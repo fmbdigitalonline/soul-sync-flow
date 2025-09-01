@@ -6,8 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, CheckCircle, Calendar, TrendingUp, Flame } from "lucide-react";
 import { HabitCard } from "./HabitCard";
 import { HabitDetailPopup } from "./HabitDetailPopup";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { safeInterpolateTranslation } from "@/utils/translation-utils";
 
 interface Habit {
   id: string;
@@ -21,7 +19,6 @@ interface Habit {
 }
 
 export const HabitTracker: React.FC = () => {
-  const { t } = useLanguage();
   const [habits, setHabits] = useState<Habit[]>([
     {
       id: '1',
@@ -93,10 +90,10 @@ export const HabitTracker: React.FC = () => {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Flame className="h-5 w-5 text-orange-500" />
-            <h2 className="text-lg font-bold">{t('habits.dailyHabits')}</h2>
+            <h2 className="text-lg font-bold">Daily Habits</h2>
           </div>
           <Badge variant="outline" className="bg-white">
-            {completedToday}/{totalHabits} {t('habits.today')}
+            {completedToday}/{totalHabits} today
           </Badge>
         </div>
         
@@ -105,11 +102,11 @@ export const HabitTracker: React.FC = () => {
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-green-500" />
-            <span className="text-gray-600">{completionRate}{t('habits.completedToday')}</span>
+            <span className="text-gray-600">{completionRate}% completed today</span>
           </div>
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-orange-500" />
-            <span className="text-gray-600">{longestStreak} {t('habits.dayBestStreak')}</span>
+            <span className="text-gray-600">{longestStreak} day best streak</span>
           </div>
         </div>
       </div>
@@ -118,24 +115,24 @@ export const HabitTracker: React.FC = () => {
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-green-50 p-3 rounded-lg text-center border border-green-200">
           <div className="text-lg font-bold text-green-800">{completedToday}</div>
-          <div className="text-xs text-green-600">{t('habits.todayLabel')}</div>
+          <div className="text-xs text-green-600">Today</div>
         </div>
         <div className="bg-orange-50 p-3 rounded-lg text-center border border-orange-200">
           <div className="text-lg font-bold text-orange-800">{longestStreak}</div>
-          <div className="text-xs text-orange-600">{t('habits.bestStreak')}</div>
+          <div className="text-xs text-orange-600">Best Streak</div>
         </div>
         <div className="bg-blue-50 p-3 rounded-lg text-center border border-blue-200">
           <div className="text-lg font-bold text-blue-800">{totalHabits}</div>
-          <div className="text-xs text-blue-600">{t('habits.totalHabits')}</div>
+          <div className="text-xs text-blue-600">Total Habits</div>
         </div>
       </div>
 
       {/* Habits List */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-gray-800">{t('habits.yourHabits')}</h3>
+          <h3 className="font-semibold text-gray-800">Your Habits</h3>
           <Badge variant="outline" className="text-xs">
-            {t('habits.doubleTapForDetails')}
+            Double-tap for details
           </Badge>
         </div>
         
@@ -157,7 +154,7 @@ export const HabitTracker: React.FC = () => {
         className="w-full border-dashed border-2 h-16 hover:border-orange-500 hover:bg-orange-50 transition-colors"
       >
         <Plus className="h-5 w-5 mr-2" />
-        {t('habits.addNewHabit')}
+        Add New Habit
       </Button>
 
       {/* Habit Detail Popup */}

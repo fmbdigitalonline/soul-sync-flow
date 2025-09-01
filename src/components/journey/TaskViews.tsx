@@ -22,8 +22,6 @@ import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { TaskCard } from "../task/TaskCard";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { safeInterpolateTranslation } from "@/utils/translation-utils";
 
 interface Task {
   id: string;
@@ -61,7 +59,6 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
   onBackToJourney, 
   onTaskSelect 
 }) => {
-  const { t } = useLanguage();
   const { productivityJourney, updateProductivityJourney } = useJourneyTracking();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
@@ -237,7 +234,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
         
         {tasks.length === 0 && (
           <div className={`flex items-center justify-center text-muted-foreground ${isMobile ? 'h-20' : 'h-32'}`}>
-            <p className="text-sm">{t('tasks.dropTasksHere')}</p>
+            <p className="text-sm">Drop tasks here</p>
           </div>
         )}
       </div>
@@ -247,28 +244,28 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
   const statusColumns = [
     {
       key: 'todo' as const,
-      title: t('tasks.todo'),
+      title: 'To Do',
       tasks: tasksByStatus.todo,
       icon: <List className="h-4 w-4 text-slate-600" />,
       accentColor: 'bg-slate-100'
     },
     {
       key: 'in_progress' as const,
-      title: t('tasks.inProgress'),
+      title: 'In Progress',
       tasks: tasksByStatus.in_progress,
       icon: <Play className="h-4 w-4 text-blue-600" />,
       accentColor: 'bg-blue-100'
     },
     {
       key: 'stuck' as const,
-      title: t('tasks.stuck'),
+      title: 'Stuck',
       tasks: tasksByStatus.stuck,
       icon: <AlertCircle className="h-4 w-4 text-amber-600" />,
       accentColor: 'bg-amber-100'
     },
     {
       key: 'completed' as const,
-      title: t('tasks.completed'),
+      title: 'Completed',
       tasks: tasksByStatus.completed,
       icon: <CheckCircle2 className="h-4 w-4 text-emerald-600" />,
       accentColor: 'bg-emerald-100'
@@ -290,21 +287,18 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            {t('tasks.backToJourney')}
+            Back to Journey
           </Button>
           
           {focusedMilestone && (
             <div className="text-sm text-muted-foreground">
-              <span className="font-medium">{t('tasks.focusingOn')}</span> {focusedMilestone.title}
+              <span className="font-medium">Focusing on:</span> {focusedMilestone.title}
             </div>
           )}
         </div>
         
         <div className="text-sm text-muted-foreground">
-          {safeInterpolateTranslation(t('tasks.tasksCompleted'), { 
-            tasks: filteredTasks.length.toString(), 
-            completed: filteredTasks.filter(t => t.status === 'completed').length.toString() 
-          })}
+          {filteredTasks.length} tasks • {filteredTasks.filter(t => t.status === 'completed').length} completed
         </div>
       </div>
 
@@ -317,7 +311,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
           className="flex items-center gap-2"
         >
           <Kanban className="h-4 w-4" />
-          {t('tasks.flow')}
+          Flow
         </Button>
         <Button
           variant={activeView === 'list' ? 'default' : 'outline'}
@@ -326,7 +320,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
           className="flex items-center gap-2"
         >
           <List className="h-4 w-4" />
-          {t('tasks.tasks')}
+          Tasks
         </Button>
         <Button
           variant={activeView === 'calendar' ? 'default' : 'outline'}
@@ -335,7 +329,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
           className="flex items-center gap-2"
         >
           <CalendarIcon className="h-4 w-4" />
-          {t('tasks.calendar')}
+          Calendar
         </Button>
       </div>
 
@@ -358,7 +352,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
                   className="flex items-center gap-1"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  {t('tasks.prev')}
+                  Prev
                 </Button>
                 
                 <div className="flex items-center gap-2">
@@ -379,7 +373,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
                   disabled={currentColumnIndex === statusColumns.length - 1}
                   className="flex items-center gap-1"
                 >
-                  {t('tasks.next')}
+                  Next
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -427,9 +421,9 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
       {activeView === 'list' && (
         <div className="space-y-3">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-800">{t('tasks.allTasks')}</h3>
+            <h3 className="font-semibold text-gray-800">All Tasks</h3>
             <Badge variant="outline" className="text-xs">
-              {t('tasks.doubleTapForCoaching')}
+              Double-tap for coaching
             </Badge>
           </div>
           {filteredTasks.map(task => (
@@ -446,7 +440,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
           {filteredTasks.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <List className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>{t('tasks.noTasksFound')}</p>
+              <p>No tasks found</p>
             </div>
           )}
         </div>
@@ -465,14 +459,14 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
           
           <div>
             <h4 className="font-medium mb-3">
-              {safeInterpolateTranslation(t('tasks.tasksFor'), { date: format(selectedDate, 'MMMM d, yyyy') })}
+              Tasks for {format(selectedDate, 'MMMM d, yyyy')}
             </h4>
             
             <div className="space-y-2">
               {tasksForSelectedDate.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>{t('tasks.noTasksScheduled')}</p>
+                  <p>No tasks scheduled for this day</p>
                 </div>
               ) : (
                 tasksForSelectedDate.map(task => (

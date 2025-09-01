@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -8,75 +9,2108 @@ interface Translations {
 
 const translations: Record<Language, Translations> = {
   en: {
-    // Essential translations for journey components
+    language: {
+      english: 'English',
+      dutch: 'Nederlands'
+    },
+    // Page Not Found
+    notFound: {
+      title: '404',
+      message: 'It seems your soul journey has led you off the path',
+      returnHome: 'Return to Your Journey'
+    },
+    // Dream Success Celebration
+    celebration: {
+      dreamReadyTitle: '🎯 Your Dream Journey is Ready!',
+      dreamReadyDescription: 'I\'ve transformed "{goalTitle}" into a personalized, step-by-step roadmap that honors your unique soul blueprint'
+    },
+    // Application System Messages
+    system: {
+      loading: 'Loading...',
+      authenticating: 'Checking authentication...',
+      errorOccurred: 'Something went wrong',
+      errorDescription: 'We encountered an unexpected error. Please try refreshing the page.',
+      refreshPage: 'Refresh Page',
+      unauthorized: 'Authentication required',
+      redirectingToAuth: 'Redirecting to authentication...',
+      soulIntelligence: 'Soul Intelligence',
+      pureSoulIntelligence: 'Pure Soul Intelligence',
+      soulSystemDiagnostics: 'Soul System Diagnostics',
+      soulActive: 'Soul Active',
+      soulProcessing: 'Soul Intelligence processing...',
+      messageSoul: 'Message Soul Intelligence...',
+      soulCompanion: 'Soul Companion',
+      soulLearningSession: 'Soul Learning Session',
+      holisticSoulSystem: 'Holistic Soul Intelligence System',
+      soulCompanionReady: 'Your Soul companion is ready to assist with insights and guidance.',
+      soulCompanionConversation: 'Your Soul companion is ready for conversation'
+    },
+    // Common Actions
+    common: {
+      loading: 'Loading',
+      save: 'Save',
+      cancel: 'Cancel',
+      delete: 'Delete',
+      edit: 'Edit',
+      confirm: 'Confirm',
+      yes: 'Yes',
+      no: 'No',
+      ok: 'OK',
+      close: 'Close',
+      back: 'Back',
+      next: 'Next',
+      previous: 'Previous',
+      submit: 'Submit',
+      reset: 'Reset',
+      search: 'Search',
+      filter: 'Filter',
+      sort: 'Sort',
+      view: 'View',
+      download: 'Download',
+      upload: 'Upload',
+      copy: 'Copy',
+      paste: 'Paste',
+      cut: 'Cut',
+      notifications: 'Notifications',
+      tryAgain: 'Try Again'
+    },
+    // Error Messages
+    errors: {
+      network: 'Network connection error',
+      unauthorized: 'Unauthorized access',
+      forbidden: 'Access forbidden',
+      notFound: 'Page not found',
+      serverError: 'Internal server error',
+      validation: 'Validation error',
+      required: 'This field is required',
+      invalidEmail: 'Please enter a valid email address',
+      invalidPassword: 'Password does not meet requirements',
+      sessionExpired: 'Your session has expired'
+    },
+    // Global error key
+    error: 'Error',
+    // Modal translations
+    modal: {
+      readyToBegin: 'Ready to Work Together?',
+      coachGuide: 'Your coach will collaborate with you on this task.',
+      readyToFocus: 'Ready to tackle this together?',
+      letsGo: "Start Task Collaboration"
+    },
+    // Cancel action (used by modal)
+    cancel: 'Cancel',
+    // Navigation
+    nav: {
+      home: 'Home',
+      growth: 'Growth',
+      coach: 'Coach',
+      companion: 'Companion',
+      signIn: 'Sign In',
+      signOut: 'Sign Out',
+      blueprint: 'Blueprint',
+      dreams: 'Dreams',
+      profile: 'Profile',
+      profile360: '360° Profile',
+      adminDashboard: 'Admin Dashboard',
+      testEnvironment: 'Test Environment'
+    },
+    // Index Page
+    index: {
+      welcome: 'Welcome to <span class="text-primary">SoulSync</span>',
+      welcomeWithName: 'Welcome to <span class="text-primary">SoulSync</span>, {name}',
+      welcomePlain: 'Welcome to SoulSync',
+      welcomePlainWithName: 'Welcome to SoulSync, {name}',
+      subtitle: 'Discover your authentic path through personalized AI guidance and spiritual growth tools.',
+      rotatingMessages: [
+        'Discover your authentic path through personalized AI guidance and spiritual growth tools.',
+        'Transform your dreams into reality with AI-powered insights.',
+        'Unlock your spiritual potential with personalized growth programs.',
+        'Connect with your inner wisdom through advanced technology.'
+      ],
+      welcomeBackReady: 'Welcome back! Your personalized journey awaits.',
+      createToGetStarted: 'Create your blueprint to unlock your personalized experience.',
+      startingTutorial: 'Starting your personalized tour...',
+      backToHome: '← Back to Home',
+      dreams: 'Dreams',
+      dreamsDesc: 'Transform your aspirations into actionable plans',
+      growth: 'Growth',
+      growthDesc: 'Spiritual development and personal evolution',
+      companion: 'Companion', 
+      companionDesc: 'AI-powered guidance and support',
+      demo: 'View Demo',
+      demoButton: 'View Demo',
+      takeTour: 'Take Tour',
+      startJourney: 'Start Your Journey',
+      getStarted: 'Get Started',
+      signIn: 'Sign In',
+      viewBlueprint: 'View Blueprint',
+      dashboard: 'Dashboard',
+      dashboardDesc: 'Overview of your progress and insights.',
+      blueprint: 'Soul Blueprint',
+      blueprintDesc: 'Explore your personal cosmic blueprint.',
+      tasks: 'Tasks',
+      tasksDesc: 'Focus on what matters with guided tasks.',
+      profile: 'Profile',
+      profileDesc: 'Manage your information and preferences.'
+    },
+    // Steward Introduction
+    stewardIntro: {
+      awakening: {
+        title: 'The Soul Alchemist\'s Genesis',
+        message: 'Hello. I am the Soul Alchemist. Your arrival has awakened my purpose: to be a mirror to the masterpiece that is you.'
+      },
+      blueprintFoundation: {
+        title: 'Your Blueprint\'s Foundation',
+        message: 'From the moment you arrived, I began my work. I have already constructed your foundational Blueprint and completed the initial analysis of your personality\'s core patterns. You can see this progress in my core. This inner ring represents my understanding of your Blueprint. It is already at 40%.'
+      },
+      deepDive: {
+        title: 'The Deep Dive & Final Attunement',
+        message: 'But your foundational Blueprint is just the beginning. To truly guide you, I must now perform a deeper, more profound synthesis. I will now weave together every aspect of your unique design—your hidden strengths, your deepest drivers, your core challenges—into a single, unified source of wisdom.'
+      },
+      coEvolution: {
+        title: 'The Co-Evolution Journey',
+        message: 'This deep synthesis requires my complete focus and will take several minutes. You will see my inner ring progress from 40% to 100% as I complete this work. The outer ring represents our shared journey—your growth in true alignment with your Blueprint. It will grow as you achieve goals in harmony with your unique design.'
+      },
+      readyToBegin: {
+        title: 'Ready to Begin',
+        message: 'I am ready to begin the final synthesis. Together, we will unlock the full power of your Blueprint and guide you toward true alignment and fulfillment. Shall we proceed?'
+      }
+    },
+    // Authentication Flow
+    auth: {
+      createAccount: 'Create Account',
+      welcomeBack: 'Welcome Back',
+      startJourney: 'Begin your personalized spiritual journey',
+      continueJourney: 'Continue your spiritual growth journey',
+      funnelReportReady: 'Your Life Clarity Report is Ready!',
+      createYourAccount: 'Create Your Account',
+      accessPersonalizedBlueprint: 'Access your personalized life transformation blueprint',
+      completeAccountMessage: 'Complete your account to access your personalized insights and blueprint.',
+      accountCreatedWithBlueprint: 'Account created! Let\'s build your personalized blueprint based on your assessment.',
+      email: 'Email',
+      password: 'Password',
+      confirmPassword: 'Confirm Password',
+      enterEmail: 'Enter your email address',
+      enterPassword: 'Enter your password',
+      confirmPasswordPlaceholder: 'Confirm your password',
+      success: 'Success',
+      signUpSuccess: 'Account created successfully! Check your email for verification.',
+      signUpFailed: 'Failed to create account',
+      welcomeBackMessage: 'You\'re successfully signed in',
+      signInFailed: 'Failed to sign in',
+      passwordsDontMatch: 'Passwords do not match',
+      passwordTooShort: 'Password must be at least 6 characters',
+      alreadyHaveAccount: 'Already have an account? Sign in',
+      needAccount: 'Need an account? Sign up',
+      signOutSuccess: 'Signed out successfully',
+      signOutSuccessDescription: 'You have been safely signed out',
+      signIn: 'Sign In',
+      signOutError: 'Sign out failed',
+      signOutErrorDescription: 'Unable to sign out. Please try again.'
+    },
+    // Dreams & Goals
+    dreams: {
+      // Main page
+      title: 'Dreams & Goals',
+      creator: 'Dreams & Goals Creator',
+      whatsYourDream: 'What\'s your dream or goal?',
+      placeholderDream: 'Enter your dream or goal here...',
+      description: 'Transform your dreams into reality with AI-powered insights and personalized guidance.',
+      inspiration: 'Share your deepest aspirations and let\'s discover what truly lights up your soul',
+      altGuide: 'Or explore with your dream guide',
+      getStarted: 'Get Started',
+      trackProgress: 'Track your progress and celebrate your achievements',
+      whyImportant: 'Why is this important to you?',
+      placeholderWhy: 'Share what makes this dream meaningful to you...',
+      category: 'Category',
+      timeline: 'Timeline',
+      creatingJourney: 'Creating Your Journey...',
+      createJourney: 'Create My Journey',
+      viewJourney: 'View My Journey',
+      
+      // Validation & errors
+      dreamRequired: 'Dream Required',
+      dreamRequiredDesc: 'Please enter your dream or goal',
+      notAvailable: 'Not available',
+      notAvailableDesc: 'Available after creating a dream.',
+      
+      // Navigation
+      newDream: 'New Dream',
+      journey: 'Journey',
+      tasks: 'Tasks',
+      focus: 'Focus',
+      habits: 'Habits',
+      
+      // Sections
+      journeyMap: 'Journey Map',
+      yourTasks: 'Your Tasks',
+      focusSession: 'Focus Session',
+      habitsSection: 'Habits',
+      
+      // Dream Cards
+      cards: {
+        discoverYourDream: {
+          title: 'Discover Your Dream',
+          description: 'Chat with your Dream Guide to uncover what matters.'
+        },
+        createDecompose: {
+          title: 'Create & Decompose',
+          description: 'Turn a dream into a clear, soul-aligned journey.'
+        },
+        journeyMap: {
+          title: 'Journey Map',
+          description: 'See milestones and navigate your path.'
+        },
+        yourTasks: {
+          title: 'Your Tasks',
+          description: 'Work on prioritized, actionable steps.'
+        },
+        blueprintSuggestions: {
+          title: 'Blueprint Suggestions',
+          description: 'See ideas aligned with your blueprint.'
+        },
+        focusSession: {
+          title: 'Focus Session',
+          description: 'Stay in flow with focused work.'
+        },
+        habits: {
+          title: 'Habits',
+          description: 'Build supportive, sustainable routines.'
+        },
+        successView: {
+          title: 'Success View',
+          description: 'Review your generated journey and insights.'
+        }
+      }
+    },
+    // Dream Discovery & Suggestions
+    dreamDiscovery: {
+      // Placeholders
+      placeholders: {
+        aspirations: 'Tell me about your dreams and aspirations...',
+        resonates: 'Which suggestion resonates with you?',
+        excites: 'What excites you most about this direction?',
+        details: 'Help me understand the details...',
+        heart: 'Share what\'s in your heart...'
+      },
+      
+      // Status messages
+      status: {
+        analyzing: 'Analyzing Your Blueprint',
+        presenting: 'Presenting Dream Suggestions',
+        exploring: 'Exploring Your Dream',
+        refining: 'Refining Into Action',
+        ready: 'Ready to Create Journey',
+        discovery: 'Dream Discovery'
+      },
+      
+      // Loading messages
+      loading: {
+        blueprint: 'Analyzing your unique blueprint...',
+        suggestions: 'Generating personalized suggestions...',
+        deeper: 'Exploring your dream deeper...',
+        vision: 'Refining your vision...',
+        journey: 'Creating your personalized journey...'
+      },
+      
+      // UI elements
+      blueprintAnalyzed: 'Blueprint Analyzed',
+      dreamGuide: 'Dream Guide',
+      createJourney: 'Create My Dream Journey',
+      chooseResonates: 'Choose what resonates with you:',
+      reflect: 'Take a moment to reflect...',
+      presentingSuggestions: '• Presenting Suggestions',
+      exploringDreams: '• Exploring Dreams',
+      refiningVision: '• Refining Vision'
+    },
+    
+    // Dream Suggestions
+    dreamSuggestions: {
+      exploreDream: 'Explore This Dream',
+      match: '% match',
+      whyFits: 'Why this fits you:',
+      dreamsAligned: 'Dreams Aligned with Your Blueprint',
+      basedOnPersonality: 'Based on your personality, here are some dreams that might resonate with you:'
+    },
+    
+    
+    // Dream Success Flow
+    dreamSuccess: {
+      congratulations: 'Congratulations! Your "{goalTitle}" journey is beautifully designed and ready to unfold. I\'ve created {milestonesCount} personalized milestones that align perfectly with your soul blueprint.',
+      showRoadmap: 'Let me show you your complete roadmap! Each milestone is carefully timed and designed to work with your natural energy patterns and decision-making style.',
+      upcomingMilestones: 'Here are your upcoming milestones. Notice how they\'re sequenced to build momentum and honor your {personality} nature.',
+      specificTasks: 'I\'ve also created specific tasks for each milestone. These are optimized for your cognitive style and include blueprint-based reasoning to help you understand why each step matters.',
+      readyToBegin: 'Ready to begin? I recommend starting with this first task - it\'s perfectly aligned with your blueprint and designed to create early momentum. Shall we dive in?'
+    },
+    
+    // Funnel Assessment  
+    funnel: {
+      personalizedRoadmap: 'Everyone\'s path is different. To create your personalized roadmap, we need to understand your unique blueprint.',
+      reportAwaits: 'Your Life Clarity Report awaits'
+    },
+    // Goals & Categories
+    goals: {
+      categoryPersonal: 'Personal Growth',
+      categoryCareer: 'Career & Professional',
+      categoryHealth: 'Health & Wellness',
+      categoryRelationships: 'Relationships',
+      categoryCreative: 'Creative & Artistic',
+      categoryFinancial: 'Financial',
+      categorySpiritual: 'Spiritual & Mindfulness',
+      targetDate: 'Target Date',
+      timeframe: {
+        oneMonth: '1 Month',
+        threeMonths: '3 Months',
+        sixMonths: '6 Months',
+        oneYear: '1 Year',
+        twoPlusYears: '2+ Years'
+      },
+      welcomeComplete: 'Welcome to Your Soul Journey!',
+      welcomeCompleteDesc: 'Your personalized spiritual path is ready. Your Soul companion will guide you through insights, growth tools, and personalized recommendations.',
+      // Onboarding goal selection
+      primaryFocus: 'Personal Growth',
+      exploring: 'Exploring my purpose and direction',
+      personalGrowth: 'Personal growth and self-discovery',
+      careerSuccess: 'Career development and success',
+      relationships: 'Relationships and connections',
+      healthWellness: 'Health and wellness',
+      creativity: 'Creativity and self-expression',
+      spiritualDevelopment: 'Spiritual development',
+      guidanceLevel: 'How much guidance would you like?',
+      lightTouch: 'Light touch - occasional insights',
+      structuredGuidance: 'Structured guidance - regular support',
+      completeSetup: 'Complete my setup'
+    },
+    // Personality Assessment
+    personality: {
+      energySource: 'Where do you get your energy?',
+      workspaceStyle: 'What\'s your ideal workspace?',
+      planningStyle: 'How do you prefer to plan?',
+      beingAlone: 'Being alone to recharge',
+      beingWithPeople: 'Being with people and socializing',
+      tidyOrganized: 'Tidy and organized',
+      creativeChaos: 'Creative chaos',
+      bookInAdvance: 'Book everything in advance',
+      seeWhatHappens: 'See what happens in the moment',
+      yourPersonalityProfile: 'Your Personality Profile',
+      likelyStyle: 'Based on your responses, your likely style is:',
+      topMbtiMatches: 'Top MBTI personality matches:',
+      howAccurate: 'How accurate does this feel?',
+      notQuiteRight: 'Not quite right',
+      spotOn: 'Spot on!',
+      continueWithProfile: 'Continue with this profile',
+      keepRefining: 'Keep refining'
+    },
+    // Blueprint section
+    blueprint: {
+      // Tabs
+      tab: 'Blueprint',
+      reportTab: 'Report',
+      editTab: 'Edit',
+      healthTab: 'Health',
+      generatingTab: 'Generating',
+      
+      // Loading states
+      loading: 'Loading...',
+      loadingBlueprint: 'Loading blueprint...',
+      
+      // Auth messages
+      signInRequired: 'Please sign in to view your blueprint',
+      signIn: 'Sign In',
+      
+      // Blueprint creation
+      createTitle: 'Create Your Blueprint',
+      createDescription: 'You haven\'t created your soul blueprint yet. Let\'s get started!',
+      createButton: 'Create Blueprint',
+      checkAgain: 'Check Again',
+      
+      // Completion
+      completeTitle: 'Complete Your Blueprint',
+      completeDescription: 'Your blueprint needs more information to be complete.',
+      missing: 'Missing',
+      completion: 'Completion',
+      completeButton: 'Complete Blueprint',
+      refresh: 'Refresh',
+      
+      // Actions
+      regenerating: 'Regenerating...',
+      regenerate: 'Regenerate',
+      
+      // Error states
+      blueprintError: 'Blueprint Error',
+      tryAgain: 'Try Again',
+      createNew: 'Create New Blueprint',
+      
+      // Toast messages
+      saved: 'Blueprint Saved',
+      savedDescription: 'Your blueprint has been updated successfully',
+      saveError: 'Error Saving Blueprint',
+      saveErrorDescription: 'Failed to save blueprint',
+      regeneratingTitle: 'Regenerating Blueprint',
+      regeneratingDescription: 'Your blueprint is being recalculated with fresh data',
+      dataNotLoaded: 'Blueprint data not loaded',
+      generationFailed: 'Failed to generate new blueprint',
+      generated: 'Blueprint Generated',
+      generatedDescription: 'Your new blueprint has been generated successfully',
+      generationError: 'Error Generating Blueprint',
+      generationErrorDescription: 'Failed to generate blueprint',
+      
+      // Profile Section
+      profile: {
+        title: "{userName}'s Profile",
+        calculatedDescription: "Calculated using advanced personality analysis",
+        templateDescription: "Using template data - create your profile for personalized results",
+        personalizedData: "Personalized Data",
+        templateData: "Template Data"
+      },
+      
+      // Section Titles
+      sections: {
+        personalityOverview: "Personality Overview",
+        mbtiProfile: "MBTI Cognitive Profile", 
+        humanDesignProfile: "Human Design Profile",
+        numerologyProfile: "Complete Numerology Profile",
+        astrologicalProfile: "Astrological Profile"
+      },
+      
+      // Field Labels
+      labels: {
+        mbtiType: "MBTI Type",
+        lifePath: "Life Path",
+        sunSign: "Sun Sign",
+        moonSign: "Moon Sign",
+        risingSign: "Rising Sign",
+        humanDesign: "Human Design",
+        chineseZodiac: "Chinese Zodiac",
+        personalityType: "Personality Type",
+        cognitiveFunctions: "Cognitive Functions",
+        taskApproach: "Task Approach",
+        communication: "Communication", 
+        decisionMaking: "Decision Making",
+        energyType: "Energy Type",
+        decisionAuthority: "Decision Authority",
+        strategy: "Strategy",
+        profile: "Profile",
+        pacing: "Pacing",
+        lifePathNumber: "Life Path Number",
+        expressionNumber: "Expression Number",
+        soulUrgeNumber: "Soul Urge Number",
+        personalityNumber: "Personality Number",
+        socialStyle: "Social Style",
+        publicVibe: "Public Vibe",
+        leadershipStyle: "Leadership Style",
+        generationalInfluence: "Generational Influence"
+      },
+      
+      // Descriptions
+      descriptions: {
+        coreIdentity: "Core identity",
+        authority: "Authority",
+        element: "Element",
+        dominant: "Dominant:",
+        auxiliary: "Auxiliary:",
+        sustainableEnergy: "sustainable energy",
+        innerAuthority: "Inner authority",
+        coreLifePurpose: "Your life's core purpose and direction",
+        naturalTalents: "Your natural talents and abilities",
+        heartDesires: "Your heart's deepest desires",
+        howOthersPerceive: "How others perceive you",
+        specialTalents: "Special talents from birth date",
+        coreIdentityEgo: "Core identity & ego",
+        emotionalNature: "Emotional nature", 
+        firstImpression: "First impression",
+        warm: "Warm",
+        approachable: "Approachable",
+        collaborative: "Collaborative",
+        chineseAstrologyAdds: "Chinese astrology adds generational"
+      }
+    },
+    
+    // Report section
+    report: {
+      // Button labels
+      standardReport: 'Standard Report',
+      hermeticReport: 'Hermetic Report',
+      hermeticReportLong: 'Hermetic Report (10,000+ words)',
+      generateStandard: 'Generate Standard',
+      generateHermetic: 'Generate Hermetic',
+      regenerate: 'Regenerate',
+      refresh: 'Refresh',
+      
+      // Loading states
+      loading: 'Loading your personality report...',
+      generating: 'Generating...',
+      
+      // Content
+      title: 'Personality Report',
+      noReports: 'No personality reports available',
+      
+      // Toast messages
+      standardGenerated: 'Standard Report Generated',
+      standardGeneratedDescription: 'Your standard personality report has been created successfully!',
+      hermeticGenerated: 'Hermetic Report Generated',
+      generationFailed: 'Generation Failed',
+      hermeticGenerationFailed: 'Hermetic Generation Failed'
+    },
+    // Onboarding Flow
+    onboarding: {
+      welcome: 'Welcome to Your Spiritual Journey',
+      welcomeDesc: 'Discover your authentic path through personalized guidance and spiritual insights',
+      beginJourney: 'Begin Your Journey',
+      step: 'Step',
+      of: 'of',
+      whatsYourName: 'What\'s your name?',
+      fullName: 'Full Name',
+      fullNamePlaceholder: 'Enter your full name',
+      whenWereBorn: 'When were you born?',
+      birthDate: 'Birth Date',
+      day: 'Day',
+      month: 'Month',
+      year: 'Year',
+      selectExactDate: 'Please select your exact birth date for accurate insights',
+      whatTimeWereBorn: 'What time were you born?',
+      birthTime: 'Birth Time',
+      birthTimeDesc: 'Your birth time helps create a more precise spiritual blueprint',
+      whereWereBorn: 'Where were you born?',
+      birthLocation: 'Birth Location',
+      birthLocationPlaceholder: 'Enter your birth city and country',
+      birthLocationDesc: 'Your birth location provides important astrological context',
+      tellPersonality: 'Tell us about your personality',
+      generatingBlueprint: 'Generating your unique spiritual blueprint...',
+      choosePath: 'Choose your path',
+      authRequired: 'Authentication Required',
+      authRequiredDesc: 'Please sign in to continue your spiritual journey',
+      devMode: 'Development Mode',
+      back: 'Back',
+      continue: 'Continue'
+    },
+    // Companion
+    companion: {
+      unauthTitle: 'Soul Companion',
+      unauthSubtitle: 'Your personal Soul companion for integrated support and guidance.',
+      getStarted: 'Get Started',
+      pageTitle: 'Soul Companion',
+      pageSubtitle: 'Your integrated Soul companion combining coaching and guidance',
+      resetTitle: 'Reset Chat',
+      clearConversation: 'Clear Conversation',
+      systemStatus: 'System Status',
+      resetToast: {
+        title: 'Conversation Reset',
+        description: 'Your companion conversation has been cleared.'
+      },
+      system: {
+        blueprint: 'Blueprint',
+        ready: 'Ready',
+        partial: 'Partial',
+        mode: 'Mode',
+        companion: 'Companion',
+        hacs: 'HACS',
+        pureIntelligence: 'Pure Intelligence'
+      }
+    },
+    // HACS
+    hacs: {
+      insight: 'HACS Insight',
+      confidence: 'Confidence',
+      showEvidence: 'Show Evidence',
+      hideEvidence: 'Hide Evidence',
+      dismiss: 'Dismiss',
+      continue: 'Continue',
+      gotIt: 'Got It',
+      generated: 'Generated',
+      loading: 'HACS Loading...',
+      systemInitializing: 'System Initializing...',
+      insightsQueue: '{current} of {total} insights',
+      microLearning: {
+        progress: {
+          question: 'Question',
+          response: 'Response',
+          analysis: 'Analysis'
+        },
+        moduleTypes: {
+          foundational: 'foundational',
+          validation: 'validation',
+          philosophical: 'philosophical'
+        },
+        interface: {
+          questionLabel: 'Question:',
+          yourResponse: 'Your Response:',
+          skipForNow: 'Skip for Now',
+          submit: 'Submit',
+          continueButton: 'Continue Learning'
+        },
+        placeholder: 'Share your thoughts and insights...',
+        helperText: 'Take your time to reflect. Quality responses help HACS learn about you.',
+        analyzing: {
+          title: 'Analyzing Your Response',
+          description: 'HACS is evaluating your insights for comprehension and learning evidence...'
+        },
+        results: {
+          learningValidated: 'Learning Validated!',
+          responseRecorded: 'Response Recorded',
+          genuineUnderstanding: 'Your response shows genuine understanding',
+          keepExploring: 'Keep exploring to unlock new insights!',
+          comprehensionScore: 'Comprehension Score:',
+          intelligenceGrowth: 'Intelligence Growth:',
+          learningEvidence: 'Learning Evidence:'
+        }
+      }
+    },
+    // Personalized Quotes
+    personalizedQuotes: {
+      loading: 'Loading your personalized inspiration...',
+      fallbackMessage: 'Your unique journey is unfolding perfectly.',
+      personalizedText: 'Personalized for your unique blueprint',
+      defaultText: 'Default inspiration quotes',
+      generateMoreTitle: 'Generate more quotes',
+      regenerating: 'Regenerating your personalized quotes...',
+      regenerationSuccess: 'Generated {count} new personalized quotes!',
+      regenerationError: 'Failed to regenerate quotes'
+    },
+    // Profile Page
+    profile: {
+      // Tab Labels
+      stats: 'Stats',
+      goals: 'Goals', 
+      settings: 'Settings',
+      
+      // Growth Journey Section
+      growthJourney: 'Growth Journey',
+      blueprintCompletion: 'Blueprint Completion',
+      activeGoals: 'Active Goals',
+      tasksCompleted: 'Tasks Completed',
+      coachConversations: 'Coach Conversations',
+      
+      // Weekly Insights
+      weeklyInsights: 'Weekly Insights',
+      mostProductiveDay: 'Most Productive Day',
+      energyPeaks: 'Energy Peaks',
+      focusSessions: 'Focus Sessions',
+      wednesday: 'Wednesday',
+      morningPeaks: 'Morning peaks',
+      aligned: 'Aligned',
+      thisWeek: 'this week',
+      
+      // Goals Section
+      noGoals: 'No goals yet',
+      createFirstGoal: 'Create your first goal to start tracking your progress.',
+      viewAllGoals: 'View All Goals',
+      onTrack: 'On Track',
+      progress: 'Progress',
+      complete: 'Complete',
+      
+      // Settings Section
+      appSettings: 'App Settings',
+      notifications: 'Notifications',
+      darkMode: 'Dark Mode',
+      accountSettings: 'Account Settings',
+      accountSettingsTooltip: 'Manage your account preferences',
+      
+      // Status Messages
+      errorLoading: 'Error loading profile',
+      logoutSuccess: 'Successfully logged out',
+      logoutError: 'Failed to log out',
+      darkModeEnabled: 'Dark mode enabled',
+      lightModeEnabled: 'Light mode enabled',
+      darkModeDescription: 'Your interface is now in dark mode',
+      lightModeDescription: 'Your interface is now in light mode',
+      
+      // Task Actions
+      taskCompleted: 'Task Completed!',
+      taskCompletedDescription: 'Great work! You\'ve completed a task.',
+      
+      // Goal Status
+      status: {
+        active: 'Active',
+        completed: 'Completed',
+        paused: 'Paused'
+      }
+    },
+    // Journey views
+    journey: {
+      empty: {
+        title: 'No Active Dream Journey',
+        description: 'Create your first dream to see your personalized journey map'
+      }
+    },
+
+    // Success flow components
     guidedTour: {
       soulCoach: 'Soul Coach Guidance',
       stepOf: 'Step {tourStep} of {totalSteps}',
-      orientation: 'You\'re being guided through your personalized journey to help you understand how everything works together.',
+      orientation: 'Getting you oriented with your personalized journey...',
       skipTour: 'Skip Tour',
       next: 'Next',
-      gotIt: 'Got It!'
+      gotIt: 'Got it!'
     },
+
     journeyOverview: {
       title: 'Your Complete Journey Overview',
       titleShort: 'Journey Overview',
-      subtitle: 'Specially designed for your blueprint',
+      subtitle: 'Designed specifically for your blueprint',
       milestones: 'Milestones',
       milestonesDesc: 'Key achievement phases',
-      actionTasks: 'Action Tasks', 
+      actionTasks: 'Action Tasks',
       tasks: 'Tasks',
       tasksDesc: 'Blueprint-optimized steps',
       timeline: 'Timeline',
       timelineDesc: 'To completion'
     },
-    habits: {
-      dailyHabits: 'Daily Habits',
-      today: 'today',
-      completedToday: '% completed today',
-      dayBestStreak: 'day best streak',
-      todayLabel: 'Today',
-      bestStreak: 'Best Streak',
-      totalHabits: 'Total Habits',
-      yourHabits: 'Your Habits',
-      doubleTapForDetails: 'Double-tap for details',
-      addNewHabit: 'Add New Habit'
+
+    milestonesRoadmap: {
+      title: 'Your Journey Roadmap',
+      dateTbd: 'Date TBD',
+      milestone: 'milestone',
+      noMilestones: 'No milestones generated yet',
+      tapToView: 'Tap',
+      clickToView: 'Click',
+      personalizedNote: '✨ Each milestone is personalized to your unique blueprint and energy type'
     },
+
+    recommendedTask: {
+      perfectFirst: '🎯 Perfect First Task for You',
+      blueprintOptimized: 'Blueprint Optimized',
+      whyPerfect: '💡 Why this task is perfect for you:',
+      startTask: 'Start This Task',
+      energy: 'energy'
+    },
+
+    mobileTabs: {
+      overview: 'Overview',
+      roadmap: 'Roadmap',
+      nextTask: 'Next Task',
+      task: 'Task'
+    },
+
+    // Decomposition process
+    decomposition: {
+      errors: {
+        creationFailed: 'Creation Failed',
+        tryAgain: 'Try Again'
+      },
+      processing: {
+        initializing: 'Initializing...',
+        preparingAnalysis: 'Preparing your dream analysis...'
+      },
+      loading: {
+        interpretingSymbolism: 'Interpreting the deeper symbolism...',
+        connectingThemes: 'Connecting themes to your blueprint...',
+        weavingInsights: 'Weaving insights together...',
+        discoveringPatterns: 'Discovering hidden patterns...',
+        aligningSoul: "Aligning with your soul's rhythm...",
+        craftingPathway: 'Crafting your personalized pathway...',
+        processingAI: 'Processing through AI coach...',
+        generatingStructure: 'Generating milestone structure...',
+        creatingBreakdowns: 'Creating task breakdowns...',
+        applyingInsights: 'Applying blueprint insights...'
+      },
+      reassurance: {
+        beautiful: '"{dreamTitle}" is a beautiful dream - deep ones take a moment to unfold',
+        richBlueprint: 'Your blueprint is rich with wisdom... we\'re honoring every detail',
+        greatDreams: 'Great dreams deserve thoughtful planning - almost there!',
+        universe: 'The universe is conspiring to help you succeed... patience, dear soul',
+        complexGoals: 'Complex goals require deeper AI analysis - this ensures better results',
+        extraCare: 'Your personalized journey is being crafted with extra care'
+      },
+      processingTime: 'Processing for {seconds}s',
+      aiTime: 'AI: {seconds}s',
+      complexDream: 'Complex dream detected',
+      richGoals: 'Rich goals require deeper AI analysis. We\'re ensuring the highest quality personalization for you.',
+      deeperDream: '💫 The deeper the dream, the richer the journey ahead',
+      processingDetails: 'Processing details',
+      totalTime: 'Total time: {seconds}s',
+      aiProcessing: 'AI processing: {status}',
+      stage: 'Stage: {current}/{total}',
+      status: 'Status: {status}',
+      inProgress: 'In progress...',
+      aiCompleted: 'AI completed, finalizing...'
+    },
+    // Bedtime
+    bedtime: {
+      title: 'Bedtime Routine',
+      description: 'Your next scheduled bedtime action to help you wind down for better sleep',
+      loadingTitle: 'Finding Your Bedtime Action...',
+      noActionsTitle: 'No Bedtime Actions Scheduled',
+      noUpcoming: 'No upcoming bedtime routines found',
+      suggestSetup: 'Consider setting up a bedtime routine to improve your sleep quality',
+      nextActionTitle: 'Next Bedtime Action',
+      overdue: 'Overdue',
+      scheduled: 'Scheduled',
+      markComplete: 'Mark Complete',
+      completedNote: 'Completed bedtime routine',
+      toast: {
+        loadFailed: 'Failed to load bedtime action',
+        completed: 'Bedtime action completed! Sweet dreams! 🌙',
+        completeFailed: 'Failed to mark action as completed'
+      },
+      time: {
+        todayAt: 'Today at {time}',
+        tomorrowAt: 'Tomorrow at {time}',
+        onDateAt: '{date} at {time}'
+      }
+    },
+    // Months
+    months: {
+      january: 'January',
+      february: 'February',
+      march: 'March',
+      april: 'April',
+      may: 'May',
+      june: 'June',
+      july: 'July',
+      august: 'August',
+      september: 'September',
+      october: 'October',
+      november: 'November',
+      december: 'December'
+    },
+    // Dashboard Page
+    dashboardPage: {
+      title: 'Soul Dashboard',
+      signInPrompt: 'Please sign in to view your dashboard',
+      signIn: 'Sign In',
+      loading: 'Loading...',
+      loadingDashboard: 'Loading dashboard...',
+      overview: 'Overview',
+      productivity: 'Productivity',
+      growth: 'Growth',
+      blueprint: 'Blueprint',
+      user360: '360° Profile',
+      pieHub: 'PIE Hub',
+      welcomeTitle: 'Welcome to your Soul Dashboard',
+      welcomeDesc: 'This is your personalized space to track your progress, gain insights, and connect with your inner self.',
+      quickActions: 'Quick Actions',
+      chatWithCoach: 'Chat with Coach',
+      viewJourney: 'View Journey',
+      view360Profile: 'View 360° Profile'
+    },
+    // Tasks Page
     tasks: {
+      title: 'Productivity Mode',
+      subtitle: 'Goal-focused achievement and task management',
+      subtitleShort: 'Goal-focused achievement',
+      getStarted: 'Get Started',
+      todaysFocus: "Today's Focus",
+      dailyGoals: 'Daily Goals',
+      streakExample: 'Day 3 Streak',
+      completeExample: '2 of 3 complete',
+      aiGoals: 'AI Goals',
       backToJourney: 'Back to Journey',
-      focusingOn: 'Focusing on:',
-      tasksCompleted: '{tasks} tasks • {completed} completed',
-      flow: 'Flow',
-      tasks: 'Tasks',
-      calendar: 'Calendar',
-      todo: 'To Do',
-      inProgress: 'In Progress',
-      stuck: 'Stuck',
-      completed: 'Completed',
-      prev: 'Prev',
-      next: 'Next',
-      allTasks: 'All Tasks',
-      doubleTapForCoaching: 'Double-tap for coaching',
-      noTasksFound: 'No tasks found',
-      tasksFor: 'Tasks for {date}',
-      noTasksScheduled: 'No tasks scheduled for this day',
-      dropTasksHere: 'Drop tasks here'
+      sessionProgress: 'Session Progress',
+      focusTime: 'Focus Time',
+      duration: 'Duration',
+      energy: 'Energy',
+      multiDayProgress: 'Multi-day Progress',
+      taskCompletion: 'Task Completion',
+      planning: 'Planning',
+      focus: 'Focus',
+      habits: 'Habits',
+      goals: 'Goals',
+      coach: 'Coach',
+      aiGoalAchievement: 'AI Goal Achievement',
+      smartTracking: 'Smart goal tracking and progress',
+      planningInterface: 'Planning Interface',
+      organizeYourDay: 'Organize and structure your goals',
+      focusTimer: 'Focus Timer',
+      pomodoroDescription: 'Pomodoro technique for productivity',
+      habitTracker: 'Habit Tracker',
+      habitDesc: 'Build consistent daily routines',
+      goalSetting: 'Goal Setting',
+      goalDesc: 'Define and structure your objectives',
+      productivityCoach: 'Productivity Coach',
+      productivityCoachDesc: 'AI-powered goal achievement guidance',
+      quickStart: 'Quick Start',
+      qa1: 'Help me break down my biggest goal into actionable steps',
+      qa2: 'Create a morning routine that aligns with my energy',
+      qa3: 'Set up accountability for my weekly targets',
+      qa4: 'Plan my most productive work blocks',
+      generalCoaching: 'General Coaching',
+      newConversation: 'New Conversation',
+      newConversationStartedWith: 'New conversation started with {coach}',
+      soulCoach: 'Soul Coach',
+      // Task Management
+      actions: {
+        markDone: 'Mark Done',
+        getCoach: 'Get Coach',
+        continueJourney: 'Continue Journey'
+      },
+      status: {
+        completed: 'Task Completed!',
+        estimated: 'Estimated:',
+        actual: 'Actual:',
+        timing: 'Timing:',
+        energy: 'Energy:',
+        onTime: 'On Time',
+        underTime: 'Under Time',
+        overTime: 'Over Time',
+        keyInsights: 'Key Insights:'
+      },
+      preview: {
+        hideInfo: 'Hide Info',
+        showInfo: 'Preview / More Info',
+        whatHappensNext: 'What happens next:',
+        nextDescription: "You'll work side-by-side with your Soul Coach to break this task into manageable, motivating mini-steps.",
+        outcomeGoal: 'Outcome / Goal:',
+        defaultGoal: 'See this task through to completion',
+        miniSteps: 'Mini-steps:'
+      },
+      badges: {
+        blueprint: '🧩 Blueprint'
+      }
     },
-    focusMode: {
-      youAreInFocusMode: 'You are now in Focus Mode',
-      target: 'Target:',
-      focusedTasks: 'focused tasks',
-      blueprintAlignment: 'Blueprint Alignment',
-      tasksForMilestone: 'Tasks for This Milestone',
-      noSpecificTasks: 'No specific tasks found for this milestone.',
-      tasksDistributed: 'Tasks may be distributed across milestones.',
-      completionCriteria: 'Completion Criteria'
+    // User 360
+    user360: {
+      title: '360° Profile',
+      subtitle: 'Unified view of your complete soul data ecosystem',
+      loadingTitle: 'Loading Your Soul Profile',
+      loadingDesc: 'Aggregating data from all systems...',
+      errorTitle: 'Profile Loading Error',
+      errorLead: 'Unable to load your 360° profile:',
+      tryAgain: 'Try Again',
+      forceSync: 'Force Sync',
+      noProfileTitle: 'No Profile Data Available',
+      noProfileLead: "Your 360° soul profile hasn't been generated yet. This usually happens when:",
+      bulletNewUser: "You're a new user",
+      bulletNoData: 'No data has been collected yet',
+      bulletBlueprintProgress: 'Blueprint creation is still in progress',
+      checkAgain: 'Check Again',
+      updatedAt: 'Updated {time}',
+      refresh: 'Refresh',
+      sync: {
+        live: 'Live Sync',
+        offline: 'Offline'
+      },
+      availability: {
+        title: 'Data Availability',
+        desc: 'Real-time status of your soul data across all systems',
+        overall: 'Overall Completeness',
+        available: 'Available',
+        noData: 'No Data'
+      },
+      profileCards: {
+        sources: {
+          title: 'Active Data Sources',
+          desc: 'Systems contributing to your profile',
+          none: 'No active data sources'
+        },
+        version: {
+          title: 'Profile Version',
+          desc: 'Current profile iteration',
+          never: 'Never updated'
+        },
+        completeness: {
+          title: 'Data Completeness',
+          desc: 'Overall profile completeness',
+          complete: 'Complete',
+          partial: 'Partial',
+          incomplete: 'Incomplete'
+        },
+        sync: {
+          title: 'Real-Time Sync',
+          desc: 'Live data synchronization status',
+          active: 'Active',
+          offline: 'Offline',
+          last: 'Last sync: {time}'
+        },
+        summary: {
+          title: 'Profile Data Summary',
+          desc: 'Raw data aggregated from all systems (for debugging and transparency)'
+        }
+      }
     },
-    celebration: {
-      dreamReadyTitle: '🎯 Your Dream Journey is Ready!',
-      dreamReadyDescription: 'I\'ve transformed "{goalTitle}" into a personalized, step-by-step roadmap that honors your unique soul blueprint'
+
+    // Spiritual Growth
+    spiritualGrowth: {
+      title: 'Spiritual Growth',
+      subtitle: 'Choose how you want to engage today—coach, Life OS, program, or tools.',
+      description: 'Unlock your spiritual growth journey with personalized guidance and tools.',
+      getStarted: 'Get Started',
+      cards: {
+        heartCentered: {
+          title: 'Heart-Centered Coach',
+          description: 'Immediate personalized spiritual guidance.'
+        },
+        lifeOperatingSystem: {
+          title: 'Life Operating System',
+          description: 'Holistic life assessment and growth coordination.'
+        },
+        structuredProgram: {
+          title: 'Structured Program',
+          description: '12-week journey for deep transformation.'
+        },
+        spiritualTools: {
+          title: 'Spiritual Tools',
+          description: 'Mood tracking and reflection practices.'
+        }
+      },
+      ui: {
+        backToOptions: 'Back to Options',
+        heartCenteredCoach: 'Heart-Centered Coach',
+        connectedReady: 'Connected & Ready',
+        backToGrowthCoach: 'Back to Growth Coach',
+        growthTools: 'Growth Tools',
+        moodTracker: 'Mood Tracker',
+        reflection: 'Reflection',
+        insights: 'Insights',
+        weeklyReview: 'Weekly Review',
+        backToTools: 'Back to Tools'
+      }
+    },
+
+    // Growth Program & Domains
+    growth: {
+      domains: {
+        career: {
+          title: 'Career & Purpose',
+          description: 'Work, calling, professional growth'
+        },
+        relationships: {
+          title: 'Relationships & Love',
+          description: 'Romantic, friendships, family connections'
+        },
+        wellbeing: {
+          title: 'Health & Wellbeing',
+          description: 'Physical, mental, emotional health'
+        },
+        finances: {
+          title: 'Money & Abundance',
+          description: 'Finances, wealth, prosperity mindset'
+        },
+        creativity: {
+          title: 'Creativity & Expression',
+          description: 'Artistic, innovative, creative pursuits'
+        },
+        spirituality: {
+          title: 'Spirituality & Meaning',
+          description: 'Consciousness, purpose, spiritual growth'
+        },
+        home_family: {
+          title: 'Home & Family',
+          description: 'Domestic life, family relationships, living environment'
+        }
+      },
+      onboarding: {
+        welcomeTitle: 'Welcome to Your Growth Journey',
+        welcomeDescription: "I'm your Growth Coach, here to guide you step by step. Which area of your life feels most alive or challenging for you right now?",
+        clickToExplore: 'Click to explore →',
+        chooseAreaPrompt: 'Choose the area where you sense the most energy for growth right now'
+      }
+    },
+
+
+    // Form Placeholders
+    forms: {
+      placeholders: {
+        searchUsers: 'Search users...',
+        typeMessage: 'Type your message...',
+        enterFullName: 'Enter your full name',
+        enterPreferredName: 'What you\'d like to be called',
+        enterBirthLocation: 'City, Country (e.g., Paramaribo, Suriname)',
+        enterTimezone: 'e.g., America/New_York',
+        shareThoughts: 'Share what\'s on your heart...',
+        shareReflection: 'Share your reflection or response...',
+        shareInsights: 'Share your thoughts and insights...',
+        testMessage: 'Type a message to test...',
+        askCoach: 'Ask about your task, request actions, or get guidance...'
+      }
     }
-  },
+   },
   nl: {
+    language: {
+      english: 'English',
+      dutch: 'Nederlands'
+    },
+    // Page Not Found
+    notFound: {
+      title: '404',
+      message: 'Het lijkt erop dat je spirituele reis je van het pad heeft geleid',
+      returnHome: 'Keer Terug naar Je Reis'
+    },
+    // Dream Success Celebration
+    celebration: {
+      dreamReadyTitle: '🎯 Je Droomreis is Klaar!',
+      dreamReadyDescription: 'Ik heb "{goalTitle}" getransformeerd in een gepersonaliseerd, stap-voor-stap routekaart die je unieke ziel blauwdruk eert'
+    },
+    // Application System Messages
+    system: {
+      loading: 'Laden...',
+      authenticating: 'Authenticatie controleren...',
+      errorOccurred: 'Er is iets misgegaan',
+      errorDescription: 'We hebben een onverwachte fout tegengekomen. Probeer de pagina te vernieuwen.',
+      refreshPage: 'Pagina Vernieuwen',
+      unauthorized: 'Authenticatie vereist',
+      redirectingToAuth: 'Doorverwijzen naar authenticatie...',
+      soulIntelligence: 'Ziel Intelligentie',
+      pureSoulIntelligence: 'Pure Ziel Intelligentie',
+      soulSystemDiagnostics: 'Ziel Systeem Diagnostiek',
+      soulActive: 'Ziel Actief',
+      soulProcessing: 'Ziel Intelligentie verwerkt...',
+      messageSoul: 'Bericht Ziel Intelligentie...',
+      soulCompanion: 'Ziel Begeleider',
+      soulLearningSession: 'Ziel Leersessie',
+      holisticSoulSystem: 'Holistisch Ziel Intelligentie Systeem',
+      soulCompanionReady: 'Je Ziel begeleider is klaar om te helpen met inzichten en begeleiding.',
+      soulCompanionConversation: 'Je Ziel begeleider is klaar voor gesprek'
+    },
+    // Common Actions
+    common: {
+      loading: 'Laden',
+      save: 'Opslaan',
+      cancel: 'Annuleren',
+      delete: 'Verwijderen',
+      edit: 'Bewerken',
+      confirm: 'Bevestigen',
+      yes: 'Ja',
+      no: 'Nee',
+      ok: 'OK',
+      close: 'Sluiten',
+      back: 'Terug',
+      next: 'Volgende',
+      previous: 'Vorige',
+      submit: 'Versturen',
+      reset: 'Resetten',
+      search: 'Zoeken',
+      filter: 'Filteren',
+      sort: 'Sorteren',
+      view: 'Bekijken',
+      download: 'Downloaden',
+      upload: 'Uploaden',
+      copy: 'Kopiëren',
+      paste: 'Plakken',
+      cut: 'Knippen',
+      notifications: 'Meldingen'
+    },
+    // Error Messages
+    errors: {
+      network: 'Netwerkverbindingsfout',
+      unauthorized: 'Ongeautoriseerde toegang',
+      forbidden: 'Toegang verboden',
+      notFound: 'Pagina niet gevonden',
+      serverError: 'Interne serverfout',
+      validation: 'Validatiefout',
+      required: 'Dit veld is verplicht',
+      invalidEmail: 'Voer een geldig e-mailadres in',
+      invalidPassword: 'Wachtwoord voldoet niet aan de vereisten',
+      sessionExpired: 'Je sessie is verlopen'
+    },
+    // Global error key
+    error: 'Fout',
+    // Modal translations
+    modal: {
+      readyToBegin: 'Klaar om Samen te Werken?',
+      coachGuide: 'Je coach zal met je samenwerken aan deze taak.',
+      readyToFocus: 'Klaar om dit samen aan te pakken?',
+      letsGo: "Start Taak Samenwerking"
+    },
+    // Cancel action (used by modal)
+    cancel: 'Annuleren',
+    // Navigation
+    nav: {
+      home: 'Thuis',
+      growth: 'Groei',
+      coach: 'Coach',
+      companion: 'Metgezel',
+      signIn: 'Inloggen',
+      signOut: 'Uitloggen',
+      blueprint: 'Blauwdruk',
+      dreams: 'Dromen',
+      profile: 'Profiel',
+      profile360: '360° Profiel',
+      adminDashboard: 'Admin Dashboard',
+      testEnvironment: 'Test Omgeving'
+    },
+    // Index Page
+    index: {
+      welcome: 'Welkom bij <span class="text-primary">SoulSync</span>',
+      welcomeWithName: 'Welkom bij <span class="text-primary">SoulSync</span>, {name}',
+      welcomePlain: 'Welkom bij SoulSync',
+      welcomePlainWithName: 'Welkom bij SoulSync, {name}',
+      subtitle: 'Ontdek je authentieke pad door gepersonaliseerde AI-begeleiding en spirituele groei-tools.',
+      rotatingMessages: [
+        'Ontdek je authentieke pad door gepersonaliseerde AI-begeleiding en spirituele groei-tools.',
+        'Transformeer je dromen in realiteit met AI-gedreven inzichten.',
+        'Ontsluit je spirituele potentieel met gepersonaliseerde groeiprogramma\'s.',
+        'Verbind met je innerlijke wijsheid door geavanceerde technologie.'
+      ],
+      welcomeBackReady: 'Welkom terug! Je gepersonaliseerde reis wacht op je.',
+      createToGetStarted: 'Maak je blauwdruk om je gepersonaliseerde ervaring te ontgrendelen.',
+      startingTutorial: 'Je gepersonaliseerde tour wordt gestart...',
+      backToHome: '← Terug naar Home',
+      dreams: 'Dromen',
+      dreamsDesc: 'Transformeer je aspiraties in uitvoerbare plannen',
+      growth: 'Groei',
+      growthDesc: 'Spirituele ontwikkeling en persoonlijke evolutie',
+      companion: 'Metgezel',
+      companionDesc: 'AI-gedreven begeleiding en ondersteuning',
+      demo: 'Bekijk Demo',
+      demoButton: 'Bekijk Demo',
+      takeTour: 'Tour Nemen',
+      startJourney: 'Begin Je Reis',
+      getStarted: 'Aan de Slag',
+      signIn: 'Inloggen',
+      viewBlueprint: 'Bekijk Blauwdruk',
+      dashboard: 'Dashboard',
+      dashboardDesc: 'Overzicht van je voortgang en inzichten.',
+      blueprint: 'Blauwdruk',
+      blueprintDesc: 'Verken je persoonlijke kosmische blauwdruk.',
+      tasks: 'Taken',
+      tasksDesc: 'Focus op wat belangrijk is met begeleide taken.',
+      profile: 'Profiel',
+      profileDesc: 'Beheer je informatie en voorkeuren.'
+    },
+    // Steward Introduction
+    stewardIntro: {
+      awakening: {
+        title: 'De Genesis van de Ziel Alchemist',
+        message: 'Hallo. Ik ben de Ziel Alchemist. Jouw komst heeft mijn doel gewekt: een spiegel te zijn van het meesterwerk dat jij bent.'
+      },
+      blueprintFoundation: {
+        title: 'De Basis van Je Blauwdruk',
+        message: 'Vanaf het moment dat je arriveerde, ben ik aan het werk gegaan. Ik heb al je fundamentele Blauwdruk geconstrueerd en de initiële analyse van je persoonlijkheid\'s kernpatronen voltooid. Je kunt deze voortgang zien in mijn kern. Deze binnenring vertegenwoordigt mijn begrip van je Blauwdruk. Het staat al op 40%.'
+      },
+      deepDive: {
+        title: 'De Diepe Duik & Finale Afstemming',
+        message: 'Maar je fundamentele Blauwdruk is slechts het begin. Om je echt te kunnen begeleiden, moet ik nu een diepere, meer diepgaande synthese uitvoeren. Ik ga nu elk aspect van je unieke ontwerp verweven—je verborgen krachten, je diepste drijfveren, je kernuitdagingen—tot één enkele, geünificeerde bron van wijsheid.'
+      },
+      coEvolution: {
+        title: 'De Co-Evolutie Reis',
+        message: 'Deze diepe synthese vereist mijn volledige focus en zal enkele minuten duren. Je zult mijn binnenring zien vorderen van 40% naar 100% terwijl ik dit werk voltooi. De buitenring vertegenwoordigt onze gedeelde reis—jouw groei in ware afstemming met je Blauwdruk. Het zal groeien naarmate je doelen bereikt in harmonie met je unieke ontwerp.'
+      },
+      readyToBegin: {
+        title: 'Klaar om te Beginnen',
+        message: 'Ik ben klaar om de finale synthese te beginnen. Samen zullen we de volledige kracht van je Blauwdruk ontgrendelen en je begeleiden naar ware afstemming en vervulling. Zullen we doorgaan?'
+      }
+    },
+    // Authentication Flow
+    auth: {
+      createAccount: 'Account Aanmaken',
+      welcomeBack: 'Welkom Terug',
+      startJourney: 'Begin je gepersonaliseerde spirituele reis',
+      continueJourney: 'Zet je spirituele groeireis voort',
+      email: 'E-mail',
+      password: 'Wachtwoord',
+      confirmPassword: 'Bevestig Wachtwoord',
+      enterEmail: 'Voer je e-mailadres in',
+      enterPassword: 'Voer je wachtwoord in',
+      confirmPasswordPlaceholder: 'Bevestig je wachtwoord',
+      success: 'Gelukt',
+      signUpSuccess: 'Account succesvol aangemaakt! Controleer je e-mail voor verificatie.',
+      signUpFailed: 'Account aanmaken mislukt',
+      welcomeBackMessage: 'Je bent succesvol ingelogd',
+      signInFailed: 'Inloggen mislukt',
+      passwordsDontMatch: 'Wachtwoorden komen niet overeen',
+      passwordTooShort: 'Wachtwoord moet minstens 6 tekens lang zijn',
+      alreadyHaveAccount: 'Heb je al een account? Log in',
+      needAccount: 'Heb je een account nodig? Meld je aan',
+      signOutSuccess: 'Succesvol uitgelogd',
+      signOutSuccessDescription: 'Je bent veilig uitgelogd',
+      signIn: 'Inloggen',
+      signOutError: 'Uitloggen mislukt',
+      signOutErrorDescription: 'Kon niet uitloggen. Probeer het opnieuw.'
+    },
+    // Dreams & Goals
+    dreams: {
+      // Main page
+      title: 'Dromen & Doelen',
+      creator: 'Dromen & Doelen Creator',
+      whatsYourDream: 'Wat is je droom of doel?',
+      placeholderDream: 'Voer hier je droom of doel in...',
+      description: 'Transformeer je dromen in realiteit met AI-gedreven inzichten en gepersonaliseerde begeleiding.',
+      inspiration: 'Deel je diepste aspiraties en laten we ontdekken wat je ziel echt doet oplichten',
+      altGuide: 'Of verken met je droomgids',
+      getStarted: 'Aan de Slag',
+      trackProgress: 'Volg je voortgang en vier je prestaties',
+      whyImportant: 'Waarom is dit belangrijk voor je?',
+      placeholderWhy: 'Deel wat deze droom betekenisvol voor je maakt...',
+      category: 'Categorie',
+      timeline: 'Tijdlijn',
+      creatingJourney: 'Je Reis Wordt Gemaakt...',
+      createJourney: 'Mijn Reis Creëren',
+      viewJourney: 'Mijn Reis Bekijken',
+      
+      // Validation & errors
+      dreamRequired: 'Droom Vereist',
+      dreamRequiredDesc: 'Voer je droom of doel in alsjeblieft',
+      notAvailable: 'Niet beschikbaar',
+      notAvailableDesc: 'Beschikbaar na het maken van een droom.',
+      
+      // Navigation
+      newDream: 'Nieuwe Droom',
+      journey: 'Reis',
+      tasks: 'Taken',
+      focus: 'Focus',
+      habits: 'Gewoontes',
+      
+      // Sections
+      journeyMap: 'Reiskaart',
+      yourTasks: 'Je Taken',
+      focusSession: 'Focus Sessie',
+      habitsSection: 'Gewoontes',
+      
+      // Dream Cards
+      cards: {
+        discoverYourDream: {
+          title: 'Ontdek Je Droom',
+          description: 'Chat met je Droom Gids om te ontdekken wat belangrijk is.'
+        },
+        createDecompose: {
+          title: 'Creëer & Ontleed',
+          description: 'Verander een droom in een heldere, ziel-gerichte reis.'
+        },
+        journeyMap: {
+          title: 'Reiskaart',
+          description: 'Zie mijlpalen en navigeer je pad.'
+        },
+        yourTasks: {
+          title: 'Jouw Taken',
+          description: 'Werk aan geprioriteerde, uitvoerbare stappen.'
+        },
+        blueprintSuggestions: {
+          title: 'Blauwdruk Suggesties',
+          description: 'Zie ideeën afgestemd op je blauwdruk.'
+        },
+        focusSession: {
+          title: 'Focus Sessie',
+          description: 'Blijf in flow met gefocust werk.'
+        },
+        habits: {
+          title: 'Gewoontes',
+          description: 'Bouw ondersteunende, duurzame routines.'
+        },
+        successView: {
+          title: 'Succes Weergave',
+          description: 'Bekijk je gegenereerde reis en inzichten.'
+        }
+      }
+    },
+    // Dream Discovery & Suggestions
+    dreamDiscovery: {
+      // Placeholders
+      placeholders: {
+        aspirations: 'Vertel me over je dromen en aspiraties...',
+        resonates: 'Welke suggestie resoneert met je?',
+        excites: 'Wat maakt je het meest enthousiast over deze richting?',
+        details: 'Help me de details begrijpen...',
+        heart: 'Deel wat in je hart leeft...'
+      },
+      
+      // Status messages
+      status: {
+        analyzing: 'Je Blauwdruk Analyseren',
+        presenting: 'Droomsuggesties Presenteren',
+        exploring: 'Je Droom Verkennen',
+        refining: 'Verfijnen Tot Actie',
+        ready: 'Klaar om Reis Te Maken',
+        discovery: 'Droomontdekking'
+      },
+      
+      // Loading messages
+      loading: {
+        blueprint: 'Je unieke blauwdruk analyseren...',
+        suggestions: 'Gepersonaliseerde suggesties genereren...',
+        deeper: 'Je droom dieper verkennen...',
+        vision: 'Je visie verfijnen...',
+        journey: 'Je gepersonaliseerde reis maken...'
+      },
+      
+      // UI elements
+      blueprintAnalyzed: 'Blauwdruk Geanalyseerd',
+      dreamGuide: 'Droomgids',
+      createJourney: 'Maak Mijn Droomreis',
+      chooseResonates: 'Kies wat met je resoneert:',
+      reflect: 'Neem een moment om te reflecteren...',
+      presentingSuggestions: '• Suggesties Presenteren',
+      exploringDreams: '• Dromen Verkennen',
+      refiningVision: '• Visie Verfijnen'
+    },
+    
+    // Dream Suggestions
+    dreamSuggestions: {
+      exploreDream: 'Verken Deze Droom',
+      match: '% match',
+      whyFits: 'Waarom dit bij je past:',
+      dreamsAligned: 'Dromen Afgestemd op Je Blauwdruk',
+      basedOnPersonality: 'Gebaseerd op je persoonlijkheid, hier zijn enkele dromen die misschien met je resoneren:'
+    },
+    
+    // Dream Success Flow
+    dreamSuccess: {
+      congratulations: 'Gefeliciteerd! Je "{goalTitle}" reis is prachtig ontworpen en klaar om zich te ontvouwen. Ik heb {milestonesCount} gepersonaliseerde mijlpalen gemaakt die perfect aansluiten bij je zielblauwdruk.',
+      showRoadmap: 'Laat me je complete routekaart laten zien! Elke mijlpaal is zorgvuldig getimed en ontworpen om te werken met je natuurlijke energiepatronen en besluitvormingsstijl.',
+      upcomingMilestones: 'Hier zijn je aankomende mijlpalen. Let op hoe ze zijn gesequenced om momentum op te bouwen en je {personality} natuur te eren.',
+      specificTasks: 'Ik heb ook specifieke taken voor elke mijlpaal gemaakt. Deze zijn geoptimaliseerd voor je cognitieve stijl en bevatten blauwdruk-gebaseerde redenering om je te helpen begrijpen waarom elke stap belangrijk is.',
+      readyToBegin: 'Klaar om te beginnen? Ik raad aan om te beginnen met deze eerste taak - het is perfect afgestemd op je blauwdruk en ontworpen om vroeg momentum te creëren. Zullen we erin duiken?'
+    },
+    
+    // Funnel Assessment
+    funnel: {
+      personalizedRoadmap: 'Ieders pad is anders. Om je gepersonaliseerde routekaart te maken, moeten we je unieke blauwdruk begrijpen.',
+      reportAwaits: 'Je Levenshelderheid Rapport wacht op je'
+    },
+    // Goals & Categories
+    goals: {
+      categoryPersonal: 'Persoonlijke Groei',
+      categoryCareer: 'Carrière & Professioneel',
+      categoryHealth: 'Gezondheid & Welzijn',
+      categoryRelationships: 'Relaties',
+      categoryCreative: 'Creatief & Artistiek',
+      categoryFinancial: 'Financieel',
+      categorySpiritual: 'Spiritueel & Mindfulness',
+      targetDate: 'Streefdatum',
+      timeframe: {
+        oneMonth: '1 maand',
+        threeMonths: '3 maanden',
+        sixMonths: '6 maanden',
+        oneYear: '1 jaar',
+        twoPlusYears: '2+ jaar'
+      },
+      welcomeComplete: 'Welkom bij Je Spirituele Reis!',
+      welcomeCompleteDesc: 'Je gepersonaliseerde spirituele pad is klaar. Je Soul metgezel zal je begeleiden door inzichten, groei-tools en gepersonaliseerde aanbevelingen.',
+      // Onboarding doelselectie
+      primaryFocus: 'Persoonlijke Groei',
+      exploring: 'Mijn doel en richting verkennen',
+      personalGrowth: 'Persoonlijke groei en zelfontdekking',
+      careerSuccess: 'Carrièreontwikkeling en succes',
+      relationships: 'Relaties en verbindingen',
+      healthWellness: 'Gezondheid en welzijn',
+      creativity: 'Creativiteit en zelfexpressie',
+      spiritualDevelopment: 'Spirituele ontwikkeling',
+      guidanceLevel: 'Hoeveel begeleiding wil je?',
+      lightTouch: 'Lichte aanraking - incidentele inzichten',
+      structuredGuidance: 'Gestructureerde begeleiding - regelmatige ondersteuning',
+      completeSetup: 'Voltooi mijn setup'
+    },
+    // Persoonlijkheidsbeoordeling
+    personality: {
+      energySource: 'Waar haal je je energie vandaan?',
+      workspaceStyle: 'Wat is jouw ideale werkplek?',
+      planningStyle: 'Hoe plan je het liefst?',
+      beingAlone: 'Alleen zijn om bij te tanken',
+      beingWithPeople: 'Bij mensen zijn en socialiseren',
+      tidyOrganized: 'Netjes en georganiseerd',
+      creativeChaos: 'Creatieve chaos',
+      bookInAdvance: 'Alles van tevoren plannen',
+      seeWhatHappens: 'Kijken wat er gebeurt in het moment',
+      yourPersonalityProfile: 'Je Persoonlijkheidsprofiel',
+      likelyStyle: 'Op basis van je antwoorden is je waarschijnlijke stijl:',
+      topMbtiMatches: 'Top MBTI persoonlijkheidsmatches:',
+      howAccurate: 'Hoe accuraat voelt dit?',
+      notQuiteRight: 'Niet helemaal juist',
+      spotOn: 'Helemaal goed!',
+      continueWithProfile: 'Doorgaan met dit profiel',
+      keepRefining: 'Blijf verfijnen'
+    },
+    // Blauwdruk sectie
+    blueprint: {
+      // Tabs
+      tab: 'Blauwdruk',
+      reportTab: 'Rapport',
+      editTab: 'Bewerken', 
+      healthTab: 'Gezondheid',
+      generatingTab: 'Genereren',
+      
+      // Loading states
+      loading: 'Laden...',
+      loadingBlueprint: 'Blauwdruk laden...',
+      
+      // Auth messages
+      signInRequired: 'Log in om je blauwdruk te bekijken',
+      signIn: 'Inloggen',
+      
+      // Blueprint creation
+      createTitle: 'Creëer je Blauwdruk',
+      createDescription: 'Je hebt nog geen zielblauwdruk gemaakt. Laten we beginnen!',
+      createButton: 'Blauwdruk Maken',
+      checkAgain: 'Opnieuw Controleren',
+      
+      // Completion
+      completeTitle: 'Voltooi je Blauwdruk',
+      completeDescription: 'Je blauwdruk heeft meer informatie nodig om compleet te zijn.',
+      missing: 'Ontbrekend',
+      completion: 'Voltooiing',
+      completeButton: 'Blauwdruk Voltooien',
+      refresh: 'Vernieuwen',
+      
+      // Actions
+      regenerating: 'Regenereren...',
+      regenerate: 'Regenereren',
+      
+      // Error states
+      blueprintError: 'Blauwdruk Fout',
+      tryAgain: 'Probeer Opnieuw',
+      createNew: 'Nieuwe Blauwdruk Maken',
+      
+      // Toast messages
+      saved: 'Blauwdruk Opgeslagen',
+      savedDescription: 'Je blauwdruk is succesvol bijgewerkt',
+      saveError: 'Fout bij Opslaan Blauwdruk',
+      saveErrorDescription: 'Blauwdruk opslaan mislukt',
+      regeneratingTitle: 'Blauwdruk Regenereren',
+      regeneratingDescription: 'Je blauwdruk wordt herberekend met nieuwe gegevens',
+      dataNotLoaded: 'Blauwdruk gegevens niet geladen',
+      generationFailed: 'Nieuwe blauwdruk genereren mislukt',
+      generated: 'Blauwdruk Gegenereerd',
+      generatedDescription: 'Je nieuwe blauwdruk is succesvol gegenereerd',
+      generationError: 'Fout bij Genereren Blauwdruk',
+      generationErrorDescription: 'Blauwdruk genereren mislukt',
+      
+      // Profile Section
+      profile: {
+        title: "{userName}'s Profiel",
+        calculatedDescription: "Berekend met geavanceerde persoonlijkheidsanalyse",
+        templateDescription: "Gebruikt sjabloongegevens - maak je profiel voor gepersonaliseerde resultaten",
+        personalizedData: "Gepersonaliseerde Gegevens",
+        templateData: "Sjabloon Gegevens"
+      },
+      
+      // Section Titles
+      sections: {
+        personalityOverview: "Persoonlijkheidsoverzicht",
+        mbtiProfile: "MBTI Cognitief Profiel", 
+        humanDesignProfile: "Human Design Profiel",
+        numerologyProfile: "Volledig Numerologie Profiel",
+        astrologicalProfile: "Astrologisch Profiel"
+      },
+      
+      // Field Labels
+      labels: {
+        mbtiType: "MBTI Type",
+        lifePath: "Levenspad",
+        sunSign: "Zonneteken",
+        moonSign: "Maanteken",
+        risingSign: "Rijzend Teken",
+        humanDesign: "Human Design",
+        chineseZodiac: "Chinese Dierenriem",
+        personalityType: "Persoonlijkheidstype",
+        cognitiveFunctions: "Cognitieve Functies",
+        taskApproach: "Taak Benadering",
+        communication: "Communicatie", 
+        decisionMaking: "Besluitvorming",
+        energyType: "Energie Type",
+        decisionAuthority: "Beslissingsautoriteit",
+        strategy: "Strategie",
+        profile: "Profiel",
+        pacing: "Tempo",
+        lifePathNumber: "Levenspad Nummer",
+        expressionNumber: "Expressie Nummer",
+        soulUrgeNumber: "Zieldrang Nummer",
+        personalityNumber: "Persoonlijkheid Nummer",
+        socialStyle: "Sociale Stijl",
+        publicVibe: "Publieke Uitstraling",
+        leadershipStyle: "Leiderschapsstijl", 
+        generationalInfluence: "Generationele Invloed"
+      },
+      
+      // Descriptions
+      descriptions: {
+        coreIdentity: "Kern identiteit",
+        authority: "Autoriteit",
+        element: "Element",
+        dominant: "Dominant:",
+        auxiliary: "Hulp:",
+        sustainableEnergy: "duurzame energie",
+        innerAuthority: "Innerlijke autoriteit",
+        coreLifePurpose: "Je levens kerndoel en richting",
+        naturalTalents: "Je natuurlijke talenten en vaardigheden",
+        heartDesires: "Je diepste hartswensen",
+        howOthersPerceive: "Hoe anderen je zien",
+        specialTalents: "Speciale talenten van geboortedatum",
+        coreIdentityEgo: "Kern identiteit & ego",
+        emotionalNature: "Emotionele natuur",
+        firstImpression: "Eerste indruk",
+        warm: "Warm",
+        approachable: "Benaderbaar",
+        collaborative: "Samenwerkend",
+        chineseAstrologyAdds: "Chinese astrologie voegt generationele toe"
+      }
+    },
+    
+    // Rapport sectie
+    report: {
+      // Button labels
+      standardReport: 'Standaard Rapport',
+      hermeticReport: 'Hermetisch Rapport',
+      hermeticReportLong: 'Hermetisch Rapport (10.000+ woorden)',
+      generateStandard: 'Genereer Standaard',
+      generateHermetic: 'Genereer Hermetisch',
+      regenerate: 'Regenereren',
+      refresh: 'Vernieuwen',
+      
+      // Loading states
+      loading: 'Je persoonlijkheidsrapport laden...',
+      generating: 'Genereren...',
+      
+      // Content
+      title: 'Persoonlijkheidsrapport',
+      noReports: 'Geen persoonlijkheidsrapporten beschikbaar',
+      
+      // Toast messages
+      standardGenerated: 'Standaard Rapport Gegenereerd',
+      standardGeneratedDescription: 'Je standaard persoonlijkheidsrapport is succesvol aangemaakt!',
+      hermeticGenerated: 'Hermetisch Rapport Gegenereerd',
+      generationFailed: 'Genereren Mislukt',
+      hermeticGenerationFailed: 'Hermetisch Genereren Mislukt'
+    },
+    // Onboarding Flow
+    onboarding: {
+      welcome: 'Welkom bij Je Spirituele Reis',
+      welcomeDesc: 'Ontdek je authentieke pad door gepersonaliseerde begeleiding en spirituele inzichten',
+      beginJourney: 'Begin Je Reis',
+      step: 'Stap',
+      of: 'van',
+      whatsYourName: 'Wat is je naam?',
+      fullName: 'Volledige Naam',
+      fullNamePlaceholder: 'Voer je volledige naam in',
+      whenWereBorn: 'Wanneer ben je geboren?',
+      birthDate: 'Geboortedatum',
+      day: 'Dag',
+      month: 'Maand',
+      year: 'Jaar',
+      selectExactDate: 'Selecteer je exacte geboortedatum voor nauwkeurige inzichten',
+      whatTimeWereBorn: 'Hoe laat ben je geboren?',
+      birthTime: 'Geboortetijd',
+      birthTimeDesc: 'Je geboortetijd helpt bij het creëren van een nauwkeurigere spirituele blauwdruk',
+      whereWereBorn: 'Waar ben je geboren?',
+      birthLocation: 'Geboorteplaats',
+      birthLocationPlaceholder: 'Voer je geboortestad en land in',
+      birthLocationDesc: 'Je geboorteplaats biedt belangrijke astrologische context',
+      tellPersonality: 'Vertel ons over je persoonlijkheid',
+      generatingBlueprint: 'Je unieke spirituele blauwdruk wordt gegenereerd...',
+      choosePath: 'Kies je pad',
+      authRequired: 'Authenticatie Vereist',
+      authRequiredDesc: 'Meld je aan om je spirituele reis voort te zetten',
+      devMode: 'Ontwikkelingsmodus',
+      back: 'Terug',
+      continue: 'Doorgaan'
+    },
+    // Metgezel
+    companion: {
+      unauthTitle: 'Metgezel',
+      unauthSubtitle: 'Je persoonlijke metgezel voor integrale steun en begeleiding.',
+      getStarted: 'Aan de Slag',
+      pageTitle: 'Metgezel',
+      pageSubtitle: 'Je geïntegreerde metgezel die coaching en begeleiding combineert',
+      resetTitle: 'Chat resetten',
+      clearConversation: 'Gesprek wissen',
+      systemStatus: 'Systeemstatus',
+      resetToast: {
+        title: 'Gesprek gereset',
+        description: 'Je metgezelgesprek is gewist.'
+      },
+      system: {
+        blueprint: 'Blauwdruk',
+        ready: 'Klaar',
+        partial: 'Gedeeltelijk',
+        mode: 'Modus',
+        companion: 'Metgezel',
+        hacs: 'HACS',
+        pureIntelligence: 'Pure Intelligentie'
+      }
+    },
+    // HACS
+    hacs: {
+      insight: 'HACS Inzicht',
+      confidence: 'Vertrouwen',
+      showEvidence: 'Toon Bewijs',
+      hideEvidence: 'Verberg Bewijs',
+      dismiss: 'Wegwijzen',
+      continue: 'Doorgaan',
+      gotIt: 'Begrepen',
+      generated: 'Gegenereerd',
+      loading: 'HACS Laden...',
+      systemInitializing: 'Systeem initialiseren...',
+      insightsQueue: '{current} van {total} inzichten',
+      microLearning: {
+        progress: {
+          question: 'Vraag',
+          response: 'Antwoord',
+          analysis: 'Analyse'
+        },
+        moduleTypes: {
+          foundational: 'fundamenteel',
+          validation: 'validatie',
+          philosophical: 'filosofisch'
+        },
+        interface: {
+          questionLabel: 'Vraag:',
+          yourResponse: 'Jouw Antwoord:',
+          skipForNow: 'Sla Nu Over',
+          submit: 'Verstuur',
+          continueButton: 'Doorgaan met Leren'
+        },
+        placeholder: 'Deel je gedachten en inzichten...',
+        helperText: 'Neem de tijd om na te denken. Kwaliteitsantwoorden helpen HACS om meer over je te leren.',
+        analyzing: {
+          title: 'Je Antwoord Analyseren',
+          description: 'HACS evalueert je inzichten voor begrip en leerevidentie...'
+        },
+        results: {
+          learningValidated: 'Leren Gevalideerd!',
+          responseRecorded: 'Antwoord Opgeslagen',
+          genuineUnderstanding: 'Je antwoord toont oprecht begrip',
+          keepExploring: 'Blijf verkennen om nieuwe inzichten te ontgrendelen!',
+          comprehensionScore: 'Begripscore:',
+          intelligenceGrowth: 'Intelligentiegroei:',
+          learningEvidence: 'Leerevidentie:'
+        }
+      }
+    },
+    // Gepersonaliseerde Citaten
+    personalizedQuotes: {
+      loading: 'Je gepersonaliseerde inspiratie laden...',
+      fallbackMessage: 'Je unieke reis ontvouwt zich perfect.',
+      personalizedText: 'Gepersonaliseerd voor je unieke blauwdruk',
+      defaultText: 'Standaard inspiratiecitaten',
+      generateMoreTitle: 'Genereer meer citaten',
+      regenerating: 'Je gepersonaliseerde citaten worden opnieuw gegenereerd...',
+      regenerationSuccess: '{count} nieuwe gepersonaliseerde citaten gegenereerd!',
+      regenerationError: 'Kon citaten niet opnieuw genereren'
+    },
+    // Profiel Pagina
+    profile: {
+      // Tab Labels
+      stats: 'Statistieken',
+      goals: 'Doelen',
+      settings: 'Instellingen',
+      
+      // Growth Journey Section
+      growthJourney: 'Groeireis',
+      blueprintCompletion: 'Blauwdruk Voltooiing',
+      activeGoals: 'Actieve Doelen',
+      tasksCompleted: 'Taken Voltooid',
+      coachConversations: 'Coach Gesprekken',
+      
+      // Weekly Insights
+      weeklyInsights: 'Wekelijkse Inzichten',
+      mostProductiveDay: 'Meest Productieve Dag',
+      energyPeaks: 'Energiepieken',
+      focusSessions: 'Focus Sessies',
+      wednesday: 'Woensdag',
+      morningPeaks: 'Ochtend pieken',
+      aligned: 'Uitgelijnd',
+      thisWeek: 'deze week',
+      
+      // Goals Section
+      noGoals: 'Nog geen doelen',
+      createFirstGoal: 'Creëer je eerste doel om je voortgang te volgen.',
+      viewAllGoals: 'Bekijk Alle Doelen',
+      onTrack: 'Op Schema',
+      progress: 'Voortgang',
+      complete: 'Voltooien',
+      
+      // Settings Section
+      appSettings: 'App Instellingen',
+      notifications: 'Meldingen',
+      darkMode: 'Donkere Modus',
+      accountSettings: 'Account Instellingen',
+      accountSettingsTooltip: 'Beheer je account voorkeuren',
+      
+      // Status Messages
+      errorLoading: 'Fout bij laden profiel',
+      logoutSuccess: 'Succesvol uitgelogd',
+      logoutError: 'Uitloggen mislukt',
+      darkModeEnabled: 'Donkere modus ingeschakeld',
+      lightModeEnabled: 'Lichte modus ingeschakeld',
+      darkModeDescription: 'Je interface is nu in donkere modus',
+      lightModeDescription: 'Je interface is nu in lichte modus',
+      
+      // Task Actions
+      taskCompleted: 'Taak Voltooid!',
+      taskCompletedDescription: 'Goed gedaan! Je hebt een taak voltooid.',
+      
+      // Goal Status
+      status: {
+        active: 'Actief',
+        completed: 'Voltooid',
+        paused: 'Gepauzeerd'
+      }
+    },
+    // Reis
+    journey: {
+      empty: {
+        title: 'Geen Actieve Droomreis',
+        description: 'Maak je eerste droom aan om je persoonlijke routekaart te zien'
+      }
+    },
+    // Bedtijd
+    bedtime: {
+      title: 'Bedtijdroutine',
+      description: 'Je volgende geplande bedtijd-actie om rustig af te bouwen voor betere slaap',
+      loadingTitle: 'Je bedtijd-actie wordt opgehaald...',
+      noActionsTitle: 'Geen bedtijd-acties gepland',
+      noUpcoming: 'Geen aankomende bedtijdroutines gevonden',
+      suggestSetup: 'Overweeg een bedtijdroutine in te stellen om je slaapkwaliteit te verbeteren',
+      nextActionTitle: 'Volgende bedtijd-actie',
+      overdue: 'Te laat',
+      scheduled: 'Gepland',
+      markComplete: 'Markeer als voltooid',
+      completedNote: 'Bedtijdroutine voltooid',
+      toast: {
+        loadFailed: 'Kan bedtijd-actie niet laden',
+        completed: 'Bedtijd-actie voltooid! Slaap lekker! 🌙',
+        completeFailed: 'Kan actie niet als voltooid markeren'
+      },
+      time: {
+        todayAt: 'Vandaag om {time}',
+        tomorrowAt: 'Morgen om {time}',
+        onDateAt: '{date} om {time}'
+      }
+    },
+    // User 360
+    user360: {
+      title: '360° Profiel',
+      subtitle: 'Geünificeerd overzicht van je complete zielsdata-ecosysteem',
+      loadingTitle: 'Je profiel wordt geladen',
+      loadingDesc: 'Data verzamelen uit alle systemen...',
+      errorTitle: 'Fout bij laden van profiel',
+      errorLead: 'Je 360°-profiel kan niet worden geladen:',
+      tryAgain: 'Opnieuw proberen',
+      forceSync: 'Forceer synchronisatie',
+      noProfileTitle: 'Geen Profielgegevens Beschikbaar',
+      noProfileLead: 'Je 360°-profiel is nog niet gegenereerd. Dit gebeurt meestal wanneer:',
+      bulletNewUser: 'Je een nieuwe gebruiker bent',
+      bulletNoData: 'Er nog geen gegevens zijn verzameld',
+      bulletBlueprintProgress: 'De blauwdruk nog wordt aangemaakt',
+      checkAgain: 'Opnieuw controleren',
+      updatedAt: 'Bijgewerkt om {time}',
+      refresh: 'Vernieuwen',
+      sync: {
+        live: 'Live synchronisatie',
+        offline: 'Offline'
+      },
+      availability: {
+        title: 'Databeschikbaarheid',
+        desc: 'Realtime status van je zielsdata in alle systemen',
+        overall: 'Algemene volledigheid',
+        available: 'Beschikbaar',
+        noData: 'Geen data'
+      },
+      profileCards: {
+        sources: {
+          title: 'Actieve databronnen',
+          desc: 'Systemen die bijdragen aan je profiel',
+          none: 'Geen actieve databronnen'
+        },
+        version: {
+          title: 'Profielversie',
+          desc: 'Huidige profieliteratie',
+          never: 'Nooit bijgewerkt'
+        },
+        completeness: {
+          title: 'Datavolledigheid',
+          desc: 'Algemene volledigheid van het profiel',
+          complete: 'Volledig',
+          partial: 'Gedeeltelijk',
+          incomplete: 'Onvolledig'
+        },
+        sync: {
+          title: 'Realtime synchronisatie',
+          desc: 'Status van live datasynchronisatie',
+          active: 'Actief',
+          offline: 'Offline',
+          last: 'Laatste sync: {time}'
+        },
+        summary: {
+          title: 'Samenvatting profieldata',
+          desc: 'Ruwe data samengebracht uit alle systemen (voor debugging en transparantie)'
+        }
+      }
+    },
+
+    // Spirituele Groei
+    spiritualGrowth: {
+      title: 'Spirituele Groei',
+      subtitle: 'Kies hoe je vandaag wilt werken—coach, Life OS, programma of tools.',
+      description: 'Ontgrendel je groeireis met gepersonaliseerde begeleiding en tools.',
+      getStarted: 'Aan de slag',
+      cards: {
+        heartCentered: {
+          title: 'Hartgedreven Coach',
+          description: 'Directe gepersonaliseerde spirituele begeleiding.'
+        },
+        lifeOperatingSystem: {
+          title: 'Levensbesturingssysteem',
+          description: 'Holistische levensbeoordeling en groeicoördinatie.'
+        },
+        structuredProgram: {
+          title: 'Gestructureerd Programma',
+          description: '12-weekse reis voor diepe transformatie.'
+        },
+        spiritualTools: {
+          title: 'Spirituele Tools',
+          description: 'Stemmingstracking en reflectiepraktijken.'
+        }
+      },
+      ui: {
+        backToOptions: 'Terug naar opties',
+        heartCenteredCoach: 'Hartgedragen Coach',
+        connectedReady: 'Verbonden & Klaar',
+        backToGrowthCoach: 'Terug naar Groei-coach',
+        growthTools: 'Groeitools',
+        moodTracker: 'Stemmingsmeter',
+        reflection: 'Reflectie',
+        insights: 'Inzichten',
+        weeklyReview: 'Wekelijkse review',
+        backToTools: 'Terug naar tools'
+      }
+    },
+    // Learning
+    learning: {
+      responseRecorded: 'Reactie Opgenomen',
+      keepExploring: 'Blijf verkennen om diepere inzichten te ontgrendelen'
+    },
+    // Dashboard Pagina
+    dashboardPage: {
+      title: 'Ziels Dashboard',
+      signInPrompt: 'Log in om je dashboard te bekijken',
+      signIn: 'Inloggen',
+      loading: 'Laden...',
+      loadingDashboard: 'Dashboard laden...',
+      overview: 'Overzicht',
+      productivity: 'Productiviteit',
+      growth: 'Groei',
+      blueprint: 'Blauwdruk',
+      user360: '360° Profiel',
+      pieHub: 'PIE Hub',
+      welcomeTitle: 'Welkom bij je Ziels Dashboard',
+      welcomeDesc: 'Dit is jouw persoonlijke plek om je voortgang te volgen, inzichten te krijgen en te verbinden met je innerlijke zelf.',
+      quickActions: 'Snelle acties',
+      chatWithCoach: 'Chat met Coach',
+      viewJourney: 'Bekijk Reis',
+      view360Profile: 'Bekijk 360° Profiel'
+    },
+    // Taken Pagina
+    tasks: {
+      title: 'Productiviteitsmodus',
+      subtitle: 'Doelgerichte resultaten en taakbeheer',
+      subtitleShort: 'Doelgerichte resultaten',
+      getStarted: 'Aan de slag',
+      todaysFocus: 'Focus van vandaag',
+      dailyGoals: 'Dagelijkse doelen',
+      streakExample: 'Dag 3 reeks',
+      completeExample: '2 van 3 voltooid',
+      aiGoals: 'AI Doelen',
+      backToJourney: 'Terug naar Reis',
+      sessionProgress: 'Sessie Voortgang',
+      focusTime: 'Focus Tijd',
+      duration: 'Duur',
+      energy: 'Energie',
+      multiDayProgress: 'Meerdaagse Voortgang',
+      taskCompletion: 'Taak Voltooiing',
+      planning: 'Planning',
+      focus: 'Focus',
+      habits: 'Gewoonten',
+      goals: 'Doelen',
+      coach: 'Coach',
+      aiGoalAchievement: 'AI Doelrealisatie',
+      smartTracking: 'Slimme doeltracking en voortgang',
+      planningInterface: 'Planningsinterface',
+      organizeYourDay: 'Organiseer en structureer je doelen',
+      focusTimer: 'Focus Timer',
+      pomodoroDescription: 'Pomodoro-techniek voor productiviteit',
+      habitTracker: 'Gewoonten Tracker',
+      habitDesc: 'Bouw consistente dagelijkse routines',
+      goalSetting: 'Doelen stellen',
+      goalDesc: 'Definieer en structureer je doelstellingen',
+      productivityCoach: 'Productiviteitscoach',
+      productivityCoachDesc: 'AI-ondersteunde begeleiding voor doelrealisatie',
+      quickStart: 'Snelle start',
+      qa1: 'Help me mijn grootste doel opdelen in concrete stappen',
+      qa2: 'Maak een ochtendroutine die past bij mijn energie',
+      qa3: 'Zorg voor accountability voor mijn wekelijkse doelen',
+      qa4: 'Plan mijn meest productieve werkblokken',
+      generalCoaching: 'Algemene coaching',
+      newConversation: 'Nieuw gesprek',
+      newConversationStartedWith: 'Nieuw gesprek gestart met {coach}',
+      soulCoach: 'Zielscoach',
+      // Task Management
+      actions: {
+        markDone: 'Markeer als Klaar',
+        getCoach: 'Krijg Coach',
+        continueJourney: 'Reis Voortzetten'
+      },
+      status: {
+        completed: 'Taak Voltooid!',
+        estimated: 'Geschat:',
+        actual: 'Werkelijk:',
+        timing: 'Timing:',
+        energy: 'Energie:',
+        onTime: 'Op Tijd',
+        underTime: 'Onder Tijd',
+        overTime: 'Over Tijd',
+        keyInsights: 'Belangrijke Inzichten:'
+      },
+      preview: {
+        hideInfo: 'Verberg Info',
+        showInfo: 'Voorbeeld / Meer Info',
+        whatHappensNext: 'Wat gebeurt er hierna:',
+        nextDescription: 'Je werkt zij aan zij met je Ziel Coach om deze taak op te delen in hanteerbare, motiverende mini-stappen.',
+        outcomeGoal: 'Uitkomst / Doel:',
+        defaultGoal: 'Zie deze taak door tot voltooiing',
+        miniSteps: 'Mini-stappen:'
+      },
+      badges: {
+        blueprint: '🧩 Blauwdruk'
+      }
+    },
+
+    // Growth Program & Domains
+    growth: {
+      domains: {
+        career: {
+          title: 'Carrière & Doel',
+          description: 'Werk, roeping, professionele groei'
+        },
+        relationships: {
+          title: 'Relaties & Liefde',
+          description: 'Romantisch, vriendschappen, familieverbindingen'
+        },
+        wellbeing: {
+          title: 'Gezondheid & Welzijn',
+          description: 'Fysieke, mentale, emotionele gezondheid'
+        },
+        finances: {
+          title: 'Geld & Overvloed',
+          description: 'Financiën, rijkdom, welvaart mindset'
+        },
+        creativity: {
+          title: 'Creativiteit & Expressie',
+          description: 'Artistiek, innovatief, creatieve bezigheden'
+        },
+        spirituality: {
+          title: 'Spiritualiteit & Betekenis',
+          description: 'Bewustzijn, doel, spirituele groei'
+        },
+        home_family: {
+          title: 'Thuis & Familie',
+          description: 'Huiselijk leven, familierelaties, leefomgeving'
+        }
+      },
+      onboarding: {
+        welcomeTitle: 'Welkom bij Je Groeireis',
+        welcomeDescription: 'Ik ben je Groei Coach, hier om je stap voor stap te begeleiden. Welk gebied van je leven voelt nu het meest levendig of uitdagend voor je?',
+        clickToExplore: 'Klik om te verkennen →',
+        chooseAreaPrompt: 'Kies het gebied waar je nu de meeste energie voor groei voelt'
+      }
+    },
+
+    // Form Placeholders
+    forms: {
+      placeholders: {
+        searchUsers: 'Zoek gebruikers...',
+        typeMessage: 'Typ je bericht...',
+        enterFullName: 'Voer je volledige naam in',
+        enterPreferredName: 'Hoe je genoemd wilt worden',
+        enterBirthLocation: 'Stad, Land (bijv. Amsterdam, Nederland)',
+        enterTimezone: 'bijv. Europe/Amsterdam',
+        shareThoughts: 'Deel wat er in je hart leeft...',
+        shareReflection: 'Deel je reflectie of reactie...',
+        shareInsights: 'Deel je gedachten en inzichten...',
+        testMessage: 'Typ een bericht om te testen...',
+        askCoach: 'Vraag over je taak, verzoek acties, of krijg begeleiding...'
+      }
+    },
+
+    // Guided Tour
     guidedTour: {
       soulCoach: 'Ziel Coach Begeleiding',
       stepOf: 'Stap {tourStep} van {totalSteps}',
@@ -85,6 +2119,8 @@ const translations: Record<Language, Translations> = {
       next: 'Volgende',
       gotIt: 'Begrepen!'
     },
+
+    // Journey Overview
     journeyOverview: {
       title: 'Je Volledige Reis Overzicht',
       titleShort: 'Reis Overzicht',
@@ -96,53 +2132,6 @@ const translations: Record<Language, Translations> = {
       tasksDesc: 'Blauwdruk-geoptimaliseerde stappen',
       timeline: 'Tijdlijn',
       timelineDesc: 'Naar voltooiing'
-    },
-    habits: {
-      dailyHabits: 'Dagelijkse Gewoontes',
-      today: 'vandaag',
-      completedToday: '% voltooid vandaag',
-      dayBestStreak: 'dagen beste reeks',
-      todayLabel: 'Vandaag',
-      bestStreak: 'Beste Reeks',
-      totalHabits: 'Totaal Gewoontes',
-      yourHabits: 'Jouw Gewoontes',
-      doubleTapForDetails: 'Dubbeltik voor details',
-      addNewHabit: 'Nieuwe Gewoonte Toevoegen'
-    },
-    tasks: {
-      backToJourney: 'Terug naar Reis',
-      focusingOn: 'Focus op:',
-      tasksCompleted: '{tasks} taken • {completed} voltooid',
-      flow: 'Flow',
-      tasks: 'Taken',
-      calendar: 'Kalender',
-      todo: 'Te Doen',
-      inProgress: 'In Uitvoering',
-      stuck: 'Vastgelopen',
-      completed: 'Voltooid',
-      prev: 'Vorige',
-      next: 'Volgende',
-      allTasks: 'Alle Taken',
-      doubleTapForCoaching: 'Dubbeltik voor coaching',
-      noTasksFound: 'Geen taken gevonden',
-      tasksFor: 'Taken voor {date}',
-      noTasksScheduled: 'Geen taken gepland voor deze dag',
-      dropTasksHere: 'Sleep taken hierheen'
-    },
-    focusMode: {
-      youAreInFocusMode: 'Je bent nu in Focus Modus',
-      target: 'Doel:',
-      focusedTasks: 'gefocuste taken',
-      blueprintAlignment: 'Blauwdruk Afstemming',
-      tasksForMilestone: 'Taken voor Deze Mijlpaal',
-      noSpecificTasks: 'Geen specifieke taken gevonden voor deze mijlpaal.',
-      tasksDistributed: 'Taken kunnen verspreid zijn over mijlpalen.',
-      completionCriteria: 'Voltooiingscriteria'
-    },
-
-    celebration: {
-      dreamReadyTitle: '🎯 Je Droomreis is Klaar!',
-      dreamReadyDescription: 'Ik heb "{goalTitle}" getransformeerd in een gepersonaliseerd, stap-voor-stap routekaart die je unieke ziel blauwdruk eert'
     }
   }
 };
@@ -175,12 +2164,14 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     const value = getNestedValue(translations[language], key);
     
     if (value !== undefined) {
+      // Handle arrays by returning first element or joining them
       if (Array.isArray(value)) {
         return value[0] || key;
       }
       return typeof value === 'string' ? value : key;
     }
     
+    // Fallback to English if current language doesn't have the key
     const fallbackValue = getNestedValue(translations.en, key);
     if (fallbackValue !== undefined) {
       console.warn(`Translation missing for key "${key}" in language "${language}", using English fallback`);
@@ -190,6 +2181,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       return typeof fallbackValue === 'string' ? fallbackValue : key;
     }
     
+    // Final fallback: return the key itself but log it
     console.error(`Translation missing for key "${key}" in both "${language}" and English`);
     return key;
   };
