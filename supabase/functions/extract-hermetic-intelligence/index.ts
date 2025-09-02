@@ -35,26 +35,42 @@ serve(async (req) => {
 
     console.log(`📊 HERMETIC INTELLIGENCE EXTRACTOR: Processing for user ${userId}, force reprocess: ${forceReprocess}`);
 
-    // Check for existing extractions
-    if (!forceReprocess) {
-      const { data: existing, error: existingError } = await supabase
-        .from('hermetic_structured_intelligence')
-        .select('id')
-        .eq('user_id', userId);
+    // For new hermetic reports, always check if intelligence needs to be extracted from the report content
+    // Don't skip extraction if report has structured_intelligence but database doesn't have the extraction record
+    const { data: existing, error: existingError } = await supabase
+      .from('hermetic_structured_intelligence')
+      .select('id, personality_report_id')
+      .eq('user_id', userId);
 
-      if (existingError) {
-        throw new Error(`Failed to check existing extractions: ${existingError.message}`);
-      }
+    if (existingError) {
+      throw new Error(`Failed to check existing extractions: ${existingError.message}`);
+    }
 
-      if (existing && existing.length > 0) {
-        console.log('✅ HERMETIC INTELLIGENCE EXTRACTOR: Existing extractions found, skipping processing');
+    // Get latest report to check if it needs processing
+    const { data: latestReport } = await supabase
+      .from('personality_reports')
+      .select('id, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    // Skip only if not force reprocessing AND existing extractions include the latest report
+    if (!forceReprocess && existing && existing.length > 0) {
+      const hasLatestReportExtracted = latestReport ? 
+        existing.some(ext => ext.personality_report_id === latestReport.id) : true;
+      
+      if (hasLatestReportExtracted) {
+        console.log('✅ HERMETIC INTELLIGENCE EXTRACTOR: Latest report already extracted, skipping processing');
         return new Response(JSON.stringify({ 
           success: true, 
-          message: 'Extractions already exist',
+          message: 'Latest report already extracted',
           extracted_count: existing.length 
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
+      } else {
+        console.log('🔄 HERMETIC INTELLIGENCE EXTRACTOR: New report detected, proceeding with extraction');
       }
     }
 

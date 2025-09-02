@@ -6,6 +6,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { BlueprintData } from "./blueprint-service";
 import { hermeticReportOrchestrator } from "./hermetic-report-orchestrator";
+import { intelligenceReportOrchestrator } from "./intelligence-report-orchestrator";
 
 export interface HermeticPersonalityReport {
   id: string;
@@ -78,7 +79,7 @@ class HermeticPersonalityReportService {
     error?: string 
   }> {
     try {
-      console.log('🌟 Generating comprehensive Hermetic Blueprint Report (25,000+ words)...');
+      console.log('🌟 Generating comprehensive Hermetic Blueprint Report (120,000+ words)...');
       console.log('📋 Blueprint structure:', {
         blueprintId: blueprint.id,
         userId: blueprint.user_id,
@@ -92,20 +93,27 @@ class HermeticPersonalityReportService {
       // Use the Hermetic Report Orchestrator for multi-agent generation
       const hermeticResult = await hermeticReportOrchestrator.generateHermeticReport(blueprint);
       
-      // Transform orchestrator result into report format
-      const report = await this.buildHermeticReport(blueprint, hermeticResult);
+      // PHASE 2.5: Generate intelligence analysis concurrently for combined word count
+      console.log('🧠 Phase 5: Generating Intelligence Analysis...');
+      const intelligenceResult = await this.generateIntelligenceAnalysis(blueprint);
+      
+      // Combine hermetic and intelligence results for full 120K+ word report
+      const combinedResult = this.combineHermeticAndIntelligence(hermeticResult, intelligenceResult);
+      
+      // Transform orchestrator result into report format with combined word count
+      const report = await this.buildHermeticReport(blueprint, combinedResult);
       
       // Store the report in the database
       const storedReport = await this.storeHermeticReport(report);
       
       // Generate personalized quotes aligned with Hermetic laws
-      const quotes = await this.generateHermeticQuotes(blueprint, hermeticResult, language);
+      const quotes = await this.generateHermeticQuotes(blueprint, combinedResult, language);
       
-      // Automatically trigger structured intelligence extraction and storage
-      await this.triggerIntelligenceExtraction(blueprint.user_id || blueprint.user_meta?.user_id);
+      // Trigger structured intelligence extraction for new report (force reprocess)
+      await this.triggerIntelligenceExtraction(blueprint.user_id || blueprint.user_meta?.user_id, true);
       
       const endTime = Date.now();
-      console.log(`✅ Hermetic Report generated: ${hermeticResult.total_word_count} words in ${endTime - startTime}ms`);
+      console.log(`✅ Complete Hermetic Report generated: ${combinedResult.total_word_count} words (${hermeticResult.total_word_count} hermetic + ${intelligenceResult.total_word_count} intelligence) in ${endTime - startTime}ms`);
       
       return { 
         success: true, 
@@ -117,6 +125,92 @@ class HermeticPersonalityReportService {
       console.error('❌ Hermetic report generation failed:', error);
       return { success: false, error: String(error) };
     }
+  }
+
+  /**
+   * PHASE 2.5: Generate intelligence analysis using client-side orchestrator
+   */
+  private async generateIntelligenceAnalysis(blueprint: BlueprintData): Promise<any> {
+    try {
+      console.log('🔬 Generating comprehensive intelligence analysis...');
+      
+      // Use the intelligence orchestrator to generate all 13 analyst reports
+      const intelligenceReport = await intelligenceReportOrchestrator.generateIntelligenceReport(
+        blueprint.user_id || blueprint.user_meta?.user_id || '',
+        { sections: [] }, // Empty hermetic report placeholder
+        blueprint
+      );
+      
+      // Transform IntelligenceReport to match expected format
+      const sections = Object.entries(intelligenceReport).map(([key, content]) => ({
+        agent_type: `${key}_analyst`,
+        content: content as string,
+        dimension: key
+      }));
+      
+      // Calculate word count from all sections
+      const totalWordCount = sections.reduce((total, section) => {
+        const wordCount = (section.content || '').split(' ').length;
+        return total + wordCount;
+      }, 0);
+      
+      console.log(`🧠 Intelligence analysis complete: ${totalWordCount} words from ${sections.length} analysts`);
+      
+      return {
+        sections,
+        total_word_count: totalWordCount,
+        structured_intelligence: intelligenceReport,
+        generation_metadata: {
+          analysts_used: sections.map(s => s.agent_type),
+          status: 'completed'
+        }
+      };
+      
+    } catch (error) {
+      console.error('❌ Intelligence analysis failed:', error);
+      // Return empty result to not break hermetic generation
+      return {
+        sections: [],
+        total_word_count: 0,
+        structured_intelligence: {},
+        generation_metadata: {
+          status: 'failed',
+          error: String(error)
+        }
+      };
+    }
+  }
+
+  /**
+   * Combine hermetic and intelligence results for full 120K+ word report
+   */
+  private combineHermeticAndIntelligence(hermeticResult: any, intelligenceResult: any): any {
+    console.log('🔄 Combining hermetic and intelligence analysis...');
+    
+    // Combine sections from both orchestrators
+    const combinedSections = [
+      ...hermeticResult.sections,
+      ...intelligenceResult.sections
+    ];
+    
+    // Combine structured intelligence
+    const combinedIntelligence = {
+      ...hermeticResult.structured_intelligence,
+      ...intelligenceResult.structured_intelligence
+    };
+    
+    // Calculate combined word count
+    const combinedWordCount = hermeticResult.total_word_count + intelligenceResult.total_word_count;
+    
+    console.log(`📊 Combined report: ${combinedWordCount} words (${hermeticResult.total_word_count} + ${intelligenceResult.total_word_count})`);
+    
+    return {
+      ...hermeticResult,
+      sections: combinedSections,
+      total_word_count: combinedWordCount,
+      structured_intelligence: combinedIntelligence,
+      intelligence_metadata: intelligenceResult.generation_metadata
+    };
   }
 
   private async buildHermeticReport(
@@ -422,28 +516,19 @@ Vibrational energy patterns: ${vibrationAnalysis.substring(0, 250)}...`;
           shadow_work_integration: reportContent?.shadow_work_integration || {
             shadow_patterns: '', integration_practices: '', transformation_roadmap: ''
           },
-          structured_intelligence: (data.structured_intelligence && typeof data.structured_intelligence === 'object' && !Array.isArray(data.structured_intelligence)) 
-            ? data.structured_intelligence as Record<string, any> 
-            : {},
           blueprint_signature: reportContent?.blueprint_signature || '',
           word_count: reportContent?.word_count || 0,
           generation_metadata: reportContent?.generation_metadata || {
             agents_used: [], total_processing_time: 0, hermetic_depth_score: 0, gates_analyzed: []
-          }
+          },
+          structured_intelligence: reportContent?.structured_intelligence
         }
       };
-      
-      console.log('📊 Report structure check:', {
-        hasGateAnalyses: !!structuredReport.report_content.gate_analyses,
-        hasSevenLaws: !!structuredReport.report_content.seven_laws_integration,
-        hasShadowWork: !!structuredReport.report_content.shadow_work_integration,
-        gateCount: structuredReport.report_content.gate_analyses ? Object.keys(structuredReport.report_content.gate_analyses).length : 0
-      });
-      
+
       return { success: true, report: structuredReport };
       
     } catch (error) {
-      console.error('❌ Service error fetching Hermetic report:', error);
+      console.error('❌ Error in getHermeticReport:', error);
       return { success: false, error: String(error) };
     }
   }
@@ -455,39 +540,44 @@ Vibrational energy patterns: ${vibrationAnalysis.substring(0, 250)}...`;
         .select('id')
         .eq('user_id', userId)
         .eq('blueprint_version', '2.0')
-        .limit(1);
+        .limit(1)
+        .maybeSingle();
 
       if (error) {
-        console.error('❌ Error checking for Hermetic report:', error);
+        console.error('❌ Error checking Hermetic report:', error);
         return false;
       }
 
-      return !!(data && data.length > 0);
-      
+      return !!data;
     } catch (error) {
-      console.error('❌ Service error checking Hermetic report:', error);
+      console.error('❌ Error in hasHermeticReport:', error);
       return false;
     }
   }
 
-  private async triggerIntelligenceExtraction(userId: string): Promise<void> {
+  /**
+   * Trigger structured intelligence extraction with option to force reprocessing
+   */
+  private async triggerIntelligenceExtraction(userId: string, forceReprocess: boolean = false): Promise<void> {
     try {
-      console.log('🧠 Triggering automatic intelligence extraction for user:', userId);
+      console.log(`🧠 Triggering intelligence extraction for user ${userId}, force: ${forceReprocess}`);
       
       const { data, error } = await supabase.functions.invoke('extract-hermetic-intelligence', {
-        body: { userId, forceReprocess: false }
+        body: { 
+          userId: userId,
+          forceReprocess: forceReprocess 
+        }
       });
 
       if (error) {
-        console.warn('⚠️ Intelligence extraction trigger failed (non-critical):', error);
+        console.warn('⚠️ Intelligence extraction failed:', error);
         return;
       }
 
       console.log('✅ Intelligence extraction triggered successfully:', data);
       
     } catch (error) {
-      console.warn('⚠️ Intelligence extraction trigger error (non-critical):', error);
-      // Don't throw - intelligence extraction failure should not break report generation
+      console.warn('⚠️ Intelligence extraction trigger error:', error);
     }
   }
 }
