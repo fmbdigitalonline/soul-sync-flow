@@ -76,17 +76,15 @@ Generate a comprehensive 3,000-4,000 word analysis covering:
 Write in a profound, insightful tone that reveals deep psychological patterns. Use "you" throughout. Connect insights to the hermetic analysis and previous intelligence findings.
 `;
 
-    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+    const { data, error } = await supabase.functions.invoke('identity-constructs-analyst', {
       body: {
-        prompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        max_tokens: 4000,
-        analyst_type: 'identity_constructs'
+        hermeticChunk,
+        previousInsights,
+        blueprintContext
       }
     });
     
-    if (error) throw new Error(`API call failed: ${error.message}`);
+    if (error) throw new Error(`Identity Constructs Analyst failed: ${error.message}`);
     return data.content;
   }
 }
@@ -144,17 +142,15 @@ Generate a comprehensive 3,000-4,000 word analysis covering:
 Connect all insights to the hermetic analysis and identity constructs findings. Write with depth and practical wisdom.
 `;
 
-    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+    const { data, error } = await supabase.functions.invoke('behavioral-triggers-analyst', {
       body: {
-        prompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        max_tokens: 4000,
-        analyst_type: 'behavioral_triggers'
+        hermeticChunk,
+        previousInsights,
+        blueprintContext
       }
     });
     
-    if (error) throw new Error(`API call failed: ${error.message}`);
+    if (error) throw new Error(`Behavioral Triggers Analyst failed: ${error.message}`);
     return data.content;
   }
 }
@@ -212,17 +208,15 @@ Generate a comprehensive 3,000-4,000 word analysis covering:
 Integrate insights from identity constructs and behavioral triggers analysis. Write with analytical depth and practical application focus.
 `;
 
-    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+    const { data, error } = await supabase.functions.invoke('execution-bias-analyst', {
       body: {
-        prompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        max_tokens: 4000,
-        analyst_type: 'execution_bias'
+        hermeticChunk,
+        previousInsights,
+        blueprintContext
       }
     });
     
-    if (error) throw new Error(`API call failed: ${error.message}`);
+    if (error) throw new Error(`Execution Bias Analyst failed: ${error.message}`);
     return data.content;
   }
 }
@@ -242,17 +236,15 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering belief contradictions, emotional double binds, and identity splits that create internal tension and resistance patterns.
 `;
 
-    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+    const { data, error } = await supabase.functions.invoke('internal-conflicts-analyst', {
       body: {
-        prompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        max_tokens: 4000,
-        analyst_type: 'internal_conflicts'
+        hermeticChunk,
+        previousInsights,
+        blueprintContext
       }
     });
     
-    if (error) throw new Error(`API call failed: ${error.message}`);
+    if (error) throw new Error(`Internal Conflicts Analyst failed: ${error.message}`);
     return data.content;
   }
 }
@@ -272,17 +264,15 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering philosophical frameworks, meaning-making patterns, spiritual beliefs, and integration practices.
 `;
 
-    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+    const { data, error } = await supabase.functions.invoke('spiritual-dimension-analyst', {
       body: {
-        prompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        max_tokens: 4000,
-        analyst_type: 'spiritual_dimension'
+        hermeticChunk,
+        previousInsights,
+        blueprintContext
       }
     });
     
-    if (error) throw new Error(`API call failed: ${error.message}`);
+    if (error) throw new Error(`Spiritual Dimension Analyst failed: ${error.message}`);
     return data.content;
   }
 }
@@ -302,17 +292,15 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering learning styles, feedback integration patterns, and adaptive capacity for growth and change.
 `;
 
-    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+    const { data, error } = await supabase.functions.invoke('adaptive-feedback-analyst', {
       body: {
-        prompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        max_tokens: 4000,
-        analyst_type: 'adaptive_feedback'
+        hermeticChunk,
+        previousInsights,
+        blueprintContext
       }
     });
     
-    if (error) throw new Error(`API call failed: ${error.message}`);
+    if (error) throw new Error(`Adaptive Feedback Analyst failed: ${error.message}`);
     return data.content;
   }
 }
@@ -332,17 +320,15 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering natural energy cycles, optimal performance windows, and chronobiological patterns.
 `;
 
-    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+    const { data, error } = await supabase.functions.invoke('temporal-biology-analyst', {
       body: {
-        prompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        max_tokens: 4000,
-        analyst_type: 'temporal_biology'
+        hermeticChunk,
+        previousInsights,
+        blueprintContext
       }
     });
     
-    if (error) throw new Error(`API call failed: ${error.message}`);
+    if (error) throw new Error(`Temporal Biology Analyst failed: ${error.message}`);
     return data.content;
   }
 }
@@ -362,17 +348,15 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering cognitive biases, perception filters, and metacognitive awareness patterns.
 `;
 
-    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+    const { data, error } = await supabase.functions.invoke('metacognitive-biases-analyst', {
       body: {
-        prompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        max_tokens: 4000,
-        analyst_type: 'metacognitive_biases'
+        hermeticChunk,
+        previousInsights,
+        blueprintContext
       }
     });
     
-    if (error) throw new Error(`API call failed: ${error.message}`);
+    if (error) throw new Error(`Metacognitive Biases Analyst failed: ${error.message}`);
     return data.content;
   }
 }
@@ -392,17 +376,15 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering attachment patterns, relationship dynamics, and authority archetype interactions.
 `;
 
-    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+    const { data, error } = await supabase.functions.invoke('attachment-style-analyst', {
       body: {
-        prompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        max_tokens: 4000,
-        analyst_type: 'attachment_style'
+        hermeticChunk,
+        previousInsights,
+        blueprintContext
       }
     });
     
-    if (error) throw new Error(`API call failed: ${error.message}`);
+    if (error) throw new Error(`Attachment Style Analyst failed: ${error.message}`);
     return data.content;
   }
 }
@@ -422,17 +404,15 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering goal orientation patterns, motivation structures, and achievement friction points.
 `;
 
-    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+    const { data, error } = await supabase.functions.invoke('goal-archetypes-analyst', {
       body: {
-        prompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        max_tokens: 4000,
-        analyst_type: 'goal_archetypes'
+        hermeticChunk,
+        previousInsights,
+        blueprintContext
       }
     });
     
-    if (error) throw new Error(`API call failed: ${error.message}`);
+    if (error) throw new Error(`Goal Archetypes Analyst failed: ${error.message}`);
     return data.content;
   }
 }
@@ -452,17 +432,15 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering crisis response patterns, resilience mechanisms, and stress recovery strategies.
 `;
 
-    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+    const { data, error } = await supabase.functions.invoke('crisis-handling-analyst', {
       body: {
-        prompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        max_tokens: 4000,
-        analyst_type: 'crisis_handling'
+        hermeticChunk,
+        previousInsights,
+        blueprintContext
       }
     });
     
-    if (error) throw new Error(`API call failed: ${error.message}`);
+    if (error) throw new Error(`Crisis Handling Analyst failed: ${error.message}`);
     return data.content;
   }
 }
@@ -482,17 +460,15 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering identity adaptability, narrative flexibility, and reinvention capacity.
 `;
 
-    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+    const { data, error } = await supabase.functions.invoke('identity-flexibility-analyst', {
       body: {
-        prompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        max_tokens: 4000,
-        analyst_type: 'identity_flexibility'
+        hermeticChunk,
+        previousInsights,
+        blueprintContext
       }
     });
     
-    if (error) throw new Error(`API call failed: ${error.message}`);
+    if (error) throw new Error(`Identity Flexibility Analyst failed: ${error.message}`);
     return data.content;
   }
 }
@@ -512,17 +488,15 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering signature metaphors, motivational language patterns, and emotional communication syntax.
 `;
 
-    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+    const { data, error } = await supabase.functions.invoke('linguistic-fingerprint-analyst', {
       body: {
-        prompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        max_tokens: 4000,
-        analyst_type: 'linguistic_fingerprint'
+        hermeticChunk,
+        previousInsights,
+        blueprintContext
       }
     });
     
-    if (error) throw new Error(`API call failed: ${error.message}`);
+    if (error) throw new Error(`Linguistic Fingerprint Analyst failed: ${error.message}`);
     return data.content;
   }
 }

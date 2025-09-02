@@ -142,5 +142,70 @@ verify_jwt = false
 cors = ["*"]
 methods = ["POST", "OPTIONS"]
 
+[functions.identity-constructs-analyst]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.behavioral-triggers-analyst]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.execution-bias-analyst]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.internal-conflicts-analyst]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.spiritual-dimension-analyst]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.adaptive-feedback-analyst]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.temporal-biology-analyst]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.metacognitive-biases-analyst]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.attachment-style-analyst]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.goal-archetypes-analyst]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.crisis-handling-analyst]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.identity-flexibility-analyst]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.linguistic-fingerprint-analyst]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
 [analytics]
 enabled = false
