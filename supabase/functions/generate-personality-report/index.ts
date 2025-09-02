@@ -94,6 +94,8 @@ class BehavioralTriggersAnalyst implements IntelligenceAnalyst {
   dimension = "behavioral_triggers";
 
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    console.log(`🔍 ${this.name}: Starting OpenAI API call...`);
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -114,8 +116,28 @@ Cover: Trigger Identification & Mapping, Automatic Response Systems, Trigger Tra
         max_tokens: 4000,
       }),
     });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ ${this.name}: OpenAI API error - Status: ${response.status}, Body: ${errorText}`);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+    
     const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error(`❌ ${this.name}: Invalid response structure:`, data);
+      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
+    }
+    
+    const content = data.choices[0].message.content;
+    
+    if (!content || content.length < 100) {
+      console.error(`❌ ${this.name}: Content too short or empty: "${content}"`);
+      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
+    }
+    
+    return content;
   }
 }
 
@@ -123,125 +145,440 @@ Cover: Trigger Identification & Mapping, Automatic Response Systems, Trigger Tra
 class ExecutionBiasAnalyst implements IntelligenceAnalyst {
   name = "Execution Bias Analyst";
   dimension = "execution_bias";
+  
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      method: 'POST', 
+      headers: { 
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
+        'Content-Type': 'application/json' 
+      },
       body: JSON.stringify({
-        model: 'gpt-4o', messages: [{ role: 'user', content: `As the Execution Bias Analyst, generate 3,000-4,000 words on decision-making patterns and action-taking biases. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights} BLUEPRINT: ${JSON.stringify(blueprintContext)}` }],
-        temperature: 0.7, max_tokens: 4000
+        model: 'gpt-4o', 
+        messages: [{ role: 'user', content: `As the Execution Bias Analyst, generate 3,000-4,000 words on decision-making patterns and action-taking biases. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights} BLUEPRINT: ${JSON.stringify(blueprintContext)}` }],
+        temperature: 0.7, 
+        max_tokens: 4000
       })
     });
-    return (await response.json()).choices[0].message.content;
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
+    }
+    
+    const content = data.choices[0].message.content;
+    
+    if (!content || content.length < 100) {
+      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
+    }
+    
+    return content;
   }
 }
 
 class SomaticMarkersAnalyst implements IntelligenceAnalyst {
-  name = "Somatic Markers Analyst"; dimension = "somatic_markers";
+  name = "Somatic Markers Analyst"; 
+  dimension = "somatic_markers";
+  
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Somatic Markers Analyst, generate 3,000-4,000 words on body wisdom and embodied intelligence patterns. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], temperature: 0.7, max_tokens: 4000 })
+      method: 'POST', 
+      headers: { 
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ 
+        model: 'gpt-4o', 
+        messages: [{ role: 'user', content: `As the Somatic Markers Analyst, generate 3,000-4,000 words on body wisdom and embodied intelligence patterns. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
+        temperature: 0.7, 
+        max_tokens: 4000 
+      })
     });
-    return (await response.json()).choices[0].message.content;
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
+    }
+    
+    const content = data.choices[0].message.content;
+    
+    if (!content || content.length < 100) {
+      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
+    }
+    
+    return content;
   }
 }
 
 class RelationalDynamicsAnalyst implements IntelligenceAnalyst {
-  name = "Relational Dynamics Analyst"; dimension = "relational_dynamics";
+  name = "Relational Dynamics Analyst"; 
+  dimension = "relational_dynamics";
+  
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Relational Dynamics Analyst, generate 3,000-4,000 words on relationship patterns and social intelligence.` }], temperature: 0.7, max_tokens: 4000 })
+      method: 'POST', 
+      headers: { 
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ 
+        model: 'gpt-4o', 
+        messages: [{ role: 'user', content: `As the Relational Dynamics Analyst, generate 3,000-4,000 words on relationship patterns and social intelligence. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
+        temperature: 0.7, 
+        max_tokens: 4000 
+      })
     });
-    return (await response.json()).choices[0].message.content;
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
+    }
+    
+    const content = data.choices[0].message.content;
+    
+    if (!content || content.length < 100) {
+      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
+    }
+    
+    return content;
   }
 }
 
 class ConsciousnessIntegrationAnalyst implements IntelligenceAnalyst {
-  name = "Consciousness Integration Analyst"; dimension = "consciousness_integration";
+  name = "Consciousness Integration Analyst"; 
+  dimension = "consciousness_integration";
+  
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Consciousness Integration Analyst, generate 3,000-4,000 words on consciousness development and integration patterns.` }], temperature: 0.7, max_tokens: 4000 })
+      method: 'POST', 
+      headers: { 
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ 
+        model: 'gpt-4o', 
+        messages: [{ role: 'user', content: `As the Consciousness Integration Analyst, generate 3,000-4,000 words on consciousness development and integration patterns. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
+        temperature: 0.7, 
+        max_tokens: 4000 
+      })
     });
-    return (await response.json()).choices[0].message.content;
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
+    }
+    
+    const content = data.choices[0].message.content;
+    
+    if (!content || content.length < 100) {
+      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
+    }
+    
+    return content;
   }
 }
 
 class ShadowWorkIntegrationAnalyst implements IntelligenceAnalyst {
-  name = "Shadow Work Integration Analyst"; dimension = "shadow_work_integration";
+  name = "Shadow Work Integration Analyst"; 
+  dimension = "shadow_work_integration";
+  
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Shadow Work Integration Analyst, generate 3,000-4,000 words on shadow patterns and integration practices.` }], temperature: 0.7, max_tokens: 4000 })
+      method: 'POST', 
+      headers: { 
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ 
+        model: 'gpt-4o', 
+        messages: [{ role: 'user', content: `As the Shadow Work Integration Analyst, generate 3,000-4,000 words on shadow patterns and integration practices. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
+        temperature: 0.7, 
+        max_tokens: 4000 
+      })
     });
-    return (await response.json()).choices[0].message.content;
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
+    }
+    
+    const content = data.choices[0].message.content;
+    
+    if (!content || content.length < 100) {
+      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
+    }
+    
+    return content;
   }
 }
 
 class HermeticFractalAnalyst implements IntelligenceAnalyst {
-  name = "Hermetic Fractal Analyst"; dimension = "hermetic_fractal_analysis";
+  name = "Hermetic Fractal Analyst"; 
+  dimension = "hermetic_fractal_analysis";
+  
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Hermetic Fractal Analyst, generate 3,000-4,000 words on fractal patterns and hermetic principles integration.` }], temperature: 0.7, max_tokens: 4000 })
+      method: 'POST', 
+      headers: { 
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ 
+        model: 'gpt-4o', 
+        messages: [{ role: 'user', content: `As the Hermetic Fractal Analyst, generate 3,000-4,000 words on fractal patterns and hermetic principles integration. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
+        temperature: 0.7, 
+        max_tokens: 4000 
+      })
     });
-    return (await response.json()).choices[0].message.content;
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
+    }
+    
+    const content = data.choices[0].message.content;
+    
+    if (!content || content.length < 100) {
+      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
+    }
+    
+    return content;
   }
 }
 
 class TransformationPhasesAnalyst implements IntelligenceAnalyst {
-  name = "Transformation Phases Analyst"; dimension = "transformation_phases";
+  name = "Transformation Phases Analyst"; 
+  dimension = "transformation_phases";
+  
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Transformation Phases Analyst, generate 3,000-4,000 words on transformation stages and evolution phases.` }], temperature: 0.7, max_tokens: 4000 })
+      method: 'POST', 
+      headers: { 
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ 
+        model: 'gpt-4o', 
+        messages: [{ role: 'user', content: `As the Transformation Phases Analyst, generate 3,000-4,000 words on transformation stages and evolution phases. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
+        temperature: 0.7, 
+        max_tokens: 4000 
+      })
     });
-    return (await response.json()).choices[0].message.content;
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
+    }
+    
+    const content = data.choices[0].message.content;
+    
+    if (!content || content.length < 100) {
+      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
+    }
+    
+    return content;
   }
 }
 
 class PolarityIntegrationAnalyst implements IntelligenceAnalyst {
-  name = "Polarity Integration Analyst"; dimension = "polarity_integration";
+  name = "Polarity Integration Analyst"; 
+  dimension = "polarity_integration";
+  
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Polarity Integration Analyst, generate 3,000-4,000 words on polarity integration and balance patterns.` }], temperature: 0.7, max_tokens: 4000 })
+      method: 'POST', 
+      headers: { 
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ 
+        model: 'gpt-4o', 
+        messages: [{ role: 'user', content: `As the Polarity Integration Analyst, generate 3,000-4,000 words on polarity integration and balance patterns. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
+        temperature: 0.7, 
+        max_tokens: 4000 
+      })
     });
-    return (await response.json()).choices[0].message.content;
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
+    }
+    
+    const content = data.choices[0].message.content;
+    
+    if (!content || content.length < 100) {
+      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
+    }
+    
+    return content;
   }
 }
 
 class GateAnalysisAnalyst implements IntelligenceAnalyst {
-  name = "Gate Analysis Analyst"; dimension = "gate_analysis";
+  name = "Gate Analysis Analyst"; 
+  dimension = "gate_analysis";
+  
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Gate Analysis Analyst, generate 3,000-4,000 words on Human Design gates and their deep psychological significance.` }], temperature: 0.7, max_tokens: 4000 })
+      method: 'POST', 
+      headers: { 
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ 
+        model: 'gpt-4o', 
+        messages: [{ role: 'user', content: `As the Gate Analysis Analyst, generate 3,000-4,000 words on Human Design gates and their deep psychological significance. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
+        temperature: 0.7, 
+        max_tokens: 4000 
+      })
     });
-    return (await response.json()).choices[0].message.content;
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
+    }
+    
+    const content = data.choices[0].message.content;
+    
+    if (!content || content.length < 100) {
+      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
+    }
+    
+    return content;
   }
 }
 
 class SpiritualPsychologyAnalyst implements IntelligenceAnalyst {
-  name = "Spiritual Psychology Analyst"; dimension = "spiritual_psychology";
+  name = "Spiritual Psychology Analyst"; 
+  dimension = "spiritual_psychology";
+  
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Spiritual Psychology Analyst, generate 3,000-4,000 words on spiritual development and psychological integration.` }], temperature: 0.7, max_tokens: 4000 })
+      method: 'POST', 
+      headers: { 
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ 
+        model: 'gpt-4o', 
+        messages: [{ role: 'user', content: `As the Spiritual Psychology Analyst, generate 3,000-4,000 words on spiritual development and psychological integration. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
+        temperature: 0.7, 
+        max_tokens: 4000 
+      })
     });
-    return (await response.json()).choices[0].message.content;
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
+    }
+    
+    const content = data.choices[0].message.content;
+    
+    if (!content || content.length < 100) {
+      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
+    }
+    
+    return content;
   }
 }
 
 class MetamorphosisPatternsAnalyst implements IntelligenceAnalyst {
-  name = "Metamorphosis Patterns Analyst"; dimension = "metamorphosis_patterns";
+  name = "Metamorphosis Patterns Analyst"; 
+  dimension = "metamorphosis_patterns";
+  
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Metamorphosis Patterns Analyst, generate 3,000-4,000 words on transformation patterns and evolutionary development.` }], temperature: 0.7, max_tokens: 4000 })
+      method: 'POST', 
+      headers: { 
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ 
+        model: 'gpt-4o', 
+        messages: [{ role: 'user', content: `As the Metamorphosis Patterns Analyst, generate 3,000-4,000 words on transformation patterns and evolutionary development. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
+        temperature: 0.7, 
+        max_tokens: 4000 
+      })
     });
-    return (await response.json()).choices[0].message.content;
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
+    }
+    
+    const content = data.choices[0].message.content;
+    
+    if (!content || content.length < 100) {
+      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
+    }
+    
+    return content;
   }
 }
 
