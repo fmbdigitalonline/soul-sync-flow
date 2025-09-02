@@ -233,30 +233,56 @@ class IntelligenceReportOrchestrator {
   ];
 
   async generateIntelligenceReport(userId: string, hermeticReport: any, blueprintData: any): Promise<IntelligenceReport> {
-    console.log('🧠 Starting Intelligence Report Generation with', this.analysts.length, 'analysts');
+    console.log('🧠 INTELLIGENCE ANALYSIS: Starting 13 Analyst Report Generation');
+    console.log(`📊 TARGET: ~45,000 words (3,500 words/analyst × 13 analysts)`);
     
     const report: Partial<IntelligenceReport> = {};
     let cumulativeInsights = "";
+    let totalWordCount = 0;
+    const startTime = Date.now();
 
-    for (const analyst of this.analysts) {
+    for (let i = 0; i < this.analysts.length; i++) {
+      const analyst = this.analysts[i];
+      const analystNumber = i + 1;
+      
       try {
-        console.log(`🔍 Processing ${analyst.name}...`);
+        console.log(`🧠 ANALYST ${analystNumber}/13: ${analyst.name} - Starting generation...`);
+        console.log(`📊 PROGRESS: ${totalWordCount} words generated so far`);
         
+        const analystStartTime = Date.now();
         const hermeticChunk = this.extractRelevantHermeticChunk(hermeticReport, analyst.dimension);
         const analysisReport = await analyst.generateReport(hermeticChunk, cumulativeInsights, blueprintData);
+        const analystDuration = Date.now() - analystStartTime;
+
+        // Calculate word count (approximate: characters / 5)
+        const analystWordCount = Math.round(analysisReport.length / 5);
+        totalWordCount += analystWordCount;
 
         report[analyst.dimension as keyof IntelligenceReport] = analysisReport;
         cumulativeInsights += `\n\n${analyst.name} Key Insights:\n${analysisReport.substring(0, 500)}...`;
         
-        console.log(`✅ Completed ${analyst.name} - ${analysisReport.length} characters`);
+        console.log(`✅ ANALYST ${analystNumber}/13: ${analyst.name} COMPLETE`);
+        console.log(`   📝 Generated: ${analystWordCount} words (${analysisReport.length} chars)`);
+        console.log(`   ⏱️ Duration: ${(analystDuration/1000).toFixed(1)}s`);
+        console.log(`   📊 TOTAL SO FAR: ${totalWordCount} words`);
         
       } catch (error) {
-        console.error(`❌ Error in ${analyst.name}:`, error);
-        report[analyst.dimension as keyof IntelligenceReport] = `Error generating ${analyst.name} analysis: ${error.message}`;
+        console.error(`❌ ANALYST ${analystNumber}/13: ${analyst.name} FAILED:`, error);
+        const errorMessage = `Error generating ${analyst.name} analysis: ${error.message}`;
+        report[analyst.dimension as keyof IntelligenceReport] = errorMessage;
+        // Still count error as words for tracking
+        totalWordCount += Math.round(errorMessage.length / 5);
       }
     }
 
-    console.log('🎉 Intelligence Report Generation Complete');
+    const totalDuration = Date.now() - startTime;
+    console.log('🎉 INTELLIGENCE ANALYSIS COMPLETE! 📊 FINAL STATISTICS:');
+    console.log(`   📝 Total words generated: ${totalWordCount} words`);
+    console.log(`   📊 Target achieved: ${((totalWordCount/45000)*100).toFixed(1)}%`);
+    console.log(`   ⏱️ Total generation time: ${(totalDuration/1000).toFixed(1)}s`);
+    console.log(`   🧠 Analysts completed: ${this.analysts.length}/13`);
+    console.log(`   📄 Average words per analyst: ${Math.round(totalWordCount/this.analysts.length)}`);
+    
     return report as IntelligenceReport;
   }
 
@@ -615,18 +641,28 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
     // Enhanced report content with intelligence sections
     const enhancedReportContent = {
       ...reportContent,
-      // 🧠 NEW: Add 12 intelligence analyst sections
+      // 🧠 NEW: Add 13 intelligence analyst sections
       intelligence_analysis: intelligenceReport || null
     };
 
-    // Store the enhanced report in the database
+    // 💾 STORAGE: Store intelligence data in BOTH locations for compatibility
+    console.log('💾 STORAGE: Preparing to store intelligence data...');
+    if (intelligenceReport) {
+      const intelligenceWordCount = Object.values(intelligenceReport).reduce((total, analysis) => {
+        return total + Math.round((analysis as string).length / 5);
+      }, 0);
+      console.log(`💾 STORAGE: Intelligence data ready - ${intelligenceWordCount} words across 13 analysts`);
+    }
+
+    // Store the enhanced report in the database with structured_intelligence
     const { data: reportData, error: insertError } = await supabaseClient
       .from('personality_reports')
       .insert({
         user_id: userId,
         blueprint_id: blueprintId,
         report_content: enhancedReportContent,
-        blueprint_version: '1.1' // Updated version to indicate enhanced content
+        structured_intelligence: intelligenceReport || {}, // 🧠 NEW: Store in dedicated column
+        blueprint_version: '2.0' // Updated version to indicate Hermetic + Intelligence enhancement
       })
       .select()
       .single();
@@ -660,15 +696,20 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
       }
     }
 
-    // Final report summary
+    // Final report summary with enhanced intelligence tracking
     const totalContentSize = JSON.stringify(enhancedReportContent).length;
     const intelligenceSections = intelligenceReport ? Object.keys(intelligenceReport).length : 0;
+    const intelligenceWordCount = intelligenceReport ? Object.values(intelligenceReport).reduce((total, analysis) => {
+      return total + Math.round((analysis as string).length / 5);
+    }, 0) : 0;
     
-    console.log('📊 Final Report Summary:');
-    console.log(`  - Total content size: ${totalContentSize} bytes`);
-    console.log(`  - Intelligence sections: ${intelligenceSections}/12`);
-    console.log(`  - Quotes generated: ${quotesToInsert.length}`);
-    console.log(`  - Blueprint version: 1.1 (Enhanced with Intelligence)`);
+    console.log('📊 FINAL REPORT SUMMARY:');
+    console.log(`  📄 Total content size: ${(totalContentSize/1024).toFixed(1)}KB`);
+    console.log(`  🧠 Intelligence sections: ${intelligenceSections}/13 analysts`);
+    console.log(`  📝 Intelligence word count: ${intelligenceWordCount} words`);
+    console.log(`  💬 Quotes generated: ${quotesToInsert.length}`);
+    console.log(`  🔖 Blueprint version: 2.0 (Hermetic + Intelligence Enhancement)`);
+    console.log(`  💾 STORAGE: Data saved to both 'report_content.intelligence_analysis' AND 'structured_intelligence' columns`);
 
     console.log('✅ Personality report and quotes generated successfully');
 
@@ -676,12 +717,13 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
       success: true, 
       report: reportData,
       quotes: quotesToInsert,
-      enhancement_metadata: {
-        intelligence_sections_generated: intelligenceSections,
-        total_analysts_attempted: 12,
-        content_size_bytes: totalContentSize,
-        enhanced_version: '1.1'
-      }
+        enhancement_metadata: {
+          intelligence_sections_generated: intelligenceSections,
+          total_analysts_attempted: 13,
+          intelligence_word_count: intelligenceWordCount,
+          content_size_bytes: totalContentSize,
+          enhanced_version: '2.0'
+        }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

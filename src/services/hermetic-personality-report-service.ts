@@ -432,9 +432,7 @@ Vibrational energy patterns: ${vibrationAnalysis.substring(0, 250)}...`;
           shadow_work_integration: reportContent?.shadow_work_integration || {
             shadow_patterns: '', integration_practices: '', transformation_roadmap: ''
           },
-          structured_intelligence: (data.structured_intelligence && typeof data.structured_intelligence === 'object' && !Array.isArray(data.structured_intelligence)) 
-            ? data.structured_intelligence as Record<string, any> 
-            : {},
+          structured_intelligence: this.extractStructuredIntelligence(data, reportContent),
           blueprint_signature: reportContent?.blueprint_signature || '',
           word_count: reportContent?.word_count || 0,
           generation_metadata: reportContent?.generation_metadata || {
@@ -480,6 +478,40 @@ Vibrational energy patterns: ${vibrationAnalysis.substring(0, 250)}...`;
     }
   }
 
+  /**
+   * Extract structured intelligence from both possible locations
+   */
+  private extractStructuredIntelligence(data: any, reportContent: any): Record<string, any> {
+    console.log('🔍 HERMETIC SERVICE: Extracting structured intelligence...');
+    
+    // Try the new structured_intelligence column first
+    if (data.structured_intelligence && typeof data.structured_intelligence === 'object' && !Array.isArray(data.structured_intelligence)) {
+      const intelligenceData = data.structured_intelligence as Record<string, any>;
+      const wordCount = Object.values(intelligenceData).reduce((total, analysis) => {
+        return total + Math.round((String(analysis).length || 0) / 5);
+      }, 0);
+      console.log(`✅ HERMETIC SERVICE: Found structured_intelligence column - ${wordCount} words from ${Object.keys(intelligenceData).length} analysts`);
+      return intelligenceData;
+    }
+    
+    // Fallback to report_content.intelligence_analysis for backward compatibility
+    if (reportContent?.intelligence_analysis && typeof reportContent.intelligence_analysis === 'object') {
+      const intelligenceData = reportContent.intelligence_analysis as Record<string, any>;
+      const wordCount = Object.values(intelligenceData).reduce((total, analysis) => {
+        return total + Math.round((String(analysis).length || 0) / 5);
+      }, 0);
+      console.log(`📊 HERMETIC SERVICE: Found intelligence_analysis in report_content - ${wordCount} words from ${Object.keys(intelligenceData).length} analysts`);
+      console.log(`⚠️ HERMETIC SERVICE: Using fallback location - consider regenerating report for optimal performance`);
+      return intelligenceData;
+    }
+    
+    console.log('⚠️ HERMETIC SERVICE: No structured intelligence found in either location');
+    return {};
+  }
+
+  /**
+   * Triggers background intelligence extraction for the user's blueprint
+   */
   private async triggerIntelligenceExtraction(userId: string): Promise<void> {
     try {
       console.log('🧠 Triggering automatic intelligence extraction for user:', userId);
