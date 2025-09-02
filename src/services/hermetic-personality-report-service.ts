@@ -54,21 +54,7 @@ export interface HermeticPersonalityReport {
       hermetic_depth_score: number;
       gates_analyzed: number[]; // NEW: Track which gates were analyzed
     };
-    structured_intelligence?: {
-      identity_constructs: any;
-      behavioral_triggers: any;
-      execution_bias: any;
-      internal_conflicts: any;
-      spiritual_dimension: any;
-      adaptive_feedback: any;
-      temporal_biology: any;
-      metacognitive_biases: any;
-      attachment_style: any;
-      goal_archetypes: any;
-      crisis_handling: any;
-      identity_flexibility: any;
-      linguistic_fingerprint: any;
-    };
+    structured_intelligence?: Record<string, any>;
   };
   generated_at: string;
   blueprint_version: string;
@@ -397,7 +383,7 @@ Vibrational energy patterns: ${vibrationAnalysis.substring(0, 250)}...`;
       
       const { data, error } = await supabase
         .from('personality_reports')
-        .select('*')
+        .select('*, structured_intelligence')
         .eq('user_id', userId)
         .eq('blueprint_version', '2.0') // Hermetic reports use version 2.0
         .order('generated_at', { ascending: false })
@@ -446,6 +432,9 @@ Vibrational energy patterns: ${vibrationAnalysis.substring(0, 250)}...`;
           shadow_work_integration: reportContent?.shadow_work_integration || {
             shadow_patterns: '', integration_practices: '', transformation_roadmap: ''
           },
+          structured_intelligence: (data.structured_intelligence && typeof data.structured_intelligence === 'object' && !Array.isArray(data.structured_intelligence)) 
+            ? data.structured_intelligence as Record<string, any> 
+            : {},
           blueprint_signature: reportContent?.blueprint_signature || '',
           word_count: reportContent?.word_count || 0,
           generation_metadata: reportContent?.generation_metadata || {

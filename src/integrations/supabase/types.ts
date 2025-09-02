@@ -2678,6 +2678,7 @@ export type Database = {
           generated_at: string
           id: string
           report_content: Json
+          structured_intelligence: Json | null
           updated_at: string
           user_id: string
         }
@@ -2688,6 +2689,7 @@ export type Database = {
           generated_at?: string
           id?: string
           report_content?: Json
+          structured_intelligence?: Json | null
           updated_at?: string
           user_id: string
         }
@@ -2698,6 +2700,7 @@ export type Database = {
           generated_at?: string
           id?: string
           report_content?: Json
+          structured_intelligence?: Json | null
           updated_at?: string
           user_id?: string
         }
