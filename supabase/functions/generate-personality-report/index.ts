@@ -33,15 +33,13 @@ class IdentityConstructsAnalyst implements IntelligenceAnalyst {
   dimension = "identity_constructs";
 
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: `
+    console.log(`🔍 ${this.name}: Starting OpenAI API call...`);
+    console.log(`   API Key present: ${!!Deno.env.get('OPENAI_API_KEY')}`);
+    console.log(`   Input lengths: hermetic=${hermeticChunk.length}, insights=${previousInsights.length}`);
+    
+    const requestBody = {
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: `
 As the Identity Constructs Analyst, generate a comprehensive 3,000-4,000 word analysis of identity formation patterns from:
 
 HERMETIC REPORT: ${hermeticChunk}
@@ -49,12 +47,45 @@ PREVIOUS INSIGHTS: ${previousInsights}
 BLUEPRINT: MBTI: ${blueprintContext.cognition_mbti?.type}, HD: ${blueprintContext.energy_strategy_human_design?.type}, Life Path: ${blueprintContext.values_life_path?.lifePathNumber}
 
 Cover: Core Identity Architecture, Identity Defense Mechanisms, Identity Evolution Patterns, Identity Integration Opportunities, and Practical Recommendations.` }],
-        temperature: 0.7,
-        max_tokens: 4000,
-      }),
+      temperature: 0.7,
+      max_tokens: 4000,
+    };
+    
+    console.log(`🌐 ${this.name}: Making fetch request to OpenAI...`);
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
     });
+    
+    console.log(`📡 ${this.name}: Response status: ${response.status} ${response.statusText}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ ${this.name}: OpenAI API error - Status: ${response.status}, Body: ${errorText}`);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+    
     const data = await response.json();
-    return data.choices[0].message.content;
+    console.log(`✅ ${this.name}: Response received, choices length: ${data.choices?.length || 0}`);
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error(`❌ ${this.name}: Invalid response structure:`, data);
+      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
+    }
+    
+    const content = data.choices[0].message.content;
+    console.log(`📝 ${this.name}: Generated content length: ${content?.length || 0} chars`);
+    
+    if (!content || content.length < 100) {
+      console.error(`❌ ${this.name}: Content too short or empty: "${content}"`);
+      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
+    }
+    
+    return content;
   }
 }
 
@@ -235,28 +266,48 @@ class IntelligenceReportOrchestrator {
   async generateIntelligenceReport(userId: string, hermeticReport: any, blueprintData: any): Promise<IntelligenceReport> {
     console.log('🧠 INTELLIGENCE ANALYSIS: Starting 13 Analyst Report Generation');
     console.log(`📊 TARGET: ~45,000 words (3,500 words/analyst × 13 analysts)`);
+    console.log('🔧 DIAGNOSTIC MODE: Comprehensive logging enabled for root cause analysis');
     
     const report: Partial<IntelligenceReport> = {};
     let cumulativeInsights = "";
     let totalWordCount = 0;
     const startTime = Date.now();
+    const failures: string[] = [];
 
     for (let i = 0; i < this.analysts.length; i++) {
       const analyst = this.analysts[i];
       const analystNumber = i + 1;
       
+      console.log(`\n🧠 ANALYST ${analystNumber}/13: ${analyst.name}`);
+      console.log(`📍 STARTING: ${analyst.dimension} analysis`);
+      console.log(`📊 PROGRESS: ${totalWordCount} words generated so far`);
+      console.log(`⏱️ TIMESTAMP: ${new Date().toISOString()}`);
+      
+      const analystStartTime = Date.now();
+      
       try {
-        console.log(`🧠 ANALYST ${analystNumber}/13: ${analyst.name} - Starting generation...`);
-        console.log(`📊 PROGRESS: ${totalWordCount} words generated so far`);
-        
-        const analystStartTime = Date.now();
+        // 🔍 DIAGNOSTIC: Log input data
         const hermeticChunk = this.extractRelevantHermeticChunk(hermeticReport, analyst.dimension);
+        console.log(`📝 INPUT DATA FOR ${analyst.name}:`);
+        console.log(`   Hermetic chunk length: ${hermeticChunk.length} chars`);
+        console.log(`   Blueprint data keys: ${Object.keys(blueprintData).join(', ')}`);
+        console.log(`   Cumulative insights length: ${cumulativeInsights.length} chars`);
+        
+        // 🔍 DIAGNOSTIC: Log API call details
+        console.log(`🌐 MAKING OpenAI API CALL for ${analyst.name}...`);
         const analysisReport = await analyst.generateReport(hermeticChunk, cumulativeInsights, blueprintData);
+        console.log(`✅ OpenAI API RESPONSE received for ${analyst.name}`);
+        
         const analystDuration = Date.now() - analystStartTime;
-
-        // Calculate word count (approximate: characters / 5)
         const analystWordCount = Math.round(analysisReport.length / 5);
         totalWordCount += analystWordCount;
+
+        // 🔍 DIAGNOSTIC: Validate response content
+        console.log(`📊 RESPONSE VALIDATION for ${analyst.name}:`);
+        console.log(`   Response length: ${analysisReport.length} chars`);
+        console.log(`   Word count: ${analystWordCount} words`);
+        console.log(`   Contains actual content: ${analysisReport.length > 100 ? '✅' : '❌'}`);
+        console.log(`   Response preview: "${analysisReport.substring(0, 100)}..."`);
 
         report[analyst.dimension as keyof IntelligenceReport] = analysisReport;
         cumulativeInsights += `\n\n${analyst.name} Key Insights:\n${analysisReport.substring(0, 500)}...`;
@@ -267,11 +318,19 @@ class IntelligenceReportOrchestrator {
         console.log(`   📊 TOTAL SO FAR: ${totalWordCount} words`);
         
       } catch (error) {
-        console.error(`❌ ANALYST ${analystNumber}/13: ${analyst.name} FAILED:`, error);
-        const errorMessage = `Error generating ${analyst.name} analysis: ${error.message}`;
-        report[analyst.dimension as keyof IntelligenceReport] = errorMessage;
-        // Still count error as words for tracking
-        totalWordCount += Math.round(errorMessage.length / 5);
+        const analystDuration = Date.now() - analystStartTime;
+        console.error(`\n❌❌❌ ANALYST ${analystNumber}/13: ${analyst.name} FAILED ❌❌❌`);
+        console.error(`🔍 ERROR DETAILS:`);
+        console.error(`   Error type: ${error.constructor.name}`);
+        console.error(`   Error message: ${error.message}`);
+        console.error(`   Duration before failure: ${(analystDuration/1000).toFixed(1)}s`);
+        console.error(`   Full error:`, error);
+        
+        // 🚨 NO SILENT FAILURES: Track and expose all errors
+        failures.push(`${analyst.name}: ${error.message}`);
+        
+        // 🚨 FAIL TRANSPARENTLY: Don't continue with broken data
+        throw new Error(`Intelligence generation failed at analyst ${analystNumber}/13 (${analyst.name}): ${error.message}. Total failures: ${failures.length}`);
       }
     }
 
@@ -622,28 +681,40 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
     
     console.log('💾 Storing report with blueprint_id:', blueprintId);
 
-    // 🧠 INTEGRATION: Generate Intelligence Report with 12 Specialists
-    console.log('🧠 Generating comprehensive intelligence analysis with 12 specialists...');
+    // 🧠 CRITICAL: Generate Intelligence Report with 13 Specialists
+    console.log('🧠 GENERATING INTELLIGENCE ANALYSIS: Starting 13 specialist analysis...');
+    console.log('🎯 TARGET: ~45,000 words from 13 analysts (~3,500 words each)');
+    console.log('📊 VALIDATION: Must complete ALL 13 analysts or FAIL transparently');
+    
     const orchestrator = new IntelligenceReportOrchestrator();
     
-    let intelligenceReport: IntelligenceReport | null = null;
-    try {
-      intelligenceReport = await orchestrator.generateIntelligenceReport(
-        userId,
-        reportContent,
-        blueprint
-      );
-      console.log('✅ Intelligence report generated successfully');
-    } catch (error) {
-      console.error('⚠️ Intelligence report generation failed, continuing with basic report:', error);
-    }
+    // 🚨 REMOVED SILENT FALLBACK: Let intelligence generation fail transparently
+    // This will expose the actual OpenAI API errors for proper diagnosis
+    console.log('🔧 NO FALLBACKS: Intelligence generation will fail transparently if any analyst fails');
+    
+    const intelligenceReport = await orchestrator.generateIntelligenceReport(
+      userId,
+      reportContent,
+      blueprint
+    );
+    
+    console.log('✅ INTELLIGENCE ANALYSIS COMPLETE: All 13 analysts succeeded');
+    console.log(`📊 Generated ${Object.keys(intelligenceReport).length}/13 analyst reports`);
 
     // Enhanced report content with intelligence sections
+    console.log('📊 BUILDING ENHANCED REPORT CONTENT...');
+    console.log(`   Intelligence report sections: ${intelligenceReport ? Object.keys(intelligenceReport).length : 0}/13`);
+    
     const enhancedReportContent = {
       ...reportContent,
-      // 🧠 NEW: Add 13 intelligence analyst sections
-      intelligence_analysis: intelligenceReport || null
+      // 🧠 CRITICAL: Add 13 intelligence analyst sections (NO NULL FALLBACK)
+      intelligence_analysis: intelligenceReport
     };
+    
+    console.log('✅ Enhanced report content built successfully');
+    console.log(`   Total content keys: ${Object.keys(enhancedReportContent).length}`);
+    console.log(`   Intelligence analysis present: ${!!enhancedReportContent.intelligence_analysis}`);
+    console.log(`   Intelligence sections: ${enhancedReportContent.intelligence_analysis ? Object.keys(enhancedReportContent.intelligence_analysis).join(', ') : 'NONE'}`);
 
     // 💾 STORAGE: Store intelligence data in BOTH locations for compatibility
     console.log('💾 STORAGE: Preparing to store intelligence data...');
