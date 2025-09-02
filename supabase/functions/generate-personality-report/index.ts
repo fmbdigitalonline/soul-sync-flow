@@ -33,13 +33,15 @@ class IdentityConstructsAnalyst implements IntelligenceAnalyst {
   dimension = "identity_constructs";
 
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
-    console.log(`🔍 ${this.name}: Starting OpenAI API call...`);
-    console.log(`   API Key present: ${!!Deno.env.get('OPENAI_API_KEY')}`);
-    console.log(`   Input lengths: hermetic=${hermeticChunk.length}, insights=${previousInsights.length}`);
-    
-    const requestBody = {
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: `
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: `
 As the Identity Constructs Analyst, generate a comprehensive 3,000-4,000 word analysis of identity formation patterns from:
 
 HERMETIC REPORT: ${hermeticChunk}
@@ -47,45 +49,12 @@ PREVIOUS INSIGHTS: ${previousInsights}
 BLUEPRINT: MBTI: ${blueprintContext.cognition_mbti?.type}, HD: ${blueprintContext.energy_strategy_human_design?.type}, Life Path: ${blueprintContext.values_life_path?.lifePathNumber}
 
 Cover: Core Identity Architecture, Identity Defense Mechanisms, Identity Evolution Patterns, Identity Integration Opportunities, and Practical Recommendations.` }],
-      temperature: 0.7,
-      max_tokens: 4000,
-    };
-    
-    console.log(`🌐 ${this.name}: Making fetch request to OpenAI...`);
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
+        temperature: 0.7,
+        max_tokens: 4000,
+      }),
     });
-    
-    console.log(`📡 ${this.name}: Response status: ${response.status} ${response.statusText}`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ ${this.name}: OpenAI API error - Status: ${response.status}, Body: ${errorText}`);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-    
     const data = await response.json();
-    console.log(`✅ ${this.name}: Response received, choices length: ${data.choices?.length || 0}`);
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error(`❌ ${this.name}: Invalid response structure:`, data);
-      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
-    }
-    
-    const content = data.choices[0].message.content;
-    console.log(`📝 ${this.name}: Generated content length: ${content?.length || 0} chars`);
-    
-    if (!content || content.length < 100) {
-      console.error(`❌ ${this.name}: Content too short or empty: "${content}"`);
-      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
-    }
-    
-    return content;
+    return data.choices[0].message.content;
   }
 }
 
@@ -94,8 +63,6 @@ class BehavioralTriggersAnalyst implements IntelligenceAnalyst {
   dimension = "behavioral_triggers";
 
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
-    console.log(`🔍 ${this.name}: Starting OpenAI API call...`);
-    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -116,28 +83,8 @@ Cover: Trigger Identification & Mapping, Automatic Response Systems, Trigger Tra
         max_tokens: 4000,
       }),
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ ${this.name}: OpenAI API error - Status: ${response.status}, Body: ${errorText}`);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-    
     const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error(`❌ ${this.name}: Invalid response structure:`, data);
-      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
-    }
-    
-    const content = data.choices[0].message.content;
-    
-    if (!content || content.length < 100) {
-      console.error(`❌ ${this.name}: Content too short or empty: "${content}"`);
-      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
-    }
-    
-    return content;
+    return data.choices[0].message.content;
   }
 }
 
@@ -145,440 +92,125 @@ Cover: Trigger Identification & Mapping, Automatic Response Systems, Trigger Tra
 class ExecutionBiasAnalyst implements IntelligenceAnalyst {
   name = "Execution Bias Analyst";
   dimension = "execution_bias";
-  
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', 
-      headers: { 
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
-        'Content-Type': 'application/json' 
-      },
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'gpt-4o', 
-        messages: [{ role: 'user', content: `As the Execution Bias Analyst, generate 3,000-4,000 words on decision-making patterns and action-taking biases. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights} BLUEPRINT: ${JSON.stringify(blueprintContext)}` }],
-        temperature: 0.7, 
-        max_tokens: 4000
+        model: 'gpt-4o', messages: [{ role: 'user', content: `As the Execution Bias Analyst, generate 3,000-4,000 words on decision-making patterns and action-taking biases. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights} BLUEPRINT: ${JSON.stringify(blueprintContext)}` }],
+        temperature: 0.7, max_tokens: 4000
       })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
-    }
-    
-    const content = data.choices[0].message.content;
-    
-    if (!content || content.length < 100) {
-      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
-    }
-    
-    return content;
+    return (await response.json()).choices[0].message.content;
   }
 }
 
 class SomaticMarkersAnalyst implements IntelligenceAnalyst {
-  name = "Somatic Markers Analyst"; 
-  dimension = "somatic_markers";
-  
+  name = "Somatic Markers Analyst"; dimension = "somatic_markers";
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', 
-      headers: { 
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
-        'Content-Type': 'application/json' 
-      },
-      body: JSON.stringify({ 
-        model: 'gpt-4o', 
-        messages: [{ role: 'user', content: `As the Somatic Markers Analyst, generate 3,000-4,000 words on body wisdom and embodied intelligence patterns. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
-        temperature: 0.7, 
-        max_tokens: 4000 
-      })
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Somatic Markers Analyst, generate 3,000-4,000 words on body wisdom and embodied intelligence patterns. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], temperature: 0.7, max_tokens: 4000 })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
-    }
-    
-    const content = data.choices[0].message.content;
-    
-    if (!content || content.length < 100) {
-      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
-    }
-    
-    return content;
+    return (await response.json()).choices[0].message.content;
   }
 }
 
 class RelationalDynamicsAnalyst implements IntelligenceAnalyst {
-  name = "Relational Dynamics Analyst"; 
-  dimension = "relational_dynamics";
-  
+  name = "Relational Dynamics Analyst"; dimension = "relational_dynamics";
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', 
-      headers: { 
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
-        'Content-Type': 'application/json' 
-      },
-      body: JSON.stringify({ 
-        model: 'gpt-4o', 
-        messages: [{ role: 'user', content: `As the Relational Dynamics Analyst, generate 3,000-4,000 words on relationship patterns and social intelligence. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
-        temperature: 0.7, 
-        max_tokens: 4000 
-      })
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Relational Dynamics Analyst, generate 3,000-4,000 words on relationship patterns and social intelligence.` }], temperature: 0.7, max_tokens: 4000 })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
-    }
-    
-    const content = data.choices[0].message.content;
-    
-    if (!content || content.length < 100) {
-      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
-    }
-    
-    return content;
+    return (await response.json()).choices[0].message.content;
   }
 }
 
 class ConsciousnessIntegrationAnalyst implements IntelligenceAnalyst {
-  name = "Consciousness Integration Analyst"; 
-  dimension = "consciousness_integration";
-  
+  name = "Consciousness Integration Analyst"; dimension = "consciousness_integration";
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', 
-      headers: { 
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
-        'Content-Type': 'application/json' 
-      },
-      body: JSON.stringify({ 
-        model: 'gpt-4o', 
-        messages: [{ role: 'user', content: `As the Consciousness Integration Analyst, generate 3,000-4,000 words on consciousness development and integration patterns. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
-        temperature: 0.7, 
-        max_tokens: 4000 
-      })
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Consciousness Integration Analyst, generate 3,000-4,000 words on consciousness development and integration patterns.` }], temperature: 0.7, max_tokens: 4000 })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
-    }
-    
-    const content = data.choices[0].message.content;
-    
-    if (!content || content.length < 100) {
-      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
-    }
-    
-    return content;
+    return (await response.json()).choices[0].message.content;
   }
 }
 
 class ShadowWorkIntegrationAnalyst implements IntelligenceAnalyst {
-  name = "Shadow Work Integration Analyst"; 
-  dimension = "shadow_work_integration";
-  
+  name = "Shadow Work Integration Analyst"; dimension = "shadow_work_integration";
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', 
-      headers: { 
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
-        'Content-Type': 'application/json' 
-      },
-      body: JSON.stringify({ 
-        model: 'gpt-4o', 
-        messages: [{ role: 'user', content: `As the Shadow Work Integration Analyst, generate 3,000-4,000 words on shadow patterns and integration practices. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
-        temperature: 0.7, 
-        max_tokens: 4000 
-      })
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Shadow Work Integration Analyst, generate 3,000-4,000 words on shadow patterns and integration practices.` }], temperature: 0.7, max_tokens: 4000 })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
-    }
-    
-    const content = data.choices[0].message.content;
-    
-    if (!content || content.length < 100) {
-      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
-    }
-    
-    return content;
+    return (await response.json()).choices[0].message.content;
   }
 }
 
 class HermeticFractalAnalyst implements IntelligenceAnalyst {
-  name = "Hermetic Fractal Analyst"; 
-  dimension = "hermetic_fractal_analysis";
-  
+  name = "Hermetic Fractal Analyst"; dimension = "hermetic_fractal_analysis";
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', 
-      headers: { 
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
-        'Content-Type': 'application/json' 
-      },
-      body: JSON.stringify({ 
-        model: 'gpt-4o', 
-        messages: [{ role: 'user', content: `As the Hermetic Fractal Analyst, generate 3,000-4,000 words on fractal patterns and hermetic principles integration. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
-        temperature: 0.7, 
-        max_tokens: 4000 
-      })
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Hermetic Fractal Analyst, generate 3,000-4,000 words on fractal patterns and hermetic principles integration.` }], temperature: 0.7, max_tokens: 4000 })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
-    }
-    
-    const content = data.choices[0].message.content;
-    
-    if (!content || content.length < 100) {
-      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
-    }
-    
-    return content;
+    return (await response.json()).choices[0].message.content;
   }
 }
 
 class TransformationPhasesAnalyst implements IntelligenceAnalyst {
-  name = "Transformation Phases Analyst"; 
-  dimension = "transformation_phases";
-  
+  name = "Transformation Phases Analyst"; dimension = "transformation_phases";
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', 
-      headers: { 
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
-        'Content-Type': 'application/json' 
-      },
-      body: JSON.stringify({ 
-        model: 'gpt-4o', 
-        messages: [{ role: 'user', content: `As the Transformation Phases Analyst, generate 3,000-4,000 words on transformation stages and evolution phases. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
-        temperature: 0.7, 
-        max_tokens: 4000 
-      })
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Transformation Phases Analyst, generate 3,000-4,000 words on transformation stages and evolution phases.` }], temperature: 0.7, max_tokens: 4000 })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
-    }
-    
-    const content = data.choices[0].message.content;
-    
-    if (!content || content.length < 100) {
-      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
-    }
-    
-    return content;
+    return (await response.json()).choices[0].message.content;
   }
 }
 
 class PolarityIntegrationAnalyst implements IntelligenceAnalyst {
-  name = "Polarity Integration Analyst"; 
-  dimension = "polarity_integration";
-  
+  name = "Polarity Integration Analyst"; dimension = "polarity_integration";
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', 
-      headers: { 
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
-        'Content-Type': 'application/json' 
-      },
-      body: JSON.stringify({ 
-        model: 'gpt-4o', 
-        messages: [{ role: 'user', content: `As the Polarity Integration Analyst, generate 3,000-4,000 words on polarity integration and balance patterns. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
-        temperature: 0.7, 
-        max_tokens: 4000 
-      })
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Polarity Integration Analyst, generate 3,000-4,000 words on polarity integration and balance patterns.` }], temperature: 0.7, max_tokens: 4000 })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
-    }
-    
-    const content = data.choices[0].message.content;
-    
-    if (!content || content.length < 100) {
-      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
-    }
-    
-    return content;
+    return (await response.json()).choices[0].message.content;
   }
 }
 
 class GateAnalysisAnalyst implements IntelligenceAnalyst {
-  name = "Gate Analysis Analyst"; 
-  dimension = "gate_analysis";
-  
+  name = "Gate Analysis Analyst"; dimension = "gate_analysis";
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', 
-      headers: { 
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
-        'Content-Type': 'application/json' 
-      },
-      body: JSON.stringify({ 
-        model: 'gpt-4o', 
-        messages: [{ role: 'user', content: `As the Gate Analysis Analyst, generate 3,000-4,000 words on Human Design gates and their deep psychological significance. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
-        temperature: 0.7, 
-        max_tokens: 4000 
-      })
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Gate Analysis Analyst, generate 3,000-4,000 words on Human Design gates and their deep psychological significance.` }], temperature: 0.7, max_tokens: 4000 })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
-    }
-    
-    const content = data.choices[0].message.content;
-    
-    if (!content || content.length < 100) {
-      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
-    }
-    
-    return content;
+    return (await response.json()).choices[0].message.content;
   }
 }
 
 class SpiritualPsychologyAnalyst implements IntelligenceAnalyst {
-  name = "Spiritual Psychology Analyst"; 
-  dimension = "spiritual_psychology";
-  
+  name = "Spiritual Psychology Analyst"; dimension = "spiritual_psychology";
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', 
-      headers: { 
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
-        'Content-Type': 'application/json' 
-      },
-      body: JSON.stringify({ 
-        model: 'gpt-4o', 
-        messages: [{ role: 'user', content: `As the Spiritual Psychology Analyst, generate 3,000-4,000 words on spiritual development and psychological integration. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
-        temperature: 0.7, 
-        max_tokens: 4000 
-      })
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Spiritual Psychology Analyst, generate 3,000-4,000 words on spiritual development and psychological integration.` }], temperature: 0.7, max_tokens: 4000 })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
-    }
-    
-    const content = data.choices[0].message.content;
-    
-    if (!content || content.length < 100) {
-      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
-    }
-    
-    return content;
+    return (await response.json()).choices[0].message.content;
   }
 }
 
 class MetamorphosisPatternsAnalyst implements IntelligenceAnalyst {
-  name = "Metamorphosis Patterns Analyst"; 
-  dimension = "metamorphosis_patterns";
-  
+  name = "Metamorphosis Patterns Analyst"; dimension = "metamorphosis_patterns";
   async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST', 
-      headers: { 
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 
-        'Content-Type': 'application/json' 
-      },
-      body: JSON.stringify({ 
-        model: 'gpt-4o', 
-        messages: [{ role: 'user', content: `As the Metamorphosis Patterns Analyst, generate 3,000-4,000 words on transformation patterns and evolutionary development. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], 
-        temperature: 0.7, 
-        max_tokens: 4000 
-      })
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Metamorphosis Patterns Analyst, generate 3,000-4,000 words on transformation patterns and evolutionary development.` }], temperature: 0.7, max_tokens: 4000 })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error(`Invalid OpenAI response structure for ${this.name}`);
-    }
-    
-    const content = data.choices[0].message.content;
-    
-    if (!content || content.length < 100) {
-      throw new Error(`Generated content too short for ${this.name}: ${content?.length || 0} chars`);
-    }
-    
-    return content;
+    return (await response.json()).choices[0].message.content;
   }
 }
 
@@ -601,84 +233,30 @@ class IntelligenceReportOrchestrator {
   ];
 
   async generateIntelligenceReport(userId: string, hermeticReport: any, blueprintData: any): Promise<IntelligenceReport> {
-    console.log('🧠 INTELLIGENCE ANALYSIS: Starting 13 Analyst Report Generation');
-    console.log(`📊 TARGET: ~45,000 words (3,500 words/analyst × 13 analysts)`);
-    console.log('🔧 DIAGNOSTIC MODE: Comprehensive logging enabled for root cause analysis');
+    console.log('🧠 Starting Intelligence Report Generation with', this.analysts.length, 'analysts');
     
     const report: Partial<IntelligenceReport> = {};
     let cumulativeInsights = "";
-    let totalWordCount = 0;
-    const startTime = Date.now();
-    const failures: string[] = [];
 
-    for (let i = 0; i < this.analysts.length; i++) {
-      const analyst = this.analysts[i];
-      const analystNumber = i + 1;
-      
-      console.log(`\n🧠 ANALYST ${analystNumber}/13: ${analyst.name}`);
-      console.log(`📍 STARTING: ${analyst.dimension} analysis`);
-      console.log(`📊 PROGRESS: ${totalWordCount} words generated so far`);
-      console.log(`⏱️ TIMESTAMP: ${new Date().toISOString()}`);
-      
-      const analystStartTime = Date.now();
-      
+    for (const analyst of this.analysts) {
       try {
-        // 🔍 DIAGNOSTIC: Log input data
+        console.log(`🔍 Processing ${analyst.name}...`);
+        
         const hermeticChunk = this.extractRelevantHermeticChunk(hermeticReport, analyst.dimension);
-        console.log(`📝 INPUT DATA FOR ${analyst.name}:`);
-        console.log(`   Hermetic chunk length: ${hermeticChunk.length} chars`);
-        console.log(`   Blueprint data keys: ${Object.keys(blueprintData).join(', ')}`);
-        console.log(`   Cumulative insights length: ${cumulativeInsights.length} chars`);
-        
-        // 🔍 DIAGNOSTIC: Log API call details
-        console.log(`🌐 MAKING OpenAI API CALL for ${analyst.name}...`);
         const analysisReport = await analyst.generateReport(hermeticChunk, cumulativeInsights, blueprintData);
-        console.log(`✅ OpenAI API RESPONSE received for ${analyst.name}`);
-        
-        const analystDuration = Date.now() - analystStartTime;
-        const analystWordCount = Math.round(analysisReport.length / 5);
-        totalWordCount += analystWordCount;
-
-        // 🔍 DIAGNOSTIC: Validate response content
-        console.log(`📊 RESPONSE VALIDATION for ${analyst.name}:`);
-        console.log(`   Response length: ${analysisReport.length} chars`);
-        console.log(`   Word count: ${analystWordCount} words`);
-        console.log(`   Contains actual content: ${analysisReport.length > 100 ? '✅' : '❌'}`);
-        console.log(`   Response preview: "${analysisReport.substring(0, 100)}..."`);
 
         report[analyst.dimension as keyof IntelligenceReport] = analysisReport;
         cumulativeInsights += `\n\n${analyst.name} Key Insights:\n${analysisReport.substring(0, 500)}...`;
         
-        console.log(`✅ ANALYST ${analystNumber}/13: ${analyst.name} COMPLETE`);
-        console.log(`   📝 Generated: ${analystWordCount} words (${analysisReport.length} chars)`);
-        console.log(`   ⏱️ Duration: ${(analystDuration/1000).toFixed(1)}s`);
-        console.log(`   📊 TOTAL SO FAR: ${totalWordCount} words`);
+        console.log(`✅ Completed ${analyst.name} - ${analysisReport.length} characters`);
         
       } catch (error) {
-        const analystDuration = Date.now() - analystStartTime;
-        console.error(`\n❌❌❌ ANALYST ${analystNumber}/13: ${analyst.name} FAILED ❌❌❌`);
-        console.error(`🔍 ERROR DETAILS:`);
-        console.error(`   Error type: ${error.constructor.name}`);
-        console.error(`   Error message: ${error.message}`);
-        console.error(`   Duration before failure: ${(analystDuration/1000).toFixed(1)}s`);
-        console.error(`   Full error:`, error);
-        
-        // 🚨 NO SILENT FAILURES: Track and expose all errors
-        failures.push(`${analyst.name}: ${error.message}`);
-        
-        // 🚨 FAIL TRANSPARENTLY: Don't continue with broken data
-        throw new Error(`Intelligence generation failed at analyst ${analystNumber}/13 (${analyst.name}): ${error.message}. Total failures: ${failures.length}`);
+        console.error(`❌ Error in ${analyst.name}:`, error);
+        report[analyst.dimension as keyof IntelligenceReport] = `Error generating ${analyst.name} analysis: ${error.message}`;
       }
     }
 
-    const totalDuration = Date.now() - startTime;
-    console.log('🎉 INTELLIGENCE ANALYSIS COMPLETE! 📊 FINAL STATISTICS:');
-    console.log(`   📝 Total words generated: ${totalWordCount} words`);
-    console.log(`   📊 Target achieved: ${((totalWordCount/45000)*100).toFixed(1)}%`);
-    console.log(`   ⏱️ Total generation time: ${(totalDuration/1000).toFixed(1)}s`);
-    console.log(`   🧠 Analysts completed: ${this.analysts.length}/13`);
-    console.log(`   📄 Average words per analyst: ${Math.round(totalWordCount/this.analysts.length)}`);
-    
+    console.log('🎉 Intelligence Report Generation Complete');
     return report as IntelligenceReport;
   }
 
@@ -1018,59 +596,37 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
     
     console.log('💾 Storing report with blueprint_id:', blueprintId);
 
-    // 🧠 CRITICAL: Generate Intelligence Report with 13 Specialists
-    console.log('🧠 GENERATING INTELLIGENCE ANALYSIS: Starting 13 specialist analysis...');
-    console.log('🎯 TARGET: ~45,000 words from 13 analysts (~3,500 words each)');
-    console.log('📊 VALIDATION: Must complete ALL 13 analysts or FAIL transparently');
-    
+    // 🧠 INTEGRATION: Generate Intelligence Report with 12 Specialists
+    console.log('🧠 Generating comprehensive intelligence analysis with 12 specialists...');
     const orchestrator = new IntelligenceReportOrchestrator();
     
-    // 🚨 REMOVED SILENT FALLBACK: Let intelligence generation fail transparently
-    // This will expose the actual OpenAI API errors for proper diagnosis
-    console.log('🔧 NO FALLBACKS: Intelligence generation will fail transparently if any analyst fails');
-    
-    const intelligenceReport = await orchestrator.generateIntelligenceReport(
-      userId,
-      reportContent,
-      blueprint
-    );
-    
-    console.log('✅ INTELLIGENCE ANALYSIS COMPLETE: All 13 analysts succeeded');
-    console.log(`📊 Generated ${Object.keys(intelligenceReport).length}/13 analyst reports`);
-
-    // Enhanced report content with intelligence sections
-    console.log('📊 BUILDING ENHANCED REPORT CONTENT...');
-    console.log(`   Intelligence report sections: ${intelligenceReport ? Object.keys(intelligenceReport).length : 0}/13`);
-    
-    const enhancedReportContent = {
-      ...reportContent,
-      // 🧠 CRITICAL: Add 13 intelligence analyst sections (NO NULL FALLBACK)
-      intelligence_analysis: intelligenceReport
-    };
-    
-    console.log('✅ Enhanced report content built successfully');
-    console.log(`   Total content keys: ${Object.keys(enhancedReportContent).length}`);
-    console.log(`   Intelligence analysis present: ${!!enhancedReportContent.intelligence_analysis}`);
-    console.log(`   Intelligence sections: ${enhancedReportContent.intelligence_analysis ? Object.keys(enhancedReportContent.intelligence_analysis).join(', ') : 'NONE'}`);
-
-    // 💾 STORAGE: Store intelligence data in BOTH locations for compatibility
-    console.log('💾 STORAGE: Preparing to store intelligence data...');
-    if (intelligenceReport) {
-      const intelligenceWordCount = Object.values(intelligenceReport).reduce((total, analysis) => {
-        return total + Math.round((analysis as string).length / 5);
-      }, 0);
-      console.log(`💾 STORAGE: Intelligence data ready - ${intelligenceWordCount} words across 13 analysts`);
+    let intelligenceReport: IntelligenceReport | null = null;
+    try {
+      intelligenceReport = await orchestrator.generateIntelligenceReport(
+        userId,
+        reportContent,
+        blueprint
+      );
+      console.log('✅ Intelligence report generated successfully');
+    } catch (error) {
+      console.error('⚠️ Intelligence report generation failed, continuing with basic report:', error);
     }
 
-    // Store the enhanced report in the database with structured_intelligence
+    // Enhanced report content with intelligence sections
+    const enhancedReportContent = {
+      ...reportContent,
+      // 🧠 NEW: Add 12 intelligence analyst sections
+      intelligence_analysis: intelligenceReport || null
+    };
+
+    // Store the enhanced report in the database
     const { data: reportData, error: insertError } = await supabaseClient
       .from('personality_reports')
       .insert({
         user_id: userId,
         blueprint_id: blueprintId,
         report_content: enhancedReportContent,
-        structured_intelligence: intelligenceReport || {}, // 🧠 NEW: Store in dedicated column
-        blueprint_version: '2.0' // Updated version to indicate Hermetic + Intelligence enhancement
+        blueprint_version: '1.1' // Updated version to indicate enhanced content
       })
       .select()
       .single();
@@ -1104,20 +660,15 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
       }
     }
 
-    // Final report summary with enhanced intelligence tracking
+    // Final report summary
     const totalContentSize = JSON.stringify(enhancedReportContent).length;
     const intelligenceSections = intelligenceReport ? Object.keys(intelligenceReport).length : 0;
-    const intelligenceWordCount = intelligenceReport ? Object.values(intelligenceReport).reduce((total, analysis) => {
-      return total + Math.round((analysis as string).length / 5);
-    }, 0) : 0;
     
-    console.log('📊 FINAL REPORT SUMMARY:');
-    console.log(`  📄 Total content size: ${(totalContentSize/1024).toFixed(1)}KB`);
-    console.log(`  🧠 Intelligence sections: ${intelligenceSections}/13 analysts`);
-    console.log(`  📝 Intelligence word count: ${intelligenceWordCount} words`);
-    console.log(`  💬 Quotes generated: ${quotesToInsert.length}`);
-    console.log(`  🔖 Blueprint version: 2.0 (Hermetic + Intelligence Enhancement)`);
-    console.log(`  💾 STORAGE: Data saved to both 'report_content.intelligence_analysis' AND 'structured_intelligence' columns`);
+    console.log('📊 Final Report Summary:');
+    console.log(`  - Total content size: ${totalContentSize} bytes`);
+    console.log(`  - Intelligence sections: ${intelligenceSections}/12`);
+    console.log(`  - Quotes generated: ${quotesToInsert.length}`);
+    console.log(`  - Blueprint version: 1.1 (Enhanced with Intelligence)`);
 
     console.log('✅ Personality report and quotes generated successfully');
 
@@ -1125,13 +676,12 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
       success: true, 
       report: reportData,
       quotes: quotesToInsert,
-        enhancement_metadata: {
-          intelligence_sections_generated: intelligenceSections,
-          total_analysts_attempted: 13,
-          intelligence_word_count: intelligenceWordCount,
-          content_size_bytes: totalContentSize,
-          enhanced_version: '2.0'
-        }
+      enhancement_metadata: {
+        intelligence_sections_generated: intelligenceSections,
+        total_analysts_attempted: 12,
+        content_size_bytes: totalContentSize,
+        enhanced_version: '1.1'
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

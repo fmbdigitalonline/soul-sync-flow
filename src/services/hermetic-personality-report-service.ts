@@ -89,48 +89,37 @@ class HermeticPersonalityReportService {
       
       const startTime = Date.now();
       
-      // 🔧 FIXED: Call Edge Function instead of client-side generation
-      console.log('🚀 Calling Edge Function to generate complete Hermetic report...');
+      // Use the Hermetic Report Orchestrator for multi-agent generation
+      const hermeticResult = await hermeticReportOrchestrator.generateHermeticReport(blueprint);
       
-      // Get current user to provide userId
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error('User authentication required');
-      }
+      // Generate Intelligence Analysis (12 analysts)
+      console.log('🧠 Generating 12 Intelligence Analysts Analysis...');
+      const { intelligenceReportOrchestrator } = await import('./intelligence-report-orchestrator');
+      const intelligenceReport = await intelligenceReportOrchestrator.generateIntelligenceReport(
+        blueprint.user_id || blueprint.user_meta?.user_id || '',
+        hermeticResult,
+        blueprint
+      );
       
-      const { data, error } = await supabase.functions.invoke('generate-personality-report', {
-        body: { 
-          blueprint: {
-            ...blueprint,
-            user_id: user.id,
-            id: blueprint.id || user.id // Use blueprint.id if available, otherwise fallback to user.id
-          },
-          userId: user.id,
-          language 
-        },
-      });
-
-      if (error) {
-        console.error('❌ Edge Function error:', error);
-        throw new Error(`Report generation failed: ${error.message}`);
-      }
-
-      if (!data.success) {
-        console.error('❌ Edge Function failed:', data.error);
-        throw new Error(`Report generation failed: ${data.error}`);
-      }
-
-      console.log('✅ Edge Function completed successfully');
-      console.log(`📊 Report generated with ${data.enhancement_metadata?.intelligence_sections_generated || 0}/13 intelligence analysts`);
-      console.log(`📝 Total intelligence words: ${data.enhancement_metadata?.intelligence_word_count || 0}`);
+      // Transform orchestrator result into report format
+      const report = await this.buildHermeticReport(blueprint, hermeticResult, intelligenceReport);
+      
+      // Store the report in the database
+      const storedReport = await this.storeHermeticReport(report);
+      
+      // Generate personalized quotes aligned with Hermetic laws
+      const quotes = await this.generateHermeticQuotes(blueprint, hermeticResult, language);
+      
+      // Automatically trigger structured intelligence extraction and storage
+      await this.triggerIntelligenceExtraction(blueprint.user_id || blueprint.user_meta?.user_id);
       
       const endTime = Date.now();
-      console.log(`✅ Complete report generated in ${endTime - startTime}ms`);
+      console.log(`✅ Hermetic Report generated: ${hermeticResult.total_word_count} words in ${endTime - startTime}ms`);
       
       return { 
         success: true, 
-        report: data.report,
-        quotes: data.quotes || []
+        report: storedReport,
+        quotes: quotes || []
       };
       
     } catch (error) {
@@ -443,7 +432,9 @@ Vibrational energy patterns: ${vibrationAnalysis.substring(0, 250)}...`;
           shadow_work_integration: reportContent?.shadow_work_integration || {
             shadow_patterns: '', integration_practices: '', transformation_roadmap: ''
           },
-          structured_intelligence: this.extractStructuredIntelligence(data, reportContent),
+          structured_intelligence: (data.structured_intelligence && typeof data.structured_intelligence === 'object' && !Array.isArray(data.structured_intelligence)) 
+            ? data.structured_intelligence as Record<string, any> 
+            : {},
           blueprint_signature: reportContent?.blueprint_signature || '',
           word_count: reportContent?.word_count || 0,
           generation_metadata: reportContent?.generation_metadata || {
@@ -489,40 +480,6 @@ Vibrational energy patterns: ${vibrationAnalysis.substring(0, 250)}...`;
     }
   }
 
-  /**
-   * Extract structured intelligence from both possible locations
-   */
-  private extractStructuredIntelligence(data: any, reportContent: any): Record<string, any> {
-    console.log('🔍 HERMETIC SERVICE: Extracting structured intelligence...');
-    
-    // Try the new structured_intelligence column first
-    if (data.structured_intelligence && typeof data.structured_intelligence === 'object' && !Array.isArray(data.structured_intelligence)) {
-      const intelligenceData = data.structured_intelligence as Record<string, any>;
-      const wordCount = Object.values(intelligenceData).reduce((total, analysis) => {
-        return total + Math.round((String(analysis).length || 0) / 5);
-      }, 0);
-      console.log(`✅ HERMETIC SERVICE: Found structured_intelligence column - ${wordCount} words from ${Object.keys(intelligenceData).length} analysts`);
-      return intelligenceData;
-    }
-    
-    // Fallback to report_content.intelligence_analysis for backward compatibility
-    if (reportContent?.intelligence_analysis && typeof reportContent.intelligence_analysis === 'object') {
-      const intelligenceData = reportContent.intelligence_analysis as Record<string, any>;
-      const wordCount = Object.values(intelligenceData).reduce((total, analysis) => {
-        return total + Math.round((String(analysis).length || 0) / 5);
-      }, 0);
-      console.log(`📊 HERMETIC SERVICE: Found intelligence_analysis in report_content - ${wordCount} words from ${Object.keys(intelligenceData).length} analysts`);
-      console.log(`⚠️ HERMETIC SERVICE: Using fallback location - consider regenerating report for optimal performance`);
-      return intelligenceData;
-    }
-    
-    console.log('⚠️ HERMETIC SERVICE: No structured intelligence found in either location');
-    return {};
-  }
-
-  /**
-   * Triggers background intelligence extraction for the user's blueprint
-   */
   private async triggerIntelligenceExtraction(userId: string): Promise<void> {
     try {
       console.log('🧠 Triggering automatic intelligence extraction for user:', userId);
