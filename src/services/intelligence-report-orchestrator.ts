@@ -76,22 +76,18 @@ Generate a comprehensive 3,000-4,000 word analysis covering:
 Write in a profound, insightful tone that reveals deep psychological patterns. Use "you" throughout. Connect insights to the hermetic analysis and previous intelligence findings.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+      body: {
+        prompt,
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 4000,
-      }),
+        analyst_type: 'identity_constructs'
+      }
     });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (error) throw new Error(`API call failed: ${error.message}`);
+    return data.content;
   }
 }
 
@@ -148,22 +144,18 @@ Generate a comprehensive 3,000-4,000 word analysis covering:
 Connect all insights to the hermetic analysis and identity constructs findings. Write with depth and practical wisdom.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+      body: {
+        prompt,
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 4000,
-      }),
+        analyst_type: 'behavioral_triggers'
+      }
     });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (error) throw new Error(`API call failed: ${error.message}`);
+    return data.content;
   }
 }
 
@@ -220,22 +212,18 @@ Generate a comprehensive 3,000-4,000 word analysis covering:
 Integrate insights from identity constructs and behavioral triggers analysis. Write with analytical depth and practical application focus.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+      body: {
+        prompt,
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 4000,
-      }),
+        analyst_type: 'execution_bias'
+      }
     });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (error) throw new Error(`API call failed: ${error.message}`);
+    return data.content;
   }
 }
 
@@ -254,22 +242,18 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering belief contradictions, emotional double binds, and identity splits that create internal tension and resistance patterns.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+      body: {
+        prompt,
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 4000,
-      }),
+        analyst_type: 'internal_conflicts'
+      }
     });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (error) throw new Error(`API call failed: ${error.message}`);
+    return data.content;
   }
 }
 
@@ -288,22 +272,18 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering philosophical frameworks, meaning-making patterns, spiritual beliefs, and integration practices.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+      body: {
+        prompt,
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 4000,
-      }),
+        analyst_type: 'spiritual_dimension'
+      }
     });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (error) throw new Error(`API call failed: ${error.message}`);
+    return data.content;
   }
 }
 
@@ -322,22 +302,18 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering learning styles, feedback integration patterns, and adaptive capacity for growth and change.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+      body: {
+        prompt,
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 4000,
-      }),
+        analyst_type: 'adaptive_feedback'
+      }
     });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (error) throw new Error(`API call failed: ${error.message}`);
+    return data.content;
   }
 }
 
@@ -356,22 +332,18 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering natural energy cycles, optimal performance windows, and chronobiological patterns.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+      body: {
+        prompt,
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 4000,
-      }),
+        analyst_type: 'temporal_biology'
+      }
     });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (error) throw new Error(`API call failed: ${error.message}`);
+    return data.content;
   }
 }
 
@@ -390,22 +362,18 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering cognitive biases, perception filters, and metacognitive awareness patterns.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+      body: {
+        prompt,
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 4000,
-      }),
+        analyst_type: 'metacognitive_biases'
+      }
     });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (error) throw new Error(`API call failed: ${error.message}`);
+    return data.content;
   }
 }
 
@@ -424,22 +392,18 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering attachment patterns, relationship dynamics, and authority archetype interactions.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+      body: {
+        prompt,
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 4000,
-      }),
+        analyst_type: 'attachment_style'
+      }
     });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (error) throw new Error(`API call failed: ${error.message}`);
+    return data.content;
   }
 }
 
@@ -458,22 +422,18 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering goal orientation patterns, motivation structures, and achievement friction points.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+      body: {
+        prompt,
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 4000,
-      }),
+        analyst_type: 'goal_archetypes'
+      }
     });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (error) throw new Error(`API call failed: ${error.message}`);
+    return data.content;
   }
 }
 
@@ -492,22 +452,18 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering crisis response patterns, resilience mechanisms, and stress recovery strategies.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+      body: {
+        prompt,
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 4000,
-      }),
+        analyst_type: 'crisis_handling'
+      }
     });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (error) throw new Error(`API call failed: ${error.message}`);
+    return data.content;
   }
 }
 
@@ -526,22 +482,18 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering identity adaptability, narrative flexibility, and reinvention capacity.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+      body: {
+        prompt,
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 4000,
-      }),
+        analyst_type: 'identity_flexibility'
+      }
     });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (error) throw new Error(`API call failed: ${error.message}`);
+    return data.content;
   }
 }
 
@@ -560,22 +512,18 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering signature metaphors, motivational language patterns, and emotional communication syntax.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('ai-analyst-call', {
+      body: {
+        prompt,
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 4000,
-      }),
+        analyst_type: 'linguistic_fingerprint'
+      }
     });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    
+    if (error) throw new Error(`API call failed: ${error.message}`);
+    return data.content;
   }
 }
 
