@@ -89,37 +89,37 @@ class HermeticPersonalityReportService {
       
       const startTime = Date.now();
       
-      // Use the Hermetic Report Orchestrator for multi-agent generation
-      const hermeticResult = await hermeticReportOrchestrator.generateHermeticReport(blueprint);
+      // 🔧 FIXED: Call Edge Function instead of client-side generation
+      console.log('🚀 Calling Edge Function to generate complete Hermetic report...');
       
-      // Generate Intelligence Analysis (12 analysts)
-      console.log('🧠 Generating 12 Intelligence Analysts Analysis...');
-      const { intelligenceReportOrchestrator } = await import('./intelligence-report-orchestrator');
-      const intelligenceReport = await intelligenceReportOrchestrator.generateIntelligenceReport(
-        blueprint.user_id || blueprint.user_meta?.user_id || '',
-        hermeticResult,
-        blueprint
-      );
-      
-      // Transform orchestrator result into report format
-      const report = await this.buildHermeticReport(blueprint, hermeticResult, intelligenceReport);
-      
-      // Store the report in the database
-      const storedReport = await this.storeHermeticReport(report);
-      
-      // Generate personalized quotes aligned with Hermetic laws
-      const quotes = await this.generateHermeticQuotes(blueprint, hermeticResult, language);
-      
-      // Automatically trigger structured intelligence extraction and storage
-      await this.triggerIntelligenceExtraction(blueprint.user_id || blueprint.user_meta?.user_id);
+      const { data, error } = await supabase.functions.invoke('generate-personality-report', {
+        body: { 
+          blueprint,
+          language 
+        },
+      });
+
+      if (error) {
+        console.error('❌ Edge Function error:', error);
+        throw new Error(`Report generation failed: ${error.message}`);
+      }
+
+      if (!data.success) {
+        console.error('❌ Edge Function failed:', data.error);
+        throw new Error(`Report generation failed: ${data.error}`);
+      }
+
+      console.log('✅ Edge Function completed successfully');
+      console.log(`📊 Report generated with ${data.enhancement_metadata?.intelligence_sections_generated || 0}/13 intelligence analysts`);
+      console.log(`📝 Total intelligence words: ${data.enhancement_metadata?.intelligence_word_count || 0}`);
       
       const endTime = Date.now();
-      console.log(`✅ Hermetic Report generated: ${hermeticResult.total_word_count} words in ${endTime - startTime}ms`);
+      console.log(`✅ Complete report generated in ${endTime - startTime}ms`);
       
       return { 
         success: true, 
-        report: storedReport,
-        quotes: quotes || []
+        report: data.report,
+        quotes: data.quotes || []
       };
       
     } catch (error) {
