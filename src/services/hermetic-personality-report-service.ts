@@ -54,6 +54,8 @@ export interface HermeticPersonalityReport {
       total_processing_time: number;
       hermetic_depth_score: number;
       gates_analyzed: number[]; // NEW: Track which gates were analyzed
+      intelligence_status?: string;
+      intelligence_analysts?: string[];
     };
     structured_intelligence?: Record<string, any>;
   };
@@ -93,15 +95,18 @@ class HermeticPersonalityReportService {
       // Use the Hermetic Report Orchestrator for multi-agent generation
       const hermeticResult = await hermeticReportOrchestrator.generateHermeticReport(blueprint);
       
-      // PHASE 2.5: Generate intelligence analysis concurrently for combined word count
+      // Build the hermetic report structure first (needed for intelligence analysis)
+      const hermeticReport = await this.buildHermeticReport(blueprint, hermeticResult);
+      
+      // PHASE 2.5: Generate intelligence analysis with actual hermetic data
       console.log('🧠 Phase 5: Generating Intelligence Analysis...');
-      const intelligenceResult = await this.generateIntelligenceAnalysis(blueprint);
+      const intelligenceResult = await this.generateIntelligenceAnalysis(blueprint, hermeticReport.report_content);
       
       // Combine hermetic and intelligence results for full 120K+ word report
       const combinedResult = this.combineHermeticAndIntelligence(hermeticResult, intelligenceResult);
       
-      // Transform orchestrator result into report format with combined word count
-      const report = await this.buildHermeticReport(blueprint, combinedResult);
+      // Update the report with combined results
+      const report = await this.updateReportWithCombinedResults(hermeticReport, combinedResult);
       
       // Store the report in the database
       const storedReport = await this.storeHermeticReport(report);
@@ -130,14 +135,15 @@ class HermeticPersonalityReportService {
   /**
    * PHASE 2.5: Generate intelligence analysis using client-side orchestrator
    */
-  private async generateIntelligenceAnalysis(blueprint: BlueprintData): Promise<any> {
+  private async generateIntelligenceAnalysis(blueprint: BlueprintData, hermeticReportContent: any): Promise<any> {
     try {
       console.log('🔬 Generating comprehensive intelligence analysis...');
+      console.log('📊 Using hermetic report with keys:', Object.keys(hermeticReportContent));
       
       // Use the intelligence orchestrator to generate all 13 analyst reports
       const intelligenceReport = await intelligenceReportOrchestrator.generateIntelligenceReport(
         blueprint.user_id || blueprint.user_meta?.user_id || '',
-        { sections: [] }, // Empty hermetic report placeholder
+        hermeticReportContent, // Pass actual hermetic report content
         blueprint
       );
       
@@ -179,6 +185,32 @@ class HermeticPersonalityReportService {
         }
       };
     }
+  }
+
+  /**
+   * Update the hermetic report with combined intelligence results
+   */
+  private async updateReportWithCombinedResults(
+    hermeticReport: HermeticPersonalityReport, 
+    combinedResult: any
+  ): Promise<HermeticPersonalityReport> {
+    
+    // Update the report with combined word count and intelligence
+    hermeticReport.report_content.word_count = combinedResult.total_word_count;
+    hermeticReport.report_content.structured_intelligence = combinedResult.structured_intelligence;
+    
+    // Add intelligence metadata to generation metadata
+    if (combinedResult.intelligence_metadata) {
+      hermeticReport.report_content.generation_metadata = {
+        ...hermeticReport.report_content.generation_metadata,
+        intelligence_status: combinedResult.intelligence_metadata.status,
+        intelligence_analysts: combinedResult.intelligence_metadata.analysts_used || []
+      };
+    }
+    
+    console.log(`📊 Updated report: ${hermeticReport.report_content.word_count} total words`);
+    
+    return hermeticReport;
   }
 
   /**
