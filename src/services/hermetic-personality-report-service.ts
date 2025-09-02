@@ -92,9 +92,20 @@ class HermeticPersonalityReportService {
       // 🔧 FIXED: Call Edge Function instead of client-side generation
       console.log('🚀 Calling Edge Function to generate complete Hermetic report...');
       
+      // Get current user to provide userId
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User authentication required');
+      }
+      
       const { data, error } = await supabase.functions.invoke('generate-personality-report', {
         body: { 
-          blueprint,
+          blueprint: {
+            ...blueprint,
+            user_id: user.id,
+            id: blueprint.id || user.id // Use blueprint.id if available, otherwise fallback to user.id
+          },
+          userId: user.id,
           language 
         },
       });
