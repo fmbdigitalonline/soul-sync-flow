@@ -268,12 +268,53 @@ export const useGenerationJobControl = () => {
     }
   }, [user?.id, checkForExistingJobs]);
   
+  // Progress mapping for IntelligentSoulOrb integration
+  const getProgressMapping = () => {
+    if (!jobState.currentJob || jobState.currentJob.status !== 'running') {
+      return { progress: 0, color: 'default', showCelebration: false };
+    }
+    
+    const progress = jobState.jobProgress;
+    if (!progress) return { progress: 10, color: 'purple', showCelebration: false };
+    
+    // Map job progress phases to percentage values (0-100) with milestone celebrations
+    switch (progress.phase) {
+      case 'initializing':
+        return { progress: 5, color: 'purple', showCelebration: false };
+      case 'system_integration':
+        return { progress: 15, color: 'purple', showCelebration: false };
+      case 'system_integration_complete':
+        return { progress: 20, color: 'teal', showCelebration: true }; // Milestone celebration
+      case 'hermetic_laws':
+        return { progress: 40, color: 'purple', showCelebration: false };
+      case 'hermetic_laws_complete':
+        return { progress: 60, color: 'teal', showCelebration: true }; // Milestone celebration
+      case 'gate_analysis':
+        return { progress: 70, color: 'purple', showCelebration: false };
+      case 'gate_analysis_complete':
+        return { progress: 85, color: 'teal', showCelebration: true }; // Milestone celebration
+      case 'intelligence_extraction':
+        return { progress: 87, color: 'purple', showCelebration: false };
+      case 'intelligence_analysis_complete':
+        return { progress: 90, color: 'teal', showCelebration: true }; // Milestone celebration
+      case 'synthesis':
+        return { progress: 95, color: 'purple', showCelebration: false };
+      case 'synthesis_complete':
+        return { progress: 100, color: 'rainbow', showCelebration: true }; // Final rainbow celebration
+      default:
+        return { progress: progress.progress || 10, color: 'purple', showCelebration: false };
+    }
+  };
+
   return {
     // State
     ...jobState,
     
     // Combined loading state (client-side OR background)
     isGenerating: coordinatedLoading.isLoading || jobState.currentJob?.status === 'running',
+    
+    // Progress mapping for orb integration
+    progressMapping: getProgressMapping(),
     
     // Methods
     startGeneration,

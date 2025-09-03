@@ -50,14 +50,23 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     intelligence_analysis: false
   });
 
-  // Progress mapping for IntelligentSoulOrb
-  const getHermeticProgress = () => {
-    if (!generationControl.isGenerating) return 0;
+  // Use job control progress mapping for orb visualization
+  const progressMapping = generationControl.progressMapping || { progress: 0, color: 'default', showCelebration: false };
+  
+  // Determine orb visual state based on job progress
+  const getOrbVisualState = () => {
+    if (!generationControl.isGenerating) return { showProgress: false, progress: 0, showCelebration: false };
     
-    const progress = generationControl.jobProgress;
-    if (progress?.phase === 'generating') return progress.progress || 25;
-    if (progress?.phase === 'finalizing') return progress.progress || 95;
-    return 10; // Default starting progress
+    return {
+      showProgress: true,
+      progress: progressMapping.progress,
+      showCelebration: progressMapping.showCelebration
+    };
+  };
+
+  // Progress mapping for legacy compatibility
+  const getHermeticProgress = () => {
+    return progressMapping.progress;
   };
 
   useEffect(() => {
@@ -591,12 +600,13 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       {/* Floating Soul Orb for Progress */}
       {generationControl.isGenerating && (
         <div className="fixed bottom-6 right-6 z-50">
-          <IntelligentSoulOrb
+          <IntelligentSoulOrb 
             size="md"
             intelligenceLevel={50}
-            showHermeticProgress={true}
-            hermeticProgress={getHermeticProgress()}
-            pulse={true}
+            showHermeticProgress={getOrbVisualState().showProgress}
+            hermeticProgress={getOrbVisualState().progress}
+            showRainbowCelebration={getOrbVisualState().showCelebration}
+            pulse={generationControl.isGenerating}
           />
         </div>
       )}
