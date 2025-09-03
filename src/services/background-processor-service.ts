@@ -12,11 +12,12 @@ export class BackgroundProcessorService {
     retryRecommended?: boolean;
   }> {
     try {
-      console.log(`🚀 Attempting background hermetic generation for job: ${jobId}`);
+      console.log(`🚀 GENERATION START: Attempting background hermetic generation for job: ${jobId}`);
       
       // ENHANCED VALIDATION: Comprehensive pre-flight checks
       const validationResult = await this.performPreFlightValidation(jobId, blueprint);
       if (!validationResult.valid) {
+        console.error(`❌ PRE-FLIGHT FAILED:`, validationResult);
         return { 
           success: false, 
           error: `Pre-flight validation failed: ${validationResult.error}`,
@@ -24,21 +25,21 @@ export class BackgroundProcessorService {
         };
       }
       
-      console.log('✅ Pre-flight validation passed');
+      console.log('✅ PRE-FLIGHT PASSED: All validation checks successful');
       
       // ENHANCED INVOCATION: Multiple attempt strategy with detailed logging
       const invocationResult = await this.performEnhancedInvocation(jobId, blueprint);
       
       if (!invocationResult.success) {
-        console.error('❌ Enhanced invocation failed:', invocationResult.error);
+        console.error('❌ INVOCATION FAILED:', invocationResult.error);
         return invocationResult;
       }
 
-      console.log('✅ Background processing confirmed started with enhanced validation');
+      console.log(`✅ GENERATION CONFIRMED: Background processing started successfully for job ${jobId}`);
       return { success: true };
 
     } catch (error: any) {
-      console.error('❌ Background processing initiation failed:', {
+      console.error('❌ CRITICAL ERROR: Background processing initiation failed:', {
         error: error.message,
         stack: error.stack,
         jobId,
@@ -62,6 +63,8 @@ export class BackgroundProcessorService {
     retryable?: boolean;
   }> {
     try {
+      console.log(`🔍 PRE-FLIGHT START: Validating job ${jobId} readiness...`);
+
       // 1. Verify edge function deployment and accessibility
       const functionHealth = await this.verifyAdvancedFunctionHealth();
       if (!functionHealth.healthy) {
@@ -97,9 +100,11 @@ export class BackgroundProcessorService {
         };
       }
 
+      console.log(`✅ PRE-FLIGHT COMPLETE: All validations passed for job ${jobId}`);
       return { valid: true };
 
     } catch (error: any) {
+      console.error('❌ PRE-FLIGHT EXCEPTION:', error);
       return { 
         valid: false, 
         error: `Validation failed: ${error.message}`,
@@ -109,23 +114,54 @@ export class BackgroundProcessorService {
   }
 
   /**
-   * ENHANCED INVOCATION WITH RETRY LOGIC
+   * ENHANCED INVOCATION WITH RETRY LOGIC AND FULL TRANSPARENCY
    */
   private static async performEnhancedInvocation(jobId: string, blueprint: BlueprintData): Promise<{
     success: boolean;
     error?: string;
     retryRecommended?: boolean;
   }> {
+    console.log(`🎯 INVOCATION START: Job ${jobId} - Background processor invocation initiated`);
+    
     const maxRetries = 3;
     const retryDelays = [0, 2000, 5000]; // 0ms, 2s, 5s
+
+    // PRINCIPLE #7: BUILD TRANSPARENTLY - Pre-flight function health check
+    try {
+      console.log('🏥 ACCESSIBILITY TEST: Testing Edge Function accessibility...');
+      const healthCheck = await supabase.functions.invoke('hermetic-background-processor', {
+        body: { healthCheck: true, validateCapabilities: true }
+      });
+      
+      if (healthCheck.error) {
+        console.error('❌ CRITICAL: Edge Function not accessible:', healthCheck.error);
+        return {
+          success: false,
+          error: `Edge Function inaccessible: ${healthCheck.error.message} (Code: ${healthCheck.error.code})`,
+          retryRecommended: false
+        };
+      }
+      
+      console.log('✅ ACCESSIBILITY CONFIRMED: Edge Function is accessible and healthy');
+    } catch (healthError: any) {
+      console.error('❌ CRITICAL: Pre-flight health check failed:', healthError);
+      return {
+        success: false,
+        error: `Function deployment issue: ${healthError.message}`,
+        retryRecommended: false
+      };
+    }
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         if (attempt > 0) {
-          console.log(`🔄 Retry attempt ${attempt + 1}/${maxRetries} after ${retryDelays[attempt]}ms delay`);
+          console.log(`🔄 RETRY ${attempt + 1}/${maxRetries}: Waiting ${retryDelays[attempt]}ms before retry...`);
           await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
         }
 
+        console.log(`📡 INVOCATION ATTEMPT ${attempt + 1}: Invoking hermetic-background-processor...`);
+        const invocationStart = Date.now();
+        
         const { data, error } = await supabase.functions.invoke('hermetic-background-processor', {
           body: {
             jobId,
@@ -135,59 +171,59 @@ export class BackgroundProcessorService {
           }
         });
 
-        // Enhanced error analysis
+        const invocationTime = Date.now() - invocationStart;
+        console.log(`⏱️ INVOCATION TIMING: Attempt ${attempt + 1} completed in ${invocationTime}ms`);
+
+        // Enhanced error analysis with full transparency
         if (error) {
-          console.error(`❌ Invocation attempt ${attempt + 1} failed:`, {
+          console.error(`❌ INVOCATION FAILED (Attempt ${attempt + 1}):`, {
             message: error.message,
             details: error.details,
             hint: error.hint,
             code: error.code,
-            context: error.context
+            context: error.context,
+            invocationTime
           });
 
-          // Determine if retry is worthwhile
+          // PRINCIPLE #3: ABSOLUTELY NO FALLBACKS THAT MASK ERRORS
           if (attempt < maxRetries - 1 && this.isRetryableInvocationError(error)) {
-            continue; // Try again
-          }
-
-          return { 
-            success: false, 
-            error: `Function invocation failed after ${attempt + 1} attempts: ${error.message}${error.details ? ` - ${error.details}` : ''}`,
-            retryRecommended: this.isRetryableInvocationError(error) && attempt >= maxRetries - 1
-          };
-        }
-
-        // Validate response structure and content
-        if (!data || typeof data !== 'object') {
-          if (attempt < maxRetries - 1) {
-            console.warn(`⚠️ Invalid response structure on attempt ${attempt + 1}, retrying...`);
+            console.log(`🔄 RETRY DECISION: Error is retryable, will attempt retry...`);
             continue;
+          } else {
+            console.error(`❌ FINAL FAILURE: All attempts exhausted or non-retryable error`);
+            return {
+              success: false,
+              error: `Invocation failed: ${error.message} (Code: ${error.code})`,
+              retryRecommended: this.isRetryableInvocationError(error)
+            };
           }
-          return { success: false, error: 'Function returned invalid response structure' };
         }
 
-        if (!data.success) {
-          const errorMsg = data.error || 'Function returned unsuccessful response';
-          console.error(`❌ Function returned failure on attempt ${attempt + 1}:`, errorMsg);
-          
-          if (attempt < maxRetries - 1 && data.retryable !== false) {
-            continue; // Try again unless explicitly marked as non-retryable
-          }
-          
-          return { 
-            success: false, 
-            error: errorMsg,
-            retryRecommended: data.retryable !== false
+        // SUCCESS CASE - Function invoked successfully
+        console.log(`✅ INVOCATION SUCCESS (Attempt ${attempt + 1}):`, {
+          data,
+          invocationTime,
+          jobId
+        });
+
+        // Verify the response indicates background processing started
+        if (data?.success) {
+          console.log(`🌟 BACKGROUND PROCESSING CONFIRMED: Job ${jobId} handed off to Edge Function successfully`);
+          return { success: true };
+        } else {
+          console.error(`❌ INVOCATION RESPONSE ERROR:`, data);
+          return {
+            success: false,
+            error: `Function responded with error: ${data?.error || 'Unknown error'}`,
+            retryRecommended: false
           };
         }
-
-        console.log(`✅ Successful invocation on attempt ${attempt + 1}:`, data);
-        return { success: true };
 
       } catch (error: any) {
-        console.error(`❌ Invocation attempt ${attempt + 1} exception:`, error);
+        console.error(`❌ INVOCATION EXCEPTION (Attempt ${attempt + 1}):`, error);
         
         if (attempt < maxRetries - 1 && this.isRetryableError(error)) {
+          console.log(`🔄 EXCEPTION RETRY: Will attempt retry for retryable exception`);
           continue;
         }
         
@@ -207,66 +243,95 @@ export class BackgroundProcessorService {
   }
 
   /**
-   * ADVANCED FUNCTION HEALTH VALIDATION
-   * Comprehensive verification of edge function deployment and capabilities
+   * ENHANCED FUNCTION HEALTH CHECK - Full diagnostic capability
    */
-  private static async verifyAdvancedFunctionHealth(): Promise<{ 
-    healthy: boolean; 
+  private static async verifyAdvancedFunctionHealth(): Promise<{
+    healthy: boolean;
     error?: string;
     retryable?: boolean;
     details?: any;
   }> {
     try {
-      const startTime = Date.now();
+      console.log('🏥 HEALTH CHECK START: Verifying Edge Function deployment and accessibility...');
+      const healthStart = Date.now();
       
-      // Enhanced health check with timeout
+      // Health check with 30-second timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('TIMEOUT: Health check exceeded 30 seconds')), 30000);
+      });
+      
       const healthPromise = supabase.functions.invoke('hermetic-background-processor', {
         body: { 
-          healthCheck: true,
-          timestamp: new Date().toISOString(),
-          validateCapabilities: true
+          healthCheck: true, 
+          validateCapabilities: true,
+          requestId: `health_${Date.now()}`
         }
       });
-
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Health check timeout after 10 seconds')), 10000)
-      );
-
-      const { data, error } = await Promise.race([healthPromise, timeoutPromise]) as any;
-      const responseTime = Date.now() - startTime;
-
-      if (error) {
-        console.error('❌ Advanced health check failed:', error);
-        return { 
-          healthy: false, 
-          error: `Function not accessible: ${error.message}`,
-          retryable: this.isRetryableInvocationError(error),
-          details: { responseTime, errorCode: error.code }
-        };
-      }
-
-      // Validate health response structure
-      if (!data || typeof data !== 'object' || !data.success) {
+      
+      console.log('📡 HEALTH CHECK: Sending health verification request...');
+      const result = await Promise.race([healthPromise, timeoutPromise]) as any;
+      const healthTime = Date.now() - healthStart;
+      
+      console.log(`⏱️ HEALTH CHECK TIMING: ${healthTime}ms`);
+      
+      if (result.error) {
+        console.error('❌ HEALTH CHECK FAILED:', {
+          error: result.error,
+          code: result.error.code,
+          message: result.error.message,
+          details: result.error.details,
+          healthTime
+        });
+        
         return {
           healthy: false,
-          error: 'Function health check returned invalid response',
-          retryable: true,
-          details: { responseTime, responseData: data }
+          error: `Function not accessible: ${result.error.message} (Code: ${result.error.code})`,
+          retryable: this.isRetryableInvocationError(result.error),
+          details: { 
+            healthTime, 
+            errorCode: result.error.code,
+            errorDetails: result.error.details 
+          }
         };
       }
-
-      console.log(`✅ Advanced health check passed in ${responseTime}ms:`, data);
-      return { 
-        healthy: true,
-        details: { responseTime, capabilities: data.capabilities }
+      
+      if (result.data?.success) {
+        console.log('✅ HEALTH CHECK SUCCESS:', {
+          healthTime, 
+          version: result.data.version,
+          capabilities: result.data.capabilities,
+          timestamp: result.data.timestamp
+        });
+        
+        return {
+          healthy: true,
+          details: { 
+            healthTime, 
+            version: result.data.version,
+            capabilities: result.data.capabilities,
+            functionDeployed: true
+          }
+        };
+      }
+      
+      console.error('❌ HEALTH CHECK INVALID RESPONSE:', result.data);
+      return {
+        healthy: false,
+        error: `Invalid health response: ${result.data?.error || 'Function returned unexpected format'}`,
+        retryable: true,
+        details: { healthTime, invalidResponse: result.data }
       };
-
+      
     } catch (error: any) {
-      console.error('❌ Advanced health check exception:', error);
-      return { 
-        healthy: false, 
+      console.error('❌ HEALTH CHECK EXCEPTION:', error);
+      return {
+        healthy: false,
         error: `Health check failed: ${error.message}`,
-        retryable: this.isRetryableError(error)
+        retryable: error.message.includes('timeout') || error.message.includes('network') || error.message.includes('fetch'),
+        details: { 
+          exception: error.message,
+          stack: error.stack?.substring(0, 500)
+        }
       };
     }
   }
@@ -280,6 +345,8 @@ export class BackgroundProcessorService {
     retryable?: boolean;
   }> {
     try {
+      console.log(`🔍 JOB VALIDATION: Checking job ${jobId} state...`);
+      
       const { data: job, error } = await supabase
         .from('generation_jobs')
         .select('id, status, created_at, expires_at')
@@ -287,6 +354,7 @@ export class BackgroundProcessorService {
         .single();
 
       if (error || !job) {
+        console.error(`❌ JOB NOT FOUND: ${jobId}`, error);
         return { 
           valid: false, 
           error: `Job ${jobId} not found: ${error?.message || 'Not found'}`,
@@ -295,6 +363,7 @@ export class BackgroundProcessorService {
       }
 
       if (job.status !== 'pending') {
+        console.error(`❌ JOB WRONG STATUS: ${jobId} is ${job.status}, expected pending`);
         return { 
           valid: false, 
           error: `Job ${jobId} is not in pending status (current: ${job.status})`,
@@ -304,6 +373,7 @@ export class BackgroundProcessorService {
 
       // Check if job has expired
       if (new Date(job.expires_at) < new Date()) {
+        console.error(`❌ JOB EXPIRED: ${jobId} expired at ${job.expires_at}`);
         return {
           valid: false,
           error: `Job ${jobId} has expired (expired at: ${job.expires_at})`,
@@ -311,9 +381,11 @@ export class BackgroundProcessorService {
         };
       }
 
+      console.log(`✅ JOB VALIDATION PASSED: ${jobId} is ready for processing`);
       return { valid: true };
 
     } catch (error: any) {
+      console.error(`❌ JOB VALIDATION EXCEPTION:`, error);
       return { 
         valid: false, 
         error: `Job validation failed: ${error.message}`,
@@ -330,6 +402,8 @@ export class BackgroundProcessorService {
     reason?: string;
   }> {
     try {
+      console.log('📊 CAPACITY CHECK: Checking system processing capacity...');
+      
       // Check for too many concurrent jobs
       const { data: activeJobs, error } = await supabase
         .from('generation_jobs')
@@ -342,17 +416,19 @@ export class BackgroundProcessorService {
       const maxConcurrent = 5; // Reasonable limit
 
       if (activeCount >= maxConcurrent) {
+        console.warn(`⚠️ CAPACITY EXCEEDED: ${activeCount}/${maxConcurrent} concurrent jobs`);
         return {
           available: false,
           reason: `Too many concurrent jobs (${activeCount}/${maxConcurrent})`
         };
       }
 
+      console.log(`✅ CAPACITY AVAILABLE: ${activeCount}/${maxConcurrent} concurrent jobs`);
       return { available: true };
 
     } catch (error: any) {
       // On error, assume capacity is available to not block legitimate requests
-      console.warn('⚠️ Capacity check failed, assuming available:', error.message);
+      console.warn('⚠️ CAPACITY CHECK FAILED: Assuming available:', error.message);
       return { available: true };
     }
   }
