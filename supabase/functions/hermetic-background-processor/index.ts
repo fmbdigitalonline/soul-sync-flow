@@ -62,13 +62,43 @@ serve(async (req) => {
   }
 
   try {
-    const { jobId, blueprint } = await req.json();
+    const requestBody = await req.json();
+    
+    // PRINCIPLE #2: GROUND TRUTH - Handle health checks transparently
+    if (requestBody.healthCheck) {
+      console.log('🏥 Health check requested');
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Function is healthy and accessible',
+          timestamp: new Date().toISOString()
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { jobId, blueprint } = requestBody;
     
     if (!jobId || !blueprint) {
       throw new Error('Missing required parameters: jobId and blueprint');
     }
 
     console.log(`🌟 Starting background hermetic generation for job: ${jobId}`);
+
+    // PRINCIPLE #7: BUILD TRANSPARENTLY - Verify job exists before processing
+    const { data: jobExists, error: jobError } = await supabase
+      .from('generation_jobs')
+      .select('id, status')
+      .eq('id', jobId)
+      .single();
+
+    if (jobError || !jobExists) {
+      throw new Error(`Job ${jobId} not found or inaccessible: ${jobError?.message}`);
+    }
+
+    if (jobExists.status !== 'pending') {
+      throw new Error(`Job ${jobId} is not in pending status (current: ${jobExists.status})`);
+    }
 
     // Update job status to running
     await updateJobStatus(jobId, 'running', { phase: 'initializing', progress: 0 });
@@ -77,14 +107,27 @@ serve(async (req) => {
     EdgeRuntime.waitUntil(processHermeticGeneration(jobId, blueprint));
 
     return new Response(
-      JSON.stringify({ success: true, jobId, message: 'Background processing started' }),
+      JSON.stringify({ 
+        success: true, 
+        jobId, 
+        message: 'Background processing confirmed started',
+        timestamp: new Date().toISOString()
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
-    console.error('❌ Background processor error:', error);
+  } catch (error: any) {
+    console.error('❌ Background processor error:', {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

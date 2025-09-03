@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
 import { JobControlService, GenerationJob, JOB_TYPES } from '@/services/job-control-service';
+import { BackgroundProcessorService } from '@/services/background-processor-service';
 import { useAuth } from '@/contexts/AuthContext';
 
 export type GenerationMethod = 'client' | 'background' | null;
@@ -193,7 +194,29 @@ export const useGenerationJobControl = () => {
     if (method === 'client') {
       coordinatedLoading.startLoading('core');
     } else if (method === 'background') {
-      // Start polling for background jobs
+      // PRINCIPLE #3: NO FALLBACKS THAT MASK ERRORS - Surface background processing failures
+      console.log('🌟 Starting background hermetic generation...');
+      const backgroundResult = await BackgroundProcessorService.startHermeticGeneration(jobData, jobId);
+      
+      if (!backgroundResult.success) {
+        console.error('❌ Background generation failed to start:', backgroundResult.error);
+        // PRINCIPLE #7: BUILD TRANSPARENTLY - Update job with specific error
+        await JobControlService.updateJobStatus(
+          jobId, 
+          'failed', 
+          { phase: 'background_start_failed', progress: 0 }, 
+          `Background processing failed: ${backgroundResult.error}`
+        );
+        setJobState(prev => ({ 
+          ...prev, 
+          activeJobId: null, 
+          currentJob: null,
+          canStartGeneration: true 
+        }));
+        return { success: false, error: `Background processing unavailable: ${backgroundResult.error}` };
+      }
+      
+      // Start polling for background job status
       startJobPolling(jobId);
     }
     
