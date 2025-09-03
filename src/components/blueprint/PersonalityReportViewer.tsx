@@ -90,106 +90,232 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     }
   };
 
-  const generateReport = async (forceRegenerate = false) => {
+  /**
+   * ENHANCED CLIENT-SIDE GENERATION WITH JOB CONTROL
+   * PHASE 2: Integrates with job control system and coordinated loading
+   */
+  const generateReport = async (method: GenerationMethod = 'client', forceRegenerate = false) => {
     if (!user) return;
     
-    setGenerating(true);
+    // Check if generation is allowed (client-side mutex)
+    if (generationControl.isGenerationBlocked()) {
+      toast({
+        title: "Generation Already Active",
+        description: generationControl.getBlockingReason(),
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setError(null);
     
     try {
-      console.log('🎭 Starting standard personality report generation...', { forceRegenerate });
+      console.log(`🎭 Starting ${method} standard personality report generation...`, { forceRegenerate });
       
-      // First, get the user's blueprint
-      const blueprintResult = await blueprintService.getActiveBlueprintData();
+      // Atomic job creation with database mutex
+      const jobResult = await generationControl.startGeneration(
+        method,
+        JOB_TYPES.HERMETIC_REPORT,
+        { 
+          reportType: 'standard', 
+          forceRegenerate, 
+          language,
+          userId: user.id 
+        }
+      );
       
-      if (blueprintResult.error || !blueprintResult.data) {
-        throw new Error('No active blueprint found. Please create your blueprint first.');
+      if (!jobResult.success) {
+        if (jobResult.error === 'DUPLICATE_JOB') {
+          toast({
+            title: "Generation Already Running",
+            description: "A report generation is already in progress. Please wait for it to complete.",
+            variant: "destructive"
+          });
+        } else {
+          throw new Error(jobResult.error || 'Failed to start generation');
+        }
+        return;
       }
       
-      console.log('📋 Blueprint found, generating standard report...');
+      // CLIENT-SIDE GENERATION: Execute immediately
+      if (method === 'client') {
+        console.log('📋 Client-side generation: Getting blueprint...');
+        
+        // Get the user's blueprint
+        const blueprintResult = await blueprintService.getActiveBlueprintData();
+        
+        if (blueprintResult.error || !blueprintResult.data) {
+          throw new Error('No active blueprint found. Please create your blueprint first.');
+        }
+        
+        // Update progress
+        await generationControl.updateProgress({ phase: 'generating', progress: 25 });
+        
+        console.log('📋 Blueprint found, generating standard report...');
+        
+        // Generate the personality report
+        const result = await aiPersonalityReportService.generatePersonalityReport(blueprintResult.data, language);
+        
+        if (result.success && result.report) {
+          setReport(result.report);
+          
+          // Complete the job successfully
+          await generationControl.completeGeneration(jobResult.jobId!, true, result.report);
+          
+          toast({
+            title: t('report.standardGenerated'),
+            description: t('report.standardGeneratedDescription'),
+          });
+          console.log('✅ Standard report generated successfully');
+        } else {
+          throw new Error(result.error || 'Failed to generate standard personality report');
+        }
+      }
       
-      // Generate the personality report
-      const result = await aiPersonalityReportService.generatePersonalityReport(blueprintResult.data, language);
-      
-      if (result.success && result.report) {
-        setReport(result.report);
+      // BACKGROUND GENERATION: Show polling status
+      if (method === 'background') {
         toast({
-          title: t('report.standardGenerated'),
-          description: t('report.standardGeneratedDescription'),
+          title: "Background Generation Started",
+          description: "Your report is being generated in the background. You can leave this page and return later.",
         });
-        console.log('✅ Standard report generated successfully');
-      } else {
-        throw new Error(result.error || 'Failed to generate standard personality report');
+        console.log(`🔄 Background generation started: ${jobResult.jobId}`);
       }
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate standard personality report';
       setError(errorMessage);
+      
+      // Complete job with error
+      if (generationControl.activeJobId) {
+        await generationControl.completeGeneration(generationControl.activeJobId, false, null, errorMessage);
+      }
+      
       toast({
         title: t('report.generationFailed'),
         description: errorMessage,
         variant: "destructive"
       });
       console.error('💥 Error generating standard personality report:', err);
-    } finally {
-      setGenerating(false);
     }
   };
 
-  const generateHermeticReport = async (forceRegenerate = false) => {
+  const generateHermeticReport = async (method: GenerationMethod = 'client', forceRegenerate = false) => {
     if (!user) return;
     
-    setGenerating(true);
+    // Check if generation is allowed (client-side mutex)
+    if (generationControl.isGenerationBlocked()) {
+      toast({
+        title: "Generation Already Active",
+        description: generationControl.getBlockingReason(),
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setError(null);
     
     try {
-      console.log('🌟 Starting Hermetic Blueprint Report generation...', { forceRegenerate });
+      console.log(`🌟 Starting ${method} Hermetic Blueprint Report generation...`, { forceRegenerate });
       
-      // First, get the user's blueprint
-      const blueprintResult = await blueprintService.getActiveBlueprintData();
+      // Atomic job creation with database mutex
+      const jobResult = await generationControl.startGeneration(
+        method,
+        JOB_TYPES.HERMETIC_REPORT,
+        { 
+          reportType: 'hermetic', 
+          forceRegenerate, 
+          language,
+          userId: user.id 
+        }
+      );
       
-      if (blueprintResult.error || !blueprintResult.data) {
-        throw new Error('No active blueprint found. Please create your blueprint first.');
+      if (!jobResult.success) {
+        if (jobResult.error === 'DUPLICATE_JOB') {
+          toast({
+            title: "Generation Already Running",
+            description: "A report generation is already in progress. Please wait for it to complete.",
+            variant: "destructive"
+          });
+        } else {
+          throw new Error(jobResult.error || 'Failed to start generation');
+        }
+        return;
       }
       
-      console.log('📋 Blueprint found, generating Hermetic report...');
+      // CLIENT-SIDE GENERATION: Execute immediately
+      if (method === 'client') {
+        console.log('📋 Client-side generation: Getting blueprint...');
+        
+        // Get the user's blueprint
+        const blueprintResult = await blueprintService.getActiveBlueprintData();
+        
+        if (blueprintResult.error || !blueprintResult.data) {
+          throw new Error('No active blueprint found. Please create your blueprint first.');
+        }
+        
+        // Update progress
+        await generationControl.updateProgress({ phase: 'generating', progress: 10 });
+        
+        console.log('📋 Blueprint found, generating Hermetic report...');
+        
+        // Generate the Hermetic personality report
+        const result = await hermeticPersonalityReportService.generateHermeticReport(blueprintResult.data, language);
+        
+        if (result.success && result.report) {
+          // Clear current report state to show loading
+          console.log('🔄 Clearing current hermetic report state for refresh...');
+          setHermeticReport(null);
+          
+          // Set initial report from generation
+          setHermeticReport(result.report);
+          setReportType('hermetic'); // Switch to view the new report
+          
+          // Update progress
+          await generationControl.updateProgress({ phase: 'finalizing', progress: 95 });
+          
+          // Force fresh data load from database to ensure UI consistency
+          console.log('🔄 Force-refreshing hermetic report from database...');
+          await loadReport();
+          
+          // Complete the job successfully
+          await generationControl.completeGeneration(jobResult.jobId!, true, result.report);
+          
+          toast({
+            title: t('report.hermeticGenerated'),
+            description: `Your comprehensive ${result.report.report_content.word_count}+ word Hermetic Blueprint report has been created!`,
+          });
+          console.log('🌟 Hermetic report generated successfully');
+          console.log('📊 Hermetic report word count:', result.report.report_content.word_count);
+          console.log('✅ UI refreshed with latest database state');
+        } else {
+          throw new Error(result.error || 'Failed to generate Hermetic personality report');
+        }
+      }
       
-      // Generate the Hermetic personality report
-      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprintResult.data, language);
-      
-      if (result.success && result.report) {
-        // Clear current report state to show loading
-        console.log('🔄 Clearing current hermetic report state for refresh...');
-        setHermeticReport(null);
-        
-        // Set initial report from generation
-        setHermeticReport(result.report);
-        setReportType('hermetic'); // Switch to view the new report
-        
-        // Force fresh data load from database to ensure UI consistency
-        console.log('🔄 Force-refreshing hermetic report from database...');
-        await loadReport();
-        
+      // BACKGROUND GENERATION: Show polling status  
+      if (method === 'background') {
         toast({
-          title: t('report.hermeticGenerated'),
-          description: `Your comprehensive ${result.report.report_content.word_count}+ word Hermetic Blueprint report has been created!`,
+          title: "Background Generation Started",
+          description: "Your Hermetic report is being generated in the background. This will take about 1 hour - you can leave and return later.",
         });
-        console.log('🌟 Hermetic report generated successfully');
-        console.log('📊 Hermetic report word count:', result.report.report_content.word_count);
-        console.log('✅ UI refreshed with latest database state');
-      } else {
-        throw new Error(result.error || 'Failed to generate Hermetic personality report');
+        console.log(`🔄 Background Hermetic generation started: ${jobResult.jobId}`);
       }
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate Hermetic personality report';
       setError(errorMessage);
+      
+      // Complete job with error
+      if (generationControl.activeJobId) {
+        await generationControl.completeGeneration(generationControl.activeJobId, false, null, errorMessage);
+      }
+      
       toast({
         title: t('report.hermeticGenerationFailed'),
         description: errorMessage,
         variant: "destructive"
       });
       console.error('💥 Error generating Hermetic personality report:', err);
-    } finally {
-      setGenerating(false);
     }
   };
 
