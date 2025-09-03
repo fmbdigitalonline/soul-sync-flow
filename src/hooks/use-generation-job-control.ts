@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
 import { JobControlService, GenerationJob, JOB_TYPES } from '@/services/job-control-service';
 import { BackgroundProcessorService } from '@/services/background-processor-service';
+import { JobCleanupService } from '@/services/job-cleanup-service';
 import { useAuth } from '@/contexts/AuthContext';
 
 export type GenerationMethod = 'client' | 'background' | null;
@@ -284,10 +285,19 @@ export const useGenerationJobControl = () => {
     }
   }, [jobState.activeJobId]);
   
-  // Check for existing jobs on component mount
+  // Initialize automated cleanup and check for existing jobs on mount
   useEffect(() => {
     if (user?.id) {
+      // Start automated cleanup service
+      JobCleanupService.startAutomatedCleanup(10); // Every 10 minutes
+      
+      // Check for existing jobs
       checkForExistingJobs();
+      
+      // Cleanup on unmount
+      return () => {
+        JobCleanupService.stopAutomatedCleanup();
+      };
     }
   }, [user?.id, checkForExistingJobs]);
   
@@ -329,6 +339,61 @@ export const useGenerationJobControl = () => {
     }
   };
 
+  /**
+   * EMERGENCY RECOVERY METHODS
+   * For when users get stuck in error loops
+   */
+  const performEmergencyRecovery = useCallback(async (): Promise<{
+    success: boolean;
+    message: string;
+  }> => {
+    try {
+      console.log('🚑 Performing emergency recovery...');
+      
+      // Stop any current polling
+      stopJobPolling();
+      
+      // Force cleanup of stuck jobs
+      const cleanupResult = await JobCleanupService.performEmergencyCleanup();
+      
+      // Reset local state
+      setJobState({
+        generationMethod: null,
+        activeJobId: null,
+        currentJob: null,
+        jobProgress: {},
+        isPolling: false,
+        canStartGeneration: true,
+      });
+      
+      // Complete any coordinated loading
+      coordinatedLoading.completeLoading('core');
+      
+      if (cleanupResult.success) {
+        return {
+          success: true,
+          message: `Emergency recovery completed. Cleaned up ${cleanupResult.recovered} stuck jobs.`
+        };
+      } else {
+        return {
+          success: false,
+          message: `Emergency recovery partially failed: ${cleanupResult.errors.join(', ')}`
+        };
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Emergency recovery failed:', error);
+      return {
+        success: false,
+        message: `Emergency recovery failed: ${error.message}`
+      };
+    }
+  }, [stopJobPolling, coordinatedLoading]);
+
+  const getSystemHealth = useCallback(async () => {
+    return await JobControlService.getJobSystemHealth();
+  }, []);
+
   return {
     // State
     ...jobState,
@@ -345,11 +410,15 @@ export const useGenerationJobControl = () => {
     updateProgress,
     checkForExistingJobs,
     
+    // Emergency recovery methods
+    performEmergencyRecovery,
+    getSystemHealth,
+    
     // Utility methods
     isGenerationBlocked: () => !jobState.canStartGeneration,
     getBlockingReason: () => {
       if (coordinatedLoading.isLoading) return 'Client-side generation in progress';
-      if (jobState.currentJob?.status === 'running') return 'Background generation in progress';
+      if (jobState.currentJob?.status === 'running') return 'Background generation in progress';  
       if (jobState.currentJob?.status === 'pending') return 'Generation job is pending';
       return undefined;
     },

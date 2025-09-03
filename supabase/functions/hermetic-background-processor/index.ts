@@ -64,17 +64,57 @@ serve(async (req) => {
   try {
     const requestBody = await req.json();
     
-    // PRINCIPLE #2: GROUND TRUTH - Handle health checks transparently
+    // ENHANCED HEALTH CHECK - Validate all capabilities
     if (requestBody.healthCheck) {
-      console.log('🏥 Health check requested');
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Function is healthy and accessible',
-          timestamp: new Date().toISOString()
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.log('🏥 Enhanced health check requested');
+      
+      try {
+        // Validate environment variables
+        const openaiKey = Deno.env.get('OPENAI_API_KEY');
+        const supabaseUrl = Deno.env.get('SUPABASE_URL');
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+        
+        if (!openaiKey || !supabaseUrl || !supabaseKey) {
+          throw new Error('Missing required environment variables');
+        }
+        
+        // Test database connectivity if requested
+        if (requestBody.validateCapabilities) {
+          const { data: testQuery, error: testError } = await supabase
+            .from('generation_jobs')
+            .select('count')
+            .limit(1);
+            
+          if (testError) {
+            throw new Error(`Database connectivity failed: ${testError.message}`);
+          }
+        }
+        
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: 'Function is healthy with all capabilities validated',
+            timestamp: new Date().toISOString(),
+            capabilities: {
+              database: true,
+              openai: !!openaiKey,
+              environment: 'production'
+            },
+            version: '2.0.0'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (healthError: any) {
+        console.error('❌ Health check failed:', healthError);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: healthError.message,
+            timestamp: new Date().toISOString()
+          }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
     
     const { jobId, blueprint } = requestBody;

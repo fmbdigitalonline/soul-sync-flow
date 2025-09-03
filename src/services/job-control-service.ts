@@ -158,6 +158,150 @@ export class JobControlService {
   }
 
   /**
+   * FORCE CLEANUP SPECIFIC JOB
+   * Manually cleanup a specific stuck job (immediate recovery)
+   */
+  static async forceCleanupJob(jobId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log(`🔧 Force cleaning up job: ${jobId}`);
+      
+      // First check if job exists and get its current state
+      const { data: job, error: fetchError } = await supabase
+        .from('generation_jobs')
+        .select('*')
+        .eq('id', jobId)
+        .single();
+
+      if (fetchError || !job) {
+        return { success: false, error: `Job ${jobId} not found: ${fetchError?.message}` };
+      }
+
+      // Force update to failed status with cleanup reason
+      const { error: updateError } = await supabase
+        .from('generation_jobs')
+        .update({
+          status: 'failed',
+          error_message: 'Job force-cleaned due to stuck state',
+          completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', jobId);
+
+      if (updateError) {
+        return { success: false, error: `Failed to cleanup job: ${updateError.message}` };
+      }
+
+      console.log(`✅ Force cleaned job ${jobId} - was ${job.status}`);
+      return { success: true };
+
+    } catch (error: any) {
+      console.error('❌ Force cleanup failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * COMPREHENSIVE JOB RECOVERY
+   * Detects and recovers stuck jobs automatically
+   */
+  static async recoverStuckJobs(): Promise<{ recovered: number; errors: string[] }> {
+    try {
+      console.log('🔍 Scanning for stuck generation jobs...');
+      
+      const { data: stuckJobs, error } = await supabase
+        .from('generation_jobs')
+        .select('*')
+        .in('status', ['pending', 'running'])
+        .lt('expires_at', new Date().toISOString());
+
+      if (error) throw error;
+
+      const errors: string[] = [];
+      let recovered = 0;
+
+      for (const job of stuckJobs || []) {
+        console.log(`🚨 Found stuck job: ${job.id} (${job.status}) - expired ${job.expires_at}`);
+        
+        const result = await this.forceCleanupJob(job.id);
+        if (result.success) {
+          recovered++;
+        } else {
+          errors.push(`Failed to recover ${job.id}: ${result.error}`);
+        }
+      }
+
+      console.log(`🔧 Recovery complete: ${recovered} jobs recovered, ${errors.length} errors`);
+      return { recovered, errors };
+
+    } catch (error: any) {
+      console.error('❌ Job recovery failed:', error);
+      return { recovered: 0, errors: [error.message] };
+    }
+  }
+
+  /**
+   * GET JOB HEALTH STATUS
+   * Comprehensive job system health check
+   */
+  static async getJobSystemHealth(): Promise<{
+    healthy: boolean;
+    activeJobs: number;
+    stuckJobs: number;
+    errors: string[];
+    recommendations: string[];
+  }> {
+    try {
+      const errors: string[] = [];
+      const recommendations: string[] = [];
+
+      // Count active jobs
+      const activeJobs = await this.getActiveJobs();
+      const activeCount = activeJobs.length;
+
+      // Check for stuck jobs (expired but still pending/running)
+      const { data: stuckJobs, error: stuckError } = await supabase
+        .from('generation_jobs')
+        .select('id, status, created_at, expires_at')
+        .in('status', ['pending', 'running'])
+        .lt('expires_at', new Date().toISOString());
+
+      if (stuckError) {
+        errors.push(`Failed to check stuck jobs: ${stuckError.message}`);
+      }
+
+      const stuckCount = stuckJobs?.length || 0;
+
+      // Generate recommendations
+      if (stuckCount > 0) {
+        recommendations.push(`Run job recovery to clean up ${stuckCount} stuck jobs`);
+      }
+      
+      if (activeCount > 3) {
+        recommendations.push('High number of active jobs detected - consider rate limiting');
+      }
+
+      const healthy = errors.length === 0 && stuckCount === 0;
+
+      return {
+        healthy,
+        activeJobs: activeCount,
+        stuckJobs: stuckCount,
+        errors,
+        recommendations
+      };
+
+    } catch (error: any) {
+      return {
+        healthy: false,
+        activeJobs: 0,
+        stuckJobs: 0,
+        errors: [error.message],
+        recommendations: ['System health check failed - investigate database connectivity']
+      };
+    }
+  }
+
+  /**
    * CHECK IF GENERATION IS ALLOWED
    * Returns false if any generation is already running
    */
