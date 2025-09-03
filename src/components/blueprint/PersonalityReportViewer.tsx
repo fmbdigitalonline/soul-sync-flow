@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { aiPersonalityReportService, PersonalityReport } from '@/services/ai-personality-report-service';
@@ -13,6 +14,11 @@ import { blueprintService } from '@/services/blueprint-service';
 import { useToast } from '@/hooks/use-toast';
 import { CosmicCard } from '@/components/ui/cosmic-card';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { useGenerationJobControl } from '@/hooks/use-generation-job-control';
+import { JOB_TYPES } from '@/services/job-control-service';
+import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
+
+type GenerationMethod = 'client' | 'background';
 
 interface PersonalityReportViewerProps {
   className?: string;
@@ -23,12 +29,17 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   const { t, language } = useLanguage();
   const { toast } = useToast();
   const { spacing, getTextSize, isMobile, isUltraNarrow, isFoldDevice } = useResponsiveLayout();
+  
+  // Initialize generation job control
+  const generationControl = useGenerationJobControl();
+  
   const [report, setReport] = useState<PersonalityReport | null>(null);
   const [hermeticReport, setHermeticReport] = useState<HermeticPersonalityReport | null>(null);
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reportType, setReportType] = useState<'standard' | 'hermetic'>('standard');
+  const [showMethodDialog, setShowMethodDialog] = useState(false);
+  const [pendingGeneration, setPendingGeneration] = useState<{ type: 'standard' | 'hermetic', forceRegenerate: boolean } | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     overview: true,
     hermetic_laws: false,
@@ -38,6 +49,16 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     practical_framework: false,
     intelligence_analysis: false
   });
+
+  // Progress mapping for IntelligentSoulOrb
+  const getHermeticProgress = () => {
+    if (!generationControl.isGenerating) return 0;
+    
+    const progress = generationControl.jobProgress;
+    if (progress?.phase === 'generating') return progress.progress || 25;
+    if (progress?.phase === 'finalizing') return progress.progress || 95;
+    return 10; // Default starting progress
+  };
 
   useEffect(() => {
     loadReport();
@@ -160,7 +181,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           setReport(result.report);
           
           // Complete the job successfully
-          await generationControl.completeGeneration(jobResult.jobId!, true, result.report);
+          await generationControl.completeGeneration(true, result.report);
           
           toast({
             title: t('report.standardGenerated'),
@@ -187,7 +208,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       
       // Complete job with error
       if (generationControl.activeJobId) {
-        await generationControl.completeGeneration(generationControl.activeJobId, false, null, errorMessage);
+        await generationControl.completeGeneration(false, null, errorMessage);
       }
       
       toast({
@@ -278,7 +299,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           await loadReport();
           
           // Complete the job successfully
-          await generationControl.completeGeneration(jobResult.jobId!, true, result.report);
+          await generationControl.completeGeneration(true, result.report);
           
           toast({
             title: t('report.hermeticGenerated'),
@@ -307,7 +328,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       
       // Complete job with error
       if (generationControl.activeJobId) {
-        await generationControl.completeGeneration(generationControl.activeJobId, false, null, errorMessage);
+        await generationControl.completeGeneration(false, null, errorMessage);
       }
       
       toast({
@@ -325,9 +346,29 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   const handleRegenerate = () => {
     if (reportType === 'hermetic') {
-      generateHermeticReport(true);
+      setPendingGeneration({ type: 'hermetic', forceRegenerate: true });
+      setShowMethodDialog(true);
     } else {
-      generateReport(true);
+      setPendingGeneration({ type: 'standard', forceRegenerate: true });
+      setShowMethodDialog(true);
+    }
+  };
+
+  const handleGenerateClick = (type: 'standard' | 'hermetic', forceRegenerate = false) => {
+    setPendingGeneration({ type, forceRegenerate });
+    setShowMethodDialog(true);
+  };
+
+  const handleMethodSelection = async (method: GenerationMethod) => {
+    setShowMethodDialog(false);
+    
+    if (pendingGeneration) {
+      if (pendingGeneration.type === 'hermetic') {
+        await generateHermeticReport(method, pendingGeneration.forceRegenerate);
+      } else {
+        await generateReport(method, pendingGeneration.forceRegenerate);
+      }
+      setPendingGeneration(null);
     }
   };
 
@@ -386,12 +427,12 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             <div className="flex flex-col gap-4 justify-center w-full">
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Button 
-                  onClick={() => generateReport(false)} 
-                  disabled={generating}
+                  onClick={() => handleGenerateClick('standard', false)} 
+                  disabled={generationControl.isGenerating}
                   className="bg-soul-purple hover:bg-soul-purple/90 w-full sm:w-auto"
                   size={isMobile ? "default" : "default"}
                 >
-                  {generating ? (
+                  {generationControl.isGenerating ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       {t('report.generating')}
@@ -404,12 +445,12 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   )}
                 </Button>
                 <Button 
-                  onClick={() => generateHermeticReport(false)} 
-                  disabled={generating}
+                  onClick={() => handleGenerateClick('hermetic', false)} 
+                  disabled={generationControl.isGenerating}
                   className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white w-full sm:w-auto"
                   size={isMobile ? "default" : "default"}
                 >
-                  {generating ? (
+                  {generationControl.isGenerating ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       {t('report.generating')}
@@ -547,6 +588,54 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   return (
     <div className={`${className} w-full max-w-full overflow-hidden`}>
+      {/* Floating Soul Orb for Progress */}
+      {generationControl.isGenerating && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <IntelligentSoulOrb
+            size="md"
+            intelligenceLevel={50}
+            showHermeticProgress={true}
+            hermeticProgress={getHermeticProgress()}
+            pulse={true}
+          />
+        </div>
+      )}
+
+      {/* Generation Method Selection Dialog */}
+      <Dialog open={showMethodDialog} onOpenChange={setShowMethodDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Choose Generation Method</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Button
+                onClick={() => handleMethodSelection('client')}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <Zap className="h-4 w-4 mr-2" />
+                <div className="text-left">
+                  <div className="font-medium">Quick Generation</div>
+                  <div className="text-xs text-muted-foreground">Generate immediately (2-3 minutes)</div>
+                </div>
+              </Button>
+              <Button
+                onClick={() => handleMethodSelection('background')}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                <div className="text-left">
+                  <div className="font-medium">Background Generation</div>
+                  <div className="text-xs text-muted-foreground">Generate in background (up to 1 hour)</div>
+                </div>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Report Type Toggle */}
       {(report || hermeticReport) && (
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -582,12 +671,12 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           <div className="flex gap-2">
             {!report && (
               <Button 
-                onClick={() => generateReport(false)} 
-                disabled={generating}
+                onClick={() => handleGenerateClick('standard', false)} 
+                disabled={generationControl.isGenerating}
                 variant="outline"
                 size="sm"
               >
-                {generating ? (
+                {generationControl.isGenerating ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <Plus className="h-4 w-4 mr-2" />
@@ -597,13 +686,13 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             )}
             {!hermeticReport && (
               <Button 
-                onClick={() => generateHermeticReport(false)} 
-                disabled={generating}
+                onClick={() => handleGenerateClick('hermetic', false)} 
+                disabled={generationControl.isGenerating}
                 variant="outline"
                 size="sm"
                 className="border-purple-200 text-purple-600 hover:bg-purple-50"
               >
-                {generating ? (
+                {generationControl.isGenerating ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <Star className="h-4 w-4 mr-2" />
@@ -650,16 +739,30 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               onClick={handleRegenerate} 
               variant="outline" 
               size="sm"
-              disabled={generating}
+              disabled={generationControl.isGenerating}
               className="flex-1 sm:flex-none"
             >
-              {generating ? (
+              {generationControl.isGenerating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              <span className="ml-1 sm:ml-2">{generating ? 'Regenerating...' : 'Regenerate'}</span>
+              <span className="ml-1 sm:ml-2">{generationControl.isGenerating ? 'Regenerating...' : 'Regenerate'}</span>
             </Button>
+            {generationControl.isGenerating && generationControl.activeJobId && (
+              <Button 
+                onClick={async () => {
+                  await generationControl.completeGeneration(false, null, 'Cancelled by user');
+                  window.location.reload(); // Force refresh to clear state
+                }}
+                variant="destructive" 
+                size="sm"
+                className="flex-shrink-0"
+              >
+                <X className="h-4 w-4" />
+                <span className="ml-1 sm:ml-2">Cancel</span>
+              </Button>
+            )}
             <Button onClick={handleRefresh} variant="ghost" size="sm" className="flex-shrink-0">
               <RefreshCw className="h-4 w-4" />
             </Button>
