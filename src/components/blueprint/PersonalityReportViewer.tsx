@@ -597,19 +597,6 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   return (
     <div className={`${className} w-full max-w-full overflow-hidden`}>
-      {/* Floating Soul Orb for Progress */}
-      {generationControl.isGenerating && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <IntelligentSoulOrb 
-            size="md"
-            intelligenceLevel={50}
-            showHermeticProgress={getOrbVisualState().showProgress}
-            hermeticProgress={getOrbVisualState().progress}
-            showRainbowCelebration={getOrbVisualState().showCelebration}
-            pulse={generationControl.isGenerating}
-          />
-        </div>
-      )}
 
       {/* Generation Method Selection Dialog */}
       <Dialog open={showMethodDialog} onOpenChange={setShowMethodDialog}>

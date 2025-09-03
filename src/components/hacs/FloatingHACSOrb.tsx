@@ -7,7 +7,7 @@ import { useHACSMicroLearning } from '@/hooks/use-hacs-micro-learning';
 import { useHACSInsights } from '@/hooks/use-hacs-insights';
 import { useAutonomousOrchestration } from '@/hooks/use-autonomous-orchestration';
 import { usePersonalityEngine } from '@/hooks/use-personality-engine';
-import { useHermeticReportStatus } from '@/hooks/use-hermetic-report-status';
+import { useGenerationJobControl } from '@/hooks/use-generation-job-control';
 import { VoiceTokenGenerator } from '@/services/voice-token-generator';
 import { HACSMicroLearning } from './HACSMicroLearning';
 import { HACSChatOverlay } from './HACSChatOverlay';
@@ -66,7 +66,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [streamingTiming, setStreamingTiming] = useState(75);
   
   const { intelligence, loading, refreshIntelligence } = useHacsIntelligence();
-  const { hasReport: hasHermeticReport, loading: hermeticLoading, refreshStatus: refreshHermeticStatus } = useHermeticReportStatus();
+  const generationJobControl = useGenerationJobControl();
+  const { isGenerating: isGeneratingJob, progressMapping } = generationJobControl;
   const {
     currentQuestion,
     isGenerating,
@@ -155,7 +156,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const intelligenceLevel = intelligence?.intelligence_level || 0;
 
   // Phase 3: Enhanced system readiness check 
-  const isSystemReady = !loading && !databaseValidation.loading && !hermeticLoading && !!intelligence;
+  const isSystemReady = !loading && !databaseValidation.loading && !!intelligence;
 
   // Subscribe to global chat loading state and streaming timing
   useEffect(() => {
@@ -170,7 +171,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
   // Update orb stage based on authentic HACS state + hermetic generation
   useEffect(() => {
-    if (isGenerating || isGeneratingInsight || isGeneratingReport) {
+    if (isGenerating || isGeneratingInsight || isGeneratingReport || isGeneratingJob) {
       setOrbStage("generating");
     } else if (currentQuestion) {
       setOrbStage("collecting");
@@ -183,43 +184,50 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     } else {
       setOrbStage("welcome");
     }
-  }, [isGenerating, isGeneratingInsight, isGeneratingReport, currentQuestion, currentInsight, intelligenceLevel]);
+  }, [isGenerating, isGeneratingInsight, isGeneratingReport, isGeneratingJob, currentQuestion, currentInsight, intelligenceLevel]);
 
-  // Monitor hermetic report generation progress and completion status
+  // Monitor hermetic report generation progress using job control system
   useEffect(() => {
-    if (isGeneratingReport) {
-      // Principle #2: Show real progress, not simulated
-      // Use smooth animation from 40% to 95% while generating
-      const progressInterval = setInterval(() => {
-        setHermeticProgress(prev => {
-          // Cap at 95% while generating to show it's not complete
-          if (prev >= 95) {
-            return 95;
-          }
-          return Math.min(prev + 1.5, 95); // Slower, more realistic increment
-        });
-      }, 1500); // Slower update interval for realism
-
-      return () => clearInterval(progressInterval);
-    } else if (hasHermeticReport) {
-      // Principle #7: Clear completion state - jump to 100% when report exists
+    // Use real job progress from the generation job control system
+    if (isGeneratingJob || isGeneratingReport) {
+      // Use progressMapping for real progress tracking
+      const realProgress = progressMapping.progress;
+      setHermeticProgress(realProgress);
+      
+      // Show celebration when progress mapping indicates completion
+      if (progressMapping.showCelebration && !showCompletionIndicator) {
+        setShowCompletionIndicator(true);
+        setShowRainbowCelebration(true);
+        setTimeout(() => {
+          setShowCompletionIndicator(false);
+          setShowRainbowCelebration(false);
+        }, 4000);
+      }
+    } else if (generationJobControl.currentJob?.status === 'completed') {
+      // Report completed - set to 100% and celebrate
       setHermeticProgress(100);
-      // Trigger dramatic rainbow celebration
       if (!showCompletionIndicator) {
         setShowCompletionIndicator(true);
         setShowRainbowCelebration(true);
         setTimeout(() => {
           setShowCompletionIndicator(false);
           setShowRainbowCelebration(false);
-        }, 4000); // 4 seconds for full rainbow celebration
+        }, 4000);
       }
     } else {
-      // Reset to baseline when not generating and no report
+      // Reset to baseline when not generating and no active job
       setHermeticProgress(40);
       setShowCompletionIndicator(false);
       setShowRainbowCelebration(false);
     }
-  }, [isGeneratingReport, hasHermeticReport, showCompletionIndicator]);
+  }, [
+    isGeneratingJob, 
+    isGeneratingReport, 
+    progressMapping.progress, 
+    progressMapping.showCelebration,
+    generationJobControl.currentJob?.status,
+    showCompletionIndicator
+  ]);
 
   // Show speech bubble for questions or insights - click to show only
   useEffect(() => {
@@ -285,7 +293,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   // Phase 3: Enhanced autonomous triggers with advanced intelligence integration
   useEffect(() => {
     // Gate autonomous behaviors during introduction OR during background report generation
-    if (introductionState.isActive || isGeneratingReport) {
+    if (introductionState.isActive || isGeneratingReport || isGeneratingJob) {
       return;
     }
 
@@ -549,8 +557,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     // CRITICAL: Refresh intelligence data to show updated levels in real-time
     console.log('🎯 Learning completed, refreshing intelligence for visual update...');
     await refreshIntelligence();
-    // Refresh hermetic report status in case report was generated during learning
-    refreshHermeticStatus();
     
     // Show module activity based on growth
     if (growth > 0) {
@@ -680,7 +686,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               activeModule={activeModule}
               moduleActivity={moduleActivity || isGeneratingInsight || isGeneratingReport}
               hermeticProgress={hermeticProgress}
-              showHermeticProgress={isGeneratingReport || hasHermeticReport}
+              showHermeticProgress={isGeneratingReport || isGeneratingJob}
               onClick={handleOrbClick}
               className="shadow-lg hover:shadow-xl transition-shadow"
             />
@@ -737,7 +743,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               showProgressRing={true}
               className={isGeneratingReport ? "animate-pulse" : ""}
               hermeticProgress={hermeticProgress}
-              showHermeticProgress={isGeneratingReport || hasHermeticReport}
+              showHermeticProgress={isGeneratingReport || isGeneratingJob}
               showRainbowCelebration={showRainbowCelebration}
             />
             {isGeneratingReport && (
