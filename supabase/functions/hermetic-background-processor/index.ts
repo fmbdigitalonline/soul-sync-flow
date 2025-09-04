@@ -11,6 +11,9 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  const startTime = Date.now();
+  const requestId = crypto.randomUUID().substring(0, 8);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -19,37 +22,93 @@ serve(async (req) => {
 
   try {
     const { userId, blueprint, language = 'en' } = await req.json();
-    console.log(`🌟 HERMETIC BACKGROUND PROCESSOR: Starting generation for user ${userId}`);
+    console.log(`🌟 [${requestId}] HERMETIC BACKGROUND PROCESSOR: Starting generation for user ${userId}`);
+    console.log(`📋 [${requestId}] Request details:`, {
+      userId,
+      language,
+      blueprintId: blueprint?.id,
+      blueprintUserMeta: !!blueprint?.user_meta,
+      blueprintSystems: {
+        mbti: !!blueprint?.cognition_mbti,
+        astrology: !!blueprint?.archetype_western,
+        numerology: !!blueprint?.values_life_path,
+        humanDesign: !!blueprint?.energy_strategy_human_design,
+        chinese: !!blueprint?.archetype_chinese
+      }
+    });
 
     if (!userId || !blueprint) {
       throw new Error('User ID and blueprint are required');
     }
 
+    const processStartTime = Date.now();
+    let phaseMetrics = {};
+    let totalApiCalls = 0;
+    let totalWordCount = 0;
+
     // PHASE 1: System Integration (replicate client-side flow)
-    console.log('📋 Phase 1: System Integration Analysis...');
-    const systemSections = await generateSystemTranslation(supabase, blueprint);
+    console.log(`📋 [${requestId}] Phase 1: System Integration Analysis...`);
+    const phase1Start = Date.now();
+    const systemSections = await generateSystemTranslation(supabase, blueprint, requestId);
+    const phase1Duration = Date.now() - phase1Start;
+    const phase1Words = systemSections.reduce((total, s) => total + (s.word_count || 0), 0);
+    phaseMetrics['phase1_system'] = { duration: phase1Duration, sections: systemSections.length, words: phase1Words };
+    totalApiCalls += systemSections.length;
+    totalWordCount += phase1Words;
+    console.log(`✅ [${requestId}] Phase 1 completed: ${systemSections.length} sections, ${phase1Words} words, ${phase1Duration}ms`);
     
     // PHASE 2: Hermetic Laws Analysis  
-    console.log('🔮 Phase 2: Hermetic Law Analysis...');
-    const hermeticSections = await generateHermeticLawAnalysis(supabase, blueprint);
+    console.log(`🔮 [${requestId}] Phase 2: Hermetic Law Analysis...`);
+    const phase2Start = Date.now();
+    const hermeticSections = await generateHermeticLawAnalysis(supabase, blueprint, requestId);
+    const phase2Duration = Date.now() - phase2Start;
+    const phase2Words = hermeticSections.reduce((total, s) => total + (s.word_count || 0), 0);
+    phaseMetrics['phase2_hermetic'] = { duration: phase2Duration, sections: hermeticSections.length, words: phase2Words };
+    totalApiCalls += hermeticSections.length;
+    totalWordCount += phase2Words;
+    console.log(`✅ [${requestId}] Phase 2 completed: ${hermeticSections.length} sections, ${phase2Words} words, ${phase2Duration}ms`);
     
     // PHASE 3: Gate Analysis
-    console.log('🚪 Phase 3: Gate-by-Gate Analysis...');
+    console.log(`🚪 [${requestId}] Phase 3: Gate-by-Gate Analysis...`);
+    const phase3Start = Date.now();
     const gates = extractHumanDesignGates(blueprint);
-    const gateSections = gates.length > 0 ? await generateGateAnalysis(supabase, blueprint, gates) : [];
+    console.log(`🚪 [${requestId}] Extracted ${gates.length} gates:`, gates.sort((a, b) => a - b));
+    const gateSections = gates.length > 0 ? await generateGateAnalysis(supabase, blueprint, gates, requestId) : [];
+    const phase3Duration = Date.now() - phase3Start;
+    const phase3Words = gateSections.reduce((total, s) => total + (s.word_count || 0), 0);
+    phaseMetrics['phase3_gates'] = { duration: phase3Duration, sections: gateSections.length, words: phase3Words, gatesAnalyzed: gates.length };
+    totalApiCalls += gateSections.length;
+    totalWordCount += phase3Words;
+    console.log(`✅ [${requestId}] Phase 3 completed: ${gates.length} gates analyzed, ${gateSections.length} sections, ${phase3Words} words, ${phase3Duration}ms`);
     
     // PHASE 4: Intelligence Analysis
-    console.log('🧠 Phase 4: Intelligence Analysis...');
+    console.log(`🧠 [${requestId}] Phase 4: Intelligence Analysis...`);
+    const phase4Start = Date.now();
     const allSections = [...systemSections, ...hermeticSections, ...gateSections];
-    const intelligenceResult = await generateIntelligenceAnalysis(supabase, blueprint, allSections);
+    console.log(`🧠 [${requestId}] Intelligence analysis input: ${allSections.length} sections, ${totalWordCount} words so far`);
+    const intelligenceResult = await generateIntelligenceAnalysis(supabase, blueprint, allSections, requestId);
+    const phase4Duration = Date.now() - phase4Start;
+    phaseMetrics['phase4_intelligence'] = { duration: phase4Duration, words: intelligenceResult.word_count || 0 };
+    totalApiCalls += 1; // Intelligence analysis is one large API call
+    totalWordCount += intelligenceResult.word_count || 0;
+    console.log(`✅ [${requestId}] Phase 4 completed: Intelligence analysis ${intelligenceResult.word_count || 0} words, ${phase4Duration}ms`);
     
     // PHASE 5: Synthesis
-    console.log('🌀 Phase 5: Synthesis...');
-    const synthesis = await generateSynthesis(supabase, blueprint, allSections);
-    const consciousnessMap = await generateConsciousnessMap(supabase, blueprint, allSections);
-    const practicalApplications = await generatePracticalApplications(supabase, blueprint, allSections);
+    console.log(`🌀 [${requestId}] Phase 5: Synthesis...`);
+    const phase5Start = Date.now();
+    const synthesis = await generateSynthesis(supabase, blueprint, allSections, requestId);
+    const consciousnessMap = await generateConsciousnessMap(supabase, blueprint, allSections, requestId);
+    const practicalApplications = await generatePracticalApplications(supabase, blueprint, allSections, requestId);
+    const phase5Duration = Date.now() - phase5Start;
+    const synthesisWords = (synthesis || '').split(' ').length + (consciousnessMap || '').split(' ').length + (practicalApplications || '').split(' ').length;
+    phaseMetrics['phase5_synthesis'] = { duration: phase5Duration, words: synthesisWords };
+    totalApiCalls += 3; // Three synthesis API calls
+    totalWordCount += synthesisWords;
+    console.log(`✅ [${requestId}] Phase 5 completed: Synthesis ${synthesisWords} words, ${phase5Duration}ms`);
     
-    // Build and store the complete report
+    // PHASE 6: Report Building & Storage
+    console.log(`💾 [${requestId}] Phase 6: Building and storing report...`);
+    const phase6Start = Date.now();
     const report = await buildAndStoreReport(supabase, blueprint, {
       sections: allSections,
       synthesis,
@@ -57,28 +116,64 @@ serve(async (req) => {
       practical_applications: practicalApplications,
       intelligence_result: intelligenceResult,
       gates_analyzed: gates
+    }, requestId);
+    const phase6Duration = Date.now() - phase6Start;
+    phaseMetrics['phase6_storage'] = { duration: phase6Duration };
+    console.log(`✅ [${requestId}] Phase 6 completed: Report stored with ID ${report.id}, ${phase6Duration}ms`);
+
+    // PHASE 7: Quote Generation
+    console.log(`💬 [${requestId}] Phase 7: Quote generation...`);
+    const phase7Start = Date.now();
+    const quotes = await generateHermeticQuotes(supabase, blueprint, allSections, requestId);
+    const phase7Duration = Date.now() - phase7Start;
+    phaseMetrics['phase7_quotes'] = { duration: phase7Duration, quotes: quotes.length };
+    totalApiCalls += 1; // Quote generation is one API call
+    console.log(`✅ [${requestId}] Phase 7 completed: ${quotes.length} quotes generated, ${phase7Duration}ms`);
+
+    const totalDuration = Date.now() - startTime;
+    const processingDuration = Date.now() - processStartTime;
+
+    // Final metrics logging
+    console.log(`🎉 [${requestId}] HERMETIC BACKGROUND PROCESSOR: Generation completed successfully`);
+    console.log(`📊 [${requestId}] Final metrics:`, {
+      totalDuration: `${totalDuration}ms`,
+      processingDuration: `${processingDuration}ms`,
+      totalApiCalls,
+      totalWordCount,
+      phaseBreakdown: phaseMetrics,
+      reportId: report.id,
+      quotesGenerated: quotes.length
     });
-
-    // Generate quotes
-    const quotes = await generateHermeticQuotes(supabase, blueprint, allSections);
-
-    console.log(`✅ HERMETIC BACKGROUND PROCESSOR: Generation completed successfully`);
 
     return new Response(JSON.stringify({ 
       success: true, 
       report,
       quotes,
-      message: 'Hermetic report generated successfully' 
+      message: `Hermetic report generated successfully: ${totalWordCount} words in ${totalDuration}ms`,
+      metrics: {
+        totalDuration,
+        processingDuration,
+        totalApiCalls,
+        totalWordCount,
+        phases: phaseMetrics
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('❌ HERMETIC BACKGROUND PROCESSOR: Generation failed:', error);
+    const errorDuration = Date.now() - startTime;
+    console.error(`❌ [${requestId}] HERMETIC BACKGROUND PROCESSOR: Generation failed after ${errorDuration}ms:`, error);
+    console.error(`❌ [${requestId}] Error details:`, {
+      name: error.name,
+      message: error.message,
+      stack: error.stack?.substring(0, 500)
+    });
 
     return new Response(JSON.stringify({ 
       success: false, 
-      error: String(error) 
+      error: String(error),
+      duration: errorDuration
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -87,8 +182,8 @@ serve(async (req) => {
 });
 
 // Replicate the exact client-side functions here for background processing
-async function generateSystemTranslation(supabase: any, blueprint: any) {
-  console.log('📋 Generating system translation...');
+async function generateSystemTranslation(supabase: any, blueprint: any, requestId: string) {
+  console.log(`📋 [${requestId}] Generating system translation...`);
   const sections = [];
   const translators = [
     'mbti_hermetic_translator',
@@ -98,7 +193,14 @@ async function generateSystemTranslation(supabase: any, blueprint: any) {
     'chinese_astrology_hermetic_translator'
   ];
 
-  for (const translator of translators) {
+  console.log(`📋 [${requestId}] Starting ${translators.length} system translation calls`);
+
+  for (let i = 0; i < translators.length; i++) {
+    const translator = translators[i];
+    const callStart = Date.now();
+    
+    console.log(`🔄 [${requestId}] API Call ${i + 1}/${translators.length}: ${translator} starting...`);
+    
     const { data, error } = await supabase.functions.invoke('openai-agent', {
       body: {
         messages: [
@@ -116,20 +218,27 @@ async function generateSystemTranslation(supabase: any, blueprint: any) {
       }
     });
 
+    const callDuration = Date.now() - callStart;
+    const wordCount = data?.content ? data.content.split(' ').length : 0;
+
     if (!error && data?.content) {
       sections.push({
         agent_type: translator,
         content: data.content,
-        word_count: data.content.length
+        word_count: wordCount
       });
+      console.log(`✅ [${requestId}] ${translator} completed: ${wordCount} words in ${callDuration}ms`);
+    } else {
+      console.error(`❌ [${requestId}] ${translator} failed:`, error);
     }
   }
 
+  console.log(`📋 [${requestId}] System translation complete: ${sections.length}/${translators.length} successful`);
   return sections;
 }
 
-async function generateHermeticLawAnalysis(supabase: any, blueprint: any) {
-  console.log('🔮 Generating Hermetic law analysis...');
+async function generateHermeticLawAnalysis(supabase: any, blueprint: any, requestId: string) {
+  console.log(`🔮 [${requestId}] Generating Hermetic law analysis...`);
   const sections = [];
   const agents = [
     'mentalism_analyst',
@@ -141,7 +250,15 @@ async function generateHermeticLawAnalysis(supabase: any, blueprint: any) {
     'gender_analyst'
   ];
 
-  for (const agent of agents) {
+  console.log(`🔮 [${requestId}] Starting ${agents.length} Hermetic Law analysis calls`);
+
+  for (let i = 0; i < agents.length; i++) {
+    const agent = agents[i];
+    const lawName = agent.replace('_analyst', '');
+    const callStart = Date.now();
+    
+    console.log(`🔄 [${requestId}] API Call ${i + 1}/${agents.length}: ${agent} (Law of ${lawName.charAt(0).toUpperCase() + lawName.slice(1)}) starting...`);
+    
     const { data, error } = await supabase.functions.invoke('openai-agent', {
       body: {
         messages: [
@@ -159,16 +276,23 @@ async function generateHermeticLawAnalysis(supabase: any, blueprint: any) {
       }
     });
 
+    const callDuration = Date.now() - callStart;
+    const wordCount = data?.content ? data.content.split(' ').length : 0;
+
     if (!error && data?.content) {
       sections.push({
         agent_type: agent,
         content: data.content,
-        word_count: data.content.length,
-        hermetic_law: agent.replace('_analyst', '')
+        word_count: wordCount,
+        hermetic_law: lawName
       });
+      console.log(`✅ [${requestId}] ${agent} (${lawName}) completed: ${wordCount} words in ${callDuration}ms`);
+    } else {
+      console.error(`❌ [${requestId}] ${agent} failed:`, error);
     }
   }
 
+  console.log(`🔮 [${requestId}] Hermetic Laws analysis complete: ${sections.length}/${agents.length} successful`);
   return sections;
 }
 
@@ -206,11 +330,23 @@ function extractHumanDesignGates(blueprint: any): number[] {
   return [...new Set(gates)].sort((a, b) => a - b);
 }
 
-async function generateGateAnalysis(supabase: any, blueprint: any, gates: number[]) {
-  console.log(`🚪 Generating analysis for ${gates.length} gates...`);
+async function generateGateAnalysis(supabase: any, blueprint: any, gates: number[], requestId: string) {
+  console.log(`🚪 [${requestId}] Generating analysis for ${gates.length} gates...`);
   const sections = [];
   
-  for (const gateNumber of gates) {
+  if (gates.length === 0) {
+    console.log(`🚪 [${requestId}] No gates to analyze`);
+    return sections;
+  }
+
+  console.log(`🚪 [${requestId}] Starting ${gates.length} gate analysis calls for gates:`, gates.sort((a, b) => a - b));
+  
+  for (let i = 0; i < gates.length; i++) {
+    const gateNumber = gates[i];
+    const callStart = Date.now();
+    
+    console.log(`🔄 [${requestId}] API Call ${i + 1}/${gates.length}: Gate ${gateNumber} analysis starting...`);
+    
     const { data, error } = await supabase.functions.invoke('openai-agent', {
       body: {
         messages: [
@@ -228,24 +364,43 @@ async function generateGateAnalysis(supabase: any, blueprint: any, gates: number
       }
     });
 
+    const callDuration = Date.now() - callStart;
+    const wordCount = data?.content ? data.content.split(' ').length : 0;
+
     if (!error && data?.content) {
       sections.push({
         agent_type: 'gate_hermetic_analyst',
         content: data.content,
-        word_count: data.content.length,
+        word_count: wordCount,
         gate_number: gateNumber
       });
+      console.log(`✅ [${requestId}] Gate ${gateNumber} completed: ${wordCount} words in ${callDuration}ms`);
+    } else {
+      console.error(`❌ [${requestId}] Gate ${gateNumber} analysis failed:`, error);
     }
   }
 
+  console.log(`🚪 [${requestId}] Gate analysis complete: ${sections.length}/${gates.length} successful gates analyzed`);
   return sections;
 }
 
-async function generateIntelligenceAnalysis(supabase: any, blueprint: any, hermeticSections: any[]) {
-  console.log('🧠 Generating intelligence analysis...');
+async function generateIntelligenceAnalysis(supabase: any, blueprint: any, hermeticSections: any[], requestId: string) {
+  console.log(`🧠 [${requestId}] Generating intelligence analysis...`);
   
   // Use the existing intelligence orchestrator pattern
   const hermeticContent = hermeticSections.map(s => s.content).join('\n\n');
+  const contentPreview = `${hermeticContent.length} chars from ${hermeticSections.length} sections`;
+  const inputSize = Math.min(hermeticContent.length, 50000);
+  
+  console.log(`🧠 [${requestId}] Intelligence input:`, {
+    hermeticSections: hermeticSections.length,
+    contentLength: hermeticContent.length,
+    inputSizeUsed: inputSize,
+    preview: hermeticContent.substring(0, 100) + '...'
+  });
+  
+  const callStart = Date.now();
+  console.log(`🔄 [${requestId}] Intelligence analysis API call starting...`);
   
   const { data, error } = await supabase.functions.invoke('openai-agent', {
     body: {
@@ -264,14 +419,26 @@ async function generateIntelligenceAnalysis(supabase: any, blueprint: any, herme
     }
   });
 
+  const callDuration = Date.now() - callStart;
+  const wordCount = data?.content ? data.content.split(' ').length : 0;
+
+  if (!error && data?.content) {
+    console.log(`✅ [${requestId}] Intelligence analysis completed: ${wordCount} words in ${callDuration}ms`);
+  } else {
+    console.error(`❌ [${requestId}] Intelligence analysis failed:`, error);
+  }
+
   return {
     content: data?.content || '',
-    word_count: data?.content?.length || 0,
+    word_count: wordCount,
     structured_intelligence: {}
   };
 }
 
-async function generateSynthesis(supabase: any, blueprint: any, sections: any[]) {
+async function generateSynthesis(supabase: any, blueprint: any, sections: any[], requestId: string) {
+  console.log(`🌀 [${requestId}] Generating synthesis...`);
+  const callStart = Date.now();
+  
   const { data } = await supabase.functions.invoke('openai-agent', {
     body: {
       messages: [
@@ -288,10 +455,17 @@ async function generateSynthesis(supabase: any, blueprint: any, sections: any[])
     }
   });
   
+  const callDuration = Date.now() - callStart;
+  const wordCount = data?.content ? data.content.split(' ').length : 0;
+  console.log(`✅ [${requestId}] Synthesis completed: ${wordCount} words in ${callDuration}ms`);
+  
   return data?.content || 'Synthesis content';
 }
 
-async function generateConsciousnessMap(supabase: any, blueprint: any, sections: any[]) {
+async function generateConsciousnessMap(supabase: any, blueprint: any, sections: any[], requestId: string) {
+  console.log(`🧭 [${requestId}] Generating consciousness map...`);
+  const callStart = Date.now();
+  
   const { data } = await supabase.functions.invoke('openai-agent', {
     body: {
       messages: [
@@ -308,10 +482,17 @@ async function generateConsciousnessMap(supabase: any, blueprint: any, sections:
     }
   });
   
+  const callDuration = Date.now() - callStart;
+  const wordCount = data?.content ? data.content.split(' ').length : 0;
+  console.log(`✅ [${requestId}] Consciousness map completed: ${wordCount} words in ${callDuration}ms`);
+  
   return data?.content || 'Consciousness map content';
 }
 
-async function generatePracticalApplications(supabase: any, blueprint: any, sections: any[]) {
+async function generatePracticalApplications(supabase: any, blueprint: any, sections: any[], requestId: string) {
+  console.log(`⚡ [${requestId}] Generating practical applications...`);
+  const callStart = Date.now();
+  
   const { data } = await supabase.functions.invoke('openai-agent', {
     body: {
       messages: [
@@ -328,18 +509,37 @@ async function generatePracticalApplications(supabase: any, blueprint: any, sect
     }
   });
   
+  const callDuration = Date.now() - callStart;
+  const wordCount = data?.content ? data.content.split(' ').length : 0;
+  console.log(`✅ [${requestId}] Practical applications completed: ${wordCount} words in ${callDuration}ms`);
+  
   return data?.content || 'Practical applications content';
 }
 
-async function buildAndStoreReport(supabase: any, blueprint: any, results: any) {
+async function buildAndStoreReport(supabase: any, blueprint: any, results: any, requestId: string) {
+  console.log(`💾 [${requestId}] Building report structure...`);
+  
   const totalWordCount = results.sections.reduce((total: number, s: any) => total + (s.word_count || 0), 0) +
                         (results.intelligence_result?.word_count || 0);
 
-  const gateAnalyses: any = {};
-  results.sections.filter((s: any) => s.gate_number).forEach((s: any) => {
-    gateAnalyses[`gate_${s.gate_number}`] = s.content;
+  console.log(`💾 [${requestId}] Report word count calculation:`, {
+    sectionsCount: results.sections.length,
+    sectionWords: results.sections.reduce((total: number, s: any) => total + (s.word_count || 0), 0),
+    intelligenceWords: results.intelligence_result?.word_count || 0,
+    totalWords: totalWordCount
   });
 
+  // Extract gate analyses with detailed logging
+  const gateAnalyses: any = {};
+  const gateSections = results.sections.filter((s: any) => s.gate_number);
+  console.log(`🚪 [${requestId}] Processing ${gateSections.length} gate sections`);
+  
+  gateSections.forEach((s: any) => {
+    gateAnalyses[`gate_${s.gate_number}`] = s.content;
+    console.log(`🚪 [${requestId}] Gate ${s.gate_number}: ${s.content?.length || 0} characters`);
+  });
+
+  // Extract seven laws with logging
   const sevenLaws = {
     mentalism: results.sections.find((s: any) => s.agent_type === 'mentalism_analyst')?.content || '',
     correspondence: results.sections.find((s: any) => s.agent_type === 'correspondence_analyst')?.content || '',
@@ -350,6 +550,13 @@ async function buildAndStoreReport(supabase: any, blueprint: any, results: any) 
     gender: results.sections.find((s: any) => s.agent_type === 'gender_analyst')?.content || ''
   };
 
+  console.log(`🔮 [${requestId}] Seven Laws content lengths:`, 
+    Object.entries(sevenLaws).reduce((acc, [law, content]) => ({
+      ...acc, 
+      [law]: content.length
+    }), {}));
+
+  // Extract system translations with logging
   const systemTranslations = {
     mbti_hermetic: results.sections.find((s: any) => s.agent_type === 'mbti_hermetic_translator')?.content || '',
     astrology_hermetic: results.sections.find((s: any) => s.agent_type === 'astrology_hermetic_translator')?.content || '',
@@ -358,8 +565,17 @@ async function buildAndStoreReport(supabase: any, blueprint: any, results: any) 
     chinese_astrology_hermetic: results.sections.find((s: any) => s.agent_type === 'chinese_astrology_hermetic_translator')?.content || ''
   };
 
+  console.log(`📋 [${requestId}] System translations content lengths:`, 
+    Object.entries(systemTranslations).reduce((acc, [system, content]) => ({
+      ...acc, 
+      [system]: content.length
+    }), {}));
+
+  const reportId = crypto.randomUUID();
+  const blueprintSignature = crypto.randomUUID();
+
   const report = {
-    id: crypto.randomUUID(),
+    id: reportId,
     user_id: blueprint.user_id || blueprint.user_meta?.user_id,
     blueprint_id: blueprint.id,
     report_content: {
@@ -380,7 +596,7 @@ async function buildAndStoreReport(supabase: any, blueprint: any, results: any) 
         integration_practices: results.practical_applications.substring(0, 1000),
         transformation_roadmap: results.consciousness_map.substring(0, 1000)
       },
-      blueprint_signature: crypto.randomUUID(),
+      blueprint_signature: blueprintSignature,
       word_count: totalWordCount,
       generation_metadata: {
         agents_used: results.sections.map((s: any) => s.agent_type),
@@ -395,17 +611,39 @@ async function buildAndStoreReport(supabase: any, blueprint: any, results: any) 
     blueprint_version: '2.0'
   };
 
+  console.log(`💾 [${requestId}] Storing report in database...`);
+  console.log(`💾 [${requestId}] Report structure:`, {
+    id: reportId,
+    userId: report.user_id,
+    blueprintId: report.blueprint_id,
+    wordCount: totalWordCount,
+    gateCount: Object.keys(gateAnalyses).length,
+    sevenLawsComplete: Object.values(sevenLaws).every(law => law.length > 0),
+    systemTranslationsComplete: Object.values(systemTranslations).every(trans => trans.length > 0)
+  });
+
   const { data, error } = await supabase
     .from('personality_reports')
     .insert([report])
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error(`❌ [${requestId}] Database storage failed:`, error);
+    throw error;
+  }
+
+  console.log(`✅ [${requestId}] Report stored successfully with ID: ${data.id}`);
   return data;
 }
 
-async function generateHermeticQuotes(supabase: any, blueprint: any, sections: any[]) {
+async function generateHermeticQuotes(supabase: any, blueprint: any, sections: any[], requestId: string) {
+  console.log(`💬 [${requestId}] Generating hermetic quotes...`);
+  const callStart = Date.now();
+  
+  const inputSections = sections.slice(0, 2);
+  console.log(`💬 [${requestId}] Quote input: ${inputSections.length} sections`);
+  
   const { data } = await supabase.functions.invoke('openai-agent', {
     body: {
       messages: [
@@ -415,12 +653,17 @@ async function generateHermeticQuotes(supabase: any, blueprint: any, sections: a
         },
         {
           role: 'user',
-          content: `Generate quotes from: ${JSON.stringify(sections.slice(0, 2))}`
+          content: `Generate quotes from: ${JSON.stringify(inputSections)}`
         }
       ],
       model: 'gpt-4o-mini'
     }
   });
 
+  const callDuration = Date.now() - callStart;
+  const quotesGenerated = data?.quotes?.length || 0;
+  
+  console.log(`✅ [${requestId}] Quotes generated: ${quotesGenerated} quotes in ${callDuration}ms`);
+  
   return data?.quotes || [];
 }

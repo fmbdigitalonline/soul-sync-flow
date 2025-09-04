@@ -46,45 +46,92 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   const loadReport = async () => {
     if (!user) return;
     
+    const loadingId = crypto.randomUUID().substring(0, 8);
+    const loadingStart = Date.now();
+    
     setLoading(true);
     setError(null);
     
     try {
-      console.log('🔍 Loading personality reports for user:', user.id);
+      console.log(`🔍 [${loadingId}] Loading personality reports for user: ${user.id}`);
       
-      // Load both standard and Hermetic reports
+      // Load both standard and Hermetic reports in parallel
+      console.log(`📊 [${loadingId}] Fetching both report types in parallel...`);
+      const fetchStart = Date.now();
+      
       const [standardResult, hermeticResult] = await Promise.all([
         aiPersonalityReportService.getStoredReport(user.id),
         hermeticPersonalityReportService.getHermeticReport(user.id)
       ]);
       
-      console.log('📊 Standard report result:', standardResult);
-      console.log('🌟 Hermetic report result:', hermeticResult);
+      const fetchDuration = Date.now() - fetchStart;
       
-      // Set standard report
+      console.log(`📊 [${loadingId}] Reports fetched in ${fetchDuration}ms:`, {
+        standard: {
+          success: standardResult.success,
+          hasReport: !!standardResult.report,
+          reportId: standardResult.report?.id,
+          error: standardResult.error
+        },
+        hermetic: {
+          success: hermeticResult.success,
+          hasReport: !!hermeticResult.report,
+          reportId: hermeticResult.report?.id,
+          wordCount: hermeticResult.report?.report_content?.word_count,
+          generatedAt: hermeticResult.report?.generated_at,
+          error: hermeticResult.error
+        }
+      });
+      
+      // Set standard report with logging
       if (standardResult.success && standardResult.report) {
         setReport(standardResult.report);
-        console.log('✅ Standard report loaded successfully');
+        console.log(`✅ [${loadingId}] Standard report loaded successfully: ID ${standardResult.report.id}`);
+      } else if (standardResult.error) {
+        console.warn(`⚠️ [${loadingId}] Standard report load failed:`, standardResult.error);
       }
       
-      // Set Hermetic report
+      // Set Hermetic report with detailed logging
       if (hermeticResult.success && hermeticResult.report) {
         setHermeticReport(hermeticResult.report);
-        console.log('🌟 Hermetic report loaded successfully');
-        console.log('📊 Hermetic word count:', hermeticResult.report.report_content.word_count);
-        console.log('📅 Hermetic report generated:', hermeticResult.report.generated_at);
-        console.log('🆔 Hermetic report ID:', hermeticResult.report.id);
+        console.log(`🌟 [${loadingId}] Hermetic report loaded successfully:`, {
+          id: hermeticResult.report.id,
+          wordCount: hermeticResult.report.report_content.word_count,
+          generatedAt: hermeticResult.report.generated_at,
+          blueprintVersion: hermeticResult.report.blueprint_version,
+          sectionsAvailable: {
+            sevenLaws: !!hermeticResult.report.report_content.seven_laws_integration,
+            systemTranslations: !!hermeticResult.report.report_content.system_translations,
+            gateAnalyses: Object.keys(hermeticResult.report.report_content.gate_analyses || {}).length,
+            shadowWork: !!hermeticResult.report.report_content.shadow_work_integration
+          }
+        });
+      } else if (hermeticResult.error) {
+        console.warn(`⚠️ [${loadingId}] Hermetic report load failed:`, hermeticResult.error);
       }
       
       // Determine error state
-      if (!standardResult.report && !hermeticResult.report) {
-        setError('No personality reports found. Generate your first report below.');
+      const hasAnyReport = standardResult.report || hermeticResult.report;
+      if (!hasAnyReport) {
+        const errorMsg = 'No personality reports found. Generate your first report below.';
+        setError(errorMsg);
+        console.log(`📝 [${loadingId}] No reports available: ${errorMsg}`);
+      } else {
+        console.log(`✅ [${loadingId}] Reports loaded successfully: ${hasAnyReport ? 'At least one report available' : 'No reports'}`);
       }
       
+      const totalDuration = Date.now() - loadingStart;
+      console.log(`🏁 [${loadingId}] Report loading completed in ${totalDuration}ms`);
+      
     } catch (err) {
+      const errorDuration = Date.now() - loadingStart;
       const errorMessage = 'Failed to load personality reports';
       setError(errorMessage);
-      console.error('💥 Error loading personality reports:', err);
+      console.error(`💥 [${loadingId}] Error loading personality reports after ${errorDuration}ms:`, {
+        error: err,
+        name: err instanceof Error ? err.name : 'Unknown',
+        message: err instanceof Error ? err.message : String(err)
+      });
     } finally {
       setLoading(false);
     }
@@ -138,27 +185,59 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   const generateHermeticReport = async (forceRegenerate = false) => {
     if (!user) return;
     
+    const operationId = crypto.randomUUID().substring(0, 8);
+    const operationStart = Date.now();
+    
     setGenerating(true);
     setError(null);
     
     try {
-      console.log('🌟 Starting Hermetic Blueprint Report generation...', { forceRegenerate });
+      console.log(`🌟 [${operationId}] Starting Hermetic Blueprint Report generation...`, { 
+        forceRegenerate,
+        userId: user.id,
+        timestamp: new Date().toISOString()
+      });
       
       // First, get the user's blueprint
+      console.log(`📋 [${operationId}] Fetching user blueprint...`);
+      const blueprintFetchStart = Date.now();
       const blueprintResult = await blueprintService.getActiveBlueprintData();
+      const blueprintFetchDuration = Date.now() - blueprintFetchStart;
       
       if (blueprintResult.error || !blueprintResult.data) {
         throw new Error('No active blueprint found. Please create your blueprint first.');
       }
       
-      console.log('📋 Blueprint found, generating Hermetic report...');
+      console.log(`📋 [${operationId}] Blueprint retrieved in ${blueprintFetchDuration}ms:`, {
+        blueprintId: blueprintResult.data.id,
+        hasUserMeta: !!blueprintResult.data.user_meta,
+        systems: {
+          mbti: !!blueprintResult.data.cognition_mbti,
+          astrology: !!blueprintResult.data.archetype_western,
+          numerology: !!blueprintResult.data.values_life_path,
+          humanDesign: !!blueprintResult.data.energy_strategy_human_design
+        }
+      });
+      
+      console.log(`🌟 [${operationId}] Generating Hermetic report using background processing...`);
       
       // Generate the Hermetic personality report using background processing
+      const generationStart = Date.now();
       const result = await hermeticPersonalityReportService.generateHermeticReport(blueprintResult.data, language, true);
+      const generationDuration = Date.now() - generationStart;
       
+      console.log(`🔄 [${operationId}] Generation completed in ${generationDuration}ms:`, {
+        success: result.success,
+        hasReport: !!result.report,
+        hasQuotes: !!result.quotes,
+        wordCount: result.report?.report_content?.word_count,
+        jobId: result.jobId,
+        error: result.error
+      });
+
       if (result.success && result.report) {
         // Clear current report state to show loading
-        console.log('🔄 Clearing current hermetic report state for refresh...');
+        console.log(`🔄 [${operationId}] Clearing current hermetic report state for refresh...`);
         setHermeticReport(null);
         
         // Set initial report from generation
@@ -166,28 +245,48 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         setReportType('hermetic'); // Switch to view the new report
         
         // Force fresh data load from database to ensure UI consistency
-        console.log('🔄 Force-refreshing hermetic report from database...');
+        console.log(`🔄 [${operationId}] Force-refreshing hermetic report from database...`);
+        const refreshStart = Date.now();
         await loadReport();
+        const refreshDuration = Date.now() - refreshStart;
+        console.log(`✅ [${operationId}] Database refresh completed in ${refreshDuration}ms`);
+        
+        const totalDuration = Date.now() - operationStart;
         
         toast({
           title: t('report.hermeticGenerated'),
-          description: `Your comprehensive ${result.report.report_content.word_count}+ word Hermetic Blueprint report has been created!`,
+          description: `Your comprehensive ${result.report.report_content.word_count}+ word Hermetic Blueprint report has been created in ${Math.round(totalDuration / 1000)}s!`,
         });
-        console.log('🌟 Hermetic report generated successfully');
-        console.log('📊 Hermetic report word count:', result.report.report_content.word_count);
-        console.log('✅ UI refreshed with latest database state');
+        
+        console.log(`🎉 [${operationId}] Hermetic report generation completed successfully!`);
+        console.log(`📊 [${operationId}] Final UI metrics:`, {
+          totalDuration: `${totalDuration}ms`,
+          blueprintFetch: `${blueprintFetchDuration}ms`,
+          generation: `${generationDuration}ms`,
+          refresh: `${refreshDuration}ms`,
+          wordCount: result.report.report_content.word_count,
+          reportId: result.report.id
+        });
       } else {
         throw new Error(result.error || 'Failed to generate Hermetic personality report');
       }
     } catch (err) {
+      const errorDuration = Date.now() - operationStart;
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate Hermetic personality report';
+      
       setError(errorMessage);
       toast({
         title: t('report.hermeticGenerationFailed'),
         description: errorMessage,
         variant: "destructive"
       });
-      console.error('💥 Error generating Hermetic personality report:', err);
+      
+      console.error(`💥 [${operationId}] Error generating Hermetic personality report after ${errorDuration}ms:`, {
+        error: err,
+        name: err instanceof Error ? err.name : 'Unknown',
+        message: errorMessage,
+        stack: err instanceof Error ? err.stack?.substring(0, 300) : 'N/A'
+      });
     } finally {
       setGenerating(false);
     }
