@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle2, Clock, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface HermeticProcessingJob {
   id: string;
@@ -24,12 +25,13 @@ export function ReportStatusPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   const [job, setJob] = useState<HermeticProcessingJob | null>(null);
   const [isPolling, setIsPolling] = useState(true);
   const [loading, setLoading] = useState(true);
 
   const fetchJobStatus = async () => {
-    if (!jobId) return;
+    if (!jobId || !user) return;
 
     try {
       const { data, error } = await supabase
@@ -42,6 +44,14 @@ export function ReportStatusPage() {
           description: "Failed to fetch job status",
           variant: "destructive"
         });
+        return;
+      }
+
+      // Check if we got empty data (likely due to RLS)
+      if (!data || Object.keys(data).length === 0) {
+        console.log('No job data returned - may not exist or user lacks access');
+        setJob(null);
+        setLoading(false);
         return;
       }
 
@@ -76,19 +86,25 @@ export function ReportStatusPage() {
     }
   };
 
+  // Only fetch job data after authentication is loaded and user is authenticated
   useEffect(() => {
-    fetchJobStatus();
-  }, [jobId]);
+    if (!authLoading && user) {
+      fetchJobStatus();
+    } else if (!authLoading && !user) {
+      // User is not authenticated
+      setLoading(false);
+    }
+  }, [jobId, user, authLoading]);
 
   useEffect(() => {
-    if (!isPolling) return;
+    if (!isPolling || !user) return;
 
     const pollInterval = setInterval(() => {
       fetchJobStatus();
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(pollInterval);
-  }, [isPolling, jobId]);
+  }, [isPolling, jobId, user]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -121,12 +137,14 @@ export function ReportStatusPage() {
     navigate('/reports/generate');
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="flex items-center justify-center h-64">
           <RefreshCw className="w-8 h-8 animate-spin text-primary" />
-          <span className="ml-2 text-lg">Loading report status...</span>
+          <span className="ml-2 text-lg">
+            {authLoading ? 'Authenticating...' : 'Loading report status...'}
+          </span>
         </div>
       </div>
     );
