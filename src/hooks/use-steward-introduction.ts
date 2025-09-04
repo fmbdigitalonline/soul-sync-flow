@@ -199,11 +199,11 @@ export const useStewardIntroduction = () => {
       // Generate the hermetic report in background
       const result = await hermeticPersonalityReportService.generateHermeticReport(blueprint as any);
       
-      if (result.success) {
-        console.log('✅ Hermetic report generated successfully in background');
-        return { success: true, report: result.report };
+      if (result.success && result.job_id) {
+        console.log(`✅ Hermetic report job created successfully: ${result.job_id}`);
+        return { success: true, job_id: result.job_id };
       } else {
-        throw new Error(result.error || 'Failed to generate report');
+        throw new Error(result.error || 'Failed to create hermetic report job');
       }
     } catch (error) {
       console.error('❌ Background hermetic report generation failed:', error);

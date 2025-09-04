@@ -184,18 +184,18 @@ export default function Onboarding() {
   // Generate hermetic report in background (EARLY ORACLE ACTIVATION)
   const generateHermeticReportInBackground = async (blueprint: BlueprintData) => {
     try {
-      console.log('🔮 EARLY ORACLE: Starting hermetic report generation immediately after blueprint...');
+      console.log('🔮 EARLY ORACLE: Starting backend hermetic report job immediately after blueprint...');
       
       // Import the service here to avoid circular dependencies
       const { hermeticPersonalityReportService } = await import('@/services/hermetic-personality-report-service');
       
-      console.log('🧙‍♂️ Generating comprehensive hermetic report with blueprint data');
+      console.log('🧙‍♂️ Creating backend hermetic job with blueprint data');
       const result = await hermeticPersonalityReportService.generateHermeticReport(blueprint, language);
       
-      if (result.success) {
-        console.log('✅ EARLY ORACLE: Hermetic report generated successfully - Oracle mode now available!');
+      if (result.success && result.job_id) {
+        console.log(`✅ EARLY ORACLE: Backend hermetic job created successfully: ${result.job_id} - Processing in background!`);
         
-        // Trigger embedding generation immediately after report
+        // Trigger embedding generation immediately after job creation
         await generateBlueprintEmbeddingsInBackground();
       } else {
         console.error('❌ EARLY ORACLE: Failed to generate hermetic report:', result.error);
