@@ -3,7 +3,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GenerationDiagnostics, type SystemHealthDiagnostic } from '@/services/generation-diagnostics';
-import { AlertCircle, CheckCircle, Clock, Zap } from 'lucide-react';
+import { GhostProcessMonitor } from '@/services/ghost-process-monitor';
+import { JobControlService } from '@/services/job-control-service';
+import { AlertCircle, CheckCircle, Clock, Zap, Skull } from 'lucide-react';
 
 interface SystemHealthPanelProps {
   jobId?: string;
@@ -18,6 +20,7 @@ export const SystemHealthPanel: React.FC<SystemHealthPanelProps> = ({
 }) => {
   const [health, setHealth] = useState<SystemHealthDiagnostic | null>(null);
   const [loading, setLoading] = useState(false);
+  const [eliminating, setEliminating] = useState(false);
   const [lastCheck, setLastCheck] = useState<string | null>(null);
 
   const checkSystemHealth = async () => {
@@ -32,6 +35,35 @@ export const SystemHealthPanel: React.FC<SystemHealthPanelProps> = ({
       console.error('❌ PANEL: Health check failed:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const eliminateGhostProcesses = async () => {
+    setEliminating(true);
+    try {
+      console.log('💀 PANEL: Eliminating ghost processes...');
+      const result = await GhostProcessMonitor.autoEliminateGhosts();
+      console.log('💀 PANEL: Ghost elimination complete:', result);
+      
+      // Refresh health after elimination
+      setTimeout(checkSystemHealth, 1000);
+    } catch (error) {
+      console.error('❌ PANEL: Ghost elimination failed:', error);
+    } finally {
+      setEliminating(false);
+    }
+  };
+
+  const recoverStuckJobs = async () => {
+    try {
+      console.log('🔧 PANEL: Running job recovery...');
+      const result = await JobControlService.recoverStuckJobs();
+      console.log('🔧 PANEL: Job recovery complete:', result);
+      
+      // Refresh health after recovery
+      setTimeout(checkSystemHealth, 1000);
+    } catch (error) {
+      console.error('❌ PANEL: Job recovery failed:', error);
     }
   };
 
@@ -152,6 +184,24 @@ export const SystemHealthPanel: React.FC<SystemHealthPanelProps> = ({
           </Badge>
         </div>
 
+        {/* Ghost Processes Status - CRITICAL MONITORING */}
+        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+          <div>
+            <h4 className="font-medium flex items-center gap-2">
+              <Skull className="w-4 h-4" />
+              Background Tasks
+            </h4>
+            <p className="text-sm text-muted-foreground">
+              {health.ghostProcesses.totalRunning} running, {health.ghostProcesses.ghostsDetected} ghost processes
+            </p>
+          </div>
+          <Badge 
+            variant={health.ghostProcesses.ghostsDetected === 0 ? "default" : "destructive"}
+          >
+            {health.ghostProcesses.ghostsDetected === 0 ? 'Healthy' : `${health.ghostProcesses.ghostsDetected} Ghosts`}
+          </Badge>
+        </div>
+
         {/* Recommendations */}
         {health.recommendations.length > 0 && (
           <div className="p-3 rounded-lg bg-yellow-50 border border-yellow-200">
@@ -166,8 +216,8 @@ export const SystemHealthPanel: React.FC<SystemHealthPanelProps> = ({
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex gap-2 pt-2">
+        {/* Actions - TRANSPARENT ERROR RECOVERY */}
+        <div className="flex gap-2 pt-2 flex-wrap">
           <Button 
             onClick={checkSystemHealth} 
             disabled={loading}
@@ -176,6 +226,27 @@ export const SystemHealthPanel: React.FC<SystemHealthPanelProps> = ({
           >
             {loading ? 'Checking...' : 'Refresh'}
           </Button>
+          
+          {health.ghostProcesses.ghostsDetected > 0 && (
+            <Button 
+              onClick={eliminateGhostProcesses}
+              disabled={eliminating}
+              size="sm"
+              variant="destructive"
+            >
+              {eliminating ? 'Eliminating...' : `Eliminate ${health.ghostProcesses.ghostsDetected} Ghosts`}
+            </Button>
+          )}
+          
+          {health.database.stuckJobs > 0 && (
+            <Button 
+              onClick={recoverStuckJobs}
+              size="sm"
+              variant="secondary"
+            >
+              Recover {health.database.stuckJobs} Stuck Jobs
+            </Button>
+          )}
           
           {onEmergencyRecovery && health.overall !== 'healthy' && (
             <Button 

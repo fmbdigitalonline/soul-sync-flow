@@ -201,6 +201,51 @@ export class JobControlService {
   }
 
   /**
+   * GHOST PROCESS ELIMINATION
+   * Detects and eliminates jobs stuck in "zombie" state (running but no background task)
+   */
+  static async eliminateGhostProcesses(): Promise<{ eliminated: number; errors: string[] }> {
+    try {
+      console.log('👻 Scanning for ghost processes (running jobs with no actual processing)...');
+      
+      // Find jobs running for more than 10 minutes with no progress
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      
+      const { data: ghostJobs, error } = await supabase
+        .from('generation_jobs')
+        .select('*')
+        .eq('status', 'running')
+        .lt('started_at', tenMinutesAgo)
+        .or('progress->progress.lt.25,progress.is.null');
+
+      if (error) throw error;
+
+      const errors: string[] = [];
+      let eliminated = 0;
+
+      for (const job of ghostJobs || []) {
+        const progressValue = job.progress && typeof job.progress === 'object' && 'progress' in job.progress ? (job.progress as any).progress : 0;
+        console.log(`👻 Found ghost process: ${job.id} - stuck at ${progressValue || 0}% for ${Math.round((Date.now() - new Date(job.started_at).getTime()) / 60000)} minutes`);
+        
+        const result = await this.forceCleanupJob(job.id);
+        if (result.success) {
+          eliminated++;
+          console.log(`💀 Eliminated ghost process: ${job.id}`);
+        } else {
+          errors.push(`Failed to eliminate ghost ${job.id}: ${result.error}`);
+        }
+      }
+
+      console.log(`🧹 Ghost elimination complete: ${eliminated} processes eliminated, ${errors.length} errors`);
+      return { eliminated, errors };
+
+    } catch (error: any) {
+      console.error('❌ Ghost elimination failed:', error);
+      return { eliminated: 0, errors: [error.message] };
+    }
+  }
+
+  /**
    * COMPREHENSIVE JOB RECOVERY
    * Detects and recovers stuck jobs automatically
    */
@@ -271,9 +316,16 @@ export class JobControlService {
 
       const stuckCount = stuckJobs?.length || 0;
 
+      // Check for ghost processes
+      const { eliminated: ghostsFound } = await this.eliminateGhostProcesses();
+      
       // Generate recommendations
       if (stuckCount > 0) {
         recommendations.push(`Run job recovery to clean up ${stuckCount} stuck jobs`);
+      }
+      
+      if (ghostsFound > 0) {
+        recommendations.push(`${ghostsFound} ghost processes detected and eliminated`);
       }
       
       if (activeCount > 3) {

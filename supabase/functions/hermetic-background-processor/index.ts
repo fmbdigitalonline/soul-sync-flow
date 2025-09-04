@@ -143,15 +143,21 @@ serve(async (req) => {
     // Update job status to running
     await updateJobStatus(jobId, 'running', { phase: 'initializing', progress: 0 });
 
-    // Use EdgeRuntime.waitUntil for background processing
-    EdgeRuntime.waitUntil(processHermeticGeneration(jobId, blueprint));
+    // CRITICAL FIX: Use EdgeRuntime.waitUntil with proper lifecycle tracking
+    console.log(`🔄 Scheduling background task for job: ${jobId}`);
+    
+    const backgroundTaskPromise = processHermeticGeneration(jobId, blueprint);
+    EdgeRuntime.waitUntil(backgroundTaskPromise);
+    
+    console.log(`✅ Background task scheduled successfully for job: ${jobId}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         jobId, 
-        message: 'Background processing confirmed started',
-        timestamp: new Date().toISOString()
+        message: 'Background processing confirmed started - task scheduled with EdgeRuntime.waitUntil',
+        timestamp: new Date().toISOString(),
+        taskScheduled: true
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -174,8 +180,25 @@ serve(async (req) => {
 });
 
 async function processHermeticGeneration(jobId: string, blueprint: any) {
+  console.log(`🚀 BACKGROUND TASK STARTED for job: ${jobId}`);
+  
+  // Add background task lifecycle monitoring
+  const taskStartTime = Date.now();
+  let taskCompleted = false;
+  
+  // Set up task completion verification
+  const taskTimeout = setTimeout(() => {
+    if (!taskCompleted) {
+      console.error(`⏰ BACKGROUND TASK TIMEOUT for job: ${jobId} after 30 minutes`);
+      updateJobStatus(jobId, 'failed', { 
+        phase: 'background_task_timeout', 
+        progress: 0 
+      }, 'Background task exceeded maximum execution time').catch(console.error);
+    }
+  }, 30 * 60 * 1000); // 30 minute timeout
+  
   try {
-    console.log('🌟 Starting comprehensive Hermetic Blueprint Report generation...');
+    console.log(`🌟 Starting comprehensive Hermetic Blueprint Report generation for job: ${jobId}...`);
     const startTime = Date.now();
     const sections: HermeticAnalysisSection[] = [];
 
@@ -261,18 +284,31 @@ async function processHermeticGeneration(jobId: string, blueprint: any) {
       phase: 'synthesis_complete', 
       progress: 100,
       word_count: hermeticResult.total_word_count,
-      processing_time: endTime - startTime
+      processing_time: endTime - startTime,
+      background_task_time: Date.now() - taskStartTime
     }, null, {
       report: storedReport,
       quotes: quotes || []
     });
 
+    // CRITICAL: Mark task as completed and clear timeout
+    taskCompleted = true;
+    clearTimeout(taskTimeout);
+    console.log(`🎉 BACKGROUND TASK COMPLETED SUCCESSFULLY for job: ${jobId} in ${Date.now() - taskStartTime}ms`);
+
   } catch (error) {
-    console.error('❌ Background hermetic generation failed:', error);
+    console.error(`❌ Background hermetic generation failed for job: ${jobId}:`, error);
+    
     await updateJobStatus(jobId, 'failed', { 
-      phase: 'error', 
-      progress: 0 
-    }, error.message);
+      phase: 'background_task_error', 
+      progress: 0,
+      background_task_time: Date.now() - taskStartTime
+    }, `Background task failed: ${error.message}`);
+    
+    // CRITICAL: Mark task as completed (failed) and clear timeout
+    taskCompleted = true;
+    clearTimeout(taskTimeout);
+    console.log(`💥 BACKGROUND TASK FAILED for job: ${jobId} after ${Date.now() - taskStartTime}ms`);
   }
 }
 

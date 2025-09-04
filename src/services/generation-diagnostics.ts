@@ -6,6 +6,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { JobControlService, type GenerationJob } from './job-control-service';
+import { GhostProcessMonitor } from './ghost-process-monitor';
 
 export interface SystemHealthDiagnostic {
   overall: 'healthy' | 'degraded' | 'critical';
@@ -24,6 +25,12 @@ export interface SystemHealthDiagnostic {
   processingCapacity: {
     available: boolean;
     reason?: string;
+  };
+  ghostProcesses: {
+    totalRunning: number;
+    ghostsDetected: number;
+    healthyJobs: number;
+    recommendations: string[];
   };
   lastCheck: string;
   recommendations: string[];
@@ -54,6 +61,7 @@ export class GenerationDiagnostics {
       edgeFunction: { accessible: false },
       database: { accessible: false, activeJobs: 0, stuckJobs: 0 },
       processingCapacity: { available: false },
+      ghostProcesses: { totalRunning: 0, ghostsDetected: 0, healthyJobs: 0, recommendations: [] },
       lastCheck: new Date().toISOString(),
       recommendations: []
     };
@@ -142,10 +150,26 @@ export class GenerationDiagnostics {
       };
     }
 
+    // CRITICAL: Check for Ghost Processes
+    try {
+      console.log('👻 Checking for ghost processes...');
+      const ghostStatus = await GhostProcessMonitor.getGhostStatus();
+      diagnostic.ghostProcesses = ghostStatus;
+      diagnostic.recommendations.push(...ghostStatus.recommendations);
+    } catch (error: any) {
+      diagnostic.ghostProcesses = {
+        totalRunning: 0,
+        ghostsDetected: 0,
+        healthyJobs: 0,
+        recommendations: [`Ghost monitoring failed: ${error.message}`]
+      };
+    }
+
     // Determine Overall Health
-    if (diagnostic.edgeFunction.accessible && diagnostic.database.accessible && diagnostic.processingCapacity.available) {
+    const hasGhosts = diagnostic.ghostProcesses.ghostsDetected > 0;
+    if (diagnostic.edgeFunction.accessible && diagnostic.database.accessible && diagnostic.processingCapacity.available && !hasGhosts) {
       diagnostic.overall = 'healthy';
-    } else if (diagnostic.database.accessible) {
+    } else if (diagnostic.database.accessible && !hasGhosts) {
       diagnostic.overall = 'degraded';
     } else {
       diagnostic.overall = 'critical';
@@ -190,8 +214,8 @@ export class GenerationDiagnostics {
       const diagnostic: ProcessingDiagnostic = {
         jobId,
         status: job.status,
-        phase: job.progress?.phase,
-        progress: job.progress?.progress,
+        phase: typeof job.progress === 'object' && job.progress && 'phase' in job.progress ? (job.progress as any).phase : undefined,
+        progress: typeof job.progress === 'object' && job.progress && 'progress' in job.progress ? (job.progress as any).progress : undefined,
         processingTime: Math.round(processingTime / 1000), // seconds
         stuck,
         lastUpdate: job.updated_at,
