@@ -174,11 +174,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       
       toast({
         title: "Report Generation Started",
-        description: "Your comprehensive hermetic report is being generated in the background. You can close this page and return later to check progress.",
+        description: "Watch the floating orb's teal inner ring for real-time progress as your comprehensive hermetic report is being generated.",
       });
-
-      // Redirect to status page to monitor progress
-      navigate(`/reports/status/${jobId}`);
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate Hermetic personality report';
