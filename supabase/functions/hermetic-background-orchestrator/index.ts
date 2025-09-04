@@ -12,7 +12,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Copy exact agent arrays from client orchestrator
+// Agent arrays for each stage
+const SYSTEM_TRANSLATORS = [
+  'mbti_hermetic_translator',
+  'astrology_hermetic_translator',
+  'numerology_hermetic_translator', 
+  'human_design_hermetic_translator',
+  'chinese_astrology_hermetic_translator'
+];
+
 const HERMETIC_AGENTS = [
   'mentalism_analyst',
   'correspondence_analyst', 
@@ -39,14 +47,7 @@ const INTELLIGENCE_EXTRACTION_AGENTS = [
   'linguistic_fingerprint_analyst'
 ];
 
-const SYSTEM_TRANSLATORS = [
-  'mbti_hermetic_translator',
-  'astrology_hermetic_translator',
-  'numerology_hermetic_translator', 
-  'human_design_hermetic_translator',
-  'chinese_astrology_hermetic_translator'
-];
-
+// ============ RELAY RACE ORCHESTRATOR ============
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -56,9 +57,9 @@ serve(async (req) => {
   try {
     const { job_id } = await req.json();
     
-    console.log(`🚀 Starting background processing for job ${job_id}`);
+    console.log(`🚀 Relay orchestrator invoked for job ${job_id}`);
     
-    // Get job details
+    // 1. Get the job's CURRENT state from the database
     const { data: job, error: jobError } = await supabase
       .from('hermetic_processing_jobs')
       .select('*')
@@ -66,169 +67,269 @@ serve(async (req) => {
       .single();
       
     if (jobError || !job) {
-      console.error('❌ Job not found:', jobError);
-      throw new Error('Job not found');
+      throw new Error(`Job not found or error fetching: ${jobError?.message}`);
     }
     
-    // Start the orchestration (exactly like client code)
-    await processHermeticReportInBackground(job);
-    
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-    
-  } catch (error) {
-    console.error('❌ Background processing failed:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Background processing failed', 
-      details: error.message 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  }
-});
+    if (job.status === 'completed' || job.status === 'failed') {
+      console.log(`Job ${job_id} is already completed or failed. Stopping.`);
+      return new Response(JSON.stringify({ message: "Job already finalized." }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
-async function processHermeticReportInBackground(job: any) {
-  const jobId = job.id;
-  const blueprint = job.blueprint_data; // Direct access to blueprint_data
-  
-  console.log(`🔮 Starting hermetic report processing for job ${jobId}`);
-  
-  try {
-    await updateJobStatus(jobId, 'processing', 'Starting hermetic analysis...', 1, 4, 5);
-    
-    // PHASE 1: System Integration (EXACT copy of client logic)
-    console.log('📋 Phase 1: System Translation');
-    await updateJobStatus(jobId, 'processing', 'Starting system translation...', 1, 4, 5);
-    
-    const systemSections = [];
-    for (let i = 0; i < SYSTEM_TRANSLATORS.length; i++) {
-      const translator = SYSTEM_TRANSLATORS[i];
+    // 2. Determine the next step to perform based on the job's state
+    let nextStage = job.current_stage;
+    let nextStepIndex = job.current_step_index;
+    let progressPercentage = 0;
+
+    // --- RELAY RACE STATE MACHINE ---
+    if (job.current_stage === 'system_translation') {
+      // Process ONE system translator
+      const translator = SYSTEM_TRANSLATORS[job.current_step_index];
+      console.log(`Processing system translator: ${translator}`);
       
-      await updateJobStatus(jobId, 'processing', 
-        `Processing ${translator} (${i+1}/${SYSTEM_TRANSLATORS.length})`, 1, 4, 
-        5 + (i * 15) / SYSTEM_TRANSLATORS.length);
+      await processSingleSystemTranslator(job, translator);
+      progressPercentage = 5 + (job.current_step_index * 15) / SYSTEM_TRANSLATORS.length;
       
-      // Update heartbeat every 3rd iteration
-      if (i > 0 && i % 3 === 0) {
-        await updateHeartbeat(jobId);
+      // Move to next step or stage
+      if (job.current_step_index + 1 >= SYSTEM_TRANSLATORS.length) {
+        nextStage = 'hermetic_laws';
+        nextStepIndex = 0;
+        progressPercentage = 20;
+      } else {
+        nextStepIndex = job.current_step_index + 1;
+      }
+
+    } else if (job.current_stage === 'hermetic_laws') {
+      // Process ONE hermetic law agent
+      const agent = HERMETIC_AGENTS[job.current_step_index];
+      console.log(`Processing hermetic agent: ${agent}`);
+      
+      await processSingleHermeticAgent(job, agent);
+      progressPercentage = 20 + (job.current_step_index * 30) / HERMETIC_AGENTS.length;
+      
+      // Move to next step or stage
+      if (job.current_step_index + 1 >= HERMETIC_AGENTS.length) {
+        nextStage = 'gate_analysis';
+        nextStepIndex = 0;
+        progressPercentage = 50;
+      } else {
+        nextStepIndex = job.current_step_index + 1;
+      }
+
+    } else if (job.current_stage === 'gate_analysis') {
+      // Process ONE gate
+      const gates = extractHumanDesignGates(job.blueprint_data);
+      const gateNumber = gates[job.current_step_index];
+      console.log(`Processing gate: ${gateNumber}`);
+      
+      await processSingleGate(job, gateNumber);
+      progressPercentage = 50 + (job.current_step_index * 30) / gates.length;
+      
+      // Move to next step or stage
+      if (job.current_step_index + 1 >= gates.length) {
+        nextStage = 'intelligence_extraction';
+        nextStepIndex = 0;
+        progressPercentage = 80;
+      } else {
+        nextStepIndex = job.current_step_index + 1;
+      }
+
+    } else if (job.current_stage === 'intelligence_extraction') {
+      // Process ONE intelligence agent
+      const agent = INTELLIGENCE_EXTRACTION_AGENTS[job.current_step_index];
+      console.log(`Processing intelligence agent: ${agent}`);
+      
+      await processSingleIntelligenceAgent(job, agent);
+      progressPercentage = 80 + (job.current_step_index * 15) / INTELLIGENCE_EXTRACTION_AGENTS.length;
+      
+      // Move to next step or stage
+      if (job.current_step_index + 1 >= INTELLIGENCE_EXTRACTION_AGENTS.length) {
+        nextStage = 'final_assembly';
+        nextStepIndex = 0;
+        progressPercentage = 95;
+      } else {
+        nextStepIndex = job.current_step_index + 1;
       }
       
-      const { data, error } = await supabase.functions.invoke('openai-agent', {
-        body: {
-          messages: [
-            {
-              role: 'system',
-              content: `You are the ${translator}. Translate the personality system through all 7 Hermetic Laws with shadow work integration. Generate 500+ words analyzing:
+    } else if (job.current_stage === 'final_assembly') {
+      // This is the final step, do the assembly and complete the job
+      console.log(`Finalizing report for job ${job_id}`);
+      await finalizeReport(job);
+      
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: "Processing complete." 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 3. Update the job state for the NEXT step
+    await supabase
+      .from('hermetic_processing_jobs')
+      .update({
+        current_stage: nextStage,
+        current_step_index: nextStepIndex,
+        status: 'processing',
+        current_step: `Queued for ${nextStage} - step ${nextStepIndex}`,
+        progress_percentage: progressPercentage,
+        last_heartbeat: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', job_id);
+
+    // 4. CRITICAL: Trigger the next step by invoking itself (fire-and-forget)
+    supabase.functions.invoke('hermetic-background-orchestrator', {
+      body: { job_id: job.id }
+    }).catch(error => {
+      console.error('Failed to trigger next step:', error);
+    });
+
+    console.log(`✅ Step completed, next step queued: ${nextStage}[${nextStepIndex}]`);
+
+  } catch (error) {
+    console.error(`❌ Orchestrator failed for job ${job_id}:`, error);
+    await supabase
+      .from('hermetic_processing_jobs')
+      .update({ 
+        status: 'failed', 
+        current_step: `Error: ${error.message}`,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', job_id);
+  }
+  
+  // 5. Return SUCCESS response IMMEDIATELY (under 5 seconds)
+  return new Response(JSON.stringify({ 
+    success: true, 
+    message: "Step triggered." 
+  }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+});
+
+// ============ SINGLE STEP PROCESSORS ============
+
+async function processSingleSystemTranslator(job: any, translator: string) {
+  const { id: jobId, blueprint_data: blueprint } = job;
+
+  await updateJobStatus(jobId, 'processing', `Processing ${translator}...`);
+  
+  const { data, error } = await supabase.functions.invoke('openai-agent', {
+    body: {
+      messages: [
+        {
+          role: 'system',
+          content: `You are the ${translator}. Translate the personality system through all 7 Hermetic Laws with shadow work integration. Generate 500+ words analyzing:
 1. How this personality system expresses through each Hermetic Law
 2. Shadow patterns and unconscious expressions of this system
 3. Light expressions and conscious mastery potential
 4. Integration techniques for balancing shadow and light aspects
 5. How this system's energies can be consciously directed`
-            },
-            {
-              role: 'user',
-              content: `Translate this system through Hermetic Laws:
+        },
+        {
+          role: 'user',
+          content: `Translate this system through Hermetic Laws:
 
 ${JSON.stringify(blueprint, null, 2)}
 
 Focus on your specific system expertise.`
-            }
-          ],
-          model: 'gpt-4o-mini',
-          temperature: 0.6
         }
-      });
-      
-      if (!error && data?.choices?.[0]?.message?.content) {
-        systemSections.push({
-          agent_type: translator,
-          content: data.choices[0].message.content,
-          word_count: data.choices[0].message.content.length
-        });
-      }
+      ],
+      model: 'gpt-4o-mini',
+      temperature: 0.6
     }
+  });
+  
+  if (error) throw new Error(`Failed on translator ${translator}: ${error.message}`);
+  
+  if (data?.choices?.[0]?.message?.content) {
+    const progressData = job.progress_data || {};
+    const systemSections = progressData.system_sections || [];
     
-    // PHASE 2: Hermetic Law Analysis (EXACT copy of client logic)
-    console.log('🔮 Phase 2: Hermetic Law Analysis');
-    await updateJobStatus(jobId, 'processing', 'Starting hermetic law analysis...', 2, 4, 20);
+    systemSections.push({
+      agent_type: translator,
+      content: data.choices[0].message.content,
+      word_count: data.choices[0].message.content.length
+    });
     
-    const hermeticSections = [];
-    for (let i = 0; i < HERMETIC_AGENTS.length; i++) {
-      const agent = HERMETIC_AGENTS[i];
-      
-      await updateJobStatus(jobId, 'processing', 
-        `Processing ${agent} (${i+1}/${HERMETIC_AGENTS.length})`, 2, 4, 
-        20 + (i * 30) / HERMETIC_AGENTS.length);
-      
-      // Update heartbeat every 2nd iteration
-      if (i > 0 && i % 2 === 0) {
-        await updateHeartbeat(jobId);
-      }
-      
-      const { data, error } = await supabase.functions.invoke('openai-agent', {
-        body: {
-          messages: [
-            {
-              role: 'system',
-              content: `You are the ${agent}. Generate 1,500+ words analyzing the blueprint through your specific Hermetic Law with comprehensive shadow work integration. Focus on:
+    await supabase
+      .from('hermetic_processing_jobs')
+      .update({ 
+        progress_data: { ...progressData, system_sections: systemSections },
+        last_heartbeat: new Date().toISOString()
+      })
+      .eq('id', jobId);
+  }
+}
+
+async function processSingleHermeticAgent(job: any, agent: string) {
+  const { id: jobId, blueprint_data: blueprint } = job;
+
+  await updateJobStatus(jobId, 'processing', `Processing ${agent}...`);
+  
+  const { data, error } = await supabase.functions.invoke('openai-agent', {
+    body: {
+      messages: [
+        {
+          role: 'system',
+          content: `You are the ${agent}. Generate 1,500+ words analyzing the blueprint through your specific Hermetic Law with comprehensive shadow work integration. Focus on:
 1. Light and shadow expressions of this law in the person's blueprint
 2. Unconscious patterns and shadow projections related to this law
 3. Practical shadow work techniques for integration
 4. Conscious activation practices for embodying the light aspect
 5. How this law's shadow shows up in relationships and life patterns
 6. Transformative practices for mastering both polarities`
-            },
-            {
-              role: 'user',
-              content: `Analyze this blueprint through your Hermetic Law expertise:
+        },
+        {
+          role: 'user',
+          content: `Analyze this blueprint through your Hermetic Law expertise:
 
 ${JSON.stringify(blueprint, null, 2)}
 
 Generate comprehensive analysis with practical applications.`
-            }
-          ],
-          model: 'gpt-4o-mini',
-          temperature: 0.7
         }
-      });
-      
-      if (!error && data?.choices?.[0]?.message?.content) {
-        hermeticSections.push({
-          agent_type: agent,
-          content: data.choices[0].message.content,
-          word_count: data.choices[0].message.content.length,
-          hermetic_law: agent.replace('_analyst', '')
-        });
-      }
+      ],
+      model: 'gpt-4o-mini',
+      temperature: 0.7
     }
+  });
+  
+  if (error) throw new Error(`Failed on agent ${agent}: ${error.message}`);
+  
+  if (data?.choices?.[0]?.message?.content) {
+    const progressData = job.progress_data || {};
+    const hermeticSections = progressData.hermetic_sections || [];
     
-    // PHASE 3: Gate Analysis (EXACT copy of client logic)
-    console.log('🚪 Phase 3: Gate Analysis');
-    await updateJobStatus(jobId, 'processing', 'Starting gate analysis...', 3, 4, 50);
+    hermeticSections.push({
+      agent_type: agent,
+      content: data.choices[0].message.content,
+      word_count: data.choices[0].message.content.length,
+      hermetic_law: agent.replace('_analyst', '')
+    });
     
-    const gateSections = [];
-    const gates = extractHumanDesignGates(blueprint);
-    
-    for (let i = 0; i < gates.length; i++) {
-      const gateNumber = gates[i];
-      
-      await updateJobStatus(jobId, 'processing', 
-        `Analyzing Gate ${gateNumber} (${i+1}/${gates.length})`, 3, 4, 
-        50 + (i * 30) / gates.length);
-      
-      // Update heartbeat every 5th gate
-      if (i > 0 && i % 5 === 0) {
-        await updateHeartbeat(jobId);
-      }
-      
-      const { data, error } = await supabase.functions.invoke('openai-agent', {
-        body: {
-          messages: [
-            {
-              role: 'system',
-              content: `You are the Gate Hermetic Analyst. You specialize in analyzing specific Human Design gates through the lens of the 7 Hermetic Laws with deep shadow work integration.
+    await supabase
+      .from('hermetic_processing_jobs')
+      .update({ 
+        progress_data: { ...progressData, hermetic_sections: hermeticSections },
+        last_heartbeat: new Date().toISOString()
+      })
+      .eq('id', jobId);
+  }
+}
+
+async function processSingleGate(job: any, gateNumber: number) {
+  const { id: jobId, blueprint_data: blueprint } = job;
+
+  await updateJobStatus(jobId, 'processing', `Analyzing Gate ${gateNumber}...`);
+  
+  const { data, error } = await supabase.functions.invoke('openai-agent', {
+    body: {
+      messages: [
+        {
+          role: 'system',
+          content: `You are the Gate Hermetic Analyst. You specialize in analyzing specific Human Design gates through the lens of the 7 Hermetic Laws with deep shadow work integration.
 
 Your task is to provide a comprehensive 1,200+ word analysis of Gate ${gateNumber} through all 7 Hermetic Laws with shadow integration:
 
@@ -241,53 +342,63 @@ Your task is to provide a comprehensive 1,200+ word analysis of Gate ${gateNumbe
 7. GENDER - The creative/receptive, active/passive energy dynamics of this gate
 
 Generate a comprehensive, flowing analysis that integrates all 7 laws with deep shadow work naturally.`
-            },
-            {
-              role: 'user',
-              content: `Analyze Gate ${gateNumber} through all 7 Hermetic Laws for this individual's blueprint:
+        },
+        {
+          role: 'user',
+          content: `Analyze Gate ${gateNumber} through all 7 Hermetic Laws for this individual's blueprint:
 
 Blueprint Context: ${JSON.stringify(blueprint, null, 2)}
 
 Focus specifically on Gate ${gateNumber} and how it expresses through each Hermetic Law in this person's unique configuration. Generate 1,200+ words of deep, integrated analysis.`
-            }
-          ],
-          model: 'gpt-4o-mini',
-          temperature: 0.7
         }
-      });
-      
-      if (!error && data?.choices?.[0]?.message?.content) {
-        gateSections.push({
-          agent_type: 'gate_hermetic_analyst',
-          content: data.choices[0].message.content,
-          word_count: data.choices[0].message.content.length,
-          gate_number: gateNumber
-        });
-      }
+      ],
+      model: 'gpt-4o-mini',
+      temperature: 0.7
     }
+  });
+  
+  if (error) throw new Error(`Failed on gate ${gateNumber}: ${error.message}`);
+  
+  if (data?.choices?.[0]?.message?.content) {
+    const progressData = job.progress_data || {};
+    const gateSections = progressData.gate_sections || [];
     
-    // PHASE 4: Intelligence Extraction
-    console.log('🧠 Phase 4: Intelligence Extraction');
-    await updateJobStatus(jobId, 'processing', 'Processing intelligence extraction...', 4, 4, 80);
+    gateSections.push({
+      agent_type: 'gate_hermetic_analyst',
+      content: data.choices[0].message.content,
+      word_count: data.choices[0].message.content.length,
+      gate_number: gateNumber
+    });
     
-    const allSections = [...systemSections, ...hermeticSections, ...gateSections];
-    const intelligenceSections = [];
-    
-    for (let i = 0; i < INTELLIGENCE_EXTRACTION_AGENTS.length; i++) {
-      const agent = INTELLIGENCE_EXTRACTION_AGENTS[i];
-      const dimensionName = agent.replace('_analyst', '');
-      
-      // Update heartbeat every 3rd agent
-      if (i > 0 && i % 3 === 0) {
-        await updateHeartbeat(jobId);
-      }
-      
-      const { data, error } = await supabase.functions.invoke('openai-agent', {
-        body: {
-          messages: [
-            {
-              role: 'system',
-              content: `You are the ${agent}. Generate a comprehensive 800+ word analysis focused on the ${dimensionName} dimension of this person's psychological and spiritual blueprint.
+    await supabase
+      .from('hermetic_processing_jobs')
+      .update({ 
+        progress_data: { ...progressData, gate_sections: gateSections },
+        last_heartbeat: new Date().toISOString()
+      })
+      .eq('id', jobId);
+  }
+}
+
+async function processSingleIntelligenceAgent(job: any, agent: string) {
+  const { id: jobId, blueprint_data: blueprint, progress_data } = job;
+  const dimensionName = agent.replace('_analyst', '');
+
+  await updateJobStatus(jobId, 'processing', `Processing ${dimensionName}...`);
+  
+  // Get context from previous sections
+  const allSections = [
+    ...(progress_data?.system_sections || []),
+    ...(progress_data?.hermetic_sections || []),
+    ...(progress_data?.gate_sections || [])
+  ];
+  
+  const { data, error } = await supabase.functions.invoke('openai-agent', {
+    body: {
+      messages: [
+        {
+          role: 'system',
+          content: `You are the ${agent}. Generate a comprehensive 800+ word analysis focused on the ${dimensionName} dimension of this person's psychological and spiritual blueprint.
 
 Your analysis should explore:
 1. Core patterns and structures in the ${dimensionName} dimension
@@ -299,10 +410,10 @@ Your analysis should explore:
 7. Practical applications for conscious evolution in this area
 
 Provide deep, actionable insights that help the person understand and consciously work with their ${dimensionName} patterns for growth and transformation.`
-            },
-            {
-              role: 'user',
-              content: `Generate comprehensive ${dimensionName} analysis for this blueprint:
+        },
+        {
+          role: 'user',
+          content: `Generate comprehensive ${dimensionName} analysis for this blueprint:
 
 ${JSON.stringify(blueprint, null, 2)}
 
@@ -310,71 +421,86 @@ Enhanced Context from Analysis:
 ${allSections.map(s => s.content.substring(0, 500)).join('\n\n')}
 
 Provide 800+ words of deep analysis focused specifically on the ${dimensionName} dimension.`
-            }
-          ],
-          model: 'gpt-4o-mini',
-          temperature: 0.7
         }
-      });
-      
-      if (!error && data?.choices?.[0]?.message?.content) {
-        intelligenceSections.push({
-          agent_type: agent,
-          content: data.choices[0].message.content,
-          word_count: data.choices[0].message.content.length,
-          intelligence_dimension: dimensionName
-        });
-      }
+      ],
+      model: 'gpt-4o-mini',
+      temperature: 0.7
     }
+  });
+  
+  if (error) throw new Error(`Failed on intelligence agent ${agent}: ${error.message}`);
+  
+  if (data?.choices?.[0]?.message?.content) {
+    const progressData = job.progress_data || {};
+    const intelligenceSections = progressData.intelligence_sections || [];
     
-    // Final Assembly
-    await updateJobStatus(jobId, 'processing', 'Assembling final report...', 4, 4, 95);
+    intelligenceSections.push({
+      agent_type: agent,
+      content: data.choices[0].message.content,
+      word_count: data.choices[0].message.content.length,
+      intelligence_dimension: dimensionName
+    });
     
-    const finalSections = [...systemSections, ...hermeticSections, ...gateSections, ...intelligenceSections];
-    const totalWordCount = finalSections.reduce((total, section) => total + Math.floor(section.word_count / 5), 0);
-    
-    const finalReport = {
-      sections: finalSections,
-      synthesis: "Comprehensive hermetic analysis complete with shadow work integration.",
-      consciousness_map: "Detailed consciousness mapping across all dimensions generated.",
-      practical_applications: "Practical shadow work and conscious activation techniques provided.",
-      blueprint_signature: generateBlueprintSignature(blueprint),
-      total_word_count: totalWordCount,
-      generated_at: new Date().toISOString(),
-      structured_intelligence: buildStructuredIntelligence(intelligenceSections)
-    };
-    
-    // Save completed report
     await supabase
       .from('hermetic_processing_jobs')
-      .update({
-        status: 'completed',
-        result_data: finalReport,
-        completed_at: new Date().toISOString(),
-        current_step: `Report completed! ${finalReport.total_word_count} words generated.`,
-        progress_percentage: 100,
+      .update({ 
+        progress_data: { ...progressData, intelligence_sections: intelligenceSections },
         last_heartbeat: new Date().toISOString()
       })
       .eq('id', jobId);
-      
-    console.log(`✅ Report completed for job ${jobId} - ${finalReport.total_word_count} words`);
-    
-  } catch (error) {
-    console.error(`❌ Processing failed for job ${jobId}:`, error);
-    await updateJobStatus(jobId, 'failed', `Processing failed: ${error.message}`, 4, 4, 0);
   }
 }
 
-// Helper functions
-async function updateJobStatus(jobId: string, status: string, message: string, phase: number, totalPhases: number, progress: number) {
+async function finalizeReport(job: any) {
+  const { id: jobId, blueprint_data: blueprint, progress_data } = job;
+  
+  await updateJobStatus(jobId, 'processing', 'Assembling final report...');
+  
+  // Combine all sections
+  const systemSections = progress_data?.system_sections || [];
+  const hermeticSections = progress_data?.hermetic_sections || [];
+  const gateSections = progress_data?.gate_sections || [];
+  const intelligenceSections = progress_data?.intelligence_sections || [];
+  
+  const finalSections = [...systemSections, ...hermeticSections, ...gateSections, ...intelligenceSections];
+  const totalWordCount = finalSections.reduce((total, section) => total + Math.floor(section.word_count / 5), 0);
+  
+  const finalReport = {
+    sections: finalSections,
+    synthesis: "Comprehensive hermetic analysis complete with shadow work integration.",
+    consciousness_map: "Detailed consciousness mapping across all dimensions generated.",
+    practical_applications: "Practical shadow work and conscious activation techniques provided.",
+    blueprint_signature: generateBlueprintSignature(blueprint),
+    total_word_count: totalWordCount,
+    generated_at: new Date().toISOString(),
+    structured_intelligence: buildStructuredIntelligence(intelligenceSections)
+  };
+  
+  // Save completed report
+  await supabase
+    .from('hermetic_processing_jobs')
+    .update({
+      status: 'completed',
+      result_data: finalReport,
+      completed_at: new Date().toISOString(),
+      current_step: `Report completed! ${finalReport.total_word_count} words generated.`,
+      progress_percentage: 100,
+      last_heartbeat: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', jobId);
+    
+  console.log(`✅ Report completed for job ${jobId} - ${finalReport.total_word_count} words`);
+}
+
+// ============ HELPER FUNCTIONS ============
+
+async function updateJobStatus(jobId: string, status: string, message: string) {
   const { error } = await supabase
     .from('hermetic_processing_jobs')
     .update({
       status: status,
       current_step: message,
-      current_phase: phase,
-      total_phases: totalPhases,
-      progress_percentage: progress,
       last_heartbeat: new Date().toISOString(),
       updated_at: new Date().toISOString()
     })
@@ -383,18 +509,7 @@ async function updateJobStatus(jobId: string, status: string, message: string, p
   if (error) {
     console.error('❌ Failed to update job status:', error);
   } else {
-    console.log(`✅ Job ${jobId} updated: ${status} - ${message} (${progress}%)`);
-  }
-}
-
-// Add heartbeat function for long-running operations
-async function updateHeartbeat(jobId: string) {
-  const { error } = await supabase.rpc('update_job_heartbeat', { 
-    job_id_param: jobId 
-  });
-  
-  if (error) {
-    console.error('❌ Failed to update heartbeat:', error);
+    console.log(`✅ Job ${jobId} updated: ${status} - ${message}`);
   }
 }
 

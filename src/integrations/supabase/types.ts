@@ -2133,7 +2133,9 @@ export type Database = {
           completed_steps: Json
           created_at: string
           current_phase: number
+          current_stage: string | null
           current_step: string | null
+          current_step_index: number | null
           error_message: string | null
           id: string
           job_type: string
@@ -2152,7 +2154,9 @@ export type Database = {
           completed_steps?: Json
           created_at?: string
           current_phase?: number
+          current_stage?: string | null
           current_step?: string | null
+          current_step_index?: number | null
           error_message?: string | null
           id?: string
           job_type?: string
@@ -2171,7 +2175,9 @@ export type Database = {
           completed_steps?: Json
           created_at?: string
           current_phase?: number
+          current_stage?: string | null
           current_step?: string | null
+          current_step_index?: number | null
           error_message?: string | null
           id?: string
           job_type?: string
