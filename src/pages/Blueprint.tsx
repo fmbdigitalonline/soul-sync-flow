@@ -17,6 +17,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { isAdminUser } from "@/utils/isAdminUser";
+import { supabase } from "@/integrations/supabase/client";
+import { hermeticPersonalityReportService } from "@/services/hermetic-personality-report-service";
 const Blueprint = () => {
   const [activeTab, setActiveTab] = useState("view");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -261,21 +263,72 @@ const Blueprint = () => {
       };
     }
   };
-  const handleRegenerateBlueprint = () => {
-    if (blueprintData) {
-      setIsGenerating(true);
-      setActiveTab("generating");
-      toast({
-        title: t('blueprint.regeneratingTitle'),
-        description: t('blueprint.regeneratingDescription')
-      });
-      speak("Your blueprint is being recalculated with fresh data");
-    } else {
+  const handleRegenerateBlueprint = async () => {
+    if (!blueprintData) {
       toast({
         title: t('system.error'),
         description: t('blueprint.dataNotLoaded'),
         variant: "destructive"
       });
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+      setActiveTab("generating");
+
+      // Step 1: Clean up stuck jobs
+      toast({
+        title: "Cleaning up stuck jobs...",
+        description: "Preparing for fresh report generation"
+      });
+
+      const { data: cleanupResult, error: cleanupError } = await supabase.rpc('cleanup_stuck_hermetic_jobs');
+      
+      if (cleanupError) {
+        console.error("Cleanup error:", cleanupError);
+        toast({
+          title: "Cleanup Warning",
+          description: "Some stuck jobs couldn't be cleaned, but proceeding anyway",
+          variant: "destructive"
+        });
+      } else {
+        const cleanedCount = cleanupResult || 0;
+        if (cleanedCount > 0) {
+          toast({
+            title: "Cleanup Complete",
+            description: `Cleaned up ${cleanedCount} stuck job${cleanedCount > 1 ? 's' : ''}`
+          });
+        }
+      }
+
+      // Step 2: Generate new hermetic report
+      toast({
+        title: t('blueprint.regeneratingTitle'),
+        description: "Starting hermetic personality report generation..."
+      });
+
+      const reportResult = await hermeticPersonalityReportService.generateHermeticReport(convertToSaveFormat(blueprintData));
+      
+      if (reportResult.success) {
+        toast({
+          title: "Report Generation Started",
+          description: "Your hermetic personality report is now being generated in the background"
+        });
+        speak("Your blueprint is being recalculated with fresh data");
+      } else {
+        throw new Error(reportResult.error || "Failed to start report generation");
+      }
+
+    } catch (error) {
+      console.error("Error in regenerate handler:", error);
+      toast({
+        title: t('system.error'),
+        description: String(error),
+        variant: "destructive"
+      });
+      setIsGenerating(false);
+      setActiveTab("view");
     }
   };
   const handleGenerationComplete = async (newBlueprint?: any) => {
