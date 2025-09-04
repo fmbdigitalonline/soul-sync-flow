@@ -208,7 +208,7 @@ class HermeticPersonalityReportService {
   }
 
   /**
-   * Generate hermetic report using background processor
+   * Generate hermetic report using background processor (queue-based)
    */
   private async generateWithBackgroundProcessor(blueprint: BlueprintData, language: string): Promise<{ 
     success: boolean; 
@@ -221,7 +221,7 @@ class HermeticPersonalityReportService {
       const processingStartTime = Date.now();
       const processingId = crypto.randomUUID().substring(0, 8);
       
-      console.log(`🚀 [${processingId}] Starting background hermetic report generation...`);
+      console.log(`🚀 [${processingId}] Starting queue-based hermetic report generation...`);
       console.log(`🚀 [${processingId}] Processing details:`, {
         language,
         blueprintSize: JSON.stringify(blueprint).length,
@@ -238,69 +238,30 @@ class HermeticPersonalityReportService {
         throw new Error('User ID is required for background processing');
       }
 
-      // For now, invoke background processor directly without job tracking
-      console.log(`🔥 [${processingId}] Invoking hermetic background processor...`);
-      console.log(`🔥 [${processingId}] Request payload:`, {
-        userId,
-        language,
-        blueprintPreview: {
-          id: blueprint.id,
-          userMeta: !!blueprint.user_meta,
-          systems: Object.keys(blueprint).filter(key => 
-            ['cognition_mbti', 'archetype_western', 'values_life_path', 'energy_strategy_human_design'].includes(key)
-          )
-        }
-      });
+      // Use the new queue monitor service to start generation
+      console.log(`🔄 [${processingId}] Starting queue-based generation...`);
+      const { hermeticQueueMonitor } = await import('./hermetic-queue-monitor-service');
       
-      const invocationStart = Date.now();
-      const { data: processorResult, error: processorError } = await supabase.functions.invoke('hermetic-background-processor', {
-        body: { 
-          userId,
-          blueprint,
-          language 
-        }
-      });
-      const invocationDuration = Date.now() - invocationStart;
-
-      if (processorError) {
-        console.error(`❌ [${processingId}] Background processor invocation failed:`, processorError);
-        console.error(`❌ [${processingId}] Error details:`, {
-          name: processorError.name,
-          message: processorError.message,
-          details: processorError.details,
-          hint: processorError.hint,
-          code: processorError.code
-        });
-        throw new Error(`Background processor failed: ${processorError.message}`);
+      const startResult = await hermeticQueueMonitor.startHermeticGeneration(userId, blueprint, language);
+      
+      if (!startResult.success) {
+        console.error(`❌ [${processingId}] Queue generation failed:`, startResult.error);
+        throw new Error(`Queue generation failed: ${startResult.error}`);
       }
-
-      if (!processorResult?.success) {
-        console.error(`❌ [${processingId}] Background generation failed:`, processorResult);
-        throw new Error(`Background generation failed: ${processorResult?.error || 'Unknown error'}`);
-      }
-
-      const totalDuration = Date.now() - processingStartTime;
       
-      console.log(`🎉 [${processingId}] Background hermetic report generated successfully`);
-      console.log(`📊 [${processingId}] Background processing metrics:`, {
-        totalDuration: `${totalDuration}ms`,
-        invocationDuration: `${invocationDuration}ms`,
-        reportId: processorResult.report?.id,
-        wordCount: processorResult.report?.report_content?.word_count || 0,
-        quotesCount: processorResult.quotes?.length || 0,
-        serverMetrics: processorResult.metrics || null
-      });
+      console.log(`✅ [${processingId}] Queue generation started with job ID: ${startResult.jobId}`);
       
+      // Return job ID for client-side monitoring
+      // The actual processing will happen asynchronously in the queue
       return {
         success: true,
-        report: processorResult.report,
-        quotes: processorResult.quotes || [],
-        jobId: processorResult.jobId || `background-${processingId}`
+        jobId: startResult.jobId,
+        // Note: report and quotes will be available once queue processing completes
+        // Client should use useHermeticProgress hook to monitor progress
       };
 
     } catch (error) {
-      const errorDuration = Date.now() - Date.now();
-      console.error('❌ Background hermetic generation failed:', error);
+      console.error('❌ Queue-based hermetic generation failed:', error);
       console.error('❌ Error context:', {
         name: error.name,
         message: error.message,

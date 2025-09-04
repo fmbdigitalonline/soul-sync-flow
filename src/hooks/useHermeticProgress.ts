@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { hermeticQueueMonitor, HermeticJobProgress } from '@/services/hermetic-queue-monitor-service';
 
 export interface HermeticProcessingJob {
   id: string;
@@ -28,6 +29,7 @@ export interface HermeticProcessingJob {
 
 export interface HermeticProgressState {
   job: HermeticProcessingJob | null;
+  queueProgress: HermeticJobProgress | null;
   isProcessing: boolean;
   progress: number;
   currentStep: string;
@@ -37,11 +39,17 @@ export interface HermeticProgressState {
   isCompleted: boolean;
   hasReport: boolean;
   reportId: string | null;
+  // Queue-specific fields
+  totalJobs: number;
+  completedJobs: number;
+  failedJobs: number;
+  currentPhase: string;
 }
 
 export function useHermeticProgress(userId?: string) {
   const [state, setState] = useState<HermeticProgressState>({
     job: null,
+    queueProgress: null,
     isProcessing: false,
     progress: 0,
     currentStep: '',
@@ -51,61 +59,107 @@ export function useHermeticProgress(userId?: string) {
     isCompleted: false,
     hasReport: false,
     reportId: null,
+    totalJobs: 0,
+    completedJobs: 0,
+    failedJobs: 0,
+    currentPhase: '',
   });
 
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
 
   const fetchProgress = useCallback(async () => {
     if (!userId) return;
 
     try {
-      const { data, error } = await supabase
-        .from('hermetic_processing_jobs')
+      // First try to get active generation job
+      const { data: generationJob, error: jobError } = await supabase
+        .from('generation_jobs')
         .select('*')
         .eq('user_id', userId)
         .eq('job_type', 'hermetic_report')
+        .in('status', ['pending', 'running'])
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('❌ Failed to fetch hermetic progress:', error);
-        setState(prev => ({ ...prev, error: error.message }));
-        return;
+      if (jobError) {
+        console.error('❌ Failed to fetch generation job:', jobError);
       }
 
-      if (data) {
-        const job = data as HermeticProcessingJob;
-        const isProcessing = job.status === 'processing' || job.status === 'pending';
-        const isCompleted = job.status === 'completed';
-        const hasError = job.status === 'failed';
+      // Check for queue-based progress if we have a job ID
+      let queueProgress: HermeticJobProgress | null = null;
+      if (generationJob?.id) {
+        setActiveJobId(generationJob.id);
+        queueProgress = await hermeticQueueMonitor.getProgress(generationJob.id);
+      } else if (activeJobId) {
+        // Continue monitoring existing job
+        queueProgress = await hermeticQueueMonitor.getProgress(activeJobId);
+      }
+
+      // Check if report is available
+      const reportCheck = await hermeticQueueMonitor.checkReportAvailability(userId);
+
+      // Update state based on available data
+      if (queueProgress) {
+        const isProcessing = queueProgress.overallStatus === 'processing' || queueProgress.overallStatus === 'pending';
+        const isCompleted = queueProgress.overallStatus === 'completed';
+        const hasError = queueProgress.overallStatus === 'failed';
 
         setState(prev => ({
           ...prev,
-          job,
+          job: generationJob as any,
+          queueProgress,
           isProcessing,
-          progress: job.progress_percentage || 0,
-          currentStep: job.current_step || '',
-          phase: job.current_phase || 1,
-          completedSteps: job.completed_steps || [],
-          error: hasError ? job.error_message || 'Processing failed' : null,
-          isCompleted,
-          hasReport: isCompleted && !!job.result_data?.report_id,
-          reportId: job.result_data?.report_id || null,
+          progress: queueProgress.progress,
+          currentStep: queueProgress.currentPhase,
+          phase: Math.ceil((queueProgress.completedJobs / queueProgress.totalJobs) * 4) || 1,
+          completedSteps: [], // Could be derived from completed phases
+          error: hasError && queueProgress.errors ? queueProgress.errors.join('; ') : null,
+          isCompleted: isCompleted || reportCheck.hasReport,
+          hasReport: reportCheck.hasReport,
+          reportId: reportCheck.reportId || null,
+          totalJobs: queueProgress.totalJobs,
+          completedJobs: queueProgress.completedJobs,
+          failedJobs: queueProgress.failedJobs,
+          currentPhase: queueProgress.currentPhase,
         }));
 
         // If processing is complete or failed, stop polling
-        if (isCompleted || hasError) {
+        if (isCompleted || hasError || reportCheck.hasReport) {
           if (pollingInterval) {
             clearInterval(pollingInterval);
             setPollingInterval(null);
+            setActiveJobId(null);
           }
         }
-      } else {
-        // No job found, reset state
+      } else if (reportCheck.hasReport) {
+        // Report exists but no active processing
         setState(prev => ({
           ...prev,
           job: null,
+          queueProgress: null,
+          isProcessing: false,
+          progress: 100,
+          currentStep: 'Report completed',
+          phase: 4,
+          completedSteps: ['System translation', 'Hermetic laws', 'Gate analysis', 'Synthesis'],
+          error: null,
+          isCompleted: true,
+          hasReport: true,
+          reportId: reportCheck.reportId || null,
+          totalJobs: 0,
+          completedJobs: 0,
+          failedJobs: 0,
+          currentPhase: 'Completed',
+        }));
+      } else {
+        // No active processing, no report
+        setState(prev => ({
+          ...prev,
+          job: null,
+          queueProgress: null,
           isProcessing: false,
           progress: 0,
           currentStep: '',
@@ -115,6 +169,10 @@ export function useHermeticProgress(userId?: string) {
           isCompleted: false,
           hasReport: false,
           reportId: null,
+          totalJobs: 0,
+          completedJobs: 0,
+          failedJobs: 0,
+          currentPhase: '',
         }));
       }
     } catch (error) {
@@ -124,7 +182,7 @@ export function useHermeticProgress(userId?: string) {
         error: error instanceof Error ? error.message : 'Unknown error' 
       }));
     }
-  }, [userId, pollingInterval]);
+  }, [userId, pollingInterval, activeJobId]);
 
   const startProgress = useCallback(() => {
     if (!userId || pollingInterval) return;
@@ -150,6 +208,7 @@ export function useHermeticProgress(userId?: string) {
   const resetProgress = useCallback(() => {
     setState({
       job: null,
+      queueProgress: null,
       isProcessing: false,
       progress: 0,
       currentStep: '',
@@ -159,7 +218,12 @@ export function useHermeticProgress(userId?: string) {
       isCompleted: false,
       hasReport: false,
       reportId: null,
+      totalJobs: 0,
+      completedJobs: 0,
+      failedJobs: 0,
+      currentPhase: '',
     });
+    setActiveJobId(null);
     stopProgress();
   }, [stopProgress]);
 
