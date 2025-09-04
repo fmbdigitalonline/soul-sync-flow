@@ -66,7 +66,13 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [streamingTiming, setStreamingTiming] = useState(75);
   
   const { intelligence, loading, refreshIntelligence } = useHacsIntelligence();
-  const { hasReport: hasHermeticReport, loading: hermeticLoading, refreshStatus: refreshHermeticStatus } = useHermeticReportStatus();
+  const { 
+    hasReport: hasHermeticReport, 
+    loading: hermeticLoading, 
+    isGenerating: isGeneratingHermeticReport,
+    progress: hermeticJobProgress,
+    refreshStatus: refreshHermeticStatus 
+  } = useHermeticReportStatus();
   const {
     currentQuestion,
     isGenerating,
@@ -170,7 +176,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
   // Update orb stage based on authentic HACS state + hermetic generation
   useEffect(() => {
-    if (isGenerating || isGeneratingInsight || isGeneratingReport) {
+    if (isGenerating || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport) {
       setOrbStage("generating");
     } else if (currentQuestion) {
       setOrbStage("collecting");
@@ -183,24 +189,24 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     } else {
       setOrbStage("welcome");
     }
-  }, [isGenerating, isGeneratingInsight, isGeneratingReport, currentQuestion, currentInsight, intelligenceLevel]);
+  }, [isGenerating, isGeneratingInsight, isGeneratingReport, isGeneratingHermeticReport, currentQuestion, currentInsight, intelligenceLevel]);
 
   // Monitor hermetic report generation progress and completion status
   useEffect(() => {
-    if (isGeneratingReport) {
-      // Principle #2: Show real progress, not simulated
-      // Use smooth animation from 40% to 95% while generating
-      const progressInterval = setInterval(() => {
-        setHermeticProgress(prev => {
-          // Cap at 95% while generating to show it's not complete
-          if (prev >= 95) {
-            return 95;
-          }
-          return Math.min(prev + 1.5, 95); // Slower, more realistic increment
-        });
-      }, 1500); // Slower update interval for realism
-
-      return () => clearInterval(progressInterval);
+    if (isGeneratingReport || isGeneratingHermeticReport) {
+      // Use real progress from active job if available, otherwise simulate
+      if (isGeneratingHermeticReport && hermeticJobProgress > 0) {
+        setHermeticProgress(hermeticJobProgress);
+      } else {
+        // Fallback simulation for legacy reports
+        const progressInterval = setInterval(() => {
+          setHermeticProgress(prev => {
+            if (prev >= 95) return 95;
+            return Math.min(prev + 1.5, 95);
+          });
+        }, 1500);
+        return () => clearInterval(progressInterval);
+      }
     } else if (hasHermeticReport) {
       // Principle #7: Clear completion state - jump to 100% when report exists
       setHermeticProgress(100);
@@ -219,7 +225,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       setShowCompletionIndicator(false);
       setShowRainbowCelebration(false);
     }
-  }, [isGeneratingReport, hasHermeticReport, showCompletionIndicator]);
+  }, [isGeneratingReport, isGeneratingHermeticReport, hermeticJobProgress, hasHermeticReport, showCompletionIndicator]);
 
   // Show speech bubble for questions or insights - click to show only
   useEffect(() => {
@@ -672,15 +678,15 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             <IntelligentSoulOrb
               size="sm"
               stage={orbStage}
-              speaking={isGenerating || isGeneratingInsight || isGeneratingReport}
+              speaking={isGenerating || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport}
               intelligenceLevel={intelligenceLevel}
               showProgressRing={intelligenceLevel > 0}
               showIntelligenceTooltip={false}
               isThinking={isThinking || chatLoading}
               activeModule={activeModule}
-              moduleActivity={moduleActivity || isGeneratingInsight || isGeneratingReport}
+              moduleActivity={moduleActivity || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport}
               hermeticProgress={hermeticProgress}
-              showHermeticProgress={isGeneratingReport || hasHermeticReport}
+              showHermeticProgress={isGeneratingReport || isGeneratingHermeticReport || hasHermeticReport}
               onClick={handleOrbClick}
               className="shadow-lg hover:shadow-xl transition-shadow"
             />
