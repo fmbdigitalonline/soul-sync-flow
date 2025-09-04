@@ -74,11 +74,12 @@ export interface HermeticReportWithQuotes {
 }
 
 class HermeticPersonalityReportService {
-  async generateHermeticReport(blueprint: BlueprintData, language: string = 'en'): Promise<{ 
+  async generateHermeticReport(blueprint: BlueprintData, language: string = 'en', useBackground: boolean = false): Promise<{ 
     success: boolean; 
     report?: HermeticPersonalityReport; 
     quotes?: any[]; 
-    error?: string 
+    error?: string;
+    jobId?: string;
   }> {
     try {
       console.log('🌟 Generating comprehensive Hermetic Blueprint Report (120,000+ words)...');
@@ -87,12 +88,17 @@ class HermeticPersonalityReportService {
         userId: blueprint.user_id,
         hasUserMeta: !!blueprint.user_meta,
         hasAllSystems: !!(blueprint.cognition_mbti && blueprint.archetype_western && 
-                         blueprint.values_life_path && blueprint.energy_strategy_human_design)
+                         blueprint.values_life_path && blueprint.energy_strategy_human_design),
+        useBackground
       });
       
       const startTime = Date.now();
       
-      // Use the Hermetic Report Orchestrator for multi-agent generation
+      if (useBackground) {
+        return await this.generateWithBackgroundProcessor(blueprint, language);
+      }
+      
+      // Use the Hermetic Report Orchestrator for client-side generation
       const hermeticResult = await hermeticReportOrchestrator.generateHermeticReport(blueprint);
       
       // Build the hermetic report structure first (needed for intelligence analysis)
@@ -128,6 +134,59 @@ class HermeticPersonalityReportService {
       
     } catch (error) {
       console.error('❌ Hermetic report generation failed:', error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Generate hermetic report using background processor
+   */
+  private async generateWithBackgroundProcessor(blueprint: BlueprintData, language: string): Promise<{ 
+    success: boolean; 
+    report?: HermeticPersonalityReport; 
+    quotes?: any[]; 
+    error?: string;
+    jobId?: string;
+  }> {
+    try {
+      console.log('🚀 Starting background hermetic report generation...');
+      
+      const userId = blueprint.user_id || blueprint.user_meta?.user_id;
+      if (!userId) {
+        throw new Error('User ID is required for background processing');
+      }
+
+      // For now, invoke background processor directly without job tracking
+      console.log('🔥 Invoking hermetic background processor...');
+      
+      const { data: processorResult, error: processorError } = await supabase.functions.invoke('hermetic-background-processor', {
+        body: { 
+          userId,
+          blueprint,
+          language 
+        }
+      });
+
+      if (processorError) {
+        console.error('Background processor invocation failed:', processorError);
+        throw new Error(`Background processor failed: ${processorError.message}`);
+      }
+
+      if (!processorResult?.success) {
+        throw new Error(`Background generation failed: ${processorResult?.error || 'Unknown error'}`);
+      }
+
+      console.log(`🎉 Background hermetic report generated successfully`);
+      
+      return {
+        success: true,
+        report: processorResult.report,
+        quotes: processorResult.quotes || [],
+        jobId: processorResult.jobId || 'background-processed'
+      };
+
+    } catch (error) {
+      console.error('❌ Background hermetic generation failed:', error);
       return { success: false, error: String(error) };
     }
   }
