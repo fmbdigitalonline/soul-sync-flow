@@ -207,5 +207,10 @@ verify_jwt = true
 cors = ["*"]
 methods = ["POST", "OPTIONS"]
 
+[functions.hermetic-background-processor]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
 [analytics]
 enabled = false
