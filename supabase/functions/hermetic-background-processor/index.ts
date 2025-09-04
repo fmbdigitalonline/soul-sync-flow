@@ -47,19 +47,69 @@ serve(async (req) => {
       throw new Error('User ID and blueprint are required');
     }
 
+    // Create processing job record for progress tracking
+    const { data: jobRecord, error: jobError } = await supabase
+      .from('hermetic_processing_jobs')
+      .insert({
+        user_id: userId,
+        status: 'processing',
+        current_phase: 1,
+        progress_percentage: 0,
+        current_step: 'Initializing hermetic background processing...',
+        started_at: new Date().toISOString(),
+        last_heartbeat: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (jobError) {
+      console.error(`❌ [${requestId}] Failed to create job record:`, jobError);
+      throw new Error(`Failed to initialize processing job: ${jobError.message}`);
+    }
+
+    const jobId = jobRecord.id;
+    console.log(`📝 [${requestId}] Created processing job: ${jobId}`);
+
+    // Helper function to update progress
+    async function updateProgress(phase: number, percentage: number, step: string, completedSteps: string[] = []) {
+      try {
+        const memoryUsage = (Deno.memoryUsage?.() || { rss: 0 }).rss / 1024 / 1024; // MB
+        await supabase
+          .from('hermetic_processing_jobs')
+          .update({
+            current_phase: phase,
+            progress_percentage: percentage,
+            current_step: step,
+            completed_steps: completedSteps,
+            memory_usage_mb: memoryUsage,
+            last_heartbeat: new Date().toISOString()
+          })
+          .eq('id', jobId);
+        console.log(`📊 [${requestId}] Progress: Phase ${phase} - ${percentage}% - ${step} (Memory: ${memoryUsage.toFixed(1)}MB)`);
+      } catch (error) {
+        console.error(`❌ [${requestId}] Failed to update progress:`, error);
+      }
+    }
+
+    // Reduce phase timeout to prevent resource exhaustion
+    const REDUCED_PHASE_TIMEOUT = 120000; // 2 minutes per phase
+    
     const processStartTime = Date.now();
     let phaseMetrics = {};
     let totalApiCalls = 0;
     let totalWordCount = 0;
+    let completedSteps: string[] = [];
 
     // PHASE 1: System Integration (replicate client-side flow)
     console.log(`📋 [${requestId}] Phase 1: System Integration Analysis...`);
+    await updateProgress(1, 5, 'Starting system integration analysis...');
+    
     const phase1Start = Date.now();
     let systemSections = [];
     try {
       systemSections = await executePhaseWithTimeout(
-        () => generateSystemTranslation(supabase, blueprint, requestId),
-        PHASE_TIMEOUT,
+        () => generateSystemTranslationWithProgress(supabase, blueprint, requestId, updateProgress),
+        REDUCED_PHASE_TIMEOUT,
         `Phase 1 System Integration`
       );
       const phase1Duration = Date.now() - phase1Start;
@@ -67,22 +117,32 @@ serve(async (req) => {
       phaseMetrics['phase1_system'] = { duration: phase1Duration, sections: systemSections.length, words: phase1Words, success: true };
       totalApiCalls += systemSections.length;
       totalWordCount += phase1Words;
+      completedSteps.push('system_integration');
+      
+      await updateProgress(1, 25, `Phase 1 completed: ${systemSections.length} sections, ${phase1Words} words`, completedSteps);
       console.log(`✅ [${requestId}] Phase 1 completed: ${systemSections.length} sections, ${phase1Words} words, ${phase1Duration}ms`);
+      
+      // Memory cleanup after Phase 1
+      if (globalThis.gc) globalThis.gc();
+      
     } catch (error) {
       const phase1Duration = Date.now() - phase1Start;
       console.error(`❌ [${requestId}] Phase 1 failed after ${phase1Duration}ms:`, error);
       phaseMetrics['phase1_system'] = { duration: phase1Duration, sections: 0, words: 0, success: false, error: error.message };
+      await updateProgress(1, 25, `Phase 1 failed: ${error.message}`, completedSteps);
       // Continue with empty sections to allow partial completion
     }
     
     // PHASE 2: Hermetic Laws Analysis  
     console.log(`🔮 [${requestId}] Phase 2: Hermetic Law Analysis...`);
+    await updateProgress(2, 30, 'Starting hermetic laws analysis...');
+    
     const phase2Start = Date.now();
     let hermeticSections = [];
     try {
       hermeticSections = await executePhaseWithTimeout(
-        () => generateHermeticLawAnalysis(supabase, blueprint, requestId),
-        PHASE_TIMEOUT,
+        () => generateHermeticLawAnalysisWithProgress(supabase, blueprint, requestId, updateProgress),
+        REDUCED_PHASE_TIMEOUT,
         `Phase 2 Hermetic Laws`
       );
       const phase2Duration = Date.now() - phase2Start;
@@ -90,24 +150,34 @@ serve(async (req) => {
       phaseMetrics['phase2_hermetic'] = { duration: phase2Duration, sections: hermeticSections.length, words: phase2Words, success: true };
       totalApiCalls += hermeticSections.length;
       totalWordCount += phase2Words;
+      completedSteps.push('hermetic_laws_analysis');
+      
+      await updateProgress(2, 50, `Phase 2 completed: ${hermeticSections.length} sections, ${phase2Words} words`, completedSteps);
       console.log(`✅ [${requestId}] Phase 2 completed: ${hermeticSections.length} sections, ${phase2Words} words, ${phase2Duration}ms`);
+      
+      // Memory cleanup after Phase 2
+      if (globalThis.gc) globalThis.gc();
+      
     } catch (error) {
       const phase2Duration = Date.now() - phase2Start;
       console.error(`❌ [${requestId}] Phase 2 failed after ${phase2Duration}ms:`, error);
       phaseMetrics['phase2_hermetic'] = { duration: phase2Duration, sections: 0, words: 0, success: false, error: error.message };
+      await updateProgress(2, 50, `Phase 2 failed: ${error.message}`, completedSteps);
       // Continue with empty sections to allow partial completion
     }
     
     // PHASE 3: Gate Analysis
     console.log(`🚪 [${requestId}] Phase 3: Gate-by-Gate Analysis...`);
+    await updateProgress(3, 55, 'Starting gate analysis...');
+    
     const phase3Start = Date.now();
     const gates = extractHumanDesignGates(blueprint);
     console.log(`🚪 [${requestId}] Extracted ${gates.length} gates:`, gates.sort((a, b) => a - b));
     let gateSections = [];
     try {
       gateSections = gates.length > 0 ? await executePhaseWithTimeout(
-        () => generateGateAnalysis(supabase, blueprint, gates, requestId),
-        PHASE_TIMEOUT,
+        () => generateGateAnalysisWithProgress(supabase, blueprint, gates, requestId, updateProgress),
+        REDUCED_PHASE_TIMEOUT,
         `Phase 3 Gate Analysis`
       ) : [];
       const phase3Duration = Date.now() - phase3Start;
@@ -115,62 +185,143 @@ serve(async (req) => {
       phaseMetrics['phase3_gates'] = { duration: phase3Duration, sections: gateSections.length, words: phase3Words, gatesAnalyzed: gates.length, success: true };
       totalApiCalls += gateSections.length;
       totalWordCount += phase3Words;
+      completedSteps.push('gate_analysis');
+      
+      await updateProgress(3, 70, `Phase 3 completed: ${gates.length} gates analyzed, ${gateSections.length} sections`, completedSteps);
       console.log(`✅ [${requestId}] Phase 3 completed: ${gates.length} gates analyzed, ${gateSections.length} sections, ${phase3Words} words, ${phase3Duration}ms`);
+      
+      // Memory cleanup after Phase 3
+      if (globalThis.gc) globalThis.gc();
+      
     } catch (error) {
       const phase3Duration = Date.now() - phase3Start;
       console.error(`❌ [${requestId}] Phase 3 failed after ${phase3Duration}ms:`, error);
       phaseMetrics['phase3_gates'] = { duration: phase3Duration, sections: 0, words: 0, gatesAnalyzed: gates.length, success: false, error: error.message };
+      await updateProgress(3, 70, `Phase 3 failed: ${error.message}`, completedSteps);
       // Continue with empty sections to allow partial completion
     }
     
     // PHASE 4: Intelligence Analysis
     console.log(`🧠 [${requestId}] Phase 4: Intelligence Analysis...`);
+    await updateProgress(4, 75, 'Starting intelligence analysis...');
+    
     const phase4Start = Date.now();
     const allSections = [...systemSections, ...hermeticSections, ...gateSections];
     console.log(`🧠 [${requestId}] Intelligence analysis input: ${allSections.length} sections, ${totalWordCount} words so far`);
-    const intelligenceResult = await generateIntelligenceAnalysis(supabase, blueprint, allSections, requestId);
-    const phase4Duration = Date.now() - phase4Start;
-    phaseMetrics['phase4_intelligence'] = { duration: phase4Duration, words: intelligenceResult.word_count || 0 };
-    totalApiCalls += 1; // Intelligence analysis is one large API call
-    totalWordCount += intelligenceResult.word_count || 0;
-    console.log(`✅ [${requestId}] Phase 4 completed: Intelligence analysis ${intelligenceResult.word_count || 0} words, ${phase4Duration}ms`);
+    
+    let intelligenceResult = { word_count: 0, content: '', structured_intelligence: {} };
+    try {
+      intelligenceResult = await generateIntelligenceAnalysis(supabase, blueprint, allSections, requestId);
+      const phase4Duration = Date.now() - phase4Start;
+      phaseMetrics['phase4_intelligence'] = { duration: phase4Duration, words: intelligenceResult.word_count || 0 };
+      totalApiCalls += 1; // Intelligence analysis is one large API call
+      totalWordCount += intelligenceResult.word_count || 0;
+      completedSteps.push('intelligence_analysis');
+      
+      await updateProgress(4, 85, `Intelligence analysis completed: ${intelligenceResult.word_count || 0} words`, completedSteps);
+      console.log(`✅ [${requestId}] Phase 4 completed: Intelligence analysis ${intelligenceResult.word_count || 0} words, ${phase4Duration}ms`);
+      
+      // Memory cleanup after Phase 4
+      if (globalThis.gc) globalThis.gc();
+      
+    } catch (error) {
+      console.error(`❌ [${requestId}] Phase 4 failed:`, error);
+      await updateProgress(4, 85, `Intelligence analysis failed: ${error.message}`, completedSteps);
+    }
     
     // PHASE 5: Synthesis
     console.log(`🌀 [${requestId}] Phase 5: Synthesis...`);
+    await updateProgress(4, 90, 'Starting synthesis phase...');
+    
     const phase5Start = Date.now();
-    const synthesis = await generateSynthesis(supabase, blueprint, allSections, requestId);
-    const consciousnessMap = await generateConsciousnessMap(supabase, blueprint, allSections, requestId);
-    const practicalApplications = await generatePracticalApplications(supabase, blueprint, allSections, requestId);
-    const phase5Duration = Date.now() - phase5Start;
-    const synthesisWords = (synthesis || '').split(' ').length + (consciousnessMap || '').split(' ').length + (practicalApplications || '').split(' ').length;
-    phaseMetrics['phase5_synthesis'] = { duration: phase5Duration, words: synthesisWords };
-    totalApiCalls += 3; // Three synthesis API calls
-    totalWordCount += synthesisWords;
-    console.log(`✅ [${requestId}] Phase 5 completed: Synthesis ${synthesisWords} words, ${phase5Duration}ms`);
+    let synthesis = '';
+    let consciousnessMap = '';
+    let practicalApplications = '';
+    
+    try {
+      synthesis = await generateSynthesis(supabase, blueprint, allSections, requestId);
+      consciousnessMap = await generateConsciousnessMap(supabase, blueprint, allSections, requestId);
+      practicalApplications = await generatePracticalApplications(supabase, blueprint, allSections, requestId);
+      
+      const phase5Duration = Date.now() - phase5Start;
+      const synthesisWords = (synthesis || '').split(' ').length + (consciousnessMap || '').split(' ').length + (practicalApplications || '').split(' ').length;
+      phaseMetrics['phase5_synthesis'] = { duration: phase5Duration, words: synthesisWords };
+      totalApiCalls += 3; // Three synthesis API calls
+      totalWordCount += synthesisWords;
+      completedSteps.push('synthesis');
+      
+      await updateProgress(4, 95, `Synthesis completed: ${synthesisWords} words`, completedSteps);
+      console.log(`✅ [${requestId}] Phase 5 completed: Synthesis ${synthesisWords} words, ${phase5Duration}ms`);
+      
+      // Memory cleanup after Phase 5
+      if (globalThis.gc) globalThis.gc();
+      
+    } catch (error) {
+      console.error(`❌ [${requestId}] Phase 5 failed:`, error);
+      await updateProgress(4, 95, `Synthesis failed: ${error.message}`, completedSteps);
+    }
     
     // PHASE 6: Report Building & Storage
     console.log(`💾 [${requestId}] Phase 6: Building and storing report...`);
+    await updateProgress(4, 98, 'Building and storing final report...');
+    
     const phase6Start = Date.now();
-    const report = await buildAndStoreReport(supabase, blueprint, {
-      sections: allSections,
-      synthesis,
-      consciousness_map: consciousnessMap,
-      practical_applications: practicalApplications,
-      intelligence_result: intelligenceResult,
-      gates_analyzed: gates
-    }, requestId);
-    const phase6Duration = Date.now() - phase6Start;
-    phaseMetrics['phase6_storage'] = { duration: phase6Duration };
-    console.log(`✅ [${requestId}] Phase 6 completed: Report stored with ID ${report.id}, ${phase6Duration}ms`);
+    let report = null;
+    let quotes = [];
+    
+    try {
+      report = await buildAndStoreReport(supabase, blueprint, {
+        sections: allSections,
+        synthesis,
+        consciousness_map: consciousnessMap,
+        practical_applications: practicalApplications,
+        intelligence_result: intelligenceResult,
+        gates_analyzed: gates
+      }, requestId);
+      
+      const phase6Duration = Date.now() - phase6Start;
+      phaseMetrics['phase6_storage'] = { duration: phase6Duration };
+      completedSteps.push('report_storage');
+      
+      console.log(`✅ [${requestId}] Phase 6 completed: Report stored with ID ${report.id}, ${phase6Duration}ms`);
 
-    // PHASE 7: Quote Generation
-    console.log(`💬 [${requestId}] Phase 7: Quote generation...`);
-    const phase7Start = Date.now();
-    const quotes = await generateHermeticQuotes(supabase, blueprint, allSections, requestId);
-    const phase7Duration = Date.now() - phase7Start;
-    phaseMetrics['phase7_quotes'] = { duration: phase7Duration, quotes: quotes.length };
-    totalApiCalls += 1; // Quote generation is one API call
-    console.log(`✅ [${requestId}] Phase 7 completed: ${quotes.length} quotes generated, ${phase7Duration}ms`);
+      // PHASE 7: Quote Generation
+      console.log(`💬 [${requestId}] Phase 7: Quote generation...`);
+      const phase7Start = Date.now();
+      
+      quotes = await generateHermeticQuotes(supabase, blueprint, allSections, requestId);
+      
+      const phase7Duration = Date.now() - phase7Start;
+      phaseMetrics['phase7_quotes'] = { duration: phase7Duration, quotes: quotes.length };
+      totalApiCalls += 1; // Quote generation is one API call
+      completedSteps.push('quote_generation');
+      
+      console.log(`✅ [${requestId}] Phase 7 completed: ${quotes.length} quotes generated, ${phase7Duration}ms`);
+
+      // Mark job as completed
+      await supabase
+        .from('hermetic_processing_jobs')
+        .update({
+          status: 'completed',
+          progress_percentage: 100,
+          current_step: 'Hermetic report generation completed successfully',
+          completed_steps: completedSteps,
+          result_data: {
+            report_id: report.id,
+            total_words: totalWordCount,
+            total_api_calls: totalApiCalls,
+            quotes_generated: quotes.length
+          },
+          completed_at: new Date().toISOString(),
+          last_heartbeat: new Date().toISOString()
+        })
+        .eq('id', jobId);
+      
+    } catch (error) {
+      console.error(`❌ [${requestId}] Phase 6/7 failed:`, error);
+      await updateProgress(4, 98, `Report storage/quote generation failed: ${error.message}`, completedSteps);
+      throw error;
+    }
 
     const totalDuration = Date.now() - startTime;
     const processingDuration = Date.now() - processStartTime;
@@ -212,6 +363,21 @@ serve(async (req) => {
       stack: error.stack?.substring(0, 500)
     });
 
+    // Mark job as failed
+    try {
+      await supabase
+        .from('hermetic_processing_jobs')
+        .update({
+          status: 'failed',
+          error_message: error.message,
+          completed_at: new Date().toISOString(),
+          last_heartbeat: new Date().toISOString()
+        })
+        .eq('id', jobId);
+    } catch (updateError) {
+      console.error(`❌ [${requestId}] Failed to update job status to failed:`, updateError);
+    }
+
     return new Response(JSON.stringify({ 
       success: false, 
       error: String(error),
@@ -223,9 +389,9 @@ serve(async (req) => {
   }
 });
 
-// Replicate the exact client-side functions here for background processing
-async function generateSystemTranslation(supabase: any, blueprint: any, requestId: string) {
-  console.log(`📋 [${requestId}] Generating system translation...`);
+// Progress-aware system translation function
+async function generateSystemTranslationWithProgress(supabase: any, blueprint: any, requestId: string, updateProgress: (phase: number, percentage: number, step: string, completedSteps: string[]) => Promise<void>) {
+  console.log(`📋 [${requestId}] Generating system translation with progress tracking...`);
   const sections = [];
   const translators = [
     'mbti_hermetic_translator',
@@ -239,6 +405,9 @@ async function generateSystemTranslation(supabase: any, blueprint: any, requestI
 
   for (let i = 0; i < translators.length; i++) {
     const translator = translators[i];
+    const progress = 5 + (i / translators.length) * 20; // 5% to 25%
+    
+    await updateProgress(1, progress, `Processing ${translator}...`);
     console.log(`🔄 [${requestId}] API Call ${i + 1}/${translators.length}: ${translator} starting...`);
     
     // Rate limiting: Add delay between API calls to prevent overwhelming systems
@@ -276,6 +445,9 @@ async function generateSystemTranslation(supabase: any, blueprint: any, requestI
         word_count: wordCount
       });
       console.log(`✅ [${requestId}] ${translator} completed: ${wordCount} words in ${result.duration}ms`);
+      
+      // Clear reference after processing to free memory
+      result.data.content = null;
     } else {
       console.error(`❌ [${requestId}] ${translator} failed after ${MAX_RETRIES} attempts:`, result.error);
       // Continue processing other translators even if one fails
@@ -286,8 +458,9 @@ async function generateSystemTranslation(supabase: any, blueprint: any, requestI
   return sections;
 }
 
-async function generateHermeticLawAnalysis(supabase: any, blueprint: any, requestId: string) {
-  console.log(`🔮 [${requestId}] Generating Hermetic law analysis...`);
+// Progress-aware hermetic law analysis function
+async function generateHermeticLawAnalysisWithProgress(supabase: any, blueprint: any, requestId: string, updateProgress: (phase: number, percentage: number, step: string, completedSteps: string[]) => Promise<void>) {
+  console.log(`🔮 [${requestId}] Generating Hermetic law analysis with progress tracking...`);
   const sections = [];
   const agents = [
     'mentalism_analyst',
@@ -304,6 +477,9 @@ async function generateHermeticLawAnalysis(supabase: any, blueprint: any, reques
   for (let i = 0; i < agents.length; i++) {
     const agent = agents[i];
     const lawName = agent.replace('_analyst', '');
+    const progress = 30 + (i / agents.length) * 20; // 30% to 50%
+    
+    await updateProgress(2, progress, `Analyzing ${lawName} law...`);
     console.log(`🔄 [${requestId}] API Call ${i + 1}/${agents.length}: ${agent} (Law of ${lawName.charAt(0).toUpperCase() + lawName.slice(1)}) starting...`);
     
     // Rate limiting: Add delay between API calls
@@ -342,6 +518,9 @@ async function generateHermeticLawAnalysis(supabase: any, blueprint: any, reques
         hermetic_law: lawName
       });
       console.log(`✅ [${requestId}] ${agent} (${lawName}) completed: ${wordCount} words in ${result.duration}ms`);
+      
+      // Clear reference after processing to free memory
+      result.data.content = null;
     } else {
       console.error(`❌ [${requestId}] ${agent} failed after ${MAX_RETRIES} attempts:`, result.error);
       // Continue processing other agents even if one fails
@@ -349,6 +528,74 @@ async function generateHermeticLawAnalysis(supabase: any, blueprint: any, reques
   }
 
   console.log(`🔮 [${requestId}] Hermetic Laws analysis complete: ${sections.length}/${agents.length} successful`);
+  return sections;
+}
+
+// Progress-aware gate analysis function
+async function generateGateAnalysisWithProgress(supabase: any, blueprint: any, gates: number[], requestId: string, updateProgress: (phase: number, percentage: number, step: string, completedSteps: string[]) => Promise<void>) {
+  console.log(`🚪 [${requestId}] Generating gate analysis with progress tracking for ${gates.length} gates...`);
+  const sections = [];
+  
+  if (gates.length === 0) {
+    console.log(`🚪 [${requestId}] No gates to analyze`);
+    return sections;
+  }
+
+  console.log(`🚪 [${requestId}] Starting ${gates.length} gate analysis calls for gates:`, gates.sort((a, b) => a - b));
+  
+  for (let i = 0; i < gates.length; i++) {
+    const gateNumber = gates[i];
+    const progress = 55 + (i / gates.length) * 15; // 55% to 70%
+    
+    await updateProgress(3, progress, `Analyzing Gate ${gateNumber}...`);
+    console.log(`🔄 [${requestId}] API Call ${i + 1}/${gates.length}: Gate ${gateNumber} analysis starting...`);
+    
+    // Rate limiting: Add delay between API calls for gates (they can be numerous)
+    if (i > 0) {
+      console.log(`⏱️ [${requestId}] Rate limiting: Waiting ${API_CALL_DELAY}ms before next gate analysis...`);
+      await delay(API_CALL_DELAY);
+    }
+    
+    const result = await makeResilientsAPICall(
+      () => supabase.functions.invoke('openai-agent', {
+        body: {
+          messages: [
+            {
+              role: 'system',
+              content: `You are the Gate Hermetic Analyst. Analyze Gate ${gateNumber} through all 7 Hermetic Laws with shadow work. Generate 1,200+ words.`
+            },
+            {
+              role: 'user',
+              content: `Analyze Gate ${gateNumber} for this blueprint: ${JSON.stringify(blueprint)}`
+            }
+          ],
+          model: 'gpt-4o-mini',
+          temperature: 0.7
+        }
+      }),
+      `gate_${gateNumber}`,
+      requestId
+    );
+
+    if (result.success && result.data?.content) {
+      const wordCount = result.data.content.split(' ').length;
+      sections.push({
+        agent_type: 'gate_hermetic_analyst',
+        content: result.data.content,
+        word_count: wordCount,
+        gate_number: gateNumber
+      });
+      console.log(`✅ [${requestId}] Gate ${gateNumber} completed: ${wordCount} words in ${result.duration}ms`);
+      
+      // Clear reference after processing to free memory
+      result.data.content = null;
+    } else {
+      console.error(`❌ [${requestId}] Gate ${gateNumber} analysis failed after ${MAX_RETRIES} attempts:`, result.error);
+      // Continue processing other gates even if one fails
+    }
+  }
+
+  console.log(`🚪 [${requestId}] Gate analysis complete: ${sections.length}/${gates.length} successful gates analyzed`);
   return sections;
 }
 
