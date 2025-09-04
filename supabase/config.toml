@@ -215,6 +215,3 @@ methods = ["POST", "OPTIONS"]
 verify_jwt = true
 cors = ["*"]
 methods = ["POST", "OPTIONS"]
-
-[analytics]
-enabled = false

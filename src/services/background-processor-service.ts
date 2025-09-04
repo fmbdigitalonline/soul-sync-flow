@@ -91,7 +91,7 @@ export class BackgroundProcessorService {
       
       // Simple health ping to check deployment
       const { error } = await supabase.functions.invoke('hermetic-background-processor', {
-        body: { action: 'health_check', timestamp: new Date().toISOString() }
+        body: { healthCheck: true }
       });
       
       if (error) {
