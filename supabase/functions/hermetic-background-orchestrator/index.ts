@@ -110,6 +110,11 @@ async function processHermeticReportInBackground(job: any) {
         `Processing ${translator} (${i+1}/${SYSTEM_TRANSLATORS.length})`, 1, 4, 
         5 + (i * 15) / SYSTEM_TRANSLATORS.length);
       
+      // Update heartbeat every 3rd iteration
+      if (i > 0 && i % 3 === 0) {
+        await updateHeartbeat(jobId);
+      }
+      
       const { data, error } = await supabase.functions.invoke('openai-agent', {
         body: {
           messages: [
@@ -156,6 +161,11 @@ Focus on your specific system expertise.`
       await updateJobStatus(jobId, 'processing', 
         `Processing ${agent} (${i+1}/${HERMETIC_AGENTS.length})`, 2, 4, 
         20 + (i * 30) / HERMETIC_AGENTS.length);
+      
+      // Update heartbeat every 2nd iteration
+      if (i > 0 && i % 2 === 0) {
+        await updateHeartbeat(jobId);
+      }
       
       const { data, error } = await supabase.functions.invoke('openai-agent', {
         body: {
@@ -207,6 +217,11 @@ Generate comprehensive analysis with practical applications.`
       await updateJobStatus(jobId, 'processing', 
         `Analyzing Gate ${gateNumber} (${i+1}/${gates.length})`, 3, 4, 
         50 + (i * 30) / gates.length);
+      
+      // Update heartbeat every 5th gate
+      if (i > 0 && i % 5 === 0) {
+        await updateHeartbeat(jobId);
+      }
       
       const { data, error } = await supabase.functions.invoke('openai-agent', {
         body: {
@@ -261,6 +276,11 @@ Focus specifically on Gate ${gateNumber} and how it expresses through each Herme
     for (let i = 0; i < INTELLIGENCE_EXTRACTION_AGENTS.length; i++) {
       const agent = INTELLIGENCE_EXTRACTION_AGENTS[i];
       const dimensionName = agent.replace('_analyst', '');
+      
+      // Update heartbeat every 3rd agent
+      if (i > 0 && i % 3 === 0) {
+        await updateHeartbeat(jobId);
+      }
       
       const { data, error } = await supabase.functions.invoke('openai-agent', {
         body: {
@@ -347,7 +367,7 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
 
 // Helper functions
 async function updateJobStatus(jobId: string, status: string, message: string, phase: number, totalPhases: number, progress: number) {
-  await supabase
+  const { error } = await supabase
     .from('hermetic_processing_jobs')
     .update({
       status: status,
@@ -359,6 +379,23 @@ async function updateJobStatus(jobId: string, status: string, message: string, p
       updated_at: new Date().toISOString()
     })
     .eq('id', jobId);
+    
+  if (error) {
+    console.error('❌ Failed to update job status:', error);
+  } else {
+    console.log(`✅ Job ${jobId} updated: ${status} - ${message} (${progress}%)`);
+  }
+}
+
+// Add heartbeat function for long-running operations
+async function updateHeartbeat(jobId: string) {
+  const { error } = await supabase.rpc('update_job_heartbeat', { 
+    job_id_param: jobId 
+  });
+  
+  if (error) {
+    console.error('❌ Failed to update heartbeat:', error);
+  }
 }
 
 function extractHumanDesignGates(blueprint: any): number[] {

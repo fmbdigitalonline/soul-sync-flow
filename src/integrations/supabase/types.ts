@@ -3911,6 +3911,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_stuck_hermetic_jobs: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       create_generation_job: {
         Args: {
           p_job_data?: Json
@@ -4027,6 +4031,10 @@ export type Database = {
           similarity: number
         }[]
       }
+      restart_hermetic_job: {
+        Args: { job_id_param: string }
+        Returns: boolean
+      }
       search_similar_messages: {
         Args: {
           max_results?: number
@@ -4054,6 +4062,10 @@ export type Database = {
       sparsevec_typmod_in: {
         Args: { "": unknown[] }
         Returns: number
+      }
+      update_job_heartbeat: {
+        Args: { job_id_param: string }
+        Returns: boolean
       }
       update_job_status: {
         Args: {
