@@ -256,9 +256,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
               strokeDashoffset: innerStrokeDashoffset,
               stroke: showRainbowCelebration 
                 ? `hsl(${rainbowPhase}, 70%, 60%)` 
-                : hermeticProgress === 100 
-                  ? "hsl(var(--soul-teal))" 
-                  : "hsl(var(--soul-purple))",
+                : "hsl(var(--soul-teal))",
               scale: showRainbowCelebration ? [1, 1.1, 1] : 1
             }}
             transition={{ 
