@@ -11,14 +11,23 @@ import { useAuth } from '@/contexts/AuthContext';
 interface HermeticProcessingJob {
   id: string;
   user_id: string;
-  blueprint_data: any;
+  job_type: string;
   status: string;
-  status_message?: string;
+  current_step?: string;
+  current_phase?: number;
+  progress_percentage?: number;
   progress_data?: any;
   result_data?: any;
+  error_message?: string;
   created_at: string;
   updated_at?: string;
   completed_at?: string;
+  last_heartbeat?: string;
+}
+
+interface RPCErrorResponse {
+  error: 'authentication_required' | 'job_not_found';
+  message: string;
 }
 
 export function ReportStatusPage() {
@@ -31,35 +40,88 @@ export function ReportStatusPage() {
   const [loading, setLoading] = useState(true);
 
   const fetchJobStatus = async () => {
-    if (!jobId || !user) return;
+    if (!jobId || !user) {
+      console.log('fetchJobStatus: Missing jobId or user', { jobId, user: !!user });
+      return;
+    }
 
     try {
+      console.log('Fetching job status for job:', jobId, 'user:', user.id);
+      
       const { data, error } = await supabase
         .rpc('get_hermetic_job_status', { job_id: jobId });
 
+      console.log('RPC response:', { data, error });
+
       if (error) {
-        console.error('Failed to fetch job status:', error);
+        console.error('RPC error:', error);
         toast({
-          title: "Error",
-          description: "Failed to fetch job status",
+          title: "Database Error",
+          description: `Failed to fetch job status: ${error.message}`,
           variant: "destructive"
         });
-        return;
-      }
-
-      // Check if we got empty data (likely due to RLS)
-      if (!data || Object.keys(data).length === 0) {
-        console.log('No job data returned - may not exist or user lacks access');
-        setJob(null);
         setLoading(false);
         return;
       }
 
-      setJob(data as any as HermeticProcessingJob);
+      // Handle new error response format from improved RPC function
+      if (data && typeof data === 'object' && 'error' in data) {
+        const errorData = data as unknown as RPCErrorResponse;
+        console.log('Job status error:', errorData.error, errorData.message);
+        
+        if (errorData.error === 'authentication_required') {
+          console.log('Authentication required - retrying in 2 seconds...');
+          // Retry after a brief delay to allow auth to settle
+          setTimeout(() => {
+            if (user) fetchJobStatus();
+          }, 2000);
+          return;
+        }
+        
+        if (errorData.error === 'job_not_found') {
+          console.log('Job not found or access denied');
+          setJob(null);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Check if we got empty data (legacy fallback)
+      if (!data || Object.keys(data).length === 0) {
+        console.log('No job data returned - checking direct table access...');
+        
+        // Try direct table query as fallback
+        const { data: directData, error: directError } = await supabase
+          .from('hermetic_processing_jobs')
+          .select('*')
+          .eq('id', jobId)
+          .eq('user_id', user.id)
+          .single();
+        
+        if (directError) {
+          console.error('Direct query also failed:', directError);
+          setJob(null);
+          setLoading(false);
+          return;
+        }
+        
+        if (directData) {
+          console.log('Direct query succeeded, using direct data');
+          setJob(directData as unknown as HermeticProcessingJob);
+          setLoading(false);
+        } else {
+          setJob(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      setJob(data as unknown as HermeticProcessingJob);
       setLoading(false);
 
       // Handle status changes
-      if ((data as any)?.status === 'completed') {
+      const jobData = data as unknown as HermeticProcessingJob;
+      if (jobData?.status === 'completed') {
         setIsPolling(false);
         toast({
           title: "Report Complete!",
@@ -68,10 +130,10 @@ export function ReportStatusPage() {
         
         // Redirect to report view after a brief delay
         setTimeout(() => {
-          navigate(`/reports/view/${(data as any).id}`);
+          navigate(`/reports/view/${jobData.id}`);
         }, 2000);
         
-      } else if ((data as any)?.status === 'failed') {
+      } else if (jobData?.status === 'failed') {
         setIsPolling(false);
         toast({
           title: "Generation Failed",
@@ -82,6 +144,17 @@ export function ReportStatusPage() {
 
     } catch (error) {
       console.error('Error fetching job status:', error);
+      toast({
+        title: "Connection Error",
+        description: "Unable to connect to the server. Retrying...",
+        variant: "destructive"
+      });
+      
+      // Retry after a delay
+      setTimeout(() => {
+        if (user) fetchJobStatus();
+      }, 3000);
+      
       setLoading(false);
     }
   };
@@ -159,10 +232,24 @@ export function ReportStatusPage() {
             <h2 className="text-xl font-semibold mb-2">Report Not Found</h2>
             <p className="text-muted-foreground mb-4">
               The report you're looking for doesn't exist or you don't have access to it.
+              This could be due to an authentication issue or the report may not exist.
             </p>
-            <Button onClick={() => navigate('/reports')}>
-              Go to Reports
-            </Button>
+            <div className="space-y-3">
+              <Button onClick={() => {
+                console.log('Retrying job status fetch...');
+                setLoading(true);
+                fetchJobStatus();
+              }}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/blueprint')}>
+                Back to Blueprint
+              </Button>
+            </div>
+            <div className="mt-4 text-sm text-muted-foreground">
+              Job ID: {jobId}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -196,8 +283,8 @@ export function ReportStatusPage() {
                 Started {new Date(job.created_at).toLocaleTimeString()}
               </span>
             </div>
-            {job.status_message && (
-              <p className="text-sm">{job.status_message}</p>
+            {job.current_step && (
+              <p className="text-sm">{job.current_step}</p>
             )}
           </div>
 
