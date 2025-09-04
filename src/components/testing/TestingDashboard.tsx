@@ -11,10 +11,7 @@ import {
   Settings,
   Shield,
   CheckCircle,
-  MessageSquare,
-  Monitor,
-  Terminal,
-  Database
+  MessageSquare
 } from 'lucide-react';
 
 // Import existing test components
@@ -32,75 +29,18 @@ import { ACSDocumentationHub } from './ACSDocumentationHub';
 // Import hermetic intelligence pipeline validator
 import { HermeticPipelineValidator } from '../hermetic-test/HermeticPipelineValidator';
 
-// Import new diagnostics and monitoring components
-import { SystemHealthPanel } from '../diagnostics/SystemHealthPanel';
-import { ProcessingDashboard } from '../diagnostics/ProcessingDashboard';
-import { RealTimeProcessMonitor } from '../diagnostics/RealTimeProcessMonitor';
-import { JobTestingPanel } from './JobTestingPanel';
-import { FunctionTester } from './FunctionTester';
-
 export const TestingDashboard: React.FC = () => {
-  // Set System Health as the default active tab for ghost process monitoring
-  const [activeTab, setActiveTab] = useState('system-health');
+  // Set Hermetic Pipeline as the default active tab (highest priority for validation)
+  const [activeTab, setActiveTab] = useState('hermetic-pipeline');
 
   const testCategories = [
-    {
-      id: 'system-health',
-      title: 'System Health Monitor',
-      description: 'Real-time system health monitoring and ghost process detection',
-      icon: Activity,
-      status: 'production',
-      priority: 'critical',
-      testCount: 12,
-      component: SystemHealthPanel
-    },
-    {
-      id: 'processing-dashboard',
-      title: 'Processing Dashboard',
-      description: 'Comprehensive job monitoring and management dashboard',
-      icon: Monitor,
-      status: 'production',
-      priority: 'critical',
-      testCount: 8,
-      component: ProcessingDashboard
-    },
-    {
-      id: 'realtime-monitor',
-      title: 'Real-Time Monitor',
-      description: 'Live process monitoring with detailed logging and diagnostics',
-      icon: Terminal,
-      status: 'production',
-      priority: 'critical',
-      testCount: 6,
-      component: RealTimeProcessMonitor
-    },
-    {
-      id: 'job-testing',
-      title: 'Job Testing Suite',
-      description: 'Advanced job lifecycle testing and validation',
-      icon: Database,
-      status: 'production',
-      priority: 'high',
-      testCount: 10,
-      component: JobTestingPanel
-    },
-    {
-      id: 'function-testing',
-      title: 'Function Testing',
-      description: 'Edge Function testing and validation suite',
-      icon: Zap,
-      status: 'production',
-      priority: 'high',
-      testCount: 15,
-      component: FunctionTester
-    },
     {
       id: 'hermetic-pipeline',
       title: 'Hermetic Intelligence Pipeline',
       description: 'End-to-end validation of hermetic report generation and automatic intelligence extraction',
       icon: Brain,
       status: 'production',
-      priority: 'high',
+      priority: 'critical',
       testCount: 7,
       component: HermeticPipelineValidator
     },

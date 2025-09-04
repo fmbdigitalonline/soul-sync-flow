@@ -68,10 +68,6 @@ vector_port = 54332
 [experimental]
 minimal_apis = true
 
-# Configure Edge Runtime for background tasks
-[edge_runtime]
-policy = "per_worker"
-
 # Configure Edge Functions
 [functions]
 enabled = true
@@ -211,7 +207,5 @@ verify_jwt = true
 cors = ["*"]
 methods = ["POST", "OPTIONS"]
 
-[functions.hermetic-background-processor]
-verify_jwt = true
-cors = ["*"]
-methods = ["POST", "OPTIONS"]
+[analytics]
+enabled = false

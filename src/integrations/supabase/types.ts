@@ -1005,54 +1005,6 @@ export type Database = {
         }
         Relationships: []
       }
-      generation_jobs: {
-        Row: {
-          completed_at: string | null
-          created_at: string
-          error_message: string | null
-          expires_at: string
-          id: string
-          job_data: Json
-          job_type: string
-          progress: Json
-          result: Json | null
-          started_at: string | null
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string
-          error_message?: string | null
-          expires_at?: string
-          id?: string
-          job_data?: Json
-          job_type: string
-          progress?: Json
-          result?: Json | null
-          started_at?: string | null
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string
-          error_message?: string | null
-          expires_at?: string
-          id?: string
-          job_data?: Json
-          job_type?: string
-          progress?: Json
-          result?: Json | null
-          started_at?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       growth_journey: {
         Row: {
           created_at: string | null
@@ -3783,10 +3735,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
-      cleanup_expired_generation_jobs: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       cleanup_expired_hot_memory: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -3794,15 +3742,6 @@ export type Database = {
       cleanup_old_memories: {
         Args: Record<PropertyKey, never>
         Returns: undefined
-      }
-      create_generation_job: {
-        Args: {
-          p_job_data?: Json
-          p_job_type: string
-          p_timeout_hours?: number
-          p_user_id: string
-        }
-        Returns: string
       }
       generate_blueprint_signature: {
         Args: { blueprint_data: Json }
@@ -3934,15 +3873,6 @@ export type Database = {
       sparsevec_typmod_in: {
         Args: { "": unknown[] }
         Returns: number
-      }
-      update_job_status: {
-        Args: {
-          p_error_message?: string
-          p_job_id: string
-          p_progress?: Json
-          p_status: string
-        }
-        Returns: boolean
       }
       vector_avg: {
         Args: { "": number[] }

@@ -4,8 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge, X } from 'lucide-react';
+import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { aiPersonalityReportService, PersonalityReport } from '@/services/ai-personality-report-service';
@@ -14,11 +13,6 @@ import { blueprintService } from '@/services/blueprint-service';
 import { useToast } from '@/hooks/use-toast';
 import { CosmicCard } from '@/components/ui/cosmic-card';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
-import { useGenerationJobControl } from '@/hooks/use-generation-job-control';
-import { JOB_TYPES } from '@/services/job-control-service';
-import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
-
-type GenerationMethod = 'client' | 'background';
 
 interface PersonalityReportViewerProps {
   className?: string;
@@ -29,17 +23,12 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   const { t, language } = useLanguage();
   const { toast } = useToast();
   const { spacing, getTextSize, isMobile, isUltraNarrow, isFoldDevice } = useResponsiveLayout();
-  
-  // Initialize generation job control
-  const generationControl = useGenerationJobControl();
-  
   const [report, setReport] = useState<PersonalityReport | null>(null);
   const [hermeticReport, setHermeticReport] = useState<HermeticPersonalityReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reportType, setReportType] = useState<'standard' | 'hermetic'>('standard');
-  const [showMethodDialog, setShowMethodDialog] = useState(false);
-  const [pendingGeneration, setPendingGeneration] = useState<{ type: 'standard' | 'hermetic', forceRegenerate: boolean } | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     overview: true,
     hermetic_laws: false,
@@ -49,25 +38,6 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     practical_framework: false,
     intelligence_analysis: false
   });
-
-  // Use job control progress mapping for orb visualization
-  const progressMapping = generationControl.progressMapping || { progress: 0, color: 'default', showCelebration: false };
-  
-  // Determine orb visual state based on job progress
-  const getOrbVisualState = () => {
-    if (!generationControl.isGenerating) return { showProgress: false, progress: 0, showCelebration: false };
-    
-    return {
-      showProgress: true,
-      progress: progressMapping.progress,
-      showCelebration: progressMapping.showCelebration
-    };
-  };
-
-  // Progress mapping for legacy compatibility
-  const getHermeticProgress = () => {
-    return progressMapping.progress;
-  };
 
   useEffect(() => {
     loadReport();
@@ -120,232 +90,106 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     }
   };
 
-  /**
-   * ENHANCED CLIENT-SIDE GENERATION WITH JOB CONTROL
-   * PHASE 2: Integrates with job control system and coordinated loading
-   */
-  const generateReport = async (method: GenerationMethod = 'client', forceRegenerate = false) => {
+  const generateReport = async (forceRegenerate = false) => {
     if (!user) return;
     
-    // Check if generation is allowed (client-side mutex)
-    if (generationControl.isGenerationBlocked()) {
-      toast({
-        title: "Generation Already Active",
-        description: generationControl.getBlockingReason(),
-        variant: "destructive"
-      });
-      return;
-    }
-    
+    setGenerating(true);
     setError(null);
     
     try {
-      console.log(`🎭 Starting ${method} standard personality report generation...`, { forceRegenerate });
+      console.log('🎭 Starting standard personality report generation...', { forceRegenerate });
       
-      // Atomic job creation with database mutex
-      const jobResult = await generationControl.startGeneration(
-        method,
-        JOB_TYPES.HERMETIC_REPORT,
-        { 
-          reportType: 'standard', 
-          forceRegenerate, 
-          language,
-          userId: user.id 
-        }
-      );
+      // First, get the user's blueprint
+      const blueprintResult = await blueprintService.getActiveBlueprintData();
       
-      if (!jobResult.success) {
-        if (jobResult.error === 'DUPLICATE_JOB') {
-          toast({
-            title: "Generation Already Running",
-            description: "A report generation is already in progress. Please wait for it to complete.",
-            variant: "destructive"
-          });
-        } else {
-          throw new Error(jobResult.error || 'Failed to start generation');
-        }
-        return;
+      if (blueprintResult.error || !blueprintResult.data) {
+        throw new Error('No active blueprint found. Please create your blueprint first.');
       }
       
-      // CLIENT-SIDE GENERATION: Execute immediately
-      if (method === 'client') {
-        console.log('📋 Client-side generation: Getting blueprint...');
-        
-        // Get the user's blueprint
-        const blueprintResult = await blueprintService.getActiveBlueprintData();
-        
-        if (blueprintResult.error || !blueprintResult.data) {
-          throw new Error('No active blueprint found. Please create your blueprint first.');
-        }
-        
-        // Update progress
-        await generationControl.updateProgress({ phase: 'generating', progress: 25 });
-        
-        console.log('📋 Blueprint found, generating standard report...');
-        
-        // Generate the personality report
-        const result = await aiPersonalityReportService.generatePersonalityReport(blueprintResult.data, language);
-        
-        if (result.success && result.report) {
-          setReport(result.report);
-          
-          // Complete the job successfully
-          await generationControl.completeGeneration(true, result.report);
-          
-          toast({
-            title: t('report.standardGenerated'),
-            description: t('report.standardGeneratedDescription'),
-          });
-          console.log('✅ Standard report generated successfully');
-        } else {
-          throw new Error(result.error || 'Failed to generate standard personality report');
-        }
-      }
+      console.log('📋 Blueprint found, generating standard report...');
       
-      // BACKGROUND GENERATION: Show polling status
-      if (method === 'background') {
+      // Generate the personality report
+      const result = await aiPersonalityReportService.generatePersonalityReport(blueprintResult.data, language);
+      
+      if (result.success && result.report) {
+        setReport(result.report);
         toast({
-          title: "Background Generation Started",
-          description: "Your report is being generated in the background. You can leave this page and return later.",
+          title: t('report.standardGenerated'),
+          description: t('report.standardGeneratedDescription'),
         });
-        console.log(`🔄 Background generation started: ${jobResult.jobId}`);
+        console.log('✅ Standard report generated successfully');
+      } else {
+        throw new Error(result.error || 'Failed to generate standard personality report');
       }
-      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate standard personality report';
       setError(errorMessage);
-      
-      // Complete job with error
-      if (generationControl.activeJobId) {
-        await generationControl.completeGeneration(false, null, errorMessage);
-      }
-      
       toast({
         title: t('report.generationFailed'),
         description: errorMessage,
         variant: "destructive"
       });
       console.error('💥 Error generating standard personality report:', err);
+    } finally {
+      setGenerating(false);
     }
   };
 
-  const generateHermeticReport = async (method: GenerationMethod = 'client', forceRegenerate = false) => {
+  const generateHermeticReport = async (forceRegenerate = false) => {
     if (!user) return;
     
-    // Check if generation is allowed (client-side mutex)
-    if (generationControl.isGenerationBlocked()) {
-      toast({
-        title: "Generation Already Active",
-        description: generationControl.getBlockingReason(),
-        variant: "destructive"
-      });
-      return;
-    }
-    
+    setGenerating(true);
     setError(null);
     
     try {
-      console.log(`🌟 Starting ${method} Hermetic Blueprint Report generation...`, { forceRegenerate });
+      console.log('🌟 Starting Hermetic Blueprint Report generation...', { forceRegenerate });
       
-      // Atomic job creation with database mutex
-      const jobResult = await generationControl.startGeneration(
-        method,
-        JOB_TYPES.HERMETIC_REPORT,
-        { 
-          reportType: 'hermetic', 
-          forceRegenerate, 
-          language,
-          userId: user.id 
-        }
-      );
+      // First, get the user's blueprint
+      const blueprintResult = await blueprintService.getActiveBlueprintData();
       
-      if (!jobResult.success) {
-        if (jobResult.error === 'DUPLICATE_JOB') {
-          toast({
-            title: "Generation Already Running",
-            description: "A report generation is already in progress. Please wait for it to complete.",
-            variant: "destructive"
-          });
-        } else {
-          throw new Error(jobResult.error || 'Failed to start generation');
-        }
-        return;
+      if (blueprintResult.error || !blueprintResult.data) {
+        throw new Error('No active blueprint found. Please create your blueprint first.');
       }
       
-      // CLIENT-SIDE GENERATION: Execute immediately
-      if (method === 'client') {
-        console.log('📋 Client-side generation: Getting blueprint...');
-        
-        // Get the user's blueprint
-        const blueprintResult = await blueprintService.getActiveBlueprintData();
-        
-        if (blueprintResult.error || !blueprintResult.data) {
-          throw new Error('No active blueprint found. Please create your blueprint first.');
-        }
-        
-        // Update progress
-        await generationControl.updateProgress({ phase: 'generating', progress: 10 });
-        
-        console.log('📋 Blueprint found, generating Hermetic report...');
-        
-        // Generate the Hermetic personality report
-        const result = await hermeticPersonalityReportService.generateHermeticReport(blueprintResult.data, language);
-        
-        if (result.success && result.report) {
-          // Clear current report state to show loading
-          console.log('🔄 Clearing current hermetic report state for refresh...');
-          setHermeticReport(null);
-          
-          // Set initial report from generation
-          setHermeticReport(result.report);
-          setReportType('hermetic'); // Switch to view the new report
-          
-          // Update progress
-          await generationControl.updateProgress({ phase: 'finalizing', progress: 95 });
-          
-          // Force fresh data load from database to ensure UI consistency
-          console.log('🔄 Force-refreshing hermetic report from database...');
-          await loadReport();
-          
-          // Complete the job successfully
-          await generationControl.completeGeneration(true, result.report);
-          
-          toast({
-            title: t('report.hermeticGenerated'),
-            description: `Your comprehensive ${result.report.report_content.word_count}+ word Hermetic Blueprint report has been created!`,
-          });
-          console.log('🌟 Hermetic report generated successfully');
-          console.log('📊 Hermetic report word count:', result.report.report_content.word_count);
-          console.log('✅ UI refreshed with latest database state');
-        } else {
-          throw new Error(result.error || 'Failed to generate Hermetic personality report');
-        }
-      }
+      console.log('📋 Blueprint found, generating Hermetic report...');
       
-      // BACKGROUND GENERATION: Show polling status  
-      if (method === 'background') {
+      // Generate the Hermetic personality report
+      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprintResult.data, language);
+      
+      if (result.success && result.report) {
+        // Clear current report state to show loading
+        console.log('🔄 Clearing current hermetic report state for refresh...');
+        setHermeticReport(null);
+        
+        // Set initial report from generation
+        setHermeticReport(result.report);
+        setReportType('hermetic'); // Switch to view the new report
+        
+        // Force fresh data load from database to ensure UI consistency
+        console.log('🔄 Force-refreshing hermetic report from database...');
+        await loadReport();
+        
         toast({
-          title: "Background Generation Started",
-          description: "Your Hermetic report is being generated in the background. This will take about 1 hour - you can leave and return later.",
+          title: t('report.hermeticGenerated'),
+          description: `Your comprehensive ${result.report.report_content.word_count}+ word Hermetic Blueprint report has been created!`,
         });
-        console.log(`🔄 Background Hermetic generation started: ${jobResult.jobId}`);
+        console.log('🌟 Hermetic report generated successfully');
+        console.log('📊 Hermetic report word count:', result.report.report_content.word_count);
+        console.log('✅ UI refreshed with latest database state');
+      } else {
+        throw new Error(result.error || 'Failed to generate Hermetic personality report');
       }
-      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate Hermetic personality report';
       setError(errorMessage);
-      
-      // Complete job with error
-      if (generationControl.activeJobId) {
-        await generationControl.completeGeneration(false, null, errorMessage);
-      }
-      
       toast({
         title: t('report.hermeticGenerationFailed'),
         description: errorMessage,
         variant: "destructive"
       });
       console.error('💥 Error generating Hermetic personality report:', err);
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -355,29 +199,9 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   const handleRegenerate = () => {
     if (reportType === 'hermetic') {
-      setPendingGeneration({ type: 'hermetic', forceRegenerate: true });
-      setShowMethodDialog(true);
+      generateHermeticReport(true);
     } else {
-      setPendingGeneration({ type: 'standard', forceRegenerate: true });
-      setShowMethodDialog(true);
-    }
-  };
-
-  const handleGenerateClick = (type: 'standard' | 'hermetic', forceRegenerate = false) => {
-    setPendingGeneration({ type, forceRegenerate });
-    setShowMethodDialog(true);
-  };
-
-  const handleMethodSelection = async (method: GenerationMethod) => {
-    setShowMethodDialog(false);
-    
-    if (pendingGeneration) {
-      if (pendingGeneration.type === 'hermetic') {
-        await generateHermeticReport(method, pendingGeneration.forceRegenerate);
-      } else {
-        await generateReport(method, pendingGeneration.forceRegenerate);
-      }
-      setPendingGeneration(null);
+      generateReport(true);
     }
   };
 
@@ -436,12 +260,12 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             <div className="flex flex-col gap-4 justify-center w-full">
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Button 
-                  onClick={() => handleGenerateClick('standard', false)} 
-                  disabled={generationControl.isGenerating}
+                  onClick={() => generateReport(false)} 
+                  disabled={generating}
                   className="bg-soul-purple hover:bg-soul-purple/90 w-full sm:w-auto"
                   size={isMobile ? "default" : "default"}
                 >
-                  {generationControl.isGenerating ? (
+                  {generating ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       {t('report.generating')}
@@ -454,12 +278,12 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   )}
                 </Button>
                 <Button 
-                  onClick={() => handleGenerateClick('hermetic', false)} 
-                  disabled={generationControl.isGenerating}
+                  onClick={() => generateHermeticReport(false)} 
+                  disabled={generating}
                   className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white w-full sm:w-auto"
                   size={isMobile ? "default" : "default"}
                 >
-                  {generationControl.isGenerating ? (
+                  {generating ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       {t('report.generating')}
@@ -597,42 +421,6 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   return (
     <div className={`${className} w-full max-w-full overflow-hidden`}>
-
-      {/* Generation Method Selection Dialog */}
-      <Dialog open={showMethodDialog} onOpenChange={setShowMethodDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Choose Generation Method</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Button
-                onClick={() => handleMethodSelection('client')}
-                className="w-full justify-start"
-                variant="outline"
-              >
-                <Zap className="h-4 w-4 mr-2" />
-                <div className="text-left">
-                  <div className="font-medium">Quick Generation</div>
-                  <div className="text-xs text-muted-foreground">Generate immediately (2-3 minutes)</div>
-                </div>
-              </Button>
-              <Button
-                onClick={() => handleMethodSelection('background')}
-                className="w-full justify-start"
-                variant="outline"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                <div className="text-left">
-                  <div className="font-medium">Background Generation</div>
-                  <div className="text-xs text-muted-foreground">Generate in background (up to 1 hour)</div>
-                </div>
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Report Type Toggle */}
       {(report || hermeticReport) && (
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -668,12 +456,12 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           <div className="flex gap-2">
             {!report && (
               <Button 
-                onClick={() => handleGenerateClick('standard', false)} 
-                disabled={generationControl.isGenerating}
+                onClick={() => generateReport(false)} 
+                disabled={generating}
                 variant="outline"
                 size="sm"
               >
-                {generationControl.isGenerating ? (
+                {generating ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <Plus className="h-4 w-4 mr-2" />
@@ -683,13 +471,13 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             )}
             {!hermeticReport && (
               <Button 
-                onClick={() => handleGenerateClick('hermetic', false)} 
-                disabled={generationControl.isGenerating}
+                onClick={() => generateHermeticReport(false)} 
+                disabled={generating}
                 variant="outline"
                 size="sm"
                 className="border-purple-200 text-purple-600 hover:bg-purple-50"
               >
-                {generationControl.isGenerating ? (
+                {generating ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <Star className="h-4 w-4 mr-2" />
@@ -736,30 +524,16 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               onClick={handleRegenerate} 
               variant="outline" 
               size="sm"
-              disabled={generationControl.isGenerating}
+              disabled={generating}
               className="flex-1 sm:flex-none"
             >
-              {generationControl.isGenerating ? (
+              {generating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              <span className="ml-1 sm:ml-2">{generationControl.isGenerating ? 'Regenerating...' : 'Regenerate'}</span>
+              <span className="ml-1 sm:ml-2">{generating ? 'Regenerating...' : 'Regenerate'}</span>
             </Button>
-            {generationControl.isGenerating && generationControl.activeJobId && (
-              <Button 
-                onClick={async () => {
-                  await generationControl.completeGeneration(false, null, 'Cancelled by user');
-                  window.location.reload(); // Force refresh to clear state
-                }}
-                variant="destructive" 
-                size="sm"
-                className="flex-shrink-0"
-              >
-                <X className="h-4 w-4" />
-                <span className="ml-1 sm:ml-2">Cancel</span>
-              </Button>
-            )}
             <Button onClick={handleRefresh} variant="ghost" size="sm" className="flex-shrink-0">
               <RefreshCw className="h-4 w-4" />
             </Button>

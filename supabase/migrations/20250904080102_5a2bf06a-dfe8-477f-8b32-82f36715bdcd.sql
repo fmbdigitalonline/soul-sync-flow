@@ -1,1 +1,0 @@
-UPDATE generation_jobs SET status = 'failed', error_message = 'Ghost process - forcibly cleaned up', updated_at = NOW() WHERE id = 'dd6c4860-52c8-4335-8633-ae64137843e4';
