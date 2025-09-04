@@ -207,5 +207,20 @@ verify_jwt = true
 cors = ["*"]
 methods = ["POST", "OPTIONS"]
 
+[functions.hermetic-job-creator]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.hermetic-background-orchestrator]
+verify_jwt = false
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.openai-agent]
+verify_jwt = false
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
 [analytics]
 enabled = false
