@@ -2129,6 +2129,7 @@ export type Database = {
       }
       hermetic_processing_jobs: {
         Row: {
+          blueprint_data: Json | null
           completed_at: string | null
           completed_steps: Json
           created_at: string
@@ -2145,11 +2146,13 @@ export type Database = {
           result_data: Json | null
           started_at: string | null
           status: string
+          status_message: string | null
           total_phases: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          blueprint_data?: Json | null
           completed_at?: string | null
           completed_steps?: Json
           created_at?: string
@@ -2166,11 +2169,13 @@ export type Database = {
           result_data?: Json | null
           started_at?: string | null
           status?: string
+          status_message?: string | null
           total_phases?: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          blueprint_data?: Json | null
           completed_at?: string | null
           completed_steps?: Json
           created_at?: string
@@ -2187,6 +2192,7 @@ export type Database = {
           result_data?: Json | null
           started_at?: string | null
           status?: string
+          status_message?: string | null
           total_phases?: number
           updated_at?: string
           user_id?: string
