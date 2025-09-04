@@ -91,8 +91,8 @@ serve(async (req) => {
       }
     }
 
-    // Reduce phase timeout to prevent resource exhaustion
-    const REDUCED_PHASE_TIMEOUT = 120000; // 2 minutes per phase
+    // Increased phase timeout to accommodate sequential API calls
+    const REDUCED_PHASE_TIMEOUT = 300000; // 5 minutes per phase (allows ~5 calls × 35s each + buffer)
     
     const processStartTime = Date.now();
     let phaseMetrics = {};
