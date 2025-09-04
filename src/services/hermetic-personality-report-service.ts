@@ -74,199 +74,60 @@ export interface HermeticReportWithQuotes {
 }
 
 class HermeticPersonalityReportService {
-  async generateHermeticReport(blueprint: BlueprintData, language: string = 'en', useBackground: boolean = false): Promise<{ 
+  async generateHermeticReport(blueprint: BlueprintData, language: string = 'en'): Promise<{ 
     success: boolean; 
     report?: HermeticPersonalityReport; 
     quotes?: any[]; 
-    error?: string;
-    jobId?: string;
+    error?: string 
   }> {
     try {
-      const generationId = crypto.randomUUID().substring(0, 8);
-      const startTime = Date.now();
-      
-      console.log(`🌟 [${generationId}] Generating comprehensive Hermetic Blueprint Report (120,000+ words)...`);
-      console.log(`📋 [${generationId}] Generation parameters:`, {
+      console.log('🌟 Generating comprehensive Hermetic Blueprint Report (120,000+ words)...');
+      console.log('📋 Blueprint structure:', {
         blueprintId: blueprint.id,
         userId: blueprint.user_id,
-        language,
-        useBackground,
-        blueprintValidation: {
-          hasUserMeta: !!blueprint.user_meta,
-          hasAllSystems: !!(blueprint.cognition_mbti && blueprint.archetype_western && 
-                           blueprint.values_life_path && blueprint.energy_strategy_human_design),
-          systemsPresent: Object.keys(blueprint).filter(key => 
-            ['cognition_mbti', 'archetype_western', 'values_life_path', 'energy_strategy_human_design', 'archetype_chinese'].includes(key)
-          )
-        }
+        hasUserMeta: !!blueprint.user_meta,
+        hasAllSystems: !!(blueprint.cognition_mbti && blueprint.archetype_western && 
+                         blueprint.values_life_path && blueprint.energy_strategy_human_design)
       });
       
-      if (useBackground) {
-        console.log(`🚀 [${generationId}] Using background processing mode`);
-        const result = await this.generateWithBackgroundProcessor(blueprint, language);
-        const duration = Date.now() - startTime;
-        
-        if (result.success) {
-          console.log(`✅ [${generationId}] Background generation completed in ${duration}ms`);
-        } else {
-          console.error(`❌ [${generationId}] Background generation failed after ${duration}ms:`, result.error);
-        }
-        
-        return result;
-      }
+      const startTime = Date.now();
       
-      console.log(`🔄 [${generationId}] Using client-side generation mode`);
-      
-      // Use the Hermetic Report Orchestrator for client-side generation
-      const phase1Start = Date.now();
+      // Use the Hermetic Report Orchestrator for multi-agent generation
       const hermeticResult = await hermeticReportOrchestrator.generateHermeticReport(blueprint);
-      const phase1Duration = Date.now() - phase1Start;
-      console.log(`✅ [${generationId}] Phase 1 (Hermetic orchestrator): ${hermeticResult.total_word_count} words in ${phase1Duration}ms`);
       
       // Build the hermetic report structure first (needed for intelligence analysis)
-      const phase2Start = Date.now();
       const hermeticReport = await this.buildHermeticReport(blueprint, hermeticResult);
-      const phase2Duration = Date.now() - phase2Start;
-      console.log(`✅ [${generationId}] Phase 2 (Report building): Structured in ${phase2Duration}ms`);
       
       // PHASE 2.5: Generate intelligence analysis with actual hermetic data
-      console.log(`🧠 [${generationId}] Phase 3: Generating Intelligence Analysis...`);
-      const phase3Start = Date.now();
+      console.log('🧠 Phase 5: Generating Intelligence Analysis...');
       const intelligenceResult = await this.generateIntelligenceAnalysis(blueprint, hermeticReport.report_content);
-      const phase3Duration = Date.now() - phase3Start;
-      console.log(`✅ [${generationId}] Phase 3 (Intelligence analysis): ${intelligenceResult.total_word_count} words in ${phase3Duration}ms`);
       
       // Combine hermetic and intelligence results for full 120K+ word report
-      const phase4Start = Date.now();
       const combinedResult = this.combineHermeticAndIntelligence(hermeticResult, intelligenceResult);
-      const phase4Duration = Date.now() - phase4Start;
-      console.log(`✅ [${generationId}] Phase 4 (Combination): ${combinedResult.total_word_count} words in ${phase4Duration}ms`);
       
       // Update the report with combined results
-      const phase5Start = Date.now();
       const report = await this.updateReportWithCombinedResults(hermeticReport, combinedResult);
-      const phase5Duration = Date.now() - phase5Start;
-      console.log(`✅ [${generationId}] Phase 5 (Report update): Updated in ${phase5Duration}ms`);
       
       // Store the report in the database
-      const phase6Start = Date.now();
       const storedReport = await this.storeHermeticReport(report);
-      const phase6Duration = Date.now() - phase6Start;
-      console.log(`✅ [${generationId}] Phase 6 (Storage): Stored with ID ${storedReport.id} in ${phase6Duration}ms`);
       
       // Generate personalized quotes aligned with Hermetic laws
-      const phase7Start = Date.now();
       const quotes = await this.generateHermeticQuotes(blueprint, combinedResult, language);
-      const phase7Duration = Date.now() - phase7Start;
-      console.log(`✅ [${generationId}] Phase 7 (Quotes): ${quotes.length} quotes in ${phase7Duration}ms`);
       
       // Trigger structured intelligence extraction for new report (force reprocess)
-      const phase8Start = Date.now();
       await this.triggerIntelligenceExtraction(blueprint.user_id || blueprint.user_meta?.user_id, true);
-      const phase8Duration = Date.now() - phase8Start;
-      console.log(`✅ [${generationId}] Phase 8 (Intelligence extraction): Triggered in ${phase8Duration}ms`);
       
-      const totalDuration = Date.now() - startTime;
-      
-      console.log(`🎉 [${generationId}] Complete Hermetic Report generated successfully!`);
-      console.log(`📊 [${generationId}] Final generation metrics:`, {
-        totalDuration: `${totalDuration}ms`,
-        totalWordCount: combinedResult.total_word_count,
-        hermeticWords: hermeticResult.total_word_count,
-        intelligenceWords: intelligenceResult.total_word_count,
-        phaseBreakdown: {
-          phase1_hermetic: `${phase1Duration}ms`,
-          phase2_building: `${phase2Duration}ms`,
-          phase3_intelligence: `${phase3Duration}ms`,
-          phase4_combination: `${phase4Duration}ms`,
-          phase5_update: `${phase5Duration}ms`,
-          phase6_storage: `${phase6Duration}ms`,
-          phase7_quotes: `${phase7Duration}ms`,
-          phase8_extraction: `${phase8Duration}ms`
-        },
-        reportId: storedReport.id,
-        quotesGenerated: quotes.length
-      });
+      const endTime = Date.now();
+      console.log(`✅ Complete Hermetic Report generated: ${combinedResult.total_word_count} words (${hermeticResult.total_word_count} hermetic + ${intelligenceResult.total_word_count} intelligence) in ${endTime - startTime}ms`);
       
       return { 
         success: true, 
         report: storedReport,
-        quotes: quotes || [],
-        jobId: `client-${generationId}`
+        quotes: quotes || []
       };
       
     } catch (error) {
-      const errorDuration = Date.now() - Date.now();
       console.error('❌ Hermetic report generation failed:', error);
-      console.error('❌ Error context:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack?.substring(0, 500)
-      });
-      return { success: false, error: String(error) };
-    }
-  }
-
-  /**
-   * Generate hermetic report using background processor (queue-based)
-   */
-  private async generateWithBackgroundProcessor(blueprint: BlueprintData, language: string): Promise<{ 
-    success: boolean; 
-    report?: HermeticPersonalityReport; 
-    quotes?: any[]; 
-    error?: string;
-    jobId?: string;
-  }> {
-    try {
-      const processingStartTime = Date.now();
-      const processingId = crypto.randomUUID().substring(0, 8);
-      
-      console.log(`🚀 [${processingId}] Starting queue-based hermetic report generation...`);
-      console.log(`🚀 [${processingId}] Processing details:`, {
-        language,
-        blueprintSize: JSON.stringify(blueprint).length,
-        blueprintSystems: {
-          mbti: !!blueprint.cognition_mbti,
-          astrology: !!blueprint.archetype_western,
-          numerology: !!blueprint.values_life_path,
-          humanDesign: !!blueprint.energy_strategy_human_design
-        }
-      });
-      
-      const userId = blueprint.user_id || blueprint.user_meta?.user_id;
-      if (!userId) {
-        throw new Error('User ID is required for background processing');
-      }
-
-      // Use the new queue monitor service to start generation
-      console.log(`🔄 [${processingId}] Starting queue-based generation...`);
-      const { hermeticQueueMonitor } = await import('./hermetic-queue-monitor-service');
-      
-      const startResult = await hermeticQueueMonitor.startHermeticGeneration(userId, blueprint, language);
-      
-      if (!startResult.success) {
-        console.error(`❌ [${processingId}] Queue generation failed:`, startResult.error);
-        throw new Error(`Queue generation failed: ${startResult.error}`);
-      }
-      
-      console.log(`✅ [${processingId}] Queue generation started with job ID: ${startResult.jobId}`);
-      
-      // Return job ID for client-side monitoring
-      // The actual processing will happen asynchronously in the queue
-      return {
-        success: true,
-        jobId: startResult.jobId,
-        // Note: report and quotes will be available once queue processing completes
-        // Client should use useHermeticProgress hook to monitor progress
-      };
-
-    } catch (error) {
-      console.error('❌ Queue-based hermetic generation failed:', error);
-      console.error('❌ Error context:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack?.substring(0, 300)
-      });
       return { success: false, error: String(error) };
     }
   }
