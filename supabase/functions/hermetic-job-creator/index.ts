@@ -55,16 +55,9 @@ serve(async (req) => {
       .from('hermetic_processing_jobs')
       .insert({
         user_id: user_id,
-        job_type: 'hermetic_report',
+        blueprint_data: blueprint_data,
         status: 'pending',
-        current_phase: 1,
-        total_phases: 4,
-        progress_percentage: 0,
-        current_step: 'Job created, queued for processing...',
-        completed_steps: [],
-        result_data: JSON.stringify({ blueprint_data }),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        status_message: 'Job created, queued for processing...'
       })
       .select()
       .single();
@@ -94,7 +87,7 @@ serve(async (req) => {
           .from('hermetic_processing_jobs')
           .update({
             status: 'failed',
-            error_message: `Failed to start processing: ${result.error.message}`,
+            status_message: `Failed to start processing: ${result.error.message}`,
             updated_at: new Date().toISOString()
           })
           .eq('id', job.id);
@@ -108,7 +101,7 @@ serve(async (req) => {
         .from('hermetic_processing_jobs')
         .update({
           status: 'failed',
-          error_message: `Failed to invoke processor: ${error.message}`,
+          status_message: `Failed to invoke processor: ${error.message}`,
           updated_at: new Date().toISOString()
         })
         .eq('id', job.id);

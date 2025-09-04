@@ -91,7 +91,7 @@ serve(async (req) => {
 
 async function processHermeticReportInBackground(job: any) {
   const jobId = job.id;
-  const blueprint = JSON.parse(job.result_data || '{}').blueprint_data || {};
+  const blueprint = job.blueprint_data; // Direct access to blueprint_data
   
   console.log(`🔮 Starting hermetic report processing for job ${jobId}`);
   
@@ -115,19 +115,24 @@ async function processHermeticReportInBackground(job: any) {
           messages: [
             {
               role: 'system',
-              content: `You are the ${translator}. Generate comprehensive 2000+ word analysis translating the blueprint into your system domain.`
+              content: `You are the ${translator}. Translate the personality system through all 7 Hermetic Laws with shadow work integration. Generate 500+ words analyzing:
+1. How this personality system expresses through each Hermetic Law
+2. Shadow patterns and unconscious expressions of this system
+3. Light expressions and conscious mastery potential
+4. Integration techniques for balancing shadow and light aspects
+5. How this system's energies can be consciously directed`
             },
             {
               role: 'user',
-              content: `Translate this blueprint data into your system perspective:
+              content: `Translate this system through Hermetic Laws:
 
 ${JSON.stringify(blueprint, null, 2)}
 
-Provide detailed translation with practical insights.`
+Focus on your specific system expertise.`
             }
           ],
           model: 'gpt-4o-mini',
-          temperature: 0.7
+          temperature: 0.6
         }
       });
       
@@ -157,15 +162,21 @@ Provide detailed translation with practical insights.`
           messages: [
             {
               role: 'system',
-              content: `You are the ${agent}. Generate 1,500+ words analyzing the blueprint through your specific Hermetic Law with comprehensive shadow work integration.`
+              content: `You are the ${agent}. Generate 1,500+ words analyzing the blueprint through your specific Hermetic Law with comprehensive shadow work integration. Focus on:
+1. Light and shadow expressions of this law in the person's blueprint
+2. Unconscious patterns and shadow projections related to this law
+3. Practical shadow work techniques for integration
+4. Conscious activation practices for embodying the light aspect
+5. How this law's shadow shows up in relationships and life patterns
+6. Transformative practices for mastering both polarities`
             },
             {
               role: 'user',
-              content: `Analyze this blueprint through your hermetic law:
+              content: `Analyze this blueprint through your Hermetic Law expertise:
 
 ${JSON.stringify(blueprint, null, 2)}
 
-Provide deep insights with shadow work integration.`
+Generate comprehensive analysis with practical applications.`
             }
           ],
           model: 'gpt-4o-mini',
@@ -202,15 +213,27 @@ Provide deep insights with shadow work integration.`
           messages: [
             {
               role: 'system',
-              content: `You are the Gate Hermetic Analyst. Provide comprehensive analysis of Gate ${gateNumber} through all 7 Hermetic Laws.`
+              content: `You are the Gate Hermetic Analyst. You specialize in analyzing specific Human Design gates through the lens of the 7 Hermetic Laws with deep shadow work integration.
+
+Your task is to provide a comprehensive 1,200+ word analysis of Gate ${gateNumber} through all 7 Hermetic Laws with shadow integration:
+
+1. MENTALISM - How this gate influences mental patterns, thoughts, and consciousness
+2. CORRESPONDENCE - How this gate manifests "as above, so below" - inner and outer reflections  
+3. VIBRATION - The energetic frequency and vibrational qualities of this gate
+4. POLARITY - The opposing forces and shadow/light aspects of this gate
+5. RHYTHM - The natural cycles, timing, and rhythmic patterns of this gate
+6. CAUSATION - The cause-and-effect patterns and how conscious choice activates this gate
+7. GENDER - The creative/receptive, active/passive energy dynamics of this gate
+
+Generate a comprehensive, flowing analysis that integrates all 7 laws with deep shadow work naturally.`
             },
             {
               role: 'user',
-              content: `Analyze Gate ${gateNumber} in this blueprint context:
+              content: `Analyze Gate ${gateNumber} through all 7 Hermetic Laws for this individual's blueprint:
 
-${JSON.stringify(blueprint, null, 2)}
+Blueprint Context: ${JSON.stringify(blueprint, null, 2)}
 
-Focus on this gate's activation through all hermetic principles.`
+Focus specifically on Gate ${gateNumber} and how it expresses through each Hermetic Law in this person's unique configuration. Generate 1,200+ words of deep, integrated analysis.`
             }
           ],
           model: 'gpt-4o-mini',
@@ -228,31 +251,58 @@ Focus on this gate's activation through all hermetic principles.`
       }
     }
     
-    // PHASE 4: Intelligence Extraction + Final Assembly
-    console.log('🧠 Phase 4: Intelligence Extraction & Assembly');
+    // PHASE 4: Intelligence Extraction
+    console.log('🧠 Phase 4: Intelligence Extraction');
     await updateJobStatus(jobId, 'processing', 'Processing intelligence extraction...', 4, 4, 80);
     
+    const allSections = [...systemSections, ...hermeticSections, ...gateSections];
     const intelligenceSections = [];
-    const allContent = [...systemSections, ...hermeticSections, ...gateSections]
-      .map(s => s.content).join('\n\n');
     
     for (let i = 0; i < INTELLIGENCE_EXTRACTION_AGENTS.length; i++) {
       const agent = INTELLIGENCE_EXTRACTION_AGENTS[i];
+      const dimensionName = agent.replace('_analyst', '');
       
-      const { data, error } = await supabase.functions.invoke(agent, {
+      const { data, error } = await supabase.functions.invoke('openai-agent', {
         body: {
-          hermeticChunk: allContent.slice(0, 15000), // Limit to avoid timeouts
-          previousInsights: {},
-          blueprintContext: blueprint
+          messages: [
+            {
+              role: 'system',
+              content: `You are the ${agent}. Generate a comprehensive 800+ word analysis focused on the ${dimensionName} dimension of this person's psychological and spiritual blueprint.
+
+Your analysis should explore:
+1. Core patterns and structures in the ${dimensionName} dimension
+2. How this dimension manifests in daily life and decision-making
+3. Shadow aspects and unconscious expressions of this dimension
+4. Light aspects and conscious mastery potential
+5. Integration practices and development opportunities
+6. How this dimension interacts with other aspects of their blueprint
+7. Practical applications for conscious evolution in this area
+
+Provide deep, actionable insights that help the person understand and consciously work with their ${dimensionName} patterns for growth and transformation.`
+            },
+            {
+              role: 'user',
+              content: `Generate comprehensive ${dimensionName} analysis for this blueprint:
+
+${JSON.stringify(blueprint, null, 2)}
+
+Enhanced Context from Analysis:
+${allSections.map(s => s.content.substring(0, 500)).join('\n\n')}
+
+Provide 800+ words of deep analysis focused specifically on the ${dimensionName} dimension.`
+            }
+          ],
+          model: 'gpt-4o-mini',
+          temperature: 0.7
         }
       });
       
-      if (!error && data) {
+      if (!error && data?.choices?.[0]?.message?.content) {
         intelligenceSections.push({
           agent_type: agent,
-          content: JSON.stringify(data, null, 2),
-          word_count: JSON.stringify(data).length,
-          intelligence_dimension: agent.replace('_analyst', '')
+          content: data.choices[0].message.content,
+          word_count: data.choices[0].message.content.length,
+          intelligence_dimension: dimensionName
         });
       }
     }
@@ -260,14 +310,14 @@ Focus on this gate's activation through all hermetic principles.`
     // Final Assembly
     await updateJobStatus(jobId, 'processing', 'Assembling final report...', 4, 4, 95);
     
-    const allSections = [...systemSections, ...hermeticSections, ...gateSections, ...intelligenceSections];
-    const totalWordCount = allSections.reduce((total, section) => total + Math.floor(section.word_count / 5), 0);
+    const finalSections = [...systemSections, ...hermeticSections, ...gateSections, ...intelligenceSections];
+    const totalWordCount = finalSections.reduce((total, section) => total + Math.floor(section.word_count / 5), 0);
     
     const finalReport = {
-      sections: allSections,
-      synthesis: "Comprehensive hermetic analysis complete.",
-      consciousness_map: "Detailed consciousness mapping generated.",
-      practical_applications: "Practical applications and recommendations provided.",
+      sections: finalSections,
+      synthesis: "Comprehensive hermetic analysis complete with shadow work integration.",
+      consciousness_map: "Detailed consciousness mapping across all dimensions generated.",
+      practical_applications: "Practical shadow work and conscious activation techniques provided.",
       blueprint_signature: generateBlueprintSignature(blueprint),
       total_word_count: totalWordCount,
       generated_at: new Date().toISOString(),

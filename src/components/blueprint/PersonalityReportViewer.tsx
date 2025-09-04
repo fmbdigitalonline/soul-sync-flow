@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { aiPersonalityReportService, PersonalityReport } from '@/services/ai-personality-report-service';
@@ -13,6 +14,7 @@ import { blueprintService } from '@/services/blueprint-service';
 import { useToast } from '@/hooks/use-toast';
 import { CosmicCard } from '@/components/ui/cosmic-card';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PersonalityReportViewerProps {
   className?: string;
@@ -20,6 +22,7 @@ interface PersonalityReportViewerProps {
 
 export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = ({ className }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { t, language } = useLanguage();
   const { toast } = useToast();
   const { spacing, getTextSize, isMobile, isUltraNarrow, isFoldDevice } = useResponsiveLayout();
@@ -142,7 +145,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     setError(null);
     
     try {
-      console.log('🌟 Starting Hermetic Blueprint Report generation...', { forceRegenerate });
+      console.log('🌟 Starting Backend Hermetic Report generation...', { forceRegenerate });
       
       // First, get the user's blueprint
       const blueprintResult = await blueprintService.getActiveBlueprintData();
@@ -151,45 +154,40 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         throw new Error('No active blueprint found. Please create your blueprint first.');
       }
       
-      console.log('📋 Blueprint found, generating Hermetic report...');
+      console.log('📋 Blueprint found, creating backend job...');
       
-      // Generate the Hermetic personality report
-      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprintResult.data, language);
-      
-      if (result.success && result.report) {
-        // Clear current report state to show loading
-        console.log('🔄 Clearing current hermetic report state for refresh...');
-        setHermeticReport(null);
-        
-        // Set initial report from generation
-        setHermeticReport(result.report);
-        setReportType('hermetic'); // Switch to view the new report
-        
-        // Force fresh data load from database to ensure UI consistency
-        console.log('🔄 Force-refreshing hermetic report from database...');
-        await loadReport();
-        
-        toast({
-          title: t('report.hermeticGenerated'),
-          description: `Your comprehensive ${result.report.report_content.word_count}+ word Hermetic Blueprint report has been created!`,
-        });
-        console.log('🌟 Hermetic report generated successfully');
-        console.log('📊 Hermetic report word count:', result.report.report_content.word_count);
-        console.log('✅ UI refreshed with latest database state');
-      } else {
-        throw new Error(result.error || 'Failed to generate Hermetic personality report');
+      // Create backend job instead of client-side generation
+      const { data: jobData, error: jobError } = await supabase.functions.invoke('hermetic-job-creator', {
+        body: {
+          user_id: user.id,
+          blueprint_data: blueprintResult.data
+        }
+      });
+
+      if (jobError || !jobData?.job_id) {
+        console.error('Failed to create hermetic job:', jobError);
+        throw new Error('Failed to start report generation. Please try again.');
       }
+
+      const jobId = jobData.job_id;
+      console.log(`🚀 Created backend job: ${jobId}`);
+      
+      toast({
+        title: "Report Generation Started",
+        description: "Your comprehensive hermetic report is being generated in the background. You can close this page and return later to check progress.",
+      });
+
+      // Redirect to status page to monitor progress
+      navigate(`/reports/status/${jobId}`);
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate Hermetic personality report';
       setError(errorMessage);
       toast({
-        title: t('report.hermeticGenerationFailed'),
+        title: t('report.generationFailed'),
         description: errorMessage,
         variant: "destructive"
       });
-      console.error('💥 Error generating Hermetic personality report:', err);
-    } finally {
-      setGenerating(false);
     }
   };
 
