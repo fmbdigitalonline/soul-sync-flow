@@ -19,6 +19,8 @@ import DesignAnalysisPage from './pages/DesignAnalysisPage';
 import User360Page from './pages/User360Page';
 import HermeticIntelligenceTest from './pages/HermeticIntelligenceTest';
 import NotFound from './pages/NotFound';
+import { ReportStatusPage } from './components/ReportStatusPage';
+import ReportViewer from './components/ReportViewer';
 import { Toaster } from '@/components/ui/toaster';
 import { SoulOrbProvider } from './contexts/SoulOrbContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -80,6 +82,9 @@ function App() {
                             </ProtectedRoute>
                           } 
                         />
+                        {/* Report routes */}
+                        <Route path="/reports/status/:jobId" element={<ProtectedRoute><ReportStatusPage /></ProtectedRoute>} />
+                        <Route path="/reports/view/:jobId" element={<ProtectedRoute><ReportViewer /></ProtectedRoute>} />
                         {/* Catch-all route for 404s - MUST be last */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>
