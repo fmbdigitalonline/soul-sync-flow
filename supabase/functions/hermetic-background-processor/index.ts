@@ -2,6 +2,12 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
+// Rate limiting and resilience configuration
+const API_CALL_DELAY = 2000; // 2 seconds between API calls
+const MAX_RETRIES = 3;
+const RETRY_DELAYS = [1000, 3000, 5000]; // Exponential backoff delays
+const PHASE_TIMEOUT = 300000; // 5 minutes per phase timeout
+
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -49,37 +55,73 @@ serve(async (req) => {
     // PHASE 1: System Integration (replicate client-side flow)
     console.log(`📋 [${requestId}] Phase 1: System Integration Analysis...`);
     const phase1Start = Date.now();
-    const systemSections = await generateSystemTranslation(supabase, blueprint, requestId);
-    const phase1Duration = Date.now() - phase1Start;
-    const phase1Words = systemSections.reduce((total, s) => total + (s.word_count || 0), 0);
-    phaseMetrics['phase1_system'] = { duration: phase1Duration, sections: systemSections.length, words: phase1Words };
-    totalApiCalls += systemSections.length;
-    totalWordCount += phase1Words;
-    console.log(`✅ [${requestId}] Phase 1 completed: ${systemSections.length} sections, ${phase1Words} words, ${phase1Duration}ms`);
+    let systemSections = [];
+    try {
+      systemSections = await executePhaseWithTimeout(
+        () => generateSystemTranslation(supabase, blueprint, requestId),
+        PHASE_TIMEOUT,
+        `Phase 1 System Integration`
+      );
+      const phase1Duration = Date.now() - phase1Start;
+      const phase1Words = systemSections.reduce((total, s) => total + (s.word_count || 0), 0);
+      phaseMetrics['phase1_system'] = { duration: phase1Duration, sections: systemSections.length, words: phase1Words, success: true };
+      totalApiCalls += systemSections.length;
+      totalWordCount += phase1Words;
+      console.log(`✅ [${requestId}] Phase 1 completed: ${systemSections.length} sections, ${phase1Words} words, ${phase1Duration}ms`);
+    } catch (error) {
+      const phase1Duration = Date.now() - phase1Start;
+      console.error(`❌ [${requestId}] Phase 1 failed after ${phase1Duration}ms:`, error);
+      phaseMetrics['phase1_system'] = { duration: phase1Duration, sections: 0, words: 0, success: false, error: error.message };
+      // Continue with empty sections to allow partial completion
+    }
     
     // PHASE 2: Hermetic Laws Analysis  
     console.log(`🔮 [${requestId}] Phase 2: Hermetic Law Analysis...`);
     const phase2Start = Date.now();
-    const hermeticSections = await generateHermeticLawAnalysis(supabase, blueprint, requestId);
-    const phase2Duration = Date.now() - phase2Start;
-    const phase2Words = hermeticSections.reduce((total, s) => total + (s.word_count || 0), 0);
-    phaseMetrics['phase2_hermetic'] = { duration: phase2Duration, sections: hermeticSections.length, words: phase2Words };
-    totalApiCalls += hermeticSections.length;
-    totalWordCount += phase2Words;
-    console.log(`✅ [${requestId}] Phase 2 completed: ${hermeticSections.length} sections, ${phase2Words} words, ${phase2Duration}ms`);
+    let hermeticSections = [];
+    try {
+      hermeticSections = await executePhaseWithTimeout(
+        () => generateHermeticLawAnalysis(supabase, blueprint, requestId),
+        PHASE_TIMEOUT,
+        `Phase 2 Hermetic Laws`
+      );
+      const phase2Duration = Date.now() - phase2Start;
+      const phase2Words = hermeticSections.reduce((total, s) => total + (s.word_count || 0), 0);
+      phaseMetrics['phase2_hermetic'] = { duration: phase2Duration, sections: hermeticSections.length, words: phase2Words, success: true };
+      totalApiCalls += hermeticSections.length;
+      totalWordCount += phase2Words;
+      console.log(`✅ [${requestId}] Phase 2 completed: ${hermeticSections.length} sections, ${phase2Words} words, ${phase2Duration}ms`);
+    } catch (error) {
+      const phase2Duration = Date.now() - phase2Start;
+      console.error(`❌ [${requestId}] Phase 2 failed after ${phase2Duration}ms:`, error);
+      phaseMetrics['phase2_hermetic'] = { duration: phase2Duration, sections: 0, words: 0, success: false, error: error.message };
+      // Continue with empty sections to allow partial completion
+    }
     
     // PHASE 3: Gate Analysis
     console.log(`🚪 [${requestId}] Phase 3: Gate-by-Gate Analysis...`);
     const phase3Start = Date.now();
     const gates = extractHumanDesignGates(blueprint);
     console.log(`🚪 [${requestId}] Extracted ${gates.length} gates:`, gates.sort((a, b) => a - b));
-    const gateSections = gates.length > 0 ? await generateGateAnalysis(supabase, blueprint, gates, requestId) : [];
-    const phase3Duration = Date.now() - phase3Start;
-    const phase3Words = gateSections.reduce((total, s) => total + (s.word_count || 0), 0);
-    phaseMetrics['phase3_gates'] = { duration: phase3Duration, sections: gateSections.length, words: phase3Words, gatesAnalyzed: gates.length };
-    totalApiCalls += gateSections.length;
-    totalWordCount += phase3Words;
-    console.log(`✅ [${requestId}] Phase 3 completed: ${gates.length} gates analyzed, ${gateSections.length} sections, ${phase3Words} words, ${phase3Duration}ms`);
+    let gateSections = [];
+    try {
+      gateSections = gates.length > 0 ? await executePhaseWithTimeout(
+        () => generateGateAnalysis(supabase, blueprint, gates, requestId),
+        PHASE_TIMEOUT,
+        `Phase 3 Gate Analysis`
+      ) : [];
+      const phase3Duration = Date.now() - phase3Start;
+      const phase3Words = gateSections.reduce((total, s) => total + (s.word_count || 0), 0);
+      phaseMetrics['phase3_gates'] = { duration: phase3Duration, sections: gateSections.length, words: phase3Words, gatesAnalyzed: gates.length, success: true };
+      totalApiCalls += gateSections.length;
+      totalWordCount += phase3Words;
+      console.log(`✅ [${requestId}] Phase 3 completed: ${gates.length} gates analyzed, ${gateSections.length} sections, ${phase3Words} words, ${phase3Duration}ms`);
+    } catch (error) {
+      const phase3Duration = Date.now() - phase3Start;
+      console.error(`❌ [${requestId}] Phase 3 failed after ${phase3Duration}ms:`, error);
+      phaseMetrics['phase3_gates'] = { duration: phase3Duration, sections: 0, words: 0, gatesAnalyzed: gates.length, success: false, error: error.message };
+      // Continue with empty sections to allow partial completion
+    }
     
     // PHASE 4: Intelligence Analysis
     console.log(`🧠 [${requestId}] Phase 4: Intelligence Analysis...`);
@@ -197,39 +239,46 @@ async function generateSystemTranslation(supabase: any, blueprint: any, requestI
 
   for (let i = 0; i < translators.length; i++) {
     const translator = translators[i];
-    const callStart = Date.now();
-    
     console.log(`🔄 [${requestId}] API Call ${i + 1}/${translators.length}: ${translator} starting...`);
     
-    const { data, error } = await supabase.functions.invoke('openai-agent', {
-      body: {
-        messages: [
-          {
-            role: 'system',
-            content: `You are the ${translator}. Generate 1,000+ words translating this blueprint's system through Hermetic principles.`
-          },
-          {
-            role: 'user',
-            content: `Translate this blueprint through Hermetic lens: ${JSON.stringify(blueprint)}`
-          }
-        ],
-        model: 'gpt-4o-mini',
-        temperature: 0.7
-      }
-    });
+    // Rate limiting: Add delay between API calls to prevent overwhelming systems
+    if (i > 0) {
+      console.log(`⏱️ [${requestId}] Rate limiting: Waiting ${API_CALL_DELAY}ms before next API call...`);
+      await delay(API_CALL_DELAY);
+    }
+    
+    const result = await makeResilientsAPICall(
+      () => supabase.functions.invoke('openai-agent', {
+        body: {
+          messages: [
+            {
+              role: 'system',
+              content: `You are the ${translator}. Generate 1,000+ words translating this blueprint's system through Hermetic principles.`
+            },
+            {
+              role: 'user',
+              content: `Translate this blueprint through Hermetic lens: ${JSON.stringify(blueprint)}`
+            }
+          ],
+          model: 'gpt-4o-mini',
+          temperature: 0.7
+        }
+      }),
+      translator,
+      requestId
+    );
 
-    const callDuration = Date.now() - callStart;
-    const wordCount = data?.content ? data.content.split(' ').length : 0;
-
-    if (!error && data?.content) {
+    if (result.success && result.data?.content) {
+      const wordCount = result.data.content.split(' ').length;
       sections.push({
         agent_type: translator,
-        content: data.content,
+        content: result.data.content,
         word_count: wordCount
       });
-      console.log(`✅ [${requestId}] ${translator} completed: ${wordCount} words in ${callDuration}ms`);
+      console.log(`✅ [${requestId}] ${translator} completed: ${wordCount} words in ${result.duration}ms`);
     } else {
-      console.error(`❌ [${requestId}] ${translator} failed:`, error);
+      console.error(`❌ [${requestId}] ${translator} failed after ${MAX_RETRIES} attempts:`, result.error);
+      // Continue processing other translators even if one fails
     }
   }
 
@@ -255,40 +304,47 @@ async function generateHermeticLawAnalysis(supabase: any, blueprint: any, reques
   for (let i = 0; i < agents.length; i++) {
     const agent = agents[i];
     const lawName = agent.replace('_analyst', '');
-    const callStart = Date.now();
-    
     console.log(`🔄 [${requestId}] API Call ${i + 1}/${agents.length}: ${agent} (Law of ${lawName.charAt(0).toUpperCase() + lawName.slice(1)}) starting...`);
     
-    const { data, error } = await supabase.functions.invoke('openai-agent', {
-      body: {
-        messages: [
-          {
-            role: 'system',
-            content: `You are the ${agent}. Generate 1,500+ words analyzing through your Hermetic Law with shadow work integration.`
-          },
-          {
-            role: 'user',
-            content: `Analyze this blueprint: ${JSON.stringify(blueprint)}`
-          }
-        ],
-        model: 'gpt-4o-mini',
-        temperature: 0.7
-      }
-    });
+    // Rate limiting: Add delay between API calls
+    if (i > 0) {
+      console.log(`⏱️ [${requestId}] Rate limiting: Waiting ${API_CALL_DELAY}ms before next API call...`);
+      await delay(API_CALL_DELAY);
+    }
+    
+    const result = await makeResilientsAPICall(
+      () => supabase.functions.invoke('openai-agent', {
+        body: {
+          messages: [
+            {
+              role: 'system',
+              content: `You are the ${agent}. Generate 1,500+ words analyzing through your Hermetic Law with shadow work integration.`
+            },
+            {
+              role: 'user',
+              content: `Analyze this blueprint: ${JSON.stringify(blueprint)}`
+            }
+          ],
+          model: 'gpt-4o-mini',
+          temperature: 0.7
+        }
+      }),
+      agent,
+      requestId
+    );
 
-    const callDuration = Date.now() - callStart;
-    const wordCount = data?.content ? data.content.split(' ').length : 0;
-
-    if (!error && data?.content) {
+    if (result.success && result.data?.content) {
+      const wordCount = result.data.content.split(' ').length;
       sections.push({
         agent_type: agent,
-        content: data.content,
+        content: result.data.content,
         word_count: wordCount,
         hermetic_law: lawName
       });
-      console.log(`✅ [${requestId}] ${agent} (${lawName}) completed: ${wordCount} words in ${callDuration}ms`);
+      console.log(`✅ [${requestId}] ${agent} (${lawName}) completed: ${wordCount} words in ${result.duration}ms`);
     } else {
-      console.error(`❌ [${requestId}] ${agent} failed:`, error);
+      console.error(`❌ [${requestId}] ${agent} failed after ${MAX_RETRIES} attempts:`, result.error);
+      // Continue processing other agents even if one fails
     }
   }
 
@@ -343,40 +399,47 @@ async function generateGateAnalysis(supabase: any, blueprint: any, gates: number
   
   for (let i = 0; i < gates.length; i++) {
     const gateNumber = gates[i];
-    const callStart = Date.now();
-    
     console.log(`🔄 [${requestId}] API Call ${i + 1}/${gates.length}: Gate ${gateNumber} analysis starting...`);
     
-    const { data, error } = await supabase.functions.invoke('openai-agent', {
-      body: {
-        messages: [
-          {
-            role: 'system',
-            content: `You are the Gate Hermetic Analyst. Analyze Gate ${gateNumber} through all 7 Hermetic Laws with shadow work. Generate 1,200+ words.`
-          },
-          {
-            role: 'user',
-            content: `Analyze Gate ${gateNumber} for this blueprint: ${JSON.stringify(blueprint)}`
-          }
-        ],
-        model: 'gpt-4o-mini',
-        temperature: 0.7
-      }
-    });
+    // Rate limiting: Add delay between API calls for gates (they can be numerous)
+    if (i > 0) {
+      console.log(`⏱️ [${requestId}] Rate limiting: Waiting ${API_CALL_DELAY}ms before next gate analysis...`);
+      await delay(API_CALL_DELAY);
+    }
+    
+    const result = await makeResilientsAPICall(
+      () => supabase.functions.invoke('openai-agent', {
+        body: {
+          messages: [
+            {
+              role: 'system',
+              content: `You are the Gate Hermetic Analyst. Analyze Gate ${gateNumber} through all 7 Hermetic Laws with shadow work. Generate 1,200+ words.`
+            },
+            {
+              role: 'user',
+              content: `Analyze Gate ${gateNumber} for this blueprint: ${JSON.stringify(blueprint)}`
+            }
+          ],
+          model: 'gpt-4o-mini',
+          temperature: 0.7
+        }
+      }),
+      `gate_${gateNumber}`,
+      requestId
+    );
 
-    const callDuration = Date.now() - callStart;
-    const wordCount = data?.content ? data.content.split(' ').length : 0;
-
-    if (!error && data?.content) {
+    if (result.success && result.data?.content) {
+      const wordCount = result.data.content.split(' ').length;
       sections.push({
         agent_type: 'gate_hermetic_analyst',
-        content: data.content,
+        content: result.data.content,
         word_count: wordCount,
         gate_number: gateNumber
       });
-      console.log(`✅ [${requestId}] Gate ${gateNumber} completed: ${wordCount} words in ${callDuration}ms`);
+      console.log(`✅ [${requestId}] Gate ${gateNumber} completed: ${wordCount} words in ${result.duration}ms`);
     } else {
-      console.error(`❌ [${requestId}] Gate ${gateNumber} analysis failed:`, error);
+      console.error(`❌ [${requestId}] Gate ${gateNumber} analysis failed after ${MAX_RETRIES} attempts:`, result.error);
+      // Continue processing other gates even if one fails
     }
   }
 
@@ -666,4 +729,83 @@ async function generateHermeticQuotes(supabase: any, blueprint: any, sections: a
   console.log(`✅ [${requestId}] Quotes generated: ${quotesGenerated} quotes in ${callDuration}ms`);
   
   return data?.quotes || [];
+}
+
+// Utility functions for resilience and rate limiting
+async function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function makeResilientsAPICall(
+  apiCall: () => Promise<any>,
+  callName: string,
+  requestId: string
+): Promise<{ success: boolean; data?: any; error?: string; duration: number }> {
+  const overallStart = Date.now();
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const attemptStart = Date.now();
+    
+    try {
+      console.log(`🔄 [${requestId}] ${callName} attempt ${attempt + 1}/${MAX_RETRIES}...`);
+      
+      const { data, error } = await apiCall();
+      const attemptDuration = Date.now() - attemptStart;
+      
+      if (!error && data?.content) {
+        console.log(`✅ [${requestId}] ${callName} succeeded on attempt ${attempt + 1} in ${attemptDuration}ms`);
+        return {
+          success: true,
+          data,
+          duration: Date.now() - overallStart
+        };
+      } else {
+        console.warn(`⚠️ [${requestId}] ${callName} attempt ${attempt + 1} returned error:`, error);
+        if (attempt < MAX_RETRIES - 1) {
+          const retryDelay = RETRY_DELAYS[attempt] || RETRY_DELAYS[RETRY_DELAYS.length - 1];
+          console.log(`⏱️ [${requestId}] ${callName} retrying in ${retryDelay}ms...`);
+          await delay(retryDelay);
+        }
+      }
+    } catch (error) {
+      const attemptDuration = Date.now() - attemptStart;
+      console.error(`❌ [${requestId}] ${callName} attempt ${attempt + 1} threw error after ${attemptDuration}ms:`, error);
+      
+      if (attempt < MAX_RETRIES - 1) {
+        const retryDelay = RETRY_DELAYS[attempt] || RETRY_DELAYS[RETRY_DELAYS.length - 1];
+        console.log(`⏱️ [${requestId}] ${callName} retrying in ${retryDelay}ms...`);
+        await delay(retryDelay);
+      }
+    }
+  }
+  
+  const totalDuration = Date.now() - overallStart;
+  console.error(`💀 [${requestId}] ${callName} failed after ${MAX_RETRIES} attempts in ${totalDuration}ms`);
+  return {
+    success: false,
+    error: `Failed after ${MAX_RETRIES} attempts`,
+    duration: totalDuration
+  };
+}
+
+async function executePhaseWithTimeout<T>(
+  phaseFunction: () => Promise<T>,
+  timeoutMs: number,
+  phaseName: string
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error(`${phaseName} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+    
+    phaseFunction()
+      .then(result => {
+        clearTimeout(timeout);
+        resolve(result);
+      })
+      .catch(error => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+  });
 }
