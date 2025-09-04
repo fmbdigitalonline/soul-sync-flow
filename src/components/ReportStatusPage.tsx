@@ -7,24 +7,24 @@ import { CheckCircle2, Clock, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-interface ProcessingJob {
+interface HermeticProcessingJob {
   id: string;
+  user_id: string;
+  blueprint_data: any;
   status: string;
-  current_phase: number;
-  total_phases: number;
-  progress_percentage: number;
-  current_step: string;
-  error_message?: string;
-  completed_at?: string;
-  created_at: string;
+  status_message?: string;
+  progress_data?: any;
   result_data?: any;
+  created_at: string;
+  updated_at?: string;
+  completed_at?: string;
 }
 
 export function ReportStatusPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [job, setJob] = useState<ProcessingJob | null>(null);
+  const [job, setJob] = useState<HermeticProcessingJob | null>(null);
   const [isPolling, setIsPolling] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +33,10 @@ export function ReportStatusPage() {
 
     try {
       const { data, error } = await supabase
-        .rpc('get_hermetic_job_status', { job_id: jobId });
+        .from('hermetic_processing_jobs')
+        .select('*')
+        .eq('id', jobId)
+        .single();
 
       if (error) {
         console.error('Failed to fetch job status:', error);
@@ -45,7 +48,7 @@ export function ReportStatusPage() {
         return;
       }
 
-      setJob(data as ProcessingJob);
+      setJob(data as HermeticProcessingJob);
       setLoading(false);
 
       // Handle status changes
@@ -61,11 +64,11 @@ export function ReportStatusPage() {
           navigate(`/reports/view/${data.id}`);
         }, 2000);
         
-      } else if (data.status === 'failed') {
+      } else if (data?.status === 'failed') {
         setIsPolling(false);
         toast({
           title: "Generation Failed",
-          description: data.error_message || "Report generation failed",
+          description: "Report generation failed",
           variant: "destructive"
         });
       }
