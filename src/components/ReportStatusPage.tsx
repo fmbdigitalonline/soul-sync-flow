@@ -33,10 +33,7 @@ export function ReportStatusPage() {
 
     try {
       const { data, error } = await supabase
-        .from('hermetic_processing_jobs')
-        .select('*')
-        .eq('id', jobId)
-        .single();
+        .rpc('get_hermetic_job_status', { job_id: jobId });
 
       if (error) {
         console.error('Failed to fetch job status:', error);
@@ -48,11 +45,11 @@ export function ReportStatusPage() {
         return;
       }
 
-      setJob(data as HermeticProcessingJob);
+      setJob(data as any as HermeticProcessingJob);
       setLoading(false);
 
       // Handle status changes
-      if (data?.status === 'completed') {
+      if ((data as any)?.status === 'completed') {
         setIsPolling(false);
         toast({
           title: "Report Complete!",
@@ -61,10 +58,10 @@ export function ReportStatusPage() {
         
         // Redirect to report view after a brief delay
         setTimeout(() => {
-          navigate(`/reports/view/${data.id}`);
+          navigate(`/reports/view/${(data as any).id}`);
         }, 2000);
         
-      } else if (data?.status === 'failed') {
+      } else if ((data as any)?.status === 'failed') {
         setIsPolling(false);
         toast({
           title: "Generation Failed",
@@ -173,31 +170,34 @@ export function ReportStatusPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Progress</span>
-              <span>{Math.round(job.progress_percentage)}%</span>
-            </div>
-            <Progress value={job.progress_percentage} className="h-3" />
-          </div>
-
           {/* Current Status */}
           <div className={`p-4 rounded-lg ${getStatusColor(job.status)}`}>
             <div className="flex justify-between items-center mb-2">
-              <span className="font-medium">Phase {job.current_phase} of {job.total_phases}</span>
+              <span className="font-medium">Status: {job.status}</span>
               <span className="text-sm">
                 Started {new Date(job.created_at).toLocaleTimeString()}
               </span>
             </div>
-            <p className="text-sm">{job.current_step}</p>
+            {job.status_message && (
+              <p className="text-sm">{job.status_message}</p>
+            )}
           </div>
 
-          {/* Error Message */}
-          {job.error_message && (
-            <div className="p-4 bg-red-50 text-red-700 rounded-lg">
-              <p className="font-medium mb-1">Error Details:</p>
-              <p className="text-sm">{job.error_message}</p>
+          {/* Progress Data */}
+          {job.progress_data && Object.keys(job.progress_data).length > 0 && (
+            <div className="p-4 bg-blue-50 text-blue-700 rounded-lg">
+              <p className="font-medium mb-1">Progress Details:</p>
+              <div className="text-sm space-y-1">
+                {job.progress_data.hermetic_sections && (
+                  <p>Hermetic Analysis: {job.progress_data.hermetic_sections.length} sections completed</p>
+                )}
+                {job.progress_data.gate_analyses && (
+                  <p>Gate Analysis: {job.progress_data.gate_analyses.length} gates analyzed</p>
+                )}
+                {job.progress_data.translations && (
+                  <p>System Translations: {job.progress_data.translations.length} translations completed</p>
+                )}
+              </div>
             </div>
           )}
         </CardContent>
