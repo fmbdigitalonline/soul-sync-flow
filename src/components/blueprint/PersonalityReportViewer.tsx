@@ -153,8 +153,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       
       console.log('📋 Blueprint found, generating Hermetic report...');
       
-      // Generate the Hermetic personality report
-      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprintResult.data, language);
+      // Generate the Hermetic personality report using background processing
+      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprintResult.data, language, true);
       
       if (result.success && result.report) {
         // Clear current report state to show loading
