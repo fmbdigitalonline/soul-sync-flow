@@ -143,19 +143,25 @@ serve(async (req) => {
     // Update job status to running
     await updateJobStatus(jobId, 'running', { phase: 'initializing', progress: 0 });
 
-    // CRITICAL FIX: Use EdgeRuntime.waitUntil with proper lifecycle tracking
-    console.log(`🔄 Scheduling background task for job: ${jobId}`);
+    // EMERGENCY FIX: Start background task without EdgeRuntime.waitUntil (not available in Deno)
+    console.log(`🔄 Starting background task for job: ${jobId}`);
     
-    const backgroundTaskPromise = processHermeticGeneration(jobId, blueprint);
-    EdgeRuntime.waitUntil(backgroundTaskPromise);
+    // Start background task immediately without waiting
+    processHermeticGeneration(jobId, blueprint).catch((error) => {
+      console.error(`❌ Background task failed for job ${jobId}:`, error);
+      updateJobStatus(jobId, 'failed', { 
+        phase: 'background_startup_error', 
+        progress: 0 
+      }, `Background task startup failed: ${error.message}`).catch(console.error);
+    });
     
-    console.log(`✅ Background task scheduled successfully for job: ${jobId}`);
+    console.log(`✅ Background task started successfully for job: ${jobId}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         jobId, 
-        message: 'Background processing confirmed started - task scheduled with EdgeRuntime.waitUntil',
+        message: 'Background processing started - task running in parallel',
         timestamp: new Date().toISOString(),
         taskScheduled: true
       }),
