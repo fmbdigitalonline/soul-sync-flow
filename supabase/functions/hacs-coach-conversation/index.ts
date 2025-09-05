@@ -491,6 +491,7 @@ Provide actionable, practical productivity advice. Stay focused on productivity 
     });
 
     // Call OpenAI with enhanced productivity coaching setup
+    // STREAMING RESPONSE: Mirror Companion Oracle's streaming architecture  
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -502,6 +503,7 @@ Provide actionable, practical productivity advice. Stay focused on productivity 
         messages: messages,
         max_tokens: maxTokens,
         temperature: useEnhancedMode ? 0.8 : 0.7,
+        stream: true // Enable streaming for real-time responses
       }),
     });
 
@@ -514,95 +516,118 @@ Provide actionable, practical productivity advice. Stay focused on productivity 
       throw new Error(`OpenAI API error: ${openAIResponse.statusText}`);
     }
 
-    const openAIData = await openAIResponse.json();
-    const response = openAIData.choices[0]?.message?.content || 'I need a moment to gather my productivity insights. Please try again.';
-
-    // PHASE 9: Enhanced Coach Intelligence Learning (Pillar I: Preserve Core Intelligence)
-    const intelligenceBonus = calculateEnhancedCoachIntelligenceBonus(message, response, personalityContext);
+    // Create streaming response 
+    console.log('✅ COACH: Starting streaming response generation');
     
-    if (intelligence) {
-      const newLevel = Math.min(100, (intelligence.intelligence_level || 50) + intelligenceBonus);
-      await supabase
-        .from('hacs_coach_intelligence')
-        .update({
-          intelligence_level: newLevel,
-          interaction_count: (intelligence.interaction_count || 0) + 1,
-          last_update: new Date().toISOString(),
-          module_scores: {
-            ...intelligence.module_scores,
-            productivity: (intelligence.module_scores?.productivity || 0) + intelligenceBonus,
-            personality_integration: personalityContext ? 1 : 0
+    const reader = openAIResponse.body?.getReader();
+    const decoder = new TextDecoder();
+    let fullResponse = '';
+
+    // Create ReadableStream for real-time streaming
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          while (reader) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                
+                if (data.trim() === '[DONE]') {
+                  // Stream complete - trigger background processing
+                  console.log('✅ COACH: Streaming complete, processing intelligence updates');
+                  
+                  // PHASE 9: Enhanced Coach Intelligence Learning (Background)
+                  const intelligenceBonus = calculateEnhancedCoachIntelligenceBonus(message, fullResponse, personalityContext);
+                  
+                  if (intelligence) {
+                    const newLevel = Math.min(100, (intelligence.intelligence_level || 50) + intelligenceBonus);
+                    await supabase
+                      .from('hacs_coach_intelligence')
+                      .update({
+                        intelligence_level: newLevel,
+                        interaction_count: (intelligence.interaction_count || 0) + 1,
+                        last_update: new Date().toISOString(),
+                        module_scores: {
+                          ...intelligence.module_scores,
+                          productivity: (intelligence.module_scores?.productivity || 0) + intelligenceBonus,
+                          personality_integration: personalityContext ? 1 : 0
+                        }
+                      })
+                      .eq('user_id', userId);
+                  } else {
+                    // Create initial enhanced coach intelligence record
+                    await supabase
+                      .from('hacs_coach_intelligence')
+                      .insert({
+                        user_id: userId,
+                        intelligence_level: 50 + intelligenceBonus,
+                        interaction_count: 1,
+                        module_scores: { 
+                          productivity: intelligenceBonus,
+                          personality_integration: personalityContext ? 1 : 0
+                        }
+                      });
+                  }
+
+                  // Background HACS Intelligence Fusion (Non-blocking)
+                  if (enableBackgroundIntelligence) {
+                    const coachResponseData = {
+                      response: fullResponse,
+                      coachingStatus,
+                      semanticChunks: semanticChunks.length,
+                      quality: intelligenceLevel > 70 ? 0.9 : 0.8,
+                      personalityContext,
+                      productivityKeywords: extractProductivityKeywords(message, fullResponse)
+                    };
+                    
+                    fuseProductivityIntelligence(message, userId, sessionId || 'coach-session', coachResponseData, supabase)
+                      .catch(error => console.error('❌ COACH: Background fusion failed:', error));
+                  }
+                  
+                  controller.close();
+                  return;
+                }
+
+                try {
+                  const parsed = JSON.parse(data);
+                  const content = parsed.choices?.[0]?.delta?.content;
+                  
+                  if (content) {
+                    fullResponse += content;
+                    // Send chunk immediately for real-time streaming
+                    controller.enqueue(`data: ${JSON.stringify({ 
+                      choices: [{ delta: { content } }] 
+                    })}\n\n`);
+                  }
+                } catch (e) {
+                  // Skip invalid JSON chunks
+                  continue;
+                }
+              }
+            }
           }
-        })
-        .eq('user_id', userId);
-    } else {
-      // Create initial enhanced coach intelligence record
-      await supabase
-        .from('hacs_coach_intelligence')
-        .insert({
-          user_id: userId,
-          intelligence_level: 50 + intelligenceBonus,
-          interaction_count: 1,
-          module_scores: { 
-            productivity: intelligenceBonus,
-            personality_integration: personalityContext ? 1 : 0
-          }
-        });
-    }
-
-    // PHASE 10: Prepare Enhanced Coach Response Data
-    const coachResponseData = {
-      response,
-      coachingStatus,
-      semanticChunks: semanticChunks.length,
-      quality: intelligenceLevel > 70 ? 0.9 : 0.8,
-      personalityContext,
-      productivityKeywords: extractProductivityKeywords(message, response)
-    };
-
-    // PHASE 11: Background HACS Intelligence Fusion (Non-blocking)
-    if (enableBackgroundIntelligence) {
-      console.log('🚀 PRODUCTIVITY FUSION: Starting background HACS intelligence processing');
-      // Fire and forget background task
-      fuseProductivityIntelligence(message, userId, sessionId || 'coach-session', coachResponseData, supabase).catch(error => {
-        console.error('Background productivity fusion task failed:', error);
-      });
-    }
-
-    // Generate productivity-specific question occasionally
-    let question = null;
-    if (conversationState.shouldAskQuestion && Math.random() < 0.3) {
-      question = generateProductivityQuestion(intelligenceLevel, personalityContext);
-    }
-
-    console.log(`🏃‍♂️ ENHANCED COACH: Response generated with enhanced architecture:`, {
-      coachingStatus,
-      semanticChunks: semanticChunks.length,
-      intelligenceBonus,
-      personalityAware: !!personalityContext,
-      backgroundFusion: enableBackgroundIntelligence
+        } catch (error) {
+          console.error('❌ COACH: Streaming error:', error);
+          controller.error(error);
+        }
+      }
     });
 
-    // PHASE 12: Return Enhanced Coach Response (Pillar III: Intentional Craft)
-    return new Response(
-      JSON.stringify({
-        response,
-        module: 'productivity',
-        mode: 'enhanced_coach',
-        intelligenceBonus,
-        question,
-        quality: coachResponseData.quality,
-        semanticChunks: semanticChunks,
-        structuredFacts: structuredFacts,
-        personalityContext: personalityContext,
-        intelligenceLevel: intelligenceLevel,
-        coachingStatus: coachingStatus,
-        processingTime: Date.now() - startTime
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    // Return streaming response with proper headers
+    return new Response(stream, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
 
   } catch (error) {
     console.error('❌ Enhanced Productivity Coach Error:', error);

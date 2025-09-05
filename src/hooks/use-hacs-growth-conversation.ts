@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export interface GrowthConversationMessage {
+interface GrowthConversationMessage {
   id: string;
   role: 'user' | 'hacs';
   content: string;
@@ -12,12 +12,14 @@ export interface GrowthConversationMessage {
   isQuestion?: boolean;
 }
 
-export interface GrowthHACSQuestion {
+interface GrowthHACSQuestion {
   id: string;
   text: string;
   module: string;
   type: 'foundational' | 'validation' | 'philosophical';
 }
+
+export type { GrowthConversationMessage, GrowthHACSQuestion };
 
 export const useHACSGrowthConversation = () => {
   const [messages, setMessages] = useState<GrowthConversationMessage[]>([]);
@@ -60,63 +62,177 @@ export const useHACSGrowthConversation = () => {
     }
   };
 
-  const sendMessage = async (content: string): Promise<void> => {
-    setIsLoading(true);
+  const sendMessage = useCallback(async (content: string) => {
+    if (isLoading || !content.trim()) return;
+
+    const userMessage: GrowthConversationMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: content.trim(),
+      timestamp: new Date().toISOString(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
 
     try {
+      console.log('🧠 ENHANCED COACH: Starting streaming conversation through enhanced coach pipeline');
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      const userMessage: GrowthConversationMessage = {
-        id: crypto.randomUUID(),
-        role: 'user',
-        content,
-        timestamp: new Date().toISOString(),
-      };
-
-      setMessages(prev => [...prev, userMessage]);
-
-      // Route through Unified Brain Service (11 Hermetic Components) then to growth edge function
-      const { unifiedBrainService } = await import('../services/unified-brain-service');
-      await unifiedBrainService.initialize(user.id);
-      
-      const sessionId = `growth_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const data = await unifiedBrainService.processMessageForModeHook(
-        content,
-        sessionId,
-        'guide',
-        messages
-      );
-
-      if (!data) throw new Error('No response from unified brain service');
-
-      const hacsMessage: GrowthConversationMessage = {
-        id: crypto.randomUUID(),
+      // Create assistant message for streaming
+      const assistantMessage: GrowthConversationMessage = {
+        id: `ai-${Date.now()}`,
         role: 'hacs',
-        content: data.response,
+        content: '',
         timestamp: new Date().toISOString(),
-        module: data.module || 'spiritual',
+        module: 'enhanced-coach'
       };
 
-      const updatedMessages = [...messages, userMessage, hacsMessage];
-      setMessages(updatedMessages);
+      setMessages(prev => [...prev, assistantMessage]);
 
-      await saveConversation(updatedMessages, user.id);
-      await recordConversationInteraction(user.id, content, data.response);
-      await refreshIntelligence();
+      // Direct call to enhanced coach with streaming
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No authentication session');
+      }
 
-      if (data.question) {
-        setCurrentQuestion(data.question);
+      const supabaseUrl = 'https://qxaajirrqrcnmvtowjbg.supabase.co';
+      const response = await fetch(`${supabaseUrl}/functions/v1/hacs-coach-conversation`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: content.trim(),
+          userId: user.id,
+          sessionId: conversationId || `session-${Date.now()}`,
+          useEnhancedMode: true,
+          enableBackgroundIntelligence: true,
+          conversationHistory: messages,
+          threadId: conversationId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Enhanced coach stream failed: ${response.status}`);
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data.trim() === '[DONE]') {
+                // Stream complete
+                setMessages(prev => prev.map(msg => 
+                  msg.id === assistantMessage.id 
+                    ? { ...msg, content: fullContent }
+                    : msg
+                ));
+                
+                // Save conversation and record interaction
+                if (user?.id) {
+                  await saveConversation([...messages, userMessage, { ...assistantMessage, content: fullContent }], user.id);
+                  await recordConversationInteraction(user.id, content, fullContent);
+                }
+                
+                return;
+              }
+
+              try {
+                const parsed = JSON.parse(data);
+                const streamContent = parsed.choices?.[0]?.delta?.content;
+                if (streamContent) {
+                  fullContent += streamContent;
+                  // Update message with streaming content
+                  setMessages(prev => prev.map(msg => 
+                    msg.id === assistantMessage.id 
+                      ? { ...msg, content: fullContent }
+                      : msg
+                  ));
+                }
+              } catch (e) {
+                // Skip invalid JSON
+                continue;
+              }
+            }
+          }
+        }
+      }
+
+      // Check if HACS wants to ask a question
+      const shouldAskQuestion = Math.random() < 0.3 && messages.length > 4;
+      if (shouldAskQuestion && !currentQuestion) {
+        setTimeout(() => {
+          generateQuestion().catch(console.error);
+        }, 2000);
       }
 
     } catch (error) {
-      console.error('Error sending growth message:', error);
+      console.error('❌ Enhanced Coach streaming error:', error);
+      
+      // Fallback to unified brain service (non-streaming)
+      try {
+        const { unifiedBrainService } = await import('../services/unified-brain-service');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await unifiedBrainService.initialize(user.id);
+          
+          const sessionId = `growth_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          const data = await unifiedBrainService.processMessageForModeHook(
+            content.trim(),
+            sessionId,
+            'guide',
+            messages
+          );
+
+          if (data) {
+            const fallbackMessage: GrowthConversationMessage = {
+              id: `ai-fallback-${Date.now()}`,
+              role: 'hacs',
+              content: data.response,
+              timestamp: new Date().toISOString(),
+              module: data.module || 'fallback'
+            };
+
+            setMessages(prev => prev.map(msg => 
+              msg.id.startsWith('ai-') && msg.content === '' ? fallbackMessage : msg
+            ));
+
+            await saveConversation([...messages, userMessage, fallbackMessage], user.id);
+            await recordConversationInteraction(user.id, content, data.response);
+          }
+        }
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError);
+        const errorMessage: GrowthConversationMessage = {
+          id: `error-${Date.now()}`,
+          role: 'hacs',
+          content: 'I\'m having trouble connecting right now. Could you try sharing that again?',
+          timestamp: new Date().toISOString(),
+        };
+        setMessages(prev => prev.map(msg => 
+          msg.id.startsWith('ai-') && msg.content === '' ? errorMessage : msg
+        ));
+      }
     } finally {
-      setIsLoading(false);
       setIsTyping(false);
     }
-  };
+  }, [isLoading, messages, conversationId, currentQuestion]);
 
   const saveConversation = async (messages: GrowthConversationMessage[], userId: string) => {
     try {

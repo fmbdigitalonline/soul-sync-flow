@@ -7,6 +7,7 @@ import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
 import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
 import { useHACSGrowthConversation } from '@/hooks/use-hacs-growth-conversation';
+import { TypewriterText } from '@/components/coach/TypewriterText';
 
 interface Message {
   id: string;
@@ -200,9 +201,14 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                       </span>
                     )}
                   </div>
-                  <div className={`${getTextSize('text-sm')} leading-relaxed whitespace-pre-wrap text-muted-foreground`}>
-                    {message.content}
-                  </div>
+                   <div className={`${getTextSize('text-sm')} leading-relaxed whitespace-pre-wrap text-muted-foreground`}>
+                     <TypewriterText 
+                       text={message.content}
+                       isStreaming={false}
+                       speed={60}
+                       messageId={message.id}
+                     />
+                   </div>
                 </div>
               </div>
             )
