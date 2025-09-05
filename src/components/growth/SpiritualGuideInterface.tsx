@@ -26,6 +26,13 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
   userDisplayName = 'friend',
   coreTraits = []
 }) => {
+  console.log('🎯 COMPONENT INIT: SpiritualGuideInterface initialized', {
+    userDisplayName,
+    coreTraitsCount: coreTraits.length,
+    coreTraits: coreTraits.slice(0, 3),
+    timestamp: new Date().toISOString()
+  });
+
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { getTextSize, touchTargetSize, isFoldDevice, spacing } = useResponsiveLayout();
@@ -38,24 +45,68 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
     sendMessage: hacseSendMessage 
   } = useHACSGrowthConversation();
 
+  console.log('📊 COMPONENT STATE: Current component state', {
+    messagesCount: messages.length,
+    isLoading,
+    hasIntelligence: !!intelligence,
+    intelligenceLevel: intelligence?.intelligence_level,
+    inputValueLength: inputValue.length
+  });
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
+    console.log('📜 SCROLL EFFECT: Messages changed, scrolling to bottom', {
+      newMessageCount: messages.length,
+      timestamp: new Date().toISOString()
+    });
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    console.log('🔄 LOADING STATE CHANGE: isLoading state changed', {
+      newLoadingState: isLoading,
+      messagesCount: messages.length,
+      timestamp: new Date().toISOString()
+    });
+  }, [isLoading]);
+
   const handleSendMessage = async () => {
+    console.log('🚀 SEND TRIGGER: User initiated message send', {
+      hasInput: !!inputValue.trim(),
+      inputLength: inputValue.trim().length,
+      isCurrentlyLoading: isLoading,
+      timestamp: new Date().toISOString()
+    });
+
     if (inputValue.trim() && !isLoading) {
       const message = inputValue.trim();
+      
+      console.log('📝 MESSAGE PREP: Preparing message for send', {
+        messageLength: message.length,
+        messagePreview: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
+        userDisplayName
+      });
+      
       setInputValue('');
       
+      console.log('🔗 HOOK CALL: Calling HACS sendMessage');
       // CRITICAL FIX: Send through HACS conversation for real intelligence updates
       await hacseSendMessage(message);
       
+      console.log('🔄 REFRESH: Refreshing intelligence display');
       // Refresh intelligence display after successful conversation
       await refreshIntelligence();
+      
+      console.log('✅ SEND COMPLETE: Message send process completed from component');
+    } else {
+      console.log('⛔ SEND BLOCKED: Message send blocked from component', {
+        reason: !inputValue.trim() ? 'no_input' : 'loading',
+        hasInput: !!inputValue.trim(),
+        isLoading
+      });
     }
   };
 

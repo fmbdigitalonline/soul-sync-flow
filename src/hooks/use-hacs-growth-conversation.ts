@@ -28,14 +28,45 @@ export const useHACSGrowthConversation = () => {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<GrowthHACSQuestion | null>(null);
 
+  // ENHANCED LOGGING: Hook initialization
+  console.log('🟢 HOOK INIT: useHACSGrowthConversation hook initialized', {
+    timestamp: new Date().toISOString(),
+    initialStates: {
+      messagesLength: messages.length,
+      isLoading,
+      isTyping,
+      conversationId,
+      currentQuestion
+    }
+  });
+
   useEffect(() => {
+    console.log('🔄 HOOK EFFECT: Loading conversation history on mount');
     loadConversationHistory();
   }, []);
 
   const loadConversationHistory = async () => {
+    console.log('📚 LOAD HISTORY: Starting conversation history load');
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      
+      console.log('🔐 AUTH CHECK: User authentication status', {
+        authenticated: !!user,
+        userId: user?.id || 'not_authenticated',
+        timestamp: new Date().toISOString()
+      });
+      
+      if (!user) {
+        console.log('❌ AUTH FAIL: No authenticated user, skipping history load');
+        return;
+      }
+
+      console.log('🔍 DB QUERY: Fetching conversation history', {
+        userId: user.id,
+        query: 'hacs_growth_conversations',
+        filters: ['user_id', 'order_by_created_at_desc', 'limit_1']
+      });
 
       const { data: conversations, error } = await supabase
         .from('hacs_growth_conversations')
@@ -45,25 +76,76 @@ export const useHACSGrowthConversation = () => {
         .limit(1);
 
       if (error) {
-        console.error('Error loading growth conversation history:', error);
+        console.error('❌ DB ERROR: Failed to load growth conversation history', {
+          error: error.message,
+          code: error.code,
+          details: error.details,
+          timestamp: new Date().toISOString()
+        });
         return;
       }
 
+      console.log('✅ DB SUCCESS: Conversation history query completed', {
+        conversationsFound: conversations?.length || 0,
+        hasData: !!(conversations && conversations.length > 0)
+      });
+
       if (conversations && conversations.length > 0) {
         const conversation = conversations[0];
+        
+        console.log('📝 HISTORY LOAD: Processing existing conversation', {
+          conversationId: conversation.id,
+          messagesInHistory: Array.isArray(conversation.conversation_data) 
+            ? conversation.conversation_data.length 
+            : 0,
+          lastActivity: conversation.last_activity
+        });
+        
         setConversationId(conversation.id);
         const conversationData = Array.isArray(conversation.conversation_data) 
           ? (conversation.conversation_data as unknown) as GrowthConversationMessage[]
           : [];
+        
         setMessages(conversationData);
+        
+        console.log('🟢 HISTORY SUCCESS: Conversation history loaded successfully', {
+          conversationId: conversation.id,
+          messagesLoaded: conversationData.length,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        console.log('📄 NEW SESSION: No existing conversation found, starting fresh');
       }
     } catch (error) {
-      console.error('Error in loadConversationHistory:', error);
+      console.error('❌ LOAD ERROR: Critical error in loadConversationHistory', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
     }
   };
 
   const sendMessage = useCallback(async (content: string) => {
-    if (isLoading || !content.trim()) return;
+    console.log('💬 SEND MESSAGE: Processing user message', {
+      messageLength: content.length,
+      isCurrentlyLoading: isLoading,
+      hasContent: !!content.trim(),
+      timestamp: new Date().toISOString()
+    });
+    
+    if (isLoading || !content.trim()) {
+      console.log('⛔ SEND BLOCKED: Message send blocked', {
+        reason: isLoading ? 'already_loading' : 'empty_content',
+        isLoading,
+        contentTrimmed: content.trim(),
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // CRITICAL FIX: Set loading immediately
+    console.log('🔄 STATE UPDATE: Setting isLoading to TRUE');
+    setIsLoading(true);
 
     const userMessage: GrowthConversationMessage = {
       id: `user-${Date.now()}`,
@@ -72,7 +154,21 @@ export const useHACSGrowthConversation = () => {
       timestamp: new Date().toISOString(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    console.log('📨 MESSAGE CREATE: User message created', {
+      messageId: userMessage.id,
+      contentLength: userMessage.content.length,
+      timestamp: userMessage.timestamp
+    });
+
+    setMessages(prev => {
+      console.log('📝 MESSAGES UPDATE: Adding user message to conversation', {
+        previousCount: prev.length,
+        newCount: prev.length + 1,
+        messageId: userMessage.id
+      });
+      return [...prev, userMessage];
+    });
+    
     setIsTyping(true);
 
     try {
@@ -121,22 +217,49 @@ export const useHACSGrowthConversation = () => {
       }
 
       // Handle streaming response
+      console.log('🌊 STREAM START: Processing streaming response');
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let fullContent = '';
+      let chunkCount = 0;
 
       if (reader) {
+        console.log('📖 READER ACTIVE: Stream reader obtained, starting chunk processing');
+        
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          
+          if (done) {
+            console.log('✅ STREAM END: Stream reading completed', {
+              totalChunks: chunkCount,
+              finalContentLength: fullContent.length,
+              timestamp: new Date().toISOString()
+            });
+            break;
+          }
 
+          chunkCount++;
           const chunk = decoder.decode(value, { stream: true });
+          
+          console.log('📦 CHUNK RECEIVED:', {
+            chunkNumber: chunkCount,
+            chunkSize: chunk.length,
+            rawChunk: chunk.substring(0, 100) + (chunk.length > 100 ? '...' : ''),
+            timestamp: new Date().toISOString()
+          });
+          
           const lines = chunk.split('\n');
 
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
+              
               if (data.trim() === '[DONE]') {
+                console.log('🎯 STREAM DONE: Received [DONE] signal', {
+                  finalContentLength: fullContent.length,
+                  totalChunks: chunkCount
+                });
+                
                 // Stream complete
                 setMessages(prev => prev.map(msg => 
                   msg.id === assistantMessage.id 
@@ -144,10 +267,14 @@ export const useHACSGrowthConversation = () => {
                     : msg
                 ));
                 
+                console.log('💾 SAVING: Starting conversation save and interaction recording');
+                
                 // Save conversation and record interaction
                 if (user?.id) {
                   await saveConversation([...messages, userMessage, { ...assistantMessage, content: fullContent }], user.id);
                   await recordConversationInteraction(user.id, content, fullContent);
+                  
+                  console.log('✅ SAVE COMPLETE: Conversation saved successfully');
                 }
                 
                 return;
@@ -156,8 +283,16 @@ export const useHACSGrowthConversation = () => {
               try {
                 const parsed = JSON.parse(data);
                 const streamContent = parsed.choices?.[0]?.delta?.content;
+                
                 if (streamContent) {
                   fullContent += streamContent;
+                  
+                  console.log('📝 CONTENT UPDATE:', {
+                    chunkContent: streamContent,
+                    totalContentLength: fullContent.length,
+                    chunkNumber: chunkCount
+                  });
+                  
                   // Update message with streaming content
                   setMessages(prev => prev.map(msg => 
                     msg.id === assistantMessage.id 
@@ -166,12 +301,17 @@ export const useHACSGrowthConversation = () => {
                   ));
                 }
               } catch (e) {
-                // Skip invalid JSON
+                console.log('⚠️ PARSE ERROR: Invalid JSON in stream chunk', {
+                  data: data.substring(0, 100),
+                  error: e instanceof Error ? e.message : 'Unknown parse error'
+                });
                 continue;
               }
             }
           }
         }
+      } else {
+        console.error('❌ READER ERROR: Unable to get stream reader from response');
       }
 
       // Check if HACS wants to ask a question
@@ -230,21 +370,53 @@ export const useHACSGrowthConversation = () => {
         ));
       }
     } finally {
+      console.log('🏁 SEND COMPLETE: Message send process completed');
+      console.log('🔄 STATE UPDATE: Setting isLoading to FALSE');
+      setIsLoading(false);
+      console.log('🔄 STATE UPDATE: Setting isTyping to FALSE');
       setIsTyping(false);
     }
   }, [isLoading, messages, conversationId, currentQuestion]);
 
   const saveConversation = async (messages: GrowthConversationMessage[], userId: string) => {
+    console.log('💾 SAVE START: Beginning conversation save process', {
+      messagesCount: messages.length,
+      userId,
+      conversationId,
+      timestamp: new Date().toISOString()
+    });
+    
     try {
       if (conversationId) {
-        await supabase
+        console.log('🔄 UPDATE MODE: Updating existing conversation', {
+          conversationId,
+          messagesCount: messages.length
+        });
+        
+        const { error } = await supabase
           .from('hacs_growth_conversations')
           .update({
             conversation_data: messages as any,
             last_activity: new Date().toISOString()
           })
           .eq('id', conversationId);
+          
+        if (error) {
+          console.error('❌ UPDATE ERROR: Failed to update conversation', {
+            error: error.message,
+            conversationId,
+            timestamp: new Date().toISOString()
+          });
+          throw error;
+        }
+        
+        console.log('✅ UPDATE SUCCESS: Conversation updated successfully', {
+          conversationId,
+          messagesCount: messages.length
+        });
       } else {
+        console.log('🆕 INSERT MODE: Creating new conversation record');
+        
         const { data, error } = await supabase
           .from('hacs_growth_conversations')
           .insert({
@@ -255,11 +427,31 @@ export const useHACSGrowthConversation = () => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ INSERT ERROR: Failed to create new conversation', {
+            error: error.message,
+            userId,
+            timestamp: new Date().toISOString()
+          });
+          throw error;
+        }
+        
         setConversationId(data.id);
+        
+        console.log('✅ INSERT SUCCESS: New conversation created successfully', {
+          newConversationId: data.id,
+          messagesCount: messages.length,
+          userId
+        });
       }
     } catch (error) {
-      console.error('Error saving growth conversation:', error);
+      console.error('❌ SAVE ERROR: Critical error in saveConversation', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId,
+        conversationId,
+        messagesCount: messages.length,
+        timestamp: new Date().toISOString()
+      });
     }
   };
 
