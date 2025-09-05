@@ -539,57 +539,70 @@ Provide actionable, practical productivity advice. Stay focused on productivity 
                 const data = line.slice(6);
                 
                 if (data.trim() === '[DONE]') {
-                  // Stream complete - trigger background processing
-                  console.log('✅ COACH: Streaming complete, processing intelligence updates');
+                  // Stream complete - send DONE signal to client first
+                  console.log('✅ COACH: OpenAI stream complete, sending [DONE] to client');
+                  controller.enqueue(`data: [DONE]\n\n`);
                   
-                  // PHASE 9: Enhanced Coach Intelligence Learning (Background)
-                  const intelligenceBonus = calculateEnhancedCoachIntelligenceBonus(message, fullResponse, personalityContext);
+                  // Start background processing without blocking stream completion
+                  console.log('🧠 COACH: Starting background intelligence processing');
                   
-                  if (intelligence) {
-                    const newLevel = Math.min(100, (intelligence.intelligence_level || 50) + intelligenceBonus);
-                    await supabase
-                      .from('hacs_coach_intelligence')
-                      .update({
-                        intelligence_level: newLevel,
-                        interaction_count: (intelligence.interaction_count || 0) + 1,
-                        last_update: new Date().toISOString(),
-                        module_scores: {
-                          ...intelligence.module_scores,
-                          productivity: (intelligence.module_scores?.productivity || 0) + intelligenceBonus,
-                          personality_integration: personalityContext ? 1 : 0
-                        }
-                      })
-                      .eq('user_id', userId);
-                  } else {
-                    // Create initial enhanced coach intelligence record
-                    await supabase
-                      .from('hacs_coach_intelligence')
-                      .insert({
-                        user_id: userId,
-                        intelligence_level: 50 + intelligenceBonus,
-                        interaction_count: 1,
-                        module_scores: { 
-                          productivity: intelligenceBonus,
-                          personality_integration: personalityContext ? 1 : 0
-                        }
-                      });
-                  }
+                  // Background processing - don't await to avoid blocking
+                  Promise.resolve().then(async () => {
+                    try {
+                      // PHASE 9: Enhanced Coach Intelligence Learning (Background)
+                      const intelligenceBonus = calculateEnhancedCoachIntelligenceBonus(message, fullResponse, personalityContext);
+                      
+                      if (intelligence) {
+                        const newLevel = Math.min(100, (intelligence.intelligence_level || 50) + intelligenceBonus);
+                        await supabase
+                          .from('hacs_coach_intelligence')
+                          .update({
+                            intelligence_level: newLevel,
+                            interaction_count: (intelligence.interaction_count || 0) + 1,
+                            last_update: new Date().toISOString(),
+                            module_scores: {
+                              ...intelligence.module_scores,
+                              productivity: (intelligence.module_scores?.productivity || 0) + intelligenceBonus,
+                              personality_integration: personalityContext ? 1 : 0
+                            }
+                          })
+                          .eq('user_id', userId);
+                      } else {
+                        // Create initial enhanced coach intelligence record
+                        await supabase
+                          .from('hacs_coach_intelligence')
+                          .insert({
+                            user_id: userId,
+                            intelligence_level: 50 + intelligenceBonus,
+                            interaction_count: 1,
+                            module_scores: { 
+                              productivity: intelligenceBonus,
+                              personality_integration: personalityContext ? 1 : 0
+                            }
+                          });
+                      }
 
-                  // Background HACS Intelligence Fusion (Non-blocking)
-                  if (enableBackgroundIntelligence) {
-                    const coachResponseData = {
-                      response: fullResponse,
-                      coachingStatus,
-                      semanticChunks: semanticChunks.length,
-                      quality: intelligenceLevel > 70 ? 0.9 : 0.8,
-                      personalityContext,
-                      productivityKeywords: extractProductivityKeywords(message, fullResponse)
-                    };
-                    
-                    fuseProductivityIntelligence(message, userId, sessionId || 'coach-session', coachResponseData, supabase)
-                      .catch(error => console.error('❌ COACH: Background fusion failed:', error));
-                  }
+                      // Background HACS Intelligence Fusion (Non-blocking)
+                      if (enableBackgroundIntelligence) {
+                        const coachResponseData = {
+                          response: fullResponse,
+                          coachingStatus,
+                          semanticChunks: semanticChunks.length,
+                          quality: intelligenceLevel > 70 ? 0.9 : 0.8,
+                          personalityContext,
+                          productivityKeywords: extractProductivityKeywords(message, fullResponse)
+                        };
+                        
+                        await fuseProductivityIntelligence(message, userId, sessionId || 'coach-session', coachResponseData, supabase);
+                      }
+                      
+                      console.log('✅ COACH: Background intelligence processing complete');
+                    } catch (error) {
+                      console.error('❌ COACH: Background processing failed:', error);
+                    }
+                  });
                   
+                  // Close controller AFTER sending DONE signal
                   controller.close();
                   return;
                 }
