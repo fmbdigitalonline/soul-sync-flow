@@ -195,7 +195,7 @@ export const useHACSGrowthConversation = () => {
       }
 
       const supabaseUrl = 'https://qxaajirrqrcnmvtowjbg.supabase.co';
-      const response = await fetch(`${supabaseUrl}/functions/v1/hacs-coach-conversation`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/hacs-growth-conversation`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
