@@ -426,7 +426,7 @@ class UnifiedBrainService {
     try {
       const edgeFunctionMap = {
         'coach': 'hacs-coach-conversation',
-        'guide': 'hacs-growth-conversation', 
+        'guide': 'hacs-coach-conversation', // Use enhanced coach architecture for guide mode
         'blend': 'hacs-blend-conversation',
         'dream': 'hacs-dream-conversation'
       };
