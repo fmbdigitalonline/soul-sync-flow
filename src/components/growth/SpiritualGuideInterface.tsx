@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Heart, Brain, Loader2, Send } from 'lucide-react';
+import { Sparkles, Heart, Loader2, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
-import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
 import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
 import { useHACSGrowthConversation } from '@/hooks/use-hacs-growth-conversation';
 import { TypewriterText } from '@/components/coach/TypewriterText';
+import { ThinkingDots } from '@/components/hacs/ThinkingDots';
 
 interface Message {
   id: string;
@@ -79,14 +79,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
         <div className="flex-1 flex flex-col justify-center px-4 py-6 overflow-y-auto">
           <div className="text-center space-y-4 max-w-md mx-auto">
             <div className="flex justify-center">
-              <IntelligentSoulOrb 
-                size="lg"
-                intelligenceLevel={intelligence?.intelligence_level || 65}
-                showProgressRing={true}
-                showIntelligenceTooltip={false}
-                stage="welcome"
-                pulse={true}
-              />
+              <Sparkles className="h-12 w-12 text-soul-purple" />
             </div>
             
             <div className="space-y-2">
@@ -180,27 +173,9 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
             ) : (
               <div key={message.id} className="flex items-start gap-3">
                 <div className="flex-shrink-0 mt-1">
-                  <IntelligentSoulOrb 
-                    size="sm"
-                    intelligenceLevel={intelligence?.intelligence_level || 0}
-                    showProgressRing={true}
-                    speaking={false}
-                    stage="complete"
-                    pulse={false}
-                  />
+                  <Sparkles className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Brain className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                    <span className={`font-medium text-soul-purple ${getTextSize('text-xs')}`}>
-                      HACS {message.isQuestion ? '(Question)' : ''}
-                    </span>
-                    {message.module && (
-                      <span className={`text-xs bg-soul-teal/10 text-soul-teal px-1.5 py-0.5 rounded-full`}>
-                        {message.module}
-                      </span>
-                    )}
-                  </div>
                    <div className={`${getTextSize('text-sm')} leading-relaxed whitespace-pre-wrap text-muted-foreground`}>
                      <TypewriterText 
                        text={message.content}
@@ -218,28 +193,10 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
           {isLoading && (
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 mt-1">
-                <IntelligentSoulOrb 
-                  size="sm"
-                  intelligenceLevel={intelligence?.intelligence_level || 65}
-                  showProgressRing={true}
-                  speaking={true}
-                  stage="generating"
-                  pulse={true}
-                />
+                <Sparkles className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
               </div>
-              <div className="bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Brain className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                  <span className={`font-medium text-soul-purple ${getTextSize('text-xs')}`}>
-                    HACS Learning System
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Loader2 className={`animate-spin text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                  <span className={`text-gray-600 ${getTextSize('text-sm')}`}>
-                    Processing and learning from your interaction...
-                  </span>
-                </div>
+              <div className="flex-1">
+                <ThinkingDots isThinking={isLoading} />
               </div>
             </div>
           )}
