@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface GrowthConversationMessage {
@@ -27,70 +27,162 @@ export const useHACSGrowthConversation = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<GrowthHACSQuestion | null>(null);
+  const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
+  
+  const loadingRef = useRef(false);
+  const sessionIdRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    loadConversationHistory();
+  // CRITICAL FIX: Robust session management like Companion Oracle
+  const getOrCreateSessionId = useCallback(async (): Promise<string> => {
+    if (sessionIdRef.current) return sessionIdRef.current;
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+    
+    // Predictable session ID format matching Companion Oracle
+    const sessionId = `spiritual_growth_${user.id}`;
+    sessionIdRef.current = sessionId;
+    return sessionId;
   }, []);
 
-  const loadConversationHistory = async () => {
+  // CRITICAL FIX: Deduplicated conversation history loading with useCallback
+  const loadConversationHistory = useCallback(async () => {
+    if (loadingRef.current || isHistoryLoaded) return;
+    
     try {
+      loadingRef.current = true;
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: conversations, error } = await supabase
-        .from('hacs_growth_conversations')
+      const sessionId = await getOrCreateSessionId();
+
+      // PHASE 2: Load from conversation_memory like Companion Oracle for deduplication
+      const { data: memoryData } = await supabase
+        .from('conversation_memory')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        .eq('session_id', sessionId)
+        .eq('mode', 'guide')
+        .order('updated_at', { ascending: false })
         .limit(1);
 
-      if (error) {
-        console.error('Error loading growth conversation history:', error);
-        return;
+      let loadedMessages: GrowthConversationMessage[] = [];
+
+      if (memoryData && memoryData.length > 0) {
+        console.log('📚 Loading from conversation_memory for deduplication');
+        const memory = memoryData[0];
+        const messages = Array.isArray(memory.messages) ? memory.messages : [];
+        
+        // Deduplicate and convert to GrowthConversationMessage format
+        const messageMap = new Map();
+        messages.forEach((msg: any) => {
+          if (msg.id && !messageMap.has(msg.id)) {
+            messageMap.set(msg.id, {
+              id: msg.id,
+              role: msg.role === 'assistant' ? 'hacs' : msg.role,
+              content: msg.content || '',
+              timestamp: msg.timestamp || new Date().toISOString(),
+              module: msg.module || 'spiritual',
+              messageType: msg.messageType,
+              questionId: msg.questionId,
+              isQuestion: msg.isQuestion
+            });
+          }
+        });
+        loadedMessages = Array.from(messageMap.values());
+      } else {
+        // Fallback to growth conversations table
+        const { data: conversations } = await supabase
+          .from('hacs_growth_conversations')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('session_id', sessionId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (conversations && conversations.length > 0) {
+          console.log('📚 Loading from hacs_growth_conversations');
+          const conversation = conversations[0];
+          setConversationId(conversation.id);
+          const conversationData = Array.isArray(conversation.conversation_data) 
+            ? (conversation.conversation_data as unknown) as GrowthConversationMessage[]
+            : [];
+          
+          // Deduplicate messages by ID
+          const messageMap = new Map();
+          conversationData.forEach(msg => {
+            if (msg.id && !messageMap.has(msg.id)) {
+              messageMap.set(msg.id, msg);
+            }
+          });
+          loadedMessages = Array.from(messageMap.values());
+        }
       }
 
-      if (conversations && conversations.length > 0) {
-        const conversation = conversations[0];
-        setConversationId(conversation.id);
-        const conversationData = Array.isArray(conversation.conversation_data) 
-          ? (conversation.conversation_data as unknown) as GrowthConversationMessage[]
-          : [];
-        setMessages(conversationData);
+      // PHASE 3: State management improvements - only set if we have new messages
+      if (loadedMessages.length > 0) {
+        setMessages(prev => {
+          // Prevent duplicates by comparing with existing messages
+          const existingIds = new Set(prev.map(m => m.id));
+          const newMessages = loadedMessages.filter(m => !existingIds.has(m.id));
+          return newMessages.length > 0 ? loadedMessages : prev;
+        });
       }
+      
+      setIsHistoryLoaded(true);
     } catch (error) {
-      console.error('Error in loadConversationHistory:', error);
+      console.error('❌ Error in loadConversationHistory:', error);
+    } finally {
+      loadingRef.current = false;
     }
-  };
+  }, [isHistoryLoaded, getOrCreateSessionId]);
+
+  // CRITICAL FIX: Only load once with proper dependency
+  useEffect(() => {
+    if (!isHistoryLoaded) {
+      loadConversationHistory();
+    }
+  }, [loadConversationHistory, isHistoryLoaded]);
+
 
   const sendMessage = useCallback(async (content: string) => {
     if (isLoading || !content.trim()) return;
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const sessionId = await getOrCreateSessionId();
+
     const userMessage: GrowthConversationMessage = {
-      id: `user-${Date.now()}`,
+      id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       role: 'user',
       content: content.trim(),
       timestamp: new Date().toISOString(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    // PHASE 3: Prevent duplicate message additions
+    setMessages(prev => {
+      const exists = prev.some(m => m.id === userMessage.id);
+      return exists ? prev : [...prev, userMessage];
+    });
     setIsTyping(true);
 
     try {
       console.log('🧠 ENHANCED COACH: Starting streaming conversation through enhanced coach pipeline');
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
 
-      // Create assistant message for streaming
+      // Create assistant message for streaming with unique ID
       const assistantMessage: GrowthConversationMessage = {
-        id: `ai-${Date.now()}`,
+        id: `ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         role: 'hacs',
         content: '',
         timestamp: new Date().toISOString(),
         module: 'enhanced-coach'
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages(prev => {
+        const exists = prev.some(m => m.id === assistantMessage.id);
+        return exists ? prev : [...prev, assistantMessage];
+      });
 
       // Direct call to enhanced coach with streaming
       const { data: { session } } = await supabase.auth.getSession();
@@ -108,7 +200,7 @@ export const useHACSGrowthConversation = () => {
         body: JSON.stringify({
           message: content.trim(),
           userId: user.id,
-          sessionId: conversationId || `session-${Date.now()}`,
+          sessionId: sessionId,
           useEnhancedMode: true,
           enableBackgroundIntelligence: true,
           conversationHistory: messages,
@@ -144,9 +236,11 @@ export const useHACSGrowthConversation = () => {
                     : msg
                 ));
                 
-                // Save conversation and record interaction
+                // PHASE 2: Save to both conversation_memory and growth conversations
                 if (user?.id) {
-                  await saveConversation([...messages, userMessage, { ...assistantMessage, content: fullContent }], user.id);
+                  const finalMessages = [...messages, userMessage, { ...assistantMessage, content: fullContent }];
+                  await saveToConversationMemory(finalMessages, user.id, sessionId);
+                  await saveConversation(finalMessages, user.id);
                   await recordConversationInteraction(user.id, content, fullContent);
                 }
                 
@@ -213,7 +307,10 @@ export const useHACSGrowthConversation = () => {
               msg.id.startsWith('ai-') && msg.content === '' ? fallbackMessage : msg
             ));
 
-            await saveConversation([...messages, userMessage, fallbackMessage], user.id);
+            const sessionId = await getOrCreateSessionId();
+            const finalMessages = [...messages, userMessage, fallbackMessage];
+            await saveToConversationMemory(finalMessages, user.id, sessionId);
+            await saveConversation(finalMessages, user.id);
             await recordConversationInteraction(user.id, content, data.response);
           }
         }
@@ -232,10 +329,49 @@ export const useHACSGrowthConversation = () => {
     } finally {
       setIsTyping(false);
     }
-  }, [isLoading, messages, conversationId, currentQuestion]);
+  }, [isLoading, messages, conversationId, currentQuestion, getOrCreateSessionId]);
+
+  // PHASE 2: Save to conversation_memory for deduplication like Companion Oracle
+  const saveToConversationMemory = async (messages: GrowthConversationMessage[], userId: string, sessionId: string) => {
+    try {
+      const conversationMemoryData = {
+        user_id: userId,
+        session_id: sessionId,
+        mode: 'guide' as const,
+        messages: messages.map(msg => ({
+          id: msg.id,
+          role: msg.role === 'hacs' ? 'assistant' : msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp,
+          module: msg.module,
+          messageType: msg.messageType,
+          questionId: msg.questionId,
+          isQuestion: msg.isQuestion
+        })),
+        last_activity: new Date().toISOString()
+      };
+
+      // Upsert into conversation_memory
+      const { error } = await supabase
+        .from('conversation_memory')
+        .upsert(conversationMemoryData, { 
+          onConflict: 'user_id, session_id, mode' 
+        });
+
+      if (error) {
+        console.error('❌ Error saving to conversation_memory:', error);
+      } else {
+        console.log('✅ Saved to conversation_memory for deduplication');
+      }
+    } catch (error) {
+      console.error('❌ Error in saveToConversationMemory:', error);
+    }
+  };
 
   const saveConversation = async (messages: GrowthConversationMessage[], userId: string) => {
     try {
+      const sessionId = await getOrCreateSessionId();
+      
       if (conversationId) {
         await supabase
           .from('hacs_growth_conversations')
@@ -249,7 +385,7 @@ export const useHACSGrowthConversation = () => {
           .from('hacs_growth_conversations')
           .insert({
             user_id: userId,
-            session_id: crypto.randomUUID(),
+            session_id: sessionId,
             conversation_data: messages as any
           })
           .select()
@@ -381,11 +517,15 @@ export const useHACSGrowthConversation = () => {
     }
   };
 
-  const clearConversation = () => {
+  // PHASE 3: Enhanced clear with cleanup
+  const clearConversation = useCallback(() => {
     setMessages([]);
     setCurrentQuestion(null);
     setConversationId(null);
-  };
+    setIsHistoryLoaded(false);
+    sessionIdRef.current = null;
+    loadingRef.current = false;
+  }, []);
 
   const generateGrowthQuestion = (intelligenceLevel: number): string => {
     const questions = [
