@@ -25,6 +25,7 @@ export const useHACSGrowthConversation = () => {
   const [messages, setMessages] = useState<GrowthConversationMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [isStreamingResponse, setIsStreamingResponse] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<GrowthHACSQuestion | null>(null);
 
@@ -626,14 +627,30 @@ export const useHACSGrowthConversation = () => {
     }
   };
 
+  // Handle streaming completion
+  const onStreamingComplete = (messageId: string) => {
+    console.log('🎯 Spiritual growth streaming complete:', messageId);
+    setIsStreamingResponse(false);
+  };
+
+  // Handle stopping streaming
+  const onStopStreaming = () => {
+    console.log('⏹️ Stopping spiritual growth streaming');
+    setIsStreamingResponse(false);
+    setIsLoading(false);
+  };
+
   return {
     messages,
     isLoading,
     isTyping,
+    isStreamingResponse,
     currentQuestion,
     sendMessage,
     generateQuestion,
     provideFeedback,
-    clearConversation
+    clearConversation,
+    onStreamingComplete,
+    onStopStreaming
   };
 };
