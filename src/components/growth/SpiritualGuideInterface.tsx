@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Heart, Loader2, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
 import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
@@ -180,29 +181,38 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
               </div>
             ) : (
               <div key={message.id} className="flex items-start gap-3">
-                <div className="flex-shrink-0 mt-1">
-                  <div className="w-8 h-8 bg-soul-purple/10 rounded-full flex items-center justify-center">
-                    <Sparkles className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                  </div>
-                </div>
+                <Avatar className="h-8 w-8 border border-soul-purple/20">
+                  <AvatarFallback className="bg-soul-purple/10 text-soul-purple">
+                    <Sparkles className="h-4 w-4" />
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex-1">
-                   <div className={`${getTextSize('text-sm')} leading-relaxed whitespace-pre-wrap text-muted-foreground`}>
-                     <TypewriterText 
-                       text={message.content}
-                       isStreaming={false}
-                       speed={60}
-                       messageId={message.id}
-                     />
-                   </div>
+                  <div className="bg-soul-purple/5 rounded-lg p-4 border border-soul-purple/10">
+                    <TypewriterText 
+                      text={message.content}
+                      isStreaming={false}
+                      speed={60}
+                      messageId={message.id}
+                    />
+                  </div>
                 </div>
               </div>
             )
           ))}
           
-          {/* Clean thinking dots matching Companion Oracle */}
+          {/* Loading indicator */}
           {isLoading && (
-            <div className="flex justify-center py-4">
-              <ThinkingDots isThinking={isLoading} />
+            <div className="flex items-start gap-3">
+              <Avatar className="h-8 w-8 border border-soul-purple/20">
+                <AvatarFallback className="bg-soul-purple/10 text-soul-purple">
+                  <Sparkles className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="bg-soul-purple/5 rounded-lg p-4 border border-soul-purple/10">
+                  <ThinkingDots isThinking={true} className="text-soul-purple" />
+                </div>
+              </div>
             </div>
           )}
           

@@ -165,6 +165,7 @@ export const useHACSGrowthConversation = () => {
       const exists = prev.some(m => m.id === userMessage.id);
       return exists ? prev : [...prev, userMessage];
     });
+    setIsLoading(true);
     setIsTyping(true);
 
     try {
@@ -327,6 +328,7 @@ export const useHACSGrowthConversation = () => {
         ));
       }
     } finally {
+      setIsLoading(false);
       setIsTyping(false);
     }
   }, [isLoading, messages, conversationId, currentQuestion, getOrCreateSessionId]);
