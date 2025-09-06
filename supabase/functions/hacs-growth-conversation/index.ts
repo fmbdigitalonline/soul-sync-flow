@@ -125,8 +125,9 @@ Provide transformational spiritual guidance tailored to their personality. Stay 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
     
+    let openAIResponse;
     try {
-      const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${openAIApiKey}`,
@@ -168,6 +169,11 @@ Provide transformational spiritual guidance tailored to their personality. Stay 
         throw new Error('Request timed out. Please try again with a shorter message.');
       }
       throw error;
+    }
+
+    // Check if openAIResponse is defined before using
+    if (!openAIResponse) {
+      throw new Error('OpenAI response is undefined');
     }
 
     const openAIData = await openAIResponse.json();
