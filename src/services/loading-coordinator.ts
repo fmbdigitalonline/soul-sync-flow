@@ -11,7 +11,7 @@ export type LoadingState =
   | 'error_recovering'
   | 'ready';
 
-export type LoadingSource = 'oracle' | 'streaming' | 'core' | 'background';
+export type LoadingSource = 'oracle' | 'streaming' | 'core' | 'background' | 'shadow_detection';
 
 interface LoadingOperation {
   source: LoadingSource;
@@ -201,10 +201,11 @@ export const createLoadingCoordinator = (overrides?: Partial<LoadingCoordinatorO
   const defaultOptions: LoadingCoordinatorOptions = {
     globalMaxDuration: 45000, // 45 seconds global max
     sourceTimeouts: {
-      oracle: 30000,     // 30 seconds for Oracle
-      streaming: 30000,  // 30 seconds for streaming
-      core: 15000,       // 15 seconds for core operations
-      background: 60000  // 60 seconds for background operations
+      oracle: 30000,           // 30 seconds for Oracle
+      streaming: 30000,        // 30 seconds for streaming
+      core: 15000,             // 15 seconds for core operations
+      background: 60000,       // 60 seconds for background operations
+      shadow_detection: 100    // 100ms for shadow detection (performance critical)
     }
   };
 

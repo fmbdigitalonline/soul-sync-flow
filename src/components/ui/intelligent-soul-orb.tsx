@@ -19,6 +19,10 @@ interface IntelligentSoulOrbProps {
   hermeticProgress?: number; // 0-100 for hermetic report generation
   showHermeticProgress?: boolean;
   showRainbowCelebration?: boolean;
+  // New subconscious orb props
+  subconsciousMode?: 'dormant' | 'detecting' | 'pattern_found' | 'thinking' | 'advice_ready';
+  patternDetected?: boolean;
+  adviceReady?: boolean;
 }
 
 const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
@@ -37,6 +41,9 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   hermeticProgress = 0,
   showHermeticProgress = false,
   showRainbowCelebration = false,
+  subconsciousMode = 'dormant',
+  patternDetected = false,
+  adviceReady = false,
 }) => {
   const orbRef = useRef<HTMLDivElement>(null);
   const [particles, setParticles] = useState<Array<{ x: number, y: number, size: number, speed: number, angle: number, hue?: number }>>([]);
@@ -72,6 +79,48 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
       return "from-amber-400 via-yellow-300 to-yellow-200"; // Awakening - warm yellow
     }
   }, [intelligenceLevel]);
+
+  // Subconscious orb colors based on mode
+  const getSubconsciousOrbColors = useMemo(() => {
+    if (subconsciousMode === 'advice_ready') {
+      return "from-teal-400 via-teal-300 to-emerald-300"; // Ready with advice
+    } else if (subconsciousMode === 'thinking') {
+      return "from-purple-400 via-violet-300 to-purple-300"; // Processing hermetic wisdom
+    } else if (subconsciousMode === 'pattern_found') {
+      return "from-amber-400 via-yellow-300 to-orange-300"; // Pattern detected
+    } else if (subconsciousMode === 'detecting') {
+      return "from-cyan-400 via-blue-300 to-cyan-300"; // Active detection
+    } else {
+      return getOrbColors; // Default intelligence-based colors
+    }
+  }, [subconsciousMode, getOrbColors]);
+
+  // Subconscious mode animation overrides
+  const getSubconsciousAnimation = useMemo(() => {
+    if (subconsciousMode === 'advice_ready') {
+      return { 
+        animate: { scale: [1, 1.05, 1], opacity: [1, 0.9, 1] }, 
+        transition: { duration: 2, repeat: Infinity } 
+      };
+    } else if (subconsciousMode === 'thinking') {
+      return { 
+        animate: { rotate: [0, 5, -5, 0], scale: [1, 1.02, 1] }, 
+        transition: { duration: 1.5, repeat: Infinity } 
+      };
+    } else if (subconsciousMode === 'pattern_found') {
+      return { 
+        animate: { scale: [1, 1.03, 1] }, 
+        transition: { duration: 0.8, repeat: 3 } 
+      };
+    } else if (subconsciousMode === 'detecting') {
+      return { 
+        animate: { opacity: [1, 0.8, 1] }, 
+        transition: { duration: 0.6, repeat: Infinity } 
+      };
+    } else {
+      return { animate: {}, transition: undefined };
+    }
+  }, [subconsciousMode]);
 
   // Module-specific animation variants
   const getModuleAnimation = useMemo(() => {
@@ -285,16 +334,17 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
           className
         )}
         animate={{
-          scale: isThinking ? [1, 1.03, 1] : pulse && !speaking ? [1, 1.05, 1] : 1,
+          scale: isThinking || subconsciousMode === 'thinking' ? [1, 1.03, 1] : pulse && !speaking ? [1, 1.05, 1] : 1,
           ...getModuleAnimation.animate,
+          ...getSubconsciousAnimation.animate,
         }}
-        transition={getModuleAnimation.transition || {
-          duration: isThinking ? 1.5 : 3, // Faster when thinking
-          repeat: (pulse && !speaking) || isThinking ? Infinity : 0,
+        transition={getSubconsciousAnimation.transition || getModuleAnimation.transition || {
+          duration: isThinking || subconsciousMode === 'thinking' ? 1.5 : 3,
+          repeat: (pulse && !speaking) || isThinking || subconsciousMode !== 'dormant' ? Infinity : 0,
           ease: "easeInOut"
         }}
       >
-        {/* Core orb with rainbow celebration */}
+        {/* Core orb with rainbow celebration and subconscious mode colors */}
         <div 
           className={cn(
             "absolute inset-0 rounded-full", 
@@ -311,7 +361,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
           }}
         >
           {!showRainbowCelebration && (
-            <div className={cn("absolute inset-0 rounded-full bg-gradient-to-r", getOrbColors)} />
+            <div className={cn("absolute inset-0 rounded-full bg-gradient-to-r", getSubconsciousOrbColors)} />
           )}
         </div>
         

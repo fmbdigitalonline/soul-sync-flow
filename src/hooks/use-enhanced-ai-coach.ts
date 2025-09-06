@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { aiCoachService } from '@/services/ai-coach-service';
 import { supabase } from '@/integrations/supabase/client';
 import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
+import { useSubconsciousOrb } from '@/hooks/use-subconscious-orb';
 import { createErrorHandler } from '@/utils/error-recovery';
 
 export interface Message {
@@ -30,6 +31,17 @@ interface VFPGraphStatus {
 export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) => {
   // Coordinated loading for streaming operations
   const { startLoading, completeLoading } = useCoordinatedLoading();
+  
+  // Subconscious orb integration
+  const { 
+    processMessage: processSubconsciousMessage,
+    orbState,
+    subconsciousMode,
+    patternDetected,
+    adviceReady,
+    handleOrbClick,
+    isEnabled: subconsciousEnabled
+  } = useSubconsciousOrb();
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -118,6 +130,13 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
     
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
+    
+    // Process message with subconscious orb (non-blocking)
+    if (subconsciousEnabled) {
+      processSubconsciousMessage(originalMessage || message, userMessage.id).catch(error => {
+        console.error('🚨 Subconscious orb processing error:', error);
+      });
+    }
     
     // Track conversation activity for smart insights
     try {
@@ -262,6 +281,16 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
     userName,
     streamingContent,
     isStreaming,
-    isInitialized
+    isInitialized,
+    
+    // Subconscious orb integration
+    subconsciousOrb: {
+      state: orbState,
+      mode: subconsciousMode,
+      patternDetected,
+      adviceReady,
+      handleClick: handleOrbClick,
+      enabled: subconsciousEnabled
+    }
   };
 };

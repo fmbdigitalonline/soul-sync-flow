@@ -24,22 +24,22 @@ export interface ConversationInsight {
 }
 
 export class ConversationShadowDetector {
-  private static readonly EMOTIONAL_TRIGGERS = [
+  protected static readonly EMOTIONAL_TRIGGERS = [
     'overwhelmed', 'frustrated', 'angry', 'annoyed', 'triggered', 'upset', 
     'irritated', 'bothered', 'stressed', 'anxious', 'worried', 'concerned'
   ];
 
-  private static readonly PROJECTION_PATTERNS = [
+  protected static readonly PROJECTION_PATTERNS = [
     'they always', 'people never', 'everyone does', 'nobody understands',
     'others should', 'why do they', 'those people', 'that person'
   ];
 
-  private static readonly RESISTANCE_PATTERNS = [
+  protected static readonly RESISTANCE_PATTERNS = [
     'i should', 'i have to', 'i need to', 'i must', 'supposed to',
     'but i cant', 'its too hard', 'impossible', 'never works'
   ];
 
-  private static readonly LIMITING_BELIEFS = [
+  protected static readonly LIMITING_BELIEFS = [
     'im not good', 'i cant do', 'im bad at', 'im terrible', 'i never',
     'i always fail', 'not smart enough', 'not worthy', 'dont deserve'
   ];
