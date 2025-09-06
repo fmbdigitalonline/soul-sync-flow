@@ -160,17 +160,6 @@ export const useHACSGrowthConversation = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Create assistant message for response
-      const assistantMessage: GrowthConversationMessage = {
-        id: `ai-${Date.now()}`,
-        role: 'hacs',
-        content: '',
-        timestamp: new Date().toISOString(),
-        module: 'spiritual-growth'
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
-
       // Call the growth conversation edge function
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
@@ -209,18 +198,23 @@ export const useHACSGrowthConversation = () => {
       if (jsonData.response) {
         const fullContent = jsonData.response;
         
-        // Update message with full content
-        setMessages(prev => prev.map(msg => 
-          msg.id === assistantMessage.id 
-            ? { ...msg, content: fullContent }
-            : msg
-        ));
+        // Create assistant message with actual content (match companion pattern)
+        const assistantMessage: GrowthConversationMessage = {
+          id: `ai-${Date.now()}`,
+          role: 'hacs',
+          content: fullContent,
+          timestamp: new Date().toISOString(),
+          module: 'spiritual-growth'
+        };
+
+        // Add assistant message to UI with content
+        setMessages(prev => [...prev, assistantMessage]);
 
         console.log('💾 SAVING: Starting conversation save and interaction recording');
         
         // Save conversation and record interaction
         if (user?.id) {
-          await saveConversation([...messages, userMessage, { ...assistantMessage, content: fullContent }], user.id);
+          await saveConversation([...messages, userMessage, assistantMessage], user.id);
           await recordConversationInteraction(user.id, content, fullContent);
           
           console.log('✅ SAVE COMPLETE: Conversation saved successfully');
@@ -247,16 +241,14 @@ export const useHACSGrowthConversation = () => {
     } catch (error) {
       console.error('❌ Growth Coach error:', error);
       
-      // Fallback error message
+      // Add error message directly to UI
       const errorMessage: GrowthConversationMessage = {
         id: `error-${Date.now()}`,
         role: 'hacs',
         content: 'I\'m having trouble connecting right now. Could you try sharing that again?',
         timestamp: new Date().toISOString(),
       };
-      setMessages(prev => prev.map(msg => 
-        msg.id.startsWith('ai-') && msg.content === '' ? errorMessage : msg
-      ));
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       console.log('🏁 SEND COMPLETE: Message send process completed');
       console.log('🔄 STATE UPDATE: Setting isLoading to FALSE');

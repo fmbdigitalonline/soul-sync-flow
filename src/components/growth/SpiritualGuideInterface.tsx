@@ -140,7 +140,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                       {isNewMessage ? (
                         <TypewriterText 
                           text={message.content} 
-                          isStreaming={false}
+                          isStreaming={true}
                           speed={60}
                           messageId={message.id}
                           onStreamingComplete={onStreamingComplete}
