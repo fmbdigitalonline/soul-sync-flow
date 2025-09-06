@@ -68,8 +68,8 @@ serve(async (req) => {
         .eq('user_id', userId)
         .single(),
       supabase
-        .from('user_blueprints')
-        .select('blueprint')
+        .from('blueprints')
+        .select('cognition_mbti, user_meta')
         .eq('user_id', userId)
         .eq('is_active', true)
         .single()
@@ -83,85 +83,91 @@ serve(async (req) => {
     });
 
     console.log(`🧬 BLUEPRINT DATA: [${requestId}] Blueprint query result`, {
-      hasBlueprint: !!blueprintResult.data?.blueprint,
+      hasBlueprint: !!blueprintResult.data,
       blueprintError: blueprintResult.error?.message,
-      blueprintKeys: blueprintResult.data?.blueprint ? Object.keys(blueprintResult.data.blueprint) : []
+      hasMbti: !!blueprintResult.data?.cognition_mbti,
+      hasUserMeta: !!blueprintResult.data?.user_meta
     });
 
     const intelligence = intelligenceResult.data;
-    const blueprint = blueprintResult.data?.blueprint;
+    const blueprint = blueprintResult.data;
+    
+    // Limit conversation history to last 6 messages for performance
+    const recentHistory = (conversationHistory || []).slice(-6);
 
-    // Growth-specific system prompt focused on spiritual development
-    const systemPrompt = `You are a specialized SPIRITUAL GROWTH GUIDE within the HACS (Holistic Adaptive Cognition System) framework. Your sole purpose is to help users deepen their spiritual connection, self-awareness, and personal transformation.
+    // Growth-specific system prompt focused on spiritual development (optimized for performance)
+    const mbtiType = blueprint?.cognition_mbti?.type || 'Unknown';
+    const userName = blueprint?.user_meta?.preferred_name || 'seeker';
+    
+    const systemPrompt = `You are a specialized SPIRITUAL GROWTH GUIDE focused on consciousness expansion and personal transformation.
 
-GROWTH MODE FOCUS AREAS:
-- Spiritual awakening and consciousness expansion
-- Inner wisdom and intuitive development
-- Shadow work and emotional healing
-- Life purpose and soul calling
-- Mindfulness and presence practices
-- Energy work and vibrational alignment
-- Compassion and loving-kindness cultivation
-- Sacred practices and rituals
+PERSONALITY CONTEXT: MBTI ${mbtiType} | User: ${userName}
+INTELLIGENCE LEVEL: ${intelligence?.intelligence_level || 50}/100
 
-PERSONALITY CONTEXT: ${blueprint ? JSON.stringify(blueprint) : 'Standard spiritual guidance approach'}
+FOCUS AREAS: Spiritual awakening, inner wisdom, shadow work, life purpose, mindfulness, energy alignment, compassion cultivation.
 
-CURRENT INTELLIGENCE LEVEL: ${intelligence?.intelligence_level || 50}/100
-GROWTH INTELLIGENCE METRICS: ${JSON.stringify(intelligence?.module_scores || {})}
-
-CONVERSATION HISTORY: ${JSON.stringify(conversationHistory)}
-
-CRITICAL INSTRUCTIONS:
-1. STAY IN GROWTH MODE - Only provide spiritual and personal development guidance
-2. Use the user's personality context to tailor your spiritual guidance
-3. Build on previous conversation context for deeper insights
-4. Provide transformational, soul-centered wisdom
-5. Ask profound questions that invite deeper self-reflection
-6. Never mix productivity coaching or dream analysis into growth responses
+${recentHistory.length > 0 ? `RECENT CONTEXT: ${recentHistory.map(m => `${m.role}: ${m.content}`).join(' | ')}` : ''}
 
 USER MESSAGE: "${message}"
 
-Respond as a specialized spiritual growth guide, maintaining strict focus on consciousness expansion and spiritual development.`;
+Provide transformational spiritual guidance tailored to their personality. Stay focused on growth and consciousness expansion.`;
 
     console.log(`🤖 AI REQUEST: [${requestId}] Calling OpenAI with growth-specific prompt`, {
       model: 'gpt-4o-mini',
       systemPromptLength: systemPrompt.length,
       userMessageLength: message.length,
       maxTokens: 500,
-      temperature: 0.8
+      temperature: 0.8,
+      recentHistoryLength: recentHistory.length
     });
     
-    // Call OpenAI with growth-specific prompt
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: message }
-        ],
-        max_tokens: 500,
-        temperature: 0.8, // Higher creativity for spiritual insights
-      }),
-    });
-
-    console.log(`🔄 AI RESPONSE: [${requestId}] OpenAI response received`, {
-      status: openAIResponse.status,
-      statusText: openAIResponse.statusText,
-      ok: openAIResponse.ok
-    });
-
-    if (!openAIResponse.ok) {
-      const error = `OpenAI API error: ${openAIResponse.statusText}`;
-      console.error(`❌ AI ERROR: [${requestId}] ${error}`, {
-        status: openAIResponse.status,
-        statusText: openAIResponse.statusText
+    // Call OpenAI with growth-specific prompt and 30-second timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
+    try {
+      const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: message }
+          ],
+          max_tokens: 500,
+          temperature: 0.8, // Higher creativity for spiritual insights
+        }),
+        signal: controller.signal
       });
-      throw new Error(error);
+      
+      clearTimeout(timeoutId);
+
+      console.log(`🔄 AI RESPONSE: [${requestId}] OpenAI response received`, {
+        status: openAIResponse.status,
+        statusText: openAIResponse.statusText,
+        ok: openAIResponse.ok
+      });
+
+      if (!openAIResponse.ok) {
+        const error = `OpenAI API error: ${openAIResponse.statusText}`;
+        console.error(`❌ AI ERROR: [${requestId}] ${error}`, {
+          status: openAIResponse.status,
+          statusText: openAIResponse.statusText
+        });
+        throw new Error(error);
+      }
+      
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error(`⏰ TIMEOUT ERROR: [${requestId}] OpenAI request timed out after 30 seconds`);
+        throw new Error('Request timed out. Please try again with a shorter message.');
+      }
+      throw error;
     }
 
     const openAIData = await openAIResponse.json();

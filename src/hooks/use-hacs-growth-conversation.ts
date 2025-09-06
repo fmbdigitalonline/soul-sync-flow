@@ -188,7 +188,7 @@ export const useHACSGrowthConversation = () => {
           message: content.trim(),
           userId: user.id,
           sessionId: conversationId || `session-${Date.now()}`,
-          conversationHistory: messages
+          conversationHistory: messages.slice(-6) // Only send last 6 messages for performance
         }),
       });
 
