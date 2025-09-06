@@ -113,7 +113,7 @@ USER MESSAGE: "${message}"
 Provide transformational spiritual guidance tailored to their personality. Stay focused on growth and consciousness expansion.`;
 
     console.log(`🤖 AI REQUEST: [${requestId}] Calling OpenAI with growth-specific prompt`, {
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1-mini-2025-04-14',
       systemPromptLength: systemPrompt.length,
       userMessageLength: message.length,
       maxTokens: 500,
@@ -133,7 +133,7 @@ Provide transformational spiritual guidance tailored to their personality. Stay 
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-4.1-mini-2025-04-14',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: message }
