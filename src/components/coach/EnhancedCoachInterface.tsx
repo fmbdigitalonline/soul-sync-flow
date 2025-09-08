@@ -14,6 +14,7 @@ import { TypewriterText } from "./TypewriterText";
 import { VFPGraphFeedback } from "./VFPGraphFeedback";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Message {
   id: string;

@@ -10,6 +10,7 @@ import { useProductionACS } from '@/hooks/use-production-acs';
 import ACSControlPanel from '@/components/acs/ACSControlPanel';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Message {
   id: string;
