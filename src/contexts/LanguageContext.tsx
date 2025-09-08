@@ -115,7 +115,8 @@ const translations: Record<Language, Translations> = {
       paste: 'Paste',
       cut: 'Cut',
       notifications: 'Notifications',
-      tryAgain: 'Try Again'
+      tryAgain: 'Try Again',
+      of: 'of'
     },
     // Error Messages
     errors: {
@@ -1614,7 +1615,9 @@ const translations: Record<Language, Translations> = {
       copy: 'Kopiëren',
       paste: 'Plakken',
       cut: 'Knippen',
-      notifications: 'Meldingen'
+      notifications: 'Meldingen',
+      tryAgain: 'Probeer Opnieuw',
+      of: 'van'
     },
     // Error Messages
     errors: {
