@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { user360Service, User360Profile, DataAvailability } from '@/services/user-360-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,11 @@ export const useUser360 = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  
+  // Error frequency limiting to prevent toast spam
+  const lastErrorTimeRef = useRef<number>(0);
+  const lastErrorMessageRef = useRef<string>('');
+  const ERROR_THROTTLE_MS = 10000; // Only show same error once per 10 seconds
 
   const fetchProfile = useCallback(async () => {
     if (!user) {
@@ -34,8 +39,7 @@ export const useUser360 = () => {
       if (userProfile) {
         console.log('✅ 360° Profile loaded successfully', {
           dataSources: userProfile.dataSources.length,
-          version: userProfile.version,
-          syncActive
+          version: userProfile.version
         });
       } else {
         console.log('⚠️ No 360° profile data available - this is normal for new users');
@@ -45,16 +49,27 @@ export const useUser360 = () => {
       console.error('❌ Error fetching 360° profile:', errorMessage);
       setError(errorMessage);
       
-      // Don't mask errors - show them transparently
-      toast({
-        title: "Profile Loading Error",
-        description: `Unable to load complete profile: ${errorMessage}`,
-        variant: "destructive"
-      });
+      // Error frequency limiting - only show toast if enough time has passed or it's a different error
+      const now = Date.now();
+      const shouldShowToast = (now - lastErrorTimeRef.current > ERROR_THROTTLE_MS) || 
+                             (lastErrorMessageRef.current !== errorMessage);
+      
+      if (shouldShowToast) {
+        lastErrorTimeRef.current = now;
+        lastErrorMessageRef.current = errorMessage;
+        
+        toast({
+          title: "Profile Loading Error",
+          description: `Unable to load complete profile: ${errorMessage}`,
+          variant: "destructive"
+        });
+      } else {
+        console.log('🔇 Error toast throttled - same error shown recently');
+      }
     } finally {
       setLoading(false);
     }
-  }, [user, toast, syncActive]);
+  }, [user, toast]); // Removed syncActive dependency to break the loop
 
   const refreshProfile = useCallback(async () => {
     if (!user) return;

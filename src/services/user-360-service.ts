@@ -248,6 +248,12 @@ class User360DataService {
         return this.getUserProfile(userId, retryCount + 1);
       }
       
+      // For repeated errors, don't immediately throw - allow graceful degradation
+      if (retryCount >= 2) {
+        console.warn(`⚠️ 360° Service: Max retries reached, returning null for graceful degradation`);
+        return null;
+      }
+      
       // Don't mask errors - surface them with context
       const contextualError = new Error(`Profile aggregation failed: ${errorMessage} (after ${retryCount + 1} attempts)`);
       contextualError.name = 'User360ProfileError';
