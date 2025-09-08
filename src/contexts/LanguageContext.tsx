@@ -1415,6 +1415,20 @@ const translations: Record<Language, Translations> = {
         welcomeDescription: "I'm your Growth Coach, here to guide you step by step. Which area of your life feels most alive or challenging for you right now?",
         clickToExplore: 'Click to explore →',
         chooseAreaPrompt: 'Choose the area where you sense the most energy for growth right now'
+      },
+      programStarter: {
+        title: 'Start Your Growth Journey',
+        description: 'Choose a life area to focus on for your personalized growth program',
+        personalizedProgram: {
+          title: 'Your Personalized Program',
+          description: 'Based on your blueprint, we\'ll create a customized growth program tailored to your personality, decision-making style, and preferences.',
+          duration: 'Program length and pace adapted to your unique profile'
+        },
+        buttons: {
+          start: 'Start My Growth Program',
+          creating: 'Creating Your Program...'
+        },
+        backToDomainSelection: 'Back to Domain Selection'
       }
     },
 

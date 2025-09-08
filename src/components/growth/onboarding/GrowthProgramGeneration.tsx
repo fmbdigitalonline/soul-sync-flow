@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Heart, Sparkles, Target, Calendar, CheckCircle, AlertCircle } from 'lucide-react';
 import { LifeDomain } from '@/types/growth-program';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface GenerationStage {
   id: string;
@@ -72,14 +73,16 @@ export const GrowthProgramGeneration: React.FC<GrowthProgramGenerationProps> = (
     home_family: '🏠'
   };
 
+  const { t } = useLanguage();
+  
   const domainTitle = {
-    career: 'Career & Purpose',
-    relationships: 'Relationships & Love',
-    wellbeing: 'Health & Wellbeing',
-    finances: 'Money & Abundance',
-    creativity: 'Creativity & Expression',
-    spirituality: 'Spirituality & Meaning',
-    home_family: 'Home & Family'
+    career: t('growth.domains.career.title'),
+    relationships: t('growth.domains.relationships.title'),
+    wellbeing: t('growth.domains.wellbeing.title'),
+    finances: t('growth.domains.finances.title'),
+    creativity: t('growth.domains.creativity.title'),
+    spirituality: t('growth.domains.spirituality.title'),
+    home_family: t('growth.domains.home_family.title')
   };
 
   useEffect(() => {

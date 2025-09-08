@@ -94,16 +94,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
   };
 
   const getDomainTitle = (domain: LifeDomain) => {
-    const titles = {
-      career: 'Career & Purpose',
-      relationships: 'Relationships & Love',
-      wellbeing: 'Health & Wellbeing',
-      finances: 'Money & Abundance',
-      creativity: 'Creativity & Expression',
-      spirituality: 'Spirituality & Meaning',
-      home_family: 'Home & Family'
-    };
-    return titles[domain] || 'Personal Growth';
+    return t(`growth.domains.${domain}.title`) || t('growth.domains.personal_growth.title');
   };
 
   const isReadyToComplete = discoveryProgress >= 40 && messages.length >= 4;

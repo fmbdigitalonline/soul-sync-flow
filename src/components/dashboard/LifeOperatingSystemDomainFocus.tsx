@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { GrowthDomainSelection } from '@/components/growth/onboarding/GrowthDomainSelection';
 import { LifeWheelAssessment as AssessmentComponent } from '@/components/assessment/LifeWheelAssessment';
 import { LifeDomain } from '@/types/growth-program';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface LifeOperatingSystemDomainFocusProps {
   onBack: () => void;
@@ -14,6 +15,7 @@ interface LifeOperatingSystemDomainFocusProps {
 export function LifeOperatingSystemDomainFocus({ onBack, onComplete }: LifeOperatingSystemDomainFocusProps) {
   const [selectedDomains, setSelectedDomains] = useState<LifeDomain[]>([]);
   const [showAssessment, setShowAssessment] = useState(false);
+  const { t } = useLanguage();
 
   const handleDomainSelect = (domain: LifeDomain) => {
     setSelectedDomains(prev => {
@@ -53,7 +55,7 @@ export function LifeOperatingSystemDomainFocus({ onBack, onComplete }: LifeOpera
               className="mb-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Domain Selection
+              {t('growth.programStarter.backToDomainSelection')}
             </Button>
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-2">Quick Focus Assessment</h2>

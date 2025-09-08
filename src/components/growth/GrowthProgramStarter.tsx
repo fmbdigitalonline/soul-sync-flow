@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Play, Heart, Briefcase, DollarSign, Home, Sparkles, TreePine, Clock } from 'lucide-react';
 import { LifeDomain } from '@/types/growth-program';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface GrowthProgramStarterProps {
   onDomainSelect: (domain: LifeDomain) => void;
@@ -18,54 +19,55 @@ export const GrowthProgramStarter: React.FC<GrowthProgramStarterProps> = ({
   creatingDomain = null
 }) => {
   const [selectedDomain, setSelectedDomain] = useState<LifeDomain | null>(null);
+  const { t } = useLanguage();
 
   const getDomainOptions = () => [
     { 
       value: 'career' as LifeDomain, 
-      label: 'Career & Purpose', 
-      description: 'Work fulfillment, calling, and professional growth',
+      label: t('growth.domains.career.title'), 
+      description: t('growth.domains.career.description'),
       icon: Briefcase,
       color: 'bg-blue-500'
     },
     { 
       value: 'relationships' as LifeDomain, 
-      label: 'Relationships', 
-      description: 'Love, friendship, and meaningful connections',
+      label: t('growth.domains.relationships.title'), 
+      description: t('growth.domains.relationships.description'),
       icon: Heart,
       color: 'bg-pink-500'
     },
     { 
       value: 'wellbeing' as LifeDomain, 
-      label: 'Wellbeing', 
-      description: 'Health, energy, and self-care practices',
+      label: t('growth.domains.wellbeing.title'), 
+      description: t('growth.domains.wellbeing.description'),
       icon: Sparkles,
       color: 'bg-green-500'
     },
     { 
       value: 'finances' as LifeDomain, 
-      label: 'Finances', 
-      description: 'Money, abundance, and financial security',
+      label: t('growth.domains.finances.title'), 
+      description: t('growth.domains.finances.description'),
       icon: DollarSign,
       color: 'bg-yellow-500'
     },
     { 
       value: 'creativity' as LifeDomain, 
-      label: 'Creativity', 
-      description: 'Expression, art, and innovative thinking',
+      label: t('growth.domains.creativity.title'), 
+      description: t('growth.domains.creativity.description'),
       icon: Sparkles,
       color: 'bg-purple-500'
     },
     { 
       value: 'spirituality' as LifeDomain, 
-      label: 'Spirituality', 
-      description: 'Meaning, growth, and deeper connection',
+      label: t('growth.domains.spirituality.title'), 
+      description: t('growth.domains.spirituality.description'),
       icon: TreePine,
       color: 'bg-indigo-500'
     },
     { 
       value: 'home_family' as LifeDomain, 
-      label: 'Home & Family', 
-      description: 'Domestic life and family relationships',
+      label: t('growth.domains.home_family.title'), 
+      description: t('growth.domains.home_family.description'),
       icon: Home,
       color: 'bg-orange-500'
     }
@@ -81,10 +83,10 @@ export const GrowthProgramStarter: React.FC<GrowthProgramStarterProps> = ({
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-center">
-          Start Your Growth Journey
+          {t('growth.programStarter.title')}
         </CardTitle>
         <p className="text-muted-foreground text-center">
-          Choose a life area to focus on for your personalized growth program
+          {t('growth.programStarter.description')}
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -124,13 +126,13 @@ export const GrowthProgramStarter: React.FC<GrowthProgramStarterProps> = ({
                 <Play className="h-5 w-5 text-soul-purple" />
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Your Personalized Program</h4>
+                <h4 className="font-semibold mb-2">{t('growth.programStarter.personalizedProgram.title')}</h4>
                 <p className="text-sm text-muted-foreground mb-3">
-                  Based on your blueprint, we'll create a customized growth program tailored to your personality, decision-making style, and preferences.
+                  {t('growth.programStarter.personalizedProgram.description')}
                 </p>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  <span>Program length and pace adapted to your unique profile</span>
+                  <span>{t('growth.programStarter.personalizedProgram.duration')}</span>
                 </div>
               </div>
             </div>
@@ -143,12 +145,12 @@ export const GrowthProgramStarter: React.FC<GrowthProgramStarterProps> = ({
               {loading || creatingDomain === selectedDomain ? (
                 <>
                   <Clock className="h-4 w-4 mr-2 animate-spin" />
-                  Creating Your Program...
+                  {t('growth.programStarter.buttons.creating')}
                 </>
               ) : (
                 <>
                   <Play className="h-4 w-4 mr-2" />
-                  Start My Growth Program
+                  {t('growth.programStarter.buttons.start')}
                 </>
               )}
             </Button>
