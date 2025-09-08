@@ -216,6 +216,8 @@ async function processSingleSystemTranslator(job: any, translator: string) {
 
   await updateJobStatus(jobId, 'processing', `Processing ${translator}...`);
   
+  console.log(`📤 Calling OpenAI agent for ${translator}...`);
+  
   const { data, error } = await supabase.functions.invoke('openai-agent', {
     body: {
       messages: [
@@ -237,23 +239,54 @@ ${JSON.stringify(blueprint, null, 2)}
 Focus on your specific system expertise.`
         }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
-      temperature: 0.6
+      model: 'gpt-4.1-mini-2025-04-14'
+      // FIXED: Removed temperature parameter for GPT-4.1+ models
     }
   });
   
-  if (error) throw new Error(`Failed on translator ${translator}: ${error.message}`);
+  console.log(`📥 OpenAI response for ${translator}:`, {
+    error: error,
+    hasData: !!data,
+    hasChoices: !!data?.choices,
+    hasContent: !!data?.choices?.[0]?.message?.content
+  });
   
-  if (data?.choices?.[0]?.message?.content) {
-    const content = data.choices[0].message.content.trim();
-    const wordCount = content.split(/\s+/).length;
-    
-    console.log(`📊 ${translator} generated ${wordCount} words, content length: ${content.length} characters`);
-    
-    if (wordCount < 300) {
-      console.warn(`⚠️ ${translator} generated insufficient content (${wordCount} words). Expected minimum: 300 words`);
-      throw new Error(`${translator} generated insufficient content: ${wordCount} words (minimum 300 required)`);
-    }
+  if (error) {
+    console.error(`❌ OpenAI API error for ${translator}:`, error);
+    throw new Error(`Failed on translator ${translator}: ${error.message}`);
+  }
+  
+  // CRITICAL: Enhanced error detection for empty content
+  if (!data?.choices?.[0]?.message?.content) {
+    console.error(`❌ ${translator} returned NO CONTENT:`, {
+      data: data,
+      choices: data?.choices,
+      message: data?.choices?.[0]?.message
+    });
+    throw new Error(`${translator} returned empty content - OpenAI API parameter issue`);
+  }
+  
+  const content = data.choices[0].message.content.trim();
+  const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+  
+  console.log(`📊 ${translator} SUCCESS:`, {
+    wordCount,
+    contentLength: content.length,
+    contentPreview: content.substring(0, 150) + '...'
+  });
+  
+  if (content.length < 50) {
+    console.error(`❌ ${translator} generated practically empty content:`, {
+      contentLength: content.length,
+      content: content
+    });
+    throw new Error(`${translator} generated practically empty content: ${content.length} characters`);
+  }
+  
+  if (wordCount < 300) {
+    console.warn(`⚠️ ${translator} generated insufficient content (${wordCount} words). Expected minimum: 300 words`);
+    throw new Error(`${translator} generated insufficient content: ${wordCount} words (minimum 300 required)`);
+  }
     
     const progressData = job.progress_data || {};
     const systemSections = progressData.system_sections || [];
@@ -292,6 +325,8 @@ async function processSingleHermeticAgent(job: any, agent: string) {
 
   await updateJobStatus(jobId, 'processing', `Processing ${agent}...`);
   
+  console.log(`📤 Calling OpenAI agent for ${agent}...`);
+  
   const { data, error } = await supabase.functions.invoke('openai-agent', {
     body: {
       messages: [
@@ -314,23 +349,54 @@ ${JSON.stringify(blueprint, null, 2)}
 Generate comprehensive analysis with practical applications.`
         }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
-      temperature: 0.7
+      model: 'gpt-4.1-mini-2025-04-14'
+      // FIXED: Removed temperature parameter for GPT-4.1+ models
     }
   });
   
-  if (error) throw new Error(`Failed on agent ${agent}: ${error.message}`);
+  console.log(`📥 OpenAI response for ${agent}:`, {
+    error: error,
+    hasData: !!data,
+    hasChoices: !!data?.choices,
+    hasContent: !!data?.choices?.[0]?.message?.content
+  });
   
-  if (data?.choices?.[0]?.message?.content) {
-    const content = data.choices[0].message.content.trim();
-    const wordCount = content.split(/\s+/).length;
-    
-    console.log(`📊 ${agent} generated ${wordCount} words, content length: ${content.length} characters`);
-    
-    if (wordCount < 800) {
-      console.warn(`⚠️ ${agent} generated insufficient content (${wordCount} words). Expected minimum: 800 words`);
-      throw new Error(`${agent} generated insufficient content: ${wordCount} words (minimum 800 required)`);
-    }
+  if (error) {
+    console.error(`❌ OpenAI API error for ${agent}:`, error);
+    throw new Error(`Failed on agent ${agent}: ${error.message}`);
+  }
+  
+  // CRITICAL: Enhanced error detection for empty content
+  if (!data?.choices?.[0]?.message?.content) {
+    console.error(`❌ ${agent} returned NO CONTENT:`, {
+      data: data,
+      choices: data?.choices,
+      message: data?.choices?.[0]?.message
+    });
+    throw new Error(`${agent} returned empty content - OpenAI API parameter issue`);
+  }
+  
+  const content = data.choices[0].message.content.trim();
+  const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+  
+  console.log(`📊 ${agent} SUCCESS:`, {
+    wordCount,
+    contentLength: content.length,
+    contentPreview: content.substring(0, 150) + '...'
+  });
+  
+  if (content.length < 50) {
+    console.error(`❌ ${agent} generated practically empty content:`, {
+      contentLength: content.length,
+      content: content
+    });
+    throw new Error(`${agent} generated practically empty content: ${content.length} characters`);
+  }
+  
+  if (wordCount < 800) {
+    console.warn(`⚠️ ${agent} generated insufficient content (${wordCount} words). Expected minimum: 800 words`);
+    throw new Error(`${agent} generated insufficient content: ${wordCount} words (minimum 800 required)`);
+  }
     
     const progressData = job.progress_data || {};
     const hermeticSections = progressData.hermetic_sections || [];
@@ -398,8 +464,8 @@ Blueprint Context: ${JSON.stringify(blueprint, null, 2)}
 Focus specifically on Gate ${gateNumber} and how it expresses through each Hermetic Law in this person's unique configuration. Generate 1,200+ words of deep, integrated analysis.`
         }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
-      temperature: 0.7
+      model: 'gpt-4.1-mini-2025-04-14'
+      // FIXED: Removed temperature parameter for GPT-4.1+ models
     }
   });
   
@@ -492,8 +558,8 @@ ${allSections.map(s => s.content.substring(0, 500)).join('\n\n')}
 Provide 800+ words of deep analysis focused specifically on the ${dimensionName} dimension.`
         }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
-      temperature: 0.7
+      model: 'gpt-4.1-mini-2025-04-14'
+      // FIXED: Removed temperature parameter for GPT-4.1+ models
     }
   });
   
@@ -559,6 +625,40 @@ async function finalizeReport(job: any) {
     const actualWordCount = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
     return total + actualWordCount;
   }, 0);
+  
+  // CRITICAL: Enhanced logging and validation
+  console.log(`🏁 FINAL REPORT ASSEMBLY:`, {
+    totalSections: finalSections.length,
+    systemSections: systemSections.length,
+    hermeticSections: hermeticSections.length,
+    gateSections: gateSections.length,
+    intelligenceSections: intelligenceSections.length,
+    totalWordCount: totalWordCount
+  });
+  
+  // Check each section for content
+  const emptySections = finalSections.filter(section => !section.content || section.content.trim().length < 50);
+  if (emptySections.length > 0) {
+    console.error(`❌ EMPTY SECTIONS DETECTED:`, {
+      count: emptySections.length,
+      sections: emptySections.map(s => ({ type: s.agent_type, contentLength: s.content?.length || 0 }))
+    });
+  }
+  
+  // CRITICAL: Validate minimum word count
+  if (totalWordCount < 5000) {
+    console.error(`❌ CRITICAL: Report too short (${totalWordCount} words). Expected minimum: 5,000 words`);
+    await supabase
+      .from('hermetic_processing_jobs')
+      .update({
+        status: 'failed',
+        error_message: `Report generation failed - only ${totalWordCount} words generated (minimum 5,000 required)`,
+        current_step: `Failed: Insufficient content generated`,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', jobId);
+    return;
+  }
   
   const finalReport = {
     sections: finalSections,
