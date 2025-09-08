@@ -154,12 +154,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.humanDesign')}</h4>
-                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg mb-2">
-                    <p className={`${getTextSize('text-lg')} font-cormorant font-bold break-words`}>{hdType}</p>
-                  </div>
-                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
-                    <p className={`${getTextSize('text-xs')} font-inter break-words`}>{authority} {t('blueprint.descriptions.authority')}</p>
-                  </div>
+                  <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{hdType}</p>
+                  <p className={`${getTextSize('text-xs')} font-inter text-soul-purple break-words`}>{authority} {t('blueprint.descriptions.authority')}</p>
                 </div>
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.chineseZodiac')}</h4>
