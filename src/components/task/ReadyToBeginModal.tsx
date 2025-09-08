@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { safeInterpolateTranslation } from "@/utils/translation-utils";
 
 interface ReadyToBeginModalProps {
   open: boolean;
@@ -25,7 +26,7 @@ export const ReadyToBeginModal: React.FC<ReadyToBeginModalProps> = ({
       <div className="bg-white rounded-xl shadow-2xl p-8 max-w-xs w-full border border-slate-200">
         <div className="text-xl font-semibold mb-3 text-center">{t('modal.readyToBegin')}</div>
         <div className="text-gray-700 mb-4 text-center">
-          Session duration: {estimatedDuration || "~30 mins"}<br />
+          {safeInterpolateTranslation(t('modal.sessionDuration'), { duration: estimatedDuration || "~30 mins" })}<br />
           {t('modal.coachGuide')}<br />
           {t('modal.readyToFocus')}
         </div>

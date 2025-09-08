@@ -94,7 +94,39 @@ const translations: Record<Language, Translations> = {
       readyToBegin: 'Ready to Work Together?',
       coachGuide: 'Your coach will collaborate with you on this task.',
       readyToFocus: 'Ready to tackle this together?',
-      letsGo: "Start Task Collaboration"
+      letsGo: "Start Task Collaboration",
+      sessionDuration: 'Session duration: {duration}'
+    },
+    // Focus Mode translations
+    focusMode: {
+      title: 'Focus Mode: {taskTitle}',
+      sessionBanner: 'You are now in Focus Mode',
+      exitMode: 'Exit Focus Mode'
+    },
+    // Coach translations
+    coach: {
+      preparingPlan: 'Coach is preparing your plan...',
+      readyToHelp: 'Your coach is ready to help',
+      loadingMessage: 'Coach is analyzing your task...'
+    },
+    // Tour & Navigation translations
+    tour: {
+      skipTour: 'Skip Tour',
+      nextStep: 'Next',
+      gotIt: 'Got It',
+      restartTour: 'Restart Tour',
+      viewFullJourney: 'View Full Journey',
+      step: 'Step {current} of {total}',
+      guidedTour: 'Guided Tour'
+    },
+    // Guided Tour translations
+    guidedTour: {
+      soulCoach: 'Soul Coach',
+      stepOf: 'Step {tourStep} of {totalSteps}',
+      orientation: 'Getting you oriented with your personalized journey to help you understand how everything works together.',
+      skipTour: 'Skip Tour',
+      next: 'Next',
+      gotIt: 'Got It'
     },
     // Cancel action (used by modal)
     cancel: 'Cancel',
@@ -734,15 +766,6 @@ const translations: Record<Language, Translations> = {
     },
 
     // Success flow components
-    guidedTour: {
-      soulCoach: 'Soul Coach Guidance',
-      stepOf: 'Step {tourStep} of {totalSteps}',
-      orientation: 'Getting you oriented with your personalized journey...',
-      skipTour: 'Skip Tour',
-      next: 'Next',
-      gotIt: 'Got it!'
-    },
-
     journeyOverview: {
       title: 'Your Complete Journey Overview',
       titleShort: 'Journey Overview',
@@ -1200,6 +1223,37 @@ const translations: Record<Language, Translations> = {
       coachGuide: 'Je coach zal met je samenwerken aan deze taak.',
       readyToFocus: 'Klaar om dit samen aan te pakken?',
       letsGo: "Start Taak Samenwerking"
+    },
+    // Focus Mode translations
+    focusMode: {
+      title: 'Focus Modus: {taskTitle}',
+      sessionBanner: 'Je bent nu in Focus Modus',
+      exitMode: 'Verlaat Focus Modus'
+    },
+    // Coach translations
+    coach: {
+      preparingPlan: 'Coach bereidt je plan voor...',
+      readyToHelp: 'Je coach is klaar om te helpen',
+      loadingMessage: 'Coach analyseert je taak...'
+    },
+    // Tour & Navigation translations
+    tour: {
+      skipTour: 'Tour Overslaan',
+      nextStep: 'Volgende',
+      gotIt: 'Begrepen',
+      restartTour: 'Tour Herstarten',
+      viewFullJourney: 'Bekijk Volledige Reis',
+      step: 'Stap {current} van {total}',
+      guidedTour: 'Begeleide Tour'
+    },
+    // Guided Tour translations
+    guidedTour: {
+      soulCoach: 'Zielcoach',
+      stepOf: 'Stap {tourStep} van {totalSteps}',
+      orientation: 'Je wordt wegwijs gemaakt in je gepersonaliseerde reis om te helpen begrijpen hoe alles samenwerkt.',
+      skipTour: 'Tour Overslaan',
+      next: 'Volgende',
+      gotIt: 'Begrepen'
     },
     // Cancel action (used by modal)
     cancel: 'Annuleren',
@@ -2108,16 +2162,6 @@ const translations: Record<Language, Translations> = {
         testMessage: 'Typ een bericht om te testen...',
         askCoach: 'Vraag over je taak, verzoek acties, of krijg begeleiding...'
       }
-    },
-
-    // Guided Tour
-    guidedTour: {
-      soulCoach: 'Ziel Coach Begeleiding',
-      stepOf: 'Stap {tourStep} van {totalSteps}',
-      orientation: 'Je wordt wegwijs gemaakt in je gepersonaliseerde reis om te helpen begrijpen hoe alles samenwerkt.',
-      skipTour: 'Tour Overslaan',
-      next: 'Volgende',
-      gotIt: 'Begrepen!'
     },
 
     // Journey Overview
