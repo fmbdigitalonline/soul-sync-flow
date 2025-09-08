@@ -247,8 +247,9 @@ Focus on your specific system expertise.`
   console.log(`📥 OpenAI response for ${translator}:`, {
     error: error,
     hasData: !!data,
-    hasChoices: !!data?.choices,
-    hasContent: !!data?.choices?.[0]?.message?.content
+    hasContent: !!data?.content,
+    contentLength: data?.content_length || 0,
+    modelUsed: data?.model_used
   });
   
   if (error) {
@@ -256,17 +257,18 @@ Focus on your specific system expertise.`
     throw new Error(`Failed on translator ${translator}: ${error.message}`);
   }
   
-  // CRITICAL: Enhanced error detection for empty content
-  if (!data?.choices?.[0]?.message?.content) {
+  // CRITICAL: Enhanced error detection for empty content (NEW FORMAT)
+  if (!data?.content) {
     console.error(`❌ ${translator} returned NO CONTENT:`, {
       data: data,
-      choices: data?.choices,
-      message: data?.choices?.[0]?.message
+      responseType: typeof data,
+      hasContent: !!data?.content,
+      contentLength: data?.content_length || 0
     });
     throw new Error(`${translator} returned empty content - OpenAI API parameter issue`);
   }
   
-  const content = data.choices[0].message.content.trim();
+  const content = data.content.trim();
   const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
   
   console.log(`📊 ${translator} SUCCESS:`, {
@@ -367,16 +369,18 @@ Generate comprehensive analysis with practical applications.`
   }
   
   // CRITICAL: Enhanced error detection for empty content
-  if (!data?.choices?.[0]?.message?.content) {
+  // CRITICAL: Enhanced error detection for empty content (NEW FORMAT)
+  if (!data?.content) {
     console.error(`❌ ${agent} returned NO CONTENT:`, {
       data: data,
-      choices: data?.choices,
-      message: data?.choices?.[0]?.message
+      responseType: typeof data,
+      hasContent: !!data?.content,
+      contentLength: data?.content_length || 0
     });
     throw new Error(`${agent} returned empty content - OpenAI API parameter issue`);
   }
   
-  const content = data.choices[0].message.content.trim();
+  const content = data.content.trim();
   const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
   
   console.log(`📊 ${agent} SUCCESS:`, {
@@ -471,8 +475,8 @@ Focus specifically on Gate ${gateNumber} and how it expresses through each Herme
   
   if (error) throw new Error(`Failed on gate ${gateNumber}: ${error.message}`);
   
-  if (data?.choices?.[0]?.message?.content) {
-    const content = data.choices[0].message.content.trim();
+  if (data?.content) {
+    const content = data.content.trim();
     const wordCount = content.split(/\s+/).length;
     
     console.log(`📊 Gate ${gateNumber} analysis generated ${wordCount} words, content length: ${content.length} characters`);
@@ -565,8 +569,8 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
   
   if (error) throw new Error(`Failed on intelligence agent ${agent}: ${error.message}`);
   
-  if (data?.choices?.[0]?.message?.content) {
-    const content = data.choices[0].message.content.trim();
+  if (data?.content) {
+    const content = data.content.trim();
     const wordCount = content.split(/\s+/).length;
     
     console.log(`📊 Intelligence agent ${agent} generated ${wordCount} words, content length: ${content.length} characters`);

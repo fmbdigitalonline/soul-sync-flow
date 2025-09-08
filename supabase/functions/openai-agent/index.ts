@@ -628,18 +628,34 @@ serve(async (req) => {
       
       const assistantMessage = data.choices[0].message;
 
-      // CRITICAL: Check for empty content early
-      if (!assistantMessage?.content || assistantMessage.content.trim().length === 0) {
-        console.error('❌ OpenAI returned empty content!', {
+      // CRITICAL: Check for empty content early (but allow tool calls)
+      if ((!assistantMessage?.content || assistantMessage.content.trim().length === 0) && 
+          (!assistantMessage?.tool_calls || assistantMessage.tool_calls.length === 0)) {
+        console.error('❌ OpenAI returned empty content and no tool calls!', {
           message: assistantMessage,
           model: requestBody.model,
           parameters: {
             max_tokens: requestBody.max_tokens,
             max_completion_tokens: requestBody.max_completion_tokens,
             temperature: requestBody.temperature
-          }
+          },
+          raw_response: data
         });
-        throw new Error('OpenAI returned empty content - possibly due to parameter mismatch');
+        return new Response(JSON.stringify({ 
+          error: 'OpenAI returned empty content - parameter mismatch or model error',
+          debug: {
+            model: requestBody.model,
+            parameters_sent: {
+              max_tokens: requestBody.max_tokens,
+              max_completion_tokens: requestBody.max_completion_tokens,
+              temperature: requestBody.temperature
+            },
+            openai_response: data
+          }
+        }), {
+          status: 502,  // Bad Gateway - API responded but with invalid content
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       conversationMessages.push(assistantMessage);
@@ -671,7 +687,37 @@ serve(async (req) => {
     console.log('📝 Final content length:', finalContent.length);
     console.log('📝 Final content preview:', finalContent.substring(0, 200) + '...');
 
-    return new Response(JSON.stringify(data), {
+    // CRITICAL: Validate content before returning success
+    if (!finalContent || finalContent.trim().length === 0) {
+      console.error('❌ Final content is empty after conversation completion!');
+      return new Response(JSON.stringify({ 
+        error: 'Agent completed but generated no content'
+      }), {
+        status: 502,  // Bad Gateway - service responded but with invalid content
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // CRITICAL: Validate minimum content length for quality reports
+    if (finalContent.trim().length < 500) {
+      console.error(`❌ Content too short: ${finalContent.length} chars (minimum 500 required)`);
+      return new Response(JSON.stringify({ 
+        error: `Generated content too short: ${finalContent.length} chars (minimum 500 required)`
+      }), {
+        status: 502,  // Bad Gateway - service responded but with insufficient content
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('🎯 Content validation passed - returning successful response');
+
+    // Return ONLY the content, not the full OpenAI response structure
+    return new Response(JSON.stringify({ 
+      content: finalContent,
+      content_length: finalContent.length,
+      model_used: data.model,
+      total_tokens: data.usage?.total_tokens
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
