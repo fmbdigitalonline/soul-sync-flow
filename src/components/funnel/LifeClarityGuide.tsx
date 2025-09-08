@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
 import { SpeechBubble } from '@/components/ui/speech-bubble';
 import { useStreamingMessage } from '@/hooks/use-streaming-message';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
 interface LifeClarityGuideProps {
@@ -34,36 +35,37 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
   const [messageType, setMessageType] = useState<'welcome' | 'guidance' | 'encouragement' | 'completion'>('welcome');
   
   const { streamingContent, isStreaming, streamText, resetStreaming } = useStreamingMessage();
+  const { t } = useLanguage();
   
   // Progress calculation
   const progress = Math.min((currentStep / totalSteps) * 100, 100);
   
-  // Step-specific messages
+  // Step-specific messages using translations
   const stepMessages: Record<number, GuideMessage> = {
     1: {
-      welcome: "Welcome! I'm here to guide you through your life clarity journey. Let's start by understanding what's challenging you most right now.",
-      guidance: "Take your time to reflect on what's really frustrating you. There's no wrong answer - this is about your authentic experience.",
-      encouragement: "Great choice! Understanding your main challenge is the first step toward transformation."
+      welcome: t('funnelGuide.step1.welcome'),
+      guidance: t('funnelGuide.step1.guidance'),
+      encouragement: t('funnelGuide.step1.encouragement')
     },
     2: {
-      welcome: "Now let's explore how satisfied you feel across different areas of your life. This helps us see the bigger picture.",
-      guidance: "Rate honestly - low scores aren't bad, they just show where growth opportunities exist. You need at least 3 areas rated to continue.",
-      encouragement: "Excellent self-awareness! These ratings help us understand your unique situation."
+      welcome: t('funnelGuide.step2.welcome'),
+      guidance: t('funnelGuide.step2.guidance'),
+      encouragement: t('funnelGuide.step2.encouragement')
     },
     3: {
-      welcome: "Everyone approaches change differently. Let's discover your natural transformation style.",
-      guidance: "Think about how you've successfully made changes before. What approach feels most natural to you?",
-      encouragement: "Perfect! Knowing your change style helps us tailor the right approach for you."
+      welcome: t('funnelGuide.step3.welcome'),
+      guidance: t('funnelGuide.step3.guidance'),
+      encouragement: t('funnelGuide.step3.encouragement')
     },
     4: {
-      welcome: "Understanding what you've tried before helps us build on your experience and avoid repeating what didn't work.",
-      guidance: "Be honest about your journey - every attempt teaches us something valuable about what works for you.",
-      encouragement: "Thank you for sharing your journey. Every experience brings valuable insights."
+      welcome: t('funnelGuide.step4.welcome'),
+      guidance: t('funnelGuide.step4.guidance'),
+      encouragement: t('funnelGuide.step4.encouragement')
     },
     5: {
-      welcome: "Finally, let's explore your vision of transformation. What would your ideal life look like?",
-      guidance: "Paint a vivid picture of your transformed life. The more specific and emotional, the more powerful your blueprint becomes.",
-      completion: "Wonderful! Your vision is the compass that will guide your transformation. Your personalized Life Clarity Report is ready!"
+      welcome: t('funnelGuide.step5.welcome'),
+      guidance: t('funnelGuide.step5.guidance'),
+      completion: t('funnelGuide.step5.completion')
     }
   };
 

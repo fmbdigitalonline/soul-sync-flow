@@ -510,6 +510,45 @@ const translations: Record<Language, Translations> = {
         reportAwaits: 'Your report awaits'
       }
     },
+    
+    // Funnel Guide Messages
+    funnelGuide: {
+      step1: {
+        welcome: "Welcome! I'm here to guide you through your life clarity journey. Let's start by understanding what's challenging you most right now.",
+        guidance: "Take your time to reflect on what's really frustrating you. There's no wrong answer - this is about your authentic experience.",
+        encouragement: "Great choice! Understanding your main challenge is the first step toward transformation."
+      },
+      step2: {
+        welcome: "Now let's explore how satisfied you feel across different areas of your life. This helps us see the bigger picture.",
+        guidance: "Rate honestly - low scores aren't bad, they just show where growth opportunities exist. You need at least 3 areas rated to continue.",
+        encouragement: "Excellent self-awareness! These ratings help us understand your unique situation."
+      },
+      step3: {
+        welcome: "Everyone approaches change differently. Let's discover your natural transformation style.",
+        guidance: "Think about how you've successfully made changes before. What approach feels most natural to you?",
+        encouragement: "Perfect! Knowing your change style helps us tailor the right approach for you."
+      },
+      step4: {
+        welcome: "Understanding what you've tried before helps us build on your experience and avoid repeating what didn't work.",
+        guidance: "Be honest about your journey - every attempt teaches us something valuable about what works for you.",
+        encouragement: "Thank you for sharing your journey. Every experience brings valuable insights."
+      },
+      step5: {
+        welcome: "Finally, let's explore your vision of transformation. What would your ideal life look like?",
+        guidance: "Paint a vivid picture of your transformed life. The more specific and emotional, the more powerful your blueprint becomes.",
+        completion: "Wonderful! Your vision is the compass that will guide your transformation. Your personalized Life Clarity Report is ready!"
+      }
+    },
+    
+    // Intelligence Phases
+    intelligencePhases: {
+      autonomous: "Autonomous",
+      advanced: "Advanced", 
+      developing: "Developing",
+      learning: "Learning",
+      awakening: "Awakening"
+    },
+    
     // Goals & Categories
     goals: {
       categoryPersonal: 'Personal Growth',
@@ -1946,6 +1985,45 @@ const translations: Record<Language, Translations> = {
         reportAwaits: 'Je rapport wacht op je'
       }
     },
+    
+    // Funnel Guide Messages (Dutch)
+    funnelGuide: {
+      step1: {
+        welcome: "Welkom! Ik ben hier om je te begeleiden door je levensduidelijkheidsreis. Laten we beginnen met begrijpen wat je op dit moment het meest uitdaagt.",
+        guidance: "Neem de tijd om na te denken over wat je echt frustreert. Er is geen fout antwoord - dit gaat over je authentieke ervaring.",
+        encouragement: "Geweldige keuze! Je hoofduitdaging begrijpen is de eerste stap naar transformatie."
+      },
+      step2: {
+        welcome: "Laten we nu verkennen hoe tevreden je je voelt in verschillende gebieden van je leven. Dit helpt ons het grotere plaatje te zien.",
+        guidance: "Beoordeel eerlijk - lage scores zijn niet slecht, ze tonen juist waar groeimogelijkheden bestaan. Je hebt minstens 3 gebieden beoordeeld nodig om door te gaan.",
+        encouragement: "Uitstekend zelfbewustzijn! Deze beoordelingen helpen ons je unieke situatie te begrijpen."
+      },
+      step3: {
+        welcome: "Iedereen benadert verandering anders. Laten we je natuurlijke transformatiestijl ontdekken.",
+        guidance: "Denk aan hoe je eerder succesvol veranderingen hebt aangebracht. Welke benadering voelt het meest natuurlijk voor je?",
+        encouragement: "Perfect! Je veranderingsstijl kennen helpt ons de juiste benadering voor jou af te stemmen."
+      },
+      step4: {
+        welcome: "Begrijpen wat je eerder hebt geprobeerd helpt ons voort te bouwen op je ervaring en herhaling van wat niet werkte te vermijden.",
+        guidance: "Wees eerlijk over je reis - elke poging leert ons iets waardevols over wat voor jou werkt.",
+        encouragement: "Dank je voor het delen van je reis. Elke ervaring brengt waardevolle inzichten."
+      },
+      step5: {
+        welcome: "Ten slotte, laten we je visie van transformatie verkennen. Hoe zou je ideale leven eruit zien?",
+        guidance: "Schilder een levendig beeld van je getransformeerde leven. Hoe specifieker en emotioneler, hoe krachtiger je blauwdruk wordt.",
+        completion: "Wonderlijk! Je visie is het kompas dat je transformatie zal leiden. Je gepersonaliseerde Levensduidelijkheidsrapport is klaar!"
+      }
+    },
+    
+    // Intelligence Phases (Dutch)
+    intelligencePhases: {
+      autonomous: "Autonoom",
+      advanced: "Geavanceerd",
+      developing: "Ontwikkelend", 
+      learning: "Lerend",
+      awakening: "Ontwakend"
+    },
+    
     // Goals & Categories
     goals: {
       categoryPersonal: 'Persoonlijke Groei',

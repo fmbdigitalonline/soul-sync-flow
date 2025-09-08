@@ -2,6 +2,7 @@
 import React, { useRef, useEffect, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface IntelligentSoulOrbProps {
   speaking?: boolean;
@@ -49,6 +50,8 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   const [particles, setParticles] = useState<Array<{ x: number, y: number, size: number, speed: number, angle: number, hue?: number }>>([]);
   const [isLevelingUp, setIsLevelingUp] = useState(false);
   const [rainbowPhase, setRainbowPhase] = useState(0);
+  
+  const { t } = useLanguage();
   
   // Size mapping - made smaller for more conversation space
   const sizeMap = {
@@ -215,11 +218,11 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   }, [intelligenceLevel]);
 
   const getIntelligencePhase = () => {
-    if (intelligenceLevel >= 100) return "Autonomous";
-    if (intelligenceLevel >= 75) return "Advanced";
-    if (intelligenceLevel >= 50) return "Developing";
-    if (intelligenceLevel >= 25) return "Learning";
-    return "Awakening";
+    if (intelligenceLevel >= 100) return t('intelligencePhases.autonomous');
+    if (intelligenceLevel >= 75) return t('intelligencePhases.advanced');
+    if (intelligenceLevel >= 50) return t('intelligencePhases.developing');
+    if (intelligenceLevel >= 25) return t('intelligencePhases.learning');
+    return t('intelligencePhases.awakening');
   };
 
   return (
