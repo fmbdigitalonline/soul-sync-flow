@@ -33,7 +33,7 @@ export function HomeMenuGrid({ items, className, ...props }: HomeMenuGridProps) 
             {/* Mobile: Compact horizontal layout, Desktop: Vertical layout */}
             <div className="flex sm:flex-col h-full pl-4 sm:pl-0">
               {/* Image container - smaller on mobile */}
-              <div className="w-14 h-14 sm:w-full sm:aspect-[4/3] relative overflow-hidden flex-shrink-0 rounded-md sm:rounded-none mt-2 sm:mt-0">
+              <div className="w-14 h-14 sm:w-full sm:aspect-[4/3] relative overflow-hidden flex-shrink-0 rounded-md sm:rounded-none self-center sm:self-start">
                 {image ? (
                   <img
                     src={image}
