@@ -459,7 +459,7 @@ export default function Onboarding() {
         return (
           <div className="space-y-4 max-w-md mx-auto text-center">
             <h2 className="text-2xl font-display font-bold">{t('onboarding.welcome')}</h2>
-            <p className="text-white/80">
+            <p className="text-foreground/90">
               {t('onboarding.welcomeDesc')}
             </p>
             <div className="pt-4">
@@ -511,7 +511,7 @@ export default function Onboarding() {
                 <Label>{t('onboarding.birthDate')}</Label>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <Label htmlFor="day" className="text-sm text-white/70">{t('onboarding.day')}</Label>
+                    <Label htmlFor="day" className="text-sm text-foreground/80">{t('onboarding.day')}</Label>
                     <Input
                       id="day"
                       type="number"
@@ -524,7 +524,7 @@ export default function Onboarding() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="month" className="text-sm text-white/70">{t('onboarding.month')}</Label>
+                    <Label htmlFor="month" className="text-sm text-foreground/80">{t('onboarding.month')}</Label>
                     <Select value={birthDateComponents.month} onValueChange={(value) => updateBirthDateComponent('month', value)}>
                       <SelectTrigger className="bg-white/5 border-white/10">
                         <SelectValue placeholder={t('onboarding.month')} />
@@ -539,7 +539,7 @@ export default function Onboarding() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="year" className="text-sm text-white/70">{t('onboarding.year')}</Label>
+                    <Label htmlFor="year" className="text-sm text-foreground/80">{t('onboarding.year')}</Label>
                     <Select value={birthDateComponents.year} onValueChange={(value) => updateBirthDateComponent('year', value)}>
                       <SelectTrigger className="bg-white/5 border-white/10">
                         <SelectValue placeholder="YYYY" />
@@ -554,7 +554,7 @@ export default function Onboarding() {
                     </Select>
                   </div>
                 </div>
-                <p className="text-sm text-white/60">
+                <p className="text-sm text-foreground/80">
                   {t('onboarding.selectExactDate')}
                 </p>
               </div>
@@ -585,7 +585,7 @@ export default function Onboarding() {
                   className="bg-white/5 border-white/10"
                   required
                 />
-                <p className="text-sm text-white/60">
+                <p className="text-sm text-foreground/80">
                   {t('onboarding.birthTimeDesc')}
                 </p>
               </div>
@@ -617,7 +617,7 @@ export default function Onboarding() {
                   className="bg-white/5 border-white/10"
                   required
                 />
-                <p className="text-sm text-white/60">
+                <p className="text-sm text-foreground/80">
                   {t('onboarding.birthLocationDesc')}
                 </p>
               </div>
@@ -665,7 +665,7 @@ export default function Onboarding() {
           return (
             <div className="space-y-6 text-center max-w-md mx-auto">
               <h2 className="text-xl font-display font-bold">{t('onboarding.authRequired')}</h2>
-              <p className="text-white/80">{t('onboarding.authRequiredDesc')}</p>
+              <p className="text-foreground/90">{t('onboarding.authRequiredDesc')}</p>
               <Button onClick={() => navigate("/auth")} className="bg-soul-purple hover:bg-soul-purple/90">
                 {t('auth.signIn')}
               </Button>
@@ -723,7 +723,7 @@ export default function Onboarding() {
             ></div>
           ))}
         </div>
-        <div className="text-center text-sm text-white/60">
+        <div className="text-center text-sm text-foreground/80">
           {t('onboarding.step')} {currentStep + 1} {t('onboarding.of')} {steps.length}: {steps[currentStep]}
         </div>
       </div>

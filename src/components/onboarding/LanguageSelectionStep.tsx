@@ -14,7 +14,7 @@ export const LanguageSelectionStep: React.FC<LanguageSelectionStepProps> = ({
   onLanguageSelect,
   selectedLanguage
 }) => {
-  const { language: currentLanguage, setLanguage } = useLanguage();
+  const { language: currentLanguage, setLanguage, t } = useLanguage();
 
   const languages = [
     { 
@@ -49,11 +49,11 @@ export const LanguageSelectionStep: React.FC<LanguageSelectionStepProps> = ({
             <Globe className="w-8 h-8 text-primary" />
           </div>
         </div>
-        <h2 className="text-2xl font-bold font-cormorant">
-          Choose Your Language
+        <h2 className="text-2xl font-bold font-cormorant text-foreground">
+          {t('onboarding.chooseLanguage')}
         </h2>
-        <p className="text-muted-foreground text-sm">
-          Select your preferred language for all AI-generated content, reports, and guidance throughout your journey.
+        <p className="text-foreground/80 text-sm">
+          {t('onboarding.languageDescription')}
         </p>
       </div>
 
@@ -93,9 +93,8 @@ export const LanguageSelectionStep: React.FC<LanguageSelectionStepProps> = ({
       </div>
 
       <div className="bg-muted/30 rounded-lg p-4 text-center">
-        <p className="text-xs text-muted-foreground">
-          <strong>Note:</strong> This selection will apply to all AI-generated content including your personality blueprint, 
-          reports, coaching responses, and personalized guidance. You can change this later in settings.
+        <p className="text-xs text-foreground/70">
+          <strong>Note:</strong> {t('onboarding.languageNote')}
         </p>
       </div>
     </div>
