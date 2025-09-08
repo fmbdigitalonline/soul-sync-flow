@@ -172,8 +172,8 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
   }, [messageType, isStreaming]);
 
   return (
-    <div className={cn("fixed top-6 right-6 z-50", className)}>
-      <div className="flex items-start gap-4">
+    <div className={cn("fixed top-6 right-2 sm:right-6 z-50", className)}>
+      <div className="flex items-start gap-2 sm:gap-4">
         {/* Speech bubble on the left side */}
         <AnimatePresence>
           {showBubble && currentMessage && (
@@ -186,11 +186,11 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
               className="cursor-pointer"
             >
               <div className={cn(
-                "relative w-64 max-w-sm px-4 py-3 cosmic-card",
-                "before:content-[''] before:absolute before:right-[-8px] before:top-1/2 before:-translate-y-1/2",
-                "before:w-0 before:h-0 before:border-[8px] before:border-transparent before:border-l-card"
+                "relative w-48 sm:w-64 max-w-sm px-3 sm:px-4 py-2 sm:py-3 cosmic-card",
+                "before:content-[''] before:absolute before:right-[-6px] sm:before:right-[-8px] before:top-1/2 before:-translate-y-1/2",
+                "before:w-0 before:h-0 before:border-[6px] sm:before:border-[8px] before:border-transparent before:border-l-card"
               )}>
-                <div className="text-sm leading-relaxed text-foreground">
+                <div className="text-xs sm:text-sm leading-relaxed text-foreground">
                   {isStreaming ? streamingContent : currentMessage}
                   {isStreaming && (
                     <motion.span
@@ -216,7 +216,7 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
           <IntelligentSoulOrb
             speaking={isStreaming}
             pulse={!isStreaming}
-            size="lg"
+            size="md"
             stage={orbStage}
             onClick={handleOrbClick}
             intelligenceLevel={progress}
@@ -229,7 +229,7 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center"
+            className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center"
           >
             {currentStep}
           </motion.div>
