@@ -226,16 +226,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-3 bg-soul-purple/5 rounded-3xl">
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.energyType')}</h4>
-                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg mb-2">
-                    <p className={`${getTextSize('text-3xl')} font-cormorant font-bold break-words`}>{hdType}</p>
-                  </div>
+                  <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{hdType}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{t('blueprint.descriptions.sustainableEnergy')}</p>
                 </div>
                 <div className="p-3 bg-soul-purple/5 rounded-3xl">
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.decisionAuthority')}</h4>
-                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg mb-2">
-                    <p className={`${getTextSize('text-xl')} font-cormorant font-bold break-words`}>{authority}</p>
-                  </div>
+                  <p className={`${getTextSize('text-xl')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{authority}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{t('blueprint.descriptions.innerAuthority')}</p>
                 </div>
               </div>
