@@ -683,7 +683,7 @@ serve(async (req) => {
     const requestData = await req.json();
     console.log('📨 Received request data:', JSON.stringify(requestData, null, 2));
     
-    const { messages, model = 'gpt-4o-mini', temperature = 0.7, tools } = requestData;
+    const { messages, model = 'gpt-4.1-mini-2025-04-14', temperature = 0.7, tools } = requestData;
 
     if (!messages || !Array.isArray(messages)) {
       console.error('❌ Invalid messages array:', messages);

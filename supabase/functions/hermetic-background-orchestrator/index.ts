@@ -237,7 +237,7 @@ ${JSON.stringify(blueprint, null, 2)}
 Focus on your specific system expertise.`
         }
       ],
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1-mini-2025-04-14',
       temperature: 0.6
     }
   });
@@ -245,13 +245,23 @@ Focus on your specific system expertise.`
   if (error) throw new Error(`Failed on translator ${translator}: ${error.message}`);
   
   if (data?.choices?.[0]?.message?.content) {
+    const content = data.choices[0].message.content.trim();
+    const wordCount = content.split(/\s+/).length;
+    
+    console.log(`📊 ${translator} generated ${wordCount} words, content length: ${content.length} characters`);
+    
+    if (wordCount < 300) {
+      console.warn(`⚠️ ${translator} generated insufficient content (${wordCount} words). Expected minimum: 300 words`);
+      throw new Error(`${translator} generated insufficient content: ${wordCount} words (minimum 300 required)`);
+    }
+    
     const progressData = job.progress_data || {};
     const systemSections = progressData.system_sections || [];
     
     systemSections.push({
       agent_type: translator,
-      content: data.choices[0].message.content,
-      word_count: data.choices[0].message.content.length
+      content: content,
+      word_count: content.length
     });
     
     await supabase
@@ -261,6 +271,19 @@ Focus on your specific system expertise.`
         last_heartbeat: new Date().toISOString()
       })
       .eq('id', jobId);
+      
+    // Calculate current total word count across all sections
+    const allCurrentSections = [
+      ...systemSections,
+      ...(progressData.hermetic_sections || []),
+      ...(progressData.gate_sections || []),
+      ...(progressData.intelligence_sections || [])
+    ];
+    const currentWordCount = allCurrentSections.reduce((total, section) => {
+      return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    }, 0);
+    
+    await updateJobStatus(jobId, 'processing', `Completed ${translator}`, undefined, currentWordCount);
   }
 }
 
@@ -291,7 +314,7 @@ ${JSON.stringify(blueprint, null, 2)}
 Generate comprehensive analysis with practical applications.`
         }
       ],
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1-mini-2025-04-14',
       temperature: 0.7
     }
   });
@@ -299,13 +322,23 @@ Generate comprehensive analysis with practical applications.`
   if (error) throw new Error(`Failed on agent ${agent}: ${error.message}`);
   
   if (data?.choices?.[0]?.message?.content) {
+    const content = data.choices[0].message.content.trim();
+    const wordCount = content.split(/\s+/).length;
+    
+    console.log(`📊 ${agent} generated ${wordCount} words, content length: ${content.length} characters`);
+    
+    if (wordCount < 800) {
+      console.warn(`⚠️ ${agent} generated insufficient content (${wordCount} words). Expected minimum: 800 words`);
+      throw new Error(`${agent} generated insufficient content: ${wordCount} words (minimum 800 required)`);
+    }
+    
     const progressData = job.progress_data || {};
     const hermeticSections = progressData.hermetic_sections || [];
     
     hermeticSections.push({
       agent_type: agent,
-      content: data.choices[0].message.content,
-      word_count: data.choices[0].message.content.length,
+      content: content,
+      word_count: content.length,
       hermetic_law: agent.replace('_analyst', '')
     });
     
@@ -316,6 +349,19 @@ Generate comprehensive analysis with practical applications.`
         last_heartbeat: new Date().toISOString()
       })
       .eq('id', jobId);
+      
+    // Calculate current total word count across all sections
+    const allCurrentSections = [
+      ...(progressData.system_sections || []),
+      ...hermeticSections,
+      ...(progressData.gate_sections || []),
+      ...(progressData.intelligence_sections || [])
+    ];
+    const currentWordCount = allCurrentSections.reduce((total, section) => {
+      return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    }, 0);
+    
+    await updateJobStatus(jobId, 'processing', `Completed ${agent}`, undefined, currentWordCount);
   }
 }
 
@@ -352,7 +398,7 @@ Blueprint Context: ${JSON.stringify(blueprint, null, 2)}
 Focus specifically on Gate ${gateNumber} and how it expresses through each Hermetic Law in this person's unique configuration. Generate 1,200+ words of deep, integrated analysis.`
         }
       ],
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1-mini-2025-04-14',
       temperature: 0.7
     }
   });
@@ -360,13 +406,23 @@ Focus specifically on Gate ${gateNumber} and how it expresses through each Herme
   if (error) throw new Error(`Failed on gate ${gateNumber}: ${error.message}`);
   
   if (data?.choices?.[0]?.message?.content) {
+    const content = data.choices[0].message.content.trim();
+    const wordCount = content.split(/\s+/).length;
+    
+    console.log(`📊 Gate ${gateNumber} analysis generated ${wordCount} words, content length: ${content.length} characters`);
+    
+    if (wordCount < 600) {
+      console.warn(`⚠️ Gate ${gateNumber} generated insufficient content (${wordCount} words). Expected minimum: 600 words`);
+      throw new Error(`Gate ${gateNumber} generated insufficient content: ${wordCount} words (minimum 600 required)`);
+    }
+    
     const progressData = job.progress_data || {};
     const gateSections = progressData.gate_sections || [];
     
     gateSections.push({
       agent_type: 'gate_hermetic_analyst',
-      content: data.choices[0].message.content,
-      word_count: data.choices[0].message.content.length,
+      content: content,
+      word_count: content.length,
       gate_number: gateNumber
     });
     
@@ -377,6 +433,19 @@ Focus specifically on Gate ${gateNumber} and how it expresses through each Herme
         last_heartbeat: new Date().toISOString()
       })
       .eq('id', jobId);
+      
+    // Calculate current total word count across all sections
+    const allCurrentSections = [
+      ...(progressData.system_sections || []),
+      ...(progressData.hermetic_sections || []),
+      ...gateSections,
+      ...(progressData.intelligence_sections || [])
+    ];
+    const currentWordCount = allCurrentSections.reduce((total, section) => {
+      return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    }, 0);
+    
+    await updateJobStatus(jobId, 'processing', `Completed Gate ${gateNumber} analysis`, undefined, currentWordCount);
   }
 }
 
@@ -423,7 +492,7 @@ ${allSections.map(s => s.content.substring(0, 500)).join('\n\n')}
 Provide 800+ words of deep analysis focused specifically on the ${dimensionName} dimension.`
         }
       ],
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1-mini-2025-04-14',
       temperature: 0.7
     }
   });
@@ -431,13 +500,23 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
   if (error) throw new Error(`Failed on intelligence agent ${agent}: ${error.message}`);
   
   if (data?.choices?.[0]?.message?.content) {
+    const content = data.choices[0].message.content.trim();
+    const wordCount = content.split(/\s+/).length;
+    
+    console.log(`📊 Intelligence agent ${agent} generated ${wordCount} words, content length: ${content.length} characters`);
+    
+    if (wordCount < 400) {
+      console.warn(`⚠️ Intelligence agent ${agent} generated insufficient content (${wordCount} words). Expected minimum: 400 words`);
+      throw new Error(`Intelligence agent ${agent} generated insufficient content: ${wordCount} words (minimum 400 required)`);
+    }
+    
     const progressData = job.progress_data || {};
     const intelligenceSections = progressData.intelligence_sections || [];
     
     intelligenceSections.push({
       agent_type: agent,
-      content: data.choices[0].message.content,
-      word_count: data.choices[0].message.content.length,
+      content: content,
+      word_count: content.length,
       intelligence_dimension: dimensionName
     });
     
@@ -448,6 +527,19 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
         last_heartbeat: new Date().toISOString()
       })
       .eq('id', jobId);
+      
+    // Calculate current total word count across all sections
+    const allCurrentSections = [
+      ...(progressData.system_sections || []),
+      ...(progressData.hermetic_sections || []),
+      ...(progressData.gate_sections || []),
+      ...intelligenceSections
+    ];
+    const currentWordCount = allCurrentSections.reduce((total, section) => {
+      return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    }, 0);
+    
+    await updateJobStatus(jobId, 'processing', `Completed ${dimensionName} intelligence extraction`, undefined, currentWordCount);
   }
 }
 
@@ -463,7 +555,10 @@ async function finalizeReport(job: any) {
   const intelligenceSections = progress_data?.intelligence_sections || [];
   
   const finalSections = [...systemSections, ...hermeticSections, ...gateSections, ...intelligenceSections];
-  const totalWordCount = finalSections.reduce((total, section) => total + Math.floor(section.word_count / 5), 0);
+  const totalWordCount = finalSections.reduce((total, section) => {
+    const actualWordCount = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    return total + actualWordCount;
+  }, 0);
   
   const finalReport = {
     sections: finalSections,
@@ -495,15 +590,25 @@ async function finalizeReport(job: any) {
 
 // ============ HELPER FUNCTIONS ============
 
-async function updateJobStatus(jobId: string, status: string, message: string) {
+async function updateJobStatus(jobId: string, status: string, message: string, progressPercentage?: number, currentWordCount?: number) {
+  const updateData: any = {
+    status: status,
+    current_step: message,
+    last_heartbeat: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  
+  if (progressPercentage !== undefined) {
+    updateData.progress_percentage = progressPercentage;
+  }
+  
+  if (currentWordCount !== undefined) {
+    updateData.current_step = `${message} (${currentWordCount.toLocaleString()} words generated)`;
+  }
+  
   const { error } = await supabase
     .from('hermetic_processing_jobs')
-    .update({
-      status: status,
-      current_step: message,
-      last_heartbeat: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    })
+    .update(updateData)
     .eq('id', jobId);
     
   if (error) {
