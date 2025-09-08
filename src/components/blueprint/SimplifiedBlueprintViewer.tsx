@@ -243,21 +243,15 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.strategy')}</h5>
-                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
-                    <p className={`${getTextSize('text-lg')} font-inter font-bold capitalize break-words`}>{strategy}</p>
-                  </div>
+                  <p className={`${getTextSize('text-lg')} font-inter font-bold capitalize text-soul-purple break-words`}>{strategy}</p>
                 </div>
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.profile')}</h5>
-                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
-                    <p className={`${getTextSize('text-lg')} font-inter font-bold break-words`}>{profile}</p>
-                  </div>
+                  <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple break-words`}>{profile}</p>
                 </div>
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.pacing')}</h5>
-                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
-                    <p className={`${getTextSize('text-lg')} font-inter font-bold capitalize break-words`}>{pacing}</p>
-                  </div>
+                  <p className={`${getTextSize('text-lg')} font-inter font-bold capitalize text-soul-purple break-words`}>{pacing}</p>
                 </div>
               </div>
             </div>
