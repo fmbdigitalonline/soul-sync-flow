@@ -268,20 +268,20 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
           <div className={`${spacing.card} pt-0`}>
             <div className="grid grid-cols-1 gap-6 w-full max-w-full">
               <div className="space-y-4">
-                <div className="p-3 bg-soul-purple/5 rounded-3xl">
+                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.lifePathNumber')}</h4>
                   <p className={`${getTextSize('text-4xl')} font-cormorant font-bold text-soul-purple`}>{lifePath}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{lifePathKeyword}</p>
                   <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>{t('blueprint.descriptions.coreLifePurpose')}</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-3 bg-soul-purple/5 rounded-3xl">
+                  <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.expressionNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{expressionNumber}</p>
                     <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{expressionKeyword}</p>
                     <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>{t('blueprint.descriptions.naturalTalents')}</p>
                   </div>
-                  <div className="p-3 bg-soul-purple/5 rounded-3xl">
+                  <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.soulUrgeNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{soulUrgeNumber}</p>
                     <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{soulUrgeKeyword}</p>
@@ -289,13 +289,13 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-3 bg-soul-purple/5 rounded-3xl">
+                  <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.personalityNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{personalityNumber}</p>
                     <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{personalityKeyword}</p>
                     <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>{t('blueprint.descriptions.howOthersPerceive')}</p>
                   </div>
-                  <div className="p-3 bg-soul-purple/5 rounded-3xl">
+                  <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.birthdayNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{birthdayNumber}</p>
                     <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{birthdayKeyword}</p>
