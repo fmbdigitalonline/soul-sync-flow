@@ -17,8 +17,10 @@ import { useOnboarding3D } from "@/hooks/use-onboarding-3d";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { PersonalityFusion } from "@/components/blueprint/PersonalityFusion";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, Language } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { LanguageSelectionStep } from "@/components/onboarding/LanguageSelectionStep";
+import { userLanguagePreferenceService } from "@/services/user-language-preference-service";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -33,6 +35,7 @@ export default function Onboarding() {
   // Use simple navigation instead of 3D navigation for better mobile experience
   const [currentStep, setCurrentStep] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
 
   // Form data state - update personality to store full profile
   const [formData, setFormData] = useState({
@@ -59,8 +62,9 @@ export default function Onboarding() {
   const navigationTriggeredRef = useRef(false);
   const goalSelectionTriggeredRef = useRef(false);
 
-  // Steps mapping
+  // Steps mapping - Language selection is now first
   const steps = [
+    "Choose Language", // Static since language context might not be initialized yet
     t('onboarding.welcome'),
     t('onboarding.whatsYourName'),
     t('onboarding.whenWereBorn'),
@@ -127,6 +131,26 @@ export default function Onboarding() {
   // Update birth date components
   const updateBirthDateComponent = (component: 'day' | 'month' | 'year', value: string) => {
     setBirthDateComponents(prev => ({ ...prev, [component]: value }));
+  };
+
+  // Handle language selection
+  const handleLanguageSelect = async (lang: Language) => {
+    setSelectedLanguage(lang);
+    
+    // Save language preference immediately if user is authenticated
+    if (user) {
+      const result = await userLanguagePreferenceService.saveLanguagePreference(user.id, lang);
+      if (result.success) {
+        console.log('✅ Language preference saved for authenticated user');
+      } else {
+        console.warn('⚠️ Failed to save language preference:', result.error);
+      }
+    }
+    
+    // Move to next step automatically after a brief delay
+    setTimeout(() => {
+      goToNextStep();
+    }, 500);
   };
 
   // Validate birth date
@@ -296,6 +320,14 @@ export default function Onboarding() {
       if (success) {
         console.log("Blueprint updated with coaching preferences successfully");
         
+        // Save language preference if not already saved
+        if (user && selectedLanguage) {
+          const langResult = await userLanguagePreferenceService.saveLanguagePreference(user.id, selectedLanguage);
+          if (langResult.success) {
+            console.log('✅ Final language preference save successful');
+          }
+        }
+        
         // Start personality report generation in background
         setTimeout(async () => {
           await generatePersonalityReportInBackground();
@@ -356,7 +388,7 @@ export default function Onboarding() {
   }, [blueprintGenerated, navigate]);
 
   useEffect(() => {
-    if (currentStep === 6 && !authLoading && !user) {
+    if (currentStep === 7 && !authLoading && !user) {
       console.log("User not authenticated, redirecting to auth page");
       toast({
         title: t('onboarding.authRequired'),
@@ -416,7 +448,14 @@ export default function Onboarding() {
   // Render the appropriate content based on the current step
   const renderStepContent = () => {
     switch (currentStep) {
-      case 0: // Welcome
+      case 0: // Language Selection
+        return (
+          <LanguageSelectionStep
+            onLanguageSelect={handleLanguageSelect}
+            selectedLanguage={selectedLanguage}
+          />
+        );
+      case 1: // Welcome
         return (
           <div className="space-y-4 max-w-md mx-auto text-center">
             <h2 className="text-2xl font-display font-bold">{t('onboarding.welcome')}</h2>
@@ -433,7 +472,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 1: // Full Name
+      case 2: // Full Name
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.whatsYourName')}</h2>
@@ -463,7 +502,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 2: // Birth Date
+      case 3: // Birth Date
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.whenWereBorn')}</h2>
@@ -531,7 +570,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 3: // Birth Time
+      case 4: // Birth Time
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.whatTimeWereBorn')}</h2>
@@ -562,7 +601,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 4: // Birth Location
+      case 5: // Birth Location
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.whereWereBorn')}</h2>
