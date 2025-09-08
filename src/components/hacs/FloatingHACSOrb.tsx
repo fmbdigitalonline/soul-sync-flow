@@ -627,7 +627,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         <div className={cn(
           "fixed z-40 pointer-events-none",
           // Consistent top-right positioning across all screen sizes
-          "top-12 right-3 sm:right-4 lg:top-40 lg:right-6",
+          "top-6 right-3 sm:right-4 lg:top-32 lg:right-6",
           className
         )}>
           <div className="relative pointer-events-auto">
