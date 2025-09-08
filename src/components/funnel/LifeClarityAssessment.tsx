@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { LifeClarityGuide } from "./LifeClarityGuide";
 
 interface FunnelData {
@@ -24,6 +25,7 @@ interface LifeClarityAssessmentProps {
 export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ onComplete }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { isUltraNarrow } = useIsMobile();
   const [currentStep, setCurrentStep] = useState(1);
   const [guideIntroComplete, setGuideIntroComplete] = useState(false);
   const [funnelData, setFunnelData] = useState<FunnelData>({
@@ -159,13 +161,23 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
                       {funnelData.lifeSatisfaction[domain.key] || 0}/10
                     </span>
                   </div>
-                  <div className="flex gap-1 overflow-x-auto pb-2">
+                  <div className={cn(
+                    "pb-2",
+                    isUltraNarrow 
+                      ? "grid grid-cols-5 gap-0.5" 
+                      : "flex gap-1 overflow-x-auto scrollbar-hide scroll-smooth"
+                  )}>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
                       <Button
                         key={value}
                         variant={funnelData.lifeSatisfaction[domain.key] === value ? "default" : "outline"}
                         size="sm"
-                        className="h-10 w-10 p-0 text-sm touch-manipulation flex-shrink-0"
+                        className={cn(
+                          "text-sm touch-manipulation",
+                          isUltraNarrow 
+                            ? "h-8 w-full p-0 text-xs" 
+                            : "h-10 w-10 p-0 flex-shrink-0"
+                        )}
                         onClick={() => handleSatisfactionChange(domain.key, value)}
                       >
                         {value}
@@ -269,7 +281,10 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
             </div>
             <Progress value={progress} className="w-full h-2" />
           </CardHeader>
-          <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
+          <CardContent className={cn(
+            "space-y-4 sm:space-y-6",
+            isUltraNarrow ? "px-3" : "px-4 sm:px-6"
+          )}>
             <div className={cn(
               "transition-all duration-500 ease-in-out",
               guideIntroComplete ? "opacity-100 pointer-events-auto" : "opacity-30 pointer-events-none"
