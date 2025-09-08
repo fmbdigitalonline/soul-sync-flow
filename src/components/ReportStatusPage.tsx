@@ -15,6 +15,8 @@ interface HermeticProcessingJob {
   job_type: string;
   status: string;
   current_step?: string;
+  current_stage?: string;
+  current_step_index?: number;
   current_phase?: number;
   progress_percentage?: number;
   progress_data?: any;
@@ -43,20 +45,25 @@ export function ReportStatusPage() {
 
   const fetchJobStatus = async () => {
     if (!jobId || !user) {
-      console.log('fetchJobStatus: Missing jobId or user', { jobId, user: !!user });
+      console.log('🔍 REPORT STATUS: Missing requirements', { jobId, user: !!user });
       return;
     }
 
+    console.log('🔍 REPORT STATUS: Fetching status for job:', jobId, 'user:', user.id);
+
     try {
-      console.log('Fetching job status for job:', jobId, 'user:', user.id);
-      
       const { data, error } = await supabase
         .rpc('get_hermetic_job_status', { job_id: jobId });
 
-      console.log('RPC response:', { data, error });
+      console.log('📡 REPORT STATUS: RPC response:', { 
+        hasData: !!data, 
+        error: error,
+        dataKeys: data ? Object.keys(data) : [],
+        rawData: data 
+      });
 
       if (error) {
-        console.error('RPC error:', error);
+        console.error('❌ REPORT STATUS: RPC error:', error);
         toast({
           title: t('toast.error.databaseError'),
           description: `Failed to fetch job status: ${error.message}`,
@@ -69,11 +76,10 @@ export function ReportStatusPage() {
       // Handle new error response format from improved RPC function
       if (data && typeof data === 'object' && 'error' in data) {
         const errorData = data as unknown as RPCErrorResponse;
-        console.log('Job status error:', errorData.error, errorData.message);
+        console.log('⚠️ REPORT STATUS: Job status error:', errorData.error, errorData.message);
         
         if (errorData.error === 'authentication_required') {
-          console.log('Authentication required - retrying in 2 seconds...');
-          // Retry after a brief delay to allow auth to settle
+          console.log('🔐 REPORT STATUS: Authentication required - retrying in 2 seconds...');
           setTimeout(() => {
             if (user) fetchJobStatus();
           }, 2000);
@@ -81,7 +87,7 @@ export function ReportStatusPage() {
         }
         
         if (errorData.error === 'job_not_found') {
-          console.log('Job not found or access denied');
+          console.log('❌ REPORT STATUS: Job not found or access denied');
           setJob(null);
           setLoading(false);
           return;
@@ -90,9 +96,8 @@ export function ReportStatusPage() {
 
       // Check if we got empty data (legacy fallback)
       if (!data || Object.keys(data).length === 0) {
-        console.log('No job data returned - checking direct table access...');
+        console.log('📋 REPORT STATUS: No job data returned - trying direct table access...');
         
-        // Try direct table query as fallback
         const { data: directData, error: directError } = await supabase
           .from('hermetic_processing_jobs')
           .select('*')
@@ -100,15 +105,21 @@ export function ReportStatusPage() {
           .eq('user_id', user.id)
           .single();
         
+        console.log('🔍 REPORT STATUS: Direct query result:', {
+          hasData: !!directData,
+          error: directError,
+          jobData: directData
+        });
+        
         if (directError) {
-          console.error('Direct query also failed:', directError);
+          console.error('❌ REPORT STATUS: Direct query failed:', directError);
           setJob(null);
           setLoading(false);
           return;
         }
         
         if (directData) {
-          console.log('Direct query succeeded, using direct data');
+          console.log('✅ REPORT STATUS: Direct query succeeded');
           setJob(directData as unknown as HermeticProcessingJob);
           setLoading(false);
         } else {
@@ -118,42 +129,92 @@ export function ReportStatusPage() {
         return;
       }
 
-      setJob(data as unknown as HermeticProcessingJob);
+      const jobData = data as unknown as HermeticProcessingJob;
+        console.log('📊 REPORT STATUS: Job details:', {
+          jobId: jobData.id,
+          status: jobData.status,
+          progress: jobData.progress_percentage,
+          currentStep: jobData.current_step,
+          currentStage: jobData.current_stage,
+          stepIndex: jobData.current_step_index,
+          lastHeartbeat: jobData.last_heartbeat,
+          hasProgressData: !!jobData.progress_data,
+          hasResultData: !!jobData.result_data
+        });
+
+      // Log detailed progress if available
+      if (jobData.progress_data) {
+        const pd = jobData.progress_data;
+        const wordCount = [
+          ...(pd.system_sections || []),
+          ...(pd.hermetic_sections || []),
+          ...(pd.gate_sections || []),
+          ...(pd.intelligence_sections || [])
+        ].reduce((total, section) => {
+          return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+        }, 0);
+
+        console.log('📈 REPORT STATUS: Progress breakdown:', {
+          systemSections: pd.system_sections?.length || 0,
+          hermeticSections: pd.hermetic_sections?.length || 0,
+          gateSections: pd.gate_sections?.length || 0,
+          intelligenceSections: pd.intelligence_sections?.length || 0,
+          totalWordCount: wordCount,
+          progressData: pd
+        });
+      }
+
+      setJob(jobData);
       setLoading(false);
 
-      // Handle status changes
-      const jobData = data as unknown as HermeticProcessingJob;
+      // Handle status changes with enhanced logging
       if (jobData?.status === 'completed') {
+        console.log('🎉 REPORT STATUS: Job completed successfully!', {
+          jobId: jobData.id,
+          completedAt: jobData.completed_at,
+          hasResultData: !!jobData.result_data
+        });
         setIsPolling(false);
         toast({
           title: t('toast.success.reportComplete'),
           description: "Your hermetic report has been generated successfully.",
         });
         
-        // Redirect to report view after a brief delay
         setTimeout(() => {
+          console.log('🚀 REPORT STATUS: Redirecting to report view...');
           navigate(`/reports/view/${jobData.id}`);
         }, 2000);
         
       } else if (jobData?.status === 'failed') {
+        console.error('❌ REPORT STATUS: Job failed!', {
+          jobId: jobData.id,
+          errorMessage: jobData.error_message,
+          failedAt: jobData.updated_at
+        });
         setIsPolling(false);
         toast({
           title: t('toast.error.generationFailed'),
-          description: "Report generation failed",
+          description: jobData.error_message || "Report generation failed",
           variant: "destructive"
+        });
+      } else {
+        console.log('⏳ REPORT STATUS: Job still in progress:', {
+          status: jobData.status,
+          progress: jobData.progress_percentage,
+          currentStep: jobData.current_step
         });
       }
 
     } catch (error) {
-      console.error('Error fetching job status:', error);
+      console.error('💥 REPORT STATUS: Unexpected error:', error);
       toast({
         title: t('toast.error.networkError'),
         description: "Unable to connect to the server. Retrying...",
         variant: "destructive"
       });
       
-      // Retry after a delay
       setTimeout(() => {
+        console.log('🔄 REPORT STATUS: Retrying after error...');
         if (user) fetchJobStatus();
       }, 3000);
       
@@ -172,13 +233,22 @@ export function ReportStatusPage() {
   }, [jobId, user, authLoading]);
 
   useEffect(() => {
-    if (!isPolling || !user) return;
+    if (!isPolling || !user) {
+      console.log('🛑 REPORT STATUS POLLING: Stopped', { isPolling, hasUser: !!user });
+      return;
+    }
+
+    console.log('🔄 REPORT STATUS POLLING: Starting polling every 3 seconds');
 
     const pollInterval = setInterval(() => {
+      console.log('⏰ REPORT STATUS POLLING: Fetching update...');
       fetchJobStatus();
-    }, 5000); // Poll every 5 seconds
+    }, 3000); // Faster polling (3 seconds)
 
-    return () => clearInterval(pollInterval);
+    return () => {
+      console.log('🛑 REPORT STATUS POLLING: Cleanup');
+      clearInterval(pollInterval);
+    };
   }, [isPolling, jobId, user]);
 
   const getStatusIcon = (status: string) => {

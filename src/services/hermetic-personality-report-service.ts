@@ -82,19 +82,23 @@ class HermeticPersonalityReportService {
     error?: string 
   }> {
     try {
-      console.log('🌟 Creating Backend Hermetic Report Job...');
-      console.log('📋 Blueprint structure:', {
+      console.log('🌟 HERMETIC SERVICE: Creating Backend Hermetic Report Job...');
+      console.log('📋 HERMETIC SERVICE: Blueprint structure:', {
         blueprintId: blueprint.id,
         userId: blueprint.user_id,
         hasUserMeta: !!blueprint.user_meta,
         hasAllSystems: !!(blueprint.cognition_mbti && blueprint.archetype_western && 
-                         blueprint.values_life_path && blueprint.energy_strategy_human_design)
+                         blueprint.values_life_path && blueprint.energy_strategy_human_design),
+        blueprintKeys: Object.keys(blueprint)
       });
       
       const userId = blueprint.user_id || blueprint.user_meta?.user_id;
       if (!userId) {
+        console.error('❌ HERMETIC SERVICE: Missing User ID');
         throw new Error('User ID is required for backend job creation');
       }
+      
+      console.log('🚀 HERMETIC SERVICE: Calling hermetic-job-creator edge function...');
       
       // Create backend job instead of client-side generation
       const { data: jobData, error: jobError } = await supabase.functions.invoke('hermetic-job-creator', {
@@ -104,13 +108,22 @@ class HermeticPersonalityReportService {
         }
       });
 
+      console.log('📡 HERMETIC SERVICE: Edge function response:', {
+        hasData: !!jobData,
+        error: jobError,
+        jobId: jobData?.job_id,
+        message: jobData?.message,
+        rawResponse: jobData
+      });
+
       if (jobError || !jobData?.job_id) {
-        console.error('Failed to create hermetic job:', jobError);
+        console.error('❌ HERMETIC SERVICE: Failed to create hermetic job:', jobError);
         throw new Error(`Failed to create backend job: ${jobError?.message || 'Unknown error'}`);
       }
 
       const jobId = jobData.job_id;
-      console.log(`🚀 Created backend hermetic processing job: ${jobId}`);
+      console.log('✅ HERMETIC SERVICE: Created backend hermetic processing job:', jobId);
+      console.log('🎯 HERMETIC SERVICE: Job creation successful - monitoring will begin automatically');
       
       return { 
         success: true, 
@@ -118,7 +131,7 @@ class HermeticPersonalityReportService {
       };
       
     } catch (error) {
-      console.error('❌ Backend hermetic job creation failed:', error);
+      console.error('💥 HERMETIC SERVICE: Backend hermetic job creation failed:', error);
       return { success: false, error: String(error) };
     }
   }
