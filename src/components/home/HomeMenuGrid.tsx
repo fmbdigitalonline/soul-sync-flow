@@ -33,7 +33,7 @@ export function HomeMenuGrid({ items, className, ...props }: HomeMenuGridProps) 
             {/* Mobile: Compact horizontal layout, Desktop: Vertical layout */}
             <div className="flex sm:flex-col h-full pl-4 sm:pl-0">
               {/* Image container - smaller on mobile */}
-              <div className="w-12 h-12 sm:w-full sm:aspect-[4/3] relative overflow-hidden flex-shrink-0 rounded-md sm:rounded-none mt-2 sm:mt-0">
+              <div className="w-14 h-14 sm:w-full sm:aspect-[4/3] relative overflow-hidden flex-shrink-0 rounded-md sm:rounded-none mt-2 sm:mt-0">
                 {image ? (
                   <img
                     src={image}
@@ -57,7 +57,7 @@ export function HomeMenuGrid({ items, className, ...props }: HomeMenuGridProps) 
                     <Icon className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-primary flex-shrink-0" aria-hidden="true" />
                     <h3 className="text-xs sm:text-base font-semibold text-foreground leading-tight">{title}</h3>
                   </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-tight sm:leading-relaxed line-clamp-1 sm:line-clamp-3">{description}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-normal sm:leading-relaxed line-clamp-2 sm:line-clamp-3">{description}</p>
                 </div>
                 
                 {/* Action button - inline on mobile */}
