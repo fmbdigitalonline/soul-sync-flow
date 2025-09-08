@@ -633,7 +633,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 5: // Personality
+      case 6: // Personality
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.tellPersonality')}</h2>
@@ -660,7 +660,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 6: // Generating Blueprint
+      case 7: // Generating Blueprint
         if (!user && !authLoading) {
           return (
             <div className="space-y-6 text-center max-w-md mx-auto">
@@ -692,7 +692,7 @@ export default function Onboarding() {
             />
           </div>
         );
-      case 7: // Goal Selection
+      case 8: // Goal Selection
         return (
           <div className="fixed inset-0 bg-soul-black">
             <GoalSelectionStep 
