@@ -25,6 +25,7 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  const [guideIntroComplete, setGuideIntroComplete] = useState(false);
   const [funnelData, setFunnelData] = useState<FunnelData>({
     painPoint: "",
     lifeSatisfaction: {},
@@ -74,6 +75,7 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
   const handleNext = useCallback(() => {
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
+      setGuideIntroComplete(false); // Reset for next step
     } else {
       onComplete(funnelData);
     }
@@ -82,6 +84,7 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
   const handleBack = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
+      setGuideIntroComplete(false); // Reset for previous step
     } else {
       navigate("/");
     }
@@ -267,17 +270,22 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
             <Progress value={progress} className="w-full h-2" />
           </CardHeader>
           <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
-            {renderStep()}
-            <div className="flex justify-center pt-4 sm:pt-6">
-              <Button
-                onClick={handleNext}
-                disabled={!isStepValid()}
-                size="lg"
-                className="min-w-32 h-12 text-base touch-manipulation"
-              >
-                {currentStep === totalSteps ? t('funnel.getReport') : t('funnel.continue')}
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
+            <div className={cn(
+              "transition-all duration-500 ease-in-out",
+              guideIntroComplete ? "opacity-100 pointer-events-auto" : "opacity-30 pointer-events-none"
+            )}>
+              {renderStep()}
+              <div className="flex justify-center pt-4 sm:pt-6">
+                <Button
+                  onClick={handleNext}
+                  disabled={!isStepValid() || !guideIntroComplete}
+                  size="lg"
+                  className="min-w-32 h-12 text-base touch-manipulation"
+                >
+                  {currentStep === totalSteps ? t('funnel.getReport') : t('funnel.continue')}
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -289,6 +297,8 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
         totalSteps={totalSteps}
         funnelData={funnelData}
         isStepValid={isStepValid()}
+        onIntroComplete={() => setGuideIntroComplete(true)}
+        guideIntroComplete={guideIntroComplete}
       />
     </div>
   );

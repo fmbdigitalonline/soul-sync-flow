@@ -12,6 +12,8 @@ interface LifeClarityGuideProps {
   funnelData: any;
   isStepValid: boolean;
   className?: string;
+  onIntroComplete: () => void;
+  guideIntroComplete: boolean;
 }
 
 interface GuideMessage {
@@ -26,7 +28,9 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
   totalSteps,
   funnelData,
   isStepValid,
-  className
+  className,
+  onIntroComplete,
+  guideIntroComplete
 }) => {
   const [showBubble, setShowBubble] = useState(false);
   const [orbStage, setOrbStage] = useState<"welcome" | "collecting" | "generating" | "complete">("welcome");
@@ -82,6 +86,16 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
     }
   }, [currentStep]);
 
+  // Auto-complete intro after welcome message finishes streaming
+  useEffect(() => {
+    if (messageType === 'welcome' && !isStreaming && showBubble) {
+      const timer = setTimeout(() => {
+        onIntroComplete();
+      }, 2000); // Give user time to read
+      return () => clearTimeout(timer);
+    }
+  }, [messageType, isStreaming, showBubble, onIntroComplete]);
+
   // React to step completion
   useEffect(() => {
     if (isStepValid && messageType === 'guidance') {
@@ -133,6 +147,12 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
   const handleOrbClick = useCallback(() => {
     if (isStreaming) return;
 
+    // If showing welcome and guide intro not complete, complete it immediately
+    if (messageType === 'welcome' && !guideIntroComplete) {
+      onIntroComplete();
+      return;
+    }
+
     // If no bubble showing, show guidance
     if (!showBubble) {
       showMessage('guidance');
@@ -153,13 +173,17 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
 
     // Close bubble
     setShowBubble(false);
-  }, [isStreaming, showBubble, messageType, isStepValid, showMessage]);
+  }, [isStreaming, showBubble, messageType, isStepValid, showMessage, guideIntroComplete, onIntroComplete]);
 
   const handleBubbleClick = useCallback(() => {
     if (!isStreaming) {
-      setShowBubble(false);
+      if (messageType === 'welcome' && !guideIntroComplete) {
+        onIntroComplete();
+      } else {
+        setShowBubble(false);
+      }
     }
-  }, [isStreaming]);
+  }, [isStreaming, messageType, guideIntroComplete, onIntroComplete]);
 
   // Auto-hide encouragement messages after delay
   useEffect(() => {
