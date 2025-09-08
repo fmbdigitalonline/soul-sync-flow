@@ -430,7 +430,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             intelligenceLevel >= 90 ? "border-amber-200" : "border-white"
           )} />
           <div className={cn(
-            "absolute inset-0 rounded-full border opacity-40",
+            "absolute inset-0 top-1 rounded-full border opacity-40",
             intelligenceLevel >= 90 ? "border-amber-200" : "border-white"
           )} />
         </div>
