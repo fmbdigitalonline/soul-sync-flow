@@ -228,16 +228,16 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
           <CardContent className={`${spacing.card} pt-0`}>
             <div className="space-y-4 w-full max-w-full">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div className="p-3 bg-soul-purple/5 rounded-3xl">
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.energyType')}</h4>
-                  <div className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg mb-2">
+                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg mb-2">
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold break-words`}>{hdType}</p>
                   </div>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{t('blueprint.descriptions.sustainableEnergy')}</p>
                 </div>
-                <div>
+                <div className="p-3 bg-soul-purple/5 rounded-3xl">
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.decisionAuthority')}</h4>
-                  <div className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg mb-2">
+                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg mb-2">
                     <p className={`${getTextSize('text-xl')} font-cormorant font-bold break-words`}>{authority}</p>
                   </div>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{t('blueprint.descriptions.innerAuthority')}</p>
