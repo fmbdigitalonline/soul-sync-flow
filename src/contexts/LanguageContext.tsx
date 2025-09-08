@@ -116,7 +116,8 @@ const translations: Record<Language, Translations> = {
       cut: 'Cut',
       notifications: 'Notifications',
       tryAgain: 'Try Again',
-      of: 'of'
+      of: 'of',
+      activateSteward: 'Activate Steward'
     },
     // Error Messages
     errors: {
@@ -953,6 +954,8 @@ const translations: Record<Language, Translations> = {
       gotIt: 'Got It',
       generated: 'Generated',
       loading: 'HACS Loading...',
+      soulAlchemistReady: 'Your Soul Alchemist is ready to guide your transformation.',
+      blueprintUnderstanding: 'Blueprint Understanding',
       systemInitializing: 'System Initializing...',
       insightsQueue: '{current} of {total} insights',
       microLearning: {
@@ -1617,7 +1620,8 @@ const translations: Record<Language, Translations> = {
       cut: 'Knippen',
       notifications: 'Meldingen',
       tryAgain: 'Probeer Opnieuw',
-      of: 'van'
+      of: 'van',
+      activateSteward: 'Activeer Steward'
     },
     // Error Messages
     errors: {
@@ -2333,6 +2337,8 @@ const translations: Record<Language, Translations> = {
       gotIt: 'Begrepen',
       generated: 'Gegenereerd',
       loading: 'HACS Laden...',
+      soulAlchemistReady: 'Je Ziel Alchemist is klaar om je transformatie te begeleiden.',
+      blueprintUnderstanding: 'Blueprint Begrip',
       systemInitializing: 'Systeem initialiseren...',
       insightsQueue: '{current} van {total} inzichten',
       microLearning: {

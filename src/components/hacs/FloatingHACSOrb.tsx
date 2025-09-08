@@ -852,11 +852,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
                 )}
 
                 <p className="text-sm text-muted-foreground mb-2">
-                  Your Soul Alchemist is ready to guide your transformation.
+                  {t('hacs.soulAlchemistReady')}
                 </p>
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span>Blueprint Understanding: 40%</span>
+                  <span>{t('hacs.blueprintUnderstanding')}: 40%</span>
                 </div>
               </div>
 
@@ -876,8 +876,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
                   className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90 transition-colors font-medium"
                 >
                   {introductionState.currentStep === introductionState.steps.length - 1 
-                    ? 'Activate Steward' 
-                    : 'Continue'
+                    ? t('activateSteward') 
+                    : t('continue')
                   }
                 </button>
               )}
