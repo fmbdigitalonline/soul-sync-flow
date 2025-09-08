@@ -347,37 +347,14 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
     
     console.log('💾 Storing report with blueprint_id:', blueprintId);
 
-    // 🧠 INTEGRATION: Generate Intelligence Report with 12 Specialists
-    console.log('🧠 Generating comprehensive intelligence analysis with 12 specialists...');
-    const orchestrator = new IntelligenceReportOrchestrator();
-    
-    let intelligenceReport: IntelligenceReport | null = null;
-    try {
-      intelligenceReport = await orchestrator.generateIntelligenceReport(
-        userId,
-        reportContent,
-        blueprint
-      );
-      console.log('✅ Intelligence report generated successfully');
-    } catch (error) {
-      console.error('⚠️ Intelligence report generation failed, continuing with basic report:', error);
-    }
-
-    // Enhanced report content with intelligence sections
-    const enhancedReportContent = {
-      ...reportContent,
-      // 🧠 NEW: Add 12 intelligence analyst sections
-      intelligence_analysis: intelligenceReport || null
-    };
-
-    // Store the enhanced report in the database
+    // Store the standard report in the database
     const { data: reportData, error: insertError } = await supabaseClient
       .from('personality_reports')
       .insert({
         user_id: userId,
         blueprint_id: blueprintId,
-        report_content: enhancedReportContent,
-        blueprint_version: '1.1' // Updated version to indicate enhanced content
+        report_content: reportContent,
+        blueprint_version: '1.0' // Standard personality report version
       })
       .select()
       .single();
@@ -412,27 +389,19 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
     }
 
     // Final report summary
-    const totalContentSize = JSON.stringify(enhancedReportContent).length;
-    const intelligenceSections = intelligenceReport ? Object.keys(intelligenceReport).length : 0;
+    const totalContentSize = JSON.stringify(reportContent).length;
     
     console.log('📊 Final Report Summary:');
     console.log(`  - Total content size: ${totalContentSize} bytes`);
-    console.log(`  - Intelligence sections: ${intelligenceSections}/12`);
     console.log(`  - Quotes generated: ${quotesToInsert.length}`);
-    console.log(`  - Blueprint version: 1.1 (Enhanced with Intelligence)`);
+    console.log(`  - Blueprint version: 1.0 (Standard Personality Report)`);
 
     console.log('✅ Personality report and quotes generated successfully');
 
     return new Response(JSON.stringify({ 
       success: true, 
       report: reportData,
-      quotes: quotesToInsert,
-      enhancement_metadata: {
-        intelligence_sections_generated: intelligenceSections,
-        total_analysts_attempted: 12,
-        content_size_bytes: totalContentSize,
-        enhanced_version: '1.1'
-      }
+      quotes: quotesToInsert
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
