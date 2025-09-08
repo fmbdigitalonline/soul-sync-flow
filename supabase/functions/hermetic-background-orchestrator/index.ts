@@ -55,15 +55,19 @@ serve(async (req) => {
   }
 
   try {
-    const { job_id } = await req.json();
+    const { job_id: jobId } = await req.json();
     
-    console.log(`🚀 Relay orchestrator invoked for job ${job_id}`);
+    if (!jobId) {
+      throw new Error('Missing job_id in request body');
+    }
+    
+    console.log(`🚀 Relay orchestrator invoked for job ${jobId}`);
     
     // 1. Get the job's CURRENT state from the database
     const { data: job, error: jobError } = await supabase
       .from('hermetic_processing_jobs')
       .select('*')
-      .eq('id', job_id)
+      .eq('id', jobId)
       .single();
       
     if (jobError || !job) {
@@ -71,7 +75,7 @@ serve(async (req) => {
     }
     
     if (job.status === 'completed' || job.status === 'failed') {
-      console.log(`Job ${job_id} is already completed or failed. Stopping.`);
+      console.log(`Job ${jobId} is already completed or failed. Stopping.`);
       return new Response(JSON.stringify({ message: "Job already finalized." }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -154,7 +158,7 @@ serve(async (req) => {
       
     } else if (job.current_stage === 'final_assembly') {
       // This is the final step, do the assembly and complete the job
-      console.log(`Finalizing report for job ${job_id}`);
+      console.log(`Finalizing report for job ${jobId}`);
       await finalizeReport(job);
       
       return new Response(JSON.stringify({ 
@@ -177,11 +181,11 @@ serve(async (req) => {
         last_heartbeat: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
-      .eq('id', job_id);
+      .eq('id', jobId);
 
     // 4. CRITICAL: Trigger the next step by invoking itself (fire-and-forget)
     supabase.functions.invoke('hermetic-background-orchestrator', {
-      body: { job_id: job.id }
+      body: { job_id: jobId }
     }).catch(error => {
       console.error('Failed to trigger next step:', error);
     });
@@ -189,15 +193,27 @@ serve(async (req) => {
     console.log(`✅ Step completed, next step queued: ${nextStage}[${nextStepIndex}]`);
 
   } catch (error) {
-    console.error(`❌ Orchestrator failed for job ${job_id}:`, error);
-    await supabase
-      .from('hermetic_processing_jobs')
-      .update({ 
-        status: 'failed', 
-        current_step: `Error: ${error.message}`,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', job_id);
+    // Get jobId from various sources in case destructuring failed
+    let errorJobId: string | undefined;
+    try {
+      const requestBody = await req.clone().json();
+      errorJobId = requestBody?.job_id;
+    } catch {
+      // Could not parse request body
+    }
+    
+    console.error(`❌ Orchestrator failed for job ${errorJobId || 'unknown'}:`, error);
+    
+    if (errorJobId) {
+      await supabase
+        .from('hermetic_processing_jobs')
+        .update({ 
+          status: 'failed', 
+          current_step: `Error: ${error.message}`,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', errorJobId);
+    }
   }
   
   // 5. Return SUCCESS response IMMEDIATELY (under 5 seconds)
@@ -306,6 +322,25 @@ Focus on your specific system expertise.`
         last_heartbeat: new Date().toISOString()
       })
       .eq('id', jobId);
+      
+    // CRITICAL: Store in queryable sub-jobs table for immediate access
+    await supabase
+      .from('hermetic_sub_jobs')
+      .upsert({
+        job_id: jobId,
+        user_id: job.user_id,
+        agent_type: translator,
+        stage: 'system_translation',
+        status: 'completed',
+        content: content,
+        word_count: wordCount,
+        metadata: { translator_type: translator },
+        completed_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'job_id,agent_type'
+      });
       
     // Calculate current total word count across all sections
     const allCurrentSections = [
@@ -419,6 +454,25 @@ Generate comprehensive analysis with practical applications.`
       })
       .eq('id', jobId);
       
+    // CRITICAL: Store in queryable sub-jobs table for immediate access
+    await supabase
+      .from('hermetic_sub_jobs')
+      .upsert({
+        job_id: jobId,
+        user_id: job.user_id,
+        agent_type: agent,
+        stage: 'hermetic_laws',
+        status: 'completed',
+        content: content,
+        word_count: wordCount,
+        metadata: { hermetic_law: agent.replace('_analyst', '') },
+        completed_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'job_id,agent_type'
+      });
+      
     // Calculate current total word count across all sections
     const allCurrentSections = [
       ...(progressData.system_sections || []),
@@ -501,6 +555,25 @@ Focus specifically on Gate ${gateNumber} and how it expresses through each Herme
         last_heartbeat: new Date().toISOString()
       })
       .eq('id', jobId);
+      
+    // CRITICAL: Store in queryable sub-jobs table for immediate access
+    await supabase
+      .from('hermetic_sub_jobs')
+      .upsert({
+        job_id: jobId,
+        user_id: job.user_id,
+        agent_type: 'gate_hermetic_analyst',
+        stage: 'gate_analysis',
+        status: 'completed',
+        content: content,
+        word_count: wordCount,
+        metadata: { gate_number: gateNumber },
+        completed_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'job_id,agent_type'
+      });
       
     // Calculate current total word count across all sections
     const allCurrentSections = [
@@ -595,6 +668,25 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
         last_heartbeat: new Date().toISOString()
       })
       .eq('id', jobId);
+      
+    // CRITICAL: Store in queryable sub-jobs table for immediate access
+    await supabase
+      .from('hermetic_sub_jobs')
+      .upsert({
+        job_id: jobId,
+        user_id: job.user_id,
+        agent_type: agent,
+        stage: 'intelligence_extraction',
+        status: 'completed',
+        content: content,
+        word_count: wordCount,
+        metadata: { intelligence_dimension: dimensionName },
+        completed_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'job_id,agent_type'
+      });
       
     // Calculate current total word count across all sections
     const allCurrentSections = [
