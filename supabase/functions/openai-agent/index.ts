@@ -669,54 +669,7 @@ async function executeAgentConversation(messages: any[], model: string, temperat
   };
 }
 
-// Fix content generation in openai-agent by adding proper error handling
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const { messages, model = 'gpt-4o-mini', temperature, max_tokens } = await req.json();
-
-    console.log(`🤖 Running OpenAI agent with model: ${model}`);
-    
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: temperature || 0.6,
-        max_tokens: max_tokens || 2000
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('❌ OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
-    }
-
-    const data = await response.json();
-    console.log(`📝 Generated content length: ${data.choices?.[0]?.message?.content?.length || 0}`);
-    
-    return new Response(JSON.stringify(data), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    console.error('❌ OpenAI agent failed:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      choices: [{ message: { content: 'Error generating content. Please try again.' } }]
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-});
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });

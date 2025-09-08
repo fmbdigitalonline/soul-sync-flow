@@ -737,10 +737,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Background Report Generation Indicator with Enhanced Details */}
+      {/* Background Report Generation Indicator */}
       {isGeneratingReport && (
-        <div className="fixed bottom-4 right-4 z-40 bg-card/95 backdrop-blur border border-border rounded-lg p-4 shadow-lg max-w-sm">
-          <div className="flex items-start gap-3">
+        <div className="fixed bottom-4 right-4 z-40 bg-card/95 backdrop-blur border border-border rounded-lg p-4 shadow-lg">
+          <div className="flex items-center gap-3">
             <IntelligentSoulOrb
               size="sm"
               stage={isGeneratingReport ? "generating" : "complete"}
@@ -753,60 +753,17 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               showRainbowCelebration={showRainbowCelebration}
             />
             {isGeneratingReport && (
-              <div className="text-sm flex-1 min-w-0">
+              <div className="text-sm">
                 <div className="font-medium text-card-foreground">
                   Soul Alchemist Activating...
                 </div>
-                
-                 {/* Enhanced Progress Display */}
-                 {hermeticDetailedStatus ? (
-                   <>
-                     <div className="text-muted-foreground text-xs mt-1">
-                       <div className="font-medium">{hermeticDetailedStatus.stage}</div>
-                       <div className="truncate">{hermeticDetailedStatus.stepName}</div>
-                       <div className="text-[10px] mt-1 opacity-70">
-                         {hermeticDetailedStatus.description}
-                       </div>
-                     </div>
-                     
-                     {/* Progress Bar */}
-                     <div className="mt-2 space-y-1">
-                       <div className="flex justify-between items-center text-xs">
-                         <span>{hermeticProgress}% Complete</span>
-                         {hermeticETA && (
-                           <span className="text-muted-foreground">{hermeticETA}</span>
-                         )}
-                       </div>
-                       <div className="w-full bg-muted rounded-full h-1.5">
-                         <div 
-                           className="bg-primary rounded-full h-1.5 transition-all duration-500"
-                           style={{ width: `${hermeticProgress}%` }}
-                         />
-                       </div>
-                       
-                       {/* Section Progress */}
-                       <div className="flex justify-between items-center text-[10px] text-muted-foreground">
-                         <span>
-                           Section {hermeticDetailedStatus.completedSections} of {hermeticDetailedStatus.totalSections}
-                         </span>
-                         {hermeticWordCount && hermeticWordCount > 0 && (
-                           <span>{hermeticWordCount.toLocaleString()} words</span>
-                         )}
-                       </div>
-                     </div>
-                   </>
-                 ) : (
-                   <div className="text-muted-foreground">
-                     Deep synthesis in progress ({hermeticProgress}%)
-                   </div>
-                   <div className="text-muted-foreground">
-                     Deep synthesis in progress ({hermeticProgress}%)
-                   </div>
-               </div>
-             )}
-           </div>
-         </div>
-       )}
+                <div className="text-muted-foreground">
+                  Deep synthesis in progress ({hermeticProgress}%)
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Insight Display - Click-triggered only */}
