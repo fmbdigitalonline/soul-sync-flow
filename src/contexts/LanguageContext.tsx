@@ -13,6 +13,49 @@ const translations: Record<Language, Translations> = {
       english: 'English',
       dutch: 'Nederlands'
     },
+    // Toast Messages System
+    toast: {
+      success: {
+        blueprintComplete: 'Blueprint Generation Complete! 🎯',
+        lifeWheelComplete: 'Life Wheel Complete! 🎯',
+        saveSuccessful: 'Successfully saved',
+        connectionSuccessful: 'Connection Successful',
+        deploymentSuccessful: 'ACS deployed to 100% of traffic!',
+        generationComplete: 'Generation Complete!',
+        reportComplete: 'Report Complete!',
+        dataExported: 'Data exported successfully',
+        settingsSaved: 'Settings saved successfully',
+        profileUpdated: 'Profile updated successfully'
+      },
+      error: {
+        blueprintGenerationError: 'Blueprint Generation Error',
+        generationFailed: 'Generation Failed',
+        saveFailed: 'Save Failed',
+        connectionFailed: 'Connection Failed',
+        deploymentFailed: 'Failed to deploy ACS',
+        databaseError: 'Database Error',
+        reportGenerationFailed: 'Report generation failed',
+        authenticationFailed: 'Authentication failed',
+        networkError: 'Network connection error',
+        validationError: 'Validation error occurred',
+        tooManyAttempts: 'Too Many Attempts',
+        systemError: 'System error occurred'
+      },
+      info: {
+        comingSoon: 'Coming soon',
+        notAvailable: 'Not available',
+        processingRequest: 'Processing your request...',
+        loadingData: 'Loading data...',
+        savingProgress: 'Saving progress...',
+        generatingContent: 'Generating content...'
+      },
+      warning: {
+        unsavedChanges: 'You have unsaved changes',
+        sessionExpiring: 'Your session is expiring',
+        incompleteData: 'Some data is incomplete',
+        limitReached: 'Usage limit reached'
+      }
+    },
     // Page Not Found
     notFound: {
       title: '404',
@@ -85,7 +128,28 @@ const translations: Record<Language, Translations> = {
       required: 'This field is required',
       invalidEmail: 'Please enter a valid email address',
       invalidPassword: 'Password does not meet requirements',
-      sessionExpired: 'Your session has expired'
+      sessionExpired: 'Your session has expired',
+      // Enhanced database errors
+      database: {
+        connectionFailed: 'Database connection failed',
+        queryFailed: 'Database query failed',
+        saveFailed: 'Failed to save to database',
+        loadFailed: 'Failed to load from database'
+      },
+      // Enhanced generation errors  
+      generation: {
+        blueprintFailed: 'Blueprint generation failed',
+        reportFailed: 'Report generation failed',
+        contentFailed: 'Content generation failed',
+        timeoutError: 'Generation timed out'
+      },
+      // Enhanced system errors
+      system: {
+        unexpectedError: 'An unexpected error occurred',
+        serviceUnavailable: 'Service temporarily unavailable',
+        permissionDenied: 'Permission denied',
+        rateLimitExceeded: 'Rate limit exceeded'
+      }
     },
     // Global error key
     error: 'Error',
@@ -440,7 +504,126 @@ const translations: Record<Language, Translations> = {
       notQuiteRight: 'Not quite right',
       spotOn: 'Spot on!',
       continueWithProfile: 'Continue with this profile',
-      keepRefining: 'Keep refining'
+      keepRefining: 'Keep refining',
+      // MBTI Personality System
+      mbti: {
+        types: {
+          INFJ: {
+            title: 'The Counselor',
+            description: 'Seek meaning and connection in ideas, relationships, and material possessions.',
+            traits: ['Insightful', 'Idealistic', 'Deep']
+          },
+          INFP: {
+            title: 'The Mediator', 
+            description: 'Idealistic, loyal to their values and to people who are important to them.',
+            traits: ['Empathetic', 'Creative', 'Authentic']
+          },
+          INTJ: {
+            title: 'The Architect',
+            description: 'Have original minds and great drive for implementing their ideas and achieving goals.',
+            traits: ['Strategic', 'Analytical', 'Independent']
+          },
+          INTP: {
+            title: 'The Thinker',
+            description: 'Seek to develop logical explanations for everything that interests them.',
+            traits: ['Logical', 'Theoretical', 'Inventive']
+          },
+          ENFJ: {
+            title: 'The Giver',
+            description: 'Charismatic and inspiring leaders, able to mesmerize listeners.',
+            traits: ['Charismatic', 'Supportive', 'Empathetic']
+          },
+          ENFP: {
+            title: 'The Champion',
+            description: 'Warmly enthusiastic and imaginative. See life as full of possibilities.',
+            traits: ['Enthusiastic', 'Innovative', 'Expressive']
+          },
+          ENTJ: {
+            title: 'The Commander',
+            description: 'Frank, decisive, assume leadership readily. Quickly see patterns in external events.',
+            traits: ['Decisive', 'Strategic', 'Driven']
+          },
+          ENTP: {
+            title: 'The Visionary',
+            description: 'Quick, ingenious, stimulating, alert, and outspoken. Resourceful in solving challenging problems.',
+            traits: ['Innovative', 'Analytical', 'Adaptable']
+          },
+          ISFJ: {
+            title: 'The Protector',
+            description: 'Quiet, friendly, responsible, and conscientious. Committed and steady in meeting obligations.',
+            traits: ['Reliable', 'Observant', 'Supportive']
+          },
+          ISFP: {
+            title: 'The Composer',
+            description: 'Friendly, sensitive, and kind. Enjoy the present moment, what\'s going on around them.',
+            traits: ['Artistic', 'Adaptable', 'Sensitive']
+          },
+          ISTJ: {
+            title: 'The Inspector',
+            description: 'Quiet, serious, earn success by thoroughness and dependability.',
+            traits: ['Orderly', 'Practical', 'Logical']
+          },
+          ISTP: {
+            title: 'The Craftsman',
+            description: 'Tolerant and flexible, quiet observers until a problem appears, then act quickly to find workable solutions.',
+            traits: ['Practical', 'Adaptable', 'Logical']
+          },
+          ESFJ: {
+            title: 'The Provider',
+            description: 'Warmhearted, conscientious, and cooperative. Value security and stability.',
+            traits: ['Organized', 'Nurturing', 'Traditional']
+          },
+          ESFP: {
+            title: 'The Performer',
+            description: 'Outgoing, friendly, and accepting. Exuberant lovers of life, people, and material comforts.',
+            traits: ['Spontaneous', 'Energetic', 'Fun-loving']
+          },
+          ESTJ: {
+            title: 'The Supervisor',
+            description: 'Practical, matter-of-fact, with a natural head for business or mechanics.',
+            traits: ['Structured', 'Efficient', 'Practical']
+          },
+          ESTP: {
+            title: 'The Dynamo',
+            description: 'Flexible and tolerant, take a pragmatic approach focused on immediate results.',
+            traits: ['Energetic', 'Action-oriented', 'Adaptable']
+          }
+        },
+        dimensions: {
+          extroversion: {
+            title: 'Extroversion',
+            description: 'Focus attention on the outer world of people and things'
+          },
+          introversion: {
+            title: 'Introversion', 
+            description: 'Focus attention on the inner world of concepts and ideas'
+          },
+          sensing: {
+            title: 'Sensing',
+            description: 'Focus on the present and on concrete information gained from the senses'
+          },
+          intuition: {
+            title: 'Intuition',
+            description: 'Focus on the future, with a view toward patterns and possibilities'
+          },
+          thinking: {
+            title: 'Thinking',
+            description: 'Base decisions primarily on logic and on objective analysis'
+          },
+          feeling: {
+            title: 'Feeling',
+            description: 'Base decisions primarily on values and on subjective evaluation'
+          },
+          judging: {
+            title: 'Judging',
+            description: 'Like a planned and organized approach to life and prefer to have things settled'
+          },
+          perceiving: {
+            title: 'Perceiving',
+            description: 'Like a flexible and spontaneous approach to life and prefer to keep options open'
+          }
+        }
+      }
     },
     // Blueprint section
     blueprint: {
@@ -1136,14 +1319,69 @@ const translations: Record<Language, Translations> = {
         searchUsers: 'Search users...',
         typeMessage: 'Type your message...',
         enterFullName: 'Enter your full name',
+        fullName: 'Your complete legal name',
         enterPreferredName: 'What you\'d like to be called',
+        displayName: 'What you\'d like to be called',
         enterBirthLocation: 'City, Country (e.g., Paramaribo, Suriname)',
+        cityCountry: 'City, Country (e.g., Paramaribo, Suriname)',
         enterTimezone: 'e.g., America/New_York',
+        timezone: 'e.g., America/New_York',
+        goalsContext: 'Any specific goals, challenges, or context about this area...',
+        visionDescription: 'Describe your vision of an ideal life where everything is working...',
         shareThoughts: 'Share what\'s on your heart...',
         shareReflection: 'Share your reflection or response...',
+        reflection: 'Share your reflection or response...',
+        spiritualThoughts: 'Share your spiritual thoughts...',
         shareInsights: 'Share your thoughts and insights...',
         testMessage: 'Type a message to test...',
-        askCoach: 'Ask about your task, request actions, or get guidance...'
+        askCoach: 'Ask about your task, request actions, or get guidance...',
+        searchQuery: 'Search across all dimensions...',
+        filterLogs: 'Filter logs by activity type or content...',
+        customMessage: 'Enter a custom message to test...',
+        shareBeliefs: 'Share what comes to mind...',
+        lifeAreaThoughts: 'Any specific thoughts about this life area...',
+        testFlowMessage: 'Test message for flow validation...',
+        memoryContent: 'Enter memory content to test with...',
+        reminderTitle: 'Enter reminder title...',
+        intentTest: 'Enter intent to test...',
+        sessionId: 'Session ID',
+        moduleId: 'Module ID...',
+        frequencyHz: 'Hz',
+        value: 'Value...',
+        userId: 'Enter user ID'
+      },
+      validation: {
+        required: 'This field is required',
+        invalidEmail: 'Please enter a valid email address',
+        minimumLength: 'Minimum {length} characters required',
+        maximumLength: 'Maximum {length} characters allowed',
+        passwordMismatch: 'Passwords do not match',
+        invalidDate: 'Please enter a valid date',
+        invalidTime: 'Please enter a valid time',
+        invalidLocation: 'Please enter a valid location'
+      }
+    },
+    // Assessment System
+    assessment: {
+      lifeWheel: {
+        title: 'Life Wheel Assessment',
+        description: 'Evaluate your satisfaction across key life domains',
+        currentScore: 'Current satisfaction level',
+        desiredScore: 'Desired satisfaction level',
+        importanceRating: 'How important is this area to you?',
+        notes: 'Additional notes or context',
+        complete: 'Assessment completed successfully',
+        saveError: 'Failed to save assessment'
+      },
+      domains: {
+        career: 'Career & Work',
+        health: 'Health & Wellness', 
+        relationships: 'Relationships',
+        finances: 'Financial Security',
+        personal: 'Personal Growth',
+        recreation: 'Recreation & Fun',
+        environment: 'Physical Environment',
+        contribution: 'Contribution & Service'
       }
     }
    },
@@ -1151,6 +1389,49 @@ const translations: Record<Language, Translations> = {
     language: {
       english: 'English',
       dutch: 'Nederlands'
+    },
+    // Toast Messages System
+    toast: {
+      success: {
+        blueprintComplete: 'Blauwdruk Generatie Voltooid! 🎯',
+        lifeWheelComplete: 'Levenswiel Voltooid! 🎯',
+        saveSuccessful: 'Succesvol opgeslagen',
+        connectionSuccessful: 'Verbinding Succesvol',
+        deploymentSuccessful: 'ACS geïmplementeerd naar 100% van het verkeer!',
+        generationComplete: 'Generatie Voltooid!',
+        reportComplete: 'Rapport Voltooid!',
+        dataExported: 'Data succesvol geëxporteerd',
+        settingsSaved: 'Instellingen succesvol opgeslagen',
+        profileUpdated: 'Profiel succesvol bijgewerkt'
+      },
+      error: {
+        blueprintGenerationError: 'Blauwdruk Generatie Fout',
+        generationFailed: 'Generatie Mislukt',
+        saveFailed: 'Opslaan Mislukt',
+        connectionFailed: 'Verbinding Mislukt',
+        deploymentFailed: 'ACS implementatie mislukt',
+        databaseError: 'Database Fout',
+        reportGenerationFailed: 'Rapport generatie mislukt',
+        authenticationFailed: 'Authenticatie mislukt',
+        networkError: 'Netwerkverbindingsfout',
+        validationError: 'Validatiefout opgetreden',
+        tooManyAttempts: 'Te Veel Pogingen',
+        systemError: 'Systeemfout opgetreden'
+      },
+      info: {
+        comingSoon: 'Binnenkort beschikbaar',
+        notAvailable: 'Niet beschikbaar',
+        processingRequest: 'Je verzoek wordt verwerkt...',
+        loadingData: 'Data wordt geladen...',
+        savingProgress: 'Voortgang wordt opgeslagen...',
+        generatingContent: 'Content wordt gegenereerd...'
+      },
+      warning: {
+        unsavedChanges: 'Je hebt niet-opgeslagen wijzigingen',
+        sessionExpiring: 'Je sessie verloopt binnenkort',
+        incompleteData: 'Sommige data is incompleet',
+        limitReached: 'Gebruikslimiet bereikt'
+      }
     },
     // Page Not Found
     notFound: {
@@ -1223,7 +1504,28 @@ const translations: Record<Language, Translations> = {
       required: 'Dit veld is verplicht',
       invalidEmail: 'Voer een geldig e-mailadres in',
       invalidPassword: 'Wachtwoord voldoet niet aan de vereisten',
-      sessionExpired: 'Je sessie is verlopen'
+      sessionExpired: 'Je sessie is verlopen',
+      // Enhanced database errors
+      database: {
+        connectionFailed: 'Database verbinding mislukt',
+        queryFailed: 'Database query mislukt',
+        saveFailed: 'Opslaan naar database mislukt',
+        loadFailed: 'Laden vanuit database mislukt'
+      },
+      // Enhanced generation errors  
+      generation: {
+        blueprintFailed: 'Blauwdruk generatie mislukt',
+        reportFailed: 'Rapport generatie mislukt',
+        contentFailed: 'Content generatie mislukt',
+        timeoutError: 'Generatie time-out'
+      },
+      // Enhanced system errors
+      system: {
+        unexpectedError: 'Er is een onverwachte fout opgetreden',
+        serviceUnavailable: 'Service tijdelijk niet beschikbaar',
+        permissionDenied: 'Toestemming geweigerd',
+        rateLimitExceeded: 'Limiet overschreden'
+      }
     },
     // Global error key
     error: 'Fout',
@@ -2173,14 +2475,69 @@ const translations: Record<Language, Translations> = {
         searchUsers: 'Zoek gebruikers...',
         typeMessage: 'Typ je bericht...',
         enterFullName: 'Voer je volledige naam in',
+        fullName: 'Je volledige legale naam',
         enterPreferredName: 'Hoe je genoemd wilt worden',
+        displayName: 'Hoe je genoemd wilt worden',
         enterBirthLocation: 'Stad, Land (bijv. Amsterdam, Nederland)',
+        cityCountry: 'Stad, Land (bijv. Amsterdam, Nederland)',
         enterTimezone: 'bijv. Europe/Amsterdam',
+        timezone: 'bijv. Europe/Amsterdam',
+        goalsContext: 'Specifieke doelen, uitdagingen, of context over dit gebied...',
+        visionDescription: 'Beschrijf je visie van een ideaal leven waarin alles werkt...',
         shareThoughts: 'Deel wat er in je hart leeft...',
         shareReflection: 'Deel je reflectie of reactie...',
+        reflection: 'Deel je reflectie of reactie...',
+        spiritualThoughts: 'Deel je spirituele gedachten...',
         shareInsights: 'Deel je gedachten en inzichten...',
         testMessage: 'Typ een bericht om te testen...',
-        askCoach: 'Vraag over je taak, verzoek acties, of krijg begeleiding...'
+        askCoach: 'Vraag over je taak, verzoek acties, of krijg begeleiding...',
+        searchQuery: 'Zoek over alle dimensies...',
+        filterLogs: 'Filter logs op activiteitstype of content...',
+        customMessage: 'Voer een aangepast bericht in om te testen...',
+        shareBeliefs: 'Deel wat er in je opkomt...',
+        lifeAreaThoughts: 'Specifieke gedachten over dit levensgebied...',
+        testFlowMessage: 'Test bericht voor flow validatie...',
+        memoryContent: 'Voer geheugeninhoud in om mee te testen...',
+        reminderTitle: 'Voer herinneringstitel in...',
+        intentTest: 'Voer intentie in om te testen...',
+        sessionId: 'Sessie ID',
+        moduleId: 'Module ID...',
+        frequencyHz: 'Hz',
+        value: 'Waarde...',
+        userId: 'Voer gebruikers ID in'
+      },
+      validation: {
+        required: 'Dit veld is verplicht',
+        invalidEmail: 'Voer een geldig e-mailadres in',
+        minimumLength: 'Minimaal {length} karakters vereist',
+        maximumLength: 'Maximaal {length} karakters toegestaan',
+        passwordMismatch: 'Wachtwoorden komen niet overeen',
+        invalidDate: 'Voer een geldige datum in',
+        invalidTime: 'Voer een geldige tijd in',
+        invalidLocation: 'Voer een geldige locatie in'
+      }
+    },
+    // Assessment System
+    assessment: {
+      lifeWheel: {
+        title: 'Levenswiel Beoordeling',
+        description: 'Evalueer je tevredenheid over belangrijke levensdomeinen',
+        currentScore: 'Huidige tevredenheidsniveau',
+        desiredScore: 'Gewenste tevredenheidsniveau',
+        importanceRating: 'Hoe belangrijk is dit gebied voor je?',
+        notes: 'Aanvullende notities of context',
+        complete: 'Beoordeling succesvol voltooid',
+        saveError: 'Beoordeling opslaan mislukt'
+      },
+      domains: {
+        career: 'Carrière & Werk',
+        health: 'Gezondheid & Welzijn', 
+        relationships: 'Relaties',
+        finances: 'Financiële Zekerheid',
+        personal: 'Persoonlijke Groei',
+        recreation: 'Recreatie & Plezier',
+        environment: 'Fysieke Omgeving',
+        contribution: 'Bijdrage & Service'
       }
     },
 

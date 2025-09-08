@@ -1,203 +1,209 @@
-
-import React, { useState } from "react";
-import { cn } from "@/lib/utils";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MBTISelectorProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-// MBTI type descriptions
-const mbtiDescriptions: Record<string, { title: string; description: string; traits: string[] }> = {
-  INFJ: {
-    title: "The Counselor",
-    description: "Seek meaning and connection in ideas, relationships, and material possessions.",
-    traits: ["Insightful", "Idealistic", "Deep"]
-  },
-  INFP: {
-    title: "The Mediator",
-    description: "Idealistic, loyal to their values and to people who are important to them.",
-    traits: ["Empathetic", "Creative", "Authentic"]
-  },
-  INTJ: {
-    title: "The Architect",
-    description: "Have original minds and great drive for implementing their ideas and achieving goals.",
-    traits: ["Strategic", "Analytical", "Independent"]
-  },
-  INTP: {
-    title: "The Thinker",
-    description: "Seek to develop logical explanations for everything that interests them.",
-    traits: ["Logical", "Theoretical", "Inventive"]
-  },
-  ENFJ: {
-    title: "The Giver",
-    description: "Charismatic and inspiring leaders, able to mesmerize listeners.",
-    traits: ["Charismatic", "Supportive", "Empathetic"]
-  },
-  ENFP: {
-    title: "The Champion",
-    description: "Warmly enthusiastic and imaginative. See life as full of possibilities.",
-    traits: ["Enthusiastic", "Innovative", "Expressive"]
-  },
-  ENTJ: {
-    title: "The Commander",
-    description: "Frank, decisive, assume leadership readily. Quickly see patterns in external events.",
-    traits: ["Decisive", "Strategic", "Driven"]
-  },
-  ENTP: {
-    title: "The Visionary",
-    description: "Quick, ingenious, stimulating, alert, and outspoken. Resourceful in solving challenging problems.",
-    traits: ["Innovative", "Analytical", "Adaptable"]
-  },
-  ISFJ: {
-    title: "The Protector",
-    description: "Quiet, friendly, responsible, and conscientious. Committed and steady in meeting obligations.",
-    traits: ["Reliable", "Observant", "Supportive"]
-  },
-  ISFP: {
-    title: "The Composer",
-    description: "Friendly, sensitive, and kind. Enjoy the present moment, what's going on around them.",
-    traits: ["Artistic", "Adaptable", "Sensitive"]
-  },
-  ISTJ: {
-    title: "The Inspector",
-    description: "Quiet, serious, earn success by thoroughness and dependability.",
-    traits: ["Orderly", "Practical", "Logical"]
-  },
-  ISTP: {
-    title: "The Craftsman",
-    description: "Tolerant and flexible, quiet observers until a problem appears, then act quickly to find workable solutions.",
-    traits: ["Practical", "Adaptable", "Logical"]
-  },
-  ESFJ: {
-    title: "The Provider",
-    description: "Warmhearted, conscientious, and cooperative. Value security and stability.",
-    traits: ["Organized", "Nurturing", "Traditional"]
-  },
-  ESFP: {
-    title: "The Performer",
-    description: "Outgoing, friendly, and accepting. Exuberant lovers of life, people, and material comforts.",
-    traits: ["Spontaneous", "Energetic", "Fun-loving"]
-  },
-  ESTJ: {
-    title: "The Supervisor",
-    description: "Practical, matter-of-fact, with a natural head for business or mechanics.",
-    traits: ["Structured", "Efficient", "Practical"]
-  },
-  ESTP: {
-    title: "The Dynamo",
-    description: "Flexible and tolerant, take a pragmatic approach focused on immediate results.",
-    traits: ["Energetic", "Action-oriented", "Adaptable"]
-  }
-};
-
 export const MBTISelector: React.FC<MBTISelectorProps> = ({ value, onChange }) => {
+  const { t } = useLanguage();
   const [type, setType] = useState(value);
+  
+  // Get MBTI data from translations
+  const getMBTITypeData = (mbtiType: string) => {
+    return t(`personality.mbti.types.${mbtiType}`) as any;
+  };
   
   // Split MBTI into its four dimensions
   const iE = type[0]; // Introversion/Extroversion
   const sN = type[1]; // Sensing/Intuition
   const tF = type[2]; // Thinking/Feeling
   const jP = type[3]; // Judging/Perceiving
-  
-  // Handle selection for individual dimensions
+
   const handleDimensionChange = (dimension: number, newValue: string) => {
-    const currentChars = type.split('');
-    currentChars[dimension] = newValue;
-    const newType = currentChars.join('');
-    setType(newType);
-    onChange(newType);
+    const newType = type.split('');
+    newType[dimension] = newValue;
+    const result = newType.join('');
+    setType(result);
+    onChange(result);
   };
-  
+
+  const typeData = getMBTITypeData(type);
+
   return (
-    <div className="space-y-6">
-      {/* Current type display */}
-      <div className="bg-card border border-border p-4 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-medium">{type} - {mbtiDescriptions[type]?.title || "Personality Type"}</h3>
-            <p className="text-muted-foreground text-sm mt-1">{mbtiDescriptions[type]?.description}</p>
+    <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
+      {/* Current Type Display */}
+      <Card className="border-2 border-soul-purple/20">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl font-bold text-soul-purple">{type}</CardTitle>
+            <Badge variant="secondary" className="bg-soul-purple/10 text-soul-purple">
+              Current Selection
+            </Badge>
           </div>
-        </div>
-        <div className="flex gap-2 mt-3">
-          {mbtiDescriptions[type]?.traits.map((trait, i) => (
-            <span 
-              key={i}
-              className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full"
+          <CardDescription className="text-lg font-semibold">
+            {typeData?.title || 'Select your type'}
+          </CardDescription>
+        </CardHeader>
+        {typeData && (
+          <CardContent>
+            <p className="text-gray-600 mb-4">{typeData.description}</p>
+            <div className="flex flex-wrap gap-2">
+              {typeData.traits?.map((trait: string, index: number) => (
+                <Badge key={index} variant="outline" className="border-soul-purple/30 text-soul-purple">
+                  {trait}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Dimension Selection Tabs */}
+      <Tabs defaultValue="ie" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="ie">E/I</TabsTrigger>
+          <TabsTrigger value="sn">S/N</TabsTrigger>
+          <TabsTrigger value="tf">T/F</TabsTrigger>
+          <TabsTrigger value="jp">J/P</TabsTrigger>
+        </TabsList>
+
+        {/* Extroversion/Introversion */}
+        <TabsContent value="ie" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card 
+              className={`cursor-pointer transition-all hover:shadow-md ${iE === 'E' ? 'ring-2 ring-soul-purple' : ''}`}
+              onClick={() => handleDimensionChange(0, 'E')}
             >
-              {trait}
-            </span>
-          ))}
-        </div>
-      </div>
-      
-      {/* Selector for each dimension */}
-      <div className="space-y-4">
-        <Tabs defaultValue={iE} onValueChange={(v) => handleDimensionChange(0, v)} className="w-full">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Extroversion vs. Introversion</span>
-            <TabsList className="grid w-36 grid-cols-2">
-              <TabsTrigger value="E">E</TabsTrigger>
-              <TabsTrigger value="I">I</TabsTrigger>
-            </TabsList>
+              <CardHeader>
+                <CardTitle className="text-soul-purple">
+                  {t('personality.mbti.dimensions.extroversion.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{t('personality.mbti.dimensions.extroversion.description')}</p>
+              </CardContent>
+            </Card>
+            
+            <Card 
+              className={`cursor-pointer transition-all hover:shadow-md ${iE === 'I' ? 'ring-2 ring-soul-purple' : ''}`}
+              onClick={() => handleDimensionChange(0, 'I')}
+            >
+              <CardHeader>
+                <CardTitle className="text-soul-purple">
+                  {t('personality.mbti.dimensions.introversion.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{t('personality.mbti.dimensions.introversion.description')}</p>
+              </CardContent>
+            </Card>
           </div>
-          <TabsContent value="E" className="p-2 rounded text-xs text-muted-foreground">
-            Extroverted - Gains energy from social interaction
-          </TabsContent>
-          <TabsContent value="I" className="p-2 rounded text-xs text-muted-foreground">
-            Introverted - Gains energy from solitary time and reflection
-          </TabsContent>
-        </Tabs>
-        
-        <Tabs defaultValue={sN} onValueChange={(v) => handleDimensionChange(1, v)} className="w-full">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Sensing vs. Intuition</span>
-            <TabsList className="grid w-36 grid-cols-2">
-              <TabsTrigger value="S">S</TabsTrigger>
-              <TabsTrigger value="N">N</TabsTrigger>
-            </TabsList>
+        </TabsContent>
+
+        {/* Sensing/Intuition */}
+        <TabsContent value="sn" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card 
+              className={`cursor-pointer transition-all hover:shadow-md ${sN === 'S' ? 'ring-2 ring-soul-purple' : ''}`}
+              onClick={() => handleDimensionChange(1, 'S')}
+            >
+              <CardHeader>
+                <CardTitle className="text-soul-purple">
+                  {t('personality.mbti.dimensions.sensing.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{t('personality.mbti.dimensions.sensing.description')}</p>
+              </CardContent>
+            </Card>
+            
+            <Card 
+              className={`cursor-pointer transition-all hover:shadow-md ${sN === 'N' ? 'ring-2 ring-soul-purple' : ''}`}
+              onClick={() => handleDimensionChange(1, 'N')}
+            >
+              <CardHeader>
+                <CardTitle className="text-soul-purple">
+                  {t('personality.mbti.dimensions.intuition.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{t('personality.mbti.dimensions.intuition.description')}</p>
+              </CardContent>
+            </Card>
           </div>
-          <TabsContent value="S" className="p-2 rounded text-xs text-muted-foreground">
-            Sensing - Focuses on concrete facts and present details
-          </TabsContent>
-          <TabsContent value="N" className="p-2 rounded text-xs text-muted-foreground">
-            Intuition - Focuses on patterns, possibilities, and future implications
-          </TabsContent>
-        </Tabs>
-        
-        <Tabs defaultValue={tF} onValueChange={(v) => handleDimensionChange(2, v)} className="w-full">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Thinking vs. Feeling</span>
-            <TabsList className="grid w-36 grid-cols-2">
-              <TabsTrigger value="T">T</TabsTrigger>
-              <TabsTrigger value="F">F</TabsTrigger>
-            </TabsList>
+        </TabsContent>
+
+        {/* Thinking/Feeling */}
+        <TabsContent value="tf" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card 
+              className={`cursor-pointer transition-all hover:shadow-md ${tF === 'T' ? 'ring-2 ring-soul-purple' : ''}`}
+              onClick={() => handleDimensionChange(2, 'T')}
+            >
+              <CardHeader>
+                <CardTitle className="text-soul-purple">
+                  {t('personality.mbti.dimensions.thinking.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{t('personality.mbti.dimensions.thinking.description')}</p>
+              </CardContent>
+            </Card>
+            
+            <Card 
+              className={`cursor-pointer transition-all hover:shadow-md ${tF === 'F' ? 'ring-2 ring-soul-purple' : ''}`}
+              onClick={() => handleDimensionChange(2, 'F')}
+            >
+              <CardHeader>
+                <CardTitle className="text-soul-purple">
+                  {t('personality.mbti.dimensions.feeling.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{t('personality.mbti.dimensions.feeling.description')}</p>
+              </CardContent>
+            </Card>
           </div>
-          <TabsContent value="T" className="p-2 rounded text-xs text-muted-foreground">
-            Thinking - Makes decisions based on logic and objective analysis
-          </TabsContent>
-          <TabsContent value="F" className="p-2 rounded text-xs text-muted-foreground">
-            Feeling - Makes decisions based on values and subjective impact
-          </TabsContent>
-        </Tabs>
-        
-        <Tabs defaultValue={jP} onValueChange={(v) => handleDimensionChange(3, v)} className="w-full">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Judging vs. Perceiving</span>
-            <TabsList className="grid w-36 grid-cols-2">
-              <TabsTrigger value="J">J</TabsTrigger>
-              <TabsTrigger value="P">P</TabsTrigger>
-            </TabsList>
+        </TabsContent>
+
+        {/* Judging/Perceiving */}
+        <TabsContent value="jp" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card 
+              className={`cursor-pointer transition-all hover:shadow-md ${jP === 'J' ? 'ring-2 ring-soul-purple' : ''}`}
+              onClick={() => handleDimensionChange(3, 'J')}
+            >
+              <CardHeader>
+                <CardTitle className="text-soul-purple">
+                  {t('personality.mbti.dimensions.judging.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{t('personality.mbti.dimensions.judging.description')}</p>
+              </CardContent>
+            </Card>
+            
+            <Card 
+              className={`cursor-pointer transition-all hover:shadow-md ${jP === 'P' ? 'ring-2 ring-soul-purple' : ''}`}
+              onClick={() => handleDimensionChange(3, 'P')}
+            >
+              <CardHeader>
+                <CardTitle className="text-soul-purple">
+                  {t('personality.mbti.dimensions.perceiving.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{t('personality.mbti.dimensions.perceiving.description')}</p>
+              </CardContent>
+            </Card>
           </div>
-          <TabsContent value="J" className="p-2 rounded text-xs text-muted-foreground">
-            Judging - Prefers structure, planning, and firm decisions
-          </TabsContent>
-          <TabsContent value="P" className="p-2 rounded text-xs text-muted-foreground">
-            Perceiving - Prefers flexibility, adaptability, and keeping options open
-          </TabsContent>
-        </Tabs>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
