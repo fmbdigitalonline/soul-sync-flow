@@ -70,8 +70,8 @@ export interface User360Profile {
 }
 
 class User360DataService {
-  async getUserProfile(userId: string): Promise<User360Profile | null> {
-    console.log('🔄 360° Service: Aggregating user profile data for:', userId);
+  async getUserProfile(userId: string, retryCount: number = 0): Promise<User360Profile | null> {
+    console.log('🔄 360° Service: Aggregating user profile data for:', userId, `(attempt ${retryCount + 1})`);
     
     // EMERGENCY I/O PROTECTION: Check if we should use emergency mode
     const emergencyStatus = user360EmergencyService.getEmergencyStatus();
@@ -81,7 +81,21 @@ class User360DataService {
     }
     
     try {
-      // Real data aggregation from all silos - no mock data
+      // Optimized data aggregation with timeout and error specificity
+      console.log('📊 360° Service: Starting parallel data fetch');
+      const fetchPromises = [
+        this.getBlueprintDataWithTimeout(userId),
+        this.getIntelligenceDataWithTimeout(userId),
+        this.getMemoryNodesWithTimeout(userId),
+        this.getMemoryEdgesWithTimeout(userId),
+        this.getBehavioralPatternsWithTimeout(userId),
+        this.getGrowthJourneyWithTimeout(userId),
+        this.getUserActivitiesWithTimeout(userId),
+        this.getUserGoalsWithTimeout(userId),
+        this.getConversationsWithTimeout(userId),
+        this.getUserStatisticsWithTimeout(userId)
+      ];
+
       const [
         blueprintResult,
         intelligenceResult,
@@ -93,34 +107,40 @@ class User360DataService {
         goalsResult,
         conversationsResult,
         statisticsResult
-      ] = await Promise.allSettled([
-        this.getBlueprintData(userId),
-        this.getIntelligenceData(userId),
-        this.getMemoryNodes(userId),
-        this.getMemoryEdges(userId),
-        this.getBehavioralPatterns(userId),
-        this.getGrowthJourney(userId),
-        this.getUserActivities(userId),
-        this.getUserGoals(userId),
-        this.getConversations(userId),
-        this.getUserStatistics(userId)
+      ] = await Promise.allSettled(fetchPromises);
+
+      // Log specific failures for transparency
+      this.logDataSourceFailures([
+        { name: 'blueprint', result: blueprintResult },
+        { name: 'intelligence', result: intelligenceResult },
+        { name: 'memory_nodes', result: memoryNodesResult },
+        { name: 'memory_edges', result: memoryEdgesResult },
+        { name: 'patterns', result: patternsResult },
+        { name: 'growth', result: growthResult },
+        { name: 'activities', result: activitiesResult },
+        { name: 'goals', result: goalsResult },
+        { name: 'conversations', result: conversationsResult },
+        { name: 'statistics', result: statisticsResult }
       ]);
 
       // Transparent data availability tracking - never mask errors
       const dataAvailability: DataAvailability = {
         blueprint: {
           available: blueprintResult.status === 'fulfilled' && blueprintResult.value !== null,
-          lastUpdated: blueprintResult.status === 'fulfilled' && blueprintResult.value ? 
-            blueprintResult.value.updated_at : undefined,
+          lastUpdated: blueprintResult.status === 'fulfilled' && blueprintResult.value && 
+            typeof blueprintResult.value === 'object' && 'updated_at' in blueprintResult.value ?
+            (blueprintResult.value as any).updated_at : undefined,
           completionPercentage: blueprintResult.status === 'fulfilled' && blueprintResult.value ?
             this.calculateBlueprintCompleteness(blueprintResult.value) : 0
         },
         intelligence: {
           available: intelligenceResult.status === 'fulfilled' && intelligenceResult.value !== null,
-          modules: intelligenceResult.status === 'fulfilled' && intelligenceResult.value?.module_scores ?
-            Object.keys(intelligenceResult.value.module_scores) : [],
-          totalScore: intelligenceResult.status === 'fulfilled' && intelligenceResult.value?.intelligence_level ?
-            intelligenceResult.value.intelligence_level : undefined
+          modules: intelligenceResult.status === 'fulfilled' && intelligenceResult.value &&
+            typeof intelligenceResult.value === 'object' && 'module_scores' in intelligenceResult.value ?
+            Object.keys((intelligenceResult.value as any).module_scores || {}) : [],
+          totalScore: intelligenceResult.status === 'fulfilled' && intelligenceResult.value &&
+            typeof intelligenceResult.value === 'object' && 'intelligence_level' in intelligenceResult.value ?
+            (intelligenceResult.value as any).intelligence_level : undefined
         },
         memory: {
           available: memoryNodesResult.status === 'fulfilled' && memoryNodesResult.value !== null,
@@ -134,35 +154,41 @@ class User360DataService {
           patternCount: patternsResult.status === 'fulfilled' && isJsonArray(patternsResult.value) ? 
             patternsResult.value.length : 0,
           confidence: patternsResult.status === 'fulfilled' && isJsonArray(patternsResult.value) && patternsResult.value.length > 0 ?
-            patternsResult.value.reduce((sum: number, p: any) => sum + p.confidence, 0) / patternsResult.value.length : undefined
+            patternsResult.value.reduce((sum: number, p: any) => sum + (p.confidence || 0), 0) / patternsResult.value.length : undefined
         },
         growth: {
           available: growthResult.status === 'fulfilled' && growthResult.value !== null,
-          entriesCount: growthResult.status === 'fulfilled' && growthResult.value ? (
-            (isJsonArray(growthResult.value.reflection_entries) ? growthResult.value.reflection_entries.length : 0) +
-            (isJsonArray(growthResult.value.mood_entries) ? growthResult.value.mood_entries.length : 0)
+          entriesCount: growthResult.status === 'fulfilled' && growthResult.value && 
+            typeof growthResult.value === 'object' ? (
+            (isJsonArray((growthResult.value as any).reflection_entries) ? (growthResult.value as any).reflection_entries.length : 0) +
+            (isJsonArray((growthResult.value as any).mood_entries) ? (growthResult.value as any).mood_entries.length : 0)
           ) : 0,
-          lastReflection: growthResult.status === 'fulfilled' && growthResult.value?.last_reflection_date ?
-            growthResult.value.last_reflection_date : undefined
+          lastReflection: growthResult.status === 'fulfilled' && growthResult.value &&
+            typeof growthResult.value === 'object' && 'last_reflection_date' in growthResult.value ?
+            (growthResult.value as any).last_reflection_date : undefined
         },
         activities: {
           available: activitiesResult.status === 'fulfilled' && activitiesResult.value !== null,
-          totalActivities: activitiesResult.status === 'fulfilled' ? activitiesResult.value?.length || 0 : 0,
-          totalPoints: statisticsResult.status === 'fulfilled' && statisticsResult.value?.total_points ?
-            statisticsResult.value.total_points : 0
+          totalActivities: activitiesResult.status === 'fulfilled' && isJsonArray(activitiesResult.value) ? 
+            activitiesResult.value.length : 0,
+          totalPoints: statisticsResult.status === 'fulfilled' && statisticsResult.value &&
+            typeof statisticsResult.value === 'object' && 'total_points' in statisticsResult.value ?
+            (statisticsResult.value as any).total_points : 0
         },
         goals: {
           available: goalsResult.status === 'fulfilled' && goalsResult.value !== null,
-          activeGoals: goalsResult.status === 'fulfilled' ?
-            goalsResult.value?.filter((g: any) => g.status === 'active').length || 0 : 0,
-          completedGoals: goalsResult.status === 'fulfilled' ?
-            goalsResult.value?.filter((g: any) => g.status === 'completed').length || 0 : 0
+          activeGoals: goalsResult.status === 'fulfilled' && isJsonArray(goalsResult.value) ?
+            goalsResult.value.filter((g: any) => g.status === 'active').length : 0,
+          completedGoals: goalsResult.status === 'fulfilled' && isJsonArray(goalsResult.value) ?
+            goalsResult.value.filter((g: any) => g.status === 'completed').length : 0
         },
         conversations: {
           available: conversationsResult.status === 'fulfilled' && conversationsResult.value !== null,
-          totalConversations: conversationsResult.status === 'fulfilled' ? conversationsResult.value?.length || 0 : 0,
-          lastActivity: conversationsResult.status === 'fulfilled' && conversationsResult.value?.length > 0 ?
-            conversationsResult.value[0].last_activity : undefined
+          totalConversations: conversationsResult.status === 'fulfilled' && isJsonArray(conversationsResult.value) ? 
+            conversationsResult.value.length : 0,
+          lastActivity: conversationsResult.status === 'fulfilled' && isJsonArray(conversationsResult.value) && 
+            conversationsResult.value.length > 0 && 'last_activity' in conversationsResult.value[0] ?
+            (conversationsResult.value[0] as any).last_activity : undefined
         }
       };
 
@@ -207,39 +233,160 @@ class User360DataService {
 
       return profile360;
     } catch (error) {
-      console.error('❌ 360° Service: Error aggregating profile:', error);
-      // Don't mask errors - surface them clearly
-      throw error;
+      const errorMessage = error instanceof Error ? error.message : 'Database operation failed';
+      console.error('❌ 360° Service: Error aggregating profile:', {
+        error: errorMessage,
+        userId,
+        attempt: retryCount + 1,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Implement retry logic for transient failures
+      if (retryCount < 2 && this.isRetryableError(error)) {
+        console.log(`🔄 360° Service: Retrying profile fetch (attempt ${retryCount + 2})`);
+        await this.delay(1000 * (retryCount + 1)); // Exponential backoff
+        return this.getUserProfile(userId, retryCount + 1);
+      }
+      
+      // Don't mask errors - surface them with context
+      const contextualError = new Error(`Profile aggregation failed: ${errorMessage} (after ${retryCount + 1} attempts)`);
+      contextualError.name = 'User360ProfileError';
+      throw contextualError;
     }
+  }
+
+  private async getBlueprintDataWithTimeout(userId: string) {
+    return this.withTimeout(this.getBlueprintData(userId), 5000, 'Blueprint data fetch timeout');
+  }
+
+  private async getIntelligenceDataWithTimeout(userId: string) {
+    return this.withTimeout(this.getIntelligenceData(userId), 5000, 'Intelligence data fetch timeout');
+  }
+
+  private async getMemoryNodesWithTimeout(userId: string) {
+    return this.withTimeout(this.getMemoryNodes(userId), 8000, 'Memory nodes fetch timeout');
+  }
+
+  private async getMemoryEdgesWithTimeout(userId: string) {
+    return this.withTimeout(this.getMemoryEdges(userId), 8000, 'Memory edges fetch timeout');
+  }
+
+  private async getBehavioralPatternsWithTimeout(userId: string) {
+    return this.withTimeout(this.getBehavioralPatterns(userId), 6000, 'Behavioral patterns fetch timeout');
+  }
+
+  private async getGrowthJourneyWithTimeout(userId: string) {
+    return this.withTimeout(this.getGrowthJourney(userId), 5000, 'Growth journey fetch timeout');
+  }
+
+  private async getUserActivitiesWithTimeout(userId: string) {
+    return this.withTimeout(this.getUserActivities(userId), 6000, 'User activities fetch timeout');
+  }
+
+  private async getUserGoalsWithTimeout(userId: string) {
+    return this.withTimeout(this.getUserGoals(userId), 5000, 'User goals fetch timeout');
+  }
+
+  private async getConversationsWithTimeout(userId: string) {
+    return this.withTimeout(this.getConversations(userId), 6000, 'Conversations fetch timeout');
+  }
+
+  private async getUserStatisticsWithTimeout(userId: string) {
+    return this.withTimeout(this.getUserStatistics(userId), 5000, 'User statistics fetch timeout');
+  }
+
+  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
+      )
+    ]);
+  }
+
+  private logDataSourceFailures(results: Array<{ name: string; result: PromiseSettledResult<any> }>) {
+    const failures = results.filter(r => r.result.status === 'rejected');
+    if (failures.length > 0) {
+      console.warn('⚠️ 360° Service: Data source failures:', failures.map(f => ({
+        source: f.name,
+        error: f.result.status === 'rejected' ? f.result.reason?.message || 'Unknown error' : null
+      })));
+    }
+  }
+
+  private isRetryableError(error: any): boolean {
+    const errorMessage = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+    return errorMessage.includes('timeout') || 
+           errorMessage.includes('network') || 
+           errorMessage.includes('connection') ||
+           errorMessage.includes('temporary') ||
+           errorMessage.includes('busy');
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   private async getBlueprintData(userId: string) {
-    const { data, error } = await supabase
-      .from('blueprints')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('blueprints')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
-      console.warn('Blueprint data unavailable:', error.message);
+      if (error && error.code !== 'PGRST116') {
+        console.warn('Blueprint data fetch failed:', error.message);
+        return null;
+      }
+      
+      // Check for MBTI data issues and attempt repair if needed
+      if (data && (!data.cognition_mbti || 
+          (typeof data.cognition_mbti === 'object' && 
+           (!('type' in data.cognition_mbti) || (data.cognition_mbti as any).type === 'Unknown')))) {
+        console.log('🔧 360° Service: Detected missing MBTI data, attempting repair');
+        // Import here to avoid circular dependencies
+        const { mbtiRepairService } = await import('./mbti-data-repair-service');
+        const repairResult = await mbtiRepairService.repairUserMBTIData(userId);
+        
+        if (repairResult.success && repairResult.repaired) {
+          console.log('✅ 360° Service: MBTI data repaired successfully');
+          // Refetch the updated data
+          const { data: updatedData } = await supabase
+            .from('blueprints')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('is_active', true)
+            .maybeSingle();
+          return updatedData;
+        }
+      }
+      
+      return data;
+    } catch (error) {
+      console.warn('Blueprint data unavailable:', error instanceof Error ? error.message : 'Unknown error');
       return null;
     }
-    return data;
   }
 
   private async getIntelligenceData(userId: string) {
-    const { data, error } = await supabase
-      .from('hacs_intelligence')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('hacs_intelligence')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
-      console.warn('Intelligence data unavailable:', error.message);
+      if (error && error.code !== 'PGRST116') {
+        console.warn('Intelligence data fetch failed:', error.message);
+        return null;
+      }
+      return data;
+    } catch (error) {
+      console.warn('Intelligence data unavailable:', error instanceof Error ? error.message : 'Unknown error');
       return null;
     }
-    return data;
   }
 
   private async getMemoryNodes(userId: string) {
