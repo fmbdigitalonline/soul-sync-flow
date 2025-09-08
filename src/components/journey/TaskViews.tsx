@@ -64,7 +64,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [activeView, setActiveView] = useState<'kanban' | 'list' | 'calendar'>('kanban');
   const [mobileKanbanColumn, setMobileKanbanColumn] = useState<'todo' | 'in_progress' | 'stuck' | 'completed'>('todo');
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
 
   // Extract all tasks from goals and normalize them
   const currentGoals = (productivityJourney?.current_goals || []) as Goal[];

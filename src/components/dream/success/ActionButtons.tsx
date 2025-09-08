@@ -16,7 +16,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   onViewJourney,
   onRestartTour
 }) => {
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
   const { t } = useLanguage();
 
   return (

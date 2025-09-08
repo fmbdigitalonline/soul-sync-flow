@@ -52,7 +52,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
   const [inputValue, setInputValue] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
   const { t } = useLanguage();
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
   const [assistantSteps, setAssistantSteps] = React.useState<string[]>([]);
   const [currentStepIdx, setCurrentStepIdx] = React.useState(0);
 

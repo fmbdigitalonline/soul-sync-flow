@@ -24,7 +24,7 @@ const Tasks = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
 
   // Check authentication status
   useEffect(() => {
