@@ -206,9 +206,11 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   const renderSafeContent = (content: any, contentType: string = 'Unknown') => {
     if (typeof content === 'string') {
       return (
-        <p className={`text-foreground leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-          {content}
-        </p>
+        <div className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
+          <p className={`leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
+            {content}
+          </p>
+        </div>
       );
     } else if (typeof content === 'object' && content !== null) {
       // Log for developers only
@@ -241,9 +243,11 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       // If we have meaningful text, display it
       if (extractedText && typeof extractedText === 'string' && extractedText.trim().length > 0) {
         return (
-          <p className={`text-foreground leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-            {extractedText.trim()}
-          </p>
+          <div className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
+            <p className={`leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
+              {extractedText.trim()}
+            </p>
+          </div>
         );
       }
       
@@ -258,9 +262,11 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       );
     } else {
       return (
-        <p className={`text-muted-foreground italic ${getTextSize('text-sm')}`}>
-          {language === 'nl' ? 'Inhoud wordt binnenkort beschikbaar' : 'Content will be available soon'}
-        </p>
+        <div className="p-3 bg-muted/50 rounded-lg">
+          <p className={`text-muted-foreground italic ${getTextSize('text-sm')}`}>
+            {language === 'nl' ? 'Inhoud wordt binnenkort beschikbaar' : 'Content will be available soon'}
+          </p>
+        </div>
       );
     }
   };
@@ -857,8 +863,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                         {Array.isArray(dimensionContent) ? (
                                           <div className="space-y-2">
                                             {dimensionContent.map((item, index) => (
-                                              <div key={index} className="p-3 bg-muted/30 rounded-lg border">
-                                                <p className="text-card-foreground leading-relaxed whitespace-pre-wrap break-words">
+                                              <div key={index} className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
+                                                <p className="leading-relaxed whitespace-pre-wrap break-words">
                                                   {typeof item === 'string' ? item : JSON.stringify(item, null, 2)}
                                                 </p>
                                               </div>
