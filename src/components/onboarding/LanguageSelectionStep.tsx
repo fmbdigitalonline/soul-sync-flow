@@ -14,7 +14,7 @@ export const LanguageSelectionStep: React.FC<LanguageSelectionStepProps> = ({
   onLanguageSelect,
   selectedLanguage
 }) => {
-  const { language: currentLanguage, changeLanguage } = useLanguage();
+  const { language: currentLanguage, setLanguage } = useLanguage();
 
   const languages = [
     { 
@@ -35,7 +35,7 @@ export const LanguageSelectionStep: React.FC<LanguageSelectionStepProps> = ({
 
   const handleLanguageSelect = (lang: Language) => {
     // Update the global language context immediately
-    changeLanguage(lang);
+    setLanguage(lang);
     
     // Notify parent component
     onLanguageSelect(lang);
