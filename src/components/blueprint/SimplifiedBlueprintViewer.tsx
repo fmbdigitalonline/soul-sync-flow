@@ -154,8 +154,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.humanDesign')}</h4>
-                  <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{hdType}</p>
-                  <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{authority} {t('blueprint.descriptions.authority')}</p>
+                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg mb-2">
+                    <p className={`${getTextSize('text-lg')} font-cormorant font-bold break-words`}>{hdType}</p>
+                  </div>
+                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
+                    <p className={`${getTextSize('text-xs')} font-inter break-words`}>{authority} {t('blueprint.descriptions.authority')}</p>
+                  </div>
                 </div>
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.chineseZodiac')}</h4>
@@ -226,12 +230,16 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.energyType')}</h4>
-                  <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{hdType}</p>
+                  <div className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg mb-2">
+                    <p className={`${getTextSize('text-3xl')} font-cormorant font-bold break-words`}>{hdType}</p>
+                  </div>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{t('blueprint.descriptions.sustainableEnergy')}</p>
                 </div>
                 <div>
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.decisionAuthority')}</h4>
-                  <p className={`${getTextSize('text-xl')} font-cormorant font-bold text-soul-purple break-words`}>{authority}</p>
+                  <div className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg mb-2">
+                    <p className={`${getTextSize('text-xl')} font-cormorant font-bold break-words`}>{authority}</p>
+                  </div>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{t('blueprint.descriptions.innerAuthority')}</p>
                 </div>
               </div>
@@ -239,15 +247,21 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.strategy')}</h5>
-                  <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{strategy}</p>
+                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
+                    <p className={`${getTextSize('text-lg')} font-inter font-bold capitalize break-words`}>{strategy}</p>
+                  </div>
                 </div>
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.profile')}</h5>
-                  <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple break-words`}>{profile}</p>
+                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
+                    <p className={`${getTextSize('text-lg')} font-inter font-bold break-words`}>{profile}</p>
+                  </div>
                 </div>
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.pacing')}</h5>
-                  <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{pacing}</p>
+                  <div className="p-2 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
+                    <p className={`${getTextSize('text-lg')} font-inter font-bold capitalize break-words`}>{pacing}</p>
+                  </div>
                 </div>
               </div>
             </div>
