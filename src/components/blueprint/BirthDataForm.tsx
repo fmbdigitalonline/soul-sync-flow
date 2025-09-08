@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, MapPin, User } from 'lucide-react';
 import { MBTISelector } from './MBTISelector';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BirthDataFormProps {
   onSubmit: (data: {
@@ -20,6 +21,7 @@ interface BirthDataFormProps {
 }
 
 export const BirthDataForm: React.FC<BirthDataFormProps> = ({ onSubmit, className }) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     full_name: '',
     preferred_name: '',
@@ -97,7 +99,7 @@ export const BirthDataForm: React.FC<BirthDataFormProps> = ({ onSubmit, classNam
               <Input
                 id="full_name"
                 type="text"
-                placeholder="Your complete legal name"
+                placeholder={t('forms.placeholders.fullName')}
                 value={formData.full_name}
                 onChange={(e) => handleInputChange('full_name', e.target.value)}
                 className={`mt-1 bg-gray-800 border-gray-700 text-white ${errors.full_name ? 'border-red-500' : ''}`}
@@ -113,7 +115,7 @@ export const BirthDataForm: React.FC<BirthDataFormProps> = ({ onSubmit, classNam
               <Input
                 id="preferred_name"
                 type="text"
-                placeholder="What you'd like to be called"
+                placeholder={t('forms.placeholders.displayName')}
                 value={formData.preferred_name}
                 onChange={(e) => handleInputChange('preferred_name', e.target.value)}
                 className="mt-1 bg-gray-800 border-gray-700 text-white"
@@ -164,7 +166,7 @@ export const BirthDataForm: React.FC<BirthDataFormProps> = ({ onSubmit, classNam
               <Input
                 id="birth_location"
                 type="text"
-                placeholder="City, Country (e.g., Paramaribo, Suriname)"
+                placeholder={t('forms.placeholders.cityCountry')}
                 value={formData.birth_location}
                 onChange={(e) => handleInputChange('birth_location', e.target.value)}
                 className={`mt-1 bg-gray-800 border-gray-700 text-white ${errors.birth_location ? 'border-red-500' : ''}`}

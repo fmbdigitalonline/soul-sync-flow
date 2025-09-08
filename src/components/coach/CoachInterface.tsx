@@ -291,7 +291,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="Ask about your task, request actions, or get guidance..."
+            placeholder={t('forms.placeholders.askCoach')}
             className="flex-1"
             disabled={isLoading}
           />

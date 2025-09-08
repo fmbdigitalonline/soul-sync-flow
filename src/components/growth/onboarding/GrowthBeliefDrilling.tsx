@@ -10,6 +10,7 @@ import { LifeDomain } from '@/types/growth-program';
 import { useProgramAwareCoach } from '@/hooks/use-program-aware-coach';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SlowStreamingMessage } from '@/components/coach/SlowStreamingMessage';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface GrowthBeliefDrillingProps {
   domain: LifeDomain;
@@ -24,6 +25,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
   onBack,
   beliefData
 }) => {
+  const { t } = useLanguage();
   const { 
     messages, 
     isLoading, 
@@ -223,7 +225,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Share what comes to mind..."
+                placeholder={t('forms.placeholders.shareBeliefs')}
                 className="flex-1 min-h-[60px] max-h-[120px] resize-none"
                 disabled={isLoading || isStreaming}
               />

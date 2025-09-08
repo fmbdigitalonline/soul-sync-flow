@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { useBlueprintData } from '@/hooks/use-blueprint-data';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ImmediateGrowthInterfaceProps {
   onSendMessage: (message: string) => void;
@@ -23,6 +24,7 @@ export const ImmediateGrowthInterface: React.FC<ImmediateGrowthInterfaceProps> =
   userDisplayName = 'friend',
   coreTraits = []
 }) => {
+  const { t } = useLanguage();
   const [inputValue, setInputValue] = useState('');
   const { getTextSize, touchTargetSize, isFoldDevice, spacing } = useResponsiveLayout();
   const { blueprintData, getDisplayName } = useBlueprintData();
@@ -115,7 +117,7 @@ export const ImmediateGrowthInterface: React.FC<ImmediateGrowthInterfaceProps> =
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Share what's on your heart..."
+                placeholder={t('forms.placeholders.shareThoughts')}
                 className={`border-soul-purple/20 focus:border-soul-purple focus:ring-soul-purple/20 rounded-2xl ${getTextSize('text-sm')} ${touchTargetSize}`}
                 disabled={isLoading}
               />

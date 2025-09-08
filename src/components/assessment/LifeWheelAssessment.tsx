@@ -10,6 +10,7 @@ import { LifeDomain } from '@/types/growth-program';
 import { lifeOrchestratorService } from '@/services/life-orchestrator-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DomainAssessment {
   domain: LifeDomain;
@@ -64,6 +65,7 @@ const DOMAIN_CONFIG = {
 } as const;
 
 export function LifeWheelAssessment({ onComplete, onCancel, initialAssessments }: LifeWheelAssessmentProps) {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [assessments, setAssessments] = useState<DomainAssessment[]>(() => {
@@ -265,7 +267,7 @@ export function LifeWheelAssessment({ onComplete, onCancel, initialAssessments }
               Additional thoughts? (Optional)
             </label>
             <Textarea
-              placeholder="Any specific goals, challenges, or context about this area..."
+              placeholder={t('forms.placeholders.goalsContext')}
               value={currentAssessment.notes || ''}
               onChange={(e) => updateCurrentAssessment({ notes: e.target.value })}
               className="min-h-16"

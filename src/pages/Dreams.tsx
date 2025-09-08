@@ -196,7 +196,7 @@ const Dreams = () => {
       if (createdGoal) {
         setCurrentView("success");
       } else {
-        toast({ title: "Not available", description: "Available after creating a dream." });
+        toast({ title: t('toast.info.notAvailable'), description: t('dreams.notAvailableDesc') });
         navigate("/dreams", { replace: true });
       }
       return;
@@ -879,7 +879,7 @@ const Dreams = () => {
                     description: t('dreams.cards.successView.description'),
                     Icon: Sparkles,
                     image: '/assets/home/dreams.jpg',
-                    onClick: () => { createdGoal ? navigate("/dreams/success") : toast({ title: "Coming soon", description: "Available after creating a dream." }); }
+                    onClick: () => { createdGoal ? navigate("/dreams/success") : toast({ title: t('toast.info.comingSoon'), description: t('dreams.notAvailableDesc') }); }
                   }
                 ]}
                 className="mb-6"
