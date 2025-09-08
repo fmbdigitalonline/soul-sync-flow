@@ -431,7 +431,6 @@ Generate comprehensive analysis with practical applications.`
     }, 0);
     
     await updateJobStatus(jobId, 'processing', `Completed ${agent}`, undefined, currentWordCount);
-  }
 }
 
 async function processSingleGate(job: any, gateNumber: number) {
