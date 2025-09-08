@@ -524,7 +524,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               className="flex-1 sm:flex-none bg-soul-purple hover:bg-soul-purple/90"
             >
               <Maximize2 className="h-4 w-4" />
-              <span className="ml-1 sm:ml-2">View Full Report</span>
+              <span className="ml-1 sm:ml-2">{t('reportModal.viewFullReport')}</span>
             </Button>
             <Button 
               onClick={handleRegenerate} 
@@ -918,7 +918,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       <ReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
-        jobId={currentReport ? `${reportType}-${currentReport.generated_at}` : 'unknown'}
+        reportType={reportType}
         reportContent={
           currentReport ? (
             <div className="space-y-6">

@@ -1,25 +1,27 @@
 import React from 'react';
-import { X, ArrowLeft } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CosmicCard } from '@/components/ui/cosmic-card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  jobId: string;
+  reportType: 'standard' | 'hermetic';
   reportContent?: React.ReactNode;
 }
 
 const ReportModal: React.FC<ReportModalProps> = ({ 
   isOpen, 
   onClose, 
-  jobId, 
+  reportType, 
   reportContent 
 }) => {
   const { spacing, getTextSize, isMobile, isUltraNarrow } = useResponsiveLayout();
+  const { t } = useLanguage();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -34,7 +36,7 @@ const ReportModal: React.FC<ReportModalProps> = ({
         `}>
           <div className="flex items-center justify-between w-full">
             <DialogTitle className={`${getTextSize('text-lg')} font-semibold text-foreground flex-1 pr-4`}>
-              Full Report - Job {jobId}
+              {t(`reportModal.${reportType}Title`)}
             </DialogTitle>
             <Button
               variant="ghost"
@@ -55,11 +57,8 @@ const ReportModal: React.FC<ReportModalProps> = ({
                 {/* Report Header */}
                 <div className="text-center space-y-2">
                   <h2 className={`${getTextSize('text-xl')} font-bold text-foreground`}>
-                    Hermetic Report
+                    {t(`reportModal.${reportType}Title`)}
                   </h2>
-                  <p className={`${getTextSize('text-base')} text-muted-foreground`}>
-                    Job ID: {jobId}
-                  </p>
                 </div>
 
                 {/* Report Content */}
@@ -68,33 +67,10 @@ const ReportModal: React.FC<ReportModalProps> = ({
                     <div className="space-y-4">
                       <div className="bg-accent/10 rounded-2xl p-6">
                         <h3 className={`${getTextSize('text-lg')} font-semibold mb-3 text-foreground`}>
-                          Report Summary
+                          {t('reportModal.reportSummary')}
                         </h3>
                         <p className="text-muted-foreground leading-relaxed">
-                          This is the detailed view of your hermetic report. The enhanced mobile experience 
-                          provides improved readability with larger fonts, better spacing, and a distraction-free 
-                          full-screen interface.
-                        </p>
-                      </div>
-
-                      <div className="space-y-3">
-                        <h3 className={`${getTextSize('text-lg')} font-semibold text-foreground`}>
-                          Detailed Analysis
-                        </h3>
-                        <p className="text-muted-foreground leading-relaxed">
-                          Your report content will be displayed here with optimal formatting for mobile reading. 
-                          The larger text size, generous spacing, and full-screen view ensure comfortable 
-                          reading on all mobile devices.
-                        </p>
-                      </div>
-
-                      <div className="bg-primary/5 rounded-2xl p-6 border border-primary/20">
-                        <h3 className={`${getTextSize('text-lg')} font-semibold mb-3 text-primary`}>
-                          Key Findings
-                        </h3>
-                        <p className="text-foreground leading-relaxed">
-                          Important insights and findings from your hermetic analysis will be highlighted 
-                          in sections like this, making them easy to identify and review.
+                          {t('reportModal.noContentAvailable')}
                         </p>
                       </div>
                     </div>

@@ -412,6 +412,16 @@ const translations: Record<Language, Translations> = {
       structuredGuidance: 'Structured guidance - regular support',
       completeSetup: 'Complete my setup'
     },
+    // Report Modal
+    reportModal: {
+      standardTitle: 'Standard Report',
+      hermeticTitle: 'Hermetic Report',
+      viewFullReport: 'View Full Report',
+      reportSummary: 'Report Summary',
+      detailedAnalysis: 'Detailed Analysis',
+      keyFindings: 'Key Findings',
+      noContentAvailable: 'No report content available'
+    },
     // Personality Assessment
     personality: {
       energySource: 'Where do you get your energy?',
@@ -1532,6 +1542,16 @@ const translations: Record<Language, Translations> = {
       lightTouch: 'Lichte aanraking - incidentele inzichten',
       structuredGuidance: 'Gestructureerde begeleiding - regelmatige ondersteuning',
       completeSetup: 'Voltooi mijn setup'
+    },
+    // Report Modal
+    reportModal: {
+      standardTitle: 'Standaard Rapport',
+      hermeticTitle: 'Hermetisch Rapport',
+      viewFullReport: 'Volledig Rapport Bekijken',
+      reportSummary: 'Rapportoverzicht',
+      detailedAnalysis: 'Gedetailleerde Analyse',
+      keyFindings: 'Belangrijkste Bevindingen',
+      noContentAvailable: 'Geen rapportinhoud beschikbaar'
     },
     // Persoonlijkheidsbeoordeling
     personality: {

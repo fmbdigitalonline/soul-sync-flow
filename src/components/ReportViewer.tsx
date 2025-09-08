@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CosmicCard } from '@/components/ui/cosmic-card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { ArrowLeft, Maximize2 } from 'lucide-react';
 import ReportModal from './ReportModal';
 
@@ -12,6 +13,7 @@ const ReportViewer: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { spacing, getTextSize, isMobile, isUltraNarrow, isFoldDevice } = useResponsiveLayout();
+  const { t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -50,7 +52,7 @@ const ReportViewer: React.FC = () => {
                   variant="default"
                 >
                   <Maximize2 className="mr-2 h-4 w-4" />
-                  <span className={getTextSize('text-sm')}>View Full Report</span>
+                  <span className={getTextSize('text-sm')}>{t('reportModal.viewFullReport')}</span>
                 </Button>
               </CardContent>
             </CosmicCard>
@@ -60,7 +62,7 @@ const ReportViewer: React.FC = () => {
         <ReportModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          jobId={jobId || 'unknown'}
+          reportType="hermetic"
         />
       </div>
     </div>
