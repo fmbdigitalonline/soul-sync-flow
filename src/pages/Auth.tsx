@@ -16,7 +16,6 @@ import { getFunnelData, clearFunnelData, getFunnelSummary } from "@/utils/funnel
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,6 +30,7 @@ export default function Auth() {
   const from = location.state?.from?.pathname || "/";
   const fromFunnel = searchParams.get('from') === 'funnel';
   const funnelData = getFunnelData();
+  const [isSignUp, setIsSignUp] = useState(fromFunnel && funnelData ? true : false);
 
   useEffect(() => {
     if (!authLoading && user) {
