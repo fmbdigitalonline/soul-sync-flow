@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge } from 'lucide-react';
+import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge, Maximize2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CosmicCard } from '@/components/ui/cosmic-card';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { supabase } from '@/integrations/supabase/client';
+import ReportModal from '@/components/ReportModal';
 
 interface PersonalityReportViewerProps {
   className?: string;
@@ -41,6 +42,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     practical_framework: false,
     intelligence_analysis: false
   });
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   useEffect(() => {
     loadReport();
@@ -516,6 +518,15 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
             <Button 
+              onClick={() => setIsReportModalOpen(true)} 
+              variant="default" 
+              size="sm"
+              className="flex-1 sm:flex-none bg-soul-purple hover:bg-soul-purple/90"
+            >
+              <Maximize2 className="h-4 w-4" />
+              <span className="ml-1 sm:ml-2">View Full Report</span>
+            </Button>
+            <Button 
               onClick={handleRegenerate} 
               variant="outline" 
               size="sm"
@@ -902,6 +913,110 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           })()}
         </div>
       </ScrollArea>
+
+      {/* Mobile-Optimized Report Modal */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        jobId={currentReport ? `${reportType}-${currentReport.generated_at}` : 'unknown'}
+        reportContent={
+          currentReport ? (
+            <div className="space-y-6">
+              {/* Report Title */}
+              <div className="text-center space-y-2">
+                <h2 className="text-2xl font-bold text-foreground">
+                  {reportType === 'hermetic' ? 'Hermetic Blueprint Report' : 'Personality Report'}
+                </h2>
+                <p className="text-muted-foreground">
+                  Generated on {new Date(currentReport.generated_at).toLocaleDateString()}
+                </p>
+              </div>
+
+              {/* Report Content */}
+              <div className="space-y-8">
+                {(() => {
+                  if (!currentReport) return null;
+                  
+                  const isHermetic = reportType === 'hermetic';
+                  const reportContent = currentReport.report_content;
+                  
+                  if (isHermetic) {
+                    const hermeticContent = reportContent as any;
+                    
+                    return (
+                      <div className="space-y-8">
+                        {/* Integrated Summary */}
+                        <div className="bg-accent/10 rounded-2xl p-6">
+                          <h3 className="text-xl font-semibold mb-4 text-foreground">Integrated Summary</h3>
+                          <div className="prose prose-lg max-w-none">
+                            {renderSafeContent(hermeticContent.integrated_summary, 'Integrated Summary')}
+                          </div>
+                        </div>
+                        
+                        {/* Seven Laws */}
+                        {hermeticContent.seven_laws_integration && (
+                          <div className="space-y-6">
+                            <h3 className="text-xl font-semibold text-foreground">Seven Hermetic Laws Integration</h3>
+                            {Object.entries(hermeticContent.seven_laws_integration).map(([lawKey, lawContent]) => (
+                              <div key={lawKey} className="bg-primary/5 rounded-2xl p-6 border border-primary/20">
+                                <h4 className="text-lg font-semibold mb-3 text-primary">
+                                  Law of {lawKey.charAt(0).toUpperCase() + lawKey.slice(1)}
+                                </h4>
+                                <div className="prose prose-lg max-w-none">
+                                  {renderSafeContent(lawContent, `Law of ${lawKey}`)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Practical Framework */}
+                        {hermeticContent.practical_activation_framework && (
+                          <div className="bg-accent/10 rounded-2xl p-6">
+                            <h3 className="text-xl font-semibold mb-4 text-foreground">Practical Activation Framework</h3>
+                            <div className="prose prose-lg max-w-none">
+                              {renderSafeContent(hermeticContent.practical_activation_framework, 'Practical Framework')}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  } else {
+                    // Standard report rendering
+                    return (
+                      <div className="space-y-6">
+                        {sectionOrder.map(key => {
+                          const sectionContent = reportContent[key as keyof typeof reportContent];
+                          const SectionIcon = sectionIcons[key as keyof typeof sectionIcons] || Sparkles;
+                          const title = sectionTitles[key as keyof typeof sectionTitles] || key;
+                          
+                          if (!sectionContent) return null;
+                          
+                          return (
+                            <div key={key} className="bg-accent/10 rounded-2xl p-6">
+                              <div className="flex items-center gap-3 mb-4">
+                                <SectionIcon className="h-6 w-6 text-primary" />
+                                <h3 className="text-xl font-semibold text-foreground">{title}</h3>
+                              </div>
+                              <div className="prose prose-lg max-w-none">
+                                {renderSafeContent(sectionContent, title)}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  }
+                })()}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No report content available</p>
+            </div>
+          )
+        }
+      />
     </div>
   );
 };
