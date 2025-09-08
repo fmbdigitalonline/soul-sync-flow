@@ -358,7 +358,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 </div>
               </div>
 
-              <div className="mt-4 p-3 bg-soul-purple/5 rounded-3xl">
+              <div className="mt-4 p-3 bg-soul-purple/5 rounded-3xl text-center">
                 <h5 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.generationalInfluence')}</h5>
                 <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac} {element}</p>
                 <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{t('blueprint.descriptions.chineseAstrologyAdds')} wisdom to your profile</p>
