@@ -202,30 +202,64 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     }
   };
 
-  // Helper function to safely render content
+  // Helper function to safely render content with smart extraction
   const renderSafeContent = (content: any, contentType: string = 'Unknown') => {
     if (typeof content === 'string') {
       return (
-        <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
+        <p className={`text-foreground leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
           {content}
         </p>
       );
     } else if (typeof content === 'object' && content !== null) {
-      console.warn(`⚠️ Object content detected for ${contentType}:`, content);
-      return (
-        <div className="space-y-2">
-          <p className={`text-amber-600 font-medium ${getTextSize('text-xs')}`}>
-            Debug: Object content detected - displaying as JSON
+      // Log for developers only
+      console.log(`📄 Processing ${contentType} content:`, content);
+      
+      // Smart content extraction from nested objects
+      let extractedText: any = null;
+      
+      // Try common text properties
+      if (content.content) extractedText = content.content;
+      else if (content.text) extractedText = content.text;
+      else if (content.description) extractedText = content.description;
+      else if (content.summary) extractedText = content.summary;
+      else if (content.analysis) extractedText = content.analysis;
+      else if (content.insight) extractedText = content.insight;
+      
+      // If extracted text is still an object, try to flatten it
+      if (extractedText && typeof extractedText === 'object') {
+        if (Array.isArray(extractedText)) {
+          extractedText = (extractedText as string[]).join(' ');
+        } else {
+          // Get all string values from the object
+          const textValues = Object.values(extractedText)
+            .filter(val => typeof val === 'string')
+            .join(' ');
+          extractedText = textValues;
+        }
+      }
+      
+      // If we have meaningful text, display it
+      if (extractedText && typeof extractedText === 'string' && extractedText.trim().length > 0) {
+        return (
+          <p className={`text-foreground leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
+            {extractedText.trim()}
           </p>
-          <pre className={`bg-gray-50 p-3 rounded text-xs overflow-x-auto border ${getTextSize('text-xs')}`}>
-            {JSON.stringify(content, null, 2)}
-          </pre>
+        );
+      }
+      
+      // If no extractable content, show user-friendly message
+      return (
+        <div className={`flex items-center gap-2 ${spacing.card} bg-muted/50 rounded-lg`}>
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          <p className={`text-muted-foreground ${getTextSize('text-sm')}`}>
+            {language === 'nl' ? 'Inhoud wordt verwerkt...' : 'Content is being processed...'}
+          </p>
         </div>
       );
     } else {
       return (
-        <p className={`text-gray-500 italic ${getTextSize('text-sm')}`}>
-          No valid content available
+        <p className={`text-muted-foreground italic ${getTextSize('text-sm')}`}>
+          {language === 'nl' ? 'Inhoud wordt binnenkort beschikbaar' : 'Content will be available soon'}
         </p>
       );
     }
