@@ -319,7 +319,6 @@ Focus on your specific system expertise.`
     }, 0);
     
     await updateJobStatus(jobId, 'processing', `Completed ${translator}`, undefined, currentWordCount);
-  }
 }
 
 async function processSingleHermeticAgent(job: any, agent: string) {
