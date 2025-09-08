@@ -626,10 +626,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         {/* Responsive positioning container - mobile aware */}
         <div className={cn(
           "fixed z-40 pointer-events-none",
-          // Mobile positioning - bottom right with safe area
-          "bottom-20 right-3 sm:bottom-6 sm:right-4",
-          // Desktop positioning - top right 
-          "lg:top-32 lg:bottom-auto lg:right-6",
+          // Consistent top-right positioning across all screen sizes
+          "top-6 right-3 sm:right-4 lg:top-32 lg:right-6",
           className
         )}>
           <div className="relative pointer-events-auto">
