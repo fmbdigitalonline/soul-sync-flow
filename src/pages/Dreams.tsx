@@ -68,7 +68,7 @@ const Dreams = () => {
     intakeData,
     isReadyForDecomposition
   } = useBlueprintAwareDreamDiscoveryCoach();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  // Removed duplicate authentication state - trusting ProtectedRoute
   const [currentView, setCurrentView] = useState<'hub' | 'create' | 'chat' | 'journey' | 'task-coach' | 'decomposing' | 'success'>('hub');
   const [activeTab, setActiveTab] = useState<'journey' | 'tasks' | 'focus' | 'habits'>('journey');
   const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
@@ -224,37 +224,7 @@ const Dreams = () => {
     return `This journey will be optimized for your ${traits.slice(0, 2).join(' & ')} nature`;
   }, [blueprintData]);
 
-  // Check authentication status
-  useEffect(() => {
-    let mounted = true;
-    
-    const checkAuth = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (mounted) {
-          setIsAuthenticated(!!data.session);
-        }
-      } catch (error) {
-        console.error('Auth check error:', error);
-        if (mounted) {
-          setIsAuthenticated(false);
-        }
-      }
-    };
-    
-    checkAuth();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (mounted) {
-        setIsAuthenticated(!!session);
-      }
-    });
-    
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
+  // Removed duplicate authentication logic - trusting ProtectedRoute wrapper
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -293,31 +263,7 @@ const Dreams = () => {
     // Focus on specific task - for now just switch to task view
   };
 
-  if (!isAuthenticated) {
-    return (
-      <MainLayout>
-        <ErrorBoundary>
-          <div className={`min-h-screen bg-background flex items-center justify-center p-3 ${isMobile ? 'pb-20' : ''}`}>
-            <div className={`bg-card rounded-2xl border border-border text-center w-full max-w-sm mx-auto ${spacing.card}`}>
-              <div className={`w-10 h-10 mx-auto bg-primary rounded-full mb-4 flex items-center justify-center ${isFoldDevice ? 'w-8 h-8' : ''}`}>
-                <Heart className={`h-5 w-5 text-primary-foreground ${isFoldDevice ? 'h-4 w-4' : ''}`} />
-              </div>
-              <h1 className={`font-heading font-bold mb-3 text-foreground ${getTextSize('text-lg')}`}>
-                {t('dreams.title')}
-              </h1>
-              <p className={`mb-6 text-muted-foreground leading-relaxed px-2 ${getTextSize('text-sm')}`}>{t("dreams.description")}</p>
-              <Button 
-                className={`w-full hover:shadow-lg transition-all duration-300 rounded-2xl font-medium font-ui ${touchTargetSize} ${getTextSize('text-sm')}`}
-                onClick={() => window.location.href = '/auth'}
-              >
-                {t("dreams.getStarted")}
-              </Button>
-            </div>
-          </div>
-        </ErrorBoundary>
-      </MainLayout>
-    );
-  }
+  // Removed duplicate authentication check - component is wrapped in ProtectedRoute
 
   // Task Coach View - uses task-specific hook
   if (currentView === 'task-coach' && selectedTask) {

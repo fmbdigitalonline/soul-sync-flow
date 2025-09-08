@@ -438,10 +438,77 @@ const translations: Record<Language, Translations> = {
       readyToBegin: 'Ready to begin? I recommend starting with this first task - it\'s perfectly aligned with your blueprint and designed to create early momentum. Shall we dive in?'
     },
     
-    // Funnel Assessment  
+    // Life Clarity Funnel
     funnel: {
-      personalizedRoadmap: 'Everyone\'s path is different. To create your personalized roadmap, we need to understand your unique blueprint.',
-      reportAwaits: 'Your Life Clarity Report awaits'
+      // Step indicators
+      stepOf: 'Step {current} of {total}',
+      back: 'Back',
+      continue: 'Continue',
+      getReport: 'Get My Report',
+
+      // Step 1: Pain Points
+      painPoint: {
+        title: 'What\'s your biggest frustration right now?',
+        subtitle: 'Understanding your main challenge helps us personalize your experience',
+        options: {
+          stuck_career: 'Feeling stuck in my career path',
+          relationship_struggles: 'Struggling with relationships',
+          overwhelmed: 'Feeling overwhelmed by everything',
+          lost_purpose: 'Lost my sense of purpose',
+          financial_stress: 'Constant financial stress',
+          health_energy: 'Health and energy issues'
+        }
+      },
+
+      // Step 2: Life Satisfaction 
+      lifeSatisfaction: {
+        title: 'Life Satisfaction Quick Scan',
+        subtitle: 'Rate your current satisfaction in these key areas (1-10)',
+        domains: {
+          career: 'Career & Work',
+          relationships: 'Relationships',
+          health: 'Physical Health',
+          finances: 'Money & Finances',
+          personal_growth: 'Personal Growth',
+          fun: 'Fun & Recreation',
+          spirituality: 'Spirituality & Purpose'
+        }
+      },
+
+      // Step 3: Change Style
+      changeStyle: {
+        title: 'What\'s your approach to change?',
+        subtitle: 'Everyone transforms differently - what resonates with you?',
+        options: {
+          understand_why: 'I need to understand WHY first',
+          tell_me_what: 'Just tell me what to do',
+          explore_gradually: 'I want to explore gradually',
+          deep_transformation: 'I\'m ready for deep transformation'
+        }
+      },
+
+      // Step 4: Previous Attempts
+      previousAttempts: {
+        title: 'What have you tried before?',
+        subtitle: 'Select all that apply - this helps us understand your journey',
+        options: {
+          therapy: 'Therapy or counseling',
+          self_help: 'Self-help books',
+          apps: 'Apps and digital tools',
+          courses: 'Online courses',
+          coaching: 'Life coaching',
+          nothing: 'This is my first attempt'
+        }
+      },
+
+      // Step 5: Vision
+      vision: {
+        title: 'Envision your transformation',
+        subtitle: 'If everything clicked into place, what would that look like?',
+        placeholder: 'Describe your vision of an ideal life where everything is working...',
+        personalizedRoadmap: 'Your personalized roadmap awaits',
+        reportAwaits: 'Your report awaits'
+      }
     },
     // Goals & Categories
     goals: {
@@ -1807,10 +1874,77 @@ const translations: Record<Language, Translations> = {
       readyToBegin: 'Klaar om te beginnen? Ik raad aan om te beginnen met deze eerste taak - het is perfect afgestemd op je blauwdruk en ontworpen om vroeg momentum te creëren. Zullen we erin duiken?'
     },
     
-    // Funnel Assessment
+    // Life Clarity Funnel (Dutch)
     funnel: {
-      personalizedRoadmap: 'Ieders pad is anders. Om je gepersonaliseerde routekaart te maken, moeten we je unieke blauwdruk begrijpen.',
-      reportAwaits: 'Je Levenshelderheid Rapport wacht op je'
+      // Step indicators
+      stepOf: 'Stap {current} van {total}',
+      back: 'Terug',
+      continue: 'Doorgaan',
+      getReport: 'Krijg Mijn Rapport',
+
+      // Step 1: Pain Points
+      painPoint: {
+        title: 'Wat is je grootste frustratie op dit moment?',
+        subtitle: 'Je hoofduitdaging begrijpen helpt ons je ervaring te personaliseren',
+        options: {
+          stuck_career: 'Vast zitten in mijn carrièrepad',
+          relationship_struggles: 'Worstelen met relaties',
+          overwhelmed: 'Overweldigd voelen door alles',
+          lost_purpose: 'Mijn gevoel van doel verloren',
+          financial_stress: 'Constante financiële stress',
+          health_energy: 'Gezondheids- en energieproblemen'
+        }
+      },
+
+      // Step 2: Life Satisfaction 
+      lifeSatisfaction: {
+        title: 'Levenstevredenheid Snelle Scan',
+        subtitle: 'Beoordeel je huidige tevredenheid in deze belangrijke gebieden (1-10)',
+        domains: {
+          career: 'Carrière & Werk',
+          relationships: 'Relaties',
+          health: 'Fysieke Gezondheid',
+          finances: 'Geld & Financiën',
+          personal_growth: 'Persoonlijke Groei',
+          fun: 'Plezier & Recreatie',
+          spirituality: 'Spiritualiteit & Doel'
+        }
+      },
+
+      // Step 3: Change Style
+      changeStyle: {
+        title: 'Wat is jouw benadering van verandering?',
+        subtitle: 'Iedereen transformeert anders - wat spreekt jou aan?',
+        options: {
+          understand_why: 'Ik moet eerst WAAROM begrijpen',
+          tell_me_what: 'Zeg me gewoon wat ik moet doen',
+          explore_gradually: 'Ik wil geleidelijk verkennen',
+          deep_transformation: 'Ik ben klaar voor diepe transformatie'
+        }
+      },
+
+      // Step 4: Previous Attempts
+      previousAttempts: {
+        title: 'Wat heb je eerder geprobeerd?',
+        subtitle: 'Selecteer alles wat van toepassing is - dit helpt ons je reis te begrijpen',
+        options: {
+          therapy: 'Therapie of counseling',
+          self_help: 'Zelfhulpboeken',
+          apps: 'Apps en digitale tools',
+          courses: 'Online cursussen',
+          coaching: 'Life coaching',
+          nothing: 'Dit is mijn eerste poging'
+        }
+      },
+
+      // Step 5: Vision
+      vision: {
+        title: 'Stel je transformatie voor',
+        subtitle: 'Als alles op zijn plaats zou vallen, hoe zou dat eruit zien?',
+        placeholder: 'Beschrijf je visie van een ideaal leven waar alles werkt...',
+        personalizedRoadmap: 'Je gepersonaliseerde routekaart wacht op je',
+        reportAwaits: 'Je rapport wacht op je'
+      }
     },
     // Goals & Categories
     goals: {
@@ -2553,7 +2687,8 @@ const translations: Record<Language, Translations> = {
       tasksDesc: 'Blauwdruk-geoptimaliseerde stappen',
       timeline: 'Tijdlijn',
       timelineDesc: 'Naar voltooiing'
-    }
+    },
+
   }
 };
 

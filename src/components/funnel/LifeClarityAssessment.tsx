@@ -37,38 +37,38 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
   const progress = (currentStep / totalSteps) * 100;
 
   const painPointOptions = [
-    { key: "stuck_career", label: "Feeling stuck in my career path" },
-    { key: "relationship_struggles", label: "Struggling with relationships" },
-    { key: "overwhelmed", label: "Feeling overwhelmed by everything" },
-    { key: "lost_purpose", label: "Lost my sense of purpose" },
-    { key: "financial_stress", label: "Constant financial stress" },
-    { key: "health_energy", label: "Health and energy issues" }
+    { key: "stuck_career", label: t('funnel.painPoint.options.stuck_career') },
+    { key: "relationship_struggles", label: t('funnel.painPoint.options.relationship_struggles') },
+    { key: "overwhelmed", label: t('funnel.painPoint.options.overwhelmed') },
+    { key: "lost_purpose", label: t('funnel.painPoint.options.lost_purpose') },
+    { key: "financial_stress", label: t('funnel.painPoint.options.financial_stress') },
+    { key: "health_energy", label: t('funnel.painPoint.options.health_energy') }
   ];
 
   const lifeDomains = [
-    { key: "career", label: "Career & Work" },
-    { key: "relationships", label: "Relationships" },
-    { key: "health", label: "Physical Health" },
-    { key: "finances", label: "Money & Finances" },
-    { key: "personal_growth", label: "Personal Growth" },
-    { key: "fun", label: "Fun & Recreation" },
-    { key: "spirituality", label: "Spirituality & Purpose" }
+    { key: "career", label: t('funnel.lifeSatisfaction.domains.career') },
+    { key: "relationships", label: t('funnel.lifeSatisfaction.domains.relationships') },
+    { key: "health", label: t('funnel.lifeSatisfaction.domains.health') },
+    { key: "finances", label: t('funnel.lifeSatisfaction.domains.finances') },
+    { key: "personal_growth", label: t('funnel.lifeSatisfaction.domains.personal_growth') },
+    { key: "fun", label: t('funnel.lifeSatisfaction.domains.fun') },
+    { key: "spirituality", label: t('funnel.lifeSatisfaction.domains.spirituality') }
   ];
 
   const changeStyleOptions = [
-    { key: "understand_why", label: "I need to understand WHY first" },
-    { key: "tell_me_what", label: "Just tell me what to do" },
-    { key: "explore_gradually", label: "I want to explore gradually" },
-    { key: "deep_transformation", label: "I'm ready for deep transformation" }
+    { key: "understand_why", label: t('funnel.changeStyle.options.understand_why') },
+    { key: "tell_me_what", label: t('funnel.changeStyle.options.tell_me_what') },
+    { key: "explore_gradually", label: t('funnel.changeStyle.options.explore_gradually') },
+    { key: "deep_transformation", label: t('funnel.changeStyle.options.deep_transformation') }
   ];
 
   const previousAttemptOptions = [
-    { key: "therapy", label: "Therapy or counseling" },
-    { key: "self_help", label: "Self-help books" },
-    { key: "apps", label: "Apps and digital tools" },
-    { key: "courses", label: "Online courses" },
-    { key: "coaching", label: "Life coaching" },
-    { key: "nothing", label: "This is my first attempt" }
+    { key: "therapy", label: t('funnel.previousAttempts.options.therapy') },
+    { key: "self_help", label: t('funnel.previousAttempts.options.self_help') },
+    { key: "apps", label: t('funnel.previousAttempts.options.apps') },
+    { key: "courses", label: t('funnel.previousAttempts.options.courses') },
+    { key: "coaching", label: t('funnel.previousAttempts.options.coaching') },
+    { key: "nothing", label: t('funnel.previousAttempts.options.nothing') }
   ];
 
   const handleNext = useCallback(() => {
@@ -122,15 +122,15 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold font-cormorant">What's your biggest frustration right now?</h2>
-              <p className="text-muted-foreground">Understanding your main challenge helps us personalize your experience</p>
+              <h2 className="text-2xl sm:text-3xl font-bold font-cormorant px-2">{t('funnel.painPoint.title')}</h2>
+              <p className="text-muted-foreground text-sm sm:text-base px-4">{t('funnel.painPoint.subtitle')}</p>
             </div>
-            <div className="grid gap-3">
+            <div className="grid gap-2 sm:gap-3">
               {painPointOptions.map((option) => (
                 <Button
                   key={option.key}
                   variant={funnelData.painPoint === option.key ? "default" : "outline"}
-                  className="h-auto p-4 text-left justify-start"
+                  className="h-auto p-3 sm:p-4 text-left justify-start text-sm sm:text-base touch-manipulation"
                   onClick={() => updateFunnelData({ painPoint: option.key })}
                 >
                   {option.label}
@@ -144,8 +144,8 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold font-cormorant">Life Satisfaction Quick Scan</h2>
-              <p className="text-muted-foreground">Rate your current satisfaction in these key areas (1-10)</p>
+              <h2 className="text-2xl sm:text-3xl font-bold font-cormorant px-2">{t('funnel.lifeSatisfaction.title')}</h2>
+              <p className="text-muted-foreground text-sm sm:text-base px-4">{t('funnel.lifeSatisfaction.subtitle')}</p>
             </div>
             <div className="space-y-4">
               {lifeDomains.map((domain) => (
@@ -156,13 +156,13 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
                       {funnelData.lifeSatisfaction[domain.key] || 0}/10
                     </span>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 overflow-x-auto pb-2">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
                       <Button
                         key={value}
                         variant={funnelData.lifeSatisfaction[domain.key] === value ? "default" : "outline"}
                         size="sm"
-                        className="h-8 w-8 p-0 text-xs"
+                        className="h-10 w-10 p-0 text-sm touch-manipulation flex-shrink-0"
                         onClick={() => handleSatisfactionChange(domain.key, value)}
                       >
                         {value}
@@ -179,15 +179,15 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold font-cormorant">What's your approach to change?</h2>
-              <p className="text-muted-foreground">Everyone transforms differently - what resonates with you?</p>
+              <h2 className="text-2xl sm:text-3xl font-bold font-cormorant px-2">{t('funnel.changeStyle.title')}</h2>
+              <p className="text-muted-foreground text-sm sm:text-base px-4">{t('funnel.changeStyle.subtitle')}</p>
             </div>
-            <div className="grid gap-3">
+            <div className="grid gap-2 sm:gap-3">
               {changeStyleOptions.map((option) => (
                 <Button
                   key={option.key}
                   variant={funnelData.changeStyle === option.key ? "default" : "outline"}
-                  className="h-auto p-4 text-left justify-start"
+                  className="h-auto p-3 sm:p-4 text-left justify-start text-sm sm:text-base touch-manipulation"
                   onClick={() => updateFunnelData({ changeStyle: option.key })}
                 >
                   {option.label}
@@ -201,15 +201,15 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold font-cormorant">What have you tried before?</h2>
-              <p className="text-muted-foreground">Select all that apply - this helps us understand your journey</p>
+              <h2 className="text-2xl sm:text-3xl font-bold font-cormorant px-2">{t('funnel.previousAttempts.title')}</h2>
+              <p className="text-muted-foreground text-sm sm:text-base px-4">{t('funnel.previousAttempts.subtitle')}</p>
             </div>
-            <div className="grid gap-3">
+            <div className="grid gap-2 sm:gap-3">
               {previousAttemptOptions.map((option) => (
                 <Button
                   key={option.key}
                   variant={funnelData.previousAttempts.includes(option.key) ? "default" : "outline"}
-                  className="h-auto p-4 text-left justify-start"
+                  className="h-auto p-3 sm:p-4 text-left justify-start text-sm sm:text-base touch-manipulation"
                   onClick={() => togglePreviousAttempt(option.key)}
                 >
                   {option.label}
@@ -223,22 +223,22 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold font-cormorant">Envision your transformation</h2>
-              <p className="text-muted-foreground">If everything clicked into place, what would that look like?</p>
+              <h2 className="text-2xl sm:text-3xl font-bold font-cormorant px-2">{t('funnel.vision.title')}</h2>
+              <p className="text-muted-foreground text-sm sm:text-base px-4">{t('funnel.vision.subtitle')}</p>
             </div>
             <Textarea
-              placeholder="Describe your vision of an ideal life where everything is working..."
+              placeholder={t('funnel.vision.placeholder')}
               value={funnelData.vision}
               onChange={(e) => updateFunnelData({ vision: e.target.value })}
-              className="min-h-32"
+              className="min-h-32 text-base"
             />
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-4">
-                {t('funnel.personalizedRoadmap')}
+                {t('funnel.vision.personalizedRoadmap')}
               </p>
               <div className="flex items-center justify-center gap-2 text-primary">
                 <Sparkles className="h-5 w-5" />
-                <span className="font-medium">{t('funnel.reportAwaits')}</span>
+                <span className="font-medium">{t('funnel.vision.reportAwaits')}</span>
                 <Sparkles className="h-5 w-5" />
               </div>
             </div>
@@ -251,31 +251,31 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-primary/5 flex items-center justify-center p-4 relative">
-      <div className="w-full max-w-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-primary/5 flex items-center justify-center p-3 sm:p-4 relative">
+      <div className="w-full max-w-2xl mx-auto">
         <Card className="w-full">
-          <CardHeader>
+          <CardHeader className="pb-4">
             <div className="flex items-center justify-between mb-4">
-              <Button variant="ghost" size="sm" onClick={handleBack}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
+              <Button variant="ghost" size="sm" onClick={handleBack} className="flex items-center gap-2 px-2 py-1 h-auto">
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('funnel.back')}</span>
               </Button>
-              <span className="text-sm text-muted-foreground">
-                {currentStep} of {totalSteps}
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                {currentStep} {t('common.of')} {totalSteps}
               </span>
             </div>
-            <Progress value={progress} className="w-full" />
+            <Progress value={progress} className="w-full h-2" />
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
             {renderStep()}
-            <div className="flex justify-center pt-6">
+            <div className="flex justify-center pt-4 sm:pt-6">
               <Button
                 onClick={handleNext}
                 disabled={!isStepValid()}
                 size="lg"
-                className="min-w-32"
+                className="min-w-32 h-12 text-base touch-manipulation"
               >
-                {currentStep === totalSteps ? "Get My Report" : "Continue"}
+                {currentStep === totalSteps ? t('funnel.getReport') : t('funnel.continue')}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>

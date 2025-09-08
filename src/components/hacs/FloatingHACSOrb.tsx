@@ -623,30 +623,38 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   return (
     <HACSErrorBoundary source="FloatingHACSOrb-Main">
       <>
-        {/* Fixed positioning container */}
+        {/* Responsive positioning container - mobile aware */}
         <div className={cn(
-          "fixed top-32 right-4 z-50 pointer-events-none",
+          "fixed z-40 pointer-events-none",
+          // Mobile positioning - bottom right with safe area
+          "bottom-20 right-3 sm:bottom-6 sm:right-4",
+          // Desktop positioning - top right 
+          "lg:top-32 lg:bottom-auto lg:right-6",
           className
         )}>
           <div className="relative pointer-events-auto">
-          {/* Speech Bubble */}
+          {/* Speech Bubble - responsive positioning */}
           <AnimatePresence>
             {showBubble && currentQuestion && (
               <div 
-                className="mb-3 cursor-pointer hover:scale-105 transition-transform"
+                className={cn(
+                  "mb-3 cursor-pointer hover:scale-105 transition-transform",
+                  // Mobile: position above orb, smaller
+                  "lg:mb-3 mb-2"
+                )}
                 onClick={handleBubbleClick}
               >
                 <SpeechBubble
                   position="left"
                   isVisible={true}
                 >
-                <div className="text-sm">
-                  <div className="font-medium text-primary mb-1">
+                <div className="text-xs sm:text-sm max-w-[200px] sm:max-w-[250px]">
+                  <div className="font-medium text-primary mb-1 text-xs sm:text-sm">
                     {currentQuestion.module} Learning
                   </div>
-                  <div>{currentQuestion.text}</div>
-                  <div className="text-xs text-muted-foreground mt-2">
-                    Click to answer • Quick learning session
+                  <div className="text-xs sm:text-sm leading-tight">{currentQuestion.text}</div>
+                  <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                    Tap to answer • Quick session
                   </div>
                 </div>
                 </SpeechBubble>

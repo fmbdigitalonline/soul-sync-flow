@@ -27,29 +27,13 @@ const Coach = () => {
     recordVFPGraphFeedback
   } = useHACSConversationAdapter("guide", "companion");
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  // Removed duplicate authentication state - trusting ProtectedRoute
   const { toast } = useToast();
   const { t } = useLanguage();
   
   const { isMobile } = useIsMobile();
   
-  // Check authentication status
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      const authenticated = !!data.session;
-      setIsAuthenticated(authenticated);
-    };
-    
-    checkAuth();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const authenticated = !!session;
-      setIsAuthenticated(authenticated);
-    });
-    
-    return () => subscription.unsubscribe();
-  }, []);
+  // Removed duplicate authentication logic - trusting ProtectedRoute wrapper
 
   const handleSendMessage = async (message: string) => {
     await sendMessage(message);
@@ -71,29 +55,7 @@ const Coach = () => {
     });
   };
 
-  if (!isAuthenticated) {
-    return (
-      <MainLayout>
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <CosmicCard className="w-full max-w-md text-center space-y-6">
-            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
-              <MessageCircle className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground mb-2">{t('companion.unauthTitle')}</h1>
-              <p className="text-muted-foreground">{t('companion.unauthSubtitle')}</p>
-            </div>
-            <Button 
-              className="w-full"
-              onClick={() => window.location.href = '/auth'}
-            >
-              {t('companion.getStarted')}
-            </Button>
-          </CosmicCard>
-        </div>
-      </MainLayout>
-    );
-  }
+  // Removed duplicate authentication check - component is wrapped in ProtectedRoute
 
   // Create the main chat interface component
   const chatInterface = (
