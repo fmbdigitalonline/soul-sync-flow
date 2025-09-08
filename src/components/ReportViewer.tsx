@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CosmicCard } from '@/components/ui/cosmic-card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Maximize2 } from 'lucide-react';
+import ReportModal from './ReportModal';
 
 const ReportViewer: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { spacing, getTextSize, isMobile, isUltraNarrow, isFoldDevice } = useResponsiveLayout();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div className={`w-full max-w-full overflow-hidden`}>
@@ -38,13 +40,28 @@ const ReportViewer: React.FC = () => {
                 <p className={`text-muted-foreground break-words ${getTextSize('text-sm')} mb-4`}>
                   Report viewer for job: {jobId}
                 </p>
-                <p className={`break-words ${getTextSize('text-sm')}`}>
-                  This is a placeholder for the completed hermetic report viewer.
+                <p className={`break-words ${getTextSize('text-sm')} mb-6`}>
+                  This is a preview of the completed hermetic report viewer.
                 </p>
+                
+                <Button
+                  onClick={() => setIsModalOpen(true)}
+                  className={`w-full sm:w-auto ${spacing.button}`}
+                  variant="default"
+                >
+                  <Maximize2 className="mr-2 h-4 w-4" />
+                  <span className={getTextSize('text-sm')}>View Full Report</span>
+                </Button>
               </CardContent>
             </CosmicCard>
           </div>
         </ScrollArea>
+
+        <ReportModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          jobId={jobId || 'unknown'}
+        />
       </div>
     </div>
   );
