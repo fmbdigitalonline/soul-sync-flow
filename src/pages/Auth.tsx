@@ -144,8 +144,8 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-soul-black to-soul-purple/20 p-4">
-      <Card className="w-full max-w-md bg-card/50 backdrop-blur-sm border-white/10">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md bg-card shadow-lg border">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-end">
             <LanguageSelector />
