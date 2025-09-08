@@ -184,13 +184,14 @@ class AIPersonalityReportService {
 
   async getStoredReport(userId: string): Promise<{ success: boolean; report?: PersonalityReport; error?: string }> {
     try {
-      console.log('🔍 Fetching stored report for user:', userId);
+      console.log('🔍 Fetching stored standard report (version 1.0) for user:', userId);
       
-      // Query the personality_reports table directly, bypassing supabase type checking for the table
+      // Query the personality_reports table directly, filtering for standard reports only
       const { data, error } = await (supabase as any)
         .from('personality_reports')
         .select('*')
         .eq('user_id', userId)
+        .eq('blueprint_version', '1.0')  // Only fetch standard reports (version 1.0)
         .order('generated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -215,13 +216,14 @@ class AIPersonalityReportService {
 
   async hasExistingReport(userId: string): Promise<boolean> {
     try {
-      console.log('🔍 Checking for existing report for user:', userId);
+      console.log('🔍 Checking for existing standard report (version 1.0) for user:', userId);
       
-      // Query the personality_reports table directly
+      // Query the personality_reports table directly, filtering for standard reports only
       const { data, error } = await (supabase as any)
         .from('personality_reports')
         .select('id')
         .eq('user_id', userId)
+        .eq('blueprint_version', '1.0')  // Only check for standard reports (version 1.0)
         .limit(1);
 
       if (error) {
