@@ -8,12 +8,14 @@ import { Key, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { isAdminUser } from '@/utils/isAdminUser';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const OpenAIKeyConfiguration: React.FC = () => {
   const [keyConfigured, setKeyConfigured] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     checkKeyStatus();
@@ -47,7 +49,7 @@ export const OpenAIKeyConfiguration: React.FC = () => {
 
       if (response.ok) {
         toast({
-          title: "Connection Successful",
+          title: t('toast.success.connectionSuccessful'),
           description: "OpenAI API is working correctly",
         });
         setKeyConfigured(true);
@@ -56,7 +58,7 @@ export const OpenAIKeyConfiguration: React.FC = () => {
       }
     } catch (error) {
       toast({
-        title: "Connection Failed",
+        title: t('toast.error.connectionFailed'),
         description: "Please check your OpenAI API key configuration",
         variant: "destructive",
       });

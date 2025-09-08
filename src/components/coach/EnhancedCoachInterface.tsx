@@ -35,6 +35,7 @@ export default function EnhancedCoachInterface({
   initialMessages = [],
   onNewMessage
 }: EnhancedCoachInterfaceProps) {
+  const { t } = useLanguage();
   const { isMobile, isUltraNarrow, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
@@ -419,7 +420,7 @@ export default function EnhancedCoachInterface({
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                placeholder={t('forms.placeholders.typeMessage')}
                 disabled={isLoading}
                 className={`flex-1 ${getTextSize('text-sm')}`}
               />

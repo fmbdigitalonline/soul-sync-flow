@@ -7,6 +7,7 @@ import { CheckCircle2, Clock, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HermeticProcessingJob {
   id: string;
@@ -34,6 +35,7 @@ export function ReportStatusPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { user, loading: authLoading } = useAuth();
   const [job, setJob] = useState<HermeticProcessingJob | null>(null);
   const [isPolling, setIsPolling] = useState(true);
@@ -56,7 +58,7 @@ export function ReportStatusPage() {
       if (error) {
         console.error('RPC error:', error);
         toast({
-          title: "Database Error",
+          title: t('toast.error.databaseError'),
           description: `Failed to fetch job status: ${error.message}`,
           variant: "destructive"
         });
@@ -124,7 +126,7 @@ export function ReportStatusPage() {
       if (jobData?.status === 'completed') {
         setIsPolling(false);
         toast({
-          title: "Report Complete!",
+          title: t('toast.success.reportComplete'),
           description: "Your hermetic report has been generated successfully.",
         });
         
@@ -136,7 +138,7 @@ export function ReportStatusPage() {
       } else if (jobData?.status === 'failed') {
         setIsPolling(false);
         toast({
-          title: "Generation Failed",
+          title: t('toast.error.generationFailed'),
           description: "Report generation failed",
           variant: "destructive"
         });
@@ -145,7 +147,7 @@ export function ReportStatusPage() {
     } catch (error) {
       console.error('Error fetching job status:', error);
       toast({
-        title: "Connection Error",
+        title: t('toast.error.networkError'),
         description: "Unable to connect to the server. Retrying...",
         variant: "destructive"
       });

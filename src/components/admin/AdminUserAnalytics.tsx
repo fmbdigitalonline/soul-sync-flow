@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   Users, 
   TrendingUp, 
@@ -36,6 +37,7 @@ const featureUsage = [
 ];
 
 export const AdminUserAnalytics: React.FC = () => {
+  const { t } = useLanguage();
   const [userMetrics, setUserMetrics] = useState({
     totalUsers: 1247,
     activeToday: 68,
@@ -255,7 +257,7 @@ export const AdminUserAnalytics: React.FC = () => {
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <Input
-                  placeholder="Search users..."
+                  placeholder={t('forms.placeholders.searchUsers')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 w-64"

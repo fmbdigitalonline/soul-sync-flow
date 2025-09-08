@@ -31,6 +31,7 @@ const ACSEnhancedCoachInterface: React.FC<ACSEnhancedCoachInterfaceProps> = ({
   initialMessages = [],
   onNewMessage
 }) => {
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -237,7 +238,7 @@ const ACSEnhancedCoachInterface: React.FC<ACSEnhancedCoachInterfaceProps> = ({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Type your message... (ACS will adapt based on your needs)"
+              placeholder={t('forms.placeholders.typeMessage')}
               className="flex-1 min-h-[60px]"
               disabled={isLoading}
             />
