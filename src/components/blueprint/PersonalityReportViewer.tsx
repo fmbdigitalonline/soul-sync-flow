@@ -187,6 +187,10 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         description: errorMessage,
         variant: "destructive"
       });
+    } finally {
+      // Always reset generating state, even if job creation succeeds
+      // The actual generation progress is tracked separately by the orb
+      setGenerating(false);
     }
   };
 
@@ -323,7 +327,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   {generating ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {t('report.generating')}
+                      Creating Job...
                     </>
                   ) : (
                     <>
@@ -333,10 +337,23 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   )}
                 </Button>
               </div>
-              <Button onClick={handleRefresh} variant="outline" className="w-full sm:w-auto mx-auto">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                {t('report.refresh')}
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Button onClick={handleRefresh} variant="outline" className="w-full sm:w-auto">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  {t('report.refresh')}
+                </Button>
+                {generating && (
+                  <Button 
+                    onClick={() => setGenerating(false)} 
+                    variant="destructive" 
+                    size="sm"
+                    className="w-full sm:w-auto"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear Loading State
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
