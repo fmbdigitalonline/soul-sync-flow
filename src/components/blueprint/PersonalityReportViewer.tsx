@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge, Maximize2 } from 'lucide-react';
+import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge, Maximize2, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -600,20 +600,38 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               </Button>
             )}
             {!hermeticReport && (
-              <Button 
-                onClick={() => generateHermeticReport(false)} 
-                disabled={generating}
-                variant="outline"
-                size="sm"
-                className="border-purple-200 text-purple-600 hover:bg-purple-50"
-              >
-                {generating ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Star className="h-4 w-4 mr-2" />
-                )}
-                Generate Hermetic
-              </Button>
+              hermeticStatus.hasZombieJob ? (
+                <div className="flex flex-col gap-2">
+                  <div className="text-xs text-warning flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Stuck job detected
+                  </div>
+                  <Button 
+                    onClick={() => hermeticStatus.cleanupZombieJob?.(hermeticStatus.zombieJobInfo?.id)}
+                    variant="outline"
+                    size="sm"
+                    className="border-warning text-warning hover:bg-warning/10"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Clean Up
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  onClick={() => generateHermeticReport(false)} 
+                  disabled={generating}
+                  variant="outline"
+                  size="sm"
+                  className="border-purple-200 text-purple-600 hover:bg-purple-50"
+                >
+                  {generating ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Star className="h-4 w-4 mr-2" />
+                  )}
+                  Generate Hermetic
+                </Button>
+              )
             )}
           </div>
         </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, RefreshCw, Sparkles } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Sparkles, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,6 +17,7 @@ interface JobStatus {
 
 export const HermeticRecoveryTest: React.FC = () => {
   const [jobStatuses, setJobStatuses] = useState<JobStatus[]>([]);
+  const [cleaningUp, setCleaningUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -43,6 +44,47 @@ export const HermeticRecoveryTest: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const cleanupZombieJobs = async () => {
+    try {
+      setCleaningUp(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to clean up zombie jobs",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Use the cleanup function to mark stuck jobs as failed
+      const { data, error } = await supabase.rpc('cleanup_stuck_hermetic_jobs');
+      
+      if (error) throw error;
+      
+      const cleanedJobsCount = data || 0;
+      
+      toast({
+        title: "Cleanup completed",
+        description: `${cleanedJobsCount} zombie jobs were marked as failed`,
+      });
+      
+      // Refresh job statuses
+      await checkZombieJobs();
+      
+    } catch (error) {
+      console.error('❌ Zombie cleanup failed:', error);
+      toast({
+        title: "Cleanup failed",
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: "destructive"
+      });
+    } finally {
+      setCleaningUp(false);
     }
   };
 
@@ -183,12 +225,30 @@ export const HermeticRecoveryTest: React.FC = () => {
               <AlertTriangle className="h-4 w-4 mr-2" />
               Check Zombie Jobs
             </Button>
+            <Button 
+              onClick={cleanupZombieJobs}
+              disabled={cleaningUp}
+              variant="destructive"
+              className="flex-1"
+            >
+              {cleaningUp ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Cleaning up...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clean Up Zombies
+                </>
+              )}
+            </Button>
+          </div>
+          <div className="flex gap-3">
             <Button onClick={startNewHermeticGeneration} variant="default" className="flex-1">
               <Sparkles className="h-4 w-4 mr-2" />
               Start New Generation
             </Button>
-          </div>
-          <div className="flex gap-3">
             <Button onClick={recoverCompletedJob} variant="secondary" className="flex-1">
               <RefreshCw className="h-4 w-4 mr-2" />
               Recover Completed Jobs
