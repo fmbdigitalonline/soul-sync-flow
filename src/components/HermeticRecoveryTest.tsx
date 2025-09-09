@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertTriangle, RefreshCw, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
@@ -45,7 +46,74 @@ export const HermeticRecoveryTest: React.FC = () => {
     }
   };
 
+  const recoverCompletedJob = async () => {
+    setIsLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to recover reports",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Find completed jobs without reports
+      const { data: completedJobs, error } = await supabase
+        .from('hermetic_processing_jobs')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .eq('progress_percentage', 100)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      if (!completedJobs || completedJobs.length === 0) {
+        toast({
+          title: "No recovery needed",
+          description: "No completed jobs found that need recovery",
+        });
+        return;
+      }
+
+      const jobToRecover = completedJobs[0];
+      console.log('🔧 Attempting to recover job:', jobToRecover.id);
+
+      const { data: recoveryResult, error: recoveryError } = await supabase.functions.invoke('hermetic-recovery', {
+        body: { job_id: jobToRecover.id }
+      });
+
+      if (recoveryError) throw recoveryError;
+
+      if (recoveryResult?.success) {
+        toast({
+          title: "Recovery successful!",
+          description: `Report recovered with ${recoveryResult.wordCount?.toLocaleString()} words`,
+        });
+        
+        // Refresh job statuses
+        await checkZombieJobs();
+      } else {
+        throw new Error(recoveryResult?.error || 'Recovery failed');
+      }
+
+    } catch (error) {
+      console.error('❌ Recovery failed:', error);
+      toast({
+        title: "Recovery failed",
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const startNewHermeticGeneration = async () => {
+    setIsLoading(true);
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user?.user) {
@@ -98,6 +166,8 @@ export const HermeticRecoveryTest: React.FC = () => {
         description: "Failed to start hermetic generation",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -108,19 +178,20 @@ export const HermeticRecoveryTest: React.FC = () => {
           <CardTitle>🔄 Hermetic Recovery & Testing Panel</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-4">
-            <Button 
-              onClick={checkZombieJobs} 
-              disabled={isLoading}
-              variant="outline"
-            >
-              {isLoading ? 'Checking...' : 'Check Zombie Jobs'}
+          <div className="flex gap-3">
+            <Button onClick={checkZombieJobs} variant="outline" className="flex-1">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Check Zombie Jobs
             </Button>
-            <Button 
-              onClick={startNewHermeticGeneration}
-              className="bg-primary text-primary-foreground"
-            >
+            <Button onClick={startNewHermeticGeneration} variant="default" className="flex-1">
+              <Sparkles className="h-4 w-4 mr-2" />
               Start New Generation
+            </Button>
+          </div>
+          <div className="flex gap-3">
+            <Button onClick={recoverCompletedJob} variant="secondary" className="flex-1">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Recover Completed Jobs
             </Button>
           </div>
 

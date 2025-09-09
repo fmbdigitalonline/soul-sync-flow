@@ -353,6 +353,18 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                     Clear Loading State
                   </Button>
                 )}
+                {(hermeticStatus.currentStep?.includes('Report generated but not saved') || 
+                  hermeticStatus.currentStep?.includes('please retry')) && (
+                  <Button 
+                    onClick={handleRecoveryAttempt} 
+                    variant="secondary" 
+                    className="w-full sm:w-auto"
+                    disabled={generating}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Recover Report
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>

@@ -754,7 +754,7 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
 }
 
 async function finalizeReport(job: any) {
-  const { id: jobId, blueprint_data: blueprint, progress_data } = job;
+  const { id: jobId, blueprint_data: blueprint, progress_data, user_id } = job;
   
   await updateJobStatus(jobId, 'processing', 'Assembling final report...');
   
@@ -814,15 +814,110 @@ async function finalizeReport(job: any) {
     generated_at: new Date().toISOString(),
     structured_intelligence: buildStructuredIntelligence(intelligenceSections)
   };
+
+  // CRITICAL FIX: Build proper personality report structure for database storage
+  const personalityReportContent = {
+    // Standard personality report sections (assembled from generated content)
+    core_personality_pattern: combineRelevantSections(finalSections, ['mbti_hermetic_translator', 'mentalism_analyst']),
+    decision_making_style: combineRelevantSections(finalSections, ['human_design_hermetic_translator', 'causation_analyst']),
+    relationship_style: combineRelevantSections(finalSections, ['astrology_hermetic_translator', 'polarity_analyst']),
+    life_path_purpose: combineRelevantSections(finalSections, ['numerology_hermetic_translator', 'correspondence_analyst']),
+    current_energy_timing: combineRelevantSections(finalSections, ['chinese_astrology_hermetic_translator', 'rhythm_analyst']),
+    integrated_summary: `Comprehensive hermetic analysis revealing ${totalWordCount.toLocaleString()} words of deep personality insights with shadow work integration.`,
+    
+    // Hermetic Blueprint sections
+    hermetic_fractal_analysis: combineRelevantSections(finalSections, ['correspondence_analyst', 'mentalism_analyst']),
+    consciousness_integration_map: combineRelevantSections(finalSections, intelligenceSections.map(s => s.agent_type)),
+    practical_activation_framework: combineRelevantSections(finalSections, ['vibration_analyst', 'gender_analyst']),
+    
+    // Seven laws integration
+    seven_laws_integration: {
+      mentalism: hermeticSections.find(s => s.agent_type === 'mentalism_analyst')?.content || '',
+      correspondence: hermeticSections.find(s => s.agent_type === 'correspondence_analyst')?.content || '',
+      vibration: hermeticSections.find(s => s.agent_type === 'vibration_analyst')?.content || '',
+      polarity: hermeticSections.find(s => s.agent_type === 'polarity_analyst')?.content || '',
+      rhythm: hermeticSections.find(s => s.agent_type === 'rhythm_analyst')?.content || '',
+      causation: hermeticSections.find(s => s.agent_type === 'causation_analyst')?.content || '',
+      gender: hermeticSections.find(s => s.agent_type === 'gender_analyst')?.content || ''
+    },
+    
+    // System translations
+    system_translations: {
+      mbti_hermetic: systemSections.find(s => s.agent_type === 'mbti_hermetic_translator')?.content || '',
+      astrology_hermetic: systemSections.find(s => s.agent_type === 'astrology_hermetic_translator')?.content || '',
+      numerology_hermetic: systemSections.find(s => s.agent_type === 'numerology_hermetic_translator')?.content || '',
+      human_design_hermetic: systemSections.find(s => s.agent_type === 'human_design_hermetic_translator')?.content || '',
+      chinese_astrology_hermetic: systemSections.find(s => s.agent_type === 'chinese_astrology_hermetic_translator')?.content || ''
+    },
+    
+    // Gate analyses
+    gate_analyses: gateSections.reduce((gates, section) => {
+      if (section.gate_number) {
+        gates[`gate_${section.gate_number}`] = section.content;
+      }
+      return gates;
+    }, {} as any),
+    
+    // Shadow work integration
+    shadow_work_integration: {
+      shadow_patterns: combineRelevantSections(finalSections, ['polarity_analyst', 'internal_conflicts_analyst']),
+      integration_practices: combineRelevantSections(finalSections, ['vibration_analyst', 'adaptive_feedback_analyst']),
+      transformation_roadmap: combineRelevantSections(finalSections, ['rhythm_analyst', 'crisis_handling_analyst'])
+    },
+    
+    blueprint_signature: generateBlueprintSignature(blueprint),
+    word_count: totalWordCount,
+    generation_metadata: {
+      agents_used: finalSections.map(s => s.agent_type),
+      total_processing_time: Date.now() - new Date(job.created_at).getTime(),
+      hermetic_depth_score: Math.min(100, Math.floor(totalWordCount / 500)),
+      gates_analyzed: gateSections.map(s => s.gate_number).filter(Boolean),
+      intelligence_status: 'completed',
+      intelligence_analysts: intelligenceSections.map(s => s.agent_type)
+    },
+    structured_intelligence: buildStructuredIntelligence(intelligenceSections)
+  };
+
+  console.log(`💾 PERSONALITY REPORT: Saving to database with ${totalWordCount} words`);
+
+  // CRITICAL FIX: Save to personality_reports table (this was the missing step!)
+  const { data: savedReport, error: reportError } = await supabase
+    .from('personality_reports')
+    .insert({
+      user_id: user_id,
+      blueprint_id: job.blueprint_id || null,
+      report_content: personalityReportContent,
+      generated_at: new Date().toISOString(),
+      blueprint_version: '2.0', // Hermetic reports use version 2.0
+      structured_intelligence: buildStructuredIntelligence(intelligenceSections)
+    })
+    .select('id')
+    .single();
+
+  if (reportError) {
+    console.error(`❌ CRITICAL: Failed to save personality report:`, reportError);
+    await supabase
+      .from('hermetic_processing_jobs')
+      .update({
+        status: 'failed',
+        error_message: `Report assembly successful but database save failed: ${reportError.message}`,
+        current_step: `Storage Error: ${reportError.message}`,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', jobId);
+    return;
+  }
+
+  console.log(`✅ PERSONALITY REPORT: Successfully saved report ${savedReport.id} to database`);
   
-  // Save completed report
+  // Save completed report to job record for reference
   await supabase
     .from('hermetic_processing_jobs')
     .update({
       status: 'completed',
       result_data: finalReport,
       completed_at: new Date().toISOString(),
-      current_step: `Report completed! ${finalReport.total_word_count} words generated.`,
+      current_step: `Report completed and saved! ${finalReport.total_word_count} words generated.`,
       progress_percentage: 100,
       last_heartbeat: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -830,6 +925,20 @@ async function finalizeReport(job: any) {
     .eq('id', jobId);
     
   console.log(`✅ Report completed for job ${jobId} - ${finalReport.total_word_count} words`);
+}
+
+// Helper function to combine relevant sections for report structure
+function combineRelevantSections(allSections: any[], relevantAgents: string[]): string {
+  const relevantContent = allSections
+    .filter(section => relevantAgents.includes(section.agent_type))
+    .map(section => section.content)
+    .filter(content => content && content.trim().length > 0);
+    
+  if (relevantContent.length === 0) {
+    return "Analysis pending - please regenerate report if this section appears empty.";
+  }
+  
+  return relevantContent.join('\n\n--- \n\n');
 }
 
 // ============ HELPER FUNCTIONS ============
