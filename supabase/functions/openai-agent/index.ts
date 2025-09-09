@@ -559,7 +559,6 @@ serve(async (req) => {
     let conversationMessages = [...messages];
     let iteration = 1;
     const maxIterations = 5; // Prevent infinite loops
-    let lastResponseData: any = null; // CRITICAL: Store the last OpenAI response for final return
 
     while (iteration <= maxIterations) {
       console.log(`🔄 Agent conversation iteration ${iteration}`);
@@ -613,7 +612,6 @@ serve(async (req) => {
       }
 
       const data = await response.json();
-      lastResponseData = data; // CRITICAL: Preserve the response data for final return
       console.log('📥 OpenAI response structure:', JSON.stringify({
         id: data.id,
         object: data.object,
@@ -717,8 +715,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       content: finalContent,
       content_length: finalContent.length,
-      model_used: lastResponseData?.model || 'unknown',
-      total_tokens: lastResponseData?.usage?.total_tokens || 0
+      model_used: data.model,
+      total_tokens: data.usage?.total_tokens
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, AlertCircle, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { CheckCircle2, Clock, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,17 +33,6 @@ interface RPCErrorResponse {
   message: string;
 }
 
-interface SubJob {
-  id: string;
-  agent_name: string;
-  stage: string;
-  status: string;
-  content?: string;
-  word_count: number;
-  created_at: string;
-  completed_at?: string;
-}
-
 export function ReportStatusPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
@@ -51,8 +40,6 @@ export function ReportStatusPage() {
   const { t } = useLanguage();
   const { user, loading: authLoading } = useAuth();
   const [job, setJob] = useState<HermeticProcessingJob | null>(null);
-  const [subJobs, setSubJobs] = useState<SubJob[]>([]);
-  const [showContent, setShowContent] = useState(false);
   const [isPolling, setIsPolling] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -65,7 +52,6 @@ export function ReportStatusPage() {
     console.log('🔍 REPORT STATUS: Fetching status for job:', jobId, 'user:', user.id);
 
     try {
-      // Fetch main job status
       const { data, error } = await supabase
         .rpc('get_hermetic_job_status', { job_id: jobId });
 
@@ -75,22 +61,6 @@ export function ReportStatusPage() {
         dataKeys: data ? Object.keys(data) : [],
         rawData: data 
       });
-
-      // CRITICAL: Also fetch sub-jobs for real-time content display
-      const { data: subJobsData, error: subJobsError } = await supabase
-        .from('hermetic_sub_jobs')
-        .select('*')
-        .eq('job_id', jobId)
-        .order('created_at', { ascending: true });
-
-      if (subJobsData) {
-        console.log('📋 REPORT STATUS: Sub-jobs fetched:', {
-          count: subJobsData.length,
-          completed: subJobsData.filter(sj => sj.status === 'completed').length,
-          totalWordCount: subJobsData.reduce((sum, sj) => sum + (sj.word_count || 0), 0)
-        });
-        setSubJobs(subJobsData);
-      }
 
       if (error) {
         console.error('❌ REPORT STATUS: RPC error:', error);
@@ -389,55 +359,6 @@ export function ReportStatusPage() {
               <p className="text-sm">{job.current_step}</p>
             )}
           </div>
-
-          {/* Real-time Content Display */}
-          {showContent && subJobs.length > 0 && (
-            <div className="p-4 bg-purple-50 text-purple-700 rounded-lg">
-              <div className="flex items-center justify-between mb-3">
-                <p className="font-medium">Generated Content Preview:</p>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowContent(false)}
-                >
-                  <EyeOff className="w-4 h-4 mr-1" />
-                  Hide
-                </Button>
-              </div>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {subJobs.filter(sj => sj.status === 'completed' && sj.content).map((subJob) => (
-                  <div key={subJob.id} className="border border-purple-200 rounded-lg p-3 bg-white">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-sm text-purple-900">
-                        {subJob.agent_name.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())} ({subJob.stage})
-                      </h4>
-                      <span className="text-xs text-purple-600">
-                        {subJob.word_count} words
-                      </span>
-                    </div>
-                    <p className="text-xs text-purple-700 line-clamp-3">
-                      {subJob.content?.substring(0, 200)}...
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 text-xs text-purple-600">
-                Total: {subJobs.reduce((sum, sj) => sum + (sj.word_count || 0), 0)} words generated so far
-              </div>
-            </div>
-          )}
-
-          {/* Show Content Button */}
-          {!showContent && subJobs.length > 0 && (
-            <Button 
-              variant="outline" 
-              onClick={() => setShowContent(true)}
-              className="w-full"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              View Generated Content ({subJobs.filter(sj => sj.status === 'completed').length} sections completed)
-            </Button>
-          )}
 
           {/* Progress Data */}
           {job.progress_data && Object.keys(job.progress_data).length > 0 && (
