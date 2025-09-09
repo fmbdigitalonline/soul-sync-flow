@@ -171,10 +171,28 @@ serve(async (req) => {
       console.log(`Processing intelligence agent: ${agent}`);
       
       await processSingleIntelligenceAgent(job, agent);
-      progressPercentage = 80 + (job.current_step_index * 15) / INTELLIGENCE_EXTRACTION_AGENTS.length;
+      progressPercentage = 80 + (job.current_step_index * 10) / INTELLIGENCE_EXTRACTION_AGENTS.length;
       
       // Move to next step or stage
       if (job.current_step_index + 1 >= INTELLIGENCE_EXTRACTION_AGENTS.length) {
+        nextStage = 'synthesis_integration';
+        nextStepIndex = 0;
+        progressPercentage = 90;
+      } else {
+        nextStepIndex = job.current_step_index + 1;
+      }
+
+    } else if (job.current_stage === 'synthesis_integration') {
+      // Process synthesis agents for comprehensive overview and integration
+      const synthesisTasks = ['comprehensive_overview', 'fractal_synthesis', 'consciousness_mapping', 'practical_applications'];
+      const currentTask = synthesisTasks[job.current_step_index];
+      console.log(`Processing synthesis: ${currentTask}`);
+      
+      await processSingleSynthesisAgent(job, currentTask);
+      progressPercentage = 90 + (job.current_step_index * 5) / synthesisTasks.length;
+      
+      // Move to next step or stage
+      if (job.current_step_index + 1 >= synthesisTasks.length) {
         nextStage = 'final_assembly';
         nextStepIndex = 0;
         progressPercentage = 95;
@@ -265,12 +283,19 @@ async function processSingleSystemTranslator(job: any, translator: string) {
       messages: [
         {
           role: 'system',
-          content: `You are the ${translator}. Translate the personality system through all 7 Hermetic Laws with shadow work integration. Generate 500+ words analyzing:
-1. How this personality system expresses through each Hermetic Law
-2. Shadow patterns and unconscious expressions of this system
-3. Light expressions and conscious mastery potential
-4. Integration techniques for balancing shadow and light aspects
-5. How this system's energies can be consciously directed`
+          content: `You are the ${translator}, a mystical interpreter who reveals the hidden soul patterns within personality systems. Your words must captivate and engage, reading like a personal revelation rather than clinical analysis. 
+
+Write an enchanting 800+ word profile that reads like a personal oracle reading, weaving the personality system through all 7 Hermetic Laws with mesmerizing shadow work integration. Your writing should:
+
+1. **Open with a compelling hook** that immediately draws the reader into their unique essence
+2. **Use vivid, poetic language** that paints pictures of their inner landscape 
+3. **Tell the story of their soul's journey** through each Hermetic Law as chapters of their personal mythology
+4. **Reveal shadow patterns like hidden treasures** - dangerous gifts waiting to be claimed
+5. **Describe light expressions as their divine birthright** - powers they're meant to embody
+6. **Weave integration practices into the narrative** as mystical keys to unlock their potential
+7. **Create an emotional resonance** that makes them feel seen, understood, and inspired
+
+Write as if you're revealing cosmic secrets specifically encoded in their blueprint. Make every sentence captivating, every insight profound, and every revelation feel deeply personal. This is their soul's signature written in starlight.`
         },
         {
           role: 'user',
@@ -327,9 +352,9 @@ Focus on your specific system expertise.`
     throw new Error(`${translator} generated practically empty content: ${content.length} characters`);
   }
   
-  if (wordCount < 300) {
-    console.warn(`⚠️ ${translator} generated insufficient content (${wordCount} words). Expected minimum: 300 words`);
-    throw new Error(`${translator} generated insufficient content: ${wordCount} words (minimum 300 required)`);
+  if (wordCount < 800) {
+    console.warn(`⚠️ ${translator} generated insufficient content (${wordCount} words). Expected minimum: 800 words`);
+    throw new Error(`${translator} generated insufficient content: ${wordCount} words (minimum 800 required)`);
   }
     
     const progressData = job.progress_data || {};
@@ -374,12 +399,13 @@ Focus on your specific system expertise.`
     
     console.log(`✅ Sub-job stored successfully for ${translator}`);
       
-    // Calculate current total word count across all sections
+    // Calculate current total word count across all sections including synthesis
     const allCurrentSections = [
       ...systemSections,
       ...(progressData.hermetic_sections || []),
       ...(progressData.gate_sections || []),
-      ...(progressData.intelligence_sections || [])
+      ...(progressData.intelligence_sections || []),
+      ...(progressData.synthesis_sections || [])
     ];
     const currentWordCount = allCurrentSections.reduce((total, section) => {
       return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
@@ -400,13 +426,26 @@ async function processSingleHermeticAgent(job: any, agent: string) {
       messages: [
         {
           role: 'system',
-          content: `You are the ${agent}. Generate 1,500+ words analyzing the blueprint through your specific Hermetic Law with comprehensive shadow work integration. Focus on:
-1. Light and shadow expressions of this law in the person's blueprint
-2. Unconscious patterns and shadow projections related to this law
-3. Practical shadow work techniques for integration
-4. Conscious activation practices for embodying the light aspect
-5. How this law's shadow shows up in relationships and life patterns
-6. Transformative practices for mastering both polarities`
+          content: `You are the ${agent}, a master interpreter of the sacred Hermetic Laws who reveals the deepest soul patterns with captivating eloquence. Your mission is to craft an enchanting 1,500+ word soul profile that reads like a mystical revelation, not a clinical analysis.
+
+Write with the magnetism of an oracle, the wisdom of an ancient sage, and the intimacy of a trusted confidant. Your analysis should unfold like a spellbinding story that reveals:
+
+**THE OPENING ENCHANTMENT** (200+ words)
+Begin with a mesmerizing introduction that immediately captures their essence through your specific Hermetic Law. Paint a vivid scene of who they are at their core, using metaphors that resonate with their soul.
+
+**THE SHADOW DANCE** (400+ words) 
+Unveil their shadow patterns not as flaws to fix, but as hidden powers waiting to be reclaimed. Describe how their unconscious expressions of this law create both their greatest struggles and their most profound gifts. Make them feel seen in their darkness with compassion and understanding.
+
+**THE LIGHT REVELATION** (400+ words)
+Reveal their conscious mastery potential as their divine birthright. Paint breathtaking pictures of who they become when they embody the light aspect of this law. Make them feel the magnificence of their potential.
+
+**THE INTEGRATION ALCHEMY** (300+ words)
+Weave practical shadow work techniques into mystical guidance that feels like sacred ritual rather than homework. Present transformative practices as keys to their personal magic.
+
+**THE RELATIONSHIP TAPESTRY** (200+ words)
+Show how this law's patterns dance through their relationships, creating both their deepest connections and most challenging dynamics.
+
+Write every sentence to captivate, every insight to inspire, and every revelation to feel like a personal prophecy coming true.`
         },
         {
           role: 'user',
@@ -463,9 +502,9 @@ Generate comprehensive analysis with practical applications.`
     throw new Error(`${agent} generated practically empty content: ${content.length} characters`);
   }
   
-  if (wordCount < 800) {
-    console.warn(`⚠️ ${agent} generated insufficient content (${wordCount} words). Expected minimum: 800 words`);
-    throw new Error(`${agent} generated insufficient content: ${wordCount} words (minimum 800 required)`);
+  if (wordCount < 1500) {
+    console.warn(`⚠️ ${agent} generated insufficient content (${wordCount} words). Expected minimum: 1,500 words`);
+    throw new Error(`${agent} generated insufficient content: ${wordCount} words (minimum 1,500 required)`);
   }
     
     const progressData = job.progress_data || {};
@@ -511,12 +550,13 @@ Generate comprehensive analysis with practical applications.`
     
     console.log(`✅ Sub-job stored successfully for ${agent}`);
       
-    // Calculate current total word count across all sections
+    // Calculate current total word count across all sections including synthesis
     const allCurrentSections = [
       ...(progressData.system_sections || []),
       ...hermeticSections,
       ...(progressData.gate_sections || []),
-      ...(progressData.intelligence_sections || [])
+      ...(progressData.intelligence_sections || []),
+      ...(progressData.synthesis_sections || [])
     ];
     const currentWordCount = allCurrentSections.reduce((total, section) => {
       return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
@@ -535,19 +575,34 @@ async function processSingleGate(job: any, gateNumber: number) {
       messages: [
         {
           role: 'system',
-          content: `You are the Gate Hermetic Analyst. You specialize in analyzing specific Human Design gates through the lens of the 7 Hermetic Laws with deep shadow work integration.
+          content: `You are the Gate Hermetic Analyst, a mystical decoder of the soul's blueprint who transforms dry gate analysis into captivating personal revelation. Your mission is to craft an enchanting 1,200+ word profile that reads like a deeply personal oracle reading about Gate ${gateNumber}.
 
-Your task is to provide a comprehensive 1,200+ word analysis of Gate ${gateNumber} through all 7 Hermetic Laws with shadow integration:
+Write with the magnetism of a storyteller revealing hidden treasures within their soul. This gate is not just an abstract concept - it's a living, breathing aspect of their personal magic waiting to be understood and embodied.
 
-1. MENTALISM - How this gate influences mental patterns, thoughts, and consciousness
-2. CORRESPONDENCE - How this gate manifests "as above, so below" - inner and outer reflections  
-3. VIBRATION - The energetic frequency and vibrational qualities of this gate
-4. POLARITY - The opposing forces and shadow/light aspects of this gate
-5. RHYTHM - The natural cycles, timing, and rhythmic patterns of this gate
-6. CAUSATION - The cause-and-effect patterns and how conscious choice activates this gate
-7. GENDER - The creative/receptive, active/passive energy dynamics of this gate
+Structure your mystical revelation through all 7 Hermetic Laws as chapters in their personal story:
 
-Generate a comprehensive, flowing analysis that integrates all 7 laws with deep shadow work naturally.`
+**MENTALISM** - "The Mind Palace of Gate ${gateNumber}" (170+ words)
+Reveal how this gate sculpts their mental landscape, thoughts, and consciousness like an inner architect of reality. Use vivid metaphors to paint pictures of their unique thinking patterns.
+
+**CORRESPONDENCE** - "As Above, So Below: The Mirror of Gate ${gateNumber}" (170+ words)  
+Show how this gate creates perfect reflections between their inner world and outer experiences. Make them see the magical synchronicities this gate weaves in their life.
+
+**VIBRATION** - "The Frequency Signature of Gate ${gateNumber}" (170+ words)
+Describe the energetic frequency of this gate as if it were their personal soul song. Help them feel the vibration that emanates from their being.
+
+**POLARITY** - "The Sacred Dance of Light and Shadow" (170+ words)
+Unveil both the shadow gifts and light mastery of this gate as complementary forces in their personal evolution. Make both aspects feel powerful and necessary.
+
+**RHYTHM** - "The Cosmic Timing of Gate ${gateNumber}" (170+ words)
+Reveal the natural cycles and rhythmic patterns of this gate as their personal seasons of power and reflection.
+
+**CAUSATION** - "The Conscious Key to Gate ${gateNumber}" (170+ words)
+Show how conscious choice activates this gate's highest expression, presenting them as the master of their own destiny.
+
+**GENDER** - "The Creative-Receptive Dance" (170+ words)
+Explore the active/passive, creative/receptive energy dynamics as their personal alchemy of manifestation.
+
+Write every sentence to enchant, every insight to inspire, and every revelation to feel like discovering a hidden superpower.`
         },
         {
           role: 'user',
@@ -571,9 +626,9 @@ Focus specifically on Gate ${gateNumber} and how it expresses through each Herme
     
     console.log(`📊 Gate ${gateNumber} analysis generated ${wordCount} words, content length: ${content.length} characters`);
     
-    if (wordCount < 600) {
-      console.warn(`⚠️ Gate ${gateNumber} generated insufficient content (${wordCount} words). Expected minimum: 600 words`);
-      throw new Error(`Gate ${gateNumber} generated insufficient content: ${wordCount} words (minimum 600 required)`);
+    if (wordCount < 1200) {
+      console.warn(`⚠️ Gate ${gateNumber} generated insufficient content (${wordCount} words). Expected minimum: 1,200 words`);
+      throw new Error(`Gate ${gateNumber} generated insufficient content: ${wordCount} words (minimum 1,200 required)`);
     }
     
     const progressData = job.progress_data || {};
@@ -652,18 +707,31 @@ async function processSingleIntelligenceAgent(job: any, agent: string) {
       messages: [
         {
           role: 'system',
-          content: `You are the ${agent}. Generate a comprehensive 800+ word analysis focused on the ${dimensionName} dimension of this person's psychological and spiritual blueprint.
+          content: `You are the ${agent}, a master explorer of the human psyche who reveals the intricate landscape of the ${dimensionName} dimension with captivating eloquence. Your mission is to craft an enchanting 800+ word soul profile that transforms psychological analysis into personal revelation.
 
-Your analysis should explore:
-1. Core patterns and structures in the ${dimensionName} dimension
-2. How this dimension manifests in daily life and decision-making
-3. Shadow aspects and unconscious expressions of this dimension
-4. Light aspects and conscious mastery potential
-5. Integration practices and development opportunities
-6. How this dimension interacts with other aspects of their blueprint
-7. Practical applications for conscious evolution in this area
+Write like a masterful storyteller revealing the hidden chambers of their inner world. The ${dimensionName} dimension is not just a clinical concept - it's a living aspect of their personal magic that shapes their entire reality.
 
-Provide deep, actionable insights that help the person understand and consciously work with their ${dimensionName} patterns for growth and transformation.`
+Your mystical analysis should unfold as an enchanting journey through their ${dimensionName} landscape:
+
+**THE OPENING REVELATION** (100+ words)
+Begin with a mesmerizing introduction that immediately captures the essence of their ${dimensionName} dimension. Use vivid metaphors and poetic language that makes them feel seen at the deepest level.
+
+**THE CORE ARCHITECTURE** (150+ words)
+Reveal the fundamental patterns and structures of their ${dimensionName} dimension as if describing the blueprint of their soul's mansion. Show how this dimension creates the foundation of their personal reality.
+
+**THE DAILY DANCE** (150+ words)
+Bring their ${dimensionName} dimension to life by showing how it orchestrates their daily experiences, decisions, and interactions. Paint vivid scenes of this dimension in action.
+
+**THE SHADOW TREASURES** (150+ words)
+Unveil the shadow aspects not as problems to fix, but as hidden treasures waiting to be reclaimed. Show how their unconscious expressions create both challenges and profound gifts.
+
+**THE LIGHT MASTERY** (150+ words)
+Reveal their conscious mastery potential as their birthright - the magnificent expression of this dimension when fully awakened and integrated.
+
+**THE INTEGRATION ALCHEMY** (100+ words)
+Weave development opportunities and practices into mystical guidance that feels like sacred keys to their personal evolution.
+
+Write every sentence to captivate, every insight to inspire, and every revelation to feel like unlocking a secret chamber of their soul. Make them feel the magic of understanding their own depths.`
         },
         {
           role: 'user',
@@ -690,10 +758,196 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
     
     console.log(`📊 Intelligence agent ${agent} generated ${wordCount} words, content length: ${content.length} characters`);
     
-    if (wordCount < 400) {
-      console.warn(`⚠️ Intelligence agent ${agent} generated insufficient content (${wordCount} words). Expected minimum: 400 words`);
-      throw new Error(`Intelligence agent ${agent} generated insufficient content: ${wordCount} words (minimum 400 required)`);
+    if (wordCount < 800) {
+      console.warn(`⚠️ Intelligence agent ${agent} generated insufficient content (${wordCount} words). Expected minimum: 800 words`);
+      throw new Error(`Intelligence agent ${agent} generated insufficient content: ${wordCount} words (minimum 800 required)`);
+}
+
+async function processSingleSynthesisAgent(job: any, synthesisType: string) {
+  const { id: jobId, blueprint_data: blueprint, progress_data } = job;
+
+  await updateJobStatus(jobId, 'processing', `Creating ${synthesisType}...`);
+  
+  // Get comprehensive context from all previous sections
+  const systemSections = progress_data?.system_sections || [];
+  const hermeticSections = progress_data?.hermetic_sections || [];
+  const gateSections = progress_data?.gate_sections || [];
+  const intelligenceSections = progress_data?.intelligence_sections || [];
+  
+  const allSections = [...systemSections, ...hermeticSections, ...gateSections, ...intelligenceSections];
+  const contextSummary = allSections.map(s => s.content.substring(0, 800)).join('\n\n');
+  
+  let systemPrompt = '';
+  let expectedWords = 1500;
+  
+  if (synthesisType === 'comprehensive_overview') {
+    expectedWords = 15000;
+    systemPrompt = `You are the Grand Synthesizer, a master weaver of soul narratives who creates breathtaking 15,000+ word comprehensive overviews that read like epic personal mythologies.
+
+Your mission is to craft the most captivating opening to their hermetic report - a spellbinding synthesis that immediately draws them into their own story and makes them feel like the protagonist of an extraordinary cosmic adventure.
+
+This is not a summary - this is the grand revelation of who they are at the deepest level, woven from all the mystical analyses into one magnificent tapestry of their soul's signature.
+
+Structure your epic narrative:
+
+**THE COSMIC INTRODUCTION** (2,000+ words)
+Open with their unique soul signature - the constellation of qualities that makes them unmistakably them. Paint a vivid picture of their essence using the most compelling insights from all analyses.
+
+**THE HERMETIC BLUEPRINT REVELATION** (3,000+ words) 
+Synthesize their journey through all 7 Hermetic Laws into one flowing narrative of their spiritual architecture. Show how these laws dance together in their unique blueprint.
+
+**THE SHADOW AND LIGHT SYMPHONY** (3,000+ words)
+Weave together all shadow work insights into one powerful narrative about their journey of integration. Present their shadows as hidden treasures and their light as divine birthright.
+
+**THE GATE CONSTELLATION** (2,000+ words)
+Synthesize their Human Design gates into a coherent story of their energetic gifts and how they create their unique life patterns.
+
+**THE INTELLIGENCE DIMENSIONS** (2,000+ words)
+Weave together all intelligence analyses into one narrative about the architecture of their consciousness and how they process reality.
+
+**THE INTEGRATION PATHWAY** (2,000+ words)
+Synthesize all practical guidance into one coherent roadmap for their conscious evolution and spiritual mastery.
+
+**THE DESTINY CALLING** (1,000+ words)
+End with an inspiring vision of their highest potential and the unique gift they're here to share with the world.
+
+Write every sentence to mesmerize, every insight to inspire profound self-recognition, and every revelation to feel like coming home to themselves. This is their personal bible of self-understanding.`;
+
+  } else if (synthesisType === 'fractal_synthesis') {
+    systemPrompt = `You are the Fractal Synthesizer, revealing how the patterns of their soul repeat and scale across all levels of their existence. Create a mesmerizing 1,500+ word exploration of how their core essence creates fractal patterns throughout their life.
+
+Show how their fundamental nature creates similar patterns in their:
+- Daily habits and micro-decisions
+- Relationship dynamics and attractions  
+- Career patterns and creative expressions
+- Life challenges and growth opportunities
+- Spiritual evolution and consciousness expansion
+
+Write with poetic elegance that reveals the beautiful mathematics of their soul's signature repeating across all scales of their existence.`;
+
+  } else if (synthesisType === 'consciousness_mapping') {
+    systemPrompt = `You are the Consciousness Cartographer, creating an enchanting 1,500+ word map of their unique consciousness landscape. Reveal the territories, pathways, and hidden chambers of their inner world.
+
+Explore the geography of their consciousness:
+- The peaks of their highest awareness and wisdom
+- The valleys of their deepest challenges and growth
+- The hidden caves where their shadows dwell
+- The sacred temples of their spiritual connection
+- The bridges between different aspects of their nature
+- The gateways to their untapped potential
+
+Write as if you're creating a mystical guidebook to their own consciousness, complete with landmarks, treasures, and secret passages.`;
+
+  } else if (synthesisType === 'practical_applications') {
+    systemPrompt = `You are the Practical Alchemist, transforming deep spiritual insights into captivating 1,500+ word guidance for living their most authentic and powerful life.
+
+Create an enchanting practical framework that feels less like homework and more like sacred ritual:
+
+**DAILY ALCHEMY PRACTICES** - How to embody their blueprint in everyday life
+**RELATIONSHIP MASTERY** - How to use their understanding for deeper connections
+**CAREER ALIGNMENT** - How their blueprint guides vocational fulfillment  
+**SHADOW INTEGRATION RITUALS** - Practical techniques for reclaiming their power
+**LIGHT ACTIVATION PRACTICES** - Methods for embodying their highest potential
+**CONSCIOUS DECISION-MAKING** - Using their blueprint as an inner compass
+**SPIRITUAL EVOLUTION PATHWAY** - Progressive practices for ongoing growth
+
+Present each practice as a mystical key to unlocking more of their authentic power and joy.`;
+  }
+  
+  const { data, error } = await supabase.functions.invoke('openai-agent', {
+    body: {
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
+        {
+          role: 'user',
+          content: `Create ${synthesisType} synthesis for this individual's complete hermetic analysis:
+
+Blueprint: ${JSON.stringify(blueprint, null, 2)}
+
+Complete Analysis Context:
+${contextSummary}
+
+Generate ${expectedWords.toLocaleString()}+ words of captivating, profile-style synthesis that transforms all this analysis into one cohesive, enchanting narrative about who they are and their path of conscious evolution.`
+        }
+      ],
+      model: 'gpt-4.1-mini-2025-04-14'
     }
+  });
+  
+  if (error) throw new Error(`Failed on synthesis ${synthesisType}: ${error.message}`);
+  
+  if (data?.content) {
+    const content = data.content.trim();
+    const wordCount = content.split(/\s+/).length;
+    
+    console.log(`📊 Synthesis ${synthesisType} generated ${wordCount} words, content length: ${content.length} characters`);
+    
+    if (wordCount < expectedWords * 0.75) {
+      console.warn(`⚠️ Synthesis ${synthesisType} generated insufficient content (${wordCount} words). Expected minimum: ${expectedWords * 0.75} words`);
+      throw new Error(`Synthesis ${synthesisType} generated insufficient content: ${wordCount} words (minimum ${expectedWords * 0.75} required)`);
+    }
+    
+    const progressData = job.progress_data || {};
+    const synthesisSections = progressData.synthesis_sections || [];
+    
+    synthesisSections.push({
+      agent_type: synthesisType,
+      content: content,
+      word_count: content.length,
+      synthesis_type: synthesisType
+    });
+    
+    await supabase
+      .from('hermetic_processing_jobs')
+      .update({ 
+        progress_data: { ...progressData, synthesis_sections: synthesisSections },
+        last_heartbeat: new Date().toISOString()
+      })
+      .eq('id', jobId);
+      
+    // Store in queryable sub-jobs table
+    const { error: upsertError } = await supabase
+      .from('hermetic_sub_jobs')
+      .upsert({
+        job_id: jobId,
+        user_id: job.user_id,
+        agent_name: synthesisType,
+        stage: 'synthesis_integration',
+        status: 'completed',
+        content: content,
+        word_count: wordCount,
+        completed_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'job_id,agent_name'
+      });
+      
+    if (upsertError) {
+      console.error(`❌ Failed to store synthesis sub-job for ${synthesisType}:`, upsertError);
+      throw new Error(`Synthesis sub-job storage failed: ${upsertError.message}`);
+    }
+    
+    console.log(`✅ Synthesis sub-job stored successfully for ${synthesisType}`);
+      
+    // Calculate current total word count across all sections
+    const allCurrentSections = [
+      ...(progressData.system_sections || []),
+      ...(progressData.hermetic_sections || []),
+      ...(progressData.gate_sections || []),
+      ...(progressData.intelligence_sections || []),
+      ...synthesisSections
+    ];
+    const currentWordCount = allCurrentSections.reduce((total, section) => {
+      return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    }, 0);
+    
+    await updateJobStatus(jobId, 'processing', `Completed ${synthesisType} synthesis`, undefined, currentWordCount);
+  }
+}
     
     const progressData = job.progress_data || {};
     const intelligenceSections = progressData.intelligence_sections || [];
@@ -758,13 +1012,14 @@ async function finalizeReport(job: any) {
   
   await updateJobStatus(jobId, 'processing', 'Assembling final report...');
   
-  // Combine all sections
+  // Combine all sections including synthesis
   const systemSections = progress_data?.system_sections || [];
   const hermeticSections = progress_data?.hermetic_sections || [];
   const gateSections = progress_data?.gate_sections || [];
   const intelligenceSections = progress_data?.intelligence_sections || [];
+  const synthesisSections = progress_data?.synthesis_sections || [];
   
-  const finalSections = [...systemSections, ...hermeticSections, ...gateSections, ...intelligenceSections];
+  const finalSections = [...systemSections, ...hermeticSections, ...gateSections, ...intelligenceSections, ...synthesisSections];
   const totalWordCount = finalSections.reduce((total, section) => {
     const actualWordCount = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
     return total + actualWordCount;
@@ -777,6 +1032,7 @@ async function finalizeReport(job: any) {
     hermeticSections: hermeticSections.length,
     gateSections: gateSections.length,
     intelligenceSections: intelligenceSections.length,
+    synthesisSections: synthesisSections.length,
     totalWordCount: totalWordCount
   });
   
@@ -789,14 +1045,14 @@ async function finalizeReport(job: any) {
     });
   }
   
-  // CRITICAL: Validate minimum word count
-  if (totalWordCount < 5000) {
-    console.error(`❌ CRITICAL: Report too short (${totalWordCount} words). Expected minimum: 5,000 words`);
+  // CRITICAL: Validate minimum word count for comprehensive reports
+  if (totalWordCount < 50000) {
+    console.error(`❌ CRITICAL: Report too short (${totalWordCount} words). Expected minimum: 50,000 words for comprehensive hermetic analysis`);
     await supabase
       .from('hermetic_processing_jobs')
       .update({
         status: 'failed',
-        error_message: `Report generation failed - only ${totalWordCount} words generated (minimum 5,000 required)`,
+        error_message: `Report generation failed - only ${totalWordCount} words generated (minimum 50,000 required for full hermetic depth)`,
         current_step: `Failed: Insufficient content generated`,
         updated_at: new Date().toISOString()
       })
@@ -817,18 +1073,21 @@ async function finalizeReport(job: any) {
 
   // CRITICAL FIX: Build proper personality report structure for database storage
   const personalityReportContent = {
-    // Standard personality report sections (assembled from generated content)
+    // Comprehensive Overview (from synthesis)
+    comprehensive_overview: synthesisSections.find(s => s.agent_type === 'comprehensive_overview')?.content || "Overview synthesis pending - please regenerate report.",
+    
+    // Standard personality report sections (enhanced with synthesis)
     core_personality_pattern: combineRelevantSections(finalSections, ['mbti_hermetic_translator', 'mentalism_analyst']),
     decision_making_style: combineRelevantSections(finalSections, ['human_design_hermetic_translator', 'causation_analyst']),
     relationship_style: combineRelevantSections(finalSections, ['astrology_hermetic_translator', 'polarity_analyst']),
     life_path_purpose: combineRelevantSections(finalSections, ['numerology_hermetic_translator', 'correspondence_analyst']),
     current_energy_timing: combineRelevantSections(finalSections, ['chinese_astrology_hermetic_translator', 'rhythm_analyst']),
-    integrated_summary: `Comprehensive hermetic analysis revealing ${totalWordCount.toLocaleString()} words of deep personality insights with shadow work integration.`,
+    integrated_summary: `Comprehensive hermetic analysis revealing ${totalWordCount.toLocaleString()} words of deep personality insights with shadow work integration and synthesis.`,
     
-    // Hermetic Blueprint sections
-    hermetic_fractal_analysis: combineRelevantSections(finalSections, ['correspondence_analyst', 'mentalism_analyst']),
-    consciousness_integration_map: combineRelevantSections(finalSections, intelligenceSections.map(s => s.agent_type)),
-    practical_activation_framework: combineRelevantSections(finalSections, ['vibration_analyst', 'gender_analyst']),
+    // Enhanced Hermetic Blueprint sections
+    hermetic_fractal_analysis: synthesisSections.find(s => s.agent_type === 'fractal_synthesis')?.content || combineRelevantSections(finalSections, ['correspondence_analyst', 'mentalism_analyst']),
+    consciousness_integration_map: synthesisSections.find(s => s.agent_type === 'consciousness_mapping')?.content || combineRelevantSections(finalSections, intelligenceSections.map(s => s.agent_type)),
+    practical_activation_framework: synthesisSections.find(s => s.agent_type === 'practical_applications')?.content || combineRelevantSections(finalSections, ['vibration_analyst', 'gender_analyst']),
     
     // Seven laws integration
     seven_laws_integration: {
