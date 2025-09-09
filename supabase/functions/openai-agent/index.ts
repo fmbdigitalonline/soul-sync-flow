@@ -559,6 +559,7 @@ serve(async (req) => {
     let conversationMessages = [...messages];
     let iteration = 1;
     const maxIterations = 5; // Prevent infinite loops
+    let data: any = null; // Fix: Declare data variable at function scope
 
     while (iteration <= maxIterations) {
       console.log(`🔄 Agent conversation iteration ${iteration}`);
@@ -611,7 +612,7 @@ serve(async (req) => {
         throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
-      const data = await response.json();
+      data = await response.json(); // Fix: Update existing data variable
       console.log('📥 OpenAI response structure:', JSON.stringify({
         id: data.id,
         object: data.object,
