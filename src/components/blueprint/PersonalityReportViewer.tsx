@@ -12,6 +12,7 @@ import { aiPersonalityReportService, PersonalityReport } from '@/services/ai-per
 import { hermeticPersonalityReportService, HermeticPersonalityReport } from '@/services/hermetic-personality-report-service';
 import { blueprintService } from '@/services/blueprint-service';
 import { useToast } from '@/hooks/use-toast';
+import { useHermeticReportStatus } from '@/hooks/use-hermetic-report-status';
 import { CosmicCard } from '@/components/ui/cosmic-card';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,6 +44,9 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     intelligence_analysis: false
   });
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+  // Add hermetic status hook
+  const hermeticStatus = useHermeticReportStatus();
 
   useEffect(() => {
     loadReport();
@@ -190,6 +194,66 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     } finally {
       // Always reset generating state, even if job creation succeeds
       // The actual generation progress is tracked separately by the orb
+      setGenerating(false);
+    }
+  };
+
+  const handleRecoveryAttempt = async () => {
+    try {
+      setGenerating(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Find completed jobs without reports
+      const { data: completedJobs, error } = await supabase
+        .from('hermetic_processing_jobs')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .eq('progress_percentage', 100)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      if (!completedJobs || completedJobs.length === 0) {
+        toast({
+          title: "No recovery needed",
+          description: "No completed jobs found that need recovery",
+        });
+        return;
+      }
+
+      const jobToRecover = completedJobs[0];
+      console.log('🔧 Attempting to recover job:', jobToRecover.id);
+
+      const { data: recoveryResult, error: recoveryError } = await supabase.functions.invoke('hermetic-recovery', {
+        body: { job_id: jobToRecover.id }
+      });
+
+      if (recoveryError) throw recoveryError;
+
+      if (recoveryResult?.success) {
+        toast({
+          title: "Recovery successful!",
+          description: `Report recovered with ${recoveryResult.wordCount?.toLocaleString()} words`,
+        });
+        
+        // Refresh the report status
+        await handleRefresh();
+      } else {
+        throw new Error(recoveryResult?.error || 'Recovery failed');
+      }
+
+    } catch (error) {
+      console.error('❌ Recovery failed:', error);
+      toast({
+        title: "Recovery failed",
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: "destructive"
+      });
+    } finally {
       setGenerating(false);
     }
   };
