@@ -2142,6 +2142,7 @@ export type Database = {
           job_type: string
           last_heartbeat: string | null
           memory_usage_mb: number | null
+          progress_data: Json | null
           progress_percentage: number
           result_data: Json | null
           started_at: string | null
@@ -2165,6 +2166,7 @@ export type Database = {
           job_type?: string
           last_heartbeat?: string | null
           memory_usage_mb?: number | null
+          progress_data?: Json | null
           progress_percentage?: number
           result_data?: Json | null
           started_at?: string | null
@@ -2188,6 +2190,7 @@ export type Database = {
           job_type?: string
           last_heartbeat?: string | null
           memory_usage_mb?: number | null
+          progress_data?: Json | null
           progress_percentage?: number
           result_data?: Json | null
           started_at?: string | null
@@ -2281,59 +2284,51 @@ export type Database = {
       }
       hermetic_sub_jobs: {
         Row: {
-          agent_type: string
-          blueprint: Json
+          agent_name: string
           completed_at: string | null
+          content: string | null
           created_at: string | null
           error_message: string | null
           id: string
-          parent_job_id: string | null
-          phase: string
-          result: Json | null
-          retry_count: number | null
+          job_id: string
+          stage: string
           started_at: string | null
           status: string | null
           updated_at: string | null
+          user_id: string
+          word_count: number | null
         }
         Insert: {
-          agent_type: string
-          blueprint: Json
+          agent_name: string
           completed_at?: string | null
+          content?: string | null
           created_at?: string | null
           error_message?: string | null
           id?: string
-          parent_job_id?: string | null
-          phase: string
-          result?: Json | null
-          retry_count?: number | null
+          job_id: string
+          stage: string
           started_at?: string | null
           status?: string | null
           updated_at?: string | null
+          user_id: string
+          word_count?: number | null
         }
         Update: {
-          agent_type?: string
-          blueprint?: Json
+          agent_name?: string
           completed_at?: string | null
+          content?: string | null
           created_at?: string | null
           error_message?: string | null
           id?: string
-          parent_job_id?: string | null
-          phase?: string
-          result?: Json | null
-          retry_count?: number | null
+          job_id?: string
+          stage?: string
           started_at?: string | null
           status?: string | null
           updated_at?: string | null
+          user_id?: string
+          word_count?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "hermetic_sub_jobs_parent_job_id_fkey"
-            columns: ["parent_job_id"]
-            isOneToOne: false
-            referencedRelation: "generation_jobs"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       hot_memory_cache: {
         Row: {
