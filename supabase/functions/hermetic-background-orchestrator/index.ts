@@ -324,23 +324,29 @@ Focus on your specific system expertise.`
       .eq('id', jobId);
       
     // CRITICAL: Store in queryable sub-jobs table for immediate access
-    await supabase
+    const { error: upsertError } = await supabase
       .from('hermetic_sub_jobs')
       .upsert({
         job_id: jobId,
         user_id: job.user_id,
-        agent_type: translator,
+        agent_name: translator, // FIXED: Use agent_name to match schema
         stage: 'system_translation',
         status: 'completed',
         content: content,
         word_count: wordCount,
-        metadata: { translator_type: translator },
         completed_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'job_id,agent_type'
+        onConflict: 'job_id,agent_name' // FIXED: Use agent_name for unique constraint
       });
+      
+    if (upsertError) {
+      console.error(`❌ Failed to store sub-job for ${translator}:`, upsertError);
+      throw new Error(`Sub-job storage failed: ${upsertError.message}`);
+    }
+    
+    console.log(`✅ Sub-job stored successfully for ${translator}`);
       
     // Calculate current total word count across all sections
     const allCurrentSections = [
@@ -455,23 +461,29 @@ Generate comprehensive analysis with practical applications.`
       .eq('id', jobId);
       
     // CRITICAL: Store in queryable sub-jobs table for immediate access
-    await supabase
+    const { error: upsertError } = await supabase
       .from('hermetic_sub_jobs')
       .upsert({
         job_id: jobId,
         user_id: job.user_id,
-        agent_type: agent,
+        agent_name: agent, // FIXED: Use agent_name to match schema
         stage: 'hermetic_laws',
         status: 'completed',
         content: content,
         word_count: wordCount,
-        metadata: { hermetic_law: agent.replace('_analyst', '') },
         completed_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'job_id,agent_type'
+        onConflict: 'job_id,agent_name' // FIXED: Use agent_name for unique constraint
       });
+      
+    if (upsertError) {
+      console.error(`❌ Failed to store sub-job for ${agent}:`, upsertError);
+      throw new Error(`Sub-job storage failed: ${upsertError.message}`);
+    }
+    
+    console.log(`✅ Sub-job stored successfully for ${agent}`);
       
     // Calculate current total word count across all sections
     const allCurrentSections = [
@@ -557,23 +569,29 @@ Focus specifically on Gate ${gateNumber} and how it expresses through each Herme
       .eq('id', jobId);
       
     // CRITICAL: Store in queryable sub-jobs table for immediate access
-    await supabase
+    const { error: upsertError } = await supabase
       .from('hermetic_sub_jobs')
       .upsert({
         job_id: jobId,
         user_id: job.user_id,
-        agent_type: 'gate_hermetic_analyst',
+        agent_name: 'gate_hermetic_analyst', // FIXED: Use agent_name to match schema
         stage: 'gate_analysis',
         status: 'completed',
         content: content,
         word_count: wordCount,
-        metadata: { gate_number: gateNumber },
         completed_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'job_id,agent_type'
+        onConflict: 'job_id,agent_name' // FIXED: Use agent_name for unique constraint
       });
+      
+    if (upsertError) {
+      console.error(`❌ Failed to store sub-job for gate ${gateNumber}:`, upsertError);
+      throw new Error(`Sub-job storage failed: ${upsertError.message}`);
+    }
+    
+    console.log(`✅ Sub-job stored successfully for gate ${gateNumber}`);
       
     // Calculate current total word count across all sections
     const allCurrentSections = [
@@ -670,23 +688,29 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
       .eq('id', jobId);
       
     // CRITICAL: Store in queryable sub-jobs table for immediate access
-    await supabase
+    const { error: upsertError } = await supabase
       .from('hermetic_sub_jobs')
       .upsert({
         job_id: jobId,
         user_id: job.user_id,
-        agent_type: agent,
+        agent_name: agent, // FIXED: Use agent_name to match schema
         stage: 'intelligence_extraction',
         status: 'completed',
         content: content,
         word_count: wordCount,
-        metadata: { intelligence_dimension: dimensionName },
         completed_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'job_id,agent_type'
+        onConflict: 'job_id,agent_name' // FIXED: Use agent_name for unique constraint
       });
+      
+    if (upsertError) {
+      console.error(`❌ Failed to store sub-job for ${agent}:`, upsertError);
+      throw new Error(`Sub-job storage failed: ${upsertError.message}`);
+    }
+    
+    console.log(`✅ Sub-job stored successfully for ${agent}`);
       
     // Calculate current total word count across all sections
     const allCurrentSections = [
