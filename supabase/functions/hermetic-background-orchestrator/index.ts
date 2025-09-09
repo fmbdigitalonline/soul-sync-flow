@@ -85,6 +85,32 @@ serve(async (req) => {
     let nextStage = job.current_stage;
     let nextStepIndex = job.current_step_index;
     let progressPercentage = 0;
+    
+    // CRITICAL: Enhanced zombie detection and recovery
+    console.log(`🔍 CURRENT JOB STATE:`, {
+      jobId,
+      status: job.status,
+      currentStage: job.current_stage,
+      stepIndex: job.current_step_index,
+      lastHeartbeat: job.last_heartbeat,
+      progressPercentage: job.progress_percentage
+    });
+    
+    // Check for existing sub-jobs to validate actual progress
+    const { data: existingSubJobs, error: subJobError } = await supabase
+      .from('hermetic_sub_jobs')
+      .select('agent_name, status, word_count')
+      .eq('job_id', jobId);
+      
+    if (subJobError) {
+      console.error(`❌ Failed to check existing sub-jobs:`, subJobError);
+    } else {
+      console.log(`📋 EXISTING SUB-JOBS:`, {
+        count: existingSubJobs?.length || 0,
+        completed: existingSubJobs?.filter(sj => sj.status === 'completed').length || 0,
+        agents: existingSubJobs?.map(sj => sj.agent_name) || []
+      });
+    }
 
     // --- RELAY RACE STATE MACHINE ---
     if (job.current_stage === 'system_translation') {

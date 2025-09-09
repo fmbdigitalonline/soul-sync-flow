@@ -4116,6 +4116,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_job_heartbeat_with_content: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          is_zombie: boolean
+          job_id: string
+          last_heartbeat: string
+          status: string
+          sub_job_count: number
+          total_content_length: number
+        }[]
+      }
       vector_avg: {
         Args: { "": number[] }
         Returns: string
