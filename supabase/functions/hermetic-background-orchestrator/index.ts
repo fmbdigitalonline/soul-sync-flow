@@ -681,6 +681,7 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
       throw new Error(`Intelligence agent ${agent} generated insufficient content: ${wordCount} words (minimum 700 required)`);
     }
   }
+}
 
 async function processSingleSynthesisAgent(job: any, synthesisType: string) {
   const { id: jobId, blueprint_data: blueprint, progress_data } = job;
