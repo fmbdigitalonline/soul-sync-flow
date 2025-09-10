@@ -283,7 +283,7 @@ async function processSingleSystemTranslator(job: any, translator: string) {
       messages: [
         {
           role: 'system',
-          content: getPersonalizedSystemPrompt(translator, blueprint)`
+          content: getPersonalizedSystemPrompt(translator, blueprint)
         },
         {
           role: 'user',
