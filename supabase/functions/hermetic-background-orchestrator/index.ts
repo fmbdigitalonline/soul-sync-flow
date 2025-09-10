@@ -544,7 +544,7 @@ async function processSingleGate(job: any, gateNumber: number) {
       messages: [
         {
           role: 'system',
-          content: getPersonalizedGatePrompt(gateNumber, blueprint)`
+          content: getPersonalizedGatePrompt(gateNumber, blueprint)
         },
         {
           role: 'user',
@@ -649,7 +649,7 @@ async function processSingleIntelligenceAgent(job: any, agent: string) {
       messages: [
         {
           role: 'system',
-          content: getPersonalizedIntelligencePrompt(agent, dimensionName, blueprint)`
+          content: getPersonalizedIntelligencePrompt(agent, dimensionName, blueprint)
         },
         {
           role: 'user',
@@ -779,7 +779,7 @@ Present each practice as a mystical key to unlocking more of their authentic pow
       messages: [
         {
           role: 'system',
-          content: getPersonalizedSynthesisPrompt(synthesisType, blueprint, expectedWords)`
+          content: getPersonalizedSynthesisPrompt(synthesisType, blueprint, expectedWords)
         },
         {
           role: 'user',
