@@ -680,6 +680,62 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
       console.warn(`⚠️ Intelligence agent ${agent} generated insufficient content (${wordCount} words). Expected range: 700-900 words`);
       throw new Error(`Intelligence agent ${agent} generated insufficient content: ${wordCount} words (minimum 700 required)`);
     }
+    
+    const progressData = job.progress_data || {};
+    const intelligenceSections = progressData.intelligence_sections || [];
+    
+    intelligenceSections.push({
+      agent_type: agent,
+      content: content,
+      word_count: content.length,
+      intelligence_dimension: dimensionName
+    });
+    
+    await supabase
+      .from('hermetic_processing_jobs')
+      .update({ 
+        progress_data: { ...progressData, intelligence_sections: intelligenceSections },
+        last_heartbeat: new Date().toISOString()
+      })
+      .eq('id', jobId);
+      
+    // CRITICAL: Store in queryable sub-jobs table for immediate access
+    const { error: upsertError } = await supabase
+      .from('hermetic_sub_jobs')
+      .upsert({
+        job_id: jobId,
+        user_id: job.user_id,
+        agent_name: agent, // FIXED: Use agent_name to match schema
+        stage: 'intelligence_extraction',
+        status: 'completed',
+        content: content,
+        word_count: wordCount,
+        completed_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'job_id,agent_name' // FIXED: Use agent_name for unique constraint
+      });
+      
+    if (upsertError) {
+      console.error(`❌ Failed to store sub-job for ${agent}:`, upsertError);
+      throw new Error(`Sub-job storage failed: ${upsertError.message}`);
+    }
+    
+    console.log(`✅ Sub-job stored successfully for ${agent}`);
+      
+    // Calculate current total word count across all sections
+    const allCurrentSections = [
+      ...(progressData.system_sections || []),
+      ...(progressData.hermetic_sections || []),
+      ...(progressData.gate_sections || []),
+      ...intelligenceSections
+    ];
+    const currentWordCount = allCurrentSections.reduce((total, section) => {
+      return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    }, 0);
+    
+    await updateJobStatus(jobId, 'processing', `Completed ${dimensionName} intelligence extraction`, undefined, currentWordCount);
   }
 }
 
@@ -866,64 +922,6 @@ Generate ${expectedWords.toLocaleString()}+ words of captivating, profile-style 
     }, 0);
     
     await updateJobStatus(jobId, 'processing', `Completed ${synthesisType} synthesis`, undefined, currentWordCount);
-  }
-}
-    
-    const progressData = job.progress_data || {};
-    const intelligenceSections = progressData.intelligence_sections || [];
-    
-    intelligenceSections.push({
-      agent_type: agent,
-      content: content,
-      word_count: content.length,
-      intelligence_dimension: dimensionName
-    });
-    
-    await supabase
-      .from('hermetic_processing_jobs')
-      .update({ 
-        progress_data: { ...progressData, intelligence_sections: intelligenceSections },
-        last_heartbeat: new Date().toISOString()
-      })
-      .eq('id', jobId);
-      
-    // CRITICAL: Store in queryable sub-jobs table for immediate access
-    const { error: upsertError } = await supabase
-      .from('hermetic_sub_jobs')
-      .upsert({
-        job_id: jobId,
-        user_id: job.user_id,
-        agent_name: agent, // FIXED: Use agent_name to match schema
-        stage: 'intelligence_extraction',
-        status: 'completed',
-        content: content,
-        word_count: wordCount,
-        completed_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'job_id,agent_name' // FIXED: Use agent_name for unique constraint
-      });
-      
-    if (upsertError) {
-      console.error(`❌ Failed to store sub-job for ${agent}:`, upsertError);
-      throw new Error(`Sub-job storage failed: ${upsertError.message}`);
-    }
-    
-    console.log(`✅ Sub-job stored successfully for ${agent}`);
-      
-    // Calculate current total word count across all sections
-    const allCurrentSections = [
-      ...(progressData.system_sections || []),
-      ...(progressData.hermetic_sections || []),
-      ...(progressData.gate_sections || []),
-      ...intelligenceSections
-    ];
-    const currentWordCount = allCurrentSections.reduce((total, section) => {
-      return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
-    }, 0);
-    
-    await updateJobStatus(jobId, 'processing', `Completed ${dimensionName} intelligence extraction`, undefined, currentWordCount);
   }
 }
 
