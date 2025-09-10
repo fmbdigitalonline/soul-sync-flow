@@ -18,6 +18,7 @@ import {
 import { GrowthModeTestRunner } from './GrowthModeTestRunner';
 import { GrowthProgramTestRunner } from './GrowthProgramTestRunner';
 import { VFPGraphTester } from '../personality/VFPGraphTester';
+import { HermeticSystemValidator } from './HermeticSystemValidator';
 import { VFPGraphPatentTester } from './VFPGraphPatentTester';
 import ACSPatentTestSuite from './ACSPatentTestSuite';
 
@@ -113,6 +114,16 @@ export const TestingDashboard: React.FC = () => {
       priority: 'high',
       testCount: 12,
       component: ACSPerformanceOptimizer
+    },
+    {
+      id: 'hermetic-system',
+      title: 'Hermetic System Validator',
+      description: 'End-to-end validation of hermetic personality report generation (100K+ words)',
+      icon: FileText,
+      status: 'production',
+      priority: 'critical',
+      testCount: 8,
+      component: HermeticSystemValidator
     },
     {
       id: 'acs-documentation',

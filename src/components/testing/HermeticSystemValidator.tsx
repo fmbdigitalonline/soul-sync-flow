@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/hooks/useUser';
+import { useAuth } from '@/contexts/AuthContext';
 import { hermeticPersonalityReportService } from '@/services/hermetic-personality-report-service';
 import { toast } from 'sonner';
 
@@ -18,7 +18,7 @@ interface ValidationResult {
 }
 
 export function HermeticSystemValidator() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [isValidating, setIsValidating] = useState(false);
   const [results, setResults] = useState<ValidationResult[]>([]);
   const [currentStep, setCurrentStep] = useState<string>('');
