@@ -1329,6 +1329,8 @@ Write every section to feel personally relevant to ${userName}, helping them see
 }
 
 // ============ HELPER FUNCTIONS ============
+
+function extractGatesFromBlueprint(blueprint: any): number[] {
   const gates: number[] = [];
   const hdData = blueprint.energy_strategy_human_design;
   
