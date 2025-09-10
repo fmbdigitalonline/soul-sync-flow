@@ -3952,7 +3952,7 @@ export type Database = {
         Returns: undefined
       }
       cleanup_stuck_hermetic_jobs: {
-        Args: Record<PropertyKey, never> | { p_user_id?: string }
+        Args: Record<PropertyKey, never>
         Returns: number
       }
       create_generation_job: {
@@ -3965,22 +3965,8 @@ export type Database = {
         Returns: string
       }
       detect_zombie_hermetic_jobs: {
-        Args: Record<PropertyKey, never> | { p_user_id?: string }
-        Returns: {
-          current_stage: string
-          current_step: string
-          is_synthesis_stuck: boolean
-          job_id: string
-          last_heartbeat: string
-          minutes_since_heartbeat: number
-          progress_percentage: number
-          status: string
-          user_id: string
-        }[]
-      }
-      emergency_cleanup_stuck_jobs: {
-        Args: { p_user_id?: string }
-        Returns: number
+        Args: { p_user_id: string }
+        Returns: Json
       }
       generate_blueprint_signature: {
         Args: { blueprint_data: Json }

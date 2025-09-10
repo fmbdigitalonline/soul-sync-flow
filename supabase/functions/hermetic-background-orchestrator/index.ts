@@ -112,55 +112,40 @@ serve(async (req) => {
       });
     }
 
-    // --- RELAY RACE STATE MACHINE WITH COMPREHENSIVE ERROR HANDLING ---
-    try {
-      if (job.current_stage === 'system_translation') {
-        // Process ONE system translator with timeout protection
-        const translator = SYSTEM_TRANSLATORS[job.current_step_index];
-        console.log(`Processing system translator: ${translator}`);
-        
-        // CRITICAL: Add stage-specific timeout protection (5 minutes for translation)
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error(`${translator} timed out after 5 minutes`)), 300000);
-        });
-        
-        const processingPromise = processSingleSystemTranslator(job, translator);
-        await Promise.race([processingPromise, timeoutPromise]);
-        
-        progressPercentage = 5 + (job.current_step_index * 15) / SYSTEM_TRANSLATORS.length;
-        
-        // Move to next step or stage
-        if (job.current_step_index + 1 >= SYSTEM_TRANSLATORS.length) {
-          nextStage = 'hermetic_laws';
-          nextStepIndex = 0;
-          progressPercentage = 20;
-        } else {
-          nextStepIndex = job.current_step_index + 1;
-        }
+    // --- RELAY RACE STATE MACHINE ---
+    if (job.current_stage === 'system_translation') {
+      // Process ONE system translator
+      const translator = SYSTEM_TRANSLATORS[job.current_step_index];
+      console.log(`Processing system translator: ${translator}`);
+      
+      await processSingleSystemTranslator(job, translator);
+      progressPercentage = 5 + (job.current_step_index * 15) / SYSTEM_TRANSLATORS.length;
+      
+      // Move to next step or stage
+      if (job.current_step_index + 1 >= SYSTEM_TRANSLATORS.length) {
+        nextStage = 'hermetic_laws';
+        nextStepIndex = 0;
+        progressPercentage = 20;
+      } else {
+        nextStepIndex = job.current_step_index + 1;
+      }
 
     } else if (job.current_stage === 'hermetic_laws') {
-        // Process ONE hermetic law agent with timeout protection
-        const agent = HERMETIC_AGENTS[job.current_step_index];
-        console.log(`Processing hermetic agent: ${agent}`);
-        
-        // CRITICAL: Add stage-specific timeout protection (8 minutes for hermetic analysis)
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error(`${agent} timed out after 8 minutes`)), 480000);
-        });
-        
-        const processingPromise = processSingleHermeticAgent(job, agent);
-        await Promise.race([processingPromise, timeoutPromise]);
-        
-        progressPercentage = 20 + (job.current_step_index * 30) / HERMETIC_AGENTS.length;
-        
-        // Move to next step or stage
-        if (job.current_step_index + 1 >= HERMETIC_AGENTS.length) {
-          nextStage = 'gate_analysis';
-          nextStepIndex = 0;
-          progressPercentage = 50;
-        } else {
-          nextStepIndex = job.current_step_index + 1;
-        }
+      // Process ONE hermetic law agent
+      const agent = HERMETIC_AGENTS[job.current_step_index];
+      console.log(`Processing hermetic agent: ${agent}`);
+      
+      await processSingleHermeticAgent(job, agent);
+      progressPercentage = 20 + (job.current_step_index * 30) / HERMETIC_AGENTS.length;
+      
+      // Move to next step or stage
+      if (job.current_step_index + 1 >= HERMETIC_AGENTS.length) {
+        nextStage = 'gate_analysis';
+        nextStepIndex = 0;
+        progressPercentage = 50;
+      } else {
+        nextStepIndex = job.current_step_index + 1;
+      }
 
     } else if (job.current_stage === 'gate_analysis') {
       // Process ONE gate
@@ -205,79 +190,33 @@ serve(async (req) => {
       }
 
     } else if (job.current_stage === 'synthesis_integration') {
-        // Process synthesis agents with EXTENDED timeout protection (critical stage)
-        const synthesisTasks = ['comprehensive_overview', 'fractal_synthesis', 'consciousness_mapping', 'practical_applications'];
-        const currentTask = synthesisTasks[job.current_step_index];
-        console.log(`Processing synthesis: ${currentTask}`);
-        
-        // CRITICAL: Extended timeout for synthesis stage (15 minutes) - this is where jobs often fail
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error(`Synthesis task '${currentTask}' timed out after 15 minutes`)), 900000);
-        });
-        
-        const processingPromise = processSingleSynthesisAgent(job, currentTask);
-        await Promise.race([processingPromise, timeoutPromise]);
-        
-        progressPercentage = 90 + (job.current_step_index * 5) / synthesisTasks.length;
-        
-        // Move to next step or stage
-        if (job.current_step_index + 1 >= synthesisTasks.length) {
-          nextStage = 'final_assembly';
-          nextStepIndex = 0;
-          progressPercentage = 95;
-        } else {
-          nextStepIndex = job.current_step_index + 1;
-        }
+      // Process synthesis agents for comprehensive overview and integration
+      const synthesisTasks = ['comprehensive_overview', 'fractal_synthesis', 'consciousness_mapping', 'practical_applications'];
+      const currentTask = synthesisTasks[job.current_step_index];
+      console.log(`Processing synthesis: ${currentTask}`);
+      
+      await processSingleSynthesisAgent(job, currentTask);
+      progressPercentage = 90 + (job.current_step_index * 5) / synthesisTasks.length;
+      
+      // Move to next step or stage
+      if (job.current_step_index + 1 >= synthesisTasks.length) {
+        nextStage = 'final_assembly';
+        nextStepIndex = 0;
+        progressPercentage = 95;
+      } else {
+        nextStepIndex = job.current_step_index + 1;
+      }
       
     } else if (job.current_stage === 'final_assembly') {
-        // Final step with timeout protection
-        console.log(`Finalizing report for job ${jobId}`);
-        
-        // CRITICAL: Timeout protection for final assembly (10 minutes)
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error(`Final assembly timed out after 10 minutes`)), 600000);
-        });
-        
-        const finalizationPromise = finalizeReport(job);
-        await Promise.race([finalizationPromise, timeoutPromise]);
-        
-        return new Response(JSON.stringify({ 
-          success: true, 
-          message: "Processing complete." 
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      } else {
-        // Unknown stage - fail the job
-        throw new Error(`Unknown processing stage: ${job.current_stage}`);
-      }
-    } catch (stageError) {
-      // CRITICAL: Stage-specific error handling - immediately fail the job
-      console.error(`❌ STAGE PROCESSING FAILED for ${job.current_stage}:`, stageError);
-      
-      const errorMessage = `Stage '${job.current_stage}' failed: ${stageError.message}`;
-      const currentStep = `Failed at stage '${job.current_stage}' - ${stageError.message}`;
-      
-      // Immediately update job to failed status
-      await supabase
-        .from('hermetic_processing_jobs')
-        .update({
-          status: 'failed',
-          error_message: errorMessage,
-          current_step: currentStep,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', jobId);
-      
-      console.log(`🚫 Job ${jobId} marked as failed due to stage error`);
+      // This is the final step, do the assembly and complete the job
+      console.log(`Finalizing report for job ${jobId}`);
+      await finalizeReport(job);
       
       return new Response(JSON.stringify({ 
-        success: false, 
-        error: errorMessage,
-        stage: job.current_stage
+        success: true, 
+        message: "Processing complete." 
       }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
@@ -295,8 +234,12 @@ serve(async (req) => {
       })
       .eq('id', jobId);
 
-    // 4. CRITICAL: Robust self-invocation with retry logic and immediate failure on exhaustion
-    await invokeNextStepWithRetry(jobId, nextStage, nextStepIndex);
+    // 4. CRITICAL: Trigger the next step by invoking itself (fire-and-forget)
+    supabase.functions.invoke('hermetic-background-orchestrator', {
+      body: { job_id: jobId }
+    }).catch(error => {
+      console.error('Failed to trigger next step:', error);
+    });
 
     console.log(`✅ Step completed, next step queued: ${nextStage}[${nextStepIndex}]`);
 
@@ -318,7 +261,6 @@ serve(async (req) => {
         .update({ 
           status: 'failed', 
           current_step: `Error: ${error.message}`,
-          error_message: `Processing failed: ${error.message}`,
           updated_at: new Date().toISOString()
         })
         .eq('id', errorJobId);
@@ -333,66 +275,6 @@ serve(async (req) => {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
   });
 });
-
-// ============ CRITICAL INVOCATION CHAIN FIX ============
-
-/**
- * CRITICAL: Robust self-invocation with retry logic to eliminate fire-and-forget failures
- * This is the core fix for the "brittle chain" issue where jobs fail silently
- */
-async function invokeNextStepWithRetry(jobId: string, nextStage: string, nextStepIndex: number, maxRetries: number = 3) {
-  let lastError: Error | null = null;
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`🔄 Attempt ${attempt}/${maxRetries}: Invoking next step for job ${jobId}`);
-      
-      const { error: invokeError } = await supabase.functions.invoke('hermetic-background-orchestrator', {
-        body: { job_id: jobId }
-      });
-      
-      if (invokeError) {
-        throw new Error(`Invocation failed: ${invokeError.message}`);
-      }
-      
-      console.log(`✅ INVOCATION SUCCESS: Next step queued for job ${jobId} (attempt ${attempt})`);
-      return; // Success - exit the function
-      
-    } catch (error) {
-      lastError = error as Error;
-      const isLastAttempt = attempt === maxRetries;
-      
-      console.error(`❌ INVOCATION ATTEMPT ${attempt} FAILED for job ${jobId}:`, error);
-      
-      if (isLastAttempt) {
-        // ALL RETRIES EXHAUSTED - IMMEDIATELY FAIL THE JOB
-        console.error(`🚫 CRITICAL: All ${maxRetries} invocation attempts failed for job ${jobId}. Marking job as failed.`);
-        
-        const chainBrokenError = `CHAIN BROKEN: Failed to trigger next processing step after ${maxRetries} attempts. Last error: ${lastError.message}`;
-        
-        await supabase
-          .from('hermetic_processing_jobs')
-          .update({
-            status: 'failed',
-            error_message: chainBrokenError,
-            current_step: `Failed to continue processing chain at ${nextStage}[${nextStepIndex}]`,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', jobId);
-          
-        console.log(`🚫 Job ${jobId} marked as FAILED due to invocation chain break`);
-        
-        // Re-throw to let caller know the chain is broken
-        throw new Error(chainBrokenError);
-      } else {
-        // Wait with exponential backoff before next attempt
-        const backoffMs = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
-        console.log(`⏳ Waiting ${backoffMs}ms before retry attempt ${attempt + 1}...`);
-        await new Promise(resolve => setTimeout(resolve, backoffMs));
-      }
-    }
-  }
-}
 
 // ============ SINGLE STEP PROCESSORS ============
 
@@ -955,15 +837,6 @@ Create an enchanting practical framework that feels less like homework and more 
 Present each practice as a mystical key to unlocking more of their authentic power and joy.`;
   }
   
-  // Calculate required tokens based on expected words (1 word ≈ 1.3 tokens + buffer)
-  const requiredTokens = Math.max(Math.ceil(expectedWords * 1.5), 25000);
-  
-  console.log(`📊 Synthesis ${synthesisType} configuration:`, {
-    expectedWords,
-    requiredTokens,
-    contextLength: contextSummary.length
-  });
-  
   const { data, error } = await supabase.functions.invoke('openai-agent', {
     body: {
       messages: [
@@ -983,27 +856,11 @@ ${contextSummary}
 Generate ${expectedWords.toLocaleString()}+ words of captivating, profile-style synthesis that transforms all this analysis into one cohesive, enchanting narrative about who they are and their path of conscious evolution.`
         }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
-      max_completion_tokens: requiredTokens
+      model: 'gpt-4.1-mini-2025-04-14'
     }
   });
   
-  if (error) {
-    console.error(`❌ Synthesis ${synthesisType} OpenAI API error:`, error);
-    
-    // CRITICAL: Mark job as failed when synthesis fails
-    await supabase
-      .from('hermetic_processing_jobs')
-      .update({
-        status: 'failed',
-        error_message: `Synthesis ${synthesisType} failed: ${error.message}`,
-        current_step: `Failed during ${synthesisType} synthesis`,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', jobId);
-      
-    throw new Error(`Failed on synthesis ${synthesisType}: ${error.message}`);
-  }
+  if (error) throw new Error(`Failed on synthesis ${synthesisType}: ${error.message}`);
   
   if (data?.content) {
     const content = data.content.trim();
