@@ -3965,8 +3965,18 @@ export type Database = {
         Returns: string
       }
       detect_zombie_hermetic_jobs: {
-        Args: { p_user_id: string }
-        Returns: Json
+        Args: { p_user_id?: string }
+        Returns: {
+          current_stage: string
+          current_step: string
+          is_synthesis_stuck: boolean
+          job_id: string
+          last_heartbeat: string
+          minutes_since_heartbeat: number
+          progress_percentage: number
+          status: string
+          user_id: string
+        }[]
       }
       generate_blueprint_signature: {
         Args: { blueprint_data: Json }
