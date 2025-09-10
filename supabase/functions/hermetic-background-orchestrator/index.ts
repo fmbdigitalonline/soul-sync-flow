@@ -679,6 +679,8 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
     if (wordCount < 700) {
       console.warn(`⚠️ Intelligence agent ${agent} generated insufficient content (${wordCount} words). Expected range: 700-900 words`);
       throw new Error(`Intelligence agent ${agent} generated insufficient content: ${wordCount} words (minimum 700 required)`);
+    }
+  }
 }
 
 async function processSingleSynthesisAgent(job: any, synthesisType: string) {
