@@ -3952,7 +3952,7 @@ export type Database = {
         Returns: undefined
       }
       cleanup_stuck_hermetic_jobs: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never> | { p_user_id?: string }
         Returns: number
       }
       create_generation_job: {

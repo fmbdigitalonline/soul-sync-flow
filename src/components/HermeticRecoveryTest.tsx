@@ -48,6 +48,23 @@ export const HermeticRecoveryTest: React.FC = () => {
   };
 
   const cleanupZombieJobs = async () => {
+    // Add confirmation dialog for safety
+    const zombieJobs = jobStatuses.filter(job => job.is_zombie);
+    if (zombieJobs.length === 0) {
+      toast({
+        title: "No zombie jobs found",
+        description: "Check for zombie jobs first to see what needs cleanup",
+        variant: "default"
+      });
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to clean up ${zombieJobs.length} zombie job(s)? This will mark them as failed and cannot be undone.`
+    );
+    
+    if (!confirmed) return;
+
     try {
       setCleaningUp(true);
       
@@ -61,19 +78,29 @@ export const HermeticRecoveryTest: React.FC = () => {
         return;
       }
 
-      // Use the cleanup function to mark stuck jobs as failed
-      const { data, error } = await supabase.rpc('cleanup_stuck_hermetic_jobs');
-      
-      if (error) throw error;
-      
-      const cleanedJobsCount = data || 0;
-      
-      toast({
-        title: "Cleanup completed",
-        description: `${cleanedJobsCount} zombie jobs were marked as failed`,
+      console.log('🔧 Starting cleanup for user:', user.id);
+
+      // Use the updated cleanup function with user-specific filtering
+      const { data: cleanedJobsCount, error } = await supabase.rpc('cleanup_stuck_hermetic_jobs', {
+        p_user_id: user.id
       });
       
-      // Refresh job statuses
+      if (error) {
+        console.error('❌ Cleanup RPC error:', error);
+        throw error;
+      }
+      
+      const count = cleanedJobsCount || 0;
+      console.log('✅ Cleanup completed, jobs affected:', count);
+      
+      toast({
+        title: "Cleanup completed successfully",
+        description: count > 0 
+          ? `${count} zombie job${count === 1 ? '' : 's'} ${count === 1 ? 'was' : 'were'} marked as failed`
+          : "No stuck jobs found to clean up",
+      });
+      
+      // Refresh job statuses to show the changes
       await checkZombieJobs();
       
     } catch (error) {
@@ -227,7 +254,7 @@ export const HermeticRecoveryTest: React.FC = () => {
             </Button>
             <Button 
               onClick={cleanupZombieJobs}
-              disabled={cleaningUp}
+              disabled={cleaningUp || isLoading}
               variant="destructive"
               className="flex-1"
             >
@@ -239,7 +266,7 @@ export const HermeticRecoveryTest: React.FC = () => {
               ) : (
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Clean Up Zombies
+                  Clean Up Zombies ({jobStatuses.filter(job => job.is_zombie).length})
                 </>
               )}
             </Button>

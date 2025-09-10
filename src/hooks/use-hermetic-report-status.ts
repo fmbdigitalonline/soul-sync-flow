@@ -24,25 +24,6 @@ export const useHermeticReportStatus = () => {
     zombieJobInfo: null,
   });
 
-  const cleanupZombieJob = useCallback(async (jobId: string) => {
-    try {
-      console.log('🔧 HERMETIC CLEANUP: Marking zombie job as failed:', jobId);
-      
-      const { error } = await supabase.rpc('cleanup_stuck_hermetic_jobs');
-      if (error) {
-        console.error('❌ CLEANUP ERROR:', error);
-        return false;
-      }
-      
-      // Refresh status after cleanup
-      await checkHermeticReportStatus();
-      return true;
-    } catch (error) {
-      console.error('❌ ZOMBIE CLEANUP FAILED:', error);
-      return false;
-    }
-  }, []);
-
   const checkHermeticReportStatus = useCallback(async () => {
     try {
       setStatus(prev => ({ ...prev, loading: true, error: null }));
@@ -197,6 +178,41 @@ export const useHermeticReportStatus = () => {
       });
     }
   }, []);
+
+  const cleanupZombieJob = useCallback(async (jobId?: string) => {
+    try {
+      console.log('🔧 HERMETIC CLEANUP: Starting user-specific cleanup for job:', jobId);
+      
+      // Get current user for user-specific cleanup
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('❌ CLEANUP ERROR: No authenticated user');
+        return { success: false, error: 'Authentication required' };
+      }
+      
+      // Call the updated cleanup function with user ID for user-specific cleanup
+      const { data: cleanedCount, error } = await supabase.rpc('cleanup_stuck_hermetic_jobs', {
+        p_user_id: user.id
+      });
+      
+      if (error) {
+        console.error('❌ CLEANUP ERROR:', error);
+        return { success: false, error: error.message };
+      }
+      
+      console.log('✅ HERMETIC CLEANUP: Successfully cleaned up', cleanedCount, 'jobs');
+      
+      // Refresh status after cleanup
+      await checkHermeticReportStatus();
+      return { success: true, cleanedCount: cleanedCount || 0 };
+    } catch (error) {
+      console.error('❌ ZOMBIE CLEANUP FAILED:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      };
+    }
+  }, [checkHermeticReportStatus]);
 
   const refreshStatus = useCallback(() => {
     checkHermeticReportStatus();
