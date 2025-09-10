@@ -3965,7 +3965,7 @@ export type Database = {
         Returns: string
       }
       detect_zombie_hermetic_jobs: {
-        Args: { p_user_id?: string }
+        Args: Record<PropertyKey, never> | { p_user_id?: string }
         Returns: {
           current_stage: string
           current_step: string
@@ -3977,6 +3977,10 @@ export type Database = {
           status: string
           user_id: string
         }[]
+      }
+      emergency_cleanup_stuck_jobs: {
+        Args: { p_user_id?: string }
+        Returns: number
       }
       generate_blueprint_signature: {
         Args: { blueprint_data: Json }

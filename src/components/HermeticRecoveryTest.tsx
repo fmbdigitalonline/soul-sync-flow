@@ -225,6 +225,54 @@ export const HermeticRecoveryTest: React.FC = () => {
     }
   };
 
+  // EMERGENCY FALLBACK: Force cleanup when normal zombie detection fails
+  const handleEmergencyCleanup = async () => {
+    const confirmed = window.confirm(
+      "🚨 EMERGENCY CLEANUP: This will forcefully mark ALL potentially stuck jobs as failed. This should only be used when normal cleanup doesn't work. Continue?"
+    );
+    
+    if (!confirmed) return;
+
+    try {
+      setCleaningUp(true);
+      
+      const { data: user } = await supabase.auth.getUser();
+      if (!user?.user) {
+        throw new Error('Not authenticated');
+      }
+
+      console.log('🚨 EMERGENCY CLEANUP: Calling emergency_cleanup_stuck_jobs function');
+      
+      const { data, error } = await supabase.rpc('emergency_cleanup_stuck_jobs', {
+        p_user_id: user.user.id
+      });
+
+      if (error) {
+        console.error('Emergency cleanup error:', error);
+        throw error;
+      }
+
+      console.log('✅ Emergency cleanup completed, jobs cleaned:', data);
+      
+      toast({
+        title: "🚨 Emergency Cleanup Completed",
+        description: `Forcefully cleaned ${data || 0} stuck jobs. You can now test the Generate button.`
+      });
+      
+      await refreshStatus();
+      await checkZombieJobs(); // Refresh diagnostic view
+    } catch (error: any) {
+      console.error('Emergency cleanup failed:', error);
+      toast({
+        title: "Emergency Cleanup Failed",
+        description: error.message || "Failed to perform emergency cleanup",
+        variant: "destructive"
+      });
+    } finally {
+      setCleaningUp(false);
+    }
+  };
+
   const startNewHermeticGeneration = async () => {
     // CRITICAL: Check if generation is already in progress
     if (isGenerating || hasZombieJob) {
@@ -328,6 +376,24 @@ export const HermeticRecoveryTest: React.FC = () => {
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
                   Clean Up Zombies {hasZombieJob ? '(1)' : '(0)'}
+                </>
+              )}
+            </Button>
+            <Button 
+              onClick={handleEmergencyCleanup}
+              disabled={cleaningUp}
+              variant="outline"
+              className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              title="Emergency fallback: Force-clean ALL stuck jobs when normal detection fails"
+            >
+              {cleaningUp ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Emergency...
+                </>
+              ) : (
+                <>
+                  🚨 Emergency Cleanup
                 </>
               )}
             </Button>
