@@ -540,7 +540,7 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    const { messages, model = 'gpt-4.1-mini-2025-04-14', temperature = 0.7, tools = null, max_tokens = 4000 } = await req.json();
+    const { messages, model = 'gpt-4.1-mini-2025-04-14', temperature = 0.7, tools = null, max_tokens = 25000 } = await req.json();
     
     console.log('🔧 Tools provided:', tools?.length || 0);
     console.log('📝 Messages count:', messages?.length);

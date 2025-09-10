@@ -837,6 +837,15 @@ Create an enchanting practical framework that feels less like homework and more 
 Present each practice as a mystical key to unlocking more of their authentic power and joy.`;
   }
   
+  // Calculate required tokens based on expected words (1 word ≈ 1.3 tokens + buffer)
+  const requiredTokens = Math.max(Math.ceil(expectedWords * 1.5), 25000);
+  
+  console.log(`📊 Synthesis ${synthesisType} configuration:`, {
+    expectedWords,
+    requiredTokens,
+    contextLength: contextSummary.length
+  });
+  
   const { data, error } = await supabase.functions.invoke('openai-agent', {
     body: {
       messages: [
@@ -856,7 +865,8 @@ ${contextSummary}
 Generate ${expectedWords.toLocaleString()}+ words of captivating, profile-style synthesis that transforms all this analysis into one cohesive, enchanting narrative about who they are and their path of conscious evolution.`
         }
       ],
-      model: 'gpt-4.1-mini-2025-04-14'
+      model: 'gpt-4.1-mini-2025-04-14',
+      max_tokens: requiredTokens
     }
   });
   
