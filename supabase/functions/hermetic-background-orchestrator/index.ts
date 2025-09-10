@@ -112,40 +112,55 @@ serve(async (req) => {
       });
     }
 
-    // --- RELAY RACE STATE MACHINE ---
-    if (job.current_stage === 'system_translation') {
-      // Process ONE system translator
-      const translator = SYSTEM_TRANSLATORS[job.current_step_index];
-      console.log(`Processing system translator: ${translator}`);
-      
-      await processSingleSystemTranslator(job, translator);
-      progressPercentage = 5 + (job.current_step_index * 15) / SYSTEM_TRANSLATORS.length;
-      
-      // Move to next step or stage
-      if (job.current_step_index + 1 >= SYSTEM_TRANSLATORS.length) {
-        nextStage = 'hermetic_laws';
-        nextStepIndex = 0;
-        progressPercentage = 20;
-      } else {
-        nextStepIndex = job.current_step_index + 1;
-      }
+    // --- RELAY RACE STATE MACHINE WITH COMPREHENSIVE ERROR HANDLING ---
+    try {
+      if (job.current_stage === 'system_translation') {
+        // Process ONE system translator with timeout protection
+        const translator = SYSTEM_TRANSLATORS[job.current_step_index];
+        console.log(`Processing system translator: ${translator}`);
+        
+        // CRITICAL: Add stage-specific timeout protection (5 minutes for translation)
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(`${translator} timed out after 5 minutes`)), 300000);
+        });
+        
+        const processingPromise = processSingleSystemTranslator(job, translator);
+        await Promise.race([processingPromise, timeoutPromise]);
+        
+        progressPercentage = 5 + (job.current_step_index * 15) / SYSTEM_TRANSLATORS.length;
+        
+        // Move to next step or stage
+        if (job.current_step_index + 1 >= SYSTEM_TRANSLATORS.length) {
+          nextStage = 'hermetic_laws';
+          nextStepIndex = 0;
+          progressPercentage = 20;
+        } else {
+          nextStepIndex = job.current_step_index + 1;
+        }
 
     } else if (job.current_stage === 'hermetic_laws') {
-      // Process ONE hermetic law agent
-      const agent = HERMETIC_AGENTS[job.current_step_index];
-      console.log(`Processing hermetic agent: ${agent}`);
-      
-      await processSingleHermeticAgent(job, agent);
-      progressPercentage = 20 + (job.current_step_index * 30) / HERMETIC_AGENTS.length;
-      
-      // Move to next step or stage
-      if (job.current_step_index + 1 >= HERMETIC_AGENTS.length) {
-        nextStage = 'gate_analysis';
-        nextStepIndex = 0;
-        progressPercentage = 50;
-      } else {
-        nextStepIndex = job.current_step_index + 1;
-      }
+        // Process ONE hermetic law agent with timeout protection
+        const agent = HERMETIC_AGENTS[job.current_step_index];
+        console.log(`Processing hermetic agent: ${agent}`);
+        
+        // CRITICAL: Add stage-specific timeout protection (8 minutes for hermetic analysis)
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(`${agent} timed out after 8 minutes`)), 480000);
+        });
+        
+        const processingPromise = processSingleHermeticAgent(job, agent);
+        await Promise.race([processingPromise, timeoutPromise]);
+        
+        progressPercentage = 20 + (job.current_step_index * 30) / HERMETIC_AGENTS.length;
+        
+        // Move to next step or stage
+        if (job.current_step_index + 1 >= HERMETIC_AGENTS.length) {
+          nextStage = 'gate_analysis';
+          nextStepIndex = 0;
+          progressPercentage = 50;
+        } else {
+          nextStepIndex = job.current_step_index + 1;
+        }
 
     } else if (job.current_stage === 'gate_analysis') {
       // Process ONE gate
@@ -190,33 +205,79 @@ serve(async (req) => {
       }
 
     } else if (job.current_stage === 'synthesis_integration') {
-      // Process synthesis agents for comprehensive overview and integration
-      const synthesisTasks = ['comprehensive_overview', 'fractal_synthesis', 'consciousness_mapping', 'practical_applications'];
-      const currentTask = synthesisTasks[job.current_step_index];
-      console.log(`Processing synthesis: ${currentTask}`);
-      
-      await processSingleSynthesisAgent(job, currentTask);
-      progressPercentage = 90 + (job.current_step_index * 5) / synthesisTasks.length;
-      
-      // Move to next step or stage
-      if (job.current_step_index + 1 >= synthesisTasks.length) {
-        nextStage = 'final_assembly';
-        nextStepIndex = 0;
-        progressPercentage = 95;
-      } else {
-        nextStepIndex = job.current_step_index + 1;
-      }
+        // Process synthesis agents with EXTENDED timeout protection (critical stage)
+        const synthesisTasks = ['comprehensive_overview', 'fractal_synthesis', 'consciousness_mapping', 'practical_applications'];
+        const currentTask = synthesisTasks[job.current_step_index];
+        console.log(`Processing synthesis: ${currentTask}`);
+        
+        // CRITICAL: Extended timeout for synthesis stage (15 minutes) - this is where jobs often fail
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(`Synthesis task '${currentTask}' timed out after 15 minutes`)), 900000);
+        });
+        
+        const processingPromise = processSingleSynthesisAgent(job, currentTask);
+        await Promise.race([processingPromise, timeoutPromise]);
+        
+        progressPercentage = 90 + (job.current_step_index * 5) / synthesisTasks.length;
+        
+        // Move to next step or stage
+        if (job.current_step_index + 1 >= synthesisTasks.length) {
+          nextStage = 'final_assembly';
+          nextStepIndex = 0;
+          progressPercentage = 95;
+        } else {
+          nextStepIndex = job.current_step_index + 1;
+        }
       
     } else if (job.current_stage === 'final_assembly') {
-      // This is the final step, do the assembly and complete the job
-      console.log(`Finalizing report for job ${jobId}`);
-      await finalizeReport(job);
+        // Final step with timeout protection
+        console.log(`Finalizing report for job ${jobId}`);
+        
+        // CRITICAL: Timeout protection for final assembly (10 minutes)
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(`Final assembly timed out after 10 minutes`)), 600000);
+        });
+        
+        const finalizationPromise = finalizeReport(job);
+        await Promise.race([finalizationPromise, timeoutPromise]);
+        
+        return new Response(JSON.stringify({ 
+          success: true, 
+          message: "Processing complete." 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } else {
+        // Unknown stage - fail the job
+        throw new Error(`Unknown processing stage: ${job.current_stage}`);
+      }
+    } catch (stageError) {
+      // CRITICAL: Stage-specific error handling - immediately fail the job
+      console.error(`❌ STAGE PROCESSING FAILED for ${job.current_stage}:`, stageError);
+      
+      const errorMessage = `Stage '${job.current_stage}' failed: ${stageError.message}`;
+      const currentStep = `Failed at stage '${job.current_stage}' - ${stageError.message}`;
+      
+      // Immediately update job to failed status
+      await supabase
+        .from('hermetic_processing_jobs')
+        .update({
+          status: 'failed',
+          error_message: errorMessage,
+          current_step: currentStep,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', jobId);
+      
+      console.log(`🚫 Job ${jobId} marked as failed due to stage error`);
       
       return new Response(JSON.stringify({ 
-        success: true, 
-        message: "Processing complete." 
+        success: false, 
+        error: errorMessage,
+        stage: job.current_stage
       }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500
       });
     }
 

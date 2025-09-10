@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, RefreshCw, Sparkles, Trash2 } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Sparkles, Trash2, Clock, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useHermeticReportStatus } from '@/hooks/use-hermetic-report-status';
 
 interface JobStatus {
   job_id: string;
@@ -18,11 +19,21 @@ interface JobStatus {
 export const HermeticRecoveryTest: React.FC = () => {
   const [jobStatuses, setJobStatuses] = useState<JobStatus[]>([]);
   const [cleaningUp, setCleaningUp] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  
+  // CRITICAL: Use the hermetic status hook for real-time status
+  const { 
+    isGenerating, 
+    hasZombieJob, 
+    progress, 
+    currentStep, 
+    error, 
+    loading,
+    cleanupZombieJob: hookCleanupZombieJob,
+    refreshStatus 
+  } = useHermeticReportStatus();
 
   const checkZombieJobs = async () => {
-    setIsLoading(true);
     try {
       const { data, error } = await supabase.rpc('validate_job_heartbeat_with_content');
       
@@ -42,8 +53,6 @@ export const HermeticRecoveryTest: React.FC = () => {
         description: "Failed to check zombie jobs",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -116,7 +125,6 @@ export const HermeticRecoveryTest: React.FC = () => {
   };
 
   const recoverCompletedJob = async () => {
-    setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -176,15 +184,60 @@ export const HermeticRecoveryTest: React.FC = () => {
         description: error instanceof Error ? error.message : 'Unknown error occurred',
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const [processingJobId, setProcessingJobId] = useState<string | null>(null);
+  // Enhanced cleanup using the hook's function
+  const handleZombieCleanup = async () => {
+    if (!hasZombieJob) {
+      toast({
+        title: "No zombie jobs found",
+        description: "No stuck jobs need cleanup at this time",
+        variant: "default"
+      });
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to clean up zombie jobs? This will mark them as failed and cannot be undone."
+    );
+    
+    if (!confirmed) return;
+
+    try {
+      const result = await hookCleanupZombieJob();
+      if (result.success) {
+        toast({
+          title: "Cleanup completed successfully",
+          description: `${result.cleanedCount} zombie job(s) cleaned up`,
+        });
+        await checkZombieJobs(); // Refresh the diagnostic view
+      } else {
+        throw new Error(result.error || 'Unknown cleanup error');
+      }
+    } catch (error) {
+      console.error('❌ Cleanup failed:', error);
+      toast({
+        title: "Cleanup failed",
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: "destructive"
+      });
+    }
+  };
 
   const startNewHermeticGeneration = async () => {
-    setIsLoading(true);
+    // CRITICAL: Check if generation is already in progress
+    if (isGenerating || hasZombieJob) {
+      toast({
+        title: "Generation Already Active",
+        description: hasZombieJob 
+          ? "A zombie job was detected. Please clean it up first." 
+          : "Hermetic generation is already in progress.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user?.user) {
@@ -213,6 +266,8 @@ export const HermeticRecoveryTest: React.FC = () => {
         return;
       }
 
+      console.log('🚀 Starting new hermetic generation for user:', user.user.id);
+
       // Start new hermetic generation
       const { data, error } = await supabase.functions.invoke('hermetic-job-creator', {
         body: {
@@ -221,61 +276,26 @@ export const HermeticRecoveryTest: React.FC = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Job creation failed:', error);
+        throw error;
+      }
 
-      // Track the processing job to keep UI in loading state
-      setProcessingJobId(data.job_id);
+      console.log('✅ Job created successfully:', data.job_id);
 
       toast({
         title: "Hermetic Generation Started",
-        description: `Processing initiated with ID: ${data.job_id}. This will take 30-45 minutes.`
+        description: `Processing initiated. This will take 30-45 minutes. Real-time progress will be shown below.`
       });
 
-      // Start polling for job completion
-      const pollInterval = setInterval(async () => {
-        const { data: job } = await supabase
-          .from('hermetic_processing_jobs')
-          .select('status, progress_percentage, current_step')
-          .eq('id', data.job_id)
-          .single();
-
-        if (job && ['completed', 'failed'].includes(job.status)) {
-          clearInterval(pollInterval);
-          setProcessingJobId(null);
-          setIsLoading(false);
-          
-          if (job.status === 'completed') {
-            toast({
-              title: "Hermetic Report Complete!",
-              description: "Your comprehensive personality report is ready.",
-            });
-          } else {
-            toast({
-              title: "Generation Failed",
-              description: "Report generation encountered an error. Please try again.",
-              variant: "destructive"
-            });
-          }
-          
-          await checkZombieJobs();
-        }
-      }, 5000);
-
-      // Auto-cleanup polling after 1 hour
-      setTimeout(() => {
-        clearInterval(pollInterval);
-        if (processingJobId === data.job_id) {
-          setProcessingJobId(null);
-          setIsLoading(false);
-        }
-      }, 3600000);
+      // The hook will handle real-time status updates automatically
+      refreshStatus();
 
     } catch (error) {
-      console.error('Error starting hermetic generation:', error);
-      setProcessingJobId(null);
+      console.error('❌ Error starting hermetic generation:', error);
       toast({
         title: "Generation Failed",
-        description: "Failed to start hermetic generation",
+        description: error instanceof Error ? error.message : "Failed to start hermetic generation",
         variant: "destructive"
       });
     }
@@ -294,8 +314,8 @@ export const HermeticRecoveryTest: React.FC = () => {
               Check Zombie Jobs
             </Button>
             <Button 
-              onClick={cleanupZombieJobs}
-              disabled={cleaningUp || isLoading}
+              onClick={handleZombieCleanup}
+              disabled={cleaningUp || !hasZombieJob}
               variant="destructive"
               className="flex-1"
             >
@@ -307,7 +327,7 @@ export const HermeticRecoveryTest: React.FC = () => {
               ) : (
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Clean Up Zombies ({jobStatuses.filter(job => job.is_zombie).length})
+                  Clean Up Zombies {hasZombieJob ? '(1)' : '(0)'}
                 </>
               )}
             </Button>
@@ -315,14 +335,24 @@ export const HermeticRecoveryTest: React.FC = () => {
           <div className="flex gap-3">
             <Button 
               onClick={startNewHermeticGeneration} 
-              disabled={isLoading || processingJobId !== null}
+              disabled={isGenerating || hasZombieJob || loading}
               variant="default" 
               className="flex-1"
             >
-              {isLoading || processingJobId ? (
+              {isGenerating ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  {processingJobId ? 'Processing...' : 'Starting...'}
+                  Processing... ({progress.toFixed(1)}%)
+                </>
+              ) : hasZombieJob ? (
+                <>
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  Zombie Job Detected
+                </>
+              ) : loading ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Loading...
                 </>
               ) : (
                 <>
@@ -336,6 +366,59 @@ export const HermeticRecoveryTest: React.FC = () => {
               Recover Completed Jobs
             </Button>
           </div>
+
+          {/* ENHANCED: Real-time status display */}
+          {(isGenerating || hasZombieJob || error) && (
+            <Card className="border-l-4 border-l-primary">
+              <CardContent className="pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    {isGenerating && <Clock className="h-4 w-4 animate-pulse" />}
+                    {hasZombieJob && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                    {error && <AlertCircle className="h-4 w-4 text-destructive" />}
+                    Real-time Status
+                  </h4>
+                  <Badge variant={
+                    error ? 'destructive' : 
+                    hasZombieJob ? 'destructive' : 
+                    isGenerating ? 'default' : 'secondary'
+                  }>
+                    {error ? 'ERROR' : hasZombieJob ? 'ZOMBIE' : isGenerating ? 'PROCESSING' : 'IDLE'}
+                  </Badge>
+                </div>
+                
+                {isGenerating && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Progress</span>
+                      <span>{progress.toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full bg-secondary h-2 rounded-full">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    {currentStep && (
+                      <p className="text-sm text-muted-foreground">{currentStep}</p>
+                    )}
+                  </div>
+                )}
+                
+                {hasZombieJob && (
+                  <div className="text-sm text-destructive">
+                    Zombie job detected. Generation appears stuck. Please clean up and retry.
+                  </div>
+                )}
+                
+                {error && (
+                  <div className="text-sm text-destructive">
+                    Error: {error}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {jobStatuses.length > 0 && (
             <div className="space-y-4">
