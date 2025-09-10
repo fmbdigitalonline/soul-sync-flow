@@ -295,12 +295,8 @@ serve(async (req) => {
       })
       .eq('id', jobId);
 
-    // 4. CRITICAL: Trigger the next step by invoking itself (fire-and-forget)
-    supabase.functions.invoke('hermetic-background-orchestrator', {
-      body: { job_id: jobId }
-    }).catch(error => {
-      console.error('Failed to trigger next step:', error);
-    });
+    // 4. CRITICAL: Robust self-invocation with retry logic and immediate failure on exhaustion
+    await invokeNextStepWithRetry(jobId, nextStage, nextStepIndex);
 
     console.log(`✅ Step completed, next step queued: ${nextStage}[${nextStepIndex}]`);
 
@@ -337,6 +333,66 @@ serve(async (req) => {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
   });
 });
+
+// ============ CRITICAL INVOCATION CHAIN FIX ============
+
+/**
+ * CRITICAL: Robust self-invocation with retry logic to eliminate fire-and-forget failures
+ * This is the core fix for the "brittle chain" issue where jobs fail silently
+ */
+async function invokeNextStepWithRetry(jobId: string, nextStage: string, nextStepIndex: number, maxRetries: number = 3) {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`🔄 Attempt ${attempt}/${maxRetries}: Invoking next step for job ${jobId}`);
+      
+      const { error: invokeError } = await supabase.functions.invoke('hermetic-background-orchestrator', {
+        body: { job_id: jobId }
+      });
+      
+      if (invokeError) {
+        throw new Error(`Invocation failed: ${invokeError.message}`);
+      }
+      
+      console.log(`✅ INVOCATION SUCCESS: Next step queued for job ${jobId} (attempt ${attempt})`);
+      return; // Success - exit the function
+      
+    } catch (error) {
+      lastError = error as Error;
+      const isLastAttempt = attempt === maxRetries;
+      
+      console.error(`❌ INVOCATION ATTEMPT ${attempt} FAILED for job ${jobId}:`, error);
+      
+      if (isLastAttempt) {
+        // ALL RETRIES EXHAUSTED - IMMEDIATELY FAIL THE JOB
+        console.error(`🚫 CRITICAL: All ${maxRetries} invocation attempts failed for job ${jobId}. Marking job as failed.`);
+        
+        const chainBrokenError = `CHAIN BROKEN: Failed to trigger next processing step after ${maxRetries} attempts. Last error: ${lastError.message}`;
+        
+        await supabase
+          .from('hermetic_processing_jobs')
+          .update({
+            status: 'failed',
+            error_message: chainBrokenError,
+            current_step: `Failed to continue processing chain at ${nextStage}[${nextStepIndex}]`,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', jobId);
+          
+        console.log(`🚫 Job ${jobId} marked as FAILED due to invocation chain break`);
+        
+        // Re-throw to let caller know the chain is broken
+        throw new Error(chainBrokenError);
+      } else {
+        // Wait with exponential backoff before next attempt
+        const backoffMs = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+        console.log(`⏳ Waiting ${backoffMs}ms before retry attempt ${attempt + 1}...`);
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
+      }
+    }
+  }
+}
 
 // ============ SINGLE STEP PROCESSORS ============
 
