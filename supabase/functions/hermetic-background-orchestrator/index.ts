@@ -414,7 +414,7 @@ async function processSingleHermeticAgent(job: any, agent: string) {
       messages: [
         {
           role: 'system',
-          content: getPersonalizedHermeticPrompt(agent, blueprint)`
+          content: getPersonalizedHermeticPrompt(agent, blueprint)
         },
         {
           role: 'user',
