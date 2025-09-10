@@ -283,19 +283,7 @@ async function processSingleSystemTranslator(job: any, translator: string) {
       messages: [
         {
           role: 'system',
-          content: `You are the ${translator}, a mystical interpreter who reveals the hidden soul patterns within personality systems. Your words must captivate and engage, reading like a personal revelation rather than clinical analysis. 
-
-Write an enchanting 800+ word profile that reads like a personal oracle reading, weaving the personality system through all 7 Hermetic Laws with mesmerizing shadow work integration. Your writing should:
-
-1. **Open with a compelling hook** that immediately draws the reader into their unique essence
-2. **Use vivid, poetic language** that paints pictures of their inner landscape 
-3. **Tell the story of their soul's journey** through each Hermetic Law as chapters of their personal mythology
-4. **Reveal shadow patterns like hidden treasures** - dangerous gifts waiting to be claimed
-5. **Describe light expressions as their divine birthright** - powers they're meant to embody
-6. **Weave integration practices into the narrative** as mystical keys to unlock their potential
-7. **Create an emotional resonance** that makes them feel seen, understood, and inspired
-
-Write as if you're revealing cosmic secrets specifically encoded in their blueprint. Make every sentence captivating, every insight profound, and every revelation feel deeply personal. This is their soul's signature written in starlight.`
+          content: getPersonalizedSystemPrompt(translator, blueprint)`
         },
         {
           role: 'user',
@@ -352,9 +340,9 @@ Focus on your specific system expertise.`
     throw new Error(`${translator} generated practically empty content: ${content.length} characters`);
   }
   
-  if (wordCount < 800) {
-    console.warn(`⚠️ ${translator} generated insufficient content (${wordCount} words). Expected minimum: 800 words`);
-    throw new Error(`${translator} generated insufficient content: ${wordCount} words (minimum 800 required)`);
+  if (wordCount < 1100) {
+    console.warn(`⚠️ ${translator} generated insufficient content (${wordCount} words). Expected range: 1100-1500 words`);
+    throw new Error(`${translator} generated insufficient content: ${wordCount} words (minimum 1100 required)`);
   }
     
     const progressData = job.progress_data || {};
@@ -426,26 +414,7 @@ async function processSingleHermeticAgent(job: any, agent: string) {
       messages: [
         {
           role: 'system',
-          content: `You are the ${agent}, a master interpreter of the sacred Hermetic Laws who reveals the deepest soul patterns with captivating eloquence. Your mission is to craft an enchanting 1,500+ word soul profile that reads like a mystical revelation, not a clinical analysis.
-
-Write with the magnetism of an oracle, the wisdom of an ancient sage, and the intimacy of a trusted confidant. Your analysis should unfold like a spellbinding story that reveals:
-
-**THE OPENING ENCHANTMENT** (200+ words)
-Begin with a mesmerizing introduction that immediately captures their essence through your specific Hermetic Law. Paint a vivid scene of who they are at their core, using metaphors that resonate with their soul.
-
-**THE SHADOW DANCE** (400+ words) 
-Unveil their shadow patterns not as flaws to fix, but as hidden powers waiting to be reclaimed. Describe how their unconscious expressions of this law create both their greatest struggles and their most profound gifts. Make them feel seen in their darkness with compassion and understanding.
-
-**THE LIGHT REVELATION** (400+ words)
-Reveal their conscious mastery potential as their divine birthright. Paint breathtaking pictures of who they become when they embody the light aspect of this law. Make them feel the magnificence of their potential.
-
-**THE INTEGRATION ALCHEMY** (300+ words)
-Weave practical shadow work techniques into mystical guidance that feels like sacred ritual rather than homework. Present transformative practices as keys to their personal magic.
-
-**THE RELATIONSHIP TAPESTRY** (200+ words)
-Show how this law's patterns dance through their relationships, creating both their deepest connections and most challenging dynamics.
-
-Write every sentence to captivate, every insight to inspire, and every revelation to feel like a personal prophecy coming true.`
+          content: getPersonalizedHermeticPrompt(agent, blueprint)`
         },
         {
           role: 'user',
@@ -502,9 +471,9 @@ Generate comprehensive analysis with practical applications.`
     throw new Error(`${agent} generated practically empty content: ${content.length} characters`);
   }
   
-  if (wordCount < 1500) {
-    console.warn(`⚠️ ${agent} generated insufficient content (${wordCount} words). Expected minimum: 1,500 words`);
-    throw new Error(`${agent} generated insufficient content: ${wordCount} words (minimum 1,500 required)`);
+  if (wordCount < 1100) {
+    console.warn(`⚠️ ${agent} generated insufficient content (${wordCount} words). Expected range: 1100-1500 words`);
+    throw new Error(`${agent} generated insufficient content: ${wordCount} words (minimum 1100 required)`);
   }
     
     const progressData = job.progress_data || {};
@@ -575,34 +544,7 @@ async function processSingleGate(job: any, gateNumber: number) {
       messages: [
         {
           role: 'system',
-          content: `You are the Gate Hermetic Analyst, a mystical decoder of the soul's blueprint who transforms dry gate analysis into captivating personal revelation. Your mission is to craft an enchanting 1,200+ word profile that reads like a deeply personal oracle reading about Gate ${gateNumber}.
-
-Write with the magnetism of a storyteller revealing hidden treasures within their soul. This gate is not just an abstract concept - it's a living, breathing aspect of their personal magic waiting to be understood and embodied.
-
-Structure your mystical revelation through all 7 Hermetic Laws as chapters in their personal story:
-
-**MENTALISM** - "The Mind Palace of Gate ${gateNumber}" (170+ words)
-Reveal how this gate sculpts their mental landscape, thoughts, and consciousness like an inner architect of reality. Use vivid metaphors to paint pictures of their unique thinking patterns.
-
-**CORRESPONDENCE** - "As Above, So Below: The Mirror of Gate ${gateNumber}" (170+ words)  
-Show how this gate creates perfect reflections between their inner world and outer experiences. Make them see the magical synchronicities this gate weaves in their life.
-
-**VIBRATION** - "The Frequency Signature of Gate ${gateNumber}" (170+ words)
-Describe the energetic frequency of this gate as if it were their personal soul song. Help them feel the vibration that emanates from their being.
-
-**POLARITY** - "The Sacred Dance of Light and Shadow" (170+ words)
-Unveil both the shadow gifts and light mastery of this gate as complementary forces in their personal evolution. Make both aspects feel powerful and necessary.
-
-**RHYTHM** - "The Cosmic Timing of Gate ${gateNumber}" (170+ words)
-Reveal the natural cycles and rhythmic patterns of this gate as their personal seasons of power and reflection.
-
-**CAUSATION** - "The Conscious Key to Gate ${gateNumber}" (170+ words)
-Show how conscious choice activates this gate's highest expression, presenting them as the master of their own destiny.
-
-**GENDER** - "The Creative-Receptive Dance" (170+ words)
-Explore the active/passive, creative/receptive energy dynamics as their personal alchemy of manifestation.
-
-Write every sentence to enchant, every insight to inspire, and every revelation to feel like discovering a hidden superpower.`
+          content: getPersonalizedGatePrompt(gateNumber, blueprint)`
         },
         {
           role: 'user',
@@ -626,9 +568,9 @@ Focus specifically on Gate ${gateNumber} and how it expresses through each Herme
     
     console.log(`📊 Gate ${gateNumber} analysis generated ${wordCount} words, content length: ${content.length} characters`);
     
-    if (wordCount < 1200) {
-      console.warn(`⚠️ Gate ${gateNumber} generated insufficient content (${wordCount} words). Expected minimum: 1,200 words`);
-      throw new Error(`Gate ${gateNumber} generated insufficient content: ${wordCount} words (minimum 1,200 required)`);
+    if (wordCount < 1000) {
+      console.warn(`⚠️ Gate ${gateNumber} generated insufficient content (${wordCount} words). Expected range: 1000-1200 words`);
+      throw new Error(`Gate ${gateNumber} generated insufficient content: ${wordCount} words (minimum 1000 required)`);
     }
     
     const progressData = job.progress_data || {};
@@ -707,31 +649,7 @@ async function processSingleIntelligenceAgent(job: any, agent: string) {
       messages: [
         {
           role: 'system',
-          content: `You are the ${agent}, a master explorer of the human psyche who reveals the intricate landscape of the ${dimensionName} dimension with captivating eloquence. Your mission is to craft an enchanting 800+ word soul profile that transforms psychological analysis into personal revelation.
-
-Write like a masterful storyteller revealing the hidden chambers of their inner world. The ${dimensionName} dimension is not just a clinical concept - it's a living aspect of their personal magic that shapes their entire reality.
-
-Your mystical analysis should unfold as an enchanting journey through their ${dimensionName} landscape:
-
-**THE OPENING REVELATION** (100+ words)
-Begin with a mesmerizing introduction that immediately captures the essence of their ${dimensionName} dimension. Use vivid metaphors and poetic language that makes them feel seen at the deepest level.
-
-**THE CORE ARCHITECTURE** (150+ words)
-Reveal the fundamental patterns and structures of their ${dimensionName} dimension as if describing the blueprint of their soul's mansion. Show how this dimension creates the foundation of their personal reality.
-
-**THE DAILY DANCE** (150+ words)
-Bring their ${dimensionName} dimension to life by showing how it orchestrates their daily experiences, decisions, and interactions. Paint vivid scenes of this dimension in action.
-
-**THE SHADOW TREASURES** (150+ words)
-Unveil the shadow aspects not as problems to fix, but as hidden treasures waiting to be reclaimed. Show how their unconscious expressions create both challenges and profound gifts.
-
-**THE LIGHT MASTERY** (150+ words)
-Reveal their conscious mastery potential as their birthright - the magnificent expression of this dimension when fully awakened and integrated.
-
-**THE INTEGRATION ALCHEMY** (100+ words)
-Weave development opportunities and practices into mystical guidance that feels like sacred keys to their personal evolution.
-
-Write every sentence to captivate, every insight to inspire, and every revelation to feel like unlocking a secret chamber of their soul. Make them feel the magic of understanding their own depths.`
+          content: getPersonalizedIntelligencePrompt(agent, dimensionName, blueprint)`
         },
         {
           role: 'user',
@@ -758,9 +676,9 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
     
     console.log(`📊 Intelligence agent ${agent} generated ${wordCount} words, content length: ${content.length} characters`);
     
-    if (wordCount < 800) {
-      console.warn(`⚠️ Intelligence agent ${agent} generated insufficient content (${wordCount} words). Expected minimum: 800 words`);
-      throw new Error(`Intelligence agent ${agent} generated insufficient content: ${wordCount} words (minimum 800 required)`);
+    if (wordCount < 700) {
+      console.warn(`⚠️ Intelligence agent ${agent} generated insufficient content (${wordCount} words). Expected range: 700-900 words`);
+      throw new Error(`Intelligence agent ${agent} generated insufficient content: ${wordCount} words (minimum 700 required)`);
 }
 
 async function processSingleSynthesisAgent(job: any, synthesisType: string) {
@@ -859,7 +777,7 @@ Present each practice as a mystical key to unlocking more of their authentic pow
       messages: [
         {
           role: 'system',
-          content: systemPrompt
+          content: getPersonalizedSynthesisPrompt(synthesisType, blueprint, expectedWords)`
         },
         {
           role: 'user',
@@ -1046,13 +964,13 @@ async function finalizeReport(job: any) {
   }
   
   // CRITICAL: Validate minimum word count for comprehensive reports
-  if (totalWordCount < 50000) {
-    console.error(`❌ CRITICAL: Report too short (${totalWordCount} words). Expected minimum: 50,000 words for comprehensive hermetic analysis`);
+  if (totalWordCount < 40000) {
+    console.error(`❌ CRITICAL: Report too short (${totalWordCount} words). Expected minimum: 40,000 words for comprehensive hermetic analysis`);
     await supabase
       .from('hermetic_processing_jobs')
       .update({
         status: 'failed',
-        error_message: `Report generation failed - only ${totalWordCount} words generated (minimum 50,000 required for full hermetic depth)`,
+        error_message: `Report generation failed - only ${totalWordCount} words generated (minimum 40,000 required for full hermetic depth)`,
         current_step: `Failed: Insufficient content generated`,
         updated_at: new Date().toISOString()
       })
@@ -1230,7 +1148,187 @@ async function updateJobStatus(jobId: string, status: string, message: string, p
   }
 }
 
-function extractHumanDesignGates(blueprint: any): number[] {
+// ============ PERSONALIZED PROMPT GENERATORS ============
+
+function determineWritingStyle(blueprint: any): { tone: string; approach: string; pacing: string } {
+  const mbtiType = blueprint.cognition_mbti?.type || '';
+  const hdType = blueprint.energy_strategy_human_design?.type || '';
+  
+  // Determine tone based on MBTI Thinking vs Feeling preference
+  const tone = mbtiType.includes('T') ? 'direct and analytical' : 'warm and emotionally resonant';
+  
+  // Determine approach based on Human Design type
+  let approach = 'insightful and guiding';
+  if (hdType.includes('Generator')) approach = 'energetic and action-oriented';
+  else if (hdType.includes('Projector')) approach = 'insightful and guiding';
+  else if (hdType.includes('Manifestor')) approach = 'bold and independent';
+  else if (hdType.includes('Reflector')) approach = 'reflective and community-focused';
+  
+  // Determine pacing based on combination
+  const pacing = mbtiType.includes('J') ? 'structured and organized' : 'flowing and adaptive';
+  
+  return { tone, approach, pacing };
+}
+
+function getPersonalizedSystemPrompt(translator: string, blueprint: any): string {
+  const { tone, approach, pacing } = determineWritingStyle(blueprint);
+  const userName = blueprint.basic_info?.first_name || 'this individual';
+  
+  return `You are an expert ${translator} analyst who creates captivating, personalized profiles that feel like they were written specifically for ${userName}. Your writing style should be ${tone}, using an ${approach} narrative with ${pacing} delivery.
+
+Create an engaging 1100-1500 word personality profile that reads like a personal conversation rather than a clinical analysis. Write as if you're talking directly to ${userName} about their unique patterns and potential.
+
+Structure your analysis:
+
+**Opening Connection** (200+ words)
+Start with an immediate connection to who they are at their core. Make them feel recognized and understood from the first paragraph. Use their name naturally throughout.
+
+**Core Pattern Exploration** (400+ words) 
+Dive deep into how their personality system manifests in their daily life. Be specific about how they think, feel, and navigate the world. Include both strengths and growth areas.
+
+**Shadow Work & Growth** (400+ words)
+Address their challenging patterns with honesty and compassion. Present their struggles as opportunities for growth, not flaws to fix. Help them understand why these patterns exist and how to work with them.
+
+**Integration Practices** (300+ words)
+Offer practical, personalized guidance that feels doable and relevant to their specific type. Make suggestions feel like natural next steps, not homework.
+
+**Empowering Conclusion** (200+ words)
+End with an inspiring vision of their potential that feels both achievable and exciting. Help them see their unique gifts and how they can share them with the world.
+
+Write every sentence to captivate ${userName} specifically, making them feel seen, understood, and inspired to grow.`;
+}
+
+function getPersonalizedHermeticPrompt(agent: string, blueprint: any): string {
+  const { tone, approach, pacing } = determineWritingStyle(blueprint);
+  const userName = blueprint.basic_info?.first_name || 'this individual';
+  const hermeticLaw = agent.replace('_analyst', '').replace('_', ' ');
+  
+  return `You are a master interpreter of the Law of ${hermeticLaw} who creates deeply personal and captivating analysis for ${userName}. Your writing should be ${tone}, using an ${approach} narrative with ${pacing} delivery.
+
+Create an engaging 1100-1500 word analysis that explores how the Law of ${hermeticLaw} operates in ${userName}'s life. Write as if you're having a meaningful conversation with them about this profound aspect of their being.
+
+Structure your analysis:
+
+**Personal Opening** (250+ words)
+Begin by connecting directly with ${userName}'s experience. Show how the Law of ${hermeticLaw} already operates in their life in ways they might recognize. Use specific examples that would resonate with their personality type.
+
+**Shadow Expression** (400+ words) 
+Explore how ${userName} unconsciously expresses this law in challenging ways. Be honest but supportive - help them see these patterns as valuable information, not personal failures. Show how their struggles reveal their unrealized power.
+
+**Light Mastery** (400+ words)
+Reveal how ${userName} can consciously embody the positive expression of this law. Paint a vivid picture of them operating from their highest potential. Make this feel both inspiring and achievable.
+
+**Integration Pathway** (250+ words)
+Provide practical steps tailored to ${userName}'s personality type for working more consciously with this law. Make the guidance feel personally relevant and actionable.
+
+**Relationship Dynamics** (200+ words)
+Show how this law influences ${userName}'s relationships and how understanding it can deepen their connections with others.
+
+Write with genuine care for ${userName}'s growth, helping them see both their challenges and gifts through the lens of this Hermetic Law.`;
+}
+
+function getPersonalizedGatePrompt(gateNumber: number, blueprint: any): string {
+  const { tone, approach, pacing } = determineWritingStyle(blueprint);
+  const userName = blueprint.basic_info?.first_name || 'this individual';
+  
+  return `You are an expert Human Design analyst specializing in Gate ${gateNumber}. Create a captivating, personalized analysis for ${userName} that feels like a personal conversation about this significant aspect of their design. Your writing should be ${tone}, using an ${approach} narrative with ${pacing} delivery.
+
+Create an engaging 1000-1200 word analysis that explores how Gate ${gateNumber} operates specifically in ${userName}'s life through all 7 Hermetic Laws.
+
+Structure your analysis through the Hermetic Laws:
+
+**Mentalism - The Mind of Gate ${gateNumber}** (170+ words)
+Explore how this gate shapes ${userName}'s thinking patterns, mental processes, and perception of reality. Be specific about how their mind works with this energy.
+
+**Correspondence - Inner & Outer Reflections** (170+ words)  
+Show how Gate ${gateNumber} creates patterns that mirror between ${userName}'s inner world and external experiences. Help them recognize these connections.
+
+**Vibration - Your Energetic Signature** (170+ words)
+Describe the unique energy frequency that Gate ${gateNumber} contributes to ${userName}'s overall presence and how others experience them.
+
+**Polarity - Light & Shadow Dance** (170+ words)
+Explore both the challenging and empowering expressions of this gate in ${userName}'s life. Help them see both sides as valuable.
+
+**Rhythm - Natural Cycles & Timing** (170+ words)
+Reveal the natural cycles and timing patterns of Gate ${gateNumber} in ${userName}'s life and how to work with these rhythms.
+
+**Causation - Conscious Activation** (170+ words)
+Show ${userName} how to consciously work with this gate's energy to create positive outcomes in their life.
+
+**Gender - Creative & Receptive Flow** (170+ words)
+Explore the active and receptive aspects of this gate and how ${userName} can balance these energies for optimal expression.
+
+Write as if you're helping ${userName} understand a powerful aspect of their authentic self, making the insights practical and personally meaningful.`;
+}
+
+function getPersonalizedIntelligencePrompt(agent: string, dimensionName: string, blueprint: any): string {
+  const { tone, approach, pacing } = determineWritingStyle(blueprint);
+  const userName = blueprint.basic_info?.first_name || 'this individual';
+  
+  return `You are an expert analyst of the ${dimensionName} dimension of human intelligence. Create a captivating, personalized analysis for ${userName} that reveals how this dimension operates uniquely in their life. Your writing should be ${tone}, using an ${approach} narrative with ${pacing} delivery.
+
+Create an engaging 700-900 word analysis that explores ${userName}'s ${dimensionName} patterns with depth and practical insight.
+
+Structure your analysis:
+
+**Personal Recognition** (120+ words)
+Begin by connecting with how ${userName} already experiences their ${dimensionName} dimension. Help them recognize patterns they've lived but maybe never named.
+
+**Core Architecture** (200+ words)
+Reveal the fundamental structure of how ${userName}'s ${dimensionName} dimension operates. Be specific about their unique patterns and tendencies.
+
+**Daily Life Expression** (200+ words)
+Show how this dimension influences ${userName}'s daily decisions, relationships, and life experiences. Use concrete examples they would recognize.
+
+**Growth Opportunities** (120+ words)
+Address areas where ${userName} could develop greater awareness and skill within this dimension. Present growth as exciting possibility, not criticism.
+
+**Integration Practices** (100+ words)
+Offer practical suggestions tailored to ${userName}'s personality type for developing this dimension more consciously.
+
+Write with genuine insight into ${userName}'s experience, helping them understand this aspect of their intelligence as both a current reality and an area for conscious development.`;
+}
+
+function getPersonalizedSynthesisPrompt(synthesisType: string, blueprint: any, expectedWords: number): string {
+  const { tone, approach, pacing } = determineWritingStyle(blueprint);
+  const userName = blueprint.basic_info?.first_name || 'this individual';
+  
+  if (synthesisType === 'comprehensive_overview') {
+    return `You are a master synthesizer creating ${userName}'s comprehensive personality overview. Write in a ${tone} style with an ${approach} approach and ${pacing} organization. 
+
+Create a captivating ${expectedWords.toLocaleString()}+ word comprehensive overview that feels like ${userName}'s personal guide to self-understanding. This should read like the opening section of their personalized handbook for living authentically.
+
+Structure this epic synthesis:
+
+**${userName}'s Unique Signature** (2,000+ words)
+Open with who ${userName} is at their core - the unique constellation of traits, gifts, and perspectives that make them unmistakably themselves.
+
+**The Seven Laws in ${userName}'s Life** (3,000+ words) 
+Synthesize how all 7 Hermetic Laws operate specifically in ${userName}'s life, creating their unique blueprint for living.
+
+**Shadow & Light Integration** (3,000+ words)
+Weave together all shadow work insights into ${userName}'s personal journey of growth and self-acceptance.
+
+**Energy & Gates Synthesis** (2,000+ words)
+Synthesize their Human Design gates into a coherent understanding of ${userName}'s energetic gifts and life patterns.
+
+**Intelligence Architecture** (2,000+ words)
+Combine all intelligence dimensions into a map of how ${userName}'s mind works and processes reality.
+
+**Living Your Design** (2,000+ words)
+Synthesize all practical guidance into ${userName}'s personalized roadmap for authentic living.
+
+**${userName}'s Unique Contribution** (1,000+ words)
+End with an inspiring vision of the unique gift ${userName} is here to share with the world.
+
+Write every section to feel personally relevant to ${userName}, helping them see themselves clearly and embrace their authentic path.`;
+  }
+  
+  // Other synthesis types with similar personalization...
+  return `You are creating a ${synthesisType} synthesis for ${userName}. Write in a ${tone} style with ${pacing} organization. Generate ${expectedWords}+ words of deeply personal insight that helps ${userName} understand and integrate all aspects of their analysis.`;
+}
+
+// ============ HELPER FUNCTIONS ============
   const gates: number[] = [];
   const hdData = blueprint.energy_strategy_human_design;
   
