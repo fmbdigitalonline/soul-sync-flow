@@ -261,6 +261,7 @@ serve(async (req) => {
         .update({ 
           status: 'failed', 
           current_step: `Error: ${error.message}`,
+          error_message: `Processing failed: ${error.message}`,
           updated_at: new Date().toISOString()
         })
         .eq('id', errorJobId);
@@ -866,11 +867,26 @@ Generate ${expectedWords.toLocaleString()}+ words of captivating, profile-style 
         }
       ],
       model: 'gpt-4.1-mini-2025-04-14',
-      max_tokens: requiredTokens
+      max_completion_tokens: requiredTokens
     }
   });
   
-  if (error) throw new Error(`Failed on synthesis ${synthesisType}: ${error.message}`);
+  if (error) {
+    console.error(`❌ Synthesis ${synthesisType} OpenAI API error:`, error);
+    
+    // CRITICAL: Mark job as failed when synthesis fails
+    await supabase
+      .from('hermetic_processing_jobs')
+      .update({
+        status: 'failed',
+        error_message: `Synthesis ${synthesisType} failed: ${error.message}`,
+        current_step: `Failed during ${synthesisType} synthesis`,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', jobId);
+      
+    throw new Error(`Failed on synthesis ${synthesisType}: ${error.message}`);
+  }
   
   if (data?.content) {
     const content = data.content.trim();

@@ -181,6 +181,8 @@ export const HermeticRecoveryTest: React.FC = () => {
     }
   };
 
+  const [processingJobId, setProcessingJobId] = useState<string | null>(null);
+
   const startNewHermeticGeneration = async () => {
     setIsLoading(true);
     try {
@@ -221,22 +223,61 @@ export const HermeticRecoveryTest: React.FC = () => {
 
       if (error) throw error;
 
+      // Track the processing job to keep UI in loading state
+      setProcessingJobId(data.job_id);
+
       toast({
         title: "Hermetic Generation Started",
-        description: `New job created with ID: ${data.job_id}`
+        description: `Processing initiated with ID: ${data.job_id}. This will take 30-45 minutes.`
       });
 
-      // Refresh job statuses
-      await checkZombieJobs();
+      // Start polling for job completion
+      const pollInterval = setInterval(async () => {
+        const { data: job } = await supabase
+          .from('hermetic_processing_jobs')
+          .select('status, progress_percentage, current_step')
+          .eq('id', data.job_id)
+          .single();
+
+        if (job && ['completed', 'failed'].includes(job.status)) {
+          clearInterval(pollInterval);
+          setProcessingJobId(null);
+          setIsLoading(false);
+          
+          if (job.status === 'completed') {
+            toast({
+              title: "Hermetic Report Complete!",
+              description: "Your comprehensive personality report is ready.",
+            });
+          } else {
+            toast({
+              title: "Generation Failed",
+              description: "Report generation encountered an error. Please try again.",
+              variant: "destructive"
+            });
+          }
+          
+          await checkZombieJobs();
+        }
+      }, 5000);
+
+      // Auto-cleanup polling after 1 hour
+      setTimeout(() => {
+        clearInterval(pollInterval);
+        if (processingJobId === data.job_id) {
+          setProcessingJobId(null);
+          setIsLoading(false);
+        }
+      }, 3600000);
+
     } catch (error) {
       console.error('Error starting hermetic generation:', error);
+      setProcessingJobId(null);
       toast({
         title: "Generation Failed",
         description: "Failed to start hermetic generation",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -272,9 +313,23 @@ export const HermeticRecoveryTest: React.FC = () => {
             </Button>
           </div>
           <div className="flex gap-3">
-            <Button onClick={startNewHermeticGeneration} variant="default" className="flex-1">
-              <Sparkles className="h-4 w-4 mr-2" />
-              Start New Generation
+            <Button 
+              onClick={startNewHermeticGeneration} 
+              disabled={isLoading || processingJobId !== null}
+              variant="default" 
+              className="flex-1"
+            >
+              {isLoading || processingJobId ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  {processingJobId ? 'Processing...' : 'Starting...'}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Generate Hermetic Report
+                </>
+              )}
             </Button>
             <Button onClick={recoverCompletedJob} variant="secondary" className="flex-1">
               <RefreshCw className="h-4 w-4 mr-2" />
