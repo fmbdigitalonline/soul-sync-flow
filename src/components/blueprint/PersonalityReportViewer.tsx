@@ -278,7 +278,11 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     try {
       console.log('🧹 Purging stuck hermetic jobs...');
       
-      // Call the RPC function to cleanup stuck jobs (all users)
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+      
+      // Call the RPC function to cleanup stuck jobs - using no params version
       const { data, error } = await supabase.rpc('cleanup_stuck_hermetic_jobs');
       
       if (error) throw error;
