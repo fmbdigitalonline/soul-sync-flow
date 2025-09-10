@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge, Maximize2, AlertTriangle } from 'lucide-react';
+import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge, Maximize2, AlertTriangle, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -47,6 +47,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   // Add hermetic status hook
   const hermeticStatus = useHermeticReportStatus();
+  const [purgeLoading, setPurgeLoading] = useState(false);
 
   useEffect(() => {
     loadReport();
@@ -261,6 +262,66 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   const handleRefresh = () => {
     loadReport();
   };
+  
+  const handlePurgeStuckJobs = async () => {
+    if (!user) return;
+    
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      "Are you sure you want to purge all stuck hermetic jobs? This action cannot be undone."
+    );
+    
+    if (!confirmed) return;
+    
+    setPurgeLoading(true);
+    
+    try {
+      console.log('🧹 Purging stuck hermetic jobs...');
+      
+      // Call the RPC function to cleanup stuck jobs for current user
+      const { data, error } = await supabase.rpc('cleanup_stuck_hermetic_jobs');
+      
+      if (error) throw error;
+      
+      const cleanupCount = data || 0;
+      
+      toast({
+        title: "Cleanup Complete",
+        description: `${cleanupCount} stuck job(s) were cleaned up successfully.`,
+      });
+      
+      // Refresh status after cleanup
+      hermeticStatus.refreshStatus();
+      
+    } catch (error) {
+      console.error('❌ Failed to purge stuck jobs:', error);
+      toast({
+        title: "Cleanup Failed",
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: "destructive"
+      });
+    } finally {
+      setPurgeLoading(false);
+    }
+  };
+  
+  // Standalone Purge Button Component
+  const PurgeStuckJobsButton = () => (
+    <Button 
+      onClick={handlePurgeStuckJobs}
+      disabled={purgeLoading}
+      variant="destructive"
+      size="sm"
+      className="border-red-200 text-red-600 hover:bg-red-50 bg-red-50/50"
+    >
+      {purgeLoading ? (
+        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+      ) : (
+        <AlertCircle className="h-3 w-3 mr-1" />
+      )}
+      {purgeLoading ? 'Purging...' : 'Purge Stuck Jobs'}
+    </Button>
+  );
 
   const handleRegenerate = () => {
     if (reportType === 'hermetic') {
@@ -633,6 +694,9 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                 </Button>
               )
             )}
+            
+            {/* Standalone Purge Stuck Jobs Button - Always Available */}
+            <PurgeStuckJobsButton />
           </div>
         </div>
       )}
