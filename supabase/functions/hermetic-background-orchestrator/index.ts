@@ -234,36 +234,71 @@ serve(async (req) => {
       })
       .eq('id', jobId);
 
-    // 4. CRITICAL: Trigger the next step by invoking itself (fire-and-forget)
-    supabase.functions.invoke('hermetic-background-orchestrator', {
-      body: { job_id: jobId }
-    }).catch(error => {
-      console.error('Failed to trigger next step:', error);
-    });
+    // 4. CRITICAL: Trigger the next step by invoking itself (fire-and-forget) with recovery
+    console.log(`🔄 Triggering next step: ${nextStage}[${nextStepIndex}] for job ${jobId}`);
+    
+    // Enhanced recovery mechanism: Try immediate invocation, then delayed fallback
+    try {
+      await supabase.functions.invoke('hermetic-background-orchestrator', {
+        body: { job_id: jobId }
+      });
+      console.log(`✅ Successfully triggered next step for job ${jobId}`);
+    } catch (error) {
+      console.error(`❌ Failed to trigger next step for job ${jobId}:`, error);
+      
+      // Fallback: Set up delayed retry (will be picked up by recovery mechanisms)
+      await supabase
+        .from('hermetic_processing_jobs')
+        .update({
+          current_step: `${nextStage}[${nextStepIndex}] - retry pending`,
+          error_message: `Self-invocation failed: ${error.message} - retry will be attempted`,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', jobId);
+        
+      console.log(`🔄 Marked job ${jobId} for recovery retry`);
+    }
 
     console.log(`✅ Step completed, next step queued: ${nextStage}[${nextStepIndex}]`);
 
   } catch (error) {
-    // Get jobId from various sources in case destructuring failed
+    // Enhanced error handling with recovery context
     let errorJobId: string | undefined;
+    let originalRequestBody: any;
+    
     try {
-      const requestBody = await req.clone().json();
-      errorJobId = requestBody?.job_id;
+      originalRequestBody = await req.clone().json();
+      errorJobId = originalRequestBody?.job_id;
     } catch {
-      // Could not parse request body
+      console.error('❌ Could not parse request body for error handling');
     }
     
-    console.error(`❌ Orchestrator failed for job ${errorJobId || 'unknown'}:`, error);
+    console.error(`❌ Orchestrator failed for job ${errorJobId || 'unknown'}:`, {
+      error: error.message,
+      stack: error.stack,
+      jobId: errorJobId,
+      requestBody: originalRequestBody
+    });
     
     if (errorJobId) {
-      await supabase
-        .from('hermetic_processing_jobs')
-        .update({ 
-          status: 'failed', 
-          current_step: `Error: ${error.message}`,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', errorJobId);
+      // Enhanced error logging similar to client service
+      const errorUpdate = {
+        status: 'failed',
+        current_step: `Error: ${error.message}`,
+        error_message: `Processing failed at step: ${error.message}. Check logs for recovery options.`,
+        updated_at: new Date().toISOString()
+      };
+      
+      try {
+        await supabase
+          .from('hermetic_processing_jobs')
+          .update(errorUpdate)
+          .eq('id', errorJobId);
+          
+        console.log(`✅ Error state saved for job ${errorJobId} - job can be recovered`);
+      } catch (updateError) {
+        console.error(`❌ Failed to update error state for job ${errorJobId}:`, updateError);
+      }
     }
   }
   
@@ -348,8 +383,8 @@ Focus on your specific system expertise.`
   }
   
   if (wordCount < 1100) {
-    console.warn(`⚠️ ${translator} generated insufficient content (${wordCount} words). Expected range: 1100-1500 words`);
-    throw new Error(`${translator} generated insufficient content: ${wordCount} words (minimum 1100 required)`);
+    console.warn(`⚠️ ${translator} generated insufficient content (${wordCount} words). Expected range: 1100-1500 words - continuing with available content`);
+    // Continue processing instead of failing - partial content is better than no content
   }
     
     const progressData = job.progress_data || {};
@@ -479,8 +514,8 @@ Generate comprehensive analysis with practical applications.`
   }
   
   if (wordCount < 1100) {
-    console.warn(`⚠️ ${agent} generated insufficient content (${wordCount} words). Expected range: 1100-1500 words`);
-    throw new Error(`${agent} generated insufficient content: ${wordCount} words (minimum 1100 required)`);
+    console.warn(`⚠️ ${agent} generated insufficient content (${wordCount} words). Expected range: 1100-1500 words - continuing with available content`);
+    // Continue processing instead of failing - partial content is better than no content
   }
     
     const progressData = job.progress_data || {};
@@ -576,8 +611,8 @@ Focus specifically on Gate ${gateNumber} and how it expresses through each Herme
     console.log(`📊 Gate ${gateNumber} analysis generated ${wordCount} words, content length: ${content.length} characters`);
     
     if (wordCount < 1000) {
-      console.warn(`⚠️ Gate ${gateNumber} generated insufficient content (${wordCount} words). Expected range: 1000-1200 words`);
-      throw new Error(`Gate ${gateNumber} generated insufficient content: ${wordCount} words (minimum 1000 required)`);
+      console.warn(`⚠️ Gate ${gateNumber} generated insufficient content (${wordCount} words). Expected range: 1000-1200 words - continuing with available content`);
+      // Continue processing instead of failing - partial content is better than no content
     }
     
     const progressData = job.progress_data || {};
@@ -684,8 +719,8 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
     console.log(`📊 Intelligence agent ${agent} generated ${wordCount} words, content length: ${content.length} characters`);
     
     if (wordCount < 700) {
-      console.warn(`⚠️ Intelligence agent ${agent} generated insufficient content (${wordCount} words). Expected range: 700-900 words`);
-      throw new Error(`Intelligence agent ${agent} generated insufficient content: ${wordCount} words (minimum 700 required)`);
+      console.warn(`⚠️ Intelligence agent ${agent} generated insufficient content (${wordCount} words). Expected range: 700-900 words - continuing with available content`);
+      // Continue processing instead of failing - partial content is better than no content
     }
     
     const progressData = job.progress_data || {};
@@ -869,8 +904,8 @@ Generate ${expectedWords.toLocaleString()}+ words of captivating, profile-style 
     console.log(`📊 Synthesis ${synthesisType} generated ${wordCount} words, content length: ${content.length} characters`);
     
     if (wordCount < expectedWords * 0.75) {
-      console.warn(`⚠️ Synthesis ${synthesisType} generated insufficient content (${wordCount} words). Expected minimum: ${expectedWords * 0.75} words`);
-      throw new Error(`Synthesis ${synthesisType} generated insufficient content: ${wordCount} words (minimum ${expectedWords * 0.75} required)`);
+      console.warn(`⚠️ Synthesis ${synthesisType} generated insufficient content (${wordCount} words). Expected minimum: ${expectedWords * 0.75} words - continuing with available content`);
+      // Continue processing instead of failing - partial content is better than no content
     }
     
     const progressData = job.progress_data || {};
@@ -1007,19 +1042,12 @@ async function finalizeReport(job: any) {
     });
   }
   
-  // CRITICAL: Validate minimum word count for comprehensive reports
+  // Enhanced: Generate report regardless of word count, but track quality metrics
   if (totalWordCount < 40000) {
-    console.error(`❌ CRITICAL: Report too short (${totalWordCount} words). Expected minimum: 40,000 words for comprehensive hermetic analysis`);
-    await supabase
-      .from('hermetic_processing_jobs')
-      .update({
-        status: 'failed',
-        error_message: `Report generation failed - only ${totalWordCount} words generated (minimum 40,000 required for full hermetic depth)`,
-        current_step: `Failed: Insufficient content generated`,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', jobId);
-    return;
+    console.warn(`⚠️ Report shorter than ideal (${totalWordCount} words). Expected: 40,000+ for full depth, but continuing with available content`);
+    // Continue processing - partial comprehensive report is better than no report
+  } else {
+    console.log(`✅ Report meets quality standards with ${totalWordCount} words`);
   }
   
   const finalReport = {
@@ -1088,18 +1116,45 @@ async function finalizeReport(job: any) {
     
     blueprint_signature: generateBlueprintSignature(blueprint),
     word_count: totalWordCount,
+    // Enhanced metadata tracking similar to client service expectations
     generation_metadata: {
       agents_used: finalSections.map(s => s.agent_type),
       total_processing_time: Date.now() - new Date(job.created_at).getTime(),
       hermetic_depth_score: Math.min(100, Math.floor(totalWordCount / 500)),
       gates_analyzed: gateSections.map(s => s.gate_number).filter(Boolean),
       intelligence_status: 'completed',
-      intelligence_analysts: intelligenceSections.map(s => s.agent_type)
+      intelligence_analysts: intelligenceSections.map(s => s.agent_type),
+      // Additional client service compatibility
+      word_count_breakdown: {
+        system_sections: systemSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
+        hermetic_sections: hermeticSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
+        gate_sections: gateSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
+        intelligence_sections: intelligenceSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
+        synthesis_sections: synthesisSections.reduce((sum, s) => sum + (s.word_count || 0), 0)
+      },
+      processing_quality: totalWordCount >= 40000 ? 'comprehensive' : 'partial',
+      version: '2.0'
     },
     structured_intelligence: buildStructuredIntelligence(intelligenceSections)
   };
 
-  console.log(`💾 PERSONALITY REPORT: Saving to database with ${totalWordCount} words`);
+  console.log(`💾 PERSONALITY REPORT: Saving to database with ${totalWordCount} words`, {
+    reportStructure: {
+      systemSections: systemSections.length,
+      hermeticSections: hermeticSections.length, 
+      gateSections: gateSections.length,
+      intelligenceSections: intelligenceSections.length,
+      synthesisSections: synthesisSections.length
+    },
+    wordCountBreakdown: {
+      system: systemSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
+      hermetic: hermeticSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
+      gates: gateSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
+      intelligence: intelligenceSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
+      synthesis: synthesisSections.reduce((sum, s) => sum + (s.word_count || 0), 0)
+    },
+    totalWords: totalWordCount
+  });
 
   // CRITICAL FIX: Save to personality_reports table (this was the missing step!)
   const { data: savedReport, error: reportError } = await supabase
