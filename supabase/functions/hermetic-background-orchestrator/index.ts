@@ -149,20 +149,27 @@ serve(async (req) => {
 
     } else if (job.current_stage === 'gate_analysis') {
       // Process ONE gate
-      const gates = extractHumanDesignGates(job.blueprint_data);
+      const gates = extractGatesFromBlueprint(job.blueprint_data); // CRITICAL FIX: Use correct function name
       const gateNumber = gates[job.current_step_index];
-      console.log(`Processing gate: ${gateNumber}`);
+      console.log(`Processing gate: ${gateNumber} (${job.current_step_index + 1}/${gates.length} total gates)`);
       
-      await processSingleGate(job, gateNumber);
-      progressPercentage = 50 + (job.current_step_index * 30) / gates.length;
-      
-      // Move to next step or stage
-      if (job.current_step_index + 1 >= gates.length) {
+      if (!gateNumber) {
+        console.log(`⚠️ No gate found at index ${job.current_step_index}, skipping to next stage`);
         nextStage = 'intelligence_extraction';
         nextStepIndex = 0;
         progressPercentage = 80;
       } else {
-        nextStepIndex = job.current_step_index + 1;
+        await processSingleGate(job, gateNumber);
+        progressPercentage = 50 + (job.current_step_index * 30) / gates.length;
+        
+        // Move to next step or stage
+        if (job.current_step_index + 1 >= gates.length) {
+          nextStage = 'intelligence_extraction';
+          nextStepIndex = 0;
+          progressPercentage = 80;
+        } else {
+          nextStepIndex = job.current_step_index + 1;
+        }
       }
 
     } else if (job.current_stage === 'intelligence_extraction') {
@@ -351,7 +358,7 @@ Focus on your specific system expertise.`
     systemSections.push({
       agent_type: translator,
       content: content,
-      word_count: content.length
+      word_count: wordCount // FIXED: Use actual word count, not character count
     });
     
     await supabase
@@ -482,7 +489,7 @@ Generate comprehensive analysis with practical applications.`
     hermeticSections.push({
       agent_type: agent,
       content: content,
-      word_count: content.length,
+      word_count: wordCount, // FIXED: Use actual word count, not character count
       hermetic_law: agent.replace('_analyst', '')
     });
     
@@ -579,7 +586,7 @@ Focus specifically on Gate ${gateNumber} and how it expresses through each Herme
     gateSections.push({
       agent_type: 'gate_hermetic_analyst',
       content: content,
-      word_count: content.length,
+      word_count: wordCount, // FIXED: Use actual word count, not character count
       gate_number: gateNumber
     });
     
@@ -687,7 +694,7 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
     intelligenceSections.push({
       agent_type: agent,
       content: content,
-      word_count: content.length,
+      word_count: wordCount, // FIXED: Use actual word count, not character count
       intelligence_dimension: dimensionName
     });
     
@@ -872,7 +879,7 @@ Generate ${expectedWords.toLocaleString()}+ words of captivating, profile-style 
     synthesisSections.push({
       agent_type: synthesisType,
       content: content,
-      word_count: content.length,
+      word_count: wordCount, // FIXED: Use actual word count, not character count
       synthesis_type: synthesisType
     });
     
@@ -943,7 +950,32 @@ async function finalizeReport(job: any) {
     return total + actualWordCount;
   }, 0);
   
-  // CRITICAL: Enhanced logging and validation
+  // CRITICAL: Enhanced logging and validation with detailed breakdown
+  const systemWordCount = systemSections.reduce((total, section) => {
+    const words = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    return total + words;
+  }, 0);
+  
+  const hermeticWordCount = hermeticSections.reduce((total, section) => {
+    const words = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    return total + words;
+  }, 0);
+  
+  const gateWordCount = gateSections.reduce((total, section) => {
+    const words = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    return total + words;
+  }, 0);
+  
+  const intelligenceWordCount = intelligenceSections.reduce((total, section) => {
+    const words = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    return total + words;
+  }, 0);
+  
+  const synthesisWordCount = synthesisSections.reduce((total, section) => {
+    const words = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    return total + words;
+  }, 0);
+
   console.log(`🏁 FINAL REPORT ASSEMBLY:`, {
     totalSections: finalSections.length,
     systemSections: systemSections.length,
@@ -953,6 +985,18 @@ async function finalizeReport(job: any) {
     synthesisSections: synthesisSections.length,
     totalWordCount: totalWordCount
   });
+  
+  console.log(`📊 DETAILED WORD COUNT BREAKDOWN:`);
+  console.log(`  System Translations: ${systemWordCount.toLocaleString()} words (${systemSections.length} sections)`);
+  console.log(`  Hermetic Laws: ${hermeticWordCount.toLocaleString()} words (${hermeticSections.length} sections)`);
+  console.log(`  Gate Analyses: ${gateWordCount.toLocaleString()} words (${gateSections.length} gates)`);
+  console.log(`  Intelligence: ${intelligenceWordCount.toLocaleString()} words (${intelligenceSections.length} dimensions)`);
+  console.log(`  Synthesis: ${synthesisWordCount.toLocaleString()} words (${synthesisSections.length} syntheses)`);
+  console.log(`  🎯 TOTAL: ${totalWordCount.toLocaleString()} words`);
+  
+  if (totalWordCount < 80000) {
+    console.warn(`⚠️ WARNING: Total word count ${totalWordCount} is below expected 100K+ words`);
+  }
   
   // Check each section for content
   const emptySections = finalSections.filter(section => !section.content || section.content.trim().length < 50);

@@ -220,11 +220,12 @@ class HermeticPersonalityReportService {
    */
   async hasHermeticReport(userId: string): Promise<boolean> {
     try {
+      // FIXED: Check for any hermetic report, regardless of version
       const { data, error } = await supabase
         .from('personality_reports')
-        .select('id')
+        .select('id, blueprint_version, generated_at')
         .eq('user_id', userId)
-        .eq('blueprint_version', '2.0')
+        .order('generated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
@@ -233,7 +234,29 @@ class HermeticPersonalityReportService {
         return false;
       }
 
-      return !!data;
+      // RECOVERY: Check for completed jobs with generated content but missing reports
+      if (!data) {
+        console.log('🔍 No personality report found, checking for completed jobs...');
+        const { data: completedJob, error: jobError } = await supabase
+          .from('hermetic_processing_jobs')
+          .select('id, result_data, status, user_id')
+          .eq('user_id', userId)
+          .eq('status', 'completed')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (completedJob && completedJob.result_data) {
+          console.log('🚨 RECOVERY: Found completed job with result but no personality report');
+          return true; // Report exists in job result, treat as having report
+        }
+      }
+
+      const hasReport = !!data;
+      if (hasReport) {
+        console.log(`✅ Found hermetic report (version ${data.blueprint_version}) created ${data.generated_at}`);
+      }
+      return hasReport;
     } catch (error) {
       console.error('❌ Error in hasHermeticReport:', error);
       return false;
