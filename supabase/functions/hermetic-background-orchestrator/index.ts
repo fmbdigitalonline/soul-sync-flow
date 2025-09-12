@@ -1072,7 +1072,7 @@ async function finalizeReport(job: any) {
     relationship_style: combineRelevantSections(finalSections, ['astrology_hermetic_translator', 'polarity_analyst']),
     life_path_purpose: combineRelevantSections(finalSections, ['numerology_hermetic_translator', 'correspondence_analyst']),
     current_energy_timing: combineRelevantSections(finalSections, ['chinese_astrology_hermetic_translator', 'rhythm_analyst']),
-    integrated_summary: `Comprehensive hermetic analysis revealing ${totalWordCount.toLocaleString()} words of deep personality insights with shadow work integration and synthesis.`,
+    integrated_summary: synthesisSections.find(s => s.agent_type === 'comprehensive_overview')?.content || `Comprehensive hermetic analysis revealing ${totalWordCount.toLocaleString()} words of deep personality insights with shadow work integration and synthesis.`,
     
     // Enhanced Hermetic Blueprint sections
     hermetic_fractal_analysis: synthesisSections.find(s => s.agent_type === 'fractal_synthesis')?.content || combineRelevantSections(finalSections, ['correspondence_analyst', 'mentalism_analyst']),
