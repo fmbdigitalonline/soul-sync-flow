@@ -19,7 +19,7 @@ interface IntelligentSoulOrbProps {
   moduleActivity?: boolean;
   hermeticProgress?: number; // 0-100 for hermetic report generation
   showHermeticProgress?: boolean;
-  showRainbowCelebration?: boolean;
+  showRadiantGlow?: boolean;
   // New subconscious orb props
   subconsciousMode?: 'dormant' | 'detecting' | 'pattern_found' | 'thinking' | 'advice_ready';
   patternDetected?: boolean;
@@ -41,7 +41,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   moduleActivity = false,
   hermeticProgress = 0,
   showHermeticProgress = false,
-  showRainbowCelebration = false,
+  showRadiantGlow = false,
   subconsciousMode = 'dormant',
   patternDetected = false,
   adviceReady = false,
@@ -193,9 +193,9 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
         }))
       );
       
-      // Rainbow celebration animation
-      if (showRainbowCelebration) {
-        setRainbowPhase(prev => (prev + 4) % 360);
+      // Radiant glow animation
+      if (showRadiantGlow && hermeticProgress === 100) {
+        setRainbowPhase(prev => (prev + 2) % 360); // Slower, more spiritual animation
       }
       
       animationId = requestAnimationFrame(animate);
@@ -206,7 +206,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [intelligenceLevel, showRainbowCelebration]);
+  }, [intelligenceLevel, showRadiantGlow, hermeticProgress]);
 
   // Level up animation trigger
   useEffect(() => {
@@ -291,13 +291,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             cx={ringSize[size] / 2}
             cy={ringSize[size] / 2}
             r={innerRadius}
-            stroke={
-              showRainbowCelebration 
-                ? `hsl(${rainbowPhase}, 70%, 60%)` 
-                : hermeticProgress === 100 
-                  ? "hsl(var(--soul-teal))" 
-                  : "hsl(var(--soul-purple))"
-            }
+            stroke="hsl(var(--soul-teal))"
             strokeWidth="1.5"
             fill="transparent"
             strokeDasharray={innerStrokeDasharray}
@@ -306,22 +300,19 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             initial={{ strokeDashoffset: innerCircumference }}
             animate={{ 
               strokeDashoffset: innerStrokeDashoffset,
-              stroke: showRainbowCelebration 
-                ? `hsl(${rainbowPhase}, 70%, 60%)` 
-                : hermeticProgress === 100 
-                  ? "hsl(var(--soul-teal))" 
-                  : "hsl(var(--soul-purple))",
-              scale: showRainbowCelebration ? [1, 1.1, 1] : 1
+              scale: showRadiantGlow && hermeticProgress === 100 ? [1, 1.05, 1] : 1,
+              filter: showRadiantGlow && hermeticProgress === 100 
+                ? ["drop-shadow(0 0 8px hsl(var(--soul-teal)))", "drop-shadow(0 0 16px hsl(var(--soul-teal)))"] 
+                : "drop-shadow(0 0 4px hsl(var(--soul-teal) / 0.5))"
             }}
             transition={{ 
               duration: 0.8, 
               ease: "easeInOut",
-              scale: showRainbowCelebration ? { duration: 0.3, repeat: Infinity } : {}
+              scale: showRadiantGlow && hermeticProgress === 100 ? { duration: 2, repeat: Infinity } : {},
+              filter: showRadiantGlow && hermeticProgress === 100 ? { duration: 2, repeat: Infinity } : {}
             }}
             style={{
-              filter: showRainbowCelebration 
-                ? `drop-shadow(0 0 8px hsl(${rainbowPhase}, 70%, 60%))`
-                : "drop-shadow(0 0 3px rgba(147, 51, 234, 0.5))"
+              filter: "drop-shadow(0 0 4px hsl(var(--soul-teal) / 0.5))"
             }}
           />
         </svg>
@@ -347,23 +338,27 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
           ease: "easeInOut"
         }}
       >
-        {/* Core orb with rainbow celebration and subconscious mode colors */}
+        {/* Core orb with radiant glow and subconscious mode colors */}
         <div 
           className={cn(
             "absolute inset-0 rounded-full", 
             speaking && "animate-pulse",
-            isLevelingUp && "animate-ping"
+            isLevelingUp && "animate-ping",
+            showRadiantGlow && hermeticProgress === 100 && "animate-pulse"
           )}
           style={{
-            background: showRainbowCelebration 
-              ? `linear-gradient(${rainbowPhase}deg, 
-                  hsl(${rainbowPhase}, 70%, 60%), 
-                  hsl(${(rainbowPhase + 120) % 360}, 70%, 60%), 
-                  hsl(${(rainbowPhase + 240) % 360}, 70%, 60%))`
+            background: showRadiantGlow && hermeticProgress === 100
+              ? `radial-gradient(circle, 
+                  hsl(var(--soul-teal) / 0.9), 
+                  hsl(var(--soul-teal) / 0.6), 
+                  hsl(var(--soul-teal) / 0.3))`
+              : undefined,
+            boxShadow: showRadiantGlow && hermeticProgress === 100
+              ? "0 0 20px hsl(var(--soul-teal) / 0.8), 0 0 40px hsl(var(--soul-teal) / 0.6), 0 0 60px hsl(var(--soul-teal) / 0.4)"
               : undefined
           }}
         >
-          {!showRainbowCelebration && (
+          {(!showRadiantGlow || hermeticProgress !== 100) && (
             <div className={cn("absolute inset-0 rounded-full bg-gradient-to-r", getSubconsciousOrbColors)} />
           )}
         </div>
@@ -389,30 +384,27 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
           <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-[135deg]" />
         </div>
         
-        {/* Intelligence-enhanced orbital particles with rainbow celebration */}
+        {/* Intelligence-enhanced orbital particles with radiant glow */}
         {particles.map((particle, index) => {
-          const x = 50 + Math.cos(particle.angle) * (showRainbowCelebration ? 35 : 28); // Expanded orbit during celebration
-          const y = 50 + Math.sin(particle.angle) * (showRainbowCelebration ? 35 : 28);
+          const x = 50 + Math.cos(particle.angle) * 28; // Consistent orbit
+          const y = 50 + Math.sin(particle.angle) * 28;
           
           return (
             <div 
               key={index}
               className={cn(
                 "absolute rounded-full transition-all duration-200",
-                !showRainbowCelebration && (intelligenceLevel >= 90 ? "bg-amber-200" : "bg-white")
+                intelligenceLevel >= 90 ? "bg-amber-200" : "bg-white"
               )}
               style={{
                 left: `${x}%`,
                 top: `${y}%`,
-                width: `${showRainbowCelebration ? particle.size * 1.5 : particle.size}px`,
-                height: `${showRainbowCelebration ? particle.size * 1.5 : particle.size}px`,
-                opacity: showRainbowCelebration ? 0.9 : 0.7 + (intelligenceLevel / 200),
+                width: `${particle.size}px`,
+                height: `${particle.size}px`,
+                opacity: 0.7 + (intelligenceLevel / 200),
                 transform: `translate(-50%, -50%)`,
-                background: showRainbowCelebration 
-                  ? `hsl(${(particle.hue! + rainbowPhase) % 360}, 70%, 60%)`
-                  : undefined,
-                boxShadow: showRainbowCelebration 
-                  ? `0 0 6px hsl(${(particle.hue! + rainbowPhase) % 360}, 70%, 60%)`
+                filter: showRadiantGlow && hermeticProgress === 100 
+                  ? `drop-shadow(0 0 4px hsl(var(--soul-teal)))`
                   : undefined
               }}
             />

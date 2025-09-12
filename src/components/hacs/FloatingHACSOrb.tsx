@@ -52,7 +52,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [isThinking, setIsThinking] = useState(false);
   const [hermeticProgress, setHermeticProgress] = useState(40); // Start at 40% (blueprint completed)
   const [showCompletionIndicator, setShowCompletionIndicator] = useState(false);
-  const [showRainbowCelebration, setShowRainbowCelebration] = useState(false);
+  const [showRadiantGlow, setShowRadiantGlow] = useState(false);
   
   // Enhanced feedback system
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -210,20 +210,20 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     } else if (hasHermeticReport) {
       // Principle #7: Clear completion state - jump to 100% when report exists
       setHermeticProgress(100);
-      // Trigger dramatic rainbow celebration
+      // Trigger dramatic radiant glow
       if (!showCompletionIndicator) {
         setShowCompletionIndicator(true);
-        setShowRainbowCelebration(true);
+        setShowRadiantGlow(true);
         setTimeout(() => {
           setShowCompletionIndicator(false);
-          setShowRainbowCelebration(false);
-        }, 4000); // 4 seconds for full rainbow celebration
+          setShowRadiantGlow(false);
+        }, 4000); // 4 seconds for full radiant glow
       }
     } else {
       // Reset to baseline when not generating and no report
       setHermeticProgress(40);
       setShowCompletionIndicator(false);
-      setShowRainbowCelebration(false);
+      setShowRadiantGlow(false);
     }
   }, [isGeneratingReport, isGeneratingHermeticReport, hermeticJobProgress, hasHermeticReport, showCompletionIndicator]);
 
@@ -693,6 +693,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               moduleActivity={moduleActivity || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport}
               hermeticProgress={hermeticProgress}
               showHermeticProgress={isGeneratingReport || isGeneratingHermeticReport || hasHermeticReport}
+              showRadiantGlow={hasHermeticReport && hermeticProgress === 100}
               onClick={handleOrbClick}
               className="shadow-lg hover:shadow-xl transition-shadow"
             />
@@ -750,7 +751,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               className={isGeneratingReport ? "animate-pulse" : ""}
               hermeticProgress={hermeticProgress}
               showHermeticProgress={isGeneratingReport || hasHermeticReport}
-              showRainbowCelebration={showRainbowCelebration}
+              showRadiantGlow={showRadiantGlow}
             />
             {isGeneratingReport && (
               <div className="text-sm">
