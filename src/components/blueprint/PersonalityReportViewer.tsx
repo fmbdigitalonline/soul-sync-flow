@@ -63,11 +63,24 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     });
 
     // If status indicates report exists but we don't have it loaded, refresh
-    if (hermeticStatus.hasReport && !hermeticReport && !loading && !hermeticStatus.isGenerating) {
-      console.log('🔄 Status sync: Hermetic report detected but not loaded - refreshing...');
+    // FIXED: Removed !hermeticStatus.isGenerating condition that was preventing post-completion sync
+    if (hermeticStatus.hasReport && !hermeticReport && !loading) {
+      console.log('🔄 Status sync: Hermetic report detected but not loaded - refreshing...', {
+        hasReport: hermeticStatus.hasReport,
+        hermeticReportLoaded: !!hermeticReport,
+        loading,
+        isGenerating: hermeticStatus.isGenerating,
+        progress: hermeticStatus.progress
+      });
       loadReport();
     }
-  }, [hermeticStatus.hasReport, hermeticReport, loading, hermeticStatus.isGenerating]);
+    
+    // Add completion-triggered refresh: If we just reached 100% progress, force a refresh
+    if (hermeticStatus.progress === 100 && hermeticStatus.hasReport && !hermeticReport && !loading) {
+      console.log('🎉 Completion-triggered refresh: Report completed at 100% - force loading');
+      loadReport();
+    }
+  }, [hermeticStatus.hasReport, hermeticReport, loading, hermeticStatus.isGenerating, hermeticStatus.progress]);
 
   const loadReport = async () => {
     if (!user) return;
