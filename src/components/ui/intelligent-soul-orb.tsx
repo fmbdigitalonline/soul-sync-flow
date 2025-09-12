@@ -344,21 +344,21 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             "absolute inset-0 rounded-full", 
             speaking && "animate-pulse",
             isLevelingUp && "animate-ping",
-            showRadiantGlow && hermeticProgress === 100 && "animate-pulse"
+            showRadiantGlow && intelligenceLevel >= 100 && "animate-pulse"
           )}
           style={{
-            background: showRadiantGlow && hermeticProgress === 100
+            background: showRadiantGlow && intelligenceLevel >= 100
               ? `radial-gradient(circle, 
                   hsl(var(--soul-teal) / 0.9), 
                   hsl(var(--soul-teal) / 0.6), 
                   hsl(var(--soul-teal) / 0.3))`
               : undefined,
-            boxShadow: showRadiantGlow && hermeticProgress === 100
+            boxShadow: showRadiantGlow && intelligenceLevel >= 100
               ? "0 0 20px hsl(var(--soul-teal) / 0.8), 0 0 40px hsl(var(--soul-teal) / 0.6), 0 0 60px hsl(var(--soul-teal) / 0.4)"
               : undefined
           }}
         >
-          {(!showRadiantGlow || hermeticProgress !== 100) && (
+          {(!showRadiantGlow || intelligenceLevel < 100) && (
             <div className={cn("absolute inset-0 rounded-full bg-gradient-to-r", getSubconsciousOrbColors)} />
           )}
         </div>
@@ -403,7 +403,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
                 height: `${particle.size}px`,
                 opacity: 0.7 + (intelligenceLevel / 200),
                 transform: `translate(-50%, -50%)`,
-                filter: showRadiantGlow && hermeticProgress === 100 
+                filter: showRadiantGlow && intelligenceLevel >= 100 
                   ? `drop-shadow(0 0 4px hsl(var(--soul-teal)))`
                   : undefined
               }}
