@@ -286,12 +286,12 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             strokeWidth="1.5"
             fill="transparent"
           />
-          {/* Inner progress ring - with rainbow celebration and teal completion */}
+          {/* Inner progress ring - FORCED BRIGHT TEAL RESTORATION */}
           <motion.circle
             cx={ringSize[size] / 2}
             cy={ringSize[size] / 2}
             r={innerRadius}
-            stroke="hsl(var(--soul-teal))"
+            stroke="hsl(180 68% 55%)" // FORCED: Original bright teal #22D3EE
             strokeWidth="1.5"
             fill="transparent"
             strokeDasharray={innerStrokeDasharray}
@@ -302,8 +302,8 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
               strokeDashoffset: innerStrokeDashoffset,
               scale: showRadiantGlow && hermeticProgress === 100 ? [1, 1.05, 1] : 1,
               filter: showRadiantGlow && hermeticProgress === 100 
-                ? ["drop-shadow(0 0 8px hsl(var(--soul-teal)))", "drop-shadow(0 0 16px hsl(var(--soul-teal)))"] 
-                : "drop-shadow(0 0 4px hsl(var(--soul-teal) / 0.5))"
+                ? ["drop-shadow(0 0 8px hsl(180 68% 55%))", "drop-shadow(0 0 16px hsl(180 68% 55%))"] 
+                : "drop-shadow(0 0 4px hsl(180 68% 55% / 0.5))"
             }}
             transition={{ 
               duration: 0.8, 
@@ -312,7 +312,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
               filter: showRadiantGlow && hermeticProgress === 100 ? { duration: 2, repeat: Infinity } : {}
             }}
             style={{
-              filter: "drop-shadow(0 0 4px hsl(var(--soul-teal) / 0.5))"
+              filter: "drop-shadow(0 0 4px hsl(180 68% 55% / 0.5))" // FORCED: Bright teal glow
             }}
           />
         </svg>
