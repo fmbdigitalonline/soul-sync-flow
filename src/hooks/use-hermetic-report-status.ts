@@ -24,6 +24,11 @@ export const useHermeticReportStatus = () => {
     zombieJobInfo: null,
   });
 
+  const [recentCompletion, setRecentCompletion] = useState<{
+    timestamp: number;
+    jobId: string;
+  } | null>(null);
+
   const cleanupZombieJob = useCallback(async (jobId: string) => {
     try {
       console.log('🔧 HERMETIC CLEANUP: Marking zombie job as failed:', jobId);
@@ -98,6 +103,20 @@ export const useHermeticReportStatus = () => {
       // CRITICAL FIX: Handle completed jobs without reports
       let activeJob = activeJobs?.find(job => ['pending', 'processing'].includes(job.status));
       let completedJobWithoutReport = null;
+      
+      // Check for recent job completions (for extended polling)
+      const recentlyCompletedJob = activeJobs?.find(job => 
+        job.status === 'completed' && 
+        job.progress_percentage === 100
+      );
+      
+      if (recentlyCompletedJob && !recentCompletion) {
+        console.log('🎉 HERMETIC COMPLETION: Detected job completion, extending polling:', recentlyCompletedJob.id);
+        setRecentCompletion({
+          timestamp: Date.now(),
+          jobId: recentlyCompletedJob.id
+        });
+      }
       
       if (!activeJob && !hasReport) {
         // Check for completed jobs that may have failed to save report
@@ -206,14 +225,31 @@ export const useHermeticReportStatus = () => {
     checkHermeticReportStatus();
   }, [checkHermeticReportStatus]);
 
-  // Poll for active job updates every 3 seconds with enhanced logging
+  // Poll for active job updates every 3 seconds with enhanced logging and post-completion polling
   useEffect(() => {
-    if (!status.isGenerating && !status.hasZombieJob) {
-      console.log('🛑 HERMETIC POLLING: Stopped - no active generation or zombie jobs');
+    const now = Date.now();
+    const isWithinCompletionWindow = recentCompletion && (now - recentCompletion.timestamp) < 30000; // 30 second window
+    
+    // Clear expired recent completion
+    if (recentCompletion && !isWithinCompletionWindow) {
+      console.log('🏁 HERMETIC POLLING: Completion window expired, clearing recent completion');
+      setRecentCompletion(null);
+    }
+    
+    const shouldPoll = status.isGenerating || status.hasZombieJob || isWithinCompletionWindow;
+    
+    if (!shouldPoll) {
+      console.log('🛑 HERMETIC POLLING: Stopped - no active generation, zombie jobs, or recent completions');
       return;
     }
 
-    console.log('🔄 HERMETIC POLLING: Starting enhanced polling every 3 seconds');
+    const reasonsForPolling = [
+      status.isGenerating && 'active generation',
+      status.hasZombieJob && 'zombie job detected', 
+      isWithinCompletionWindow && `recent completion (${Math.floor((30000 - (now - recentCompletion!.timestamp)) / 1000)}s remaining)`
+    ].filter(Boolean);
+
+    console.log('🔄 HERMETIC POLLING: Starting enhanced polling every 3 seconds -', reasonsForPolling.join(', '));
     
     const pollForActiveJobs = setInterval(() => {
       console.log('⏰ HERMETIC POLLING: Fetching status update...');
@@ -224,7 +260,7 @@ export const useHermeticReportStatus = () => {
       console.log('🛑 HERMETIC POLLING: Cleanup interval');
       clearInterval(pollForActiveJobs);
     };
-  }, [status.isGenerating, status.hasZombieJob, checkHermeticReportStatus]);
+  }, [status.isGenerating, status.hasZombieJob, recentCompletion, checkHermeticReportStatus]);
 
   return {
     ...status,
