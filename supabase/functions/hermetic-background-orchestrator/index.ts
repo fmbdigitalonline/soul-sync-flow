@@ -1435,41 +1435,51 @@ function extractGatesFromBlueprint(blueprint: any): number[] {
   
   if (!hdData) return [];
 
+  // Helper function to extract gate number from various formats
+  const extractGateNumber = (gateData: any): number | null => {
+    // Handle object format: { gate: 45, line: 2 }
+    if (gateData?.gate && typeof gateData.gate === 'number') {
+      return gateData.gate;
+    }
+    
+    // Handle number format: 45.2 -> extract 45
+    if (typeof gateData === 'number') {
+      return Math.floor(gateData);
+    }
+    
+    // Handle string format: "45.2" -> extract 45
+    if (typeof gateData === 'string') {
+      const parsed = parseFloat(gateData);
+      return isNaN(parsed) ? null : Math.floor(parsed);
+    }
+    
+    return null;
+  };
+
   // Extract gates from all possible structures
-  if (hdData.gates?.conscious_personality) {
-    hdData.gates.conscious_personality.forEach((gateData: any) => {
-      if (gateData?.gate && typeof gateData.gate === 'number') {
-        gates.push(gateData.gate);
-      }
-    });
-  }
-  
-  if (hdData.gates?.unconscious_personality) {
-    hdData.gates.unconscious_personality.forEach((gateData: any) => {
-      if (gateData?.gate && typeof gateData.gate === 'number') {
-        gates.push(gateData.gate);
-      }
-    });
-  }
-  
-  if (hdData.gates?.conscious_design) {
-    hdData.gates.conscious_design.forEach((gateData: any) => {
-      if (gateData?.gate && typeof gateData.gate === 'number') {
-        gates.push(gateData.gate);
-      }
-    });
-  }
-  
-  if (hdData.gates?.unconscious_design) {
-    hdData.gates.unconscious_design.forEach((gateData: any) => {
-      if (gateData?.gate && typeof gateData.gate === 'number') {
-        gates.push(gateData.gate);
-      }
-    });
-  }
+  const gateArrays = [
+    hdData.gates?.conscious_personality,
+    hdData.gates?.unconscious_personality, 
+    hdData.gates?.conscious_design,
+    hdData.gates?.unconscious_design
+  ];
+
+  gateArrays.forEach(gateArray => {
+    if (Array.isArray(gateArray)) {
+      gateArray.forEach(gateData => {
+        const gateNumber = extractGateNumber(gateData);
+        if (gateNumber !== null && gateNumber > 0 && gateNumber <= 64) {
+          gates.push(gateNumber);
+        }
+      });
+    }
+  });
 
   // Remove duplicates and sort
-  return [...new Set(gates)].sort((a, b) => a - b);
+  const uniqueGates = [...new Set(gates)].sort((a, b) => a - b);
+  console.log(`🔍 GATE EXTRACTION: Found ${uniqueGates.length} unique gates:`, uniqueGates);
+  
+  return uniqueGates;
 }
 
 function generateBlueprintSignature(blueprint: any): string {
