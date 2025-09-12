@@ -193,22 +193,17 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
   // Monitor hermetic report generation progress and completion status
   useEffect(() => {
-    if (isGeneratingReport || isGeneratingHermeticReport) {
-      // Use real progress from active job if available, otherwise simulate
-      if (isGeneratingHermeticReport && hermeticJobProgress > 0) {
-        setHermeticProgress(hermeticJobProgress);
-      } else {
-        // Fallback simulation for legacy reports
-        const progressInterval = setInterval(() => {
-          setHermeticProgress(prev => {
-            if (prev >= 95) return 95;
-            return Math.min(prev + 1.5, 95);
-          });
-        }, 1500);
-        return () => clearInterval(progressInterval);
-      }
-    } else if (hasHermeticReport) {
+    console.log('🔄 HERMETIC PROGRESS UPDATE:', {
+      hasHermeticReport,
+      isGeneratingHermeticReport,
+      hermeticJobProgress,
+      currentHermeticProgress: hermeticProgress
+    });
+
+    // PRIORITY FIX: Always prioritize report completion over generation status
+    if (hasHermeticReport) {
       // Principle #7: Clear completion state - jump to 100% when report exists
+      console.log('✅ HERMETIC COMPLETE: Setting progress to 100%');
       setHermeticProgress(100);
       // Trigger dramatic radiant glow
       if (!showCompletionIndicator) {
@@ -219,8 +214,25 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           setShowRadiantGlow(false);
         }, 4000); // 4 seconds for full radiant glow
       }
+    } else if (isGeneratingReport || isGeneratingHermeticReport) {
+      // Use real progress from active job if available, otherwise simulate
+      if (isGeneratingHermeticReport && hermeticJobProgress > 0) {
+        console.log('📈 HERMETIC GENERATING: Using job progress', hermeticJobProgress);
+        setHermeticProgress(hermeticJobProgress);
+      } else {
+        // Fallback simulation for legacy reports
+        console.log('⏳ HERMETIC GENERATING: Using simulation');
+        const progressInterval = setInterval(() => {
+          setHermeticProgress(prev => {
+            if (prev >= 95) return 95;
+            return Math.min(prev + 1.5, 95);
+          });
+        }, 1500);
+        return () => clearInterval(progressInterval);
+      }
     } else {
       // Reset to baseline when not generating and no report
+      console.log('🔄 HERMETIC RESET: No generation, no report');
       setHermeticProgress(40);
       setShowCompletionIndicator(false);
       setShowRadiantGlow(false);
