@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -48,43 +48,28 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   // Add hermetic status hook
   const hermeticStatus = useHermeticReportStatus();
   const [purgeLoading, setPurgeLoading] = useState(false);
+  
+  // Add ref to prevent multiple simultaneous loads
+  const loadingRef = useRef(false);
 
   useEffect(() => {
     loadReport();
   }, [user]);
 
-  // Add synchronization effect for hermetic report status
+  // FIXED: Simplified synchronization effect with loading guards
   useEffect(() => {
-    console.log('🔄 Status sync check:', { 
-      hasReport: hermeticStatus.hasReport, 
-      hermeticReport: !!hermeticReport,
-      loading,
-      isGenerating: hermeticStatus.isGenerating 
-    });
-
-    // If status indicates report exists but we don't have it loaded, refresh
-    // FIXED: Removed !hermeticStatus.isGenerating condition that was preventing post-completion sync
-    if (hermeticStatus.hasReport && !hermeticReport && !loading) {
-      console.log('🔄 Status sync: Hermetic report detected but not loaded - refreshing...', {
-        hasReport: hermeticStatus.hasReport,
-        hermeticReportLoaded: !!hermeticReport,
-        loading,
-        isGenerating: hermeticStatus.isGenerating,
-        progress: hermeticStatus.progress
-      });
+    // Only sync when status changes from no report to has report
+    // and we don't already have the report loaded
+    if (hermeticStatus.hasReport && !hermeticReport && !loadingRef.current) {
+      console.log('🔄 Status sync: Hermetic report detected but not loaded - refreshing...');
       loadReport();
     }
-    
-    // Add completion-triggered refresh: If we just reached 100% progress, force a refresh
-    if (hermeticStatus.progress === 100 && hermeticStatus.hasReport && !hermeticReport && !loading) {
-      console.log('🎉 Completion-triggered refresh: Report completed at 100% - force loading');
-      loadReport();
-    }
-  }, [hermeticStatus.hasReport, hermeticReport, loading, hermeticStatus.isGenerating, hermeticStatus.progress]);
+  }, [hermeticStatus.hasReport, hermeticReport]); // Removed loading and progress from deps
 
   const loadReport = async () => {
-    if (!user) return;
+    if (!user || loadingRef.current) return;
     
+    loadingRef.current = true;
     setLoading(true);
     setError(null);
     
@@ -126,6 +111,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       console.error('💥 Error loading personality reports:', err);
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
   };
 
