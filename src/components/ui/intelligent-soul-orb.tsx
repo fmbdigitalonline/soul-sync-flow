@@ -20,6 +20,7 @@ interface IntelligentSoulOrbProps {
   hermeticProgress?: number; // 0-100 for hermetic report generation
   showHermeticProgress?: boolean;
   showRadiantGlow?: boolean;
+  milestoneGlow?: boolean; // For hermetic milestone celebrations
   // New subconscious orb props
   subconsciousMode?: 'dormant' | 'detecting' | 'pattern_found' | 'thinking' | 'advice_ready';
   patternDetected?: boolean;
@@ -42,6 +43,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   hermeticProgress = 0,
   showHermeticProgress = false,
   showRadiantGlow = false,
+  milestoneGlow = false,
   subconsciousMode = 'dormant',
   patternDetected = false,
   adviceReady = false,
@@ -303,13 +305,19 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
               scale: showRadiantGlow && hermeticProgress === 100 ? [1, 1.05, 1] : 1,
               filter: showRadiantGlow && hermeticProgress === 100 
                 ? ["drop-shadow(0 0 8px hsl(180 68% 55%))", "drop-shadow(0 0 16px hsl(180 68% 55%))"] 
+                : milestoneGlow
+                ? ["drop-shadow(0 0 6px hsl(180 68% 55%))", "drop-shadow(0 0 12px hsl(180 68% 55%))", "drop-shadow(0 0 6px hsl(180 68% 55%))"]
                 : "drop-shadow(0 0 4px hsl(180 68% 55% / 0.5))"
             }}
             transition={{ 
               duration: 0.8, 
               ease: "easeInOut",
               scale: showRadiantGlow && hermeticProgress === 100 ? { duration: 2, repeat: Infinity } : {},
-              filter: showRadiantGlow && hermeticProgress === 100 ? { duration: 2, repeat: Infinity } : {}
+              filter: showRadiantGlow && hermeticProgress === 100 
+                ? { duration: 2, repeat: Infinity } 
+                : milestoneGlow 
+                ? { duration: 1.5, repeat: 6, repeatType: "reverse" as const } // 10 seconds total (1.5s * 6 + reverses)
+                : {}
             }}
             style={{
               filter: "drop-shadow(0 0 4px hsl(180 68% 55% / 0.5))" // FORCED: Bright teal glow

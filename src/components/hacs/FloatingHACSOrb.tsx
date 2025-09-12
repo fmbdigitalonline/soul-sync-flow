@@ -53,6 +53,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [hermeticProgress, setHermeticProgress] = useState(40); // Start at 40% (blueprint completed)
   const [showCompletionIndicator, setShowCompletionIndicator] = useState(false);
   const [showRadiantGlow, setShowRadiantGlow] = useState(false);
+  const [previousHermeticProgress, setPreviousHermeticProgress] = useState(40);
+  const [milestoneGlow, setMilestoneGlow] = useState(false);
   
   // Enhanced feedback system
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -197,14 +199,27 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       hasHermeticReport,
       isGeneratingHermeticReport,
       hermeticJobProgress,
-      currentHermeticProgress: hermeticProgress
+      currentHermeticProgress: hermeticProgress,
+      previousProgress: previousHermeticProgress
     });
+
+    // CRITICAL FIX 1: Immediate reset on regeneration start
+    if (isGeneratingHermeticReport && hermeticJobProgress === 0) {
+      console.log('🔄 HERMETIC REGENERATION: Immediate reset to 0%');
+      setHermeticProgress(0);
+      setPreviousHermeticProgress(0);
+      setShowCompletionIndicator(false);
+      setShowRadiantGlow(false);
+      setMilestoneGlow(false);
+      return;
+    }
 
     // PRIORITY FIX: Always prioritize report completion over generation status
     if (hasHermeticReport) {
       // Principle #7: Clear completion state - jump to 100% when report exists
       console.log('✅ HERMETIC COMPLETE: Setting progress to 100%');
       setHermeticProgress(100);
+      setPreviousHermeticProgress(100);
       // Trigger dramatic radiant glow
       if (!showCompletionIndicator) {
         setShowCompletionIndicator(true);
@@ -214,18 +229,41 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           setShowRadiantGlow(false);
         }, 4000); // 4 seconds for full radiant glow
       }
-    } else if (isGeneratingReport || isGeneratingHermeticReport) {
-      // Use real progress from active job if available, otherwise simulate
-      if (isGeneratingHermeticReport && hermeticJobProgress > 0) {
+    } else if (isGeneratingHermeticReport) {
+      // CRITICAL FIX 2: Use real progress and detect milestones
+      if (hermeticJobProgress > 0) {
         console.log('📈 HERMETIC GENERATING: Using job progress', hermeticJobProgress);
+        
+        // CRITICAL FIX 3: Detect milestone completion (significant progress jumps)
+        const progressJump = hermeticJobProgress - previousHermeticProgress;
+        const isMilestone = progressJump >= 10 && hermeticJobProgress < 100; // 10%+ jump that's not completion
+        
+        if (isMilestone) {
+          console.log('🎉 HERMETIC MILESTONE: Progress jump detected', {
+            from: previousHermeticProgress,
+            to: hermeticJobProgress,
+            jump: progressJump
+          });
+          
+          // Trigger 10-second teal glow for milestone
+          setMilestoneGlow(true);
+          setTimeout(() => {
+            console.log('✨ HERMETIC MILESTONE: Glow complete');
+            setMilestoneGlow(false);
+          }, 10000); // 10 seconds for milestone glow
+        }
+        
         setHermeticProgress(hermeticJobProgress);
+        setPreviousHermeticProgress(hermeticJobProgress);
       } else {
         // Fallback simulation for legacy reports
         console.log('⏳ HERMETIC GENERATING: Using simulation');
         const progressInterval = setInterval(() => {
           setHermeticProgress(prev => {
             if (prev >= 95) return 95;
-            return Math.min(prev + 1.5, 95);
+            const newProgress = Math.min(prev + 1.5, 95);
+            setPreviousHermeticProgress(newProgress);
+            return newProgress;
           });
         }, 1500);
         return () => clearInterval(progressInterval);
@@ -234,10 +272,12 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       // Reset to baseline when not generating and no report
       console.log('🔄 HERMETIC RESET: No generation, no report');
       setHermeticProgress(40);
+      setPreviousHermeticProgress(40);
       setShowCompletionIndicator(false);
       setShowRadiantGlow(false);
+      setMilestoneGlow(false);
     }
-  }, [isGeneratingReport, isGeneratingHermeticReport, hermeticJobProgress, hasHermeticReport, showCompletionIndicator]);
+  }, [isGeneratingReport, isGeneratingHermeticReport, hermeticJobProgress, hasHermeticReport, showCompletionIndicator, previousHermeticProgress]);
 
   // Show speech bubble for questions or insights - click to show only
   useEffect(() => {
@@ -706,6 +746,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               hermeticProgress={hermeticProgress}
               showHermeticProgress={isGeneratingReport || isGeneratingHermeticReport || hasHermeticReport}
               showRadiantGlow={hasHermeticReport && hermeticProgress === 100}
+              milestoneGlow={milestoneGlow}
               onClick={handleOrbClick}
               className="shadow-lg hover:shadow-xl transition-shadow"
             />
