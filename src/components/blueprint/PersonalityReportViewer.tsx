@@ -282,8 +282,10 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         throw new Error('User not authenticated');
       }
       
-      // Call the RPC function to cleanup stuck jobs - using no params version
-      const { data, error } = await supabase.rpc('cleanup_stuck_hermetic_jobs');
+      // Call the RPC function to cleanup stuck jobs for the current user
+      const { data, error } = await supabase.rpc('cleanup_stuck_hermetic_jobs' as any, {
+        p_user_id: user.id
+      });
       
       if (error) throw error;
       
