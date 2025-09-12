@@ -53,6 +53,22 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     loadReport();
   }, [user]);
 
+  // Add synchronization effect for hermetic report status
+  useEffect(() => {
+    console.log('🔄 Status sync check:', { 
+      hasReport: hermeticStatus.hasReport, 
+      hermeticReport: !!hermeticReport,
+      loading,
+      isGenerating: hermeticStatus.isGenerating 
+    });
+
+    // If status indicates report exists but we don't have it loaded, refresh
+    if (hermeticStatus.hasReport && !hermeticReport && !loading && !hermeticStatus.isGenerating) {
+      console.log('🔄 Status sync: Hermetic report detected but not loaded - refreshing...');
+      loadReport();
+    }
+  }, [hermeticStatus.hasReport, hermeticReport, loading, hermeticStatus.isGenerating]);
+
   const loadReport = async () => {
     if (!user) return;
     
