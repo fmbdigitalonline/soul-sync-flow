@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, RotateCcw, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
+import { useSubconsciousOrb } from "@/hooks/use-subconscious-orb";
+import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
 
 import { supabase } from "@/integrations/supabase/client";
 import { HACSChatInterface } from "@/components/hacs/HACSChatInterface";
@@ -27,6 +29,18 @@ const Coach = () => {
     recordVFPGraphFeedback
   } = useHACSConversationAdapter("guide", "companion");
 
+  // Shadow detection integration
+  const {
+    orbState,
+    isEnabled: orbEnabled,
+    processMessage,
+    handleOrbClick,
+    subconsciousMode,
+    patternDetected,
+    adviceReady,
+    confidence
+  } = useSubconsciousOrb();
+
   // Removed duplicate authentication state - trusting ProtectedRoute
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -37,6 +51,12 @@ const Coach = () => {
 
   const handleSendMessage = async (message: string) => {
     await sendMessage(message);
+    
+    // Process message for shadow pattern detection
+    if (orbEnabled && message.trim()) {
+      const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      await processMessage(message, messageId);
+    }
   };
 
   const handleStopStreaming = () => {
@@ -55,19 +75,46 @@ const Coach = () => {
     });
   };
 
+  // Handle orb click for hermetic advice
+  const onOrbClick = () => {
+    const advice = handleOrbClick();
+    if (advice) {
+      toast({
+        title: "Shadow Insight",
+        description: advice,
+        duration: 8000,
+      });
+    }
+  };
+
   // Removed duplicate authentication check - component is wrapped in ProtectedRoute
 
   // Create the main chat interface component
   const chatInterface = (
-    <HACSChatInterface
-      messages={messages}
-      isLoading={isLoading}
-      isStreamingResponse={isStreamingResponse}
-      onSendMessage={handleSendMessage}
-      onStreamingComplete={markMessageStreamingComplete}
-      onStopStreaming={handleStopStreaming}
-      onFeedback={handleFeedback}
-    />
+    <div className="h-full relative">
+      {/* Shadow Detection Orb */}
+      <div className="absolute top-4 right-4 z-10">
+        <IntelligentSoulOrb
+          size="md"
+          subconsciousMode={subconsciousMode}
+          patternDetected={patternDetected}
+          adviceReady={adviceReady}
+          onClick={onOrbClick}
+          hermeticProgress={confidence}
+          showHermeticProgress={adviceReady}
+        />
+      </div>
+      
+      <HACSChatInterface
+        messages={messages}
+        isLoading={isLoading}
+        isStreamingResponse={isStreamingResponse}
+        onSendMessage={handleSendMessage}
+        onStreamingComplete={markMessageStreamingComplete}
+        onStopStreaming={handleStopStreaming}
+        onFeedback={handleFeedback}
+      />
+    </div>
   );
 
   const remindersContent = (
