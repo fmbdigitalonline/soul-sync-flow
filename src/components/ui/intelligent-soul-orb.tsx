@@ -294,33 +294,37 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             cy={ringSize[size] / 2}
             r={innerRadius}
             stroke="hsl(180 68% 55%)" // FORCED: Original bright teal #22D3EE
-            strokeWidth="1.5"
+            strokeWidth={hermeticProgress === 100 ? "2" : "1.5"}
             fill="transparent"
             strokeDasharray={innerStrokeDasharray}
             strokeDashoffset={innerStrokeDashoffset}
             strokeLinecap="round"
             initial={{ strokeDashoffset: innerCircumference }}
-            animate={{ 
+            animate={hermeticProgress === 100 ? {
               strokeDashoffset: innerStrokeDashoffset,
-              scale: showRadiantGlow && hermeticProgress === 100 ? [1, 1.05, 1] : 1,
-              filter: showRadiantGlow && hermeticProgress === 100 
-                ? ["drop-shadow(0 0 8px hsl(180 68% 55%))", "drop-shadow(0 0 16px hsl(180 68% 55%))"] 
-                : milestoneGlow
+              // Static ring - no animations when complete
+            } : { 
+              strokeDashoffset: innerStrokeDashoffset,
+              scale: showRadiantGlow ? [1, 1.05, 1] : 1,
+              filter: milestoneGlow
                 ? ["drop-shadow(0 0 6px hsl(180 68% 55%))", "drop-shadow(0 0 12px hsl(180 68% 55%))", "drop-shadow(0 0 6px hsl(180 68% 55%))"]
                 : "drop-shadow(0 0 4px hsl(180 68% 55% / 0.5))"
             }}
-            transition={{ 
+            transition={hermeticProgress === 100 ? {
+              duration: 0.8, 
+              ease: "easeInOut"
+            } : { 
               duration: 0.8, 
               ease: "easeInOut",
-              scale: showRadiantGlow && hermeticProgress === 100 ? { duration: 2, repeat: Infinity } : {},
-              filter: showRadiantGlow && hermeticProgress === 100 
-                ? { duration: 2, repeat: Infinity } 
-                : milestoneGlow 
-                ? { duration: 1.5, repeat: 6, repeatType: "reverse" as const } // 10 seconds total (1.5s * 6 + reverses)
+              scale: showRadiantGlow ? { duration: 2, repeat: Infinity } : {},
+              filter: milestoneGlow 
+                ? { duration: 1.5, repeat: 6, repeatType: "reverse" as const } 
                 : {}
             }}
             style={{
-              filter: "drop-shadow(0 0 4px hsl(180 68% 55% / 0.5))" // FORCED: Bright teal glow
+              filter: hermeticProgress === 100 
+                ? "drop-shadow(0 0 6px hsl(180 68% 55% / 0.8))" // Static glow for 100%
+                : "drop-shadow(0 0 4px hsl(180 68% 55% / 0.5))" // FORCED: Bright teal glow
             }}
           />
         </svg>

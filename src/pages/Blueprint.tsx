@@ -5,6 +5,7 @@ import SimplifiedBlueprintViewer from "@/components/blueprint/SimplifiedBlueprin
 import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
 import { BlueprintHealthCheck } from "@/components/blueprint/BlueprintHealthCheck";
 import PersonalityReportViewer from "@/components/blueprint/PersonalityReportViewer";
+import TriggerRecovery from "@/components/blueprint/TriggerRecovery";
 import { Button } from "@/components/ui/button";
 import { Loader2, MessageCircle, RefreshCw, Activity, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -372,6 +373,7 @@ const Blueprint = () => {
     setActiveTab("view");
   };
   return <MainLayout>
+      <TriggerRecovery />
       <div className={`w-full ${spacing.container} pb-20 mobile-container`}>
         {/* Header with proper typography hierarchy */}
         <div className={`flex flex-col ${spacing.gap} mb-6 w-full max-w-full`}>

@@ -98,6 +98,30 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         console.log('📊 Hermetic word count:', hermeticResult.report.report_content.word_count);
         console.log('📅 Hermetic report generated:', hermeticResult.report.generated_at);
         console.log('🆔 Hermetic report ID:', hermeticResult.report.id);
+      } else {
+        // If no hermetic report found, try recovery process for completed jobs
+        console.log('[PersonalityReportViewer] No hermetic report found, attempting recovery...');
+        try {
+          const { hermeticRecoveryService } = await import('@/services/hermetic-recovery-service');
+          const recoveryResult = await hermeticRecoveryService.triggerRecoveryForUser(user.id);
+          
+          if (recoveryResult.success) {
+            console.log('[PersonalityReportViewer] Recovery successful, retrying report fetch...');
+            // Retry loading the report after recovery
+            const retryResult = await hermeticPersonalityReportService.getHermeticReport(user.id);
+            if (retryResult.success && retryResult.report) {
+              setHermeticReport(retryResult.report);
+              console.log('🌟 Hermetic report loaded successfully after recovery');
+              console.log('📊 Hermetic word count:', retryResult.report.report_content.word_count);
+            } else {
+              console.log('[PersonalityReportViewer] Recovery completed but report still not available');
+            }
+          } else {
+            console.log('[PersonalityReportViewer] Recovery failed:', recoveryResult.error);
+          }
+        } catch (recoveryError) {
+          console.error('[PersonalityReportViewer] Recovery process error:', recoveryError);
+        }
       }
       
       // Determine error state
