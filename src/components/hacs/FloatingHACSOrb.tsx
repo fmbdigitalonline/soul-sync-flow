@@ -337,8 +337,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     startIntroduction
   ]);
 
-  // 🔒 INSIGHTS DISABLED - Replaced with shadow detection system
-  const AUTO_INSIGHTS_ENABLED = false; // Disabled in favor of shadow detection
+  // ✅ INSIGHTS ACTIVATED - Feature flag for automatic insight generation
+  const AUTO_INSIGHTS_ENABLED = true; // Activated to enable red exclamation notifications
   
   // Phase 3: Enhanced autonomous triggers with advanced intelligence integration
   useEffect(() => {
