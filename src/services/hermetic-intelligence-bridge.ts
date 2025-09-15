@@ -12,6 +12,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { HermeticStructuredIntelligence } from '@/types/hermetic-intelligence';
 import { semanticMemoryService } from './semantic-memory-service';
+import { hermeticReportAccessService } from './hermetic-report-access-service';
 
 export interface HermeticCompanionContext {
   // Core Intelligence Dimensions (13 analysts)
@@ -24,6 +25,16 @@ export interface HermeticCompanionContext {
     confidence: number;
     similarity?: number;
   }>;
+  
+  // Full Hermetic 2.0 Report Access (NEW - ADDITIVE)
+  fullHermeticReport: Record<string, any>;
+  relevantReportSections: string[];
+  reportMetadata: {
+    totalSections: number;
+    contentLength: number;
+    version: string;
+    generatedAt: string;
+  };
   
   // Aggregated Personality Insights
   personalityContext: {
@@ -85,15 +96,20 @@ class HermeticIntelligenceBridge {
         return cached.data;
       }
 
-      // Load fresh hermetic intelligence data
-      const [structuredIntelligence, semanticChunks] = await Promise.all([
+      // Load fresh hermetic intelligence data AND full report context
+      const [structuredIntelligence, semanticChunks, fullReportSections] = await Promise.all([
         this.loadStructuredIntelligence(userId),
-        userMessage ? this.getSemanticBlueprintChunks(userId, userMessage, maxSemanticChunks) : []
+        userMessage ? this.getSemanticBlueprintChunks(userId, userMessage, maxSemanticChunks) : [],
+        this.getFullReportContext(userId, userMessage)
       ]);
 
       const context: HermeticCompanionContext = {
         structuredIntelligence,
         semanticBlueprintChunks: semanticChunks,
+        // NEW: Full report access
+        fullHermeticReport: fullReportSections.sections,
+        relevantReportSections: Object.keys(fullReportSections.sections),
+        reportMetadata: fullReportSections.metadata,
         personalityContext: this.aggregatePersonalityContext(structuredIntelligence),
         extractionMetadata: this.extractMetadata(structuredIntelligence)
       };
@@ -105,7 +121,11 @@ class HermeticIntelligenceBridge {
         hasStructuredIntelligence: !!structuredIntelligence,
         dimensionsAvailable: structuredIntelligence ? Object.keys(structuredIntelligence).length : 0,
         semanticChunks: semanticChunks.length,
-        personalityInsights: context.personalityContext.coreNarratives.length
+        personalityInsights: context.personalityContext.coreNarratives.length,
+        // NEW: Full report metrics
+        fullReportSections: context.relevantReportSections.length,
+        reportContentLength: context.reportMetadata.contentLength,
+        reportVersion: context.reportMetadata.version
       });
 
       return context;
@@ -116,6 +136,15 @@ class HermeticIntelligenceBridge {
       return {
         structuredIntelligence: null,
         semanticBlueprintChunks: [],
+        // NEW: Empty full report context on error
+        fullHermeticReport: {},
+        relevantReportSections: [],
+        reportMetadata: {
+          totalSections: 0,
+          contentLength: 0,
+          version: 'error',
+          generatedAt: new Date().toISOString()
+        },
         personalityContext: {
           coreNarratives: [],
           dominantPatterns: [],
@@ -342,10 +371,107 @@ class HermeticIntelligenceBridge {
   }
 
   /**
+   * Get full report context with intelligent section selection
+   * NEW METHOD - ADDITIVE ENHANCEMENT
+   */
+  private async getFullReportContext(userId: string, userMessage?: string): Promise<{
+    sections: Record<string, any>;
+    metadata: { totalSections: number; contentLength: number; version: string; generatedAt: string };
+  }> {
+    try {
+      // Detect conversation topic from user message
+      const conversationTopic = this.detectConversationTopic(userMessage);
+      
+      // Get relevant sections from full report
+      const relevantSections = await hermeticReportAccessService.getRelevantSections(userId, {
+        conversationTopic,
+        maxTokens: 6000, // Reasonable token budget for companion context
+        includeMetadata: true
+      });
+
+      // Convert to simple content format for companion
+      const sections: Record<string, any> = {};
+      let totalContentLength = 0;
+
+      Object.entries(relevantSections).forEach(([sectionName, sectionData]) => {
+        sections[sectionName] = sectionData.content;
+        totalContentLength += sectionData.content.length;
+      });
+
+      console.log('✅ HERMETIC BRIDGE: Full report context prepared', {
+        sectionsSelected: Object.keys(sections).length,
+        contentLength: totalContentLength,
+        conversationTopic
+      });
+
+      return {
+        sections,
+        metadata: {
+          totalSections: Object.keys(sections).length,
+          contentLength: totalContentLength,
+          version: '2.0',
+          generatedAt: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      console.error('❌ Error getting full report context:', error);
+      return {
+        sections: {},
+        metadata: {
+          totalSections: 0,
+          contentLength: 0,
+          version: 'error',
+          generatedAt: new Date().toISOString()
+        }
+      };
+    }
+  }
+
+  /**
+   * Detect conversation topic from user message for intelligent section selection
+   * NEW METHOD - ADDITIVE ENHANCEMENT
+   */
+  private detectConversationTopic(userMessage?: string): string | undefined {
+    if (!userMessage) return undefined;
+
+    const message = userMessage.toLowerCase();
+    
+    // Topic detection keywords
+    if (message.includes('relationship') || message.includes('love') || message.includes('dating') || message.includes('partner')) {
+      return 'relationship';
+    }
+    if (message.includes('purpose') || message.includes('calling') || message.includes('mission') || message.includes('career')) {
+      return 'purpose';
+    }
+    if (message.includes('spiritual') || message.includes('consciousness') || message.includes('awakening') || message.includes('meditation')) {
+      return 'spirituality';
+    }
+    if (message.includes('growth') || message.includes('develop') || message.includes('evolve') || message.includes('improve')) {
+      return 'growth';
+    }
+    if (message.includes('decision') || message.includes('choose') || message.includes('choice') || message.includes('decide')) {
+      return 'decisions';
+    }
+    if (message.includes('energy') || message.includes('timing') || message.includes('when') || message.includes('optimal')) {
+      return 'energy';
+    }
+    if (message.includes('pattern') || message.includes('behavior') || message.includes('tendency') || message.includes('habit')) {
+      return 'patterns';
+    }
+    if (message.includes('shadow') || message.includes('struggle') || message.includes('challenge') || message.includes('weakness')) {
+      return 'shadow';
+    }
+
+    return undefined;
+  }
+
+  /**
    * Clear cache for a specific user (e.g., after new intelligence extraction)
    */
   clearCache(userId: string): void {
     this.cache.delete(userId);
+    // Also clear report access service cache
+    hermeticReportAccessService.clearCache(userId);
     console.log('🗑️ HERMETIC BRIDGE: Cache cleared for user:', userId);
   }
 

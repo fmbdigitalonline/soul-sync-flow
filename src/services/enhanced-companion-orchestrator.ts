@@ -275,15 +275,15 @@ export class EnhancedCompanionOrchestrator {
   }
 
   /**
-   * Build comprehensive personality context from Hermetic intelligence
-   * NEW METHOD - ADDITIVE ENHANCEMENT
+   * Build comprehensive personality context from Hermetic intelligence AND full report
+   * ENHANCED METHOD - Now includes full 18-section Hermetic 2.0 report context
    */
   private buildComprehensivePersonalityContext(
     hermeticContext: HermeticCompanionContext,
     fallbackPersonalityContext: string,
     fallbackSemanticChunks: string[]
   ): string {
-    if (!hermeticContext.structuredIntelligence) {
+    if (!hermeticContext.structuredIntelligence && Object.keys(hermeticContext.fullHermeticReport).length === 0) {
       // Fallback to existing context if no hermetic intelligence
       const chunks = fallbackSemanticChunks.length > 0 ? 
         `\n\nBlueprint Context:\n${fallbackSemanticChunks.join('\n')}` : '';
@@ -292,8 +292,9 @@ export class EnhancedCompanionOrchestrator {
 
     const personality = hermeticContext.personalityContext;
     const blueprintChunks = hermeticContext.semanticBlueprintChunks;
+    const fullReport = hermeticContext.fullHermeticReport;
 
-    let context = `## Comprehensive Personality Profile (${hermeticContext.extractionMetadata.dimensionsExtracted}/13 dimensions):
+    let context = `## Comprehensive Soul Profile (${hermeticContext.extractionMetadata.dimensionsExtracted}/13 analysts + ${hermeticContext.relevantReportSections.length} report sections):
 
 **Core Identity Narratives:**
 ${personality.coreNarratives.slice(0, 3).map(n => `• ${n}`).join('\n')}
@@ -317,18 +318,107 @@ ${personality.adaptationStyle.slice(0, 2).map(s => `• ${s}`).join('\n')}`;
 ${personality.conflictAreas.slice(0, 2).map(c => `• ${c}`).join('\n')}`;
     }
 
-    // Add semantic blueprint chunks
-    if (blueprintChunks.length > 0) {
-      context += `\n\n**Relevant Blueprint Context:**`;
-      blueprintChunks.slice(0, 4).forEach((chunk, i) => {
-        context += `\n${i + 1}. [${chunk.facet}] ${chunk.content.substring(0, 150)}${chunk.content.length > 150 ? '...' : ''}`;
+    // NEW: Add full Hermetic 2.0 report sections for deeper context
+    if (Object.keys(fullReport).length > 0) {
+      context += `\n\n## Deep Hermetic Intelligence Context:`;
+      
+      // Prioritize key sections for context
+      const prioritySections = ['integrated_summary', 'life_path_purpose', 'consciousness_integration_map', 'core_personality_pattern'];
+      const availablePrioritySections = prioritySections.filter(section => fullReport[section]);
+      
+      availablePrioritySections.forEach(sectionName => {
+        const sectionContent = this.extractSectionSummary(fullReport[sectionName]);
+        if (sectionContent) {
+          context += `\n\n**${this.formatSectionName(sectionName)}:**\n${sectionContent}`;
+        }
+      });
+
+      // Add other available sections (truncated)
+      const otherSections = Object.keys(fullReport).filter(section => 
+        !prioritySections.includes(section) && fullReport[section]
+      ).slice(0, 3);
+
+      otherSections.forEach(sectionName => {
+        const sectionContent = this.extractSectionSummary(fullReport[sectionName], 200);
+        if (sectionContent) {
+          context += `\n\n**${this.formatSectionName(sectionName)}:** ${sectionContent}`;
+        }
       });
     }
 
-    // Add extraction metadata
-    context += `\n\n*Intelligence extracted with ${(hermeticContext.extractionMetadata.confidence * 100).toFixed(0)}% confidence*`;
+    // Add semantic blueprint chunks
+    if (blueprintChunks.length > 0) {
+      context += `\n\n**Relevant Blueprint Context:**`;
+      blueprintChunks.slice(0, 3).forEach((chunk, i) => {
+        context += `\n${i + 1}. [${chunk.facet}] ${chunk.content.substring(0, 120)}${chunk.content.length > 120 ? '...' : ''}`;
+      });
+    }
+
+    // Add enhanced metadata
+    context += `\n\n*Soul Intelligence: ${(hermeticContext.extractionMetadata.confidence * 100).toFixed(0)}% confidence • ${hermeticContext.reportMetadata.totalSections} report sections • ${Math.round(hermeticContext.reportMetadata.contentLength / 1000)}K characters*`;
 
     return context;
+  }
+
+  /**
+   * Extract summary from section content
+   * NEW METHOD - Helper for full report integration
+   */
+  private extractSectionSummary(sectionData: any, maxLength: number = 400): string {
+    if (typeof sectionData === 'string') {
+      return sectionData.length > maxLength ? sectionData.substring(0, maxLength) + '...' : sectionData;
+    }
+
+    if (typeof sectionData === 'object' && sectionData !== null) {
+      // Look for summary fields first
+      if (sectionData.summary) return this.truncateContent(sectionData.summary, maxLength);
+      if (sectionData.overview) return this.truncateContent(sectionData.overview, maxLength);
+      if (sectionData.description) return this.truncateContent(sectionData.description, maxLength);
+      if (sectionData.content) return this.truncateContent(sectionData.content, maxLength);
+      
+      // Extract key insights or main points
+      if (sectionData.key_insights && Array.isArray(sectionData.key_insights)) {
+        return sectionData.key_insights.slice(0, 3).join('. ');
+      }
+      if (sectionData.main_points && Array.isArray(sectionData.main_points)) {
+        return sectionData.main_points.slice(0, 3).join('. ');
+      }
+      
+      // Fallback to formatted object
+      const formatted = JSON.stringify(sectionData, null, 2);
+      return this.truncateContent(formatted, maxLength);
+    }
+
+    return String(sectionData);
+  }
+
+  /**
+   * Format section name for display
+   * NEW METHOD - Helper for full report integration
+   */
+  private formatSectionName(sectionName: string): string {
+    return sectionName
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  /**
+   * Truncate content intelligently
+   * NEW METHOD - Helper for content management
+   */
+  private truncateContent(content: string, maxLength: number): string {
+    if (content.length <= maxLength) return content;
+    
+    // Try to truncate at sentence boundary
+    const truncated = content.substring(0, maxLength);
+    const lastSentence = truncated.lastIndexOf('.');
+    
+    if (lastSentence > maxLength * 0.7) {
+      return truncated.substring(0, lastSentence + 1);
+    }
+    
+    return truncated + '...';
   }
 
   /**
