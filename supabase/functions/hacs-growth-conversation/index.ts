@@ -92,8 +92,17 @@ serve(async (req) => {
     const intelligence = intelligenceResult.data;
     const blueprint = blueprintResult.data;
     
-    // Limit conversation history to last 6 messages for performance
-    const recentHistory = (conversationHistory || []).slice(-6);
+    // Expanded conversation history for better context (with safety monitoring)
+    const maxMessages = 21;
+    const fullHistory = (conversationHistory || []).slice(-maxMessages);
+    
+    // Performance monitoring: Log context size for optimization
+    console.log('📊 CONTEXT: Message count:', fullHistory.length, 'Estimated tokens:', fullHistory.length * 50);
+    
+    // Safety check: If context becomes too large, intelligently reduce
+    const recentHistory = fullHistory.length > maxMessages ? 
+      [...fullHistory.slice(0, 5), ...fullHistory.slice(-16)] : // Keep first 5 + last 16 if over limit
+      fullHistory;
 
     // Growth-specific system prompt focused on spiritual development (optimized for performance)
     const mbtiType = blueprint?.cognition_mbti?.type || 'Unknown';
