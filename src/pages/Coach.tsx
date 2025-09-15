@@ -18,7 +18,7 @@ import { useSubconsciousOrb } from "@/hooks/use-subconscious-orb";
 import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
 import { AnimatePresence } from "framer-motion";
 import { motion } from "@/lib/framer-motion";
-import { ShadowInsightDisplay } from "@/components/hacs/ShadowInsightDisplay";
+
 
 const Coach = () => {
   const {
@@ -127,39 +127,21 @@ const Coach = () => {
           <Zap className="h-4 w-4 mr-2" />
           Shadow Detection
         </h3>
-        <div className="flex items-center justify-center mb-3">
+        <div className="flex items-center justify-center">
           <IntelligentSoulOrb
             size="md"
-            stage={subconsciousMode === 'dormant' ? 'welcome' : 
-                   subconsciousMode === 'detecting' ? 'collecting' : 
-                   subconsciousMode === 'thinking' ? 'generating' : 'complete'}
+            subconsciousMode={subconsciousMode}
             speaking={subconsciousMode === 'thinking'}
             pulse={patternDetected}
             onClick={handleOrbInteraction}
             className="cursor-pointer"
+            intelligenceLevel={confidence}
+            hermeticProgress={adviceReady ? 100 : (subconsciousMode === 'thinking' ? 50 : 0)}
+            showHermeticProgress={subconsciousMode !== 'dormant'}
+            showRadiantGlow={patternDetected}
+            milestoneGlow={adviceReady}
+            showIntelligenceTooltip={true}
           />
-        </div>
-        
-        {/* Shadow Detection Status */}
-        <div className="text-center space-y-1">
-          <p className="text-xs text-muted-foreground capitalize">
-            {subconsciousMode}
-          </p>
-          {patternDetected && (
-            <p className="text-xs text-primary">
-              Pattern: {orbState.pattern?.type}
-            </p>
-          )}
-          {confidence > 0 && (
-            <p className="text-xs text-muted-foreground">
-              Confidence: {Math.round(confidence)}%
-            </p>
-          )}
-          {adviceReady && (
-            <p className="text-xs text-accent animate-pulse">
-              Hermetic insight ready - Click orb
-            </p>
-          )}
         </div>
       </CosmicCard>
       
@@ -218,18 +200,6 @@ const Coach = () => {
           )}
         </div>
         
-        {/* Shadow Insight Display */}
-        {showShadowInsight && (
-          <ShadowInsightDisplay
-            pattern={orbState.pattern}
-            hermeticAdvice={orbState.hermeticAdvice}
-            confidence={confidence}
-            processingTime={processingTime}
-            onAcknowledge={handleAcknowledgeInsight}
-            onDismiss={handleDismissInsight}
-            position="bottom-right"
-          />
-        )}
       </div>
     </MainLayout>
   );
