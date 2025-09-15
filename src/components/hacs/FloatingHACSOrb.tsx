@@ -29,6 +29,7 @@ import { usePIEEnhancedCoach } from '@/hooks/use-pie-enhanced-coach';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEnhancedFeedbackSystem } from '@/hooks/use-enhanced-feedback-system';
 import { EnhancedFeedbackModal } from '@/components/feedback/EnhancedFeedbackModal';
+import { useSubconsciousOrb } from '@/hooks/use-subconscious-orb';
 // Phase 1: Critical Error Recovery
 import { 
   HACSErrorBoundary, 
@@ -145,6 +146,15 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   // Language and feedback integration
   const { language, t } = useLanguage();
   const enhancedFeedback = useEnhancedFeedbackSystem();
+  
+  // Shadow detection integration
+  const { 
+    handleOrbClick: handleShadowClick, 
+    subconsciousMode, 
+    patternDetected, 
+    adviceReady,
+    confidence: shadowConfidence 
+  } = useSubconsciousOrb();
 
   console.log('FloatingHACSOrb render:', { 
     loading, 
@@ -563,17 +573,37 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const handleOrbClick = () => {
     console.log('🎯 FloatingHACSOrb: Orb clicked', {
       hasCurrentQuestion: !!currentQuestion,
-      hasUnacknowledgedInsight: !!(currentInsight && !currentInsight.acknowledged)
+      hasUnacknowledgedInsight: !!(currentInsight && !currentInsight.acknowledged),
+      adviceReady,
+      patternDetected
     });
 
-    // Priority 1: Show unacknowledged insight if available
+    // Priority 1: Show shadow advice if available
+    if (adviceReady) {
+      const shadowAdvice = handleShadowClick();
+      if (shadowAdvice) {
+        console.log('🎯 FloatingHACSOrb: Showing shadow advice');
+        // Use toast to show shadow advice
+        import('@/hooks/use-toast').then(({ useToast }) => {
+          const { toast } = useToast();
+          toast({
+            title: "Shadow Insight",
+            description: shadowAdvice,
+            duration: 8000,
+          });
+        });
+        return;
+      }
+    }
+
+    // Priority 2: Show unacknowledged insight if available
     if (currentInsight && !currentInsight.acknowledged) {
       console.log('🎯 FloatingHACSOrb: Showing pending insight');
       setShowInsightDisplay(true);
       return;
     }
 
-    // Priority 2: Show micro learning for pending questions
+    // Priority 3: Show micro learning for pending questions
     if (currentQuestion) {
       console.log('🎯 FloatingHACSOrb: Opening micro learning for question');
       setShowMicroLearning(true);
@@ -581,7 +611,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       return;
     }
 
-    // Priority 3: Default to chat interface
+    // Priority 4: Default to chat interface
     console.log('🎯 FloatingHACSOrb: Opening chat interface');
     setShowChat(true);
   };
@@ -747,6 +777,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               showHermeticProgress={isGeneratingReport || isGeneratingHermeticReport || hasHermeticReport}
               showRadiantGlow={hasHermeticReport && hermeticProgress === 100}
               milestoneGlow={milestoneGlow}
+              subconsciousMode={subconsciousMode}
+              patternDetected={patternDetected}
+              adviceReady={adviceReady}
               onClick={handleOrbClick}
               className="shadow-lg hover:shadow-xl transition-shadow"
             />
