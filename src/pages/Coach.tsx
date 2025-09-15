@@ -14,6 +14,11 @@ import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { useSubconsciousOrb } from "@/hooks/use-subconscious-orb";
+import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
+import { AnimatePresence } from "framer-motion";
+import { motion } from "@/lib/framer-motion";
+import { ShadowInsightDisplay } from "@/components/hacs/ShadowInsightDisplay";
 
 const Coach = () => {
   const {
@@ -27,7 +32,22 @@ const Coach = () => {
     recordVFPGraphFeedback
   } = useHACSConversationAdapter("guide", "companion");
 
-  // Removed duplicate authentication state - trusting ProtectedRoute
+  // Shadow detection integration
+  const {
+    orbState,
+    isEnabled: orbEnabled,
+    processMessage: processShadowMessage,
+    handleOrbClick,
+    subconsciousMode,
+    patternDetected,
+    adviceReady,
+    confidence,
+    processingTime
+  } = useSubconsciousOrb();
+
+  // State for shadow insight display
+  const [showShadowInsight, setShowShadowInsight] = useState(false);
+
   const { toast } = useToast();
   const { t } = useLanguage();
   
@@ -36,7 +56,15 @@ const Coach = () => {
   // Removed duplicate authentication logic - trusting ProtectedRoute wrapper
 
   const handleSendMessage = async (message: string) => {
+    // Send message through HACS conversation system
     await sendMessage(message);
+    
+    // Process through shadow detection system
+    if (orbEnabled && message.trim()) {
+      // Generate a unique message ID for shadow processing
+      const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      await processShadowMessage(message, messageId);
+    }
   };
 
   const handleStopStreaming = () => {
@@ -45,6 +73,25 @@ const Coach = () => {
 
   const handleFeedback = (messageId: string, isPositive: boolean) => {
     recordVFPGraphFeedback(messageId, isPositive);
+  };
+
+  const handleOrbInteraction = () => {
+    if (!orbEnabled || !adviceReady) return;
+    
+    setShowShadowInsight(true);
+  };
+
+  const handleAcknowledgeInsight = () => {
+    setShowShadowInsight(false);
+    toast({
+      title: "Shadow Pattern Integrated",
+      description: "Hermetic wisdom has been integrated into your awareness.",
+      duration: 4000,
+    });
+  };
+
+  const handleDismissInsight = () => {
+    setShowShadowInsight(false);
   };
 
   const handleReset = () => {
@@ -74,6 +121,48 @@ const Coach = () => {
     <div className="space-y-4 h-full">
       <ActiveReminders />
       
+      {/* Shadow Detection Orb */}
+      <CosmicCard className="p-4">
+        <h3 className="font-semibold mb-3 flex items-center">
+          <Zap className="h-4 w-4 mr-2" />
+          Shadow Detection
+        </h3>
+        <div className="flex items-center justify-center mb-3">
+          <IntelligentSoulOrb
+            size="md"
+            stage={subconsciousMode === 'dormant' ? 'welcome' : 
+                   subconsciousMode === 'detecting' ? 'collecting' : 
+                   subconsciousMode === 'thinking' ? 'generating' : 'complete'}
+            speaking={subconsciousMode === 'thinking'}
+            pulse={patternDetected}
+            onClick={handleOrbInteraction}
+            className="cursor-pointer"
+          />
+        </div>
+        
+        {/* Shadow Detection Status */}
+        <div className="text-center space-y-1">
+          <p className="text-xs text-muted-foreground capitalize">
+            {subconsciousMode}
+          </p>
+          {patternDetected && (
+            <p className="text-xs text-primary">
+              Pattern: {orbState.pattern?.type}
+            </p>
+          )}
+          {confidence > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Confidence: {Math.round(confidence)}%
+            </p>
+          )}
+          {adviceReady && (
+            <p className="text-xs text-accent animate-pulse">
+              Hermetic insight ready - Click orb
+            </p>
+          )}
+        </div>
+      </CosmicCard>
+      
       <CosmicCard className="p-4">
         <h3 className="font-semibold mb-3 flex items-center">
           <RotateCcw className="h-4 w-4 mr-2" />
@@ -88,8 +177,6 @@ const Coach = () => {
           {t('companion.clearConversation')}
         </Button>
       </CosmicCard>
-
-
     </div>
   );
 
@@ -131,6 +218,18 @@ const Coach = () => {
           )}
         </div>
         
+        {/* Shadow Insight Display */}
+        {showShadowInsight && (
+          <ShadowInsightDisplay
+            pattern={orbState.pattern}
+            hermeticAdvice={orbState.hermeticAdvice}
+            confidence={confidence}
+            processingTime={processingTime}
+            onAcknowledge={handleAcknowledgeInsight}
+            onDismiss={handleDismissInsight}
+            position="bottom-right"
+          />
+        )}
       </div>
     </MainLayout>
   );
