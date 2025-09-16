@@ -279,10 +279,10 @@ const translations: Record<Language, Translations> = {
       welcomeBack: 'Welcome Back',
       startJourney: 'Begin your personalized spiritual journey',
       continueJourney: 'Continue your spiritual growth journey',
-      funnelReportReady: 'Your Soul Report is Ready!',
+      funnelReportReady: 'Your Soul Guide Awaits!',
       createYourAccount: 'Create Your Account',
-      accessPersonalizedBlueprint: 'Access your personalized life transformation blueprint',
-      completeAccountMessage: 'Complete your account to access your personalized insights and blueprint.',
+      accessPersonalizedBlueprint: 'Create your Soul Report and connect with your Soul Guide',
+      completeAccountMessage: 'Create your account to build your Soul Report and meet your personal Soul Guide.',
       accountCreatedWithBlueprint: 'Account created! Let\'s build your personalized blueprint based on your assessment.',
       email: 'Email',
       password: 'Password',
@@ -446,7 +446,7 @@ const translations: Record<Language, Translations> = {
       stepOf: 'Step {current} of {total}',
       back: 'Back',
       continue: 'Next',
-      getReport: 'See My Soul Report',
+      getReport: 'Begin My Soul Journey',
 
       // Step 1: Core Struggle
       painPoint: {
@@ -508,8 +508,8 @@ const translations: Record<Language, Translations> = {
         title: 'Imagine your best life…',
         subtitle: 'If everything clicked into place, what would it look like?',
         placeholder: 'Write a few lines about your dream life in flow…',
-        personalizedRoadmap: 'Your personalized Soul Report is almost ready.',
-        reportAwaits: '✨ Your Soul Report is waiting for you ✨'
+        personalizedRoadmap: 'Ready to create your personalized Soul Report and meet your Soul Guide?',
+        reportAwaits: '✨ Your Soul Guide is ready to meet you ✨'
       }
     },
     
@@ -1782,10 +1782,10 @@ const translations: Record<Language, Translations> = {
       welcomeBack: 'Welkom Terug',
       startJourney: 'Begin je gepersonaliseerde spirituele reis',
       continueJourney: 'Zet je spirituele groeireis voort',
-      funnelReportReady: 'Je Soul Rapport is Klaar!',
+      funnelReportReady: 'Je Soul Guide Wacht!',
       createYourAccount: 'Maak Je Account Aan',
-      accessPersonalizedBlueprint: 'Krijg toegang tot je gepersonaliseerde levenstransformatie blauwdruk',
-      completeAccountMessage: 'Voltooi je account om toegang te krijgen tot je gepersonaliseerde inzichten en blauwdruk.',
+      accessPersonalizedBlueprint: 'Maak je Soul Rapport en verbind met je Soul Guide',
+      completeAccountMessage: 'Maak je account aan om je Soul Rapport te bouwen en je persoonlijke Soul Guide te ontmoeten.',
       accountCreatedWithBlueprint: 'Account aangemaakt! Laten we je gepersonaliseerde blauwdruk bouwen op basis van je beoordeling.',
       email: 'E-mail',
       password: 'Wachtwoord',
@@ -1948,7 +1948,7 @@ const translations: Record<Language, Translations> = {
       stepOf: 'Stap {current} van {total}',
       back: 'Terug',
       continue: 'Volgende',
-      getReport: 'Bekijk Mijn Soul Rapport',
+      getReport: 'Begin Mijn Soul Reis',
 
       // Step 1: Core Struggle
       painPoint: {
@@ -2010,8 +2010,8 @@ const translations: Record<Language, Translations> = {
         title: 'Stel je je beste leven voor…',
         subtitle: 'Als alles op zijn plaats zou vallen, hoe zou dat eruit zien?',
         placeholder: 'Schrijf een paar regels over je droomleven in flow…',
-        personalizedRoadmap: 'Je gepersonaliseerde Soul Rapport is bijna klaar.',
-        reportAwaits: '✨ Je Soul Rapport wacht op je ✨'
+        personalizedRoadmap: 'Klaar om je gepersonaliseerde Soul Rapport te maken en je Soul Guide te ontmoeten?',
+        reportAwaits: '✨ Je Soul Guide is klaar om je te ontmoeten ✨'
       }
     },
     
