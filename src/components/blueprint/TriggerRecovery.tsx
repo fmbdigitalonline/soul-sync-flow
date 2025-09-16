@@ -21,11 +21,7 @@ const TriggerRecovery: React.FC = () => {
         if (data?.success) {
           console.log('🎉 Recovery successful! Report created with ID:', data.report_id);
           console.log('📊 Report word count:', data.word_count);
-          // Refresh the page to see the updated data
-          setTimeout(() => {
-            console.log('🔄 Refreshing page to show new report...');
-            window.location.reload();
-          }, 2000);
+          console.log('✅ Recovery completed - check report tab for updated content');
         } else {
           console.error('❌ Recovery unsuccessful:', data?.error);
         }

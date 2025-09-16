@@ -154,11 +154,13 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (intelligenceLevel / 100) * circumference;
 
-  // Calculate circumference for inner progress ring (hermetic)
+  // Calculate circumference for inner progress ring (hermetic) - with 40% baseline
   const innerRadius = radius * 0.7; // 70% of outer radius
   const innerCircumference = 2 * Math.PI * innerRadius;
   const innerStrokeDasharray = innerCircumference;
-  const innerStrokeDashoffset = innerCircumference - (hermeticProgress / 100) * innerCircumference;
+  // Start from 40% baseline, progress to 100%
+  const hermeticBaselineProgress = Math.max(0, Math.min(100, (hermeticProgress / 100) * 60 + 40));
+  const innerStrokeDashoffset = innerCircumference - (hermeticBaselineProgress / 100) * innerCircumference;
 
   // Initialize particles with intelligence-based count
   useEffect(() => {
@@ -181,13 +183,35 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
     setParticles(newParticles);
   }, [intelligenceLevel]);
    
-  // Animation loop for particles
+  // Animation loop for particles - optimized with pause conditions
   useEffect(() => {
     if (!orbRef.current) return;
     
     let animationId: number;
+    let isActive = true;
+    
+    const shouldAnimate = () => {
+      // Pause animations when:
+      // 1. Not speaking and intelligence is maxed
+      // 2. Hermetic progress is complete and not glowing
+      // 3. Subconscious mode is dormant
+      if (!speaking && intelligenceLevel >= 100 && hermeticProgress >= 100 && !showRadiantGlow && subconsciousMode === 'dormant') {
+        return false;
+      }
+      return true;
+    };
     
     const animate = () => {
+      if (!isActive || !shouldAnimate()) {
+        // Schedule next check in 100ms to allow resuming when needed
+        setTimeout(() => {
+          if (isActive && shouldAnimate()) {
+            animationId = requestAnimationFrame(animate);
+          }
+        }, 100);
+        return;
+      }
+      
       setParticles(prevParticles => 
         prevParticles.map(particle => ({
           ...particle,
@@ -196,19 +220,25 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
       );
       
       // Radiant glow animation
-      if (showRadiantGlow && hermeticProgress === 100) {
-        setRainbowPhase(prev => (prev + 2) % 360); // Slower, more spiritual animation
+      if (showRadiantGlow && hermeticProgress >= 100) {
+        setRainbowPhase(prev => (prev + 2) % 360);
       }
       
       animationId = requestAnimationFrame(animate);
     };
     
-    animationId = requestAnimationFrame(animate);
+    // Start animation only if needed
+    if (shouldAnimate()) {
+      animationId = requestAnimationFrame(animate);
+    }
     
     return () => {
-      cancelAnimationFrame(animationId);
+      isActive = false;
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
     };
-  }, [intelligenceLevel, showRadiantGlow, hermeticProgress]);
+  }, [speaking, intelligenceLevel, showRadiantGlow, hermeticProgress, subconsciousMode]);
 
   // Level up animation trigger
   useEffect(() => {
@@ -300,26 +330,15 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             strokeDashoffset={innerStrokeDashoffset}
             strokeLinecap="round"
             initial={{ strokeDashoffset: innerCircumference }}
-            animate={hermeticProgress === 100 ? {
-              strokeDashoffset: innerStrokeDashoffset,
-              // Static ring - no animations when complete
+            animate={hermeticProgress >= 100 ? {
+              strokeDashoffset: innerStrokeDashoffset
+              // Static when complete - no continuous animations
             } : { 
-              strokeDashoffset: innerStrokeDashoffset,
-              scale: showRadiantGlow ? [1, 1.05, 1] : 1,
-              filter: milestoneGlow
-                ? ["drop-shadow(0 0 6px hsl(180 68% 55%))", "drop-shadow(0 0 12px hsl(180 68% 55%))", "drop-shadow(0 0 6px hsl(180 68% 55%))"]
-                : "drop-shadow(0 0 4px hsl(180 68% 55% / 0.5))"
+              strokeDashoffset: innerStrokeDashoffset
             }}
-            transition={hermeticProgress === 100 ? {
+            transition={{
               duration: 0.8, 
               ease: "easeInOut"
-            } : { 
-              duration: 0.8, 
-              ease: "easeInOut",
-              scale: showRadiantGlow ? { duration: 2, repeat: Infinity } : {},
-              filter: milestoneGlow 
-                ? { duration: 1.5, repeat: 6, repeatType: "reverse" as const } 
-                : {}
             }}
             style={{
               filter: hermeticProgress === 100 
