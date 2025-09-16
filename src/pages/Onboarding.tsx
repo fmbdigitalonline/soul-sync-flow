@@ -16,9 +16,18 @@ export default function Onboarding() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationComplete, setGenerationComplete] = useState(false);
   const [showGrowthModal, setShowGrowthModal] = useState(false);
+  const [stuckTimer, setStuckTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showRecovery, setShowRecovery] = useState(false);
+  
   const { user, loading: authLoading } = useAuth();
   const { flowState, completeOnboardingFlow, setCurrentStep, isNavigationSafe } = useRegistrationFlow();
-  const { phase, isReady, error: systemError } = useSystemInitialization();
+  const { 
+    phase, 
+    isReady, 
+    error: systemError,
+    forceReady,
+    reinitialize
+  } = useSystemInitialization();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -33,6 +42,29 @@ export default function Onboarding() {
     isGenerating,
     generationComplete
   });
+
+  // Recovery mechanism for stuck initialization
+  useEffect(() => {
+    if (phase === 'user-setup') {
+      // Start timer for recovery option
+      const timer = setTimeout(() => {
+        setShowRecovery(true);
+        console.warn('🔧 ONBOARDING: Showing recovery options due to stuck initialization');
+      }, 10000); // Show recovery after 10 seconds
+      
+      setStuckTimer(timer);
+      
+      return () => {
+        if (timer) clearTimeout(timer);
+      };
+    } else {
+      setShowRecovery(false);
+      if (stuckTimer) {
+        clearTimeout(stuckTimer);
+        setStuckTimer(null);
+      }
+    }
+  }, [phase, stuckTimer]);
 
   // Redirect if user is not authenticated
   useEffect(() => {
@@ -190,7 +222,27 @@ export default function Onboarding() {
     });
   };
 
-  // Show loading while auth is being checked
+  const handleForceReady = () => {
+    console.log('🔧 ONBOARDING: Manual recovery initiated');
+    forceReady();
+    setShowRecovery(false);
+    toast({
+      title: "System Recovery",
+      description: "System initialization has been manually completed.",
+    });
+  };
+
+  const handleReinitialize = () => {
+    console.log('🔧 ONBOARDING: Manual reinitialization initiated');
+    reinitialize();
+    setShowRecovery(false);
+    toast({
+      title: "System Restart",
+      description: "Restarting system initialization...",
+    });
+  };
+
+  // Show loading while auth is being checked or system is not ready
   if (authLoading || phase !== 'ready') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -203,6 +255,31 @@ export default function Onboarding() {
             {systemError && (
               <div className="text-xs text-red-500 text-center">
                 {systemError}
+              </div>
+            )}
+            {showRecovery && (
+              <div className="mt-4 space-y-2 w-full">
+                <p className="text-xs text-yellow-600 text-center">
+                  System appears to be stuck. Try recovery options:
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleForceReady}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    Force Continue
+                  </Button>
+                  <Button
+                    onClick={handleReinitialize}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    Restart
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
