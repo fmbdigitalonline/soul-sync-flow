@@ -13,6 +13,7 @@ import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
 import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRegistrationFlow } from "@/contexts/RegistrationFlowContext";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
@@ -31,6 +32,7 @@ const Blueprint = () => {
     user,
     loading: authLoading
   } = useAuth();
+  const { flowState, isNavigationSafe } = useRegistrationFlow();
   const {
     speak
   } = useSoulOrb();
@@ -112,7 +114,29 @@ const Blueprint = () => {
   if (error) {
     const isNoBlueprint = error.includes("No active blueprint found");
     if (isNoBlueprint) {
-      console.log("📝 BLUEPRINT PAGE: No blueprint found, should redirect to onboarding");
+      console.log("📝 BLUEPRINT PAGE: No blueprint found", { flowState, isNavigationSafe: isNavigationSafe() });
+      
+      // Check if navigation is safe (not in active onboarding flow)
+      if (!isNavigationSafe()) {
+        console.log("📝 BLUEPRINT PAGE: User in active onboarding, showing waiting state");
+        return <MainLayout>
+            <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
+              <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
+                <Loader2 className="h-12 w-12 animate-spin text-soul-purple mx-auto mb-4" />
+                <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 break-words font-cormorant`}>
+                  <span className="gradient-text">Creating Your Blueprint</span>
+                </h2>
+                <p className={`${getTextSize('text-sm')} mb-6 break-words text-muted-foreground font-inter`}>
+                  Your personalized Soul Blueprint is being generated. This usually takes a few moments...
+                </p>
+                <div className={`${getTextSize('text-xs')} text-muted-foreground font-inter`}>
+                  Current step: {flowState.currentStep || 'initializing'}
+                </div>
+              </div>
+            </div>
+          </MainLayout>;
+      }
+      
       return <MainLayout>
           <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
             <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
@@ -160,7 +184,29 @@ const Blueprint = () => {
 
   // Check if we have sufficient blueprint data to display
   if (!hasBlueprint || !blueprintData) {
-    console.log("📝 BLUEPRINT PAGE: Insufficient blueprint data, redirecting to onboarding");
+    console.log("📝 BLUEPRINT PAGE: Insufficient blueprint data", { flowState, isNavigationSafe: isNavigationSafe() });
+    
+    // Check if navigation is safe (not in active onboarding flow)
+    if (!isNavigationSafe()) {
+      console.log("📝 BLUEPRINT PAGE: User in active onboarding, showing generation state");
+      return <MainLayout>
+          <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
+            <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
+              <Loader2 className="h-12 w-12 animate-spin text-soul-purple mx-auto mb-4" />
+              <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 break-words font-cormorant`}>
+                <span className="gradient-text">Completing Your Blueprint</span>
+              </h2>
+              <p className={`${getTextSize('text-sm')} mb-4 break-words text-muted-foreground font-inter`}>
+                Your personalized insights are being assembled. Please wait while we complete the process...
+              </p>
+              <div className={`${getTextSize('text-xs')} text-muted-foreground font-inter`}>
+                Current step: {flowState.currentStep || 'processing'}
+              </div>
+            </div>
+          </div>
+        </MainLayout>;
+    }
+    
     return <MainLayout>
         <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
           <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>

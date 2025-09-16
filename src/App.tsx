@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { RegistrationFlowProvider } from './contexts/RegistrationFlowContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ModeProvider } from './contexts/ModeContext';
 import MainLayout from './components/Layout/MainLayout';
@@ -18,6 +19,7 @@ import { TestFunctionsPage } from './pages/TestFunctionsPage';
 import DesignAnalysisPage from './pages/DesignAnalysisPage';
 import User360Page from './pages/User360Page';
 import HermeticIntelligenceTest from './pages/HermeticIntelligenceTest';
+import Onboarding from './pages/Onboarding';
 import NotFound from './pages/NotFound';
 
 import ReportViewer from './components/ReportViewer';
@@ -50,16 +52,18 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <AutomationWrapper>
-            <LanguageProvider>
-              <ModeProvider>
-                <SoulOrbProvider>
-                  <BlueprintCacheProvider>
-                    <div className="min-h-screen bg-background">
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/get-started" element={<LifeClarityFunnel />} />
-                        <Route path="/dreams/*" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
+          <RegistrationFlowProvider>
+            <AutomationWrapper>
+              <LanguageProvider>
+                <ModeProvider>
+                  <SoulOrbProvider>
+                    <BlueprintCacheProvider>
+                      <div className="min-h-screen bg-background">
+                        <Routes>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/get-started" element={<LifeClarityFunnel />} />
+                          <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+                          <Route path="/dreams/*" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
                         <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
                         <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
                         {/* Legacy redirect from /coach to /companion */}
@@ -86,14 +90,15 @@ function App() {
         <Route path="/reports/view/:jobId" element={<ProtectedRoute><ReportViewer /></ProtectedRoute>} />
                         {/* Catch-all route for 404s - MUST be last */}
                         <Route path="*" element={<NotFound />} />
-                      </Routes>
-                      <Toaster />
-                    </div>
-                  </BlueprintCacheProvider>
-                </SoulOrbProvider>
-              </ModeProvider>
-            </LanguageProvider>
-          </AutomationWrapper>
+                        </Routes>
+                        <Toaster />
+                      </div>
+                    </BlueprintCacheProvider>
+                  </SoulOrbProvider>
+                </ModeProvider>
+              </LanguageProvider>
+            </AutomationWrapper>
+          </RegistrationFlowProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

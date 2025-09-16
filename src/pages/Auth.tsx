@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRegistrationFlow } from "@/contexts/RegistrationFlowContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Loader2, Eye, EyeOff, Sparkles } from "lucide-react";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
@@ -25,6 +26,7 @@ export default function Auth() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
+  const { startOnboardingFlow, setCurrentStep } = useRegistrationFlow();
   const { t } = useLanguage();
 
   const from = location.state?.from?.pathname || "/";
@@ -86,6 +88,10 @@ export default function Auth() {
           : t('auth.signUpSuccess'),
       });
 
+      // Mark that we're starting the onboarding flow
+      startOnboardingFlow();
+      setCurrentStep('onboarding');
+      
       navigate("/onboarding", { replace: true });
       
     } catch (error: any) {
