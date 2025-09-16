@@ -244,7 +244,7 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
             stage={orbStage}
             onClick={handleOrbClick}
             intelligenceLevel={progress}
-            showProgressRing={true}
+            showProgressRing={false}
             isThinking={isThinking}
             className="cursor-pointer shadow-lg hover:shadow-xl transition-shadow duration-300"
           />

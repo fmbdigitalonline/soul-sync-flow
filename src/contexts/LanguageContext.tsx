@@ -279,10 +279,10 @@ const translations: Record<Language, Translations> = {
       welcomeBack: 'Welcome Back',
       startJourney: 'Begin your personalized spiritual journey',
       continueJourney: 'Continue your spiritual growth journey',
-      funnelReportReady: 'Your Life Clarity Report is Ready!',
+      funnelReportReady: 'Your Soul Guide Awaits!',
       createYourAccount: 'Create Your Account',
-      accessPersonalizedBlueprint: 'Access your personalized life transformation blueprint',
-      completeAccountMessage: 'Complete your account to access your personalized insights and blueprint.',
+      accessPersonalizedBlueprint: 'Create your Soul Report and connect with your Soul Guide',
+      completeAccountMessage: 'Create your account to build your Soul Report and meet your personal Soul Guide.',
       accountCreatedWithBlueprint: 'Account created! Let\'s build your personalized blueprint based on your assessment.',
       email: 'Email',
       password: 'Password',
@@ -442,103 +442,103 @@ const translations: Record<Language, Translations> = {
     
     // Life Clarity Funnel
     funnel: {
-      // Step indicators
+      // Navigation & Progress
       stepOf: 'Step {current} of {total}',
       back: 'Back',
-      continue: 'Continue',
-      getReport: 'Get My Report',
+      continue: 'Next',
+      getReport: 'See My Soul Report',
 
-      // Step 1: Pain Points
+      // Step 1: Core Struggle
       painPoint: {
-        title: 'What\'s your biggest frustration right now?',
-        subtitle: 'Understanding your main challenge helps us personalize your experience',
+        title: 'What feels hardest in life right now?',
+        subtitle: 'This helps us tune into your Soul Blueprint.',
         options: {
-          stuck_career: 'Feeling stuck in my career path',
-          relationship_struggles: 'Struggling with relationships',
-          overwhelmed: 'Feeling overwhelmed by everything',
-          lost_purpose: 'Lost my sense of purpose',
-          financial_stress: 'Constant financial stress',
-          health_energy: 'Health and energy issues'
+          stuck_career: 'I feel stuck in my career',
+          relationship_struggles: 'My relationships feel off',
+          overwhelmed: 'I feel overwhelmed',
+          lost_purpose: 'I\'ve lost my purpose',
+          financial_stress: 'I\'m stressed about money',
+          health_energy: 'My health and energy are low'
         }
       },
 
-      // Step 2: Life Satisfaction 
+      // Step 2: Life Balance Scan
       lifeSatisfaction: {
-        title: 'Life Satisfaction Quick Scan',
-        subtitle: 'Rate your current satisfaction in these key areas (1-10)',
+        title: 'How balanced do you feel?',
+        subtitle: 'Rate each area from 1 (low) to 10 (great).',
         domains: {
-          career: 'Career & Work',
-          relationships: 'Relationships',
-          health: 'Physical Health',
-          finances: 'Money & Finances',
-          personal_growth: 'Personal Growth',
-          fun: 'Fun & Recreation',
-          spirituality: 'Spirituality & Purpose'
+          career: 'Work & Career',
+          relationships: 'Love & Relationships',
+          health: 'Health & Energy',
+          finances: 'Money & Security',
+          personal_growth: 'Growth & Learning',
+          fun: 'Fun & Play',
+          spirituality: 'Spirit & Purpose'
         }
       },
 
-      // Step 3: Change Style
+      // Step 3: Growth Style
       changeStyle: {
-        title: 'What\'s your approach to change?',
-        subtitle: 'Everyone transforms differently - what resonates with you?',
+        title: 'How do you like to grow?',
+        subtitle: 'Pick the style that feels most like you.',
         options: {
-          understand_why: 'I need to understand WHY first',
-          tell_me_what: 'Just tell me what to do',
-          explore_gradually: 'I want to explore gradually',
-          deep_transformation: 'I\'m ready for deep transformation'
+          understand_why: 'I want to know the WHY first',
+          tell_me_what: 'Just give me the steps',
+          explore_gradually: 'I like to explore slowly',
+          deep_transformation: 'I\'m ready for big change'
         }
       },
 
-      // Step 4: Previous Attempts
+      // Step 4: What You Tried
       previousAttempts: {
-        title: 'What have you tried before?',
-        subtitle: 'Select all that apply - this helps us understand your journey',
+        title: 'What have you already tried?',
+        subtitle: 'This helps us build on your journey.',
         options: {
           therapy: 'Therapy or counseling',
           self_help: 'Self-help books',
-          apps: 'Apps and digital tools',
-          courses: 'Online courses',
-          coaching: 'Life coaching',
-          nothing: 'This is my first attempt'
+          apps: 'Apps & online tools',
+          courses: 'Courses or classes',
+          coaching: 'Coaches or mentors',
+          nothing: 'This is my first time'
         }
       },
 
-      // Step 5: Vision
+      // Step 5: Your Vision
       vision: {
-        title: 'Envision your transformation',
-        subtitle: 'If everything clicked into place, what would that look like?',
-        placeholder: 'Describe your vision of an ideal life where everything is working...',
-        personalizedRoadmap: 'Your personalized roadmap awaits',
-        reportAwaits: 'Your report awaits'
+        title: 'Imagine your best life…',
+        subtitle: 'If everything clicked into place, what would it look like?',
+        placeholder: 'Write a few lines about your dream life in flow…',
+        personalizedRoadmap: 'Ready to create your personalized Soul Report and meet your Soul Guide?',
+        reportAwaits: '✨ Your Soul Guide is ready to meet you ✨'
       }
     },
     
     // Funnel Guide Messages
     funnelGuide: {
       step1: {
-        welcome: "Welcome! I'm here to guide you through your life clarity journey. Let's start by understanding what's challenging you most right now.",
-        guidance: "Take your time to reflect on what's really frustrating you. There's no wrong answer - this is about your authentic experience.",
-        encouragement: "Great choice! Understanding your main challenge is the first step toward transformation."
+        welcome: 'Welcome! Let\'s begin by finding what feels most heavy for you right now.',
+        guidance: 'There\'s no wrong choice. Pick what feels most true.',
+        encouragement: 'Great start. Naming your struggle is the first step toward flow.'
       },
       step2: {
-        welcome: "Now let's explore how satisfied you feel across different areas of your life. This helps us see the bigger picture.",
-        guidance: "Rate honestly - low scores aren't bad, they just show where growth opportunities exist. You need at least 3 areas rated to continue.",
-        encouragement: "Excellent self-awareness! These ratings help us understand your unique situation."
+        welcome: 'Now, let\'s scan the big areas of your life.',
+        guidance: 'Be honest. Low scores just show where more energy is needed.',
+        encouragement: 'Beautiful awareness. This gives us the full picture.'
       },
       step3: {
-        welcome: "Everyone approaches change differently. Let's discover your natural transformation style.",
-        guidance: "Think about how you've successfully made changes before. What approach feels most natural to you?",
-        encouragement: "Perfect! Knowing your change style helps us tailor the right approach for you."
+        welcome: 'Everyone grows in their own way.',
+        guidance: 'Pick the path that feels most natural to you.',
+        encouragement: 'Perfect. We\'ll shape your Soul Report around your style.'
       },
       step4: {
-        welcome: "Understanding what you've tried before helps us build on your experience and avoid repeating what didn't work.",
-        guidance: "Be honest about your journey - every attempt teaches us something valuable about what works for you.",
-        encouragement: "Thank you for sharing your journey. Every experience brings valuable insights."
+        welcome: 'Your past steps matter. Let\'s honor them.',
+        guidance: 'Select everything you\'ve tried before, big or small.',
+        encouragement: 'Thank you for sharing. Every step brought wisdom.'
       },
       step5: {
-        welcome: "Finally, let's explore your vision of transformation. What would your ideal life look like?",
-        guidance: "Paint a vivid picture of your transformed life. The more specific and emotional, the more powerful your blueprint becomes.",
-        completion: "Wonderful! Your vision is the compass that will guide your transformation. Your personalized Life Clarity Report is ready!"
+        welcome: 'Now, imagine the life you truly want.',
+        guidance: 'Write from the heart. The clearer the dream, the clearer the path.',
+        completion: 'Wonderful. Your vision is the compass. Your Soul Report is ready!'
       }
     },
     
@@ -1981,66 +1981,66 @@ const translations: Record<Language, Translations> = {
 
       // Step 3: Change Style
       changeStyle: {
-        title: 'Wat is jouw benadering van verandering?',
-        subtitle: 'Iedereen transformeert anders - wat spreekt jou aan?',
+        title: 'Hoe groei je graag?',
+        subtitle: 'Kies de stijl die het meest bij je past.',
         options: {
-          understand_why: 'Ik moet eerst WAAROM begrijpen',
-          tell_me_what: 'Zeg me gewoon wat ik moet doen',
-          explore_gradually: 'Ik wil geleidelijk verkennen',
-          deep_transformation: 'Ik ben klaar voor diepe transformatie'
+          understand_why: 'Ik wil eerst de WAAROM weten',
+          tell_me_what: 'Geef me gewoon de stappen',
+          explore_gradually: 'Ik wil langzaam verkennen',
+          deep_transformation: 'Ik ben klaar voor grote verandering'
         }
       },
 
-      // Step 4: Previous Attempts
+      // Step 4: Wat Je Hebt Geprobeerd
       previousAttempts: {
-        title: 'Wat heb je eerder geprobeerd?',
-        subtitle: 'Selecteer alles wat van toepassing is - dit helpt ons je reis te begrijpen',
+        title: 'Wat heb je al geprobeerd?',
+        subtitle: 'Dit helpt ons voortbouwen op je reis.',
         options: {
           therapy: 'Therapie of counseling',
           self_help: 'Zelfhulpboeken',
-          apps: 'Apps en digitale tools',
-          courses: 'Online cursussen',
-          coaching: 'Life coaching',
-          nothing: 'Dit is mijn eerste poging'
+          apps: 'Apps en online tools',
+          courses: 'Cursussen of lessen',
+          coaching: 'Coaches of mentoren',
+          nothing: 'Dit is mijn eerste keer'
         }
       },
 
-      // Step 5: Vision
+      // Step 5: Jouw Visie
       vision: {
-        title: 'Stel je transformatie voor',
+        title: 'Stel je je beste leven voor…',
         subtitle: 'Als alles op zijn plaats zou vallen, hoe zou dat eruit zien?',
-        placeholder: 'Beschrijf je visie van een ideaal leven waar alles werkt...',
-        personalizedRoadmap: 'Je gepersonaliseerde routekaart wacht op je',
-        reportAwaits: 'Je rapport wacht op je'
+        placeholder: 'Schrijf een paar regels over je droomleven in flow…',
+        personalizedRoadmap: 'Klaar om je gepersonaliseerde Zielrapport te maken en je Zielgids te ontmoeten?',
+        reportAwaits: '✨ Je Zielgids is klaar om je te ontmoeten ✨'
       }
     },
     
-    // Funnel Guide Messages (Dutch)
+    // Trechter Gids Berichten (Nederlands)
     funnelGuide: {
       step1: {
-        welcome: "Welkom! Ik ben hier om je te begeleiden door je levensduidelijkheidsreis. Laten we beginnen met begrijpen wat je op dit moment het meest uitdaagt.",
-        guidance: "Neem de tijd om na te denken over wat je echt frustreert. Er is geen fout antwoord - dit gaat over je authentieke ervaring.",
-        encouragement: "Geweldige keuze! Je hoofduitdaging begrijpen is de eerste stap naar transformatie."
+        welcome: 'Welkom! Laten we beginnen met vinden wat nu het zwaarst voelt voor je.',
+        guidance: 'Er is geen verkeerde keuze. Kies wat het meest waar voelt.',
+        encouragement: 'Geweldige start. Je struggle benoemen is de eerste stap naar flow.'
       },
       step2: {
-        welcome: "Laten we nu verkennen hoe tevreden je je voelt in verschillende gebieden van je leven. Dit helpt ons het grotere plaatje te zien.",
-        guidance: "Beoordeel eerlijk - lage scores zijn niet slecht, ze tonen juist waar groeimogelijkheden bestaan. Je hebt minstens 3 gebieden beoordeeld nodig om door te gaan.",
-        encouragement: "Uitstekend zelfbewustzijn! Deze beoordelingen helpen ons je unieke situatie te begrijpen."
+        welcome: 'Nu gaan we de grote gebieden van je leven scannen.',
+        guidance: 'Wees eerlijk. Lage scores tonen gewoon waar meer energie nodig is.',
+        encouragement: 'Mooie bewustwording. Dit geeft ons het volledige plaatje.'
       },
       step3: {
-        welcome: "Iedereen benadert verandering anders. Laten we je natuurlijke transformatiestijl ontdekken.",
-        guidance: "Denk aan hoe je eerder succesvol veranderingen hebt aangebracht. Welke benadering voelt het meest natuurlijk voor je?",
-        encouragement: "Perfect! Je veranderingsstijl kennen helpt ons de juiste benadering voor jou af te stemmen."
+        welcome: 'Iedereen groeit op zijn eigen manier.',
+        guidance: 'Kies het pad dat het meest natuurlijk voor je voelt.',
+        encouragement: 'Perfect. We vormen je Zielrapport rond jouw stijl.'
       },
       step4: {
-        welcome: "Begrijpen wat je eerder hebt geprobeerd helpt ons voort te bouwen op je ervaring en herhaling van wat niet werkte te vermijden.",
-        guidance: "Wees eerlijk over je reis - elke poging leert ons iets waardevols over wat voor jou werkt.",
-        encouragement: "Dank je voor het delen van je reis. Elke ervaring brengt waardevolle inzichten."
+        welcome: 'Je vorige stappen zijn belangrijk. Laten we ze eren.',
+        guidance: 'Selecteer alles wat je eerder hebt geprobeerd, groot of klein.',
+        encouragement: 'Dank je voor het delen. Elke stap bracht wijsheid.'
       },
       step5: {
-        welcome: "Ten slotte, laten we je visie van transformatie verkennen. Hoe zou je ideale leven eruit zien?",
-        guidance: "Schilder een levendig beeld van je getransformeerde leven. Hoe specifieker en emotioneler, hoe krachtiger je blauwdruk wordt.",
-        completion: "Wonderlijk! Je visie is het kompas dat je transformatie zal leiden. Je gepersonaliseerde Levensduidelijkheidsrapport is klaar!"
+        welcome: 'Nu, stel je het leven voor dat je echt wilt.',
+        guidance: 'Schrijf vanuit je hart. Hoe helderder de droom, hoe helderder het pad.',
+        completion: 'Wonderlijk. Je visie is het kompas. Je Zielrapport is klaar!'
       }
     },
     
