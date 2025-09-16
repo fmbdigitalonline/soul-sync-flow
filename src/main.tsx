@@ -28,7 +28,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import HermeticIntelligenceTest from "./pages/HermeticIntelligenceTest";
 import LifeClarityFunnel from "./pages/LifeClarityFunnel";
 import { AuthProvider } from "./contexts/AuthContext";
-import { RegistrationFlowProvider } from "./contexts/RegistrationFlowContext";
 import { BlueprintCacheProvider } from "./contexts/BlueprintCacheContext";
 import { SoulOrbProvider } from "./contexts/SoulOrbContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
@@ -51,18 +50,16 @@ const RootLayout = () => {
     <div className="min-h-screen bg-background">
       <ErrorBoundary>
         <AuthProvider>
-          <RegistrationFlowProvider>
-            <LanguageProvider>
-              <ModeProvider>
-                <SoulOrbProvider>
-                  <BlueprintCacheProvider>
-                    <Outlet />
-                    <Toaster />
-                  </BlueprintCacheProvider>
-                </SoulOrbProvider>
-              </ModeProvider>
-            </LanguageProvider>
-          </RegistrationFlowProvider>
+          <LanguageProvider>
+            <ModeProvider>
+              <SoulOrbProvider>
+                <BlueprintCacheProvider>
+                  <Outlet />
+                  <Toaster />
+                </BlueprintCacheProvider>
+              </SoulOrbProvider>
+            </ModeProvider>
+          </LanguageProvider>
         </AuthProvider>
       </ErrorBoundary>
     </div>

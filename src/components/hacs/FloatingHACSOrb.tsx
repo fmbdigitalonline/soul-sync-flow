@@ -213,6 +213,17 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       previousProgress: previousHermeticProgress
     });
 
+    // CRITICAL FIX 1: Immediate reset on regeneration start
+    if (isGeneratingHermeticReport && hermeticJobProgress === 0) {
+      console.log('🔄 HERMETIC REGENERATION: Immediate reset to 0%');
+      setHermeticProgress(0);
+      setPreviousHermeticProgress(0);
+      setShowCompletionIndicator(false);
+      setShowRadiantGlow(false);
+      setMilestoneGlow(false);
+      return;
+    }
+
     // PRIORITY FIX: Always prioritize report completion over generation status
     if (hasHermeticReport) {
       // Principle #7: Clear completion state - jump to 100% when report exists
@@ -229,17 +240,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         }, 4000); // 4 seconds for full radiant glow
       }
     } else if (isGeneratingHermeticReport) {
-      // CRITICAL FIX: Handle mid-progress job discovery and real-time progress sync
-      if (hermeticJobProgress >= 0) {
-        console.log('📈 HERMETIC ACTIVE JOB: Syncing to progress', hermeticJobProgress);
+      // CRITICAL FIX 2: Use real progress and detect milestones
+      if (hermeticJobProgress > 0) {
+        console.log('📈 HERMETIC GENERATING: Using job progress', hermeticJobProgress);
         
-        // CRITICAL FIX: Always sync to actual job progress (handles mid-progress discovery)
-        if (hermeticProgress !== hermeticJobProgress) {
-          console.log('🔄 PROGRESS SYNC: Updating from', hermeticProgress, 'to', hermeticJobProgress);
-          setHermeticProgress(hermeticJobProgress);
-        }
-        
-        // Detect milestone completion (significant progress jumps)
+        // CRITICAL FIX 3: Detect milestone completion (significant progress jumps)
         const progressJump = hermeticJobProgress - previousHermeticProgress;
         const isMilestone = progressJump >= 10 && hermeticJobProgress < 100; // 10%+ jump that's not completion
         
@@ -258,10 +263,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           }, 10000); // 10 seconds for milestone glow
         }
         
+        setHermeticProgress(hermeticJobProgress);
         setPreviousHermeticProgress(hermeticJobProgress);
       } else {
-        // Fallback simulation for legacy reports with unknown progress
-        console.log('⏳ HERMETIC GENERATING: Using fallback simulation');
+        // Fallback simulation for legacy reports
+        console.log('⏳ HERMETIC GENERATING: Using simulation');
         const progressInterval = setInterval(() => {
           setHermeticProgress(prev => {
             if (prev >= 95) return 95;
@@ -281,7 +287,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       setShowRadiantGlow(false);
       setMilestoneGlow(false);
     }
-  }, [isGeneratingReport, isGeneratingHermeticReport, hermeticJobProgress, hasHermeticReport, showCompletionIndicator, previousHermeticProgress, hermeticProgress]);
+  }, [isGeneratingReport, isGeneratingHermeticReport, hermeticJobProgress, hasHermeticReport, showCompletionIndicator, previousHermeticProgress]);
 
   // Show speech bubble for questions or insights - click to show only
   useEffect(() => {
