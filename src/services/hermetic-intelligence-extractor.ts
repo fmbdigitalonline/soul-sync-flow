@@ -94,6 +94,13 @@ export class HermeticIntelligenceExtractor {
         crisis_handling: results[10].extracted_data,
         identity_flexibility: results[11].extracted_data,
         linguistic_fingerprint: results[12].extracted_data,
+        // New dimensions - populated by hermetic agent system
+        cognitive_functions: {},
+        career_vocational: {},
+        health_wellness: {},
+        interpersonal_compatibility: {},
+        financial_archetypes: {},
+        karmic_patterns: {},
         extraction_confidence: overallConfidence,
         extraction_version: this.EXTRACTION_VERSION,
         processing_notes: {

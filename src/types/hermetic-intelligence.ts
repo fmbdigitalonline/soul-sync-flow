@@ -81,13 +81,62 @@ export interface LinguisticFingerprint {
   emotional_syntax: string[];
 }
 
+export interface CognitiveFunctions {
+  dominant_function: string;
+  auxiliary_function: string;
+  tertiary_function: string;
+  inferior_function: string;
+  cognitive_stack: string[];
+  function_dynamics: string[];
+}
+
+export interface CareerVocational {
+  work_archetypes: string[];
+  leadership_style: string;
+  team_dynamics: string[];
+  career_motivators: string[];
+  work_environment_preferences: string[];
+}
+
+export interface HealthWellness {
+  stress_manifestations: string[];
+  energy_patterns: string[];
+  nutrition_tendencies: string[];
+  exercise_preferences: string[];
+  healing_modalities: string[];
+}
+
+export interface InterpersonalCompatibility {
+  relationship_patterns: string[];
+  conflict_styles: string[];
+  communication_preferences: string[];
+  compatibility_indicators: string[];
+  social_energy_dynamics: string[];
+}
+
+export interface FinancialArchetypes {
+  money_relationship: string;
+  abundance_blocks: string[];
+  financial_patterns: string[];
+  resource_management_style: string;
+  wealth_creation_tendencies: string[];
+}
+
+export interface KarmicPatterns {
+  soul_lessons: string[];
+  ancestral_themes: string[];
+  past_life_influences: string[];
+  karmic_relationships: string[];
+  spiritual_evolution_path: string[];
+}
+
 // Main interface combining all 12 dimensions (for application use)
 export interface HermeticStructuredIntelligence {
   id: string;
   user_id: string;
   personality_report_id: string;
   
-  // Core 12 Dimensions
+  // Core 19 Dimensions
   identity_constructs: IdentityConstructs;
   behavioral_triggers: BehavioralTriggers;
   execution_bias: ExecutionBias;
@@ -101,6 +150,12 @@ export interface HermeticStructuredIntelligence {
   crisis_handling: CrisisHandling;
   identity_flexibility: IdentityFlexibility;
   linguistic_fingerprint: LinguisticFingerprint;
+  cognitive_functions: CognitiveFunctions;
+  career_vocational: CareerVocational;
+  health_wellness: HealthWellness;
+  interpersonal_compatibility: InterpersonalCompatibility;
+  financial_archetypes: FinancialArchetypes;
+  karmic_patterns: KarmicPatterns;
   
   // Extraction metadata
   extraction_confidence: number;
@@ -117,7 +172,7 @@ export interface HermeticStructuredIntelligenceDB {
   user_id: string;
   personality_report_id: string;
   
-  // Core 12 Dimensions as JSONB
+  // Core 19 Dimensions as JSONB
   identity_constructs: any;
   behavioral_triggers: any;
   execution_bias: any;
@@ -131,6 +186,12 @@ export interface HermeticStructuredIntelligenceDB {
   crisis_handling: any;
   identity_flexibility: any;
   linguistic_fingerprint: any;
+  cognitive_functions: any;
+  career_vocational: any;
+  health_wellness: any;
+  interpersonal_compatibility: any;
+  financial_archetypes: any;
+  karmic_patterns: any;
   
   // Extraction metadata
   extraction_confidence: number;

@@ -44,7 +44,13 @@ const INTELLIGENCE_EXTRACTION_AGENTS = [
   'goal_archetypes_analyst',
   'crisis_handling_analyst',
   'identity_flexibility_analyst',
-  'linguistic_fingerprint_analyst'
+  'linguistic_fingerprint_analyst',
+  'cognitive_functions_analyst',
+  'career_vocational_analyst',
+  'health_wellness_analyst',
+  'compatibility_analyst',
+  'financial_archetype_analyst',
+  'karmic_patterns_analyst'
 ];
 
 // ============ RELAY RACE ORCHESTRATOR ============
