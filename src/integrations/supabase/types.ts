@@ -2207,16 +2207,22 @@ export type Database = {
           adaptive_feedback: Json
           attachment_style: Json
           behavioral_triggers: Json
+          career_vocational: Json
+          cognitive_functions: Json
+          compatibility: Json
           created_at: string
           crisis_handling: Json
           execution_bias: Json
           extraction_confidence: number
           extraction_version: string
+          financial_archetype: Json
           goal_archetypes: Json
+          health_wellness: Json
           id: string
           identity_constructs: Json
           identity_flexibility: Json
           internal_conflicts: Json
+          karmic_patterns: Json
           linguistic_fingerprint: Json
           metacognitive_biases: Json
           personality_report_id: string | null
@@ -2230,16 +2236,22 @@ export type Database = {
           adaptive_feedback?: Json
           attachment_style?: Json
           behavioral_triggers?: Json
+          career_vocational?: Json
+          cognitive_functions?: Json
+          compatibility?: Json
           created_at?: string
           crisis_handling?: Json
           execution_bias?: Json
           extraction_confidence?: number
           extraction_version?: string
+          financial_archetype?: Json
           goal_archetypes?: Json
+          health_wellness?: Json
           id?: string
           identity_constructs?: Json
           identity_flexibility?: Json
           internal_conflicts?: Json
+          karmic_patterns?: Json
           linguistic_fingerprint?: Json
           metacognitive_biases?: Json
           personality_report_id?: string | null
@@ -2253,16 +2265,22 @@ export type Database = {
           adaptive_feedback?: Json
           attachment_style?: Json
           behavioral_triggers?: Json
+          career_vocational?: Json
+          cognitive_functions?: Json
+          compatibility?: Json
           created_at?: string
           crisis_handling?: Json
           execution_bias?: Json
           extraction_confidence?: number
           extraction_version?: string
+          financial_archetype?: Json
           goal_archetypes?: Json
+          health_wellness?: Json
           id?: string
           identity_constructs?: Json
           identity_flexibility?: Json
           internal_conflicts?: Json
+          karmic_patterns?: Json
           linguistic_fingerprint?: Json
           metacognitive_biases?: Json
           personality_report_id?: string | null
