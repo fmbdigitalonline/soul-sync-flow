@@ -823,286 +823,272 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             if (isHermetic) {
               const hermeticContent = reportContent as any;
               
+              // Define known sections with their configurations
+              const knownSections = {
+                integrated_summary: {
+                  title: 'Overview',
+                  icon: Sparkles,
+                  badge: `${hermeticContent.word_count || 0}+ words`,
+                  color: 'green',
+                  key: 'overview'
+                },
+                seven_laws_integration: {
+                  title: 'Seven Hermetic Laws Analysis',
+                  icon: Star,
+                  badge: `${Object.keys(hermeticContent.seven_laws_integration || {}).length} laws`,
+                  color: 'purple',
+                  key: 'hermetic_laws',
+                  isNested: true
+                },
+                gate_analyses: {
+                  title: 'Gate Analyses',
+                  icon: Target,
+                  badge: `${Object.keys(hermeticContent.gate_analyses || {}).length} gates`,
+                  color: 'orange',
+                  key: 'gate_analyses',
+                  isNested: true
+                },
+                shadow_work_integration: {
+                  title: 'Shadow Work Integration',
+                  icon: Moon,
+                  badge: 'Deep Integration',
+                  color: 'indigo',
+                  key: 'shadow_work',
+                  isNested: true
+                },
+                system_translations: {
+                  title: 'System Translations',
+                  icon: Compass,
+                  badge: `${Object.keys(hermeticContent.system_translations || {}).length} systems`,
+                  color: 'blue',
+                  key: 'system_translations',
+                  isNested: true
+                },
+                practical_activation_framework: {
+                  title: 'Practical Framework',
+                  icon: Zap,
+                  badge: 'Applications',
+                  color: 'emerald',
+                  key: 'practical_framework'
+                },
+                consciousness_integration_map: {
+                  title: 'Consciousness Integration Map',
+                  icon: Brain,
+                  badge: 'Integration Map',
+                  color: 'emerald',
+                  key: 'practical_framework',
+                  isSubsection: true
+                },
+                structured_intelligence: {
+                  title: 'Enhanced Intelligence Analysis',
+                  icon: Brain,
+                  badge: `${Object.keys(hermeticContent.structured_intelligence || {}).length} Dimensions`,
+                  color: 'primary',
+                  key: 'intelligence_analysis',
+                  isIntelligence: true
+                }
+              };
+
+              // Get all available sections (both known and unknown)
+              const allSections = Object.keys(hermeticContent).filter(key => 
+                key !== 'word_count' && 
+                key !== 'generation_timestamp' && 
+                key !== 'report_version' &&
+                hermeticContent[key] && 
+                (typeof hermeticContent[key] === 'string' || typeof hermeticContent[key] === 'object')
+              );
+
+              console.log('📄 All available hermetic sections:', allSections);
+
+              // Helper function to get color classes
+              const getColorClasses = (color: string) => {
+                const colorMap = {
+                  green: 'border-green-200 bg-gradient-to-br from-green-50 to-emerald-50',
+                  purple: 'border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50', 
+                  orange: 'border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50',
+                  indigo: 'border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50',
+                  blue: 'border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50',
+                  emerald: 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50',
+                  primary: 'border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5',
+                  default: 'border-gray-200 bg-gradient-to-br from-gray-50 to-slate-50'
+                };
+                return colorMap[color] || colorMap.default;
+              };
+
+              // Helper function to render nested content
+              const renderNestedContent = (content: any, sectionKey: string, config: any) => {
+                if (!content || typeof content !== 'object') return null;
+
+                return Object.entries(content).map(([itemKey, itemContent]) => {
+                  let displayTitle = itemKey;
+                  let IconComponent = config.icon;
+
+                  // Special formatting for different section types
+                  if (sectionKey === 'gate_analyses' && itemKey.startsWith('gate_')) {
+                    displayTitle = `Gate ${itemKey.replace('gate_', '')}`;
+                    IconComponent = Target;
+                  } else if (sectionKey === 'seven_laws_integration') {
+                    displayTitle = `Law of ${itemKey.charAt(0).toUpperCase() + itemKey.slice(1)}`;
+                    IconComponent = Star;
+                  } else {
+                    displayTitle = itemKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  }
+
+                  return (
+                    <CosmicCard key={itemKey} className={`border-${config.color}-200`}>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <IconComponent className={`h-5 w-5 text-${config.color}-600`} />
+                          <h3>{displayTitle}</h3>
+                          <Badge variant="outline" className={`bg-${config.color}-100 text-${config.color}-700`}>
+                            {typeof itemContent === 'string' ? `${itemContent.length} chars` : 'Object'}
+                          </Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="prose prose-sm max-w-none">
+                          {renderSafeContent(itemContent, displayTitle)}
+                        </div>
+                      </CardContent>
+                    </CosmicCard>
+                  );
+                });
+              };
+
               return (
                 <div className="space-y-4">
-                  {/* Overview Section */}
-                  <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
-                    <div className={spacing.card}>
-                      <SectionHeader
-                        title="Overview"
-                        isExpanded={expandedSections.overview}
-                        onClick={() => toggleSection('overview')}
-                        icon={Sparkles}
-                        badge={`${hermeticContent.word_count || 0}+ words`}
-                      />
-                      
-                      {expandedSections.overview && (
-                        <div className="mt-4 space-y-4">
-                          <CosmicCard className="border-green-200">
-                            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                                <Brain className="h-5 w-5 text-green-600" />
-                                Integrated Summary
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="prose prose-sm max-w-none">
-                                {renderSafeContent(hermeticContent.integrated_summary, 'Integrated Summary')}
-                              </div>
-                            </CardContent>
-                          </CosmicCard>
-                        </div>
-                      )}
-                    </div>
-                  </Card>
+                  {allSections.map(sectionKey => {
+                    const content = hermeticContent[sectionKey];
+                    const config = knownSections[sectionKey];
+                    
+                    // Skip subsections that are handled within their parent sections
+                    if (config?.isSubsection) return null;
+                    
+                    // Use known configuration or create default
+                    const sectionConfig = config || {
+                      title: sectionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                      icon: Lightbulb,
+                      badge: typeof content === 'string' ? `${content.length} chars` : 
+                             typeof content === 'object' && content ? `${Object.keys(content).length} items` : 'Content',
+                      color: 'default',
+                      key: sectionKey.replace(/[^a-zA-Z0-9]/g, '_')
+                    };
 
-                  {/* Seven Hermetic Laws Section */}
-                  <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50">
-                    <div className={spacing.card}>
-                      <SectionHeader
-                        title="Seven Hermetic Laws Analysis"
-                        isExpanded={expandedSections.hermetic_laws}
-                        onClick={() => toggleSection('hermetic_laws')}
-                        icon={Star}
-                        badge={`${Object.keys(hermeticContent.seven_laws_integration || {}).length} laws`}
-                      />
-                      
-                      {expandedSections.hermetic_laws && (
-                        <div className="mt-4 space-y-4">
-                          {hermeticContent.seven_laws_integration && Object.entries(hermeticContent.seven_laws_integration).map(([lawKey, lawContent]) => (
-                            <CosmicCard key={lawKey} className="border-purple-200">
-                              <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                  <Star className="h-5 w-5 text-purple-600" />
-                                  <h3>Law of {lawKey.charAt(0).toUpperCase() + lawKey.slice(1)}</h3>
-                                  <Badge variant="outline" className="bg-purple-100 text-purple-700">
-                                    {typeof lawContent === 'string' ? `${lawContent.length} chars` : 'Object'}
-                                  </Badge>
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="prose prose-sm max-w-none">
-                                  {renderSafeContent(lawContent, `Law of ${lawKey}`)}
-                                </div>
-                              </CardContent>
-                            </CosmicCard>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </Card>
+                    const expandedKey = sectionConfig.key;
+                    const isExpanded = expandedSections[expandedKey];
 
-                  {/* Gate Analyses Section */}
-                  <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50">
-                    <div className={spacing.card}>
-                      <SectionHeader
-                        title="Gate Analyses"
-                        isExpanded={expandedSections.gate_analyses}
-                        onClick={() => toggleSection('gate_analyses')}
-                        icon={Target}
-                        badge={`${Object.keys(hermeticContent.gate_analyses || {}).length} gates`}
-                      />
-                      
-                      {expandedSections.gate_analyses && (
-                        <div className="mt-4 space-y-4">
-                          {hermeticContent.gate_analyses && Object.entries(hermeticContent.gate_analyses).map(([gateKey, gateContent]) => {
-                            const gateNumber = gateKey.replace('gate_', '');
-                            return (
-                              <CosmicCard key={gateKey} className="border-orange-200">
-                                <CardHeader>
-                                  <CardTitle className="flex items-center gap-2">
-                                    <Target className="h-5 w-5 text-orange-600" />
-                                    <h3>Gate {gateNumber}</h3>
-                                    <Badge variant="outline" className="bg-orange-100 text-orange-700">
-                                      {typeof gateContent === 'string' ? `${gateContent.length} chars` : 'Object'}
-                                    </Badge>
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                  <div className="prose prose-sm max-w-none">
-                                    {renderSafeContent(gateContent, `Gate ${gateNumber}`)}
-                                  </div>
-                                </CardContent>
-                              </CosmicCard>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-
-                  {/* Shadow Work Integration Section */}
-                  <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50">
-                    <div className={spacing.card}>
-                      <SectionHeader
-                        title="Shadow Work Integration"
-                        isExpanded={expandedSections.shadow_work}
-                        onClick={() => toggleSection('shadow_work')}
-                        icon={Moon}
-                        badge="Deep Integration"
-                      />
-                      
-                      {expandedSections.shadow_work && (
-                        <div className="mt-4 space-y-4">
-                          {hermeticContent.shadow_work_integration && Object.entries(hermeticContent.shadow_work_integration).map(([shadowKey, shadowContent]) => (
-                            <CosmicCard key={shadowKey} className="border-indigo-200">
-                              <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                  <Moon className="h-5 w-5 text-indigo-600" />
-                                  <h3>{shadowKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="prose prose-sm max-w-none">
-                                  {renderSafeContent(shadowContent, shadowKey)}
-                                </div>
-                              </CardContent>
-                            </CosmicCard>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-
-                  {/* System Translations Section */}
-                  <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
-                    <div className={spacing.card}>
-                      <SectionHeader
-                        title="System Translations"
-                        isExpanded={expandedSections.system_translations}
-                        onClick={() => toggleSection('system_translations')}
-                        icon={Compass}
-                        badge={`${Object.keys(hermeticContent.system_translations || {}).length} systems`}
-                      />
-                      
-                      {expandedSections.system_translations && (
-                        <div className="mt-4 space-y-4">
-                          {hermeticContent.system_translations && Object.entries(hermeticContent.system_translations).map(([systemKey, systemContent]) => (
-                            <CosmicCard key={systemKey} className="border-blue-200">
-                              <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                  <Compass className="h-5 w-5 text-blue-600" />
-                                  <h3>{systemKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
-                                  <Badge variant="outline" className="bg-blue-100 text-blue-700">
-                                    {typeof systemContent === 'string' ? `${systemContent.length} chars` : 'Object'}
-                                  </Badge>
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="prose prose-sm max-w-none">
-                                  {renderSafeContent(systemContent, systemKey)}
-                                </div>
-                              </CardContent>
-                            </CosmicCard>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-
-                  {/* Practical Framework Section */}
-                  <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50">
-                    <div className={spacing.card}>
-                      <SectionHeader
-                        title="Practical Framework"
-                        isExpanded={expandedSections.practical_framework}
-                        onClick={() => toggleSection('practical_framework')}
-                        icon={Zap}
-                        badge="Applications"
-                      />
-                      
-                      {expandedSections.practical_framework && (
-                        <div className="mt-4 space-y-4">
-                          <CosmicCard className="border-emerald-200">
-                            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                                <Zap className="h-5 w-5 text-emerald-600" />
-                                Practical Activation Framework
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="prose prose-sm max-w-none">
-                                {renderSafeContent(hermeticContent.practical_activation_framework, 'Practical Framework')}
-                              </div>
-                            </CardContent>
-                          </CosmicCard>
+                    return (
+                      <Card key={sectionKey} className={getColorClasses(sectionConfig.color)}>
+                        <div className={spacing.card}>
+                          <SectionHeader
+                            title={sectionConfig.title}
+                            isExpanded={isExpanded}
+                            onClick={() => toggleSection(expandedKey)}
+                            icon={sectionConfig.icon}
+                            badge={sectionConfig.badge}
+                          />
                           
-                          <CosmicCard className="border-emerald-200">
-                            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                                <Brain className="h-5 w-5 text-emerald-600" />
-                                Consciousness Integration Map
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="prose prose-sm max-w-none">
-                                {renderSafeContent(hermeticContent.consciousness_integration_map, 'Consciousness Map')}
-                              </div>
-                            </CardContent>
-                          </CosmicCard>
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-
-                  {/* Intelligence Analysis Section - 12 Dimensions */}
-                  {hermeticContent.structured_intelligence && (
-                    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5">
-                      <div className={spacing.card}>
-                        <SectionHeader
-                          title="Enhanced Intelligence Analysis"
-                          isExpanded={expandedSections.intelligence_analysis}
-                          onClick={() => toggleSection('intelligence_analysis')}
-                          icon={Brain}
-                          badge={`${Object.keys(hermeticContent.structured_intelligence).length} Dimensions`}
-                        />
-                        
-                        {expandedSections.intelligence_analysis && (
-                          <div className="mt-4 space-y-4">
-                            {Object.entries(hermeticContent.structured_intelligence)
-                              .filter(([key]) => key !== 'id' && key !== 'user_id' && key !== 'personality_report_id' && key !== 'extraction_confidence' && key !== 'extraction_version' && key !== 'processing_notes' && key !== 'created_at' && key !== 'updated_at')
-                              .map(([dimensionKey, dimensionContent]) => {
-                                const IconComponent = intelligenceIcons[dimensionKey as keyof typeof intelligenceIcons] || Brain;
-                                const title = intelligenceTitles[dimensionKey as keyof typeof intelligenceTitles] || dimensionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                                
-                                return (
-                                  <CosmicCard key={dimensionKey} className="border-primary/10 hover:border-primary/20 transition-colors">
+                          {isExpanded && (
+                            <div className="mt-4 space-y-4">
+                              {/* Handle Intelligence Analysis specially */}
+                              {sectionConfig.isIntelligence && content ? (
+                                Object.entries(content)
+                                  .filter(([key]) => key !== 'id' && key !== 'user_id' && key !== 'personality_report_id' && key !== 'extraction_confidence' && key !== 'extraction_version' && key !== 'processing_notes' && key !== 'created_at' && key !== 'updated_at')
+                                  .map(([dimensionKey, dimensionContent]) => {
+                                    const IconComponent = intelligenceIcons[dimensionKey as keyof typeof intelligenceIcons] || Brain;
+                                    const title = intelligenceTitles[dimensionKey as keyof typeof intelligenceTitles] || dimensionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                    
+                                    return (
+                                      <CosmicCard key={dimensionKey} className="border-primary/10 hover:border-primary/20 transition-colors">
+                                        <CardHeader>
+                                          <CardTitle className="flex items-center gap-2">
+                                            <IconComponent className="h-5 w-5 text-primary" />
+                                            <h3>{title}</h3>
+                                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                                              {Array.isArray(dimensionContent) ? `${dimensionContent.length} items` : 
+                                               typeof dimensionContent === 'string' ? `${dimensionContent.length} chars` : 
+                                               typeof dimensionContent === 'object' && dimensionContent ? `${Object.keys(dimensionContent).length} fields` : 'Data'}
+                                            </Badge>
+                                          </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                          <div className="prose prose-sm max-w-none">
+                                            {Array.isArray(dimensionContent) ? (
+                                              <div className="space-y-2">
+                                                {dimensionContent.map((item, index) => (
+                                                  <div key={index} className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
+                                                    <p className="leading-relaxed whitespace-pre-wrap break-words">
+                                                      {typeof item === 'string' ? item : JSON.stringify(item, null, 2)}
+                                                    </p>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            ) : (
+                                              renderSafeContent(dimensionContent, title)
+                                            )}
+                                          </div>
+                                        </CardContent>
+                                      </CosmicCard>
+                                    );
+                                  })
+                              ) : sectionConfig.isNested && content && typeof content === 'object' ? (
+                                /* Handle nested content (like gate_analyses, system_translations, etc.) */
+                                renderNestedContent(content, sectionKey, sectionConfig)
+                              ) : sectionKey === 'practical_activation_framework' ? (
+                                /* Handle practical framework section with both main content and consciousness map */
+                                <>
+                                  <CosmicCard className="border-emerald-200">
                                     <CardHeader>
                                       <CardTitle className="flex items-center gap-2">
-                                        <IconComponent className="h-5 w-5 text-primary" />
-                                        <h3>{title}</h3>
-                                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
-                                          {Array.isArray(dimensionContent) ? `${dimensionContent.length} items` : 
-                                           typeof dimensionContent === 'string' ? `${dimensionContent.length} chars` : 
-                                           typeof dimensionContent === 'object' && dimensionContent ? `${Object.keys(dimensionContent).length} fields` : 'Data'}
-                                        </Badge>
+                                        <Zap className="h-5 w-5 text-emerald-600" />
+                                        Practical Activation Framework
                                       </CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                       <div className="prose prose-sm max-w-none">
-                                        {Array.isArray(dimensionContent) ? (
-                                          <div className="space-y-2">
-                                            {dimensionContent.map((item, index) => (
-                                              <div key={index} className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
-                                                <p className="leading-relaxed whitespace-pre-wrap break-words">
-                                                  {typeof item === 'string' ? item : JSON.stringify(item, null, 2)}
-                                                </p>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        ) : (
-                                          renderSafeContent(dimensionContent, title)
-                                        )}
+                                        {renderSafeContent(content, 'Practical Framework')}
                                       </div>
                                     </CardContent>
                                   </CosmicCard>
-                                );
-                              })}
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  )}
+                                  
+                                  {hermeticContent.consciousness_integration_map && (
+                                    <CosmicCard className="border-emerald-200">
+                                      <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                          <Brain className="h-5 w-5 text-emerald-600" />
+                                          Consciousness Integration Map
+                                        </CardTitle>
+                                      </CardHeader>
+                                      <CardContent>
+                                        <div className="prose prose-sm max-w-none">
+                                          {renderSafeContent(hermeticContent.consciousness_integration_map, 'Consciousness Map')}
+                                        </div>
+                                      </CardContent>
+                                    </CosmicCard>
+                                  )}
+                                </>
+                              ) : (
+                                /* Handle simple single-content sections */
+                                <CosmicCard className={`border-${sectionConfig.color}-200`}>
+                                  <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                      <sectionConfig.icon className={`h-5 w-5 text-${sectionConfig.color}-600`} />
+                                      {sectionConfig.title}
+                                    </CardTitle>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <div className="prose prose-sm max-w-none">
+                                      {renderSafeContent(content, sectionConfig.title)}
+                                    </div>
+                                  </CardContent>
+                                </CosmicCard>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </div>
               );
             }
