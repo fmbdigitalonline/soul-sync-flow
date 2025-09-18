@@ -889,8 +889,19 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                 }
               };
 
+              // Define section order - Overview (integrated_summary) should always be first
+              const sectionOrder = [
+                'integrated_summary',  // Overview - always first
+                'seven_laws_integration',
+                'gate_analyses', 
+                'shadow_work_integration',
+                'system_translations',
+                'practical_activation_framework',
+                'structured_intelligence'
+              ];
+
               // Get all available sections (both known and unknown)
-              const allSections = Object.keys(hermeticContent).filter(key => 
+              const availableSections = Object.keys(hermeticContent).filter(key => 
                 key !== 'word_count' && 
                 key !== 'generation_timestamp' && 
                 key !== 'report_version' &&
@@ -898,7 +909,12 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                 (typeof hermeticContent[key] === 'string' || typeof hermeticContent[key] === 'object')
               );
 
-              console.log('📄 All available hermetic sections:', allSections);
+              // Sort sections: ordered sections first, then remaining sections
+              const orderedSections = sectionOrder.filter(section => availableSections.includes(section));
+              const remainingSections = availableSections.filter(section => !sectionOrder.includes(section));
+              const allSections = [...orderedSections, ...remainingSections];
+
+              console.log('📄 All available hermetic sections (ordered):', allSections);
 
               // Helper function to get color classes
               const getColorClasses = (color: string) => {
