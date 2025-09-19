@@ -2269,8 +2269,8 @@ const translations: Record<Language, Translations> = {
     },
     // Onboarding Flow
     onboarding: {
-      welcome: 'Welkom bij Je Spirituele Reis',
-      welcomeDesc: 'Ontdek je authentieke pad door gepersonaliseerde begeleiding en spirituele inzichten',
+      welcome: 'Welkom bij jouw Ontdekkingsreis',
+      welcomeDesc: 'Leer jezelf dieper kennen, ontdek je authentieke kracht en breng je dromen tot leven',
       beginJourney: 'Begin Je Reis',
       chooseLanguage: 'Kies Je Taal',
       languageDescription: 'Selecteer je voorkeurstaal voor alle AI-gegenereerde inhoud, rapporten en begeleiding gedurende je reis.',
@@ -2328,7 +2328,7 @@ const translations: Record<Language, Translations> = {
     },
     // HACS
     hacs: {
-      insight: 'HACS Inzicht',
+      insight: 'Inzicht',
       confidence: 'Vertrouwen',
       showEvidence: 'Toon Bewijs',
       hideEvidence: 'Verberg Bewijs',
@@ -2337,7 +2337,7 @@ const translations: Record<Language, Translations> = {
       gotIt: 'Begrepen',
       generated: 'Gegenereerd',
       loading: 'HACS Laden...',
-      soulAlchemistReady: 'Je Ziel Alchemist is klaar om je transformatie te begeleiden.',
+      soulAlchemistReady: 'Je Echo is klaar om je transformatie te begeleiden.',
       blueprintUnderstanding: 'Blueprint Begrip',
       systemInitializing: 'Systeem initialiseren...',
       insightsQueue: '{current} van {total} inzichten',
@@ -2360,10 +2360,10 @@ const translations: Record<Language, Translations> = {
           continueButton: 'Doorgaan met Leren'
         },
         placeholder: 'Deel je gedachten en inzichten...',
-        helperText: 'Neem de tijd om na te denken. Kwaliteitsantwoorden helpen HACS om meer over je te leren.',
+        helperText: 'Neem de tijd om na te denken. Kwaliteitsantwoorden helpen Echo om meer over je te leren.',
         analyzing: {
           title: 'Je Antwoord Analyseren',
-          description: 'HACS evalueert je inzichten voor begrip en leerevidentie...'
+          description: 'Echo kijkt met je mee om te zien wat je hebt ontdekt en hoe je groeit...'
         },
         results: {
           learningValidated: 'Leren Gevalideerd!',
