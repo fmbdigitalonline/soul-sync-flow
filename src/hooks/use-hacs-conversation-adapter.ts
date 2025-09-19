@@ -244,32 +244,37 @@ export const useHACSConversationAdapter = (
         sessionId 
       });
 
-      // ORACLE-FIRST FLOW: Prioritize Oracle response in companion mode
+  // ORACLE-FIRST FLOW: Enhanced with 4-layer memory system
       if (isCompanionMode) {
-        console.log('🔮 ORACLE-FIRST: Starting Oracle-prioritized conversation flow');
+        console.log('🔮 ORACLE-FIRST: Starting enhanced conversation flow with 4-layer memory');
         
         // Start coordinated Oracle operation
         const abortController = startOracleOperation();
         
         try {
-          // PILLAR II: Load conversation context with intelligent selection
-          const conversationContext = await conversationMemoryService.getConversationContext(stableThreadId!);
+          // NEW: Use Enhanced Conversation Orchestrator for complete context
+          const { enhancedConversationOrchestrator } = await import('@/services/enhanced-conversation-orchestrator');
           
-          let recentMessages = [];
-          if (conversationContext?.messages) {
-            // PHASE 3 UPGRADE: Use progressive context with multi-level summarization
-            const intelligentMessages = await conversationMemoryService.getProgressiveIntelligentContext(
-              stableThreadId!, 
-              content, // Pass user query for semantic similarity
-              4000 // Max tokens for Oracle context
-            );
-            
-            recentMessages = intelligentMessages.map(msg => ({
-              role: msg.role === 'assistant' ? 'assistant' : msg.role,
-              content: msg.content,
-              timestamp: msg.timestamp
-            }));
-          }
+          const enhancedContext = await enhancedConversationOrchestrator.processUserMessage(
+            content,
+            stableThreadId!,
+            user.id
+          );
+          
+          console.log('🎭 ENHANCED CONTEXT LOADED:', {
+            intent: enhancedContext.currentIntent.type,
+            confidence: enhancedContext.currentIntent.confidence,
+            contextQuality: enhancedContext.contextQuality,
+            turnBuffer: enhancedContext.turnBufferSize,
+            semanticMemories: enhancedContext.semanticContext.relevantMemories.length
+          });
+
+          // Convert context for Oracle
+          let recentMessages = enhancedContext.recentTurns.map(turn => ({
+            role: turn.speaker === 'assistant' ? 'assistant' : turn.speaker,
+            content: turn.text,
+            timestamp: turn.timestamp
+          }));
 
           // PILLAR II: Load user profile for Oracle context
           const { data: blueprint } = await supabase
@@ -279,7 +284,13 @@ export const useHACSConversationAdapter = (
             .eq('is_active', true)
             .maybeSingle();
 
-          let userProfile = {};
+          let userProfile: { name: string; mbti: string; hdType: string; sunSign: string } = {
+            name: 'Seeker',
+            mbti: 'Unknown',
+            hdType: 'Unknown',
+            sunSign: 'Unknown'
+          };
+          
           if (blueprint?.blueprint) {
             const blueprintData = blueprint.blueprint as any;
             userProfile = {
@@ -296,17 +307,28 @@ export const useHACSConversationAdapter = (
             userProfile: Object.keys(userProfile).length > 0
           });
 
-          // Call the companion oracle function with enhanced context
+          // Generate enhanced prompt for Oracle
+          const basePrompt = "Je bent een wijze metgezel die luistert naar de gebruiker en bouwt voort op de gesprekcontext.";
+          const enhancedPrompt = await enhancedConversationOrchestrator.generateEnhancedPrompt(
+            basePrompt,
+            enhancedContext,
+            stableThreadId!,
+            userProfile.name || 'friend'
+          );
+
+          // Call the companion oracle function with enhanced context and prompt
           const { data: oracleResponse, error: oracleError } = await supabase.functions.invoke('companion-oracle-conversation', {
             body: {
               message: content,
               userId: user.id,
               sessionId,
-              threadId: stableThreadId, // PHASE 2 FIX: Pass stable thread ID for Oracle context reconciliation
+              threadId: stableThreadId,
               useOracleMode: true,
               enableBackgroundIntelligence: true,
               conversationHistory: recentMessages,
-              userProfile: userProfile
+              userProfile: userProfile,
+              enhancedPrompt: enhancedPrompt,
+              intentContext: enhancedContext.currentIntent
             }
           });
 
@@ -321,21 +343,21 @@ export const useHACSConversationAdapter = (
             responseLength: oracleResponse.response?.length || 0
           });
           
-          // PHASE 2 FIX: Use sendOracleMessage and ensure conversation memory uses stable thread ID
+          // ENHANCED: Process AI response through orchestrator
+          if (oracleResponse?.response) {
+            await enhancedConversationOrchestrator.processAIResponse(
+              oracleResponse.response,
+              stableThreadId!,
+              user.id,
+              'companion'
+            );
+          }
+
+          // Send through HACS conversation
           await hacsConversation.sendOracleMessage(content, oracleResponse);
           
-          // PILLAR I & II: Store messages using enhanced ConversationMemoryService with semantic embeddings
+          // Store in legacy conversation memory for backward compatibility
           try {
-            // PHASE 4: Check conversation state and detect closure signals
-            const { conversationStateService } = await import('@/services/conversation-state-service');
-            const conversationState = conversationStateService.detectConversationState(content);
-            
-            console.log('🎯 CONVERSATION STATE DETECTED:', conversationState);
-
-            // Store conversation state in progressive memory
-            await conversationStateService.storeConversationState(stableThreadId!, user.id, conversationState, content);
-
-            // Store user message with progressive memory features
             await conversationMemoryService.storeMessageWithProgressiveMemory(stableThreadId!, {
               role: 'user',
               content: content,
@@ -343,7 +365,6 @@ export const useHACSConversationAdapter = (
               id: `user_${Date.now()}`
             }, user.id);
             
-            // Store Oracle response with progressive memory features
             if (oracleResponse?.response) {
               await conversationMemoryService.storeMessageWithProgressiveMemory(stableThreadId!, {
                 role: 'assistant',
@@ -354,9 +375,9 @@ export const useHACSConversationAdapter = (
               }, user.id);
             }
             
-            console.log('✅ ADAPTER: Messages stored with semantic enhancement');
+            console.log('✅ ENHANCED ADAPTER: Complete 4-layer memory storage completed');
           } catch (error) {
-            console.error('❌ ADAPTER: Enhanced storage error:', error);
+            console.error('❌ ENHANCED ADAPTER: Storage error (non-critical):', error);
           }
           
           // Background processing for future intelligence
