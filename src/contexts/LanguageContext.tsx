@@ -1948,7 +1948,7 @@ const translations: Record<Language, Translations> = {
       stepOf: 'Stap {current} van {total}',
       back: 'Terug',
       continue: 'Doorgaan',
-      getReport: 'Krijg Mijn Rapport',
+      getReport: 'Creëer Mijn Rapport',
 
       // Step 1: Pain Points
       painPoint: {
