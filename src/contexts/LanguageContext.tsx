@@ -253,7 +253,7 @@ const translations: Record<Language, Translations> = {
     // Steward Introduction
     stewardIntro: {
       awakening: {
-        title: 'The Soul Alchemist\'s Genesis',
+        title: 'The Companion’s Introduction',
         message: 'Hello. I am the Soul Alchemist. Your arrival has awakened my purpose: to be a mirror to the masterpiece that is you.'
       },
       blueprintFoundation: {
