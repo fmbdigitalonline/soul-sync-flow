@@ -8,9 +8,13 @@ import { conversationMemoryService } from '@/services/conversation-memory-servic
 
 export interface ConversationMessage {
   id: string;
+  client_msg_id?: string; // Step 1: Client-side UUID for optimistic updates
+  server_msg_id?: string; // Step 2: Server-side ID after backend processing
   role: 'user' | 'hacs';
   content: string;
   timestamp: string;
+  created_at_server?: string; // Step 4: Server timestamp for proper ordering
+  status?: 'sending' | 'sent' | 'error'; // Step 5: Message status tracking
   module?: string;
   messageType?: string;
   questionId?: string;
@@ -21,6 +25,8 @@ export interface ConversationMessage {
   intelligence_bonus?: number;
   mode?: string;
   isStreaming?: boolean;
+  correlation_id?: string; // Step 6: Pipeline patching support
+  client_seq?: number; // Step 4: Local sequence for tie-breaking
 }
 
 export interface HACSQuestion {
@@ -45,6 +51,7 @@ export const useHACSConversation = () => {
   const [currentQuestion, setCurrentQuestion] = useState<HACSQuestion | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string>('');
   const streamingAbortRef = useRef<AbortController | null>(null);
+  const clientSeqRef = useRef<number>(0); // Step 4: Client sequence counter
 
   // Helper function to determine conversation quality
   const determineResponseQuality = useCallback((hacsResponse: string, userMessage: string): 'excellent' | 'good' | 'average' | 'poor' => {
@@ -269,18 +276,25 @@ export const useHACSConversation = () => {
     setIsLoading(true);
     setIsTyping(true);
 
+    // Step 1: Generate client UUID and increment sequence
+    const clientMsgId = crypto.randomUUID();
+    const clientSeq = ++clientSeqRef.current;
+
     try {
-      // Add user message immediately
+      // Step 1: Add optimistic user message immediately
       const userMessage: ConversationMessage = {
-        id: `user_${Date.now()}`,
+        id: clientMsgId, // Use client ID as primary ID initially
+        client_msg_id: clientMsgId,
         role: 'user',
         content: content.trim(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        status: 'sending',
+        client_seq: clientSeq
       };
 
       setMessages(prev => [...prev, userMessage]);
 
-      // Send to HACS intelligent conversation
+      // Step 2: Send to idempotent HACS conversation endpoint
       const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
         body: {
           action: 'respond_to_user',
@@ -288,21 +302,38 @@ export const useHACSConversation = () => {
           sessionId: currentSessionId || `companion_${user.id}`,
           conversationId,
           userMessage: content.trim(),
+          client_msg_id: clientMsgId, // Step 2: Include client ID for idempotency
           messageHistory: [...messages, userMessage]
         }
       });
 
       if (error) throw error;
 
-      // Add HACS response
+      // Step 2: Reconcile optimistic message with server response
+      setMessages(prev => prev.map(msg => 
+        msg.client_msg_id === clientMsgId 
+          ? { 
+              ...msg, 
+              server_msg_id: data.server_msg_id,
+              created_at_server: data.created_at_server,
+              status: 'sent' as const
+            }
+          : msg
+      ));
+
+      // Step 3: Add HACS response with streaming placeholder
       const hacsMessage: ConversationMessage = {
-        id: `hacs_${Date.now()}`,
+        id: data.assistant_msg_id || `hacs_${Date.now()}`,
+        server_msg_id: data.assistant_msg_id,
         role: 'hacs',
         content: data.response || 'I understand. How can I help you further?',
         timestamp: new Date().toISOString(),
+        created_at_server: data.assistant_created_at,
+        status: 'sent',
         module: data.module,
         mode: data.mode,
-        intelligence_bonus: data.intelligence_bonus
+        intelligence_bonus: data.intelligence_bonus,
+        correlation_id: data.correlation_id // Step 6: Pipeline patching support
       };
 
       setMessages(prev => [...prev, hacsMessage]);
@@ -327,11 +358,20 @@ export const useHACSConversation = () => {
 
     } catch (error) {
       console.error('Error in HACS conversation:', error);
+      
+      // Step 5: Mark optimistic message as error and allow retry
+      setMessages(prev => prev.map(msg => 
+        msg.client_msg_id === clientMsgId 
+          ? { ...msg, status: 'error' as const }
+          : msg
+      ));
+      
       const errorMessage: ConversationMessage = {
         id: `error_${Date.now()}`,
         role: 'hacs',
         content: 'I apologize, but I encountered an issue. Please try again.',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        status: 'sent'
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {

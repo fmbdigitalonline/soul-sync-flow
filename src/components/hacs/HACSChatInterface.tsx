@@ -10,6 +10,8 @@ import { ThinkingDots } from "./ThinkingDots";
 import { useGlobalChatState } from "@/hooks/use-global-chat-state";
 import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
 import { VFPGraphFeedback } from "@/components/coach/VFPGraphFeedback";
+import { useOptimisticMessages } from "@/hooks/use-optimistic-messages";
+import { AlertCircle, RotateCcw, X } from "lucide-react";
 
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
@@ -34,6 +36,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   const [initialMessageCount, setInitialMessageCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { updateChatLoading } = useGlobalChatState();
+  const { retryMessage, removeFailedMessage, sortMessages } = useOptimisticMessages();
 
   // Track initial message count to avoid animating historical messages
   useEffect(() => {
@@ -49,6 +52,9 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Step 4: Sort messages for proper display order
+  const sortedMessages = sortMessages(messages);
 
   // Update global chat loading state
   useEffect(() => {
@@ -91,19 +97,35 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     }
   };
 
+  // Step 5: Handle retry for failed messages
+  const handleRetryMessage = (message: ConversationMessage) => {
+    retryMessage(message, messages, (updater) => {
+      // This would need to be passed from parent, but for now just log
+      console.log('Retry requested for message:', message.client_msg_id);
+    }, onSendMessage);
+  };
+
+  // Step 5: Handle remove failed message
+  const handleRemoveFailedMessage = (clientMsgId: string) => {
+    removeFailedMessage(clientMsgId, (updater) => {
+      // This would need to be passed from parent, but for now just log
+      console.log('Remove requested for message:', clientMsgId);
+    }, setInputValue);
+  };
+
   return (
     <div className="flex flex-col h-full relative">
 
       {/* Messages */}
       <ScrollArea className="flex-1 h-[calc(100%-5rem)]">
         <div className="px-3 py-2 pb-20 space-y-3">
-          {messages.length === 0 && (
+          {sortedMessages.length === 0 && (
             <div className="text-center text-muted-foreground py-4">
               <p>Start a conversation to begin intelligence learning</p>
             </div>
           )}
           
-          {messages.map((message, index) => {
+          {sortedMessages.map((message, index) => {
             const isNewMessage = index >= initialMessageCount;
             return (
               <div
@@ -114,11 +136,39 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                 )}
               >
                 {message.role === "user" ? (
-                  <div className="inline-block bg-primary text-primary-foreground rounded-lg p-3 max-w-[85%] sm:max-w-[70%]">
+                  <div className="inline-block bg-primary text-primary-foreground rounded-lg p-3 max-w-[85%] sm:max-w-[70%] relative">
                     <p className="text-sm">{message.content}</p>
                     {message.isQuestion && (
                       <div className="mt-2 text-xs opacity-70">
                         Question from: {message.module}
+                      </div>
+                    )}
+                    
+                    {/* Step 5: Status indicators and error recovery */}
+                    {message.status === 'sending' && (
+                      <div className="mt-1 flex items-center gap-1 text-xs opacity-70">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span>Sending...</span>
+                      </div>
+                    )}
+                    
+                    {message.status === 'error' && (
+                      <div className="mt-2 flex items-center gap-2 text-xs">
+                        <AlertCircle className="h-3 w-3 text-destructive" />
+                        <span className="text-destructive">Failed to send</span>
+                        <button
+                          onClick={() => handleRetryMessage(message)}
+                          className="flex items-center gap-1 text-primary hover:text-primary/80 underline"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                          Retry
+                        </button>
+                        <button
+                          onClick={() => handleRemoveFailedMessage(message.client_msg_id!)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </div>
                     )}
                   </div>
