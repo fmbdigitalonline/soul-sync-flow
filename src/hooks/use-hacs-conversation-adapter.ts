@@ -8,6 +8,7 @@ import { BackgroundIntelligenceService } from '../services/background-intelligen
 import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
 import { createErrorHandler } from '@/utils/error-recovery';
 import { conversationMemoryService } from '@/services/conversation-memory-service';
+import { useOptimisticMessages } from './use-optimistic-messages';
 
 // Adapter interface that matches useEnhancedAICoach exactly
 export interface HACSConversationAdapter {
@@ -216,6 +217,19 @@ export const useHACSConversationAdapter = (
       content: content.substring(0, 50),
       agentOverride,
       timestamp: new Date().toISOString()
+    });
+
+    // STEP 1: IMMEDIATE OPTIMISTIC MESSAGE DISPLAY (Fix root cause of delay)
+    // Add user message to UI immediately, before any loading states or processing
+    const { createOptimisticMessage } = useOptimisticMessages();
+    const optimisticMessage = createOptimisticMessage(content, 'user');
+    
+    // Add optimistic message to HACS conversation immediately
+    hacsConversation.setMessages(prev => [...prev, optimisticMessage]);
+    
+    console.log('✅ OPTIMISTIC: User message displayed immediately', {
+      clientMsgId: optimisticMessage.client_msg_id,
+      timestamp: optimisticMessage.timestamp
     });
 
     // Post-send guard: if any operations still active after 9s, force recovery

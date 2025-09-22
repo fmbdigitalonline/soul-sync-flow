@@ -5,6 +5,7 @@ import { useHacsIntelligence } from './use-hacs-intelligence';
 import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
 import { createErrorHandler } from '@/utils/error-recovery';
 import { conversationMemoryService } from '@/services/conversation-memory-service';
+import { useOptimisticMessages } from './use-optimistic-messages';
 
 export interface ConversationMessage {
   id: string;
@@ -52,6 +53,9 @@ export const useHACSConversation = () => {
   const [currentSessionId, setCurrentSessionId] = useState<string>('');
   const streamingAbortRef = useRef<AbortController | null>(null);
   const clientSeqRef = useRef<number>(0); // Step 4: Client sequence counter
+  
+  // Import optimistic message utilities
+  const { sortMessages, createOptimisticMessage } = useOptimisticMessages();
 
   // Helper function to determine conversation quality
   const determineResponseQuality = useCallback((hacsResponse: string, userMessage: string): 'excellent' | 'good' | 'average' | 'poor' => {
@@ -273,15 +277,12 @@ export const useHACSConversation = () => {
   const sendMessage = useCallback(async (content: string) => {
     if (!user || !content.trim()) return;
 
-    setIsLoading(true);
-    setIsTyping(true);
-
     // Step 1: Generate client UUID and increment sequence
     const clientMsgId = crypto.randomUUID();
     const clientSeq = ++clientSeqRef.current;
 
     try {
-      // Step 1: Add optimistic user message immediately
+      // Step 1: Add optimistic user message immediately (but check for duplicates first)
       const userMessage: ConversationMessage = {
         id: clientMsgId, // Use client ID as primary ID initially
         client_msg_id: clientMsgId,
@@ -292,7 +293,19 @@ export const useHACSConversation = () => {
         client_seq: clientSeq
       };
 
-      setMessages(prev => [...prev, userMessage]);
+      // Check if message already exists (added by adapter) to prevent duplicates
+      setMessages(prev => {
+        const exists = prev.some(msg => msg.client_msg_id === clientMsgId);
+        if (exists) {
+          console.log('⚠️ OPTIMISTIC: Message already exists, skipping duplicate', { clientMsgId });
+          return prev;
+        }
+        return [...prev, userMessage];
+      });
+
+      // Set loading states AFTER optimistic message is added
+      setIsLoading(true);
+      setIsTyping(true);
 
       // Step 2: Send to idempotent message handler first
       const messageHandlerResponse = await supabase.functions.invoke('hacs-message-handler', {
@@ -760,6 +773,7 @@ export const useHACSConversation = () => {
     provideFeedback,
     stopStreaming,
     clearConversation,
+    setMessages, // Export setMessages for adapter use
     markMessageStreamingComplete
   };
 };
