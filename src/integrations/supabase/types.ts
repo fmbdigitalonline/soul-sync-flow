@@ -702,60 +702,48 @@ export type Database = {
       }
       conversation_messages: {
         Row: {
-          agent_mode: string | null
+          client_msg_id: string
           content: string
-          created_at: string
-          emotional_tone: string | null
+          conversation_id: string
+          correlation_id: string | null
+          created_at: string | null
           id: string
-          importance_score: number | null
-          is_summary: boolean | null
-          message_id: string
-          parent_message_id: string | null
+          pipeline_id: string | null
           role: string
-          semantic_embedding: string | null
-          summary_level: number | null
-          thread_id: string
-          tokens_count: number | null
-          topic_tags: string[] | null
-          updated_at: string
+          session_id: string
+          status: string | null
+          step_seq: number | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
-          agent_mode?: string | null
+          client_msg_id: string
           content: string
-          created_at?: string
-          emotional_tone?: string | null
+          conversation_id: string
+          correlation_id?: string | null
+          created_at?: string | null
           id?: string
-          importance_score?: number | null
-          is_summary?: boolean | null
-          message_id: string
-          parent_message_id?: string | null
+          pipeline_id?: string | null
           role: string
-          semantic_embedding?: string | null
-          summary_level?: number | null
-          thread_id: string
-          tokens_count?: number | null
-          topic_tags?: string[] | null
-          updated_at?: string
+          session_id: string
+          status?: string | null
+          step_seq?: number | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
-          agent_mode?: string | null
+          client_msg_id?: string
           content?: string
-          created_at?: string
-          emotional_tone?: string | null
+          conversation_id?: string
+          correlation_id?: string | null
+          created_at?: string | null
           id?: string
-          importance_score?: number | null
-          is_summary?: boolean | null
-          message_id?: string
-          parent_message_id?: string | null
+          pipeline_id?: string | null
           role?: string
-          semantic_embedding?: string | null
-          summary_level?: number | null
-          thread_id?: string
-          tokens_count?: number | null
-          topic_tags?: string[] | null
-          updated_at?: string
+          session_id?: string
+          status?: string | null
+          step_seq?: number | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []

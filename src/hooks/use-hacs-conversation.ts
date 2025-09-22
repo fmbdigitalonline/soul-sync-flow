@@ -294,7 +294,34 @@ export const useHACSConversation = () => {
 
       setMessages(prev => [...prev, userMessage]);
 
-      // Step 2: Send to idempotent HACS conversation endpoint
+      // Step 2: Send to idempotent message handler first
+      const messageHandlerResponse = await supabase.functions.invoke('hacs-message-handler', {
+        body: {
+          conversation_id: conversationId || currentSessionId || `companion_${user.id}`,
+          client_msg_id: clientMsgId,
+          content: content.trim(),
+          user_id: user.id,
+          session_id: currentSessionId || `companion_${user.id}`
+        }
+      });
+
+      if (messageHandlerResponse.error) {
+        throw new Error(`Message Handler Error: ${messageHandlerResponse.error.message}`);
+      }
+
+      // Step 2: Update optimistic message with server data
+      setMessages(prev => prev.map(msg => 
+        msg.client_msg_id === clientMsgId 
+          ? { 
+              ...msg, 
+              server_msg_id: messageHandlerResponse.data.server_msg_id,
+              created_at_server: messageHandlerResponse.data.created_at_server,
+              status: 'sent' as const
+            }
+          : msg
+      ));
+
+      // Now send to HACS intelligent conversation
       const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
         body: {
           action: 'respond_to_user',
@@ -302,24 +329,13 @@ export const useHACSConversation = () => {
           sessionId: currentSessionId || `companion_${user.id}`,
           conversationId,
           userMessage: content.trim(),
-          client_msg_id: clientMsgId, // Step 2: Include client ID for idempotency
+          client_msg_id: clientMsgId, // Step 2: Include client ID for correlation
+          server_msg_id: messageHandlerResponse.data.server_msg_id,
           messageHistory: [...messages, userMessage]
         }
       });
 
       if (error) throw error;
-
-      // Step 2: Reconcile optimistic message with server response
-      setMessages(prev => prev.map(msg => 
-        msg.client_msg_id === clientMsgId 
-          ? { 
-              ...msg, 
-              server_msg_id: data.server_msg_id,
-              created_at_server: data.created_at_server,
-              status: 'sent' as const
-            }
-          : msg
-      ));
 
       // Step 3: Add HACS response with streaming placeholder
       const hacsMessage: ConversationMessage = {

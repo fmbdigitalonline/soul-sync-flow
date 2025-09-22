@@ -21,6 +21,8 @@ interface HACSChatInterfaceProps {
   onStreamingComplete?: (messageId: string) => void;
   onStopStreaming?: () => void;
   onFeedback?: (messageId: string, isPositive: boolean) => void;
+  retryFailedMessage?: (clientMsgId: string) => Promise<void>; // Step 5: Add retry function
+  removeFailedMessage?: (clientMsgId: string, setInputValue: (value: string) => void) => void; // Step 5: Add remove function
 }
 
 export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
@@ -31,12 +33,14 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   onStreamingComplete,
   onStopStreaming,
   onFeedback,
+  retryFailedMessage,
+  removeFailedMessage,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [initialMessageCount, setInitialMessageCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { updateChatLoading } = useGlobalChatState();
-  const { retryMessage, removeFailedMessage, sortMessages } = useOptimisticMessages();
+  const { sortMessages } = useOptimisticMessages();
 
   // Track initial message count to avoid animating historical messages
   useEffect(() => {
@@ -99,18 +103,16 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
 
   // Step 5: Handle retry for failed messages
   const handleRetryMessage = (message: ConversationMessage) => {
-    retryMessage(message, messages, (updater) => {
-      // This would need to be passed from parent, but for now just log
-      console.log('Retry requested for message:', message.client_msg_id);
-    }, onSendMessage);
+    if (retryFailedMessage && message.client_msg_id) {
+      retryFailedMessage(message.client_msg_id);
+    }
   };
 
-  // Step 5: Handle remove failed message
+  // Step 5: Handle remove failed message  
   const handleRemoveFailedMessage = (clientMsgId: string) => {
-    removeFailedMessage(clientMsgId, (updater) => {
-      // This would need to be passed from parent, but for now just log
-      console.log('Remove requested for message:', clientMsgId);
-    }, setInputValue);
+    if (removeFailedMessage) {
+      removeFailedMessage(clientMsgId, setInputValue);
+    }
   };
 
   return (
