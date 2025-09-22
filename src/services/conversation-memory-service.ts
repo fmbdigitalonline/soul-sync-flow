@@ -197,14 +197,17 @@ export class ConversationMemoryService {
   ): Promise<ValidatedMessage[]> {
     try {
       // Get progressive context from Phase 3 service
-      const progressiveContext = await progressiveMemoryService.getProgressiveContext(
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || 'anonymous';
+      
+      const progressiveMessages = await progressiveMemoryService.getConversationHistory(
+        userId,
         threadId,
-        maxTokens,
-        true // Include topic context
+        Math.floor(maxTokens / 100) // Rough estimate: 100 chars per message
       );
 
       // Convert structured messages to ValidatedMessage format for compatibility
-      const messages: ValidatedMessage[] = progressiveContext.messages.map(msg => ({
+      const messages: ValidatedMessage[] = progressiveMessages.map(msg => ({
         id: msg.message_id,
         role: msg.role,
         content: msg.content,
@@ -212,18 +215,7 @@ export class ConversationMemoryService {
         agent_mode: msg.agent_mode
       }));
 
-      // Add summary context as system messages if available
-      progressiveContext.summaries.forEach(summary => {
-        messages.unshift({
-          id: `summary_${summary.id}`,
-          role: 'system',
-          content: `[Summary] ${summary.summary_content}`,
-          timestamp: new Date(summary.created_at),
-          agent_mode: 'summary'
-        });
-      });
-
-      console.log(`✅ PROGRESSIVE CONTEXT: Retrieved ${messages.length} messages using ${progressiveContext.contextStrategy} strategy`);
+      console.log(`✅ PROGRESSIVE CONTEXT: Retrieved ${messages.length} messages from progressive memory`);
       return messages.slice(0, 20); // Reasonable limit
     } catch (error) {
       console.error('❌ PROGRESSIVE CONTEXT: Error, falling back to semantic context:', error);
@@ -354,19 +346,23 @@ export class ConversationMemoryService {
         return false;
       }
 
-      // Store in progressive memory system (Phase 3)
-      const structuredMessage = await progressiveMemoryService.storeStructuredMessage(
-        threadId,
-        validatedMessage.id,
-        validatedMessage.role,
-        validatedMessage.content,
-        validatedMessage.agent_mode
-      );
-
-      if (!structuredMessage) {
-        console.error('❌ PROGRESSIVE STORAGE: Failed to store in structured format');
-        // Fall back to legacy storage
-        return this.storeMessageWithEmbedding(threadId, message, userId);
+      // Store in progressive memory system (Phase 3) - skip system messages
+      if (validatedMessage.role !== 'system') {
+        const { data: { user } } = await supabase.auth.getUser();
+        const effectiveUserId = userId || user?.id || 'anonymous';
+        
+        await progressiveMemoryService.storeMessage(
+          {
+            id: validatedMessage.id,
+            role: validatedMessage.role,
+            content: validatedMessage.content,
+            timestamp: validatedMessage.timestamp.toISOString()
+          },
+          effectiveUserId,
+          threadId,
+          validatedMessage.agent_mode
+        );
+        console.log('✅ PROGRESSIVE STORAGE: Message stored in progressive memory');
       }
 
       // Also store in legacy format for backwards compatibility
