@@ -18,7 +18,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 export const useStewardIntroductionEnhanced = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   // Phase 3: Use database-driven validation instead of diagnostics
   const databaseValidation = useStewardIntroductionDatabase();
   const [introductionState, setIntroductionState] = useState<StewardIntroductionState>({
@@ -212,7 +212,7 @@ export const useStewardIntroductionEnhanced = () => {
       }
 
       // Generate the hermetic report in background
-      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprint as any);
+      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprint as any, language);
       
       if (result.success && result.job_id) {
         console.log(`✅ PHASE 3: Hermetic report job created successfully: ${result.job_id}`);

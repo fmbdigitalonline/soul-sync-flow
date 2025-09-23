@@ -19,7 +19,7 @@ serve(async (req) => {
   }
 
   try {
-    const { user_id, blueprint_data } = await req.json();
+    const { user_id, blueprint_data, language = 'en' } = await req.json();
     
     if (!user_id || !blueprint_data) {
       return new Response(JSON.stringify({ 
@@ -56,6 +56,7 @@ serve(async (req) => {
       .insert({
         user_id: user_id,
         blueprint_data: blueprint_data,
+        language: language,
         status: 'pending',
         status_message: 'Job created, queued for processing...'
       })

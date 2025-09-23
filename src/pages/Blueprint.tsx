@@ -35,7 +35,8 @@ const Blueprint = () => {
     speak
   } = useSoulOrb();
   const {
-    t
+    t,
+    language
   } = useLanguage();
   const {
     spacing,
@@ -309,7 +310,7 @@ const Blueprint = () => {
         description: "Starting hermetic personality report generation..."
       });
 
-      const reportResult = await hermeticPersonalityReportService.generateHermeticReport(convertToSaveFormat(blueprintData));
+      const reportResult = await hermeticPersonalityReportService.generateHermeticReport(convertToSaveFormat(blueprintData), language);
       
       if (reportResult.success) {
         toast({

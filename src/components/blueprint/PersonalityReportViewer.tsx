@@ -206,7 +206,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       const { data: jobData, error: jobError } = await supabase.functions.invoke('hermetic-job-creator', {
         body: {
           user_id: user.id,
-          blueprint_data: blueprintResult.data
+          blueprint_data: blueprintResult.data,
+          language: language
         }
       });
 
