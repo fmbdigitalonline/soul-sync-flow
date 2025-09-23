@@ -10,8 +10,6 @@ import { ThinkingDots } from "./ThinkingDots";
 import { useGlobalChatState } from "@/hooks/use-global-chat-state";
 import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
 import { VFPGraphFeedback } from "@/components/coach/VFPGraphFeedback";
-import { useOptimisticMessages } from "@/hooks/use-optimistic-messages";
-import { AlertCircle, RotateCcw, X } from "lucide-react";
 
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
@@ -21,8 +19,6 @@ interface HACSChatInterfaceProps {
   onStreamingComplete?: (messageId: string) => void;
   onStopStreaming?: () => void;
   onFeedback?: (messageId: string, isPositive: boolean) => void;
-  retryFailedMessage?: (clientMsgId: string) => Promise<void>; // Step 5: Add retry function
-  removeFailedMessage?: (clientMsgId: string, setInputValue: (value: string) => void) => void; // Step 5: Add remove function
 }
 
 export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
@@ -33,14 +29,11 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   onStreamingComplete,
   onStopStreaming,
   onFeedback,
-  retryFailedMessage,
-  removeFailedMessage,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [initialMessageCount, setInitialMessageCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { updateChatLoading } = useGlobalChatState();
-  const { sortMessages } = useOptimisticMessages();
 
   // Track initial message count to avoid animating historical messages
   useEffect(() => {
@@ -57,43 +50,21 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     scrollToBottom();
   }, [messages]);
 
-  // Step 4: Sort messages for proper display order
-  const sortedMessages = sortMessages(messages);
-
   // Update global chat loading state
   useEffect(() => {
     updateChatLoading(isLoading);
   }, [isLoading, updateChatLoading]);
 
   const handleSendMessage = async () => {
-    console.log('🖱️ BUTTON CLICK: Send message button clicked', {
-      inputValue: inputValue.substring(0, 50),
-      inputValueLength: inputValue.length,
-      inputValueTrimmed: inputValue.trim().length,
-      isLoading,
-      isStreamingResponse
-    });
-    
-    if (!inputValue.trim()) {
-      console.warn('⚠️ BUTTON CLICK: Empty input value, not sending');
-      return;
-    }
-    
-    if (isLoading) {
-      console.warn('⚠️ BUTTON CLICK: Currently loading, not sending message');
-      return;
-    }
+    if (!inputValue.trim() || isLoading) return;
     
     const messageToSend = inputValue.trim();
     setInputValue("");
     
-    console.log('📤 BUTTON CLICK: Calling onSendMessage with:', messageToSend.substring(0, 50));
-    
     try {
       await onSendMessage(messageToSend);
-      console.log('✅ BUTTON CLICK: Message sent successfully');
     } catch (error) {
-      console.error('❌ BUTTON CLICK: Failed to send message:', error);
+      console.error('Failed to send message:', error);
       // Put the message back if it failed
       setInputValue(messageToSend);
     }
@@ -120,33 +91,19 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     }
   };
 
-  // Step 5: Handle retry for failed messages
-  const handleRetryMessage = (message: ConversationMessage) => {
-    if (retryFailedMessage && message.client_msg_id) {
-      retryFailedMessage(message.client_msg_id);
-    }
-  };
-
-  // Step 5: Handle remove failed message  
-  const handleRemoveFailedMessage = (clientMsgId: string) => {
-    if (removeFailedMessage) {
-      removeFailedMessage(clientMsgId, setInputValue);
-    }
-  };
-
   return (
     <div className="flex flex-col h-full relative">
 
       {/* Messages */}
       <ScrollArea className="flex-1 h-[calc(100%-5rem)]">
         <div className="px-3 py-2 pb-20 space-y-3">
-          {sortedMessages.length === 0 && (
+          {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-4">
               <p>Start a conversation to begin intelligence learning</p>
             </div>
           )}
           
-          {sortedMessages.map((message, index) => {
+          {messages.map((message, index) => {
             const isNewMessage = index >= initialMessageCount;
             return (
               <div
@@ -157,15 +114,13 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                 )}
               >
                 {message.role === "user" ? (
-                  <div className="inline-block bg-primary text-primary-foreground rounded-lg p-3 max-w-[85%] sm:max-w-[70%] relative">
+                  <div className="inline-block bg-primary text-primary-foreground rounded-lg p-3 max-w-[85%] sm:max-w-[70%]">
                     <p className="text-sm">{message.content}</p>
                     {message.isQuestion && (
                       <div className="mt-2 text-xs opacity-70">
                         Question from: {message.module}
                       </div>
                     )}
-                    
-                    {/* No status indicators - user doesn't want them */}
                   </div>
                 ) : (
                   <div className="w-full">

@@ -5,17 +5,12 @@ import { useHacsIntelligence } from './use-hacs-intelligence';
 import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
 import { createErrorHandler } from '@/utils/error-recovery';
 import { conversationMemoryService } from '@/services/conversation-memory-service';
-import { useOptimisticMessages } from './use-optimistic-messages';
 
 export interface ConversationMessage {
   id: string;
-  client_msg_id?: string; // Step 1: Client-side UUID for optimistic updates
-  server_msg_id?: string; // Step 2: Server-side ID after backend processing
   role: 'user' | 'hacs';
   content: string;
   timestamp: string;
-  created_at_server?: string; // Step 4: Server timestamp for proper ordering
-  status?: 'sending' | 'sent' | 'error'; // Step 5: Message status tracking
   module?: string;
   messageType?: string;
   questionId?: string;
@@ -26,8 +21,6 @@ export interface ConversationMessage {
   intelligence_bonus?: number;
   mode?: string;
   isStreaming?: boolean;
-  correlation_id?: string; // Step 6: Pipeline patching support
-  client_seq?: number; // Step 4: Local sequence for tie-breaking
 }
 
 export interface HACSQuestion {
@@ -52,10 +45,6 @@ export const useHACSConversation = () => {
   const [currentQuestion, setCurrentQuestion] = useState<HACSQuestion | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string>('');
   const streamingAbortRef = useRef<AbortController | null>(null);
-  const clientSeqRef = useRef<number>(0); // Step 4: Client sequence counter
-  
-  // Import optimistic message utilities
-  const { sortMessages, createOptimisticMessage } = useOptimisticMessages();
 
   // Helper function to determine conversation quality
   const determineResponseQuality = useCallback((hacsResponse: string, userMessage: string): 'excellent' | 'good' | 'average' | 'poor' => {
@@ -277,64 +266,21 @@ export const useHACSConversation = () => {
   const sendMessage = useCallback(async (content: string) => {
     if (!user || !content.trim()) return;
 
-    // Step 1: Generate client UUID and increment sequence
-    const clientMsgId = crypto.randomUUID();
-    const clientSeq = ++clientSeqRef.current;
+    setIsLoading(true);
+    setIsTyping(true);
 
     try {
-      // Step 1: Add optimistic user message immediately (but check for duplicates first)
+      // Add user message immediately
       const userMessage: ConversationMessage = {
-        id: clientMsgId, // Use client ID as primary ID initially
-        client_msg_id: clientMsgId,
+        id: `user_${Date.now()}`,
         role: 'user',
         content: content.trim(),
-        timestamp: new Date().toISOString(),
-        status: 'sending',
-        client_seq: clientSeq
+        timestamp: new Date().toISOString()
       };
 
-      // Check if message already exists (added by adapter) to prevent duplicates
-      setMessages(prev => {
-        const exists = prev.some(msg => msg.client_msg_id === clientMsgId);
-        if (exists) {
-          console.log('⚠️ OPTIMISTIC: Message already exists, skipping duplicate', { clientMsgId });
-          return prev;
-        }
-        return [...prev, userMessage];
-      });
+      setMessages(prev => [...prev, userMessage]);
 
-      // Set loading states AFTER optimistic message is added
-      setIsLoading(true);
-      setIsTyping(true);
-
-      // Step 2: Send to idempotent message handler first
-      const messageHandlerResponse = await supabase.functions.invoke('hacs-message-handler', {
-        body: {
-          conversation_id: conversationId || currentSessionId || `companion_${user.id}`,
-          client_msg_id: clientMsgId,
-          content: content.trim(),
-          user_id: user.id,
-          session_id: currentSessionId || `companion_${user.id}`
-        }
-      });
-
-      if (messageHandlerResponse.error) {
-        throw new Error(`Message Handler Error: ${messageHandlerResponse.error.message}`);
-      }
-
-      // Step 2: Update optimistic message with server data
-      setMessages(prev => prev.map(msg => 
-        msg.client_msg_id === clientMsgId 
-          ? { 
-              ...msg, 
-              server_msg_id: messageHandlerResponse.data.server_msg_id,
-              created_at_server: messageHandlerResponse.data.created_at_server,
-              status: 'sent' as const
-            }
-          : msg
-      ));
-
-      // Now send to HACS intelligent conversation
+      // Send to HACS intelligent conversation
       const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
         body: {
           action: 'respond_to_user',
@@ -342,27 +288,21 @@ export const useHACSConversation = () => {
           sessionId: currentSessionId || `companion_${user.id}`,
           conversationId,
           userMessage: content.trim(),
-          client_msg_id: clientMsgId, // Step 2: Include client ID for correlation
-          server_msg_id: messageHandlerResponse.data.server_msg_id,
           messageHistory: [...messages, userMessage]
         }
       });
 
       if (error) throw error;
 
-      // Step 3: Add HACS response with streaming placeholder
+      // Add HACS response
       const hacsMessage: ConversationMessage = {
-        id: data.assistant_msg_id || `hacs_${Date.now()}`,
-        server_msg_id: data.assistant_msg_id,
+        id: `hacs_${Date.now()}`,
         role: 'hacs',
         content: data.response || 'I understand. How can I help you further?',
         timestamp: new Date().toISOString(),
-        created_at_server: data.assistant_created_at,
-        status: 'sent',
         module: data.module,
         mode: data.mode,
-        intelligence_bonus: data.intelligence_bonus,
-        correlation_id: data.correlation_id // Step 6: Pipeline patching support
+        intelligence_bonus: data.intelligence_bonus
       };
 
       setMessages(prev => [...prev, hacsMessage]);
@@ -387,20 +327,11 @@ export const useHACSConversation = () => {
 
     } catch (error) {
       console.error('Error in HACS conversation:', error);
-      
-      // Step 5: Mark optimistic message as error and allow retry
-      setMessages(prev => prev.map(msg => 
-        msg.client_msg_id === clientMsgId 
-          ? { ...msg, status: 'error' as const }
-          : msg
-      ));
-      
       const errorMessage: ConversationMessage = {
         id: `error_${Date.now()}`,
         role: 'hacs',
         content: 'I apologize, but I encountered an issue. Please try again.',
-        timestamp: new Date().toISOString(),
-        status: 'sent'
+        timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -417,7 +348,7 @@ export const useHACSConversation = () => {
     setIsTyping(true);
 
     try {
-      // Add user message immediately for responsive UX
+      // Add user message immediately
       const userMessage: ConversationMessage = {
         id: `user_${Date.now()}`,
         role: 'user',
@@ -426,7 +357,6 @@ export const useHACSConversation = () => {
       };
 
       setMessages(prev => [...prev, userMessage]);
-      console.log('✅ USER MESSAGE: Added to conversation immediately');
 
       // If oracle response provided, use it; otherwise call Oracle with conversation context
       let response = oracleResponse;
@@ -774,7 +704,6 @@ export const useHACSConversation = () => {
     provideFeedback,
     stopStreaming,
     clearConversation,
-    setMessages, // Export setMessages for adapter use
     markMessageStreamingComplete
   };
 };

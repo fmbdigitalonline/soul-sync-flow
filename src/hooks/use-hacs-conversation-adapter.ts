@@ -146,23 +146,6 @@ export const useHACSConversationAdapter = (
   const [stableThreadId, setStableThreadId] = useState<string | null>(null);
   const [threadLoading, setThreadLoading] = useState(true);
   
-  // DEBUGGING: Log loading states periodically
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log('🔍 ADAPTER LOADING STATES:', {
-        coordinatedLoading,
-        threadLoading,
-        isStreamingResponse: hacsConversation.isStreamingResponse,
-        hacsLoading: hacsConversation.isLoading,
-        enhancedLoading: enhancedCoach.isLoading,
-        effectiveLoading: coordinatedLoading || threadLoading || hacsConversation.isLoading,
-        activeOperations: getActiveOperations()
-      });
-    }, 2000);
-    
-    return () => clearInterval(interval);
-  }, [coordinatedLoading, threadLoading, hacsConversation.isLoading, hacsConversation.isStreamingResponse, enhancedCoach.isLoading, getActiveOperations]);
-  
   // Get or create stable conversation thread
   const initializeStableThread = useCallback(async () => {
     // Get current user authentication state
@@ -229,38 +212,11 @@ export const useHACSConversationAdapter = (
     context?: any,
     agentOverride?: string
   ) => {
-    console.log('🚀 SEND MESSAGE START:', {
+    console.log('🚀 DUAL-PATHWAY VALIDATION: sendMessage called', {
       content: content.substring(0, 50),
       agentOverride,
-      threadLoading,
-      isCompanionMode,
       timestamp: new Date().toISOString()
     });
-
-    // STEP 0: Pre-flight checks
-    if (!content?.trim()) {
-      console.error('❌ SEND ERROR: Empty message content');
-      return;
-    }
-
-    // Check if thread is still loading
-    if (threadLoading) {
-      console.warn('⚠️ SEND WARNING: Thread still loading, waiting...');
-      // Wait up to 5 seconds for thread to initialize
-      let attempts = 0;
-      while (threadLoading && attempts < 50) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
-      }
-      
-      if (threadLoading) {
-        console.error('❌ SEND ERROR: Thread failed to initialize after 5 seconds');
-        setThreadLoading(false); // Force reset
-      }
-    }
-
-    // STEP 1: Skip optimistic message - let HACS conversation handle it
-    console.log('📝 MESSAGE: Letting HACS conversation handle user message display');
 
     // Post-send guard: if any operations still active after 9s, force recovery
     setTimeout(() => {
@@ -272,90 +228,58 @@ export const useHACSConversationAdapter = (
     }, 9000);
 
     try {
-      // STEP 2: Authentication check
-      console.log('🔐 AUTH: Checking user authentication');
+      // Get user authentication
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error('❌ AUTH ERROR: User not authenticated');
-        throw new Error('User not authenticated - please refresh the page and log in again');
-      }
-      console.log('✅ AUTH: User authenticated', { userId: user.id });
+      if (!user) throw new Error('User not authenticated');
       
-      // STEP 3: Session and agent setup
-      console.log('🔧 SETUP: Initializing session and agent mode');
+      // FUSION FIX: Use context-aware agent mode instead of hardcoded 'guide'
       const sessionId = getOrCreateSessionId();
       const agentMode = agentOverride || getAgentModeFromContext();
 
-      console.log('✅ SETUP: Session and agent configured', { 
+      console.log('🔮 FUSION: Agent mode determination', { 
         currentMode, 
         isCompanionMode, 
         agentOverride, 
         finalAgentMode: agentMode,
-        sessionId,
-        stableThreadId 
+        sessionId 
       });
 
-      // STEP 4: Choose pathway based on companion mode
+      // ORACLE-FIRST FLOW: Prioritize Oracle response in companion mode
       if (isCompanionMode) {
-        console.log('🔮 ORACLE-FIRST: Starting enhanced conversation flow');
-        
-        // Validate stable thread exists
-        if (!stableThreadId) {
-          console.error('❌ ORACLE ERROR: No stable thread ID available');
-          throw new Error('Conversation thread not initialized');
-        }
+        console.log('🔮 ORACLE-FIRST: Starting Oracle-prioritized conversation flow');
         
         // Start coordinated Oracle operation
-        console.log('🔄 ORACLE: Starting coordinated loading operation');
         const abortController = startOracleOperation();
         
         try {
-          console.log('🎭 ORACLE: Loading enhanced conversation orchestrator');
-          // NEW: Use Enhanced Conversation Orchestrator for complete context
-          const { enhancedConversationOrchestrator } = await import('@/services/enhanced-conversation-orchestrator');
+          // PILLAR II: Load conversation context with intelligent selection
+          const conversationContext = await conversationMemoryService.getConversationContext(stableThreadId!);
           
-          console.log('🧠 ORACLE: Processing user message with enhanced context');
-          const enhancedContext = await enhancedConversationOrchestrator.processUserMessage(
-            content,
-            stableThreadId!,
-            user.id
-          );
-          
-          console.log('✅ ORACLE: Enhanced context loaded:', {
-            intent: enhancedContext.currentIntent.type,
-            confidence: enhancedContext.currentIntent.confidence,
-            contextQuality: enhancedContext.contextQuality,
-            turnBuffer: enhancedContext.turnBufferSize,
-            semanticMemories: enhancedContext.semanticContext.relevantMemories.length
-          });
+          let recentMessages = [];
+          if (conversationContext?.messages) {
+            // PHASE 3 UPGRADE: Use progressive context with multi-level summarization
+            const intelligentMessages = await conversationMemoryService.getProgressiveIntelligentContext(
+              stableThreadId!, 
+              content, // Pass user query for semantic similarity
+              4000 // Max tokens for Oracle context
+            );
+            
+            recentMessages = intelligentMessages.map(msg => ({
+              role: msg.role === 'assistant' ? 'assistant' : msg.role,
+              content: msg.content,
+              timestamp: msg.timestamp
+            }));
+          }
 
-          // Convert context for Oracle
-          let recentMessages = enhancedContext.recentTurns.map(turn => ({
-            role: turn.speaker === 'assistant' ? 'assistant' : turn.speaker,
-            content: turn.text,
-            timestamp: turn.timestamp
-          }));
-
-          // STEP 5: Load user profile for Oracle context
-          console.log('👤 ORACLE: Loading user profile from blueprint');
-          const { data: blueprint, error: blueprintError } = await supabase
+          // PILLAR II: Load user profile for Oracle context
+          const { data: blueprint } = await supabase
             .from('user_blueprints')
             .select('blueprint')
             .eq('user_id', user.id)
             .eq('is_active', true)
             .maybeSingle();
 
-          if (blueprintError) {
-            console.warn('⚠️ ORACLE: Blueprint load error (non-critical):', blueprintError);
-          }
-
-          let userProfile: { name: string; mbti: string; hdType: string; sunSign: string } = {
-            name: 'Seeker',
-            mbti: 'Unknown',
-            hdType: 'Unknown',
-            sunSign: 'Unknown'
-          };
-          
+          let userProfile = {};
           if (blueprint?.blueprint) {
             const blueprintData = blueprint.blueprint as any;
             userProfile = {
@@ -367,65 +291,51 @@ export const useHACSConversationAdapter = (
             };
           }
 
-          console.log('✅ ORACLE: User profile loaded', userProfile);
+          console.log('🔮 ADAPTER ORACLE: Enhanced context loaded', {
+            conversationHistory: recentMessages.length,
+            userProfile: Object.keys(userProfile).length > 0
+          });
 
-          // STEP 6: Generate enhanced prompt
-          console.log('📝 ORACLE: Generating enhanced prompt');
-          const basePrompt = "Je bent een wijze metgezel die luistert naar de gebruiker en bouwt voort op de gesprekcontext.";
-          const enhancedPrompt = await enhancedConversationOrchestrator.generateEnhancedPrompt(
-            basePrompt,
-            enhancedContext,
-            stableThreadId!,
-            userProfile.name || 'friend'
-          );
-
-          // STEP 7: Call Oracle function
-          console.log('🔮 ORACLE: Calling companion oracle function');
+          // Call the companion oracle function with enhanced context
           const { data: oracleResponse, error: oracleError } = await supabase.functions.invoke('companion-oracle-conversation', {
             body: {
               message: content,
               userId: user.id,
               sessionId,
-              threadId: stableThreadId,
+              threadId: stableThreadId, // PHASE 2 FIX: Pass stable thread ID for Oracle context reconciliation
               useOracleMode: true,
               enableBackgroundIntelligence: true,
               conversationHistory: recentMessages,
-              userProfile: userProfile,
-              enhancedPrompt: enhancedPrompt,
-              intentContext: enhancedContext.currentIntent
+              userProfile: userProfile
             }
           });
 
           if (oracleError) {
-            console.error('❌ ORACLE ERROR: Oracle function failed', oracleError);
             throw new Error(`Oracle call failed: ${oracleError.message}`);
           }
 
-          console.log('✅ ORACLE SUCCESS: Oracle response generated', {
+          console.log('✅ ORACLE-FIRST SUCCESS: Oracle response generated', {
             oracleStatus: oracleResponse.oracleStatus,
             semanticChunks: oracleResponse.semanticChunks,
             intelligenceLevel: oracleResponse.intelligenceLevel,
             responseLength: oracleResponse.response?.length || 0
           });
           
-          // STEP 8: Process AI response through orchestrator
-          if (oracleResponse?.response) {
-            console.log('🔄 ORACLE: Processing AI response through orchestrator');
-            await enhancedConversationOrchestrator.processAIResponse(
-              oracleResponse.response,
-              stableThreadId!,
-              user.id,
-              'companion'
-            );
-          }
-
-          // STEP 9: Send through HACS conversation
-          console.log('📤 ORACLE: Sending message through HACS conversation');
+          // PHASE 2 FIX: Use sendOracleMessage and ensure conversation memory uses stable thread ID
           await hacsConversation.sendOracleMessage(content, oracleResponse);
           
-          // STEP 10: Store in legacy conversation memory for backward compatibility
-          console.log('💾 ORACLE: Storing in conversation memory');
+          // PILLAR I & II: Store messages using enhanced ConversationMemoryService with semantic embeddings
           try {
+            // PHASE 4: Check conversation state and detect closure signals
+            const { conversationStateService } = await import('@/services/conversation-state-service');
+            const conversationState = conversationStateService.detectConversationState(content);
+            
+            console.log('🎯 CONVERSATION STATE DETECTED:', conversationState);
+
+            // Store conversation state in progressive memory
+            await conversationStateService.storeConversationState(stableThreadId!, user.id, conversationState, content);
+
+            // Store user message with progressive memory features
             await conversationMemoryService.storeMessageWithProgressiveMemory(stableThreadId!, {
               role: 'user',
               content: content,
@@ -433,6 +343,7 @@ export const useHACSConversationAdapter = (
               id: `user_${Date.now()}`
             }, user.id);
             
+            // Store Oracle response with progressive memory features
             if (oracleResponse?.response) {
               await conversationMemoryService.storeMessageWithProgressiveMemory(stableThreadId!, {
                 role: 'assistant',
@@ -443,98 +354,70 @@ export const useHACSConversationAdapter = (
               }, user.id);
             }
             
-            console.log('✅ ORACLE: Complete 4-layer memory storage completed');
-          } catch (storageError) {
-            console.error('❌ ORACLE: Storage error (non-critical):', storageError);
+            console.log('✅ ADAPTER: Messages stored with semantic enhancement');
+          } catch (error) {
+            console.error('❌ ADAPTER: Enhanced storage error:', error);
           }
           
           // Background processing for future intelligence
-          console.log('🔄 ORACLE: Starting background intelligence processing');
           BackgroundIntelligenceService.processInBackground(
             content,
             user.id,
             sessionId,
             agentMode
-          ).catch(error => console.error('❌ ORACLE: Background processing error:', error));
+          ).catch(console.error);
           
-        } catch (oracleError) {
-          console.error('❌ ORACLE-FIRST ERROR: Oracle conversation failed, falling back to HACS', oracleError);
-          handleOracleError(oracleError, { fallback: true });
+        } catch (error) {
+          console.error('❌ ORACLE-FIRST ERROR: Oracle conversation failed, falling back to HACS', error);
+          handleOracleError(error, { fallback: true });
           
           // Fallback: Use standard HACS conversation
-          console.log('🔄 FALLBACK: Using standard HACS conversation');
           await hacsConversation.sendMessage(content);
         }
-        // Note: Oracle loading will be set to false when streaming completes
+        // Note: isOracleLoading will be set to false when streaming completes
         
       } else {
         // STANDARD FLOW: Dual-pathway for non-companion modes
         console.log('🟢 STANDARD FLOW: Starting dual-pathway for non-companion mode');
         
-        try {
-          // Get accumulated intelligence from previous processing
-          console.log('🧠 STANDARD: Loading accumulated intelligence');
-          const accumulatedIntelligence = await BackgroundIntelligenceService.getAccumulatedIntelligence(
-            user.id,
-            sessionId
-          );
-          
-          console.log('🔄 STANDARD: Starting immediate response and background processing');
-          const immediateResponsePromise = ImmediateResponseService.generateImmediateResponse(
-            content,
-            user.id,
-            agentMode,
-            accumulatedIntelligence
-          );
+        // Get accumulated intelligence from previous processing
+        const accumulatedIntelligence = await BackgroundIntelligenceService.getAccumulatedIntelligence(
+          user.id,
+          sessionId
+        );
+        
+        const immediateResponsePromise = ImmediateResponseService.generateImmediateResponse(
+          content,
+          user.id,
+          agentMode,
+          accumulatedIntelligence
+        );
 
-          const backgroundProcessingPromise = BackgroundIntelligenceService.processInBackground(
-            content,
-            user.id,
-            sessionId,
-            agentMode
-          );
+        const backgroundProcessingPromise = BackgroundIntelligenceService.processInBackground(
+          content,
+          user.id,
+          sessionId,
+          agentMode
+        );
 
-          const [immediateResponse] = await Promise.all([
-            immediateResponsePromise,
-            backgroundProcessingPromise
-          ]);
+        const [immediateResponse] = await Promise.all([
+          immediateResponsePromise,
+          backgroundProcessingPromise
+        ]);
 
-          console.log('✅ STANDARD FLOW: Dual-pathway completed', {
-            immediateProcessingTime: immediateResponse.processingTime
-          });
+        console.log('✅ STANDARD FLOW: Dual-pathway completed', {
+          immediateProcessingTime: immediateResponse.processingTime
+        });
 
-          // Send through standard HACS conversation
-          console.log('📤 STANDARD: Sending message through HACS conversation');
-          await hacsConversation.sendMessage(content);
-          
-        } catch (standardError) {
-          console.error('❌ STANDARD FLOW ERROR: Dual-pathway failed, using basic HACS', standardError);
-          // Fallback to basic HACS conversation
-          await hacsConversation.sendMessage(content);
-        }
+        // Standard HACS conversation for non-companion modes
+        await hacsConversation.sendMessage(content);
       }
       
-      console.log('🎉 SEND MESSAGE COMPLETE: All pathways processed successfully');
-      
     } catch (error) {
-      console.error('❌ SEND MESSAGE FATAL ERROR: Complete failure', error);
-      
-      // Mark any optimistic messages as failed
-      hacsConversation.setMessages(prev => 
-        prev.map(msg => 
-          msg.status === 'sending' ? { ...msg, status: 'error' as const } : msg
-        )
-      );
-      
-      // Show user-friendly error
-      const errorMessage = error instanceof Error ? error.message : 'Something went wrong sending your message';
-      console.error('💥 USER ERROR:', errorMessage);
-      
-      // Force recovery from any stuck states
-      handleOracleError(error, { fatal: true });
-      
-      // Rethrow to let UI handle the error display
-      throw new Error(errorMessage);
+      console.error('❌ DUAL-PATHWAY ERROR: One or both pathways failed', error);
+      handleOracleError(error, { dualPathway: true });
+      // Fallback to original HACS conversation
+      await hacsConversation.sendMessage(content);
     }
   }, [hacsConversation.sendMessage, hacsConversation.sendOracleMessage, initialAgent, isCompanionMode, startOracleOperation, handleOracleError]);
 
