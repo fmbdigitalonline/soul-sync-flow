@@ -25,7 +25,8 @@ const Coach = () => {
     stopStreaming,
     resetConversation,
     markMessageStreamingComplete,
-    recordVFPGraphFeedback
+    recordVFPGraphFeedback,
+    addOptimisticMessage
   } = useHACSConversationAdapter("guide", "companion");
 
   // Shadow detection integration - only for message processing
@@ -78,6 +79,7 @@ const Coach = () => {
       onStreamingComplete={markMessageStreamingComplete}
       onStopStreaming={handleStopStreaming}
       onFeedback={handleFeedback}
+      onAddOptimisticMessage={addOptimisticMessage}
     />
   );
 

@@ -35,6 +35,7 @@ export interface HACSConversationAdapter {
   acsState: string;
   userName: string;
   markMessageStreamingComplete: (messageId: string) => void;
+  addOptimisticMessage: (message: ConversationMessage) => void;
 }
 
 export const useHACSConversationAdapter = (
@@ -468,6 +469,11 @@ export const useHACSConversationAdapter = (
     };
   }, [forceRecovery]);
 
+  // Add optimistic message callback
+  const addOptimisticMessage = useCallback((message: ConversationMessage) => {
+    hacsConversation.setMessages(prev => [...prev, message]);
+  }, [hacsConversation.setMessages]);
+
   return {
     messages: hacsConversation.messages,
     isLoading: coordinatedLoading || hacsConversation.isLoading,
@@ -487,6 +493,7 @@ export const useHACSConversationAdapter = (
     acsEnabled: enhancedCoach.acsEnabled,
     acsState: enhancedCoach.acsState,
     userName: enhancedCoach.userName,
-    markMessageStreamingComplete: handleOracleStreamingComplete
+    markMessageStreamingComplete: handleOracleStreamingComplete,
+    addOptimisticMessage
   };
 };

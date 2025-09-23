@@ -21,6 +21,7 @@ export interface ConversationMessage {
   intelligence_bonus?: number;
   mode?: string;
   isStreaming?: boolean;
+  client_msg_id?: string;
 }
 
 export interface HACSQuestion {
@@ -693,6 +694,7 @@ export const useHACSConversation = () => {
 
   return {
     messages,
+    setMessages,
     isLoading,
     isTyping,
     isStreamingResponse,

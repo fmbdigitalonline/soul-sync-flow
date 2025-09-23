@@ -19,6 +19,7 @@ interface HACSChatInterfaceProps {
   onStreamingComplete?: (messageId: string) => void;
   onStopStreaming?: () => void;
   onFeedback?: (messageId: string, isPositive: boolean) => void;
+  onAddOptimisticMessage?: (message: ConversationMessage) => void;
 }
 
 export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
@@ -29,6 +30,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   onStreamingComplete,
   onStopStreaming,
   onFeedback,
+  onAddOptimisticMessage,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [initialMessageCount, setInitialMessageCount] = useState(0);
@@ -67,17 +69,15 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       role: 'user',
       content: messageToSend,
       timestamp: new Date().toISOString(),
+      client_msg_id: clientMsgId,
     };
     
-    // Update UI state first: clear input → add optimistic message
+    // Clear input immediately for responsive UI
     setInputValue("");
     
-    // Add optimistic message using the messages prop setter mechanism
-    // This ensures immediate UI feedback while backend processes
-    if (messages) {
-      // Trigger optimistic update through parent component
-      const updatedMessages = [...messages, optimisticMessage];
-      // The parent should handle this through the messages prop
+    // Add optimistic message instantly to UI
+    if (onAddOptimisticMessage) {
+      onAddOptimisticMessage(optimisticMessage);
     }
     
     try {
