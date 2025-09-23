@@ -66,15 +66,34 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   }, [isLoading, updateChatLoading]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    console.log('🖱️ BUTTON CLICK: Send message button clicked', {
+      inputValue: inputValue.substring(0, 50),
+      inputValueLength: inputValue.length,
+      inputValueTrimmed: inputValue.trim().length,
+      isLoading,
+      isStreamingResponse
+    });
+    
+    if (!inputValue.trim()) {
+      console.warn('⚠️ BUTTON CLICK: Empty input value, not sending');
+      return;
+    }
+    
+    if (isLoading) {
+      console.warn('⚠️ BUTTON CLICK: Currently loading, not sending message');
+      return;
+    }
     
     const messageToSend = inputValue.trim();
     setInputValue("");
     
+    console.log('📤 BUTTON CLICK: Calling onSendMessage with:', messageToSend.substring(0, 50));
+    
     try {
       await onSendMessage(messageToSend);
+      console.log('✅ BUTTON CLICK: Message sent successfully');
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('❌ BUTTON CLICK: Failed to send message:', error);
       // Put the message back if it failed
       setInputValue(messageToSend);
     }
