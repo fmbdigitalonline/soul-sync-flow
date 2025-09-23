@@ -899,8 +899,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         intelligenceLevel={intelligenceLevel}
       />
 
-      {/* Steward Introduction Modal */}
-      {introductionState.isActive && (
+      {/* Steward Introduction Modal - DISABLED */}
+      {false && introductionState.isActive && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
