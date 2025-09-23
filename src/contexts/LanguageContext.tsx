@@ -1589,7 +1589,7 @@ const translations: Record<Language, Translations> = {
       soulCompanion: 'Ziel Begeleider',
       soulLearningSession: 'Ziel Leersessie',
       holisticSoulSystem: 'Holistisch Ziel Intelligentie Systeem',
-      soulCompanionReady: 'Je Ziel begeleider is klaar om te helpen met inzichten en begeleiding.',
+      soulCompanionReady: 'Echo is klaar om te helpen met inzichten en begeleiding.',
       soulCompanionConversation: 'Je Ziel begeleider is klaar voor gesprek'
     },
     // Common Actions
