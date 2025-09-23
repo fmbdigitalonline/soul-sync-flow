@@ -264,23 +264,26 @@ export const useHACSConversation = () => {
     }
   }, [user, recordConversationInteraction, refreshIntelligence, determineResponseQuality]);
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, skipUserMessage: boolean = false) => {
     if (!user || !content.trim()) return;
 
     setIsLoading(true);
     setIsTyping(true);
 
     try {
-      // Add user message immediately with client ID for idempotency
-      const clientMsgId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const userMessage: ConversationMessage = {
-        id: clientMsgId,
-        role: 'user',
-        content: content.trim(),
-        timestamp: new Date().toISOString()
-      };
+      // Only add user message if not skipped (for optimistic UI scenarios)
+      if (!skipUserMessage) {
+        const clientMsgId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const userMessage: ConversationMessage = {
+          id: clientMsgId,
+          role: 'user',
+          content: content.trim(),
+          timestamp: new Date().toISOString(),
+          client_msg_id: clientMsgId
+        };
 
-      setMessages(prev => [...prev, userMessage]);
+        setMessages(prev => [...prev, userMessage]);
+      }
 
       // Send to HACS intelligent conversation
       const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
@@ -290,7 +293,12 @@ export const useHACSConversation = () => {
           sessionId: currentSessionId || `companion_${user.id}`,
           conversationId,
           userMessage: content.trim(),
-          messageHistory: [...messages, userMessage]
+          messageHistory: skipUserMessage ? messages : [...messages, { 
+            id: `client_${Date.now()}`, 
+            role: 'user', 
+            content: content.trim(), 
+            timestamp: new Date().toISOString() 
+          }]
         }
       });
 
@@ -310,7 +318,22 @@ export const useHACSConversation = () => {
       setMessages(prev => [...prev, hacsMessage]);
 
       // Save conversation to database
-      await saveConversation([...messages, userMessage, hacsMessage]);
+      const userMessageForSave = skipUserMessage ? 
+        { 
+          id: `client_${Date.now()}`, 
+          role: 'user' as const, 
+          content: content.trim(), 
+          timestamp: new Date().toISOString() 
+        } : 
+        messages.find(msg => msg.role === 'user' && msg.content === content.trim()) || 
+        { 
+          id: `client_${Date.now()}`, 
+          role: 'user' as const, 
+          content: content.trim(), 
+          timestamp: new Date().toISOString() 
+        };
+      
+      await saveConversation([...messages.filter(m => m.content !== content.trim() || m.role !== 'user'), userMessageForSave, hacsMessage]);
 
       // Update HACS intelligence if provided
       if (data.intelligence_bonus && data.intelligence_bonus > 0) {
@@ -343,23 +366,26 @@ export const useHACSConversation = () => {
   }, [user, messages, conversationId, saveConversation, updateHACSIntelligence]);
 
   // Enhanced Oracle message with conversation context
-  const sendOracleMessage = useCallback(async (content: string, oracleResponse?: any) => {
+  const sendOracleMessage = useCallback(async (content: string, oracleResponse?: any, skipUserMessage: boolean = false) => {
     if (!user || !content.trim()) return;
 
     setIsLoading(true);
     setIsTyping(true);
 
     try {
-      // Add user message immediately with client ID for idempotency
-      const clientMsgId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const userMessage: ConversationMessage = {
-        id: clientMsgId,
-        role: 'user',
-        content: content.trim(),
-        timestamp: new Date().toISOString()
-      };
+      // Only add user message if not skipped (for optimistic UI scenarios)
+      if (!skipUserMessage) {
+        const clientMsgId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const userMessage: ConversationMessage = {
+          id: clientMsgId,
+          role: 'user',
+          content: content.trim(),
+          timestamp: new Date().toISOString(),
+          client_msg_id: clientMsgId
+        };
 
-      setMessages(prev => [...prev, userMessage]);
+        setMessages(prev => [...prev, userMessage]);
+      }
 
       // If oracle response provided, use it; otherwise call Oracle with conversation context
       let response = oracleResponse;
@@ -489,11 +515,26 @@ export const useHACSConversation = () => {
       streamingAbortRef.current = startLoading('streaming');
 
       // Save conversation to database with oracle metadata
-      await saveConversation([...messages, userMessage, oracleMessage]);
+      const userMessageForSave = skipUserMessage ? 
+        { 
+          id: `client_${Date.now()}`, 
+          role: 'user' as const, 
+          content: content.trim(), 
+          timestamp: new Date().toISOString() 
+        } : 
+        messages.find(msg => msg.role === 'user' && msg.content === content.trim()) || 
+        { 
+          id: `client_${Date.now()}`, 
+          role: 'user' as const, 
+          content: content.trim(), 
+          timestamp: new Date().toISOString() 
+        };
+        
+      await saveConversation([...messages.filter(m => m.content !== content.trim() || m.role !== 'user'), userMessageForSave, oracleMessage]);
 
       console.log('✅ ORACLE MESSAGE: Stored in conversation system', {
         sessionId: currentSessionId || `companion_${user.id}`,
-        messageCount: [...messages, userMessage, oracleMessage].length,
+        messageCount: [...messages.filter(m => m.content !== content.trim() || m.role !== 'user'), userMessageForSave, oracleMessage].length,
         oracleStatus: response.oracleStatus,
         semanticChunks: response.semanticChunks,
         messageId: oracleMessage.id

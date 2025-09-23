@@ -329,7 +329,7 @@ export const useHACSConversationAdapter = (
           });
           
           // PHASE 2 FIX: Use sendOracleMessage and ensure conversation memory uses stable thread ID
-          await hacsConversation.sendOracleMessage(content, oracleResponse);
+          await hacsConversation.sendOracleMessage(content, oracleResponse, true); // Skip user message - already added optimistically
           
           // PILLAR I & II: Store messages using enhanced ConversationMemoryService with semantic embeddings
           try {
@@ -420,7 +420,7 @@ export const useHACSConversationAdapter = (
         });
 
         // Standard HACS conversation for non-companion modes
-        await hacsConversation.sendMessage(content);
+        await hacsConversation.sendMessage(content, true); // Skip user message - already added optimistically
       }
       
     } catch (error) {
@@ -428,7 +428,7 @@ export const useHACSConversationAdapter = (
       clearTimeout(loadingTimeout);
       handleOracleError(error, { dualPathway: true });
       // Fallback to original HACS conversation
-      await hacsConversation.sendMessage(content);
+      await hacsConversation.sendMessage(content, true); // Skip user message - already added optimistically
     } finally {
       clearTimeout(loadingTimeout);
     }
@@ -472,6 +472,17 @@ export const useHACSConversationAdapter = (
   // Add optimistic message callback
   const addOptimisticMessage = useCallback((message: ConversationMessage) => {
     hacsConversation.setMessages(prev => [...prev, message]);
+  }, [hacsConversation.setMessages]);
+
+  // Message reconciliation - update optimistic messages with server data
+  const reconcileOptimisticMessage = useCallback((clientMsgId: string, serverMessage: Partial<ConversationMessage>) => {
+    hacsConversation.setMessages(prev => 
+      prev.map(msg => 
+        msg.client_msg_id === clientMsgId 
+          ? { ...msg, ...serverMessage, client_msg_id: clientMsgId } 
+          : msg
+      )
+    );
   }, [hacsConversation.setMessages]);
 
   return {
