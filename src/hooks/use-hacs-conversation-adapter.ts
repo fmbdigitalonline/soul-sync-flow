@@ -52,6 +52,9 @@ export const useHACSConversationAdapter = (
     getActiveOperations 
   } = useCoordinatedLoading();
   
+  // Extract optimistic message utilities at top level (Fix React Hook Rules violation)
+  const { createOptimisticMessage } = useOptimisticMessages();
+  
   // Local Oracle abort controller for coordinated cancellation
   const oracleAbortRef = useRef<AbortController | null>(null);
   
@@ -221,7 +224,6 @@ export const useHACSConversationAdapter = (
 
     // STEP 1: IMMEDIATE OPTIMISTIC MESSAGE DISPLAY (Fix root cause of delay)
     // Add user message to UI immediately, before any loading states or processing
-    const { createOptimisticMessage } = useOptimisticMessages();
     const optimisticMessage = createOptimisticMessage(content, 'user');
     
     // Add optimistic message to HACS conversation immediately
