@@ -417,7 +417,7 @@ export const useHACSConversation = () => {
     setIsTyping(true);
 
     try {
-      // Add user message immediately
+      // Add user message immediately for responsive UX
       const userMessage: ConversationMessage = {
         id: `user_${Date.now()}`,
         role: 'user',
@@ -426,6 +426,7 @@ export const useHACSConversation = () => {
       };
 
       setMessages(prev => [...prev, userMessage]);
+      console.log('✅ USER MESSAGE: Added to conversation immediately');
 
       // If oracle response provided, use it; otherwise call Oracle with conversation context
       let response = oracleResponse;

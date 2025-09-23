@@ -70,15 +70,13 @@ export const useHACSCoachConversation = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Create user message
+      // Create user message without adding to messages yet - avoid duplicate
       const userMessage: CoachConversationMessage = {
         id: crypto.randomUUID(),
         role: 'user',
         content,
         timestamp: new Date().toISOString(),
       };
-
-      setMessages(prev => [...prev, userMessage]);
 
       // Route through Unified Brain Service (11 Hermetic Components) then to coach edge function
       const { unifiedBrainService } = await import('../services/unified-brain-service');

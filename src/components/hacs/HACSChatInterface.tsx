@@ -165,33 +165,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                       </div>
                     )}
                     
-                    {/* Step 5: Status indicators and error recovery */}
-                    {message.status === 'sending' && (
-                      <div className="mt-1 flex items-center gap-1 text-xs opacity-70">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        <span>Sending...</span>
-                      </div>
-                    )}
-                    
-                    {message.status === 'error' && (
-                      <div className="mt-2 flex items-center gap-2 text-xs">
-                        <AlertCircle className="h-3 w-3 text-destructive" />
-                        <span className="text-destructive">Failed to send</span>
-                        <button
-                          onClick={() => handleRetryMessage(message)}
-                          className="flex items-center gap-1 text-primary hover:text-primary/80 underline"
-                        >
-                          <RotateCcw className="h-3 w-3" />
-                          Retry
-                        </button>
-                        <button
-                          onClick={() => handleRemoveFailedMessage(message.client_msg_id!)}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    )}
+                    {/* No status indicators - user doesn't want them */}
                   </div>
                 ) : (
                   <div className="w-full">

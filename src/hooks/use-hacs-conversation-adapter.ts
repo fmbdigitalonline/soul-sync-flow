@@ -8,7 +8,6 @@ import { BackgroundIntelligenceService } from '../services/background-intelligen
 import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
 import { createErrorHandler } from '@/utils/error-recovery';
 import { conversationMemoryService } from '@/services/conversation-memory-service';
-import { useOptimisticMessages } from './use-optimistic-messages';
 
 // Adapter interface that matches useEnhancedAICoach exactly
 export interface HACSConversationAdapter {
@@ -51,9 +50,6 @@ export const useHACSConversationAdapter = (
     forceRecovery,
     getActiveOperations 
   } = useCoordinatedLoading();
-  
-  // Extract optimistic message utilities at top level (Fix React Hook Rules violation)
-  const { createOptimisticMessage } = useOptimisticMessages();
   
   // Local Oracle abort controller for coordinated cancellation
   const oracleAbortRef = useRef<AbortController | null>(null);
@@ -263,22 +259,8 @@ export const useHACSConversationAdapter = (
       }
     }
 
-    // STEP 1: IMMEDIATE OPTIMISTIC MESSAGE DISPLAY
-    console.log('📝 OPTIMISTIC: Creating user message');
-    try {
-      const optimisticMessage = createOptimisticMessage(content, 'user');
-      
-      // Add optimistic message to HACS conversation immediately
-      hacsConversation.setMessages(prev => [...prev, optimisticMessage]);
-      
-      console.log('✅ OPTIMISTIC: User message displayed', {
-        clientMsgId: optimisticMessage.client_msg_id,
-        timestamp: optimisticMessage.timestamp
-      });
-    } catch (error) {
-      console.error('❌ OPTIMISTIC ERROR: Failed to create optimistic message', error);
-      return;
-    }
+    // STEP 1: Skip optimistic message - let HACS conversation handle it
+    console.log('📝 MESSAGE: Letting HACS conversation handle user message display');
 
     // Post-send guard: if any operations still active after 9s, force recovery
     setTimeout(() => {
