@@ -158,8 +158,8 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   const innerRadius = radius * 0.7; // 70% of outer radius
   const innerCircumference = 2 * Math.PI * innerRadius;
   const innerStrokeDasharray = innerCircumference;
-  // Start from 40% baseline, progress to 100%
-  const hermeticBaselineProgress = Math.max(0, Math.min(100, (hermeticProgress / 100) * 60 + 40));
+  // hermeticProgress already represents 40-100% range, use directly
+  const hermeticBaselineProgress = Math.max(40, Math.min(100, hermeticProgress));
   const innerStrokeDashoffset = innerCircumference - (hermeticBaselineProgress / 100) * innerCircumference;
 
   // Initialize particles with intelligence-based count
