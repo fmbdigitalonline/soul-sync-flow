@@ -1,26 +1,35 @@
-import { supabase } from "@/integrations/supabase/client";
+/**
+ * Conversation State Detection Service
+ * Implements intent routing for reflect vs plan vs close decisions
+ * Integrates with existing memory and semantic systems
+ */
+
+import { supabase } from '@/integrations/supabase/client';
 
 export interface ConversationState {
   isActive: boolean;
   userSatisfied: boolean;
   closureSignalDetected: boolean;
-  lastInteractionType: 'question' | 'closure' | 'gratitude' | 'continuation';
+  lastInteractionType: 'gratitude' | 'closure' | 'continuation' | 'neutral';
+  shouldAskQuestion: boolean;
+  intent: 'reflect' | 'plan' | 'close' | 'neutral';
 }
 
 export class ConversationStateService {
   private static instance: ConversationStateService;
-  
+
   static getInstance(): ConversationStateService {
-    if (!ConversationStateService.instance) {
-      ConversationStateService.instance = new ConversationStateService();
+    if (!this.instance) {
+      this.instance = new ConversationStateService();
     }
-    return ConversationStateService.instance;
+    return this.instance;
   }
 
   /**
-   * Detects conversation closure signals using pattern matching and semantic analysis
+   * Detect conversation state and determine intent routing
+   * Routes between reflect vs plan vs close based on user signals
    */
-  detectConversationState(message: string): ConversationState {
+  detectConversationState(message: string, conversationHistory: any[] = []): ConversationState {
     const cleanMessage = message.trim().toLowerCase();
     
     // Gratitude patterns - strong signal for satisfaction
@@ -39,131 +48,114 @@ export class ConversationStateService {
       /\b(end|stop|enough)\b/i
     ];
 
-    // Continuation patterns - signals for more interaction
-    const continuationPatterns = [
-      /\b(what about|how|why|when|where|can you|could you)\b/i,
-      /\b(tell me more|explain|help me|show me)\b/i,
-      /\b(but|however|also|and|next)\b/i,
-      /[?]$/  // Ends with question mark
+    // Planning patterns - signals for action-oriented guidance  
+    const planningPatterns = [
+      /\b(what should i|what do you think i should|any suggestions|any advice)\b/i,
+      /\b(recommend|suggest|what would you|what next|where do i go)\b/i,
+      /\b(help me understand|guide me|show me the way)\b/i,
+      /\b(please advise|your thoughts|what's your take)\b/i,
+      /\b(any ideas|thoughts on|what do you suggest)\b/i,
+      /\b(how do i|steps|action|plan|strategy)\b/i
+    ];
+
+    // Reflection patterns - signals for deeper exploration
+    const reflectionPatterns = [
+      /\b(tell me more|explain further|elaborate|go deeper)\b/i,
+      /\b(what else|anything else|more about)\b/i,
+      /\b(i want to know more|can you expand|give me more details)\b/i,
+      /\b(help me explore|understand better|dive deeper)\b/i,
+      /\b(what does this mean|significance|why)\b/i
     ];
 
     const hasGratitude = gratitudePatterns.some(pattern => pattern.test(cleanMessage));
     const hasClosure = closurePatterns.some(pattern => pattern.test(cleanMessage));
-    const hasContinuation = continuationPatterns.some(pattern => pattern.test(cleanMessage));
+    const hasPlanning = planningPatterns.some(pattern => pattern.test(cleanMessage));
+    const hasReflection = reflectionPatterns.some(pattern => pattern.test(cleanMessage));
 
-    // Determine interaction type based on strongest signal
-    let lastInteractionType: ConversationState['lastInteractionType'] = 'continuation';
+    // Determine primary intent based on strongest signal
+    let intent: 'reflect' | 'plan' | 'close' | 'neutral' = 'neutral';
+    let lastInteractionType: 'gratitude' | 'closure' | 'continuation' | 'neutral' = 'neutral';
     
     if (hasGratitude && hasClosure) {
+      intent = 'close';
       lastInteractionType = 'closure';
-    } else if (hasGratitude) {
-      lastInteractionType = 'gratitude';
     } else if (hasClosure) {
+      intent = 'close';
       lastInteractionType = 'closure';
-    } else if (hasContinuation) {
+    } else if (hasPlanning) {
+      intent = 'plan';
       lastInteractionType = 'continuation';
+    } else if (hasReflection) {
+      intent = 'reflect';
+      lastInteractionType = 'continuation';
+    } else if (hasGratitude) {
+      intent = 'neutral';
+      lastInteractionType = 'gratitude';
     }
 
     // Calculate state flags
     const closureSignalDetected = hasGratitude || hasClosure;
-    const userSatisfied = hasGratitude || (hasClosure && !hasContinuation);
-    const isActive = !closureSignalDetected || hasContinuation;
+    const userSatisfied = hasGratitude || (hasClosure && !hasPlanning && !hasReflection);
+    const isActive = hasPlanning || hasReflection;
+    const shouldAskQuestion = hasPlanning || hasReflection;
 
     return {
       isActive,
       userSatisfied,
       closureSignalDetected,
-      lastInteractionType
+      lastInteractionType,
+      shouldAskQuestion,
+      intent
     };
   }
 
   /**
-   * Stores conversation state in the progressive memory system
+   * Store conversation state for progressive memory and intelligence learning
    */
   async storeConversationState(
     threadId: string,
     userId: string,
     state: ConversationState,
-    message: string
-  ): Promise<void> {
+    userMessage: string
+  ): Promise<boolean> {
     try {
-      // Store conversation state in conversation summaries for progressive memory
-      const stateContent = JSON.stringify({
-        conversationState: state,
-        lastMessage: message.substring(0, 100),
-        timestamp: new Date().toISOString()
-      });
-
       const { error } = await supabase
-        .from('conversation_summaries')
-        .upsert({
-          thread_id: threadId,
+        .from('user_activities')
+        .insert({
           user_id: userId,
-          summary_level: 0,
-          summary_content: stateContent,
-          message_range_start: `state_${Date.now()}`,
-          message_range_end: `state_${Date.now()}`,
-          summary_type: 'conversation_state'
-        }, {
-          onConflict: 'thread_id,user_id,summary_type'
+          activity_type: 'conversation_state_detected',
+          activity_data: {
+            threadId,
+            conversationState: {
+              isActive: state.isActive,
+              userSatisfied: state.userSatisfied,
+              closureSignalDetected: state.closureSignalDetected,
+              lastInteractionType: state.lastInteractionType,
+              shouldAskQuestion: state.shouldAskQuestion,
+              intent: state.intent
+            },
+            messageIntent: state.intent,
+            userMessage: userMessage.substring(0, 100), // Store snippet for analysis
+            timestamp: new Date().toISOString()
+          }
         });
 
       if (error) {
-        console.warn('⚠️ Failed to store conversation state:', error);
-      } else {
-        console.log('✅ Conversation state stored:', state);
+        console.error('❌ CONVERSATION STATE: Failed to store state:', error);
+        return false;
       }
+
+      console.log('✅ CONVERSATION STATE: State stored for intelligence learning', {
+        intent: state.intent,
+        satisfied: state.userSatisfied,
+        active: state.isActive
+      });
+      
+      return true;
     } catch (error) {
-      console.error('❌ Error storing conversation state:', error);
+      console.error('❌ CONVERSATION STATE: Storage error:', error);
+      return false;
     }
-  }
-
-  /**
-   * Retrieves the latest conversation state for a thread
-   */
-  async getConversationState(threadId: string, userId: string): Promise<ConversationState | null> {
-    // For now, always return null to avoid TypeScript issues
-    // The state detection will work without this retrieval
-    return null;
-  }
-
-  /**
-   * Generates appropriate response template based on conversation state
-   */
-  generateResponseTemplate(state: ConversationState): {
-    shouldAskQuestion: boolean;
-    closingType: 'graceful' | 'encouraging' | 'neutral' | 'active';
-    template: string;
-  } {
-    if (state.closureSignalDetected && state.userSatisfied && !state.isActive) {
-      return {
-        shouldAskQuestion: false,
-        closingType: 'graceful',
-        template: 'graceful_closure'
-      };
-    }
-
-    if (state.lastInteractionType === 'gratitude' && !state.isActive) {
-      return {
-        shouldAskQuestion: false,
-        closingType: 'encouraging',
-        template: 'gratitude_acknowledgment'
-      };
-    }
-
-    if (state.closureSignalDetected && !state.isActive) {
-      return {
-        shouldAskQuestion: false,
-        closingType: 'neutral',
-        template: 'neutral_closure'
-      };
-    }
-
-    return {
-      shouldAskQuestion: true,
-      closingType: 'active',
-      template: 'continue_conversation'
-    };
   }
 }
 

@@ -103,19 +103,18 @@ export const useHACSConversationAdapter = (
     console.log('🔮 Oracle streaming complete for message:', messageId, { loadingState });
     markMessageStreamingComplete(messageId);
     
-    // Complete both Oracle and streaming operations on adapter coordinator
+    // Complete coordinated loading operations in sequence
     completeLoading('oracle');
     completeLoading('streaming');
-
-    // Safety: if anything remains active after 1.2s, force recovery
+    
+    // Small delay to ensure all state updates complete before recovery check
     setTimeout(() => {
       const active = getActiveOperations();
-      const stillActive = active.length > 0;
-      if (stillActive) {
-        console.warn('🛠️ Recovery: Active operations remain after streaming complete', { active });
+      if (active.length > 0) {
+        console.warn('🛠️ Recovery: Clearing lingering operations after streaming complete', { active });
         forceRecovery();
       }
-    }, 1200);
+    }, 500);
   }, [markMessageStreamingComplete, completeLoading, getActiveOperations, forceRecovery, loadingState]);
 
   // Coordinated Oracle operation management
@@ -212,20 +211,22 @@ export const useHACSConversationAdapter = (
     context?: any,
     agentOverride?: string
   ) => {
-    console.log('🚀 DUAL-PATHWAY VALIDATION: sendMessage called', {
+    if (!content.trim()) return;
+    
+    console.log('🚀 DUAL-PATHWAY: sendMessage called', {
       content: content.substring(0, 50),
       agentOverride,
       timestamp: new Date().toISOString()
     });
 
-    // Post-send guard: if any operations still active after 9s, force recovery
-    setTimeout(() => {
+    // Set loading state coordination AFTER message validation
+    const loadingTimeout = setTimeout(() => {
       const active = getActiveOperations();
       if (active.length > 0) {
-        console.warn('⏱️ Post-send guard forcing recovery due to lingering operations', { active });
+        console.warn('⏱️ Loading timeout forcing recovery', { active });
         forceRecovery();
       }
-    }, 9000);
+    }, 8000);
 
     try {
       // Get user authentication
@@ -244,12 +245,17 @@ export const useHACSConversationAdapter = (
         sessionId 
       });
 
-      // ORACLE-FIRST FLOW: Prioritize Oracle response in companion mode
+      // ORACLE-FIRST FLOW: Prioritize Oracle response in companion mode  
       if (isCompanionMode) {
         console.log('🔮 ORACLE-FIRST: Starting Oracle-prioritized conversation flow');
         
-        // Start coordinated Oracle operation
+        // Start coordinated Oracle operation with timeout cleanup
         const abortController = startOracleOperation();
+        
+        const cleanup = () => {
+          clearTimeout(loadingTimeout);
+          completeOracleOperation();
+        };
         
         try {
           // PILLAR II: Load conversation context with intelligent selection
@@ -369,12 +375,15 @@ export const useHACSConversationAdapter = (
           
         } catch (error) {
           console.error('❌ ORACLE-FIRST ERROR: Oracle conversation failed, falling back to HACS', error);
+          cleanup();
           handleOracleError(error, { fallback: true });
           
           // Fallback: Use standard HACS conversation
           await hacsConversation.sendMessage(content);
+        } finally {
+          // Ensure cleanup happens regardless of success/failure
+          cleanup();
         }
-        // Note: isOracleLoading will be set to false when streaming completes
         
       } else {
         // STANDARD FLOW: Dual-pathway for non-companion modes
@@ -415,9 +424,12 @@ export const useHACSConversationAdapter = (
       
     } catch (error) {
       console.error('❌ DUAL-PATHWAY ERROR: One or both pathways failed', error);
+      clearTimeout(loadingTimeout);
       handleOracleError(error, { dualPathway: true });
       // Fallback to original HACS conversation
       await hacsConversation.sendMessage(content);
+    } finally {
+      clearTimeout(loadingTimeout);
     }
   }, [hacsConversation.sendMessage, hacsConversation.sendOracleMessage, initialAgent, isCompanionMode, startOracleOperation, handleOracleError]);
 

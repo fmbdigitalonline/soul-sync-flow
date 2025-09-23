@@ -270,9 +270,10 @@ export const useHACSConversation = () => {
     setIsTyping(true);
 
     try {
-      // Add user message immediately
+      // Add user message immediately with client ID for idempotency
+      const clientMsgId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const userMessage: ConversationMessage = {
-        id: `user_${Date.now()}`,
+        id: clientMsgId,
         role: 'user',
         content: content.trim(),
         timestamp: new Date().toISOString()
@@ -348,9 +349,10 @@ export const useHACSConversation = () => {
     setIsTyping(true);
 
     try {
-      // Add user message immediately
+      // Add user message immediately with client ID for idempotency
+      const clientMsgId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const userMessage: ConversationMessage = {
-        id: `user_${Date.now()}`,
+        id: clientMsgId,
         role: 'user',
         content: content.trim(),
         timestamp: new Date().toISOString()

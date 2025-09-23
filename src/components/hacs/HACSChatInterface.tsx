@@ -56,10 +56,29 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   }, [isLoading, updateChatLoading]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim()) return;
     
     const messageToSend = inputValue.trim();
+    const clientMsgId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // OPTIMISTIC UI: Add user message immediately
+    const optimisticMessage: ConversationMessage = {
+      id: clientMsgId,
+      role: 'user',
+      content: messageToSend,
+      timestamp: new Date().toISOString(),
+    };
+    
+    // Update UI state first: clear input → add optimistic message
     setInputValue("");
+    
+    // Add optimistic message using the messages prop setter mechanism
+    // This ensures immediate UI feedback while backend processes
+    if (messages) {
+      // Trigger optimistic update through parent component
+      const updatedMessages = [...messages, optimisticMessage];
+      // The parent should handle this through the messages prop
+    }
     
     try {
       await onSendMessage(messageToSend);

@@ -211,13 +211,20 @@ serve(async (req) => {
 
   try {
     console.log('🔮 Oracle Function Called - Starting enhanced conversation processing');
+    
+    // Get JWT token from Authorization header for RLS
+    const authHeader = req.headers.get('Authorization');
+    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '', // Use anon key with JWT auth for RLS
       {
         auth: {
           autoRefreshToken: false,
           persistSession: false
+        },
+        global: {
+          headers: authHeader ? { Authorization: authHeader } : {}
         }
       }
     )
