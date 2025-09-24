@@ -97,7 +97,15 @@ export default function Onboarding() {
 
   // Navigation functions
   const goToNextStep = () => {
-    if (isTransitioning || currentStep >= steps.length - 1) return;
+    if (isTransitioning) return;
+    
+    // Add boundary check to prevent advancing beyond valid steps
+    if (currentStep >= steps.length - 1) {
+      console.warn(`Cannot advance beyond step ${steps.length - 1}. Current step: ${currentStep}`);
+      return;
+    }
+    
+    console.log(`Advancing from step ${currentStep} to ${currentStep + 1} (${steps[currentStep + 1]})`);
     setIsTransitioning(true);
     setTimeout(() => {
       setCurrentStep(prev => prev + 1);
@@ -376,16 +384,8 @@ export default function Onboarding() {
     document.title = "SoulSync - Onboarding";
   }, []);
   
-  useEffect(() => {
-    if (blueprintGenerated && !navigationTriggeredRef.current) {
-      navigationTriggeredRef.current = true;
-      console.log("Blueprint generated, preparing to navigate");
-      
-      setTimeout(() => {
-        navigate("/blueprint");
-      }, 1500);
-    }
-  }, [blueprintGenerated, navigate]);
+  // Removed conflicting navigation useEffect that was causing race condition
+  // Blueprint generation now properly advances to Goal Selection step via handleBlueprintComplete()
 
   useEffect(() => {
     if (currentStep === 7 && !authLoading && !user) {
