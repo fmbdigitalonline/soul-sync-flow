@@ -2337,7 +2337,7 @@ const translations: Record<Language, Translations> = {
       gotIt: 'Begrepen',
       generated: 'Gegenereerd',
       loading: 'HACS Laden...',
-      soulAlchemistReady: 'Je Ziel Alchemist is klaar om je transformatie te begeleiden.',
+      soulAlchemistReady: 'Ik ben klaar om je transformatie te begeleiden.',
       blueprintUnderstanding: 'Blueprint Begrip',
       systemInitializing: 'Systeem initialiseren...',
       insightsQueue: '{current} van {total} inzichten',
