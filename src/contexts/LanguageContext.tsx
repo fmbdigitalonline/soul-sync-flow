@@ -1588,7 +1588,7 @@ const translations: Record<Language, Translations> = {
       messageSoul: 'Bericht Ziel Intelligentie...',
       soulCompanion: 'Ziel Begeleider',
       soulLearningSession: 'Ziel Leersessie',
-      holisticSoulSystem: 'Holistisch Ziel Intelligentie Systeem',
+      holisticSoulSystem: 'Reflecterend Intelligentie Systeem',
       soulCompanionReady: 'Echo is klaar om te helpen met inzichten en begeleiding.',
       soulCompanionConversation: 'Je Ziel begeleider is klaar voor gesprek'
     },
