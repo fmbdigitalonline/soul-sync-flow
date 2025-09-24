@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, Loader2, Sparkles, Brain } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { PersonalityTestStepper } from './PersonalityTestStepper';
 import { personalityVectorService } from '@/services/personality-vector-service';
@@ -14,6 +15,7 @@ interface BlueprintGenerationFlowProps {
 }
 
 export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = ({ onComplete }) => {
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationComplete, setGenerationComplete] = useState(false);
@@ -234,11 +236,9 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
         {/* Progress Bar */}
         <div className="space-y-2">
           <Progress value={(currentStep / (steps.length - 1)) * 100} className="w-full" />
-          <p className="text-sm text-center text-muted-foreground">
-            {currentStep === 1 && 'Creating your unique personality blueprint...'}
-            {currentStep === 2 && 'Generating 128-dimensional VFP-Graph vector for enhanced AI coaching...'}
-            {currentStep === 3 && 'Setting up your personalized experience...'}
-          </p>
+            <p className="text-sm text-center text-muted-foreground">
+              {t('common.generatingBlueprint')}
+            </p>
         </div>
 
         {/* Special VFP-Graph Info */}

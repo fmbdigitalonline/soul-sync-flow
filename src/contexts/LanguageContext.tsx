@@ -117,7 +117,17 @@ const translations: Record<Language, Translations> = {
       notifications: 'Notifications',
       tryAgain: 'Try Again',
       of: 'of',
-      activateSteward: 'Activate Steward'
+      activateSteward: 'Activate Steward',
+      confidence: 'Confidence',
+      generatedOn: 'Generated on',
+      soulGenerated: 'Soul Generated',
+      version: 'Version',
+      regenerate: 'Regenerate',
+      purgeStuckJobs: 'Purge Stuck Jobs',
+      purging: 'Purging...',
+      activeReminders: 'Active Reminders',
+      noActiveReminders: 'No active reminders',
+      generatingBlueprint: 'Generating your Soul Blueprint...'
     },
     // Error Messages
     errors: {
@@ -947,6 +957,24 @@ const translations: Record<Language, Translations> = {
     hacs: {
       insight: 'HACS Insight',
       confidence: 'Confidence',
+      mbtiDescriptions: {
+        'INTJ': 'Strategic and independent, you likely prefer working alone on complex problems and have a natural talent for seeing the big picture.',
+        'INTP': 'Analytical and inventive, you probably enjoy exploring theoretical concepts and finding logical explanations for everything.',
+        'ENTJ': 'Natural leader with strong organizational skills, you likely excel at implementing your vision and motivating others.',
+        'ENTP': 'Innovative and adaptable, you probably love brainstorming new possibilities and engaging in intellectual discussions.',
+        'INFJ': 'Insightful and idealistic, you likely seek meaning and connection while working toward your vision of a better world.',
+        'INFP': 'Authentic and empathetic, you probably value personal growth and helping others discover their potential.',
+        'ENFJ': 'Charismatic and supportive, you likely excel at understanding others and helping them achieve their goals.',
+        'ENFP': 'Enthusiastic and creative, you probably see life as full of possibilities and love inspiring others.',
+        'ISTJ': 'Reliable and methodical, you likely prefer proven methods and take pride in completing tasks thoroughly.',
+        'ISFJ': 'Caring and dependable, you probably focus on helping others and maintaining harmony in your environment.',
+        'ESTJ': 'Organized and decisive, you likely excel at managing projects and ensuring things get done efficiently.',
+        'ESFJ': 'Warm and conscientious, you probably enjoy bringing people together and creating positive experiences.',
+        'ISTP': 'Practical and adaptable, you likely prefer hands-on problem solving and working independently.',
+        'ISFP': 'Artistic and sensitive, you probably value personal expression and prefer to work at your own pace.',
+        'ESTP': 'Energetic and pragmatic, you likely enjoy taking action and adapting quickly to new situations.',
+        'ESFP': 'Spontaneous and enthusiastic, you probably love being around people and creating memorable experiences.'
+      },
       showEvidence: 'Show Evidence',
       hideEvidence: 'Hide Evidence',
       dismiss: 'Dismiss',
@@ -1621,7 +1649,17 @@ const translations: Record<Language, Translations> = {
       notifications: 'Meldingen',
       tryAgain: 'Probeer Opnieuw',
       of: 'van',
-      activateSteward: 'Activeer Steward'
+      activateSteward: 'Activeer Steward',
+      confidence: 'Vertrouwen',
+      generatedOn: 'Gegenereerd op',
+      soulGenerated: 'Soul Gegenereerd',
+      version: 'Versie',
+      regenerate: 'Regenereren',
+      purgeStuckJobs: 'Opruimen Vastgelopen Jobs',
+      purging: 'Bezig met opruimen...',
+      activeReminders: 'Actieve Herinneringen',
+      noActiveReminders: 'Geen actieve herinneringen',
+      generatingBlueprint: 'Je Soul Blueprint wordt gegenereerd...'
     },
     // Error Messages
     errors: {
@@ -2330,6 +2368,24 @@ const translations: Record<Language, Translations> = {
     hacs: {
       insight: 'HACS Inzicht',
       confidence: 'Vertrouwen',
+      mbtiDescriptions: {
+        'INTJ': 'Strategisch en onafhankelijk, je werkt waarschijnlijk liever alleen aan complexe problemen en hebt een natuurlijk talent voor het zien van het grote geheel.',
+        'INTP': 'Analytisch en inventief, je houdt waarschijnlijk van het verkennen van theoretische concepten en het vinden van logische verklaringen voor alles.',
+        'ENTJ': 'Natuurlijke leider met sterke organisatorische vaardigheden, je blinkt waarschijnlijk uit in het implementeren van je visie en het motiveren van anderen.',
+        'ENTP': 'Innovatief en aanpasbaar, je houdt waarschijnlijk van het bedenken van nieuwe mogelijkheden en het voeren van intellectuele discussies.',
+        'INFJ': 'Inzichtelijk en idealistisch, je zoekt waarschijnlijk betekenis en verbinding terwijl je werkt aan je visie van een betere wereld.',
+        'INFP': 'Authentiek en empathisch, je waardeert waarschijnlijk persoonlijke groei en het helpen van anderen hun potentieel te ontdekken.',
+        'ENFJ': 'Charismatisch en ondersteunend, je blinkt waarschijnlijk uit in het begrijpen van anderen en hen helpen hun doelen te bereiken.',
+        'ENFP': 'Enthousiast en creatief, je ziet het leven waarschijnlijk vol mogelijkheden en houdt ervan anderen te inspireren.',
+        'ISTJ': 'Betrouwbaar en methodisch, je geeft waarschijnlijk de voorkeur aan bewezen methoden en bent trots op het grondig voltooien van taken.',
+        'ISFJ': 'Zorgzaam en betrouwbaar, je richt je waarschijnlijk op het helpen van anderen en het behouden van harmonie in je omgeving.',
+        'ESTJ': 'Georganiseerd en besluitvaardig, je blinkt waarschijnlijk uit in het beheren van projecten en ervoor zorgen dat dingen efficiënt worden gedaan.',
+        'ESFJ': 'Warm en consciëntieus, je geniet er waarschijnlijk van mensen samen te brengen en positieve ervaringen te creëren.',
+        'ISTP': 'Praktisch en aanpasbaar, je geeft waarschijnlijk de voorkeur aan praktisch probleemoplossen en zelfstandig werken.',
+        'ISFP': 'Artistiek en gevoelig, je waardeert waarschijnlijk persoonlijke expressie en werkt liever in je eigen tempo.',
+        'ESTP': 'Energiek en pragmatisch, je houdt waarschijnlijk van actie ondernemen en je snel aanpassen aan nieuwe situaties.',
+        'ESFP': 'Spontaan en enthousiast, je houdt waarschijnlijk van het samenzijn met mensen en het creëren van gedenkwaardige ervaringen.'
+      },
       showEvidence: 'Toon Bewijs',
       hideEvidence: 'Verberg Bewijs',
       dismiss: 'Wegwijzen',

@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Clock, CheckCircle, Calendar } from 'lucide-react';
 import { memoryService, MicroActionReminder } from '@/services/memory-service';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { format, isPast } from 'date-fns';
 
 export const ActiveReminders: React.FC = () => {
+  const { t } = useLanguage();
   const [reminders, setReminders] = useState<MicroActionReminder[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -90,10 +92,10 @@ export const ActiveReminders: React.FC = () => {
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Bell className="h-4 w-4" />
-            Active Reminders
-          </CardTitle>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Bell className="h-4 w-4" />
+              {t('common.activeReminders')}
+            </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-2">
@@ -109,15 +111,15 @@ export const ActiveReminders: React.FC = () => {
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Bell className="h-4 w-4" />
-            Active Reminders
-          </CardTitle>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Bell className="h-4 w-4" />
+              {t('common.activeReminders')}
+            </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-4 text-gray-500">
             <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-            <p className="text-sm">No active reminders</p>
+            <p className="text-sm">{t('common.noActiveReminders')}</p>
           </div>
         </CardContent>
       </Card>
@@ -127,13 +129,13 @@ export const ActiveReminders: React.FC = () => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-sm">
-          <Bell className="h-4 w-4" />
-          Active Reminders
-          <Badge variant="secondary" className="text-xs">
-            {reminders.length}
-          </Badge>
-        </CardTitle>
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Bell className="h-4 w-4" />
+            {t('common.activeReminders')}
+            <Badge variant="secondary" className="text-xs">
+              {reminders.length}
+            </Badge>
+          </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {reminders.slice(0, 3).map((reminder) => (

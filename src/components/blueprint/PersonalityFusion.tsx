@@ -207,25 +207,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
   };
 
   const generateDescription = (type: string, bigFive: any): string => {
-    const descriptions: Record<string, string> = {
-      'INTJ': 'Strategic and independent, you likely prefer working alone on complex problems and have a natural talent for seeing the big picture.',
-      'INTP': 'Analytical and inventive, you probably enjoy exploring theoretical concepts and finding logical explanations for everything.',
-      'ENTJ': 'Natural leader with strong organizational skills, you likely excel at implementing your vision and motivating others.',
-      'ENTP': 'Innovative and adaptable, you probably love brainstorming new possibilities and engaging in intellectual discussions.',
-      'INFJ': 'Insightful and idealistic, you likely seek meaning and connection while working toward your vision of a better world.',
-      'INFP': 'Authentic and empathetic, you probably value personal growth and helping others discover their potential.',
-      'ENFJ': 'Charismatic and supportive, you likely excel at understanding others and helping them achieve their goals.',
-      'ENFP': 'Enthusiastic and creative, you probably see life as full of possibilities and love inspiring others.',
-      'ISTJ': 'Reliable and methodical, you likely prefer proven methods and take pride in completing tasks thoroughly.',
-      'ISFJ': 'Caring and dependable, you probably focus on helping others and maintaining harmony in your environment.',
-      'ESTJ': 'Organized and decisive, you likely excel at managing projects and ensuring things get done efficiently.',
-      'ESFJ': 'Warm and conscientious, you probably enjoy bringing people together and creating positive experiences.',
-      'ISTP': 'Practical and adaptable, you likely prefer hands-on problem solving and working independently.',
-      'ISFP': 'Artistic and sensitive, you probably value personal expression and prefer to work at your own pace.',
-      'ESTP': 'Energetic and pragmatic, you likely enjoy taking action and adapting quickly to new situations.',
-      'ESFP': 'Spontaneous and enthusiastic, you probably love being around people and creating memorable experiences.'
-    };
-    
+    const descriptions: Record<string, string> = (t('personality.mbtiDescriptions') as any) || {};
     return descriptions[type] || 'You have a unique personality that combines various traits in interesting ways.';
   };
 
@@ -402,7 +384,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
               <CardTitle className="text-base">
                 {t('personality.likelyStyle')} {personalityEstimate.likelyType}
               </CardTitle>
-              <Badge variant="secondary">Confidence: {confidence}%</Badge>
+              <Badge variant="secondary">{t('common.confidence')}: {confidence}%</Badge>
             </div>
           </CardHeader>
           <CardContent>

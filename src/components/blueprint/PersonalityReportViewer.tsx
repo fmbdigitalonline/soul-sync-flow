@@ -365,7 +365,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       ) : (
         <AlertCircle className="h-3 w-3 mr-1" />
       )}
-      {purgeLoading ? 'Purging...' : 'Purge Stuck Jobs'}
+      {purgeLoading ? t('common.purging') : t('common.purgeStuckJobs')}
     </Button>
   );
 
@@ -753,14 +753,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             {reportType === 'hermetic' ? 'Hermetic Blueprint Report' : 'Personality Report'}
           </h3>
           <p className={`text-muted-foreground break-words ${getTextSize('text-sm')}`}>
-            {currentReport && `Generated on ${new Date(currentReport.generated_at).toLocaleDateString()}`}
+            {currentReport && `${t('common.generatedOn')} ${new Date(currentReport.generated_at).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US')}`}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto mt-3 sm:mt-0">
           <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
             <Badge variant="outline" className="bg-soul-purple/10 text-soul-purple border-soul-purple/20">
               <Sparkles className="h-3 w-3 mr-1 flex-shrink-0" />
-              <span className="truncate">Soul Generated</span>
+              <span className="truncate">{t('common.soulGenerated')}</span>
             </Badge>
             {currentReport && (
               <Badge 
@@ -799,7 +799,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              <span className="ml-1 sm:ml-2">{generating ? 'Regenerating...' : 'Regenerate'}</span>
+              <span className="ml-1 sm:ml-2">{generating ? t('settings.regenerating') : t('common.regenerate')}</span>
             </Button>
             <Button onClick={handleRefresh} variant="ghost" size="sm" className="flex-shrink-0">
               <RefreshCw className="h-4 w-4" />
@@ -1191,7 +1191,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   {reportType === 'hermetic' ? 'Hermetic Blueprint Report' : 'Personality Report'}
                 </h2>
                 <p className="text-muted-foreground">
-                  Generated on {new Date(currentReport.generated_at).toLocaleDateString()}
+                  {t('common.generatedOn')} {new Date(currentReport.generated_at).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US')}
                 </p>
               </div>
 
