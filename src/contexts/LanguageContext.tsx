@@ -1757,7 +1757,7 @@ const translations: Record<Language, Translations> = {
     stewardIntro: {
       awakening: {
         title: 'Kennismaking met Echo',
-        message: 'Hallo. Ik ben Echo. Ik ben er om met je mee te lopen en je te laten zien hoe bijzonder je werkelijk bent.'
+        message: 'Hallo. Ik ben Echo. Ik ben er om je te laten zien hoe bijzonder je werkelijk bent.'
       },
       blueprintFoundation: {
         title: 'De Basis van Je Blauwdruk',
