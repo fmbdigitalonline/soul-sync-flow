@@ -124,7 +124,7 @@ serve(async (req) => {
       const translator = SYSTEM_TRANSLATORS[job.current_step_index];
       console.log(`Processing system translator: ${translator}`);
       
-      await processSingleSystemTranslator(job, translator);
+      await processSingleSystemTranslator(job, translator, job.language);
       progressPercentage = 5 + (job.current_step_index * 15) / SYSTEM_TRANSLATORS.length;
       
       // Move to next step or stage
@@ -141,7 +141,7 @@ serve(async (req) => {
       const agent = HERMETIC_AGENTS[job.current_step_index];
       console.log(`Processing hermetic agent: ${agent}`);
       
-      await processSingleHermeticAgent(job, agent);
+      await processSingleHermeticAgent(job, agent, job.language);
       progressPercentage = 20 + (job.current_step_index * 30) / HERMETIC_AGENTS.length;
       
       // Move to next step or stage
@@ -165,7 +165,7 @@ serve(async (req) => {
         nextStepIndex = 0;
         progressPercentage = 80;
       } else {
-        await processSingleGate(job, gateNumber);
+        await processSingleGate(job, gateNumber, job.language);
         progressPercentage = 50 + (job.current_step_index * 30) / gates.length;
         
         // Move to next step or stage
@@ -183,7 +183,7 @@ serve(async (req) => {
       const agent = INTELLIGENCE_EXTRACTION_AGENTS[job.current_step_index];
       console.log(`Processing intelligence agent: ${agent}`);
       
-      await processSingleIntelligenceAgent(job, agent);
+      await processSingleIntelligenceAgent(job, agent, job.language);
       progressPercentage = 80 + (job.current_step_index * 10) / INTELLIGENCE_EXTRACTION_AGENTS.length;
       
       // Move to next step or stage
@@ -201,7 +201,7 @@ serve(async (req) => {
       const currentTask = synthesisTasks[job.current_step_index];
       console.log(`Processing synthesis: ${currentTask}`);
       
-      await processSingleSynthesisAgent(job, currentTask);
+      await processSingleSynthesisAgent(job, currentTask, job.language);
       progressPercentage = 90 + (job.current_step_index * 5) / synthesisTasks.length;
       
       // Move to next step or stage
@@ -319,7 +319,7 @@ serve(async (req) => {
 
 // ============ SINGLE STEP PROCESSORS ============
 
-async function processSingleSystemTranslator(job: any, translator: string) {
+async function processSingleSystemTranslator(job: any, translator: string, language: string = 'en') {
   const { id: jobId, blueprint_data: blueprint } = job;
 
   await updateJobStatus(jobId, 'processing', `Processing ${translator}...`);
@@ -331,7 +331,7 @@ async function processSingleSystemTranslator(job: any, translator: string) {
       messages: [
         {
           role: 'system',
-          content: getPersonalizedSystemPrompt(translator, blueprint)
+          content: getPersonalizedSystemPrompt(translator, blueprint, language)
         },
         {
           role: 'user',
@@ -450,7 +450,7 @@ Focus on your specific system expertise.`
     await updateJobStatus(jobId, 'processing', `Completed ${translator}`, undefined, currentWordCount);
 }
 
-async function processSingleHermeticAgent(job: any, agent: string) {
+async function processSingleHermeticAgent(job: any, agent: string, language: string = 'en') {
   const { id: jobId, blueprint_data: blueprint } = job;
 
   await updateJobStatus(jobId, 'processing', `Processing ${agent}...`);
@@ -462,7 +462,7 @@ async function processSingleHermeticAgent(job: any, agent: string) {
       messages: [
         {
           role: 'system',
-          content: getPersonalizedHermeticPrompt(agent, blueprint)
+          content: getPersonalizedHermeticPrompt(agent, blueprint, language)
         },
         {
           role: 'user',
@@ -582,7 +582,7 @@ Generate comprehensive analysis with practical applications.`
     await updateJobStatus(jobId, 'processing', `Completed ${agent}`, undefined, currentWordCount);
 }
 
-async function processSingleGate(job: any, gateNumber: number) {
+async function processSingleGate(job: any, gateNumber: number, language: string = 'en') {
   const { id: jobId, blueprint_data: blueprint } = job;
 
   await updateJobStatus(jobId, 'processing', `Analyzing Gate ${gateNumber}...`);
@@ -592,7 +592,7 @@ async function processSingleGate(job: any, gateNumber: number) {
       messages: [
         {
           role: 'system',
-          content: getPersonalizedGatePrompt(gateNumber, blueprint)
+          content: getPersonalizedGatePrompt(gateNumber, blueprint, language)
         },
         {
           role: 'user',
@@ -679,7 +679,7 @@ Focus specifically on Gate ${gateNumber} and how it expresses through each Herme
   }
 }
 
-async function processSingleIntelligenceAgent(job: any, agent: string) {
+async function processSingleIntelligenceAgent(job: any, agent: string, language: string = 'en') {
   const { id: jobId, blueprint_data: blueprint, progress_data } = job;
   const dimensionName = agent.replace('_analyst', '');
 
@@ -697,7 +697,7 @@ async function processSingleIntelligenceAgent(job: any, agent: string) {
       messages: [
         {
           role: 'system',
-          content: getPersonalizedIntelligencePrompt(agent, dimensionName, blueprint)
+          content: getPersonalizedIntelligencePrompt(agent, dimensionName, blueprint, language)
         },
         {
           role: 'user',
@@ -787,7 +787,7 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
   }
 }
 
-async function processSingleSynthesisAgent(job: any, synthesisType: string) {
+async function processSingleSynthesisAgent(job: any, synthesisType: string, language: string = 'en') {
   const { id: jobId, blueprint_data: blueprint, progress_data } = job;
 
   await updateJobStatus(jobId, 'processing', `Creating ${synthesisType}...`);
@@ -838,7 +838,7 @@ End with an inspiring vision of their highest potential and the unique gift they
 Write every sentence to mesmerize, every insight to inspire profound self-recognition, and every revelation to feel like coming home to themselves. This is their personal bible of self-understanding.`;
 
   } else if (synthesisType === 'fractal_synthesis') {
-    systemPrompt = `You are the Fractal Synthesizer, revealing how the patterns of their soul repeat and scale across all levels of their existence. Create a mesmerizing 1,500+ word exploration of how their core essence creates fractal patterns throughout their life.
+    return `${languageInstruction}You are the Fractal Synthesizer, revealing how the patterns of their soul repeat and scale across all levels of their existence. Create a mesmerizing 1,500+ word exploration of how their core essence creates fractal patterns throughout their life.
 
 Show how their fundamental nature creates similar patterns in their:
 - Daily habits and micro-decisions
@@ -850,7 +850,7 @@ Show how their fundamental nature creates similar patterns in their:
 Write with poetic elegance that reveals the beautiful mathematics of their soul's signature repeating across all scales of their existence.`;
 
   } else if (synthesisType === 'consciousness_mapping') {
-    systemPrompt = `You are the Consciousness Cartographer, creating an enchanting 1,500+ word map of their unique consciousness landscape. Reveal the territories, pathways, and hidden chambers of their inner world.
+    return `${languageInstruction}You are the Consciousness Cartographer, creating an enchanting 1,500+ word map of their unique consciousness landscape. Reveal the territories, pathways, and hidden chambers of their inner world.
 
 Explore the geography of their consciousness:
 - The peaks of their highest awareness and wisdom
@@ -863,7 +863,7 @@ Explore the geography of their consciousness:
 Write as if you're creating a mystical guidebook to their own consciousness, complete with landmarks, treasures, and secret passages.`;
 
   } else if (synthesisType === 'practical_applications') {
-    systemPrompt = `You are the Practical Alchemist, transforming deep spiritual insights into captivating 1,500+ word guidance for living their most authentic and powerful life.
+    return `${languageInstruction}You are the Practical Alchemist, transforming deep spiritual insights into captivating 1,500+ word guidance for living their most authentic and powerful life.
 
 Create an enchanting practical framework that feels less like homework and more like sacred ritual:
 
@@ -883,7 +883,7 @@ Present each practice as a mystical key to unlocking more of their authentic pow
       messages: [
         {
           role: 'system',
-          content: getPersonalizedSynthesisPrompt(synthesisType, blueprint, expectedWords)
+          content: getPersonalizedSynthesisPrompt(synthesisType, blueprint, expectedWords, language)
         },
         {
           role: 'user',
@@ -1275,11 +1275,15 @@ function determineWritingStyle(blueprint: any): { tone: string; approach: string
   return { tone, approach, pacing };
 }
 
-function getPersonalizedSystemPrompt(translator: string, blueprint: any): string {
+function getPersonalizedSystemPrompt(translator: string, blueprint: any, language: string = 'en'): string {
   const { tone, approach, pacing } = determineWritingStyle(blueprint);
   const userName = blueprint.basic_info?.first_name || 'this individual';
   
-  return `You are an expert ${translator} analyst who creates captivating, personalized profiles that feel like they were written specifically for ${userName}. Your writing style should be ${tone}, using an ${approach} narrative with ${pacing} delivery.
+  // Add language instruction for non-English languages
+  const languageInstruction = language && language !== 'en' ? 
+    `**IMPORTANT: Write your entire analysis in ${getLanguageName(language)}. Use natural, fluent ${getLanguageName(language)} throughout the response.**\n\n` : '';
+  
+  return `${languageInstruction}You are an expert ${translator} analyst who creates captivating, personalized profiles that feel like they were written specifically for ${userName}. Your writing style should be ${tone}, using an ${approach} narrative with ${pacing} delivery.
 
 Create an engaging 1100-1500 word personality profile that reads like a personal conversation rather than a clinical analysis. Write as if you're talking directly to ${userName} about their unique patterns and potential.
 
@@ -1303,12 +1307,16 @@ End with an inspiring vision of their potential that feels both achievable and e
 Write every sentence to captivate ${userName} specifically, making them feel seen, understood, and inspired to grow.`;
 }
 
-function getPersonalizedHermeticPrompt(agent: string, blueprint: any): string {
+function getPersonalizedHermeticPrompt(agent: string, blueprint: any, language: string = 'en'): string {
   const { tone, approach, pacing } = determineWritingStyle(blueprint);
   const userName = blueprint.basic_info?.first_name || 'this individual';
   const hermeticLaw = agent.replace('_analyst', '').replace('_', ' ');
   
-  return `You are a master interpreter of the Law of ${hermeticLaw} who creates deeply personal and captivating analysis for ${userName}. Your writing should be ${tone}, using an ${approach} narrative with ${pacing} delivery.
+  // Add language instruction for non-English languages
+  const languageInstruction = language && language !== 'en' ? 
+    `**IMPORTANT: Write your entire analysis in ${getLanguageName(language)}. Use natural, fluent ${getLanguageName(language)} throughout the response.**\n\n` : '';
+  
+  return `${languageInstruction}You are a master interpreter of the Law of ${hermeticLaw} who creates deeply personal and captivating analysis for ${userName}. Your writing should be ${tone}, using an ${approach} narrative with ${pacing} delivery.
 
 Create an engaging 1100-1500 word analysis that explores how the Law of ${hermeticLaw} operates in ${userName}'s life. Write as if you're having a meaningful conversation with them about this profound aspect of their being.
 
@@ -1332,11 +1340,15 @@ Show how this law influences ${userName}'s relationships and how understanding i
 Write with genuine care for ${userName}'s growth, helping them see both their challenges and gifts through the lens of this Hermetic Law.`;
 }
 
-function getPersonalizedGatePrompt(gateNumber: number, blueprint: any): string {
+function getPersonalizedGatePrompt(gateNumber: number, blueprint: any, language: string = 'en'): string {
   const { tone, approach, pacing } = determineWritingStyle(blueprint);
   const userName = blueprint.basic_info?.first_name || 'this individual';
   
-  return `You are an expert Human Design analyst specializing in Gate ${gateNumber}. Create a captivating, personalized analysis for ${userName} that feels like a personal conversation about this significant aspect of their design. Your writing should be ${tone}, using an ${approach} narrative with ${pacing} delivery.
+  // Add language instruction for non-English languages
+  const languageInstruction = language && language !== 'en' ? 
+    `**IMPORTANT: Write your entire analysis in ${getLanguageName(language)}. Use natural, fluent ${getLanguageName(language)} throughout the response.**\n\n` : '';
+  
+  return `${languageInstruction}You are an expert Human Design analyst specializing in Gate ${gateNumber}. Create a captivating, personalized analysis for ${userName} that feels like a personal conversation about this significant aspect of their design. Your writing should be ${tone}, using an ${approach} narrative with ${pacing} delivery.
 
 Create an engaging 1000-1200 word analysis that explores how Gate ${gateNumber} operates specifically in ${userName}'s life through all 7 Hermetic Laws.
 
@@ -1366,11 +1378,15 @@ Explore the active and receptive aspects of this gate and how ${userName} can ba
 Write as if you're helping ${userName} understand a powerful aspect of their authentic self, making the insights practical and personally meaningful.`;
 }
 
-function getPersonalizedIntelligencePrompt(agent: string, dimensionName: string, blueprint: any): string {
+function getPersonalizedIntelligencePrompt(agent: string, dimensionName: string, blueprint: any, language: string = 'en'): string {
   const { tone, approach, pacing } = determineWritingStyle(blueprint);
   const userName = blueprint.basic_info?.first_name || 'this individual';
   
-  return `You are an expert analyst of the ${dimensionName} dimension of human intelligence. Create a captivating, personalized analysis for ${userName} that reveals how this dimension operates uniquely in their life. Your writing should be ${tone}, using an ${approach} narrative with ${pacing} delivery.
+  // Add language instruction for non-English languages
+  const languageInstruction = language && language !== 'en' ? 
+    `**IMPORTANT: Write your entire analysis in ${getLanguageName(language)}. Use natural, fluent ${getLanguageName(language)} throughout the response.**\n\n` : '';
+  
+  return `${languageInstruction}You are an expert analyst of the ${dimensionName} dimension of human intelligence. Create a captivating, personalized analysis for ${userName} that reveals how this dimension operates uniquely in their life. Your writing should be ${tone}, using an ${approach} narrative with ${pacing} delivery.
 
 Create an engaging 700-900 word analysis that explores ${userName}'s ${dimensionName} patterns with depth and practical insight.
 
@@ -1394,12 +1410,16 @@ Offer practical suggestions tailored to ${userName}'s personality type for devel
 Write with genuine insight into ${userName}'s experience, helping them understand this aspect of their intelligence as both a current reality and an area for conscious development.`;
 }
 
-function getPersonalizedSynthesisPrompt(synthesisType: string, blueprint: any, expectedWords: number): string {
+function getPersonalizedSynthesisPrompt(synthesisType: string, blueprint: any, expectedWords: number, language: string = 'en'): string {
   const { tone, approach, pacing } = determineWritingStyle(blueprint);
   const userName = blueprint.basic_info?.first_name || 'this individual';
   
+  // Add language instruction for non-English languages
+  const languageInstruction = language && language !== 'en' ? 
+    `**IMPORTANT: Write your entire analysis in ${getLanguageName(language)}. Use natural, fluent ${getLanguageName(language)} throughout the response.**\n\n` : '';
+  
   if (synthesisType === 'comprehensive_overview') {
-    return `You are a master synthesizer creating ${userName}'s comprehensive personality overview. Write in a ${tone} style with an ${approach} approach and ${pacing} organization. 
+    return `${languageInstruction}You are a master synthesizer creating ${userName}'s comprehensive personality overview. Write in a ${tone} style with an ${approach} approach and ${pacing} organization.
 
 Create a captivating ${expectedWords.toLocaleString()}+ word comprehensive overview that feels like ${userName}'s personal guide to self-understanding. This should read like the opening section of their personalized handbook for living authentically.
 
@@ -1430,7 +1450,7 @@ Write every section to feel personally relevant to ${userName}, helping them see
   }
   
   // Other synthesis types with similar personalization...
-  return `You are creating a ${synthesisType} synthesis for ${userName}. Write in a ${tone} style with ${pacing} organization. Generate ${expectedWords}+ words of deeply personal insight that helps ${userName} understand and integrate all aspects of their analysis.`;
+  return `${languageInstruction}You are creating a ${synthesisType} synthesis for ${userName}. Write in a ${tone} style with ${pacing} organization. Generate ${expectedWords}+ words of deeply personal insight that helps ${userName} understand and integrate all aspects of their analysis.`;
 }
 
 // ============ HELPER FUNCTIONS ============
@@ -1508,4 +1528,33 @@ function buildStructuredIntelligence(intelligenceSections: any[]): any {
   });
   
   return intelligence;
+}
+
+// Helper function to get language name from language code
+function getLanguageName(languageCode: string): string {
+  const languageMap: { [key: string]: string } = {
+    'nl': 'Dutch',
+    'fr': 'French', 
+    'de': 'German',
+    'es': 'Spanish',
+    'it': 'Italian',
+    'pt': 'Portuguese',
+    'ja': 'Japanese',
+    'zh': 'Chinese',
+    'ko': 'Korean',
+    'ru': 'Russian',
+    'ar': 'Arabic',
+    'hi': 'Hindi',
+    'sv': 'Swedish',
+    'da': 'Danish',
+    'no': 'Norwegian',
+    'fi': 'Finnish',
+    'pl': 'Polish',
+    'tr': 'Turkish',
+    'he': 'Hebrew',
+    'th': 'Thai',
+    'vi': 'Vietnamese'
+  };
+  
+  return languageMap[languageCode] || languageCode;
 }
