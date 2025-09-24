@@ -2269,7 +2269,7 @@ const translations: Record<Language, Translations> = {
     },
     // Onboarding Flow
     onboarding: {
-      welcome: 'Welkom bij Je Spirituele Reis',
+      welcome: 'Welkom bij Je ontdekkingsreis',
       welcomeDesc: 'Ontgrendel je ware potentieel, afgestemd op jouw pad, met een gids die begrijpt wie je bent, en helpt wie je wordt.',
       beginJourney: 'Begin Je Reis',
       chooseLanguage: 'Kies Je Taal',
