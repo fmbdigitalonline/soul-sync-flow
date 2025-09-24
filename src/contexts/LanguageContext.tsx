@@ -2010,8 +2010,8 @@ const translations: Record<Language, Translations> = {
         title: 'Stel je je beste leven voor…',
         subtitle: 'Als alles op zijn plaats zou vallen, hoe zou dat eruit zien?',
         placeholder: 'Schrijf een paar regels over je droomleven in flow…',
-        personalizedRoadmap: 'Klaar om je gepersonaliseerde Zielrapport te maken en je Zielgids te ontmoeten?',
-        reportAwaits: '✨ Je Zielgids is klaar om je te ontmoeten ✨'
+        personalizedRoadmap: 'Klaar om je gepersonaliseerde blauwdruk te maken en je gids te ontmoeten?',
+        reportAwaits: '✨ Je gids is klaar om je te ontmoeten ✨'
       }
     },
     
