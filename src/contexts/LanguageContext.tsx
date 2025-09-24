@@ -2269,8 +2269,9 @@ const translations: Record<Language, Translations> = {
     },
     // Onboarding Flow
     onboarding: {
-      welcome: 'Welkom bij Je ontdekkingsreis',
-      welcomeDesc: 'Ontgrendel je ware potentieel, afgestemd op jouw pad, met een gids die begrijpt wie je bent, en helpt wie je wordt.',
+      welcome: 'Je gids is bijna klaar om je te ontmoeten.',
+      welcomeDesc: 'Even wat laatste vragen, zodat jouw rapport 100% op maat is.
+Jij beantwoordt — wij luisteren. En dan begint het echt.',
       beginJourney: 'Begin Je Reis',
       chooseLanguage: 'Kies Je Taal',
       languageDescription: 'Selecteer je voorkeurstaal voor alle AI-gegenereerde inhoud, rapporten en begeleiding gedurende je reis.',
