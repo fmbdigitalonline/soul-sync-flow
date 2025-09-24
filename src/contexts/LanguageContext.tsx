@@ -1782,7 +1782,7 @@ const translations: Record<Language, Translations> = {
       welcomeBack: 'Welkom Terug',
       startJourney: 'Begin je gepersonaliseerde spirituele reis',
       continueJourney: 'Zet je spirituele groeireis voort',
-      funnelReportReady: 'Je Rapport is Klaar!',
+      funnelReportReady: 'Je Rapport is bijna Klaar!',
       createYourAccount: 'Maak Je Account Aan',
       accessPersonalizedBlueprint: 'Krijg toegang tot je gepersonaliseerde levenstransformatie blauwdruk',
       completeAccountMessage: 'Voltooi je account om toegang te krijgen tot je gepersonaliseerde inzichten en blauwdruk.',
