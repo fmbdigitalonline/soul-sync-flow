@@ -1764,8 +1764,8 @@ const translations: Record<Language, Translations> = {
         message: 'Vanaf het moment dat je hier bent gekomen, ben ik begonnen. Ik heb al een stevige basis gelegd voor je blauwdruk en een eerste analyse gemaakt van je belangrijkste patronen. Je ziet mijn voortgang in de binnenste ring: die staat nu al op 40%.'
       },
       deepDive: {
-        title: 'De Diepe Duik & Finale Afstemming',
-        message: 'Maar je fundamentele Blauwdruk is slechts het begin. Om je echt te kunnen begeleiden, moet ik nu een diepere, meer diepgaande synthese uitvoeren. Ik ga nu elk aspect van je unieke ontwerp verweven—je verborgen krachten, je diepste drijfveren, je kernuitdagingen—tot één enkele, geünificeerde bron van wijsheid.'
+        title: 'De Verdieping & Afstemming',
+        message: 'Maar die basis is nog maar het begin. Om je echt te kunnen begeleiden, breng ik nu alle onderdelen van jouw unieke design samen – je krachten, je drijfveren en je uitdagingen – tot één helder en bruikbaar geheel.'
       },
       coEvolution: {
         title: 'De Co-Evolutie Reis',
