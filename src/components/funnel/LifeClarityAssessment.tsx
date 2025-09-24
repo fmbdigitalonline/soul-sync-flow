@@ -9,6 +9,7 @@ import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LifeClarityGuide } from "./LifeClarityGuide";
+import { LanguageSelector } from "@/components/ui/language-selector";
 
 interface FunnelData {
   painPoint: string;
@@ -275,9 +276,12 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
                 <ArrowLeft className="h-4 w-4" />
                 <span className="hidden sm:inline">{t('funnel.back')}</span>
               </Button>
-              <span className="text-xs sm:text-sm text-muted-foreground">
-                {currentStep} {t('common.of')} {totalSteps}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs sm:text-sm text-muted-foreground">
+                  {currentStep} {t('common.of')} {totalSteps}
+                </span>
+                <LanguageSelector />
+              </div>
             </div>
             <Progress value={progress} className="w-full h-2" />
           </CardHeader>
