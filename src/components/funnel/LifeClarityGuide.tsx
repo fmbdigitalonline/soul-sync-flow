@@ -86,34 +86,6 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
     }
   }, [currentStep]);
 
-  // Auto-complete intro after welcome message finishes streaming
-  useEffect(() => {
-    if (messageType === 'welcome' && !isStreaming && showBubble) {
-      const timer = setTimeout(() => {
-        onIntroComplete();
-      }, 2000); // Give user time to read
-      return () => clearTimeout(timer);
-    }
-  }, [messageType, isStreaming, showBubble, onIntroComplete]);
-
-  // React to step completion
-  useEffect(() => {
-    if (isStepValid && messageType === 'guidance') {
-      setOrbStage("collecting");
-      setIsThinking(true);
-      
-      setTimeout(() => {
-        setIsThinking(false);
-        if (currentStep === totalSteps) {
-          showMessage('completion');
-          setOrbStage("complete");
-        } else {
-          showMessage('encouragement');
-        }
-      }, 1500);
-    }
-  }, [isStepValid, messageType, currentStep, totalSteps]);
-
   const showMessage = useCallback((type: 'welcome' | 'guidance' | 'encouragement' | 'completion') => {
     const message = stepMessages[currentStep];
     if (!message) return;
@@ -143,6 +115,26 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
       streamText(text, 60); // Slower, more thoughtful speed
     }
   }, [currentStep, stepMessages, resetStreaming, streamText]);
+
+  // Auto-progress through messages: welcome → guidance → intro complete
+  useEffect(() => {
+    if (messageType === 'welcome' && !isStreaming && showBubble) {
+      const timer = setTimeout(() => {
+        showMessage('guidance');
+      }, 1500); // Show guidance after welcome
+      return () => clearTimeout(timer);
+    }
+  }, [messageType, isStreaming, showBubble, showMessage]);
+
+  // Complete intro after guidance message is shown
+  useEffect(() => {
+    if (messageType === 'guidance' && !isStreaming && showBubble) {
+      const timer = setTimeout(() => {
+        onIntroComplete();
+      }, 1000); // Complete intro after guidance is shown
+      return () => clearTimeout(timer);
+    }
+  }, [messageType, isStreaming, showBubble, onIntroComplete]);
 
   const handleOrbClick = useCallback(() => {
     if (isStreaming) return;
