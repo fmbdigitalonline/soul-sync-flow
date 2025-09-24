@@ -1768,12 +1768,12 @@ const translations: Record<Language, Translations> = {
         message: 'Maar die basis is nog maar het begin. Om je echt te kunnen begeleiden, breng ik nu alle onderdelen van jouw unieke design samen – je krachten, je drijfveren en je uitdagingen – tot één helder en bruikbaar geheel.'
       },
       coEvolution: {
-        title: 'De Co-Evolutie Reis',
-        message: 'Deze diepe synthese vereist mijn volledige focus en zal enkele minuten duren. Je zult mijn binnenring zien vorderen van 40% naar 100% terwijl ik dit werk voltooi. De buitenring vertegenwoordigt onze gedeelde reis—jouw groei in ware afstemming met je Blauwdruk. Het zal groeien naarmate je doelen bereikt in harmonie met je unieke ontwerp.'
+        title: 'Onze Reis Samen',
+        message: 'Voor deze diepere afstemming heb ik even tijd en focus nodig. Je ziet de binnenste ring doorgroeien van 40% naar 100% terwijl ik dit voltooi. De buitenste ring laat onze gezamenlijke reis zien – hoe jij groeit naarmate je steeds meer in lijn komt met je Blueprint.'
       },
       readyToBegin: {
-        title: 'Klaar om te Beginnen',
-        message: 'Ik ben klaar om de finale synthese te beginnen. Samen zullen we de volledige kracht van je Blauwdruk ontgrendelen en je begeleiden naar ware afstemming en vervulling. Zullen we doorgaan?'
+        title: 'Klaar om te Starten',
+        message: 'Ik ben er helemaal klaar voor om de laatste afstemming te doen. Samen ontsluiten we de volle kracht van je Blueprint en zetten we stappen richting echte vervulling. Zullen we beginnen?'
       }
     },
     // Authentication Flow
