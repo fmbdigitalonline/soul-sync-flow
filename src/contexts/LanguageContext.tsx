@@ -592,7 +592,20 @@ const translations: Record<Language, Translations> = {
       guidanceLevel: 'How much guidance would you like?',
       lightTouch: 'Light touch - occasional insights',
       structuredGuidance: 'Structured guidance - regular support',
-      completeSetup: 'Complete my setup'
+      completeSetup: 'Complete my setup',
+      // Goal selection interface
+      yourSelections: 'Your Selections',
+      focus: 'Focus',
+      guidanceLevelLabel: 'Guidance Level',
+      errorSaving: 'Error saving',
+      saving: 'Saving...',
+      tryAgain: 'Try Again',
+      // Guidance level descriptions
+      guidance1: 'Minimal guidance - just the basics',
+      guidance2: 'Light guidance - occasional reminders',
+      guidance3: 'Balanced guidance - regular check-ins',
+      guidance4: 'Active guidance - frequent support',
+      guidance5: 'Full guidance - comprehensive support'
     },
     // Report Modal
     reportModal: {
@@ -2122,7 +2135,20 @@ const translations: Record<Language, Translations> = {
       guidanceLevel: 'Hoeveel begeleiding wil je?',
       lightTouch: 'Lichte aanraking - incidentele inzichten',
       structuredGuidance: 'Gestructureerde begeleiding - regelmatige ondersteuning',
-      completeSetup: 'Voltooi mijn setup'
+      completeSetup: 'Voltooi mijn setup',
+      // Doel selectie interface
+      yourSelections: 'Je Selecties',
+      focus: 'Focus',
+      guidanceLevelLabel: 'Begeleidingsniveau',
+      errorSaving: 'Fout bij opslaan',
+      saving: 'Opslaan...',
+      tryAgain: 'Probeer opnieuw',
+      // Begeleidingsniveau beschrijvingen
+      guidance1: 'Minimale begeleiding - alleen de basis',
+      guidance2: 'Lichte begeleiding - af en toe een herinnering',
+      guidance3: 'Uitgebalanceerde begeleiding - regelmatige check-ins',
+      guidance4: 'Actieve begeleiding - frequente ondersteuning',
+      guidance5: 'Volledige begeleiding - uitgebreide ondersteuning'
     },
     // Report Modal
     reportModal: {

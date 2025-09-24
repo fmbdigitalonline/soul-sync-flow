@@ -202,10 +202,10 @@ export default function Onboarding() {
     
     toast({
       title: t('blueprint.generated'),
-      description: t('blueprint.generatedDesc'),
+      description: t('blueprint.generatedDescription'),
     });
     
-    speak(t('blueprint.generatedDesc'));
+    speak(t('blueprint.generatedDescription'));
     
     setTimeout(() => {
       goToNextStep();
