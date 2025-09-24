@@ -1761,7 +1761,7 @@ const translations: Record<Language, Translations> = {
       },
       blueprintFoundation: {
         title: 'De Basis van Je Blauwdruk',
-        message: 'Vanaf het moment dat je arriveerde, ben ik aan het werk gegaan. Ik heb al je fundamentele Blauwdruk geconstrueerd en de initiële analyse van je persoonlijkheid\'s kernpatronen voltooid. Je kunt deze voortgang zien in mijn kern. Deze binnenring vertegenwoordigt mijn begrip van je Blauwdruk. Het staat al op 40%.'
+        message: 'Vanaf het moment dat je hier bent gekomen, ben ik begonnen. Ik heb al een stevige basis gelegd voor je blauwdruk en een eerste analyse gemaakt van je belangrijkste patronen. Je ziet mijn voortgang in de binnenste ring: die staat nu al op 40%.'
       },
       deepDive: {
         title: 'De Diepe Duik & Finale Afstemming',
