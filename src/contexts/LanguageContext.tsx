@@ -2070,7 +2070,7 @@ const translations: Record<Language, Translations> = {
         oneYear: '1 jaar',
         twoPlusYears: '2+ jaar'
       },
-      welcomeComplete: 'Welkom bij Je Spirituele Reis!',
+      welcomeComplete: 'Welkom bij Je Ontdekkingsreis!',
       welcomeCompleteDesc: 'Je gepersonaliseerde spirituele pad is klaar. Je Soul metgezel zal je begeleiden door inzichten, groei-tools en gepersonaliseerde aanbevelingen.',
       // Onboarding doelselectie
       primaryFocus: 'Persoonlijke Groei',
