@@ -1769,7 +1769,7 @@ const translations: Record<Language, Translations> = {
       },
       coEvolution: {
         title: 'Onze Reis Samen',
-        message: 'Voor deze diepere afstemming heb ik even tijd en focus nodig. Je ziet de binnenste ring doorgroeien van 40% naar 100% terwijl ik dit voltooi. De buitenste ring laat onze gezamenlijke reis zien – hoe jij groeit naarmate je steeds meer in lijn komt met je Blueprint.'
+        message: 'Voor deze diepere afstemming heb ik even tijd en focus nodig. Je ziet de binnenste ring doorgroeien van 40% naar 100% terwijl ik dit voltooi. De buitenste ring laat onze gezamenlijke reis zien – hoe jij groeit naarmate je steeds meer in lijn komt met je blauwdruk.'
       },
       readyToBegin: {
         title: 'Klaar om te Starten',
