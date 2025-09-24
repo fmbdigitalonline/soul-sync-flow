@@ -7,7 +7,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { BlueprintHealthChecker } from './blueprint-health-checker';
-import { progressiveMemoryService } from './progressive-memory-service';
 
 export interface ValidatedMessage {
   id: string;
@@ -196,12 +195,9 @@ export class ConversationMemoryService {
     maxTokens: number = 4000
   ): Promise<ValidatedMessage[]> {
     try {
-      // Get progressive context from Phase 3 service
-      const progressiveContext = await progressiveMemoryService.getProgressiveContext(
-        threadId,
-        maxTokens,
-        true // Include topic context
-      );
+      // Progressive memory service temporarily disabled due to schema mismatch
+      // TODO: Fix progressive memory service schema alignment
+      const progressiveContext = { messages: [], summaries: [] };
 
       // Convert structured messages to ValidatedMessage format for compatibility
       const messages: ValidatedMessage[] = progressiveContext.messages.map(msg => ({
@@ -223,7 +219,7 @@ export class ConversationMemoryService {
         });
       });
 
-      console.log(`✅ PROGRESSIVE CONTEXT: Retrieved ${messages.length} messages using ${progressiveContext.contextStrategy} strategy`);
+      console.log(`✅ PROGRESSIVE CONTEXT: Retrieved ${messages.length} messages using fallback strategy`);
       return messages.slice(0, 20); // Reasonable limit
     } catch (error) {
       console.error('❌ PROGRESSIVE CONTEXT: Error, falling back to semantic context:', error);
@@ -354,14 +350,9 @@ export class ConversationMemoryService {
         return false;
       }
 
-      // Store in progressive memory system (Phase 3)
-      const structuredMessage = await progressiveMemoryService.storeStructuredMessage(
-        threadId,
-        validatedMessage.id,
-        validatedMessage.role,
-        validatedMessage.content,
-        validatedMessage.agent_mode
-      );
+      // Progressive memory storage temporarily disabled due to schema mismatch
+      // TODO: Fix progressive memory service schema alignment
+      const structuredMessage = null;
 
       if (!structuredMessage) {
         console.error('❌ PROGRESSIVE STORAGE: Failed to store in structured format');

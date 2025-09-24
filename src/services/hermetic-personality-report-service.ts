@@ -338,11 +338,12 @@ class HermeticPersonalityReportService {
    */
   async hasHermeticReport(userId: string): Promise<boolean> {
     try {
-      // FIXED: Check for any hermetic report, regardless of version
+      // FIXED: Check specifically for Hermetic 2.0 reports only
       const { data, error } = await supabase
         .from('personality_reports')
         .select('id, blueprint_version, generated_at')
         .eq('user_id', userId)
+        .eq('blueprint_version', '2.0') // Only check for Hermetic 2.0 reports
         .order('generated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
