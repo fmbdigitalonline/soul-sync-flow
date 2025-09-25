@@ -495,6 +495,22 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   }, [intelligence, currentInsight, isGeneratingInsight, triggerInsightCheck, AUTO_INSIGHTS_ENABLED]);
 
+  // Automatic steward introduction trigger - critical missing piece
+  useEffect(() => {
+    // Check if we should start the steward introduction
+    if (!introductionState.isActive && !introductionState.completed && shouldStartIntroduction()) {
+      console.log('🎯 PHASE 3: Auto-triggering steward introduction - conditions met');
+      startIntroduction();
+    }
+  }, [
+    introductionState.isActive, 
+    introductionState.completed, 
+    shouldStartIntroduction, 
+    startIntroduction,
+    databaseValidation.shouldShow,
+    databaseValidation.loading
+  ]);
+
   // Module activity based on current question or insight
   useEffect(() => {
     if (currentQuestion) {

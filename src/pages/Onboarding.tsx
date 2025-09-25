@@ -196,8 +196,7 @@ export default function Onboarding() {
       setBlueprintData(newBlueprint);
       console.log("Blueprint data stored in state for goal selection");
       
-      // 🔮 EARLY ORACLE ACTIVATION: Generate hermetic report immediately after blueprint
-      generateHermeticReportInBackground(newBlueprint);
+      // Standard personality report will be generated through proper steward activation flow
     }
     
     toast({
@@ -213,33 +212,7 @@ export default function Onboarding() {
     }, 1500);
   };
 
-  // Generate hermetic report in background (EARLY ORACLE ACTIVATION)
-  const generateHermeticReportInBackground = async (blueprint: BlueprintData) => {
-    try {
-      console.log('🔮 EARLY ORACLE: Starting backend hermetic report job immediately after blueprint...');
-      
-      // Import the service here to avoid circular dependencies
-      const { hermeticPersonalityReportService } = await import('@/services/hermetic-personality-report-service');
-      
-      console.log('🧙‍♂️ Creating backend hermetic job with blueprint data');
-      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprint, language);
-      
-      if (result.success && result.job_id) {
-        console.log(`✅ EARLY ORACLE: Backend hermetic job created successfully: ${result.job_id} - Processing in background!`);
-        
-        // Trigger embedding generation immediately after job creation
-        await generateBlueprintEmbeddingsInBackground();
-      } else {
-        console.error('❌ EARLY ORACLE: Failed to generate hermetic report:', result.error);
-        // Fallback to standard personality report
-        await generatePersonalityReportInBackground();
-      }
-    } catch (error) {
-      console.error('💥 EARLY ORACLE: Error during hermetic report generation:', error);
-      // Fallback to standard personality report
-      await generatePersonalityReportInBackground();
-    }
-  };
+  // Hermetic report generation removed - now only triggered through steward activation
 
   // Generate blueprint embeddings for Oracle functionality
   const generateBlueprintEmbeddingsInBackground = async () => {
