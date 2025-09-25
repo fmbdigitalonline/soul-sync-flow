@@ -849,6 +849,21 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         />
       )}
 
+      {/* Subconscious Whisper Bubble - Database Intelligence */}
+      {showWhisperBubble && currentWhisper && (
+        <div className="fixed bottom-20 right-4 z-50">
+          <SpeechBubble
+            variant="whisper"
+            position="top"
+            isVisible={showWhisperBubble}
+            className="max-w-xs"
+            onClick={() => setShowWhisperBubble(false)}
+          >
+            {currentWhisper}
+          </SpeechBubble>
+        </div>
+      )}
+
       {/* Micro Learning Modal */}
       <HACSMicroLearning
         isOpen={showMicroLearning}
