@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { MessageCircle, ArrowLeft, ArrowRight, Check } from 'lucide-react';
-import { SpiritualGuideInterface } from '@/components/growth/SpiritualGuideInterface';
+import { ReflectiveGrowthInterface } from '@/components/growth/ReflectiveGrowthInterface';
 import { useHACSConversationAdapter } from '@/hooks/use-hacs-conversation-adapter';
 import { useBlueprintData } from '@/hooks/use-blueprint-data';
 import { LifeDomain, LifeWheelAssessment } from '@/types/growth-program';
@@ -354,7 +354,7 @@ ${ASSESSMENT_STAGES[0].prompt}`;
           {/* Chat Interface */}
           <div className="lg:col-span-3">
             <Card className="h-[calc(100vh-300px)]">
-              <SpiritualGuideInterface
+              <ReflectiveGrowthInterface
                 userDisplayName={getUserDisplayName()}
                 coreTraits={getCoreTraits()}
               />

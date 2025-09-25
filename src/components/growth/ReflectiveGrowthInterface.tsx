@@ -9,13 +9,13 @@ import { ThinkingDots } from '@/components/hacs/ThinkingDots';
 import { useHACSGrowthConversation } from '@/hooks/use-hacs-growth-conversation';
 import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
 
-interface SpiritualGuideInterfaceProps {
+interface ReflectiveGrowthInterfaceProps {
   userDisplayName?: string;
   coreTraits?: string[];
 }
 
-export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = ({
-  userDisplayName = "Seeker",
+export const ReflectiveGrowthInterface: React.FC<ReflectiveGrowthInterfaceProps> = ({
+  userDisplayName = "Friend",
   coreTraits = []
 }) => {
   const [inputValue, setInputValue] = useState('');
@@ -54,15 +54,13 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
     const messageToSend = inputValue.trim();
     setInputValue('');
     
-    console.log('🌱 Spiritual Guide - Sending message:', messageToSend);
+    console.log('🌱 Reflective Growth - Sending message:', messageToSend);
     
     try {
       await sendMessage(messageToSend);
-      // Refresh intelligence after successful message
       await refreshIntelligence();
     } catch (error) {
-      console.error('❌ Failed to send spiritual message:', error);
-      // Put the message back if it failed  
+      console.error('❌ Failed to send reflective message:', error);
       setInputValue(messageToSend);
     }
   };
@@ -98,13 +96,13 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
             <div className="text-center text-muted-foreground py-4 space-y-4">
               <div className="space-y-2">
                 <h3 className="text-lg font-medium text-soul-purple">Welcome, {userDisplayName}</h3>
-                <p className="text-sm">Begin your spiritual growth journey with guided conversation</p>
+                <p className="text-sm">Begin exploring your thoughts and feelings through reflective conversation</p>
               </div>
               
               {/* Core Traits Display */}
               {coreTraits.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Your Core Essence:</p>
+                  <p className="text-xs text-muted-foreground">Your Unique Patterns:</p>
                   <div className="flex flex-wrap justify-center gap-2">
                     {coreTraits.map((trait, index) => (
                       <span 
@@ -172,7 +170,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Share your spiritual thoughts..."
+            placeholder="Share what's on your mind..."
             disabled={isLoading}
             className="flex-1 text-base pb-[env(safe-area-inset-bottom)]"
           />

@@ -6,7 +6,7 @@ import { Sparkles, Moon, BookOpen, Calendar, MessageCircle, Settings, TrendingUp
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
-import { SpiritualGuideInterface } from "@/components/growth/SpiritualGuideInterface";
+import { ReflectiveGrowthInterface } from "@/components/growth/ReflectiveGrowthInterface";
 import { GrowthProgramInterface } from "@/components/growth/GrowthProgramInterface";
 import { TelemetryTracker } from "@/components/growth/TelemetryTracker";
 import { MoodTracker } from "@/components/coach/MoodTracker";
@@ -169,7 +169,7 @@ const SpiritualGrowth = () => {
 
             {/* Direct Chat Interface - Matching Coach Layout */}
             <div className="h-[calc(100vh-200px)]">
-              <SpiritualGuideInterface
+              <ReflectiveGrowthInterface
                 userDisplayName={getUserDisplayName()}
                 coreTraits={getCoreTraits()}
               />
