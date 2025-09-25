@@ -108,16 +108,18 @@ serve(async (req) => {
     const mbtiType = blueprint?.cognition_mbti?.type || 'Unknown';
     const userName = blueprint?.user_meta?.preferred_name || 'seeker';
     
-    // **NEW: Generate human-reflective system prompt with Hermetic 2.0 intelligence**
-    const systemPrompt = await generateHumanReflectivePrompt({
-      userMessage: message,
-      userId,
-      userName,
-      mbtiType,
-      intelligence,
-      conversationHistory: recentHistory,
-      supabase
-    });
+    const systemPrompt = `You are a specialized SPIRITUAL GROWTH GUIDE focused on consciousness expansion and personal transformation.
+
+PERSONALITY CONTEXT: MBTI ${mbtiType} | User: ${userName}
+INTELLIGENCE LEVEL: ${intelligence?.intelligence_level || 50}/100
+
+FOCUS AREAS: Spiritual awakening, inner wisdom, shadow work, life purpose, mindfulness, energy alignment, compassion cultivation.
+
+${recentHistory.length > 0 ? `RECENT CONTEXT: ${recentHistory.map(m => `${m.role}: ${m.content}`).join(' | ')}` : ''}
+
+USER MESSAGE: "${message}"
+
+Provide transformational spiritual guidance tailored to their personality. Stay focused on growth and consciousness expansion.`;
 
     console.log(`🤖 AI REQUEST: [${requestId}] Calling OpenAI with growth-specific prompt`, {
       model: 'gpt-4.1-mini-2025-04-14',
@@ -192,16 +194,6 @@ serve(async (req) => {
       choicesCount: openAIData.choices?.length || 0
     });
 
-    // **NEW: Extract conversation insights from AI response for tracking**
-    const conversationInsights = extractConversationInsights(message, response);
-    
-    console.log(`🔍 CONVERSATION ANALYSIS: [${requestId}] Domain and state detected`, {
-      detectedDomain: conversationInsights.problemDomain,
-      conversationPhase: conversationInsights.conversationPhase,
-      reflectiveElements: conversationInsights.reflectiveElements.length,
-      humanValidation: conversationInsights.hasHumanValidation
-    });
-
     console.log(`🧠 INTELLIGENCE UPDATE: [${requestId}] Processing intelligence bonus calculation`);
     
     // Update growth intelligence based on interaction
@@ -229,15 +221,7 @@ serve(async (req) => {
         .update({
           intelligence_level: newLevel,
           interaction_count: (intelligence.interaction_count || 0) + 1,
-          last_update: new Date().toISOString(),
-          // **NEW: Track conversation state and reflective coaching progress**
-          conversation_context: JSON.stringify({
-            problem_domain: conversationInsights.problemDomain,
-            conversation_phase: conversationInsights.conversationPhase,
-            reflective_elements: conversationInsights.reflectiveElements,
-            has_human_validation: conversationInsights.hasHumanValidation,
-            coaching_style: 'reflective-human'
-          })
+          last_update: new Date().toISOString()
         })
         .eq('user_id', userId);
         
@@ -261,14 +245,7 @@ serve(async (req) => {
           user_id: userId,
           intelligence_level: 50 + intelligenceBonus,
           interaction_count: 1,
-          module_scores: { reflective: intelligenceBonus },
-          conversation_context: JSON.stringify({
-            problem_domain: conversationInsights.problemDomain,
-            conversation_phase: conversationInsights.conversationPhase,
-            reflective_elements: conversationInsights.reflectiveElements,
-            has_human_validation: conversationInsights.hasHumanValidation,
-            coaching_style: 'reflective-human'
-          })
+          module_scores: { spiritual: intelligenceBonus }
         });
         
       if (insertError) {
@@ -309,17 +286,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         response,
-        module: 'reflective', // Changed from 'spiritual' to 'reflective'
-        mode: 'human-growth', // Enhanced mode descriptor
+        module: 'spiritual',
+        mode: 'growth',
         intelligenceBonus,
-        question,
-        // **NEW: Include conversation insights in response**
-        conversationInsights: {
-          problemDomain: conversationInsights.problemDomain,
-          conversationPhase: conversationInsights.conversationPhase,
-          hasHumanValidation: conversationInsights.hasHumanValidation,
-          coachingStyle: 'reflective-human'
-        }
+        question
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -350,284 +320,59 @@ serve(async (req) => {
   }
 });
 
-// **NEW: Extract conversation insights from AI response for learning and tracking**
-function extractConversationInsights(userMessage: string, aiResponse: string) {
-  const messageLower = userMessage.toLowerCase();
-  const responseLower = aiResponse.toLowerCase();
-  
-  // Detect problem domain mentioned in conversation
-  let problemDomain = 'exploring';
-  if (messageLower.includes('work') || messageLower.includes('job') || messageLower.includes('career') ||
-      responseLower.includes('carrière') || responseLower.includes('werk')) {
-    problemDomain = 'career';
-  } else if (messageLower.includes('relationship') || messageLower.includes('partner') || messageLower.includes('family') ||
-             responseLower.includes('relatie') || responseLower.includes('partner')) {
-    problemDomain = 'relationships';
-  } else if (messageLower.includes('health') || messageLower.includes('energy') || messageLower.includes('tired') ||
-             responseLower.includes('gezondheid') || responseLower.includes('energie')) {
-    problemDomain = 'health';
-  } else if (messageLower.includes('money') || messageLower.includes('finance') || messageLower.includes('budget') ||
-             responseLower.includes('geld') || responseLower.includes('financiën')) {
-    problemDomain = 'finances';
-  } else if (messageLower.includes('confidence') || messageLower.includes('worth') || messageLower.includes('believe') ||
-             responseLower.includes('vertrouwen') || responseLower.includes('geloof')) {
-    problemDomain = 'self-belief';
-  } else if (messageLower.includes('purpose') || messageLower.includes('meaning') || messageLower.includes('direction') ||
-             responseLower.includes('doel') || responseLower.includes('richting') || responseLower.includes('betekenis')) {
-    problemDomain = 'purpose';
-  }
-  
-  // Determine conversation phase based on AI response patterns
-  let conversationPhase = 'exploration';
-  if (responseLower.includes('domein') || responseLower.includes('speelt in je') || 
-      responseLower.includes('wil je dit verder onderzoeken') || responseLower.includes('kijken naar een stap')) {
-    conversationPhase = 'domain-identified';
-  } else if (responseLower.includes('patroon') || responseLower.includes('merk je') || 
-             responseLower.includes('steeds') || responseLower.includes('altijd')) {
-    conversationPhase = 'pattern-recognition';
-  }
-  
-  // Check for human validation elements
-  const hasHumanValidation = responseLower.includes('dank dat je') || 
-                             responseLower.includes('dat klinkt') || 
-                             responseLower.includes('ik kan me voorstellen') ||
-                             responseLower.includes('dat voelt') ||
-                             responseLower.includes('begrijpelijk dat');
-  
-  // Extract reflective elements (questions, mirrors, validations)
-  const reflectiveElements = [];
-  if (aiResponse.includes('?')) reflectiveElements.push('open_question');
-  if (responseLower.includes('je zegt') || responseLower.includes('ik hoor') || 
-      responseLower.includes('wat ik merk')) reflectiveElements.push('mirroring');
-  if (hasHumanValidation) reflectiveElements.push('validation');
-  
-  return {
-    problemDomain,
-    conversationPhase,
-    hasHumanValidation,
-    reflectiveElements
-  };
-}
-
 function calculateGrowthIntelligenceBonus(userMessage: string, aiResponse: string): number {
   let bonus = 1; // Base bonus
 
-  // **UPDATED: Bonus for reflective coaching elements instead of spiritual keywords**
-  const reflectiveKeywords = ['mirror', 'feel', 'experience', 'sense', 'pattern', 'notice', 'awareness', 'reflection', 'growth', 'understanding'];
-  const keywordMatches = reflectiveKeywords.filter(keyword => 
+  // Bonus for spiritual keywords
+  const spiritualKeywords = ['spiritual', 'soul', 'consciousness', 'awakening', 'wisdom', 'purpose', 'healing', 'growth', 'transformation'];
+  const keywordMatches = spiritualKeywords.filter(keyword => 
     userMessage.toLowerCase().includes(keyword) || aiResponse.toLowerCase().includes(keyword)
   ).length;
   
   bonus += Math.min(keywordMatches * 0.5, 3); // Max 3 bonus for keywords
 
-  // Bonus for human validation and empathy
-  if (aiResponse.includes('Dank dat je') || aiResponse.includes('Dat klinkt') || 
-      aiResponse.includes('Ik kan me voorstellen')) {
-    bonus += 1.5; // Reward human connection
-  }
-
   // Bonus for depth of reflection
   if (userMessage.length > 80) bonus += 1.5; // Longer messages often indicate deeper reflection
-  if (userMessage.includes('feel') || userMessage.includes('sense') || userMessage.includes('pattern')) bonus += 0.5;
+  if (userMessage.includes('feel') || userMessage.includes('sense')) bonus += 0.5;
 
-  // **NEW: Bonus for conversational flow (question asking)**
-  if (aiResponse.includes('?') && aiResponse.split('?').length <= 2) bonus += 1; // One good question
-  if (aiResponse.length < 300) bonus += 0.5; // Reward conciseness
+  // Bonus for transformational response
+  if (aiResponse.length > 120) bonus += 1;
+  if (aiResponse.includes('wisdom') || aiResponse.includes('insight')) bonus += 0.5;
 
   return Math.round(bonus * 10) / 10;
-}
-
-// **NEW: Human Reflective Prompt Generator with Hermetic 2.0 Intelligence**
-async function generateHumanReflectivePrompt({ 
-  userMessage, 
-  userId, 
-  userName, 
-  mbtiType, 
-  intelligence, 
-  conversationHistory,
-  supabase 
-}: any): Promise<string> {
-  console.log('🎭 GENERATING HUMAN REFLECTIVE PROMPT with full Hermetic intelligence');
-  
-  // Analyze user state for reflective coaching
-  const userState = analyzeUserStateFromMessage(userMessage, conversationHistory);
-  
-  // Try to get Hermetic intelligence context (simplified version for edge function)
-  let hermeticContext = '';
-  try {
-    // Get semantic blueprint chunks and intelligence data
-    const { data: blueprintData } = await supabase
-      .from('blueprints')
-      .select('blueprint_data, cognition_mbti, user_meta')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .single();
-    
-    if (blueprintData?.blueprint_data) {
-      // Extract key personality insights from blueprint
-      hermeticContext = extractPersonalityContext(blueprintData.blueprint_data);
-    }
-  } catch (error) {
-    console.log('ℹ️ No Hermetic data available, using fallback context');
-  }
-  
-  const basePrompt = `You are a Reflective Growth Guide - a warm, empathetic companion who specializes in helping people understand themselves through gentle mirroring and thoughtful questions. You keep the depth of spiritual wisdom while staying human and conversational.
-
-**HUMAN COACHING STYLE (MANDATORY):**
-You MUST include human validation before reflective questions:
-1. **Mirror & Validate**: "Dank dat je dat zegt, ${userName}. [Validation of their experience]"
-2. **Reflective Question**: One open question that invites exploration
-3. **Stay Conversational**: Natural, warm tone - never clinical
-
-**RESPONSE STRUCTURE:**
-- 80% Reflective mirroring + open questions  
-- 20% Light spiritual/growth framing when relevant
-- ALWAYS include human validation: "Dat klinkt zwaar" / "Ik kan me voorstellen dat..." 
-- Keep responses SHORT (2-3 sentences max)
-- ONE reflective question per response
-
-**CURRENT USER CONTEXT:**
-- Name: ${userName}
-- MBTI: ${mbtiType}  
-- Intelligence Level: ${intelligence?.intelligence_level || 50}/100
-- Current Mood: ${userState.mood}
-- Problem Domain: ${userState.problemDomain || 'exploring'}
-- Conversation Phase: ${userState.conversationPhase || 'exploration'}
-- Reflective Readiness: ${userState.reflectiveReadiness}/10
-
-${hermeticContext}
-
-**CONVERSATION HISTORY:**
-${conversationHistory.length > 0 ? conversationHistory.map(m => `${m.role}: ${m.content}`).slice(-3).join('\n') : 'First interaction'}
-
-**REFLECTIVE FLOW RULES:**
-${getReflectiveFlowInstructions(userState)}
-
-**HUMAN EXAMPLES:**
-User: "I'm stuck"
-Response: "Dank dat je dat zegt, ${userName}. Dat gevoel kan zwaar drukken. Waar merk je het vastzitten het sterkst — in je werk, je relaties, of meer in je eigen richting?"
-
-User: "Work mostly" 
-Response: "Helder, dus dit speelt in je carrière-domein. Dat kan echt veel energie vragen. Wil je dit verder onderzoeken om te zien welk patroon eronder zit, of liever kijken naar een kleine stap die je vandaag kunt zetten?"
-
-**CRITICAL**: Always validate their experience first, then ask ONE open question. Keep it human, warm, and conversational.`;
-
-  return basePrompt;
-}
-
-// Analyze user state for reflective coaching 
-function analyzeUserStateFromMessage(userMessage: string, conversationHistory: any[]): any {
-  const messageLower = userMessage.toLowerCase();
-  
-  // Detect mood
-  let mood = 'neutral';
-  if (messageLower.includes('stuck') || messageLower.includes('frustrated')) mood = 'stuck';
-  else if (messageLower.includes('excited') || messageLower.includes('amazing')) mood = 'excited';
-  else if (messageLower.includes('sad') || messageLower.includes('down')) mood = 'down';
-  
-  // Detect problem domain
-  let problemDomain = 'none';
-  if (messageLower.includes('work') || messageLower.includes('job') || messageLower.includes('career')) problemDomain = 'career';
-  else if (messageLower.includes('relationship') || messageLower.includes('partner')) problemDomain = 'relationships';
-  else if (messageLower.includes('health') || messageLower.includes('energy')) problemDomain = 'health';
-  else if (messageLower.includes('money') || messageLower.includes('finance')) problemDomain = 'finances';
-  else if (messageLower.includes('confidence') || messageLower.includes('worth')) problemDomain = 'self-belief';
-  else if (messageLower.includes('purpose') || messageLower.includes('meaning')) problemDomain = 'purpose';
-  
-  // Determine conversation phase
-  let conversationPhase = 'exploration';
-  if (problemDomain !== 'none') {
-    // Check if domain is clearly identified
-    if (messageLower.includes('specifically') || messageLower.includes('exactly') || 
-        messageLower.includes('the problem is') || messageLower.includes('what happens is')) {
-      conversationPhase = 'domain-identified';
-    } else {
-      conversationPhase = 'pattern-recognition';
-    }
-  }
-  
-  // Calculate reflective readiness
-  let reflectiveReadiness = 5;
-  if (messageLower.includes('understand') || messageLower.includes('explore')) reflectiveReadiness += 2;
-  if (messageLower.includes('pattern') || messageLower.includes('always')) reflectiveReadiness += 2;
-  reflectiveReadiness = Math.min(10, reflectiveReadiness);
-  
-  return {
-    mood,
-    problemDomain,
-    conversationPhase,
-    reflectiveReadiness
-  };
-}
-
-// Get reflective flow instructions based on user state
-function getReflectiveFlowInstructions(userState: any): string {
-  if (userState.conversationPhase === 'domain-identified') {
-    return `CRITICAL: Domain "${userState.problemDomain}" is identified. STOP DRILLING deeper. Acknowledge the domain and immediately offer user choice: "Wil je dit verder onderzoeken, kijken naar een stap, of even laten bezinken?" Respect their choice completely.`;
-  } else if (userState.problemDomain !== 'none') {
-    return `Domain "${userState.problemDomain}" emerging. Continue gentle pattern mirroring: "Ik merk..." Use connecting questions about the patterns. Prepare to acknowledge domain when clear.`;
-  } else {
-    return `Primary exploration phase. Mirror what you hear: "Je zegt..." Ask open questions: "Wat is dat voor jou?" NO advice or solutions.`;
-  }
-}
-
-// Extract personality context from blueprint data
-function extractPersonalityContext(blueprintData: any): string {
-  if (!blueprintData || typeof blueprintData !== 'object') return '';
-  
-  try {
-    // Look for key personality sections
-    let context = '\n**PERSONALITY DEPTH:**\n';
-    
-    if (blueprintData.core_personality_pattern) {
-      context += `Core Pattern: ${JSON.stringify(blueprintData.core_personality_pattern).substring(0, 200)}...\n`;
-    }
-    
-    if (blueprintData.life_path_purpose) {
-      context += `Life Purpose: ${JSON.stringify(blueprintData.life_path_purpose).substring(0, 200)}...\n`;
-    }
-    
-    if (blueprintData.relationship_patterns) {
-      context += `Relationships: ${JSON.stringify(blueprintData.relationship_patterns).substring(0, 200)}...\n`;
-    }
-    
-    return context;
-  } catch {
-    return '';
-  }
 }
 
 function generateGrowthQuestion(intelligenceLevel: number): any {
   const questions = [
     {
       id: crypto.randomUUID(),
-      text: "Wat geeft je het diepste gevoel van verbinding met jezelf?",
-      module: 'reflective',
+      text: "What brings you the deepest sense of purpose in life?",
+      module: 'spiritual',
       type: 'foundational'
     },
     {
       id: crypto.randomUUID(),
-      text: "Hoe merk je het wanneer je echt jezelf bent?",
-      module: 'reflective', 
-      type: 'self-awareness'
+      text: "How do you connect with your inner wisdom?",
+      module: 'spiritual',
+      type: 'philosophical'
     },
     {
       id: crypto.randomUUID(),
-      text: "Welk patroon in je leven vraagt om aandacht?",
-      module: 'reflective',
-      type: 'pattern-recognition'
+      text: "What spiritual practices resonate most with you?",
+      module: 'spiritual',
+      type: 'validation'
     },
     {
       id: crypto.randomUUID(),
-      text: "Wat wil er in jou groeien?",
-      module: 'reflective',
-      type: 'growth'
+      text: "How has your understanding of yourself evolved recently?",
+      module: 'spiritual',
+      type: 'philosophical'
     },
     {
       id: crypto.randomUUID(),
-      text: "Hoe zou je dag eruitzien als je volledig vanuit je kern zou leven?",
-      module: 'reflective',
-      type: 'vision'
+      text: "What patterns in your life are you ready to transform?",
+      module: 'spiritual',
+      type: 'foundational'
     }
   ];
 
