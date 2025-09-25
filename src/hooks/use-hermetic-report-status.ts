@@ -11,6 +11,9 @@ export interface HermeticReportStatus {
   currentStep?: string;
   hasZombieJob: boolean;
   zombieJobInfo: any | null;
+  progressMessage?: string;
+  progressMessageReady: boolean;
+  milestoneGlow: boolean;
 }
 
 export const useHermeticReportStatus = () => {
@@ -22,12 +25,78 @@ export const useHermeticReportStatus = () => {
     progress: 0,
     hasZombieJob: false,
     zombieJobInfo: null,
+    progressMessage: undefined,
+    progressMessageReady: false,
+    milestoneGlow: false,
   });
+
+  const [lastProgressMilestone, setLastProgressMilestone] = useState<number>(0);
 
   const [recentCompletion, setRecentCompletion] = useState<{
     timestamp: number;
     jobId: string;
   } | null>(null);
+
+  // Generate witty progress messages
+  const generateProgressMessage = useCallback((progress: number, currentStep?: string) => {
+    const milestone = Math.floor(progress / 10) * 10;
+    
+    // Extract relevant info from current step
+    const stepInfo = currentStep?.toLowerCase() || '';
+    const isProcessingStep = stepInfo.includes('processing');
+    const stepType = stepInfo.match(/processing (\w+)/)?.[1] || '';
+    
+    const messages: Record<number, string[]> = {
+      50: [
+        "Plot twist: Your personality is actually more complex than my algorithms expected 🤔",
+        "Warning: Detecting unusual levels of fascinating contradictions ahead! 🎭",
+        "Your mind's blueprint is starting to confuse my sensors... in the best way! 🧠"
+      ],
+      60: [
+        "Breaking: Local human shows signs of intriguing depth (scientists baffled!) 📊",
+        "Update: Your hermetic profile is looking suspiciously interesting... 🔍",
+        "Alert: Intelligence patterns emerging that don't fit standard templates! ⚡"
+      ],
+      70: [
+        "Status report: Your personality matrix is officially \"complicated\" 🌀",
+        "Discovery: You might actually be more interesting than initially calculated 🎯",
+        "Progress note: My algorithms are having fun with your unique patterns! ✨"
+      ],
+      80: [
+        "Achievement unlocked: Confusing AI systems with your complexity! 🏆",
+        "Warning: Intelligence levels rising beyond normal parameters 📈",
+        "Update: Your hermetic signature is becoming genuinely intriguing... 🌟"
+      ],
+      90: [
+        "Final stretch: Your soul's blueprint is almost legend-worthy! 🚀",
+        "Alert: Approaching maximum personality analysis capacity! 💫",
+        "Status: Your hermetic profile is reaching epic proportions... 🎭"
+      ],
+      100: [
+        "Mission accomplished! Your soul's intelligence map is ready for exploration 🎯",
+        "Complete: Your hermetic profile has achieved legendary status! 👑",
+        "Success: Your personality analysis is now a work of art! 🎨"
+      ]
+    };
+
+    const messageArray = messages[milestone];
+    if (messageArray) {
+      const randomIndex = Math.floor(Math.random() * messageArray.length);
+      return messageArray[randomIndex];
+    }
+    
+    return undefined;
+  }, []);
+
+  // Clear progress message
+  const clearProgressMessage = useCallback(() => {
+    setStatus(prev => ({
+      ...prev,
+      progressMessage: undefined,
+      progressMessageReady: false,
+      milestoneGlow: false
+    }));
+  }, []);
 
   const cleanupZombieJob = useCallback(async (jobId: string) => {
     try {
@@ -61,9 +130,12 @@ export const useHermeticReportStatus = () => {
           error: null, 
           isGenerating: false, 
           progress: 0,
-          hasZombieJob: false,
-          zombieJobInfo: null,
-        });
+        hasZombieJob: false,
+        zombieJobInfo: null,
+        progressMessage: undefined,
+        progressMessageReady: false,
+        milestoneGlow: false,
+      });
         return;
       }
 
@@ -147,6 +219,33 @@ export const useHermeticReportStatus = () => {
       } else if (completedJobWithoutReport) {
         currentStep = 'Report generated but not saved - please retry';
       }
+
+      // Progress milestone detection (every 10% starting from 50%)
+      const currentMilestone = Math.floor(progress / 10) * 10;
+      const shouldShowProgressMessage = progress >= 50 && 
+                                       currentMilestone > lastProgressMilestone && 
+                                       currentMilestone % 10 === 0 &&
+                                       !hasZombieJob &&
+                                       isGenerating;
+      
+      let progressMessage = status.progressMessage;
+      let progressMessageReady = status.progressMessageReady;
+      let milestoneGlow = status.milestoneGlow;
+      
+      if (shouldShowProgressMessage) {
+        console.log(`🎉 HERMETIC MILESTONE: Reached ${currentMilestone}% progress!`);
+        progressMessage = generateProgressMessage(progress, currentStep);
+        progressMessageReady = true;
+        milestoneGlow = [75, 100].includes(currentMilestone);
+        setLastProgressMilestone(currentMilestone);
+
+        // Auto-clear milestone glow after 3 seconds
+        if (milestoneGlow) {
+          setTimeout(() => {
+            setStatus(prev => ({ ...prev, milestoneGlow: false }));
+          }, 3000);
+        }
+      }
       
       if (activeJob || completedJobWithoutReport) {
         const jobData = (activeJob || completedJobWithoutReport) as any;
@@ -193,6 +292,9 @@ export const useHermeticReportStatus = () => {
         currentStep,
         hasZombieJob,
         zombieJobInfo,
+        progressMessage,
+        progressMessageReady,
+        milestoneGlow,
       });
 
       console.log('✅ HERMETIC STATUS: Final status updated:', {
@@ -213,6 +315,9 @@ export const useHermeticReportStatus = () => {
         progress: 0,
         hasZombieJob: false,
         zombieJobInfo: null,
+        progressMessage: undefined,
+        progressMessageReady: false,
+        milestoneGlow: false,
       });
     }
   }, []);
@@ -266,5 +371,6 @@ export const useHermeticReportStatus = () => {
     ...status,
     refreshStatus,
     cleanupZombieJob,
+    clearProgressMessage,
   };
 };

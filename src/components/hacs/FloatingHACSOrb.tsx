@@ -72,7 +72,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     loading: hermeticLoading, 
     isGenerating: isGeneratingHermeticReport,
     progress: hermeticJobProgress,
-    refreshStatus: refreshHermeticStatus 
+    refreshStatus: refreshHermeticStatus,
+    progressMessage,
+    progressMessageReady,
+    milestoneGlow: hermeticMilestoneGlow,
+    clearProgressMessage
   } = useHermeticReportStatus();
   const {
     currentQuestion,
@@ -541,10 +545,27 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       hasCurrentQuestion: !!currentQuestion,
       hasUnacknowledgedInsight: !!(currentInsight && !currentInsight.acknowledged),
       adviceReady,
-      patternDetected
+      patternDetected,
+      progressMessageReady
     });
 
-    // Priority 1: Show shadow advice if available
+    // Priority 1: Show hermetic progress message if available
+    if (progressMessageReady && progressMessage) {
+      console.log('🎯 FloatingHACSOrb: Showing hermetic progress message');
+      import('@/hooks/use-toast').then(({ useToast }) => {
+        const { toast } = useToast();
+        toast({
+          title: "Hermetic Analysis Update",
+          description: progressMessage,
+          duration: 6000,
+        });
+      });
+      // Clear the message after showing
+      clearProgressMessage();
+      return;
+    }
+
+    // Priority 2: Show shadow advice if available
     if (adviceReady) {
       const shadowAdvice = handleShadowClick();
       if (shadowAdvice) {
@@ -562,14 +583,14 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       }
     }
 
-    // Priority 2: Show unacknowledged insight if available
+    // Priority 3: Show unacknowledged insight if available
     if (currentInsight && !currentInsight.acknowledged) {
       console.log('🎯 FloatingHACSOrb: Showing pending insight');
       setShowInsightDisplay(true);
       return;
     }
 
-    // Priority 3: Show micro learning for pending questions
+    // Priority 4: Show micro learning for pending questions
     if (currentQuestion) {
       console.log('🎯 FloatingHACSOrb: Opening micro learning for question');
       setShowMicroLearning(true);
@@ -577,7 +598,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       return;
     }
 
-    // Priority 4: Default to chat interface
+    // Priority 5: Default to chat interface
     console.log('🎯 FloatingHACSOrb: Opening chat interface');
     setShowChat(true);
   };
@@ -748,10 +769,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               }
               showHermeticProgress={isGeneratingReport || isGeneratingHermeticReport || hasHermeticReport}
               showRadiantGlow={hasHermeticReport && showRadiantGlow}
-              milestoneGlow={milestoneGlow}
+              milestoneGlow={milestoneGlow || hermeticMilestoneGlow}
               subconsciousMode={subconsciousMode}
               patternDetected={patternDetected}
-              adviceReady={adviceReady}
+              adviceReady={adviceReady || progressMessageReady}
               onClick={handleOrbClick}
               className="shadow-lg hover:shadow-xl transition-shadow"
             />
@@ -771,8 +792,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
              />
            )}
 
-          {/* Red exclamation mark for unacknowledged insights - clickable */}
-          {currentInsight && !currentInsight.acknowledged && (
+          {/* Red exclamation mark for unacknowledged insights OR progress messages - clickable */}
+          {((currentInsight && !currentInsight.acknowledged) || progressMessageReady) && (
             <motion.div
               className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
               animate={{ 
@@ -786,8 +807,13 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               transition={{ duration: 1.5, repeat: Infinity }}
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('🔴 Red exclamation clicked - showing insight');
-                setShowInsightDisplay(true);
+                if (progressMessageReady) {
+                  console.log('🔴 Red exclamation clicked - showing progress message');
+                  handleOrbClick(); // Will handle progress message in priority order
+                } else {
+                  console.log('🔴 Red exclamation clicked - showing insight');
+                  setShowInsightDisplay(true);
+                }
               }}
             >
               <span className="text-white text-[10px] font-bold leading-none">!</span>
