@@ -1206,42 +1206,230 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   if (isHermetic) {
                     const hermeticContent = reportContent as any;
                     
-                    return (
-                      <div className="space-y-8">
-                        {/* Integrated Summary */}
-                        <div className="bg-accent/10 rounded-2xl p-6">
-                          <h3 className="text-xl font-semibold mb-4 text-foreground">Integrated Summary</h3>
-                          <div className="prose prose-lg max-w-none">
-                            {renderSafeContent(hermeticContent.integrated_summary, 'Integrated Summary')}
-                          </div>
-                        </div>
-                        
-                        {/* Seven Laws */}
-                        {hermeticContent.seven_laws_integration && (
-                          <div className="space-y-6">
-                            <h3 className="text-xl font-semibold text-foreground">Seven Hermetic Laws Integration</h3>
-                            {Object.entries(hermeticContent.seven_laws_integration).map(([lawKey, lawContent]) => (
-                              <div key={lawKey} className="bg-primary/5 rounded-2xl p-6 border border-primary/20">
-                                <h4 className="text-lg font-semibold mb-3 text-primary">
-                                  Law of {lawKey.charAt(0).toUpperCase() + lawKey.slice(1)}
-                                </h4>
-                                <div className="prose prose-lg max-w-none">
-                                  {renderSafeContent(lawContent, `Law of ${lawKey}`)}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {/* Practical Framework */}
-                        {hermeticContent.practical_activation_framework && (
-                          <div className="bg-accent/10 rounded-2xl p-6">
-                            <h3 className="text-xl font-semibold mb-4 text-foreground">Practical Activation Framework</h3>
+                    // Define known sections with their configurations (same as main view)
+                    const knownSections = {
+                      integrated_summary: {
+                        title: 'Overview',
+                        icon: Sparkles,
+                        badge: `${hermeticContent.word_count || 0}+ words`,
+                        color: 'green',
+                        key: 'overview'
+                      },
+                      seven_laws_integration: {
+                        title: 'Seven Hermetic Laws Analysis',
+                        icon: Star,
+                        badge: `${Object.keys(hermeticContent.seven_laws_integration || {}).length} laws`,
+                        color: 'purple',
+                        key: 'hermetic_laws',
+                        isNested: true
+                      },
+                      gate_analyses: {
+                        title: 'Gate Analyses',
+                        icon: Target,
+                        badge: `${Object.keys(hermeticContent.gate_analyses || {}).length} gates`,
+                        color: 'orange',
+                        key: 'gate_analyses',
+                        isNested: true
+                      },
+                      shadow_work_integration: {
+                        title: 'Shadow Work Integration',
+                        icon: Moon,
+                        badge: 'Deep Integration',
+                        color: 'indigo',
+                        key: 'shadow_work',
+                        isNested: true
+                      },
+                      system_translations: {
+                        title: 'System Translations',
+                        icon: Compass,
+                        badge: `${Object.keys(hermeticContent.system_translations || {}).length} systems`,
+                        color: 'blue',
+                        key: 'system_translations',
+                        isNested: true
+                      },
+                      practical_activation_framework: {
+                        title: 'Practical Framework',
+                        icon: Zap,
+                        badge: 'Applications',
+                        color: 'emerald',
+                        key: 'practical_framework'
+                      },
+                      consciousness_integration_map: {
+                        title: 'Consciousness Integration Map',
+                        icon: Brain,
+                        badge: 'Integration Map',
+                        color: 'emerald',
+                        key: 'practical_framework',
+                        isSubsection: true
+                      },
+                      structured_intelligence: {
+                        title: 'Enhanced Intelligence Analysis',
+                        icon: Brain,
+                        badge: `${Object.keys(hermeticContent.structured_intelligence || {}).length} Dimensions`,
+                        color: 'primary',
+                        key: 'intelligence_analysis',
+                        isIntelligence: true
+                      }
+                    };
+
+                    // Define section order - Overview (integrated_summary) should always be first
+                    const sectionOrder = [
+                      'integrated_summary',  // Overview - always first
+                      'seven_laws_integration',
+                      'gate_analyses', 
+                      'shadow_work_integration',
+                      'system_translations',
+                      'practical_activation_framework',
+                      'structured_intelligence'
+                    ];
+
+                    // Get all available sections (both known and unknown)
+                    const availableSections = Object.keys(hermeticContent).filter(key => 
+                      key !== 'word_count' && 
+                      key !== 'generation_timestamp' && 
+                      key !== 'report_version' &&
+                      hermeticContent[key] && 
+                      (typeof hermeticContent[key] === 'string' || typeof hermeticContent[key] === 'object')
+                    );
+
+                    // Sort sections: ordered sections first, then remaining sections
+                    const orderedSections = sectionOrder.filter(section => availableSections.includes(section));
+                    const remainingSections = availableSections.filter(section => !sectionOrder.includes(section));
+                    const allSections = [...orderedSections, ...remainingSections];
+
+                    // Helper function to render nested content (same as main view)
+                    const renderNestedContent = (content: any, sectionKey: string, config: any) => {
+                      if (!content || typeof content !== 'object') return null;
+
+                      return Object.entries(content).map(([itemKey, itemContent]) => {
+                        let displayTitle = itemKey;
+                        let IconComponent = config.icon;
+
+                        // Special formatting for different section types
+                        if (sectionKey === 'gate_analyses' && itemKey.startsWith('gate_')) {
+                          displayTitle = `Gate ${itemKey.replace('gate_', '')}`;
+                          IconComponent = Target;
+                        } else if (sectionKey === 'seven_laws_integration') {
+                          displayTitle = `Law of ${itemKey.charAt(0).toUpperCase() + itemKey.slice(1)}`;
+                          IconComponent = Star;
+                        } else {
+                          displayTitle = itemKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        }
+
+                        return (
+                          <div key={itemKey} className="bg-accent/10 rounded-2xl p-6 border border-accent/20 mb-4">
+                            <div className="flex items-center gap-3 mb-4">
+                              <IconComponent className="h-6 w-6 text-primary" />
+                              <h4 className="text-lg font-semibold text-foreground">{displayTitle}</h4>
+                            </div>
                             <div className="prose prose-lg max-w-none">
-                              {renderSafeContent(hermeticContent.practical_activation_framework, 'Practical Framework')}
+                              {renderSafeContent(itemContent, displayTitle)}
                             </div>
                           </div>
-                        )}
+                        );
+                      });
+                    };
+
+                    return (
+                      <div className="space-y-8">
+                        {allSections.map(sectionKey => {
+                          const content = hermeticContent[sectionKey];
+                          const config = knownSections[sectionKey];
+                          
+                          // Skip subsections that are handled within their parent sections
+                          if (config?.isSubsection) return null;
+                          
+                          // Use known configuration or create default
+                          const sectionConfig = config || {
+                            title: sectionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                            icon: Lightbulb,
+                            badge: typeof content === 'string' ? `${content.length} chars` : 
+                                   typeof content === 'object' && content ? `${Object.keys(content).length} items` : 'Content',
+                            color: 'default',
+                            key: sectionKey.replace(/[^a-zA-Z0-9]/g, '_')
+                          };
+
+                          return (
+                            <div key={sectionKey} className="space-y-4">
+                              <div className="flex items-center gap-3 mb-6">
+                                <sectionConfig.icon className="h-8 w-8 text-primary" />
+                                <h3 className="text-2xl font-bold text-foreground">{sectionConfig.title}</h3>
+                                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                                  {sectionConfig.badge}
+                                </Badge>
+                              </div>
+                              
+                              {/* Handle Intelligence Analysis specially */}
+                              {sectionConfig.isIntelligence && content ? (
+                                Object.entries(content)
+                                  .filter(([key]) => key !== 'id' && key !== 'user_id' && key !== 'personality_report_id' && key !== 'extraction_confidence' && key !== 'extraction_version' && key !== 'processing_notes' && key !== 'created_at' && key !== 'updated_at')
+                                  .map(([dimensionKey, dimensionContent]) => {
+                                    const IconComponent = intelligenceIcons[dimensionKey as keyof typeof intelligenceIcons] || Brain;
+                                    const title = intelligenceTitles[dimensionKey as keyof typeof intelligenceTitles] || dimensionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                    
+                                    return (
+                                      <div key={dimensionKey} className="bg-primary/5 rounded-2xl p-6 border border-primary/20 mb-4">
+                                        <div className="flex items-center gap-3 mb-4">
+                                          <IconComponent className="h-6 w-6 text-primary" />
+                                          <h4 className="text-lg font-semibold text-foreground">{title}</h4>
+                                        </div>
+                                        <div className="prose prose-lg max-w-none">
+                                          {Array.isArray(dimensionContent) ? (
+                                            <div className="space-y-4">
+                                              {dimensionContent.map((item, index) => (
+                                                <div key={index} className="p-4 bg-accent/10 rounded-lg">
+                                                  <p className="leading-relaxed whitespace-pre-wrap break-words">
+                                                    {typeof item === 'string' ? item : JSON.stringify(item, null, 2)}
+                                                  </p>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            renderSafeContent(dimensionContent, title)
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                              ) : sectionConfig.isNested && content && typeof content === 'object' ? (
+                                /* Handle nested content (like gate_analyses, system_translations, etc.) */
+                                renderNestedContent(content, sectionKey, sectionConfig)
+                              ) : sectionKey === 'practical_activation_framework' ? (
+                                /* Handle practical framework section with both main content and consciousness map */
+                                <>
+                                  <div className="bg-accent/10 rounded-2xl p-6 mb-4">
+                                    <div className="flex items-center gap-3 mb-4">
+                                      <Zap className="h-6 w-6 text-primary" />
+                                      <h4 className="text-lg font-semibold text-foreground">Practical Activation Framework</h4>
+                                    </div>
+                                    <div className="prose prose-lg max-w-none">
+                                      {renderSafeContent(content, 'Practical Framework')}
+                                    </div>
+                                  </div>
+                                  
+                                  {hermeticContent.consciousness_integration_map && (
+                                    <div className="bg-accent/10 rounded-2xl p-6">
+                                      <div className="flex items-center gap-3 mb-4">
+                                        <Brain className="h-6 w-6 text-primary" />
+                                        <h4 className="text-lg font-semibold text-foreground">Consciousness Integration Map</h4>
+                                      </div>
+                                      <div className="prose prose-lg max-w-none">
+                                        {renderSafeContent(hermeticContent.consciousness_integration_map, 'Consciousness Map')}
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                /* Handle simple single-content sections */
+                                <div className="bg-accent/10 rounded-2xl p-6">
+                                  <div className="prose prose-lg max-w-none">
+                                    {renderSafeContent(content, sectionConfig.title)}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     );
                   } else {
