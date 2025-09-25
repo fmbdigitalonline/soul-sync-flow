@@ -73,10 +73,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     isGenerating: isGeneratingHermeticReport,
     progress: hermeticJobProgress,
     refreshStatus: refreshHermeticStatus,
-    progressMessage,
-    progressMessageReady,
+    progressInsight,
+    progressInsightReady,
     milestoneGlow: hermeticMilestoneGlow,
-    clearProgressMessage
+    clearProgressInsight
   } = useHermeticReportStatus();
   const {
     currentQuestion,
@@ -96,7 +96,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     currentInsightIndex,
     nextInsight,
     previousInsight,
-    removeCurrentInsight
+    removeCurrentInsight,
+    addInsightToQueue
   } = useHACSInsights();
   
   // NEW: Add autonomous orchestration
@@ -546,22 +547,14 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       hasUnacknowledgedInsight: !!(currentInsight && !currentInsight.acknowledged),
       adviceReady,
       patternDetected,
-      progressMessageReady
+      progressInsightReady
     });
 
-    // Priority 1: Show hermetic progress message if available
-    if (progressMessageReady && progressMessage) {
-      console.log('🎯 FloatingHACSOrb: Showing hermetic progress message');
-      import('@/hooks/use-toast').then(({ useToast }) => {
-        const { toast } = useToast();
-        toast({
-          title: "Hermetic Analysis Update",
-          description: progressMessage,
-          duration: 6000,
-        });
-      });
-      // Clear the message after showing
-      clearProgressMessage();
+    // Priority 1: Show hermetic progress insight if available
+    if (progressInsightReady && progressInsight) {
+      console.log('🎯 FloatingHACSOrb: Adding hermetic progress insight to queue');
+      addInsightToQueue(progressInsight);
+      clearProgressInsight();
       return;
     }
 
@@ -772,7 +765,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               milestoneGlow={milestoneGlow || hermeticMilestoneGlow}
               subconsciousMode={subconsciousMode}
               patternDetected={patternDetected}
-              adviceReady={adviceReady || progressMessageReady}
+              adviceReady={adviceReady || progressInsightReady}
               onClick={handleOrbClick}
               className="shadow-lg hover:shadow-xl transition-shadow"
             />
@@ -793,7 +786,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
            )}
 
           {/* Red exclamation mark for unacknowledged insights OR progress messages - clickable */}
-          {((currentInsight && !currentInsight.acknowledged) || progressMessageReady) && (
+          {((currentInsight && !currentInsight.acknowledged) || progressInsightReady) && (
             <motion.div
               className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
               animate={{ 
@@ -807,9 +800,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               transition={{ duration: 1.5, repeat: Infinity }}
               onClick={(e) => {
                 e.stopPropagation();
-                if (progressMessageReady) {
-                  console.log('🔴 Red exclamation clicked - showing progress message');
-                  handleOrbClick(); // Will handle progress message in priority order
+                if (progressInsightReady) {
+                  console.log('🔴 Red exclamation clicked - showing progress insight');
+                  handleOrbClick(); // Will handle progress insight in priority order
                 } else {
                   console.log('🔴 Red exclamation clicked - showing insight');
                   setShowInsightDisplay(true);

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { hermeticPersonalityReportService } from '@/services/hermetic-personality-report-service';
+import { HACSInsight } from './use-hacs-insights';
 
 export interface HermeticReportStatus {
   hasReport: boolean;
@@ -11,8 +12,8 @@ export interface HermeticReportStatus {
   currentStep?: string;
   hasZombieJob: boolean;
   zombieJobInfo: any | null;
-  progressMessage?: string;
-  progressMessageReady: boolean;
+  progressInsight?: HACSInsight;
+  progressInsightReady: boolean;
   milestoneGlow: boolean;
 }
 
@@ -25,8 +26,8 @@ export const useHermeticReportStatus = () => {
     progress: 0,
     hasZombieJob: false,
     zombieJobInfo: null,
-    progressMessage: undefined,
-    progressMessageReady: false,
+    progressInsight: undefined,
+    progressInsightReady: false,
     milestoneGlow: false,
   });
 
@@ -37,8 +38,8 @@ export const useHermeticReportStatus = () => {
     jobId: string;
   } | null>(null);
 
-  // Generate witty progress messages
-  const generateProgressMessage = useCallback((progress: number, currentStep?: string) => {
+  // Generate witty progress insights as HACSInsight objects
+  const generateProgressInsight = useCallback((progress: number, currentStep?: string): HACSInsight | undefined => {
     const milestone = Math.floor(progress / 10) * 10;
     
     // Extract relevant info from current step
@@ -82,18 +83,34 @@ export const useHermeticReportStatus = () => {
     const messageArray = messages[milestone];
     if (messageArray) {
       const randomIndex = Math.floor(Math.random() * messageArray.length);
-      return messageArray[randomIndex];
+      const message = messageArray[randomIndex];
+      
+      return {
+        id: `hermetic-progress-${milestone}-${Date.now()}`,
+        text: message,
+        module: 'Hermetic Intelligence',
+        type: 'hermetic_progress',
+        confidence: 100,
+        evidence: [
+          `Analysis progress: ${progress}%`,
+          `Current stage: ${currentStep || 'Processing personality matrix'}`,
+          ...(stepType ? [`Processing: ${stepType} data`] : [])
+        ],
+        timestamp: new Date(),
+        acknowledged: false,
+        showContinue: true
+      };
     }
     
     return undefined;
   }, []);
 
-  // Clear progress message
-  const clearProgressMessage = useCallback(() => {
+  // Clear progress insight
+  const clearProgressInsight = useCallback(() => {
     setStatus(prev => ({
       ...prev,
-      progressMessage: undefined,
-      progressMessageReady: false,
+      progressInsight: undefined,
+      progressInsightReady: false,
       milestoneGlow: false
     }));
   }, []);
@@ -132,8 +149,8 @@ export const useHermeticReportStatus = () => {
           progress: 0,
         hasZombieJob: false,
         zombieJobInfo: null,
-        progressMessage: undefined,
-        progressMessageReady: false,
+        progressInsight: undefined,
+        progressInsightReady: false,
         milestoneGlow: false,
       });
         return;
@@ -228,14 +245,14 @@ export const useHermeticReportStatus = () => {
                                        !hasZombieJob &&
                                        isGenerating;
       
-      let progressMessage = status.progressMessage;
-      let progressMessageReady = status.progressMessageReady;
+      let progressInsight = status.progressInsight;
+      let progressInsightReady = status.progressInsightReady;
       let milestoneGlow = status.milestoneGlow;
       
       if (shouldShowProgressMessage) {
         console.log(`🎉 HERMETIC MILESTONE: Reached ${currentMilestone}% progress!`);
-        progressMessage = generateProgressMessage(progress, currentStep);
-        progressMessageReady = true;
+        progressInsight = generateProgressInsight(progress, currentStep);
+        progressInsightReady = true;
         milestoneGlow = [75, 100].includes(currentMilestone);
         setLastProgressMilestone(currentMilestone);
 
@@ -292,8 +309,8 @@ export const useHermeticReportStatus = () => {
         currentStep,
         hasZombieJob,
         zombieJobInfo,
-        progressMessage,
-        progressMessageReady,
+        progressInsight,
+        progressInsightReady,
         milestoneGlow,
       });
 
@@ -315,8 +332,8 @@ export const useHermeticReportStatus = () => {
         progress: 0,
         hasZombieJob: false,
         zombieJobInfo: null,
-        progressMessage: undefined,
-        progressMessageReady: false,
+        progressInsight: undefined,
+        progressInsightReady: false,
         milestoneGlow: false,
       });
     }
@@ -371,6 +388,6 @@ export const useHermeticReportStatus = () => {
     ...status,
     refreshStatus,
     cleanupZombieJob,
-    clearProgressMessage,
+    clearProgressInsight,
   };
 };

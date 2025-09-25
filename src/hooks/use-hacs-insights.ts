@@ -27,7 +27,7 @@ export interface HACSInsight {
   id: string;
   text: string;
   module: string;
-  type: 'productivity' | 'behavioral' | 'growth' | 'learning' | 'intelligence_trend' | 'learning_streak' | 'performance_trend' | 'peak_times' | 'activity_frequency' | 'module_performance' | 'memory_patterns' | 'difficulty_progression' | 'steward_introduction' | 'memory_enhanced' | 'behavioral_enhanced' | 'predictive' | 'conversation_shadow' | 'conversation_nullification';
+  type: 'productivity' | 'behavioral' | 'growth' | 'learning' | 'intelligence_trend' | 'learning_streak' | 'performance_trend' | 'peak_times' | 'activity_frequency' | 'module_performance' | 'memory_patterns' | 'difficulty_progression' | 'steward_introduction' | 'memory_enhanced' | 'behavioral_enhanced' | 'predictive' | 'conversation_shadow' | 'conversation_nullification' | 'hermetic_progress';
   confidence: number;
   evidence: string[];
   timestamp: Date;
@@ -854,6 +854,7 @@ export const useHACSInsights = () => {
     nextInsight,
     previousInsight,
     removeCurrentInsight,
+    addInsightToQueue,
     // Steward introduction state
     introductionState,
     isGeneratingReport,
