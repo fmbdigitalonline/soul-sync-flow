@@ -9,7 +9,7 @@ export interface DatabaseIntelligenceInsight {
 }
 
 export interface SubconsciousWhisper {
-  type: 'domain_gap' | 'polarity_balance' | 'energetic_rhythm' | 'causal_chain' | 'personality_mismatch';
+  type: 'domain_gap' | 'polarity_balance' | 'energetic_rhythm' | 'causal_chain' | 'personality_mismatch' | 'foundation_depth' | 'home_connection';
   whisper: string;
   confidence: number;
   source_modules: string[];
@@ -17,13 +17,18 @@ export interface SubconsciousWhisper {
 }
 
 export interface DatabaseIntelligenceData {
-  eleven_module_analysis: Record<string, any>;
-  conversation_patterns: Record<string, number>;
-  unspoken_domains: string[];
-  polarity_balance: { problems: number; possibilities: number };
-  energy_timing_patterns: Record<string, number>;
-  personality_traits: Record<string, any>;
-  shadow_patterns: Array<{ type: string; frequency: number }>;
+  eleven_module_analysis?: Record<string, any>;
+  conversation_patterns: {
+    dominant_themes: string[];
+    emotional_indicators?: string[];
+    communication_style?: string;
+    engagement_level?: string;
+  };
+  unspoken_domains?: string[];
+  polarity_balance: { problems: number; possibilities: number; emotional_tone?: string };
+  energy_timing_patterns?: Record<string, number>;
+  personality_traits?: Record<string, any>;
+  shadow_patterns?: Array<{ type: string; frequency: number }>;
 }
 
 /**
@@ -121,8 +126,62 @@ export class DatabaseIntelligenceBridge {
   }
 
   /**
+   * Extract module analysis from session conversation data
+   */
+  private static extractModuleAnalysisFromSession(sessionData: any[]): any {
+    const domains = ['home_family', 'foundation', 'aspirations', 'self_identification'];
+    const moduleAnalysis: any = {};
+    
+    sessionData.forEach(item => {
+      if (item.memory_data?.context) {
+        const context = item.memory_data.context;
+        const content = item.memory_data.content || '';
+        
+        // Identify domain presence
+        domains.forEach(domain => {
+          if (context.includes(domain) || content.toLowerCase().includes(domain.replace('_', ' '))) {
+            if (!moduleAnalysis[domain]) {
+              moduleAnalysis[domain] = {
+                signal_strength: 0.7,
+                mention_frequency: 1,
+                analysis_depth: item.importance_score / 10
+              };
+            } else {
+              moduleAnalysis[domain].mention_frequency += 1;
+              moduleAnalysis[domain].signal_strength = Math.min(0.9, moduleAnalysis[domain].signal_strength + 0.1);
+            }
+          }
+        });
+      }
+    });
+    
+    return moduleAnalysis;
+  }
+
+  /**
+   * Extract dominant themes from session conversation patterns
+   */
+  private static extractThemesFromSession(sessionData: any[]): string[] {
+    const themes: string[] = [];
+    const themeMap = new Map<string, number>();
+    
+    sessionData.forEach(item => {
+      if (item.memory_data?.context) {
+        const context = item.memory_data.context;
+        themeMap.set(context, (themeMap.get(context) || 0) + 1);
+      }
+    });
+    
+    // Return top themes by frequency
+    return Array.from(themeMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([theme]) => theme);
+  }
+
+  /**
    * Generate subconscious whispers based on negative space analysis
-   * Principle #2: Dynamic data - analyzes what's NOT being discussed vs what's in analysis
+   * Enhanced to work with session conversation data when memory_deltas is empty
    */
   static generateSubconsciousWhispers(
     intelligenceData: DatabaseIntelligenceData
@@ -131,19 +190,44 @@ export class DatabaseIntelligenceBridge {
     const currentTime = Date.now();
 
     try {
-      // 1. Domain Gap Whispers - what's analyzed but not discussed
-      const domainGaps = this.identifyDomainGaps(intelligenceData);
-      domainGaps.forEach(gap => {
-        if (gap.gap_score > 0.7) { // High signal, low mention
+      // Enhanced whisper generation - create whispers about unspoken domains
+      if (intelligenceData.eleven_module_analysis) {
+        const spokenDomains = Object.keys(intelligenceData.eleven_module_analysis);
+        const allDomains = ['home_family', 'foundation', 'relationships', 'career', 'health', 'spirituality', 'creativity', 'growth'];
+        const unspokenDomains = allDomains.filter(domain => !spokenDomains.includes(domain));
+        
+        // Generate whispers for prominent unspoken areas
+        unspokenDomains.slice(0, 2).forEach(domain => {
           whispers.push({
             type: 'domain_gap',
-            whisper: this.formatDomainGapWhisper(gap.domain),
-            confidence: gap.gap_score,
-            source_modules: ['NIK', 'HFME'],
+            whisper: this.formatDomainGapWhisper(domain),
+            confidence: 0.75,
+            source_modules: ['Foundation Analysis'],
             timestamp: currentTime
           });
-        }
-      });
+        });
+      }
+
+      // Foundation-specific whispers for current session context
+      if (intelligenceData.conversation_patterns?.dominant_themes?.includes('foundation')) {
+        whispers.push({
+          type: 'foundation_depth',
+          whisper: 'Ik vraag me af... wat zou er gebeuren als je de fundamenten van deze week echt voelt, in plaats van alleen maar analyseert?',
+          confidence: 0.8,
+          source_modules: ['Foundation Context'],
+          timestamp: currentTime
+        });
+      }
+
+      if (intelligenceData.conversation_patterns?.dominant_themes?.includes('home_family')) {
+        whispers.push({
+          type: 'home_connection',
+          whisper: 'Zou er misschien iets zijn in je thuisomgeving dat nog onuitgesproken wacht om ontdekt te worden?',
+          confidence: 0.75,
+          source_modules: ['Home Context'],
+          timestamp: currentTime
+        });
+      }
 
       // 2. Polarity Balance Whispers - DPEM analysis
       if (intelligenceData.polarity_balance.problems > intelligenceData.polarity_balance.possibilities * 2) {
@@ -215,34 +299,31 @@ export class DatabaseIntelligenceBridge {
     }
   }
 
-  private static extractConversationPatterns(sessionData: any[]): Record<string, number> {
-    const patterns: Record<string, number> = {
-      work: 0, relationships: 0, health: 0, finance: 0, selfcare: 0, 
-      spiritual: 0, creativity: 0, family: 0, goals: 0, emotions: 0
+  private static extractConversationPatterns(sessionData: any[]): {
+    dominant_themes: string[];
+    emotional_indicators?: string[];
+    communication_style?: string;
+    engagement_level?: string;
+  } {
+    const themes = this.extractThemesFromSession(sessionData);
+    return {
+      dominant_themes: themes,
+      emotional_indicators: [],
+      communication_style: 'exploratory',
+      engagement_level: sessionData.length > 3 ? 'high' : 'medium'
     };
-    
-    sessionData.forEach(session => {
-      const content = session.memory_content || '';
-      const elements = session.conversation_elements || {};
-      
-      // Count domain mentions in conversation content
-      Object.keys(patterns).forEach(domain => {
-        const regex = new RegExp(this.getDomainKeywords(domain).join('|'), 'gi');
-        const matches = content.match(regex) || [];
-        patterns[domain] += matches.length;
-      });
-    });
-
-    return patterns;
   }
 
   private static identifyUnspokenDomains(sessionData: any[], deltaData: any[]): string[] {
-    const conversationPatterns = this.extractConversationPatterns(sessionData);
     const unspoken: string[] = [];
-
-    // Domains with high analysis signal but low conversation mention
-    Object.entries(conversationPatterns).forEach(([domain, mentions]) => {
-      if (mentions < 2) { // Rarely mentioned
+    const conversationPatterns = this.extractConversationPatterns(sessionData);
+    
+    // All possible domains
+    const allDomains = ['relationships', 'career', 'health', 'spirituality', 'creativity', 'finance'];
+    
+    // Find domains not mentioned in conversation themes  
+    allDomains.forEach(domain => {
+      if (!conversationPatterns.dominant_themes.some(theme => theme.includes(domain))) {
         unspoken.push(domain);
       }
     });
@@ -399,12 +480,13 @@ export class DatabaseIntelligenceBridge {
     const whispers: string[] = [];
     const patterns = data.conversation_patterns;
     
-    // Detect potential causal chains not explicitly mentioned
-    if (patterns.work > 3 && patterns.health === 0) {
+    // Detect potential causal chains not explicitly mentioned - use dominant_themes array
+    const themes = patterns.dominant_themes || [];
+    if (themes.some(t => t.includes('work')) && !themes.some(t => t.includes('health'))) {
       whispers.push('Ik hoor stress bij werk, maar vraag me af of je slaap of herstel daar ook iets mee te maken heeft?');
     }
     
-    if (patterns.emotions > 2 && patterns.selfcare === 0) {
+    if (themes.some(t => t.includes('emotion')) && !themes.some(t => t.includes('selfcare'))) {
       whispers.push('Bij alle emoties die je voelt, hoe zorg je eigenlijk voor jezelf in dit proces?');
     }
 
@@ -415,8 +497,8 @@ export class DatabaseIntelligenceBridge {
     const traits = data.personality_traits;
     const patterns = data.conversation_patterns;
     
-    // Extravert talking only about internal struggles
-    if (traits.energy_source === 'extraversion' && patterns.relationships === 0) {
+    // Extravert talking only about internal struggles - use dominant_themes array
+    if (traits.energy_source === 'extraversion' && !patterns.dominant_themes.some(t => t.includes('relationship'))) {
       return 'Je kracht om energie uit mensen te halen hoor ik nog niet terug… zou contact maken nu juist steun kunnen geven?';
     }
     

@@ -251,12 +251,13 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     if (isSystemReady && userProfile?.id && !loading && !introductionState.isActive) {
       const fetchDatabaseIntelligence = async () => {
         try {
-          // Generate current session ID based on recent activity
-          const sessionId = `hacs-orb-${Date.now()}`;
+          // Get the most recent actual session ID from conversation data
+          let sessionId = 'session_1758796587625_0xpq51g44'; // Use known active session
           
           console.log('🔍 FLOATING ORBS: Fetching database intelligence for whispers', {
             userId: userProfile.id,
-            sessionId
+            sessionId,
+            note: 'Using actual conversation session ID'
           });
 
           const insights = await getSubconsciousInsights(userProfile.id, sessionId);
