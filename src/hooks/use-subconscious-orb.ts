@@ -75,11 +75,11 @@ export const useSubconsciousOrb = () => {
     return advice;
   }, [isEnabled]);
   
-  // Get session insights
-  const getSessionInsights = useCallback(() => {
+  // Get session insights - Enhanced with database intelligence
+  const getSessionInsights = useCallback(async (userId?: string, sessionId?: string) => {
     if (!isEnabled) return null;
     
-    return SubconsciousOrbController.getSessionInsights();
+    return await SubconsciousOrbController.getSessionInsights(userId, sessionId);
   }, [isEnabled]);
   
   // Get performance metrics

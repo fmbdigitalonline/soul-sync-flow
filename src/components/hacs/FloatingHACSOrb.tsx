@@ -145,14 +145,21 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const { language, t } = useLanguage();
   const enhancedFeedback = useEnhancedFeedbackSystem();
   
-  // Shadow detection integration
+  // Shadow detection integration - Enhanced with database intelligence
   const { 
     handleOrbClick: handleShadowClick, 
     subconsciousMode, 
     patternDetected, 
     adviceReady,
-    confidence: shadowConfidence 
+    confidence: shadowConfidence,
+    getSessionInsights: getSubconsciousInsights
   } = useSubconsciousOrb();
+
+  // State for database-powered whispers
+  const [subconsciousWhispers, setSubconsciousWhispers] = useState<any[]>([]);
+  const [databaseIntelligence, setDatabaseIntelligence] = useState<any>(null);
+  const [showWhisperBubble, setShowWhisperBubble] = useState(false);
+  const [currentWhisper, setCurrentWhisper] = useState<string>('');
 
   console.log('FloatingHACSOrb render:', { 
     loading, 
@@ -238,46 +245,56 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   }, [currentQuestion, currentInsight, showBubble, clearCurrentQuestion]);
 
-  // Phase 3 Complete: Final database-driven Steward Introduction logic
+  // Enhanced database intelligence fetching
   useEffect(() => {
-    // Wait for all systems to be ready including database validation
-    if (!isSystemReady) {
-      console.log('🚀 PHASE 3: System not ready for introduction check', {
-        loading,
-        databaseLoading: databaseValidation.loading,
-        intelligence: !!intelligence
-      });
-      return;
-    }
+    // Fetch database intelligence for whispers when system is ready
+    if (isSystemReady && userProfile?.id && !loading && !introductionState.isActive) {
+      const fetchDatabaseIntelligence = async () => {
+        try {
+          // Generate current session ID based on recent activity
+          const sessionId = `hacs-orb-${Date.now()}`;
+          
+          console.log('🔍 FLOATING ORBS: Fetching database intelligence for whispers', {
+            userId: userProfile.id,
+            sessionId
+          });
 
-    // Use the enhanced introduction hook's validation (Principle #6: Integrate)
-    const shouldStart = shouldStartIntroduction();
-    
-    console.log('🚀 PHASE 3: Final introduction validation:', {
-      shouldStart,
-      introductionActive: introductionState.isActive,
-      databaseShouldShow: databaseValidation.shouldShow,
-      databaseDiagnostic: databaseValidation.diagnostic?.diagnosis,
-      databaseError: databaseValidation.error
-    });
+          const insights = await getSubconsciousInsights(userProfile.id, sessionId);
+          
+          if (insights && insights.subconsciousWhispers?.length > 0) {
+            setSubconsciousWhispers(insights.subconsciousWhispers);
+            setDatabaseIntelligence(insights.databaseIntelligence);
+            
+            // Show first whisper as bubble after 3 seconds
+            setTimeout(() => {
+              if (insights.subconsciousWhispers[0]) {
+                setCurrentWhisper(insights.subconsciousWhispers[0].whisper);
+                setShowWhisperBubble(true);
+                
+                // Auto-hide whisper after 12 seconds
+                setTimeout(() => {
+                  setShowWhisperBubble(false);
+                }, 12000);
+              }
+            }, 3000);
+            
+            console.log('✅ FLOATING ORBS: Database intelligence loaded', {
+              whispersCount: insights.subconsciousWhispers.length,
+              hasElevenModules: insights.databaseIntelligence?.hasElevenModules,
+              unspokenDomains: insights.databaseIntelligence?.unspokenDomainsCount
+            });
+          }
+          
+        } catch (error) {
+          console.error('🚨 FLOATING ORBS: Database intelligence error:', error);
+        }
+      };
 
-    // Start introduction based on enhanced validation (Principle #7: Transparent)
-    if (shouldStart && !introductionState.isActive) {
-      console.log('🎯 PHASE 3: Starting Steward Introduction (Final Integration)');
-      startIntroduction();
-    } else if (!shouldStart) {
-      console.log('✅ PHASE 3: Steward Introduction not needed:', {
-        reason: databaseValidation.diagnostic?.diagnosis || 'Unknown',
-        completed: databaseValidation.diagnostic?.introductionCompleted
-      });
+      // Fetch with slight delay to allow system to settle
+      const timer = setTimeout(fetchDatabaseIntelligence, 2000);
+      return () => clearTimeout(timer);
     }
-  }, [
-    isSystemReady, 
-    shouldStartIntroduction,
-    introductionState.isActive,
-    databaseValidation.error,
-    startIntroduction
-  ]);
+  }, [isSystemReady, userProfile?.id, loading, introductionState.isActive, getSubconsciousInsights]);
 
   // ✅ INSIGHTS ACTIVATED - Feature flag for automatic insight generation
   const AUTO_INSIGHTS_ENABLED = true; // Activated to enable red exclamation notifications

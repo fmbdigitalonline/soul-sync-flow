@@ -4,19 +4,25 @@ import { cn } from "@/lib/utils";
 import { motion } from "@/lib/framer-motion";
 
 interface SpeechBubbleProps {
-  children: React.ReactNode;
+  text?: string;
+  children?: React.ReactNode;
   className?: string;
   position?: "top" | "bottom" | "left" | "right";
   isVisible?: boolean;
   is3D?: boolean;
+  variant?: "default" | "whisper";
+  onClick?: () => void;
 }
 
 const SpeechBubble: React.FC<SpeechBubbleProps> = ({
+  text,
   children,
   className,
   position = "bottom",
   isVisible = true,
   is3D = false,
+  variant = "default",
+  onClick,
 }) => {
   const positionClasses = {
     top: "bottom-full mb-2",
@@ -37,11 +43,13 @@ const SpeechBubble: React.FC<SpeechBubbleProps> = ({
   return (
     <motion.div
       className={cn(
-        "absolute z-10 w-64 max-w-sm px-4 py-3",
+        "absolute z-10 w-64 max-w-sm px-4 py-3 cursor-pointer",
         is3D ? "bg-black bg-opacity-50 backdrop-blur-md border border-white border-opacity-40 text-white" : "cosmic-card",
+        variant === "whisper" && "bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200 text-purple-800",
         positionClasses[position],
         className
       )}
+      onClick={onClick}
       initial={{ opacity: 0, scale: 0.9, y: position === "bottom" ? -10 : position === "top" ? 10 : 0 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}

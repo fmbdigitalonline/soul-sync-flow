@@ -359,29 +359,90 @@ export class SubconsciousOrbController {
   }
 
   /**
-   * Get session insights for user
+   * Get session insights for user - Enhanced with Database Intelligence
+   * Principle #1: Additive only - preserves original functionality while adding database insights
+   * Principle #2: Real data - connects to actual 11-module analysis and conversation intelligence
    */
-  static getSessionInsights(): {
+  static async getSessionInsights(userId?: string, sessionId?: string): Promise<{
     totalPatterns: number;
     topPatterns: string[];
     recommendations: string[];
-  } {
+    subconsciousWhispers: Array<{
+      type: string;
+      whisper: string;
+      confidence: number;
+      source_modules: string[];
+    }>;
+    databaseIntelligence: {
+      hasElevenModules: boolean;
+      conversationPatternsCount: number;
+      unspokenDomainsCount: number;
+      polarityBalance: { problems: number; possibilities: number };
+    } | null;
+  }> {
+    // Principle #1: Preserve existing functionality
     const summary = PatternBuffer.getSessionSummary();
     
     const topPatterns = summary.topPatterns.map(entry => 
       `${entry.pattern.type}: ${entry.pattern.pattern}`
     );
     
-    const recommendations = [
+    const basicRecommendations = [
       'Notice patterns without judgment',
       'Practice mindful awareness of triggers',
       'Explore the wisdom in your reactions'
     ];
+
+    // Principle #2: Add database intelligence when available (no hardcoded fallbacks)
+    let subconsciousWhispers: any[] = [];
+    let databaseIntelligence = null;
+
+    if (userId && sessionId) {
+      try {
+        console.log('🔍 SUBCONSCIOUS ORB: Fetching database intelligence for whispers', { userId, sessionId });
+        
+        // Import dynamically to respect critical data pathways (Principle #6)
+        const { DatabaseIntelligenceBridge } = await import('./database-intelligence-bridge');
+        
+        const intelligenceData = await DatabaseIntelligenceBridge.getIntelligenceContext(userId, sessionId);
+        
+        if (intelligenceData) {
+          // Generate whispers based on negative space analysis
+          const whispers = DatabaseIntelligenceBridge.generateSubconsciousWhispers(intelligenceData);
+          
+          subconsciousWhispers = whispers.map(whisper => ({
+            type: whisper.type,
+            whisper: whisper.whisper,
+            confidence: whisper.confidence,
+            source_modules: whisper.source_modules
+          }));
+
+          databaseIntelligence = {
+            hasElevenModules: Object.keys(intelligenceData.eleven_module_analysis).length > 0,
+            conversationPatternsCount: Object.keys(intelligenceData.conversation_patterns).length,
+            unspokenDomainsCount: intelligenceData.unspoken_domains.length,
+            polarityBalance: intelligenceData.polarity_balance
+          };
+
+          console.log('✅ SUBCONSCIOUS ORB: Database intelligence integrated', {
+            whispersGenerated: subconsciousWhispers.length,
+            hasElevenModules: databaseIntelligence.hasElevenModules,
+            unspokenDomains: databaseIntelligence.unspokenDomainsCount
+          });
+        }
+        
+      } catch (error) {
+        // Principle #3: Surface errors clearly, don't mask with fallbacks
+        console.error('🚨 SUBCONSCIOUS ORB: Database intelligence error:', error);
+      }
+    }
     
     return {
       totalPatterns: summary.totalPatterns,
       topPatterns: topPatterns.slice(0, 3),
-      recommendations
+      recommendations: basicRecommendations,
+      subconsciousWhispers,
+      databaseIntelligence
     };
   }
 }
