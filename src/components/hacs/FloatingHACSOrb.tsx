@@ -12,6 +12,8 @@ import { VoiceTokenGenerator } from '@/services/voice-token-generator';
 import { HACSMicroLearning } from './HACSMicroLearning';
 import { HACSChatOverlay } from './HACSChatOverlay';
 import { HACSInsightDisplay } from './HACSInsightDisplay';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useStewardIntroductionEnhanced } from '@/hooks/use-steward-introduction-enhanced';
 import { useStewardIntroductionDatabase } from '@/hooks/use-steward-introduction-database';
@@ -117,6 +119,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
   // Phase 2: Database-driven Steward Introduction validation
   const stewardDatabase = useStewardIntroductionDatabase();
+  
+  // Mobile responsiveness
+  const { isMobile } = useIsMobile();
   
   // Phase 1: Comprehensive data integration (addresses 60% missing data)
   const { 
@@ -919,92 +924,180 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
       {/* Steward Introduction Modal */}
       {introductionState.isActive && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex p-4 ${
+          isMobile ? 'items-end pb-safe' : 'items-center justify-center'
+        }`}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-card/95 backdrop-blur border border-border rounded-lg shadow-2xl max-w-md w-full mx-4"
+            className={`bg-card/95 backdrop-blur border border-border rounded-lg shadow-2xl w-full ${
+              isMobile ? 'max-h-[85vh] mb-4' : 'max-w-md mx-4'
+            }`}
           >
-            <div className="p-6 text-center">
-              {/* Soul Alchemist Orb - Speaking State */}
-              <div className="flex justify-center mb-6">
-                <IntelligentSoulOrb
-                  stage="collecting"
-                  speaking={true}
-                  pulse={true}
-                  size="lg"
-                  intelligenceLevel={40}
-                  showProgressRing={true}
-                  className="animate-pulse"
-                />
-              </div>
-              
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold mb-2 text-card-foreground">Blueprint Echo</h1>
-                <p className="text-sm text-muted-foreground mb-4">{t('system.holisticSoulSystem')}</p>
-                
-                {/* Current step content */}
-                {introductionState.steps && introductionState.steps[introductionState.currentStep] && (
-                  <div className="mb-6">
-                    <h2 className="text-lg font-semibold mb-3 text-card-foreground">
-                      {introductionState.steps[introductionState.currentStep].title}
-                    </h2>
-                    <p className="text-muted-foreground leading-relaxed text-left bg-muted/20 p-4 rounded-lg border-l-4 border-primary">
-                      "{introductionState.steps[introductionState.currentStep].message}"
-                    </p>
+            {isMobile ? (
+              <ScrollArea className="max-h-[85vh]">
+                <div className="p-6 text-center">
+                  {/* Soul Alchemist Orb - Speaking State */}
+                  <div className="flex justify-center mb-6">
+                    <IntelligentSoulOrb
+                      stage="collecting"
+                      speaking={true}
+                      pulse={true}
+                      size="lg"
+                      intelligenceLevel={40}
+                      showProgressRing={true}
+                      className="animate-pulse"
+                    />
                   </div>
+                  
+                  <div className="mb-6">
+                    <h1 className="text-2xl font-bold mb-2 text-card-foreground">Blueprint Echo</h1>
+                    <p className="text-sm text-muted-foreground mb-4">{t('system.holisticSoulSystem')}</p>
+                    
+                    {/* Current step content */}
+                    {introductionState.steps && introductionState.steps[introductionState.currentStep] && (
+                      <div className="mb-6">
+                        <h2 className="text-lg font-semibold mb-3 text-card-foreground">
+                          {introductionState.steps[introductionState.currentStep].title}
+                        </h2>
+                        <p className="text-muted-foreground leading-relaxed text-left bg-muted/20 p-4 rounded-lg border-l-4 border-primary">
+                          "{introductionState.steps[introductionState.currentStep].message}"
+                        </p>
+                      </div>
+                    )}
+
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {t('hacs.soulAlchemistReady')}
+                    </p>
+                    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                      <div className="w-2 h-2 bg-primary rounded-full"></div>
+                      <span>{t('hacs.blueprintUnderstanding')}: 40%</span>
+                    </div>
+                  </div>
+
+                  {/* Continue button */}
+                  {introductionState.steps && 
+                   introductionState.steps[introductionState.currentStep] && 
+                   introductionState.steps[introductionState.currentStep].showContinue && (
+                    <button
+                      onClick={async () => {
+                        // Handle final step - trigger report generation and close modal immediately
+                        if (introductionState.currentStep === introductionState.steps.length - 1) {
+                          await completeIntroductionWithReport();
+                        } else {
+                          continueIntroduction();
+                        }
+                      }}
+                      className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90 transition-colors font-medium min-h-[44px]"
+                    >
+                      {introductionState.currentStep === introductionState.steps.length - 1 
+                        ? t('activateSteward') 
+                        : t('continue')
+                      }
+                    </button>
+                  )}
+
+                  {/* Step indicator */}
+                  {introductionState.steps && introductionState.steps.length > 1 && (
+                    <div className="flex justify-center mt-4 space-x-2">
+                      {introductionState.steps.map((_, index) => (
+                        <div
+                          key={index}
+                          className={`w-2 h-2 rounded-full transition-colors ${
+                            index === introductionState.currentStep 
+                              ? 'bg-primary' 
+                              : index < introductionState.currentStep 
+                                ? 'bg-primary/50' 
+                                : 'bg-muted-foreground/30'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            ) : (
+              <div className="p-6 text-center">
+                {/* Soul Alchemist Orb - Speaking State */}
+                <div className="flex justify-center mb-6">
+                  <IntelligentSoulOrb
+                    stage="collecting"
+                    speaking={true}
+                    pulse={true}
+                    size="lg"
+                    intelligenceLevel={40}
+                    showProgressRing={true}
+                    className="animate-pulse"
+                  />
+                </div>
+                
+                <div className="mb-6">
+                  <h1 className="text-2xl font-bold mb-2 text-card-foreground">Blueprint Echo</h1>
+                  <p className="text-sm text-muted-foreground mb-4">{t('system.holisticSoulSystem')}</p>
+                  
+                  {/* Current step content */}
+                  {introductionState.steps && introductionState.steps[introductionState.currentStep] && (
+                    <div className="mb-6">
+                      <h2 className="text-lg font-semibold mb-3 text-card-foreground">
+                        {introductionState.steps[introductionState.currentStep].title}
+                      </h2>
+                      <p className="text-muted-foreground leading-relaxed text-left bg-muted/20 p-4 rounded-lg border-l-4 border-primary">
+                        "{introductionState.steps[introductionState.currentStep].message}"
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {t('hacs.soulAlchemistReady')}
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <div className="w-2 h-2 bg-primary rounded-full"></div>
+                    <span>{t('hacs.blueprintUnderstanding')}: 40%</span>
+                  </div>
+                </div>
+
+                {/* Continue button */}
+                {introductionState.steps && 
+                 introductionState.steps[introductionState.currentStep] && 
+                 introductionState.steps[introductionState.currentStep].showContinue && (
+                  <button
+                    onClick={async () => {
+                      // Handle final step - trigger report generation and close modal immediately
+                      if (introductionState.currentStep === introductionState.steps.length - 1) {
+                        await completeIntroductionWithReport();
+                      } else {
+                        continueIntroduction();
+                      }
+                    }}
+                    className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90 transition-colors font-medium"
+                  >
+                    {introductionState.currentStep === introductionState.steps.length - 1 
+                      ? t('activateSteward') 
+                      : t('continue')
+                    }
+                  </button>
                 )}
 
-                <p className="text-sm text-muted-foreground mb-2">
-                  {t('hacs.soulAlchemistReady')}
-                </p>
-                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span>{t('hacs.blueprintUnderstanding')}: 40%</span>
-                </div>
+                {/* Step indicator */}
+                {introductionState.steps && introductionState.steps.length > 1 && (
+                  <div className="flex justify-center mt-4 space-x-2">
+                    {introductionState.steps.map((_, index) => (
+                      <div
+                        key={index}
+                        className={`w-2 h-2 rounded-full transition-colors ${
+                          index === introductionState.currentStep 
+                            ? 'bg-primary' 
+                            : index < introductionState.currentStep 
+                              ? 'bg-primary/50' 
+                              : 'bg-muted-foreground/30'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-
-              {/* Continue button */}
-              {introductionState.steps && 
-               introductionState.steps[introductionState.currentStep] && 
-               introductionState.steps[introductionState.currentStep].showContinue && (
-                <button
-                  onClick={async () => {
-                    // Handle final step - trigger report generation and close modal immediately
-                    if (introductionState.currentStep === introductionState.steps.length - 1) {
-                      await completeIntroductionWithReport();
-                    } else {
-                      continueIntroduction();
-                    }
-                  }}
-                  className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90 transition-colors font-medium"
-                >
-                  {introductionState.currentStep === introductionState.steps.length - 1 
-                    ? t('activateSteward') 
-                    : t('continue')
-                  }
-                </button>
-              )}
-
-              {/* Step indicator */}
-              {introductionState.steps && introductionState.steps.length > 1 && (
-                <div className="flex justify-center mt-4 space-x-2">
-                  {introductionState.steps.map((_, index) => (
-                    <div
-                      key={index}
-                      className={`w-2 h-2 rounded-full transition-colors ${
-                        index === introductionState.currentStep 
-                          ? 'bg-primary' 
-                          : index < introductionState.currentStep 
-                            ? 'bg-primary/50' 
-                            : 'bg-muted-foreground/30'
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
           </motion.div>
         </div>
       )}
