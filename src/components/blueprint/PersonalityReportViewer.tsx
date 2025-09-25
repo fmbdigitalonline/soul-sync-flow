@@ -554,12 +554,12 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   };
 
   const sectionTitles = {
-    core_personality_pattern: 'Core Personality Pattern',
-    decision_making_style: 'Decision Making Style',
-    relationship_style: 'Relationship Style',
-    life_path_purpose: 'Life Path & Purpose',
-    current_energy_timing: 'Current Energy & Timing',
-    integrated_summary: 'Integrated Summary'
+    core_personality_pattern: t('reportSections.corePersonalityPattern'),
+    decision_making_style: t('reportSections.decisionMakingStyle'),
+    relationship_style: t('reportSections.relationshipStyle'),
+    life_path_purpose: t('reportSections.lifePathPurpose'),
+    current_energy_timing: t('reportSections.currentEnergyTiming'),
+    integrated_summary: t('reportSections.integratedSummary')
   };
 
   // Define the preferred order for sections

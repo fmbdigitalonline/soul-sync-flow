@@ -617,6 +617,15 @@ const translations: Record<Language, Translations> = {
       keyFindings: 'Key Findings',
       noContentAvailable: 'No report content available'
     },
+    // Standard Report Sections
+    reportSections: {
+      corePersonalityPattern: 'Core Personality Pattern',
+      decisionMakingStyle: 'Decision Making Style',
+      relationshipStyle: 'Relationship Style',
+      lifePathPurpose: 'Life Path & Purpose',
+      currentEnergyTiming: 'Current Energy & Timing',
+      integratedSummary: 'Integrated Summary'
+    },
     // Personality Assessment
     personality: {
       energySource: 'Where do you get your energy?',
@@ -2159,6 +2168,15 @@ const translations: Record<Language, Translations> = {
       detailedAnalysis: 'Gedetailleerde Analyse',
       keyFindings: 'Belangrijkste Bevindingen',
       noContentAvailable: 'Geen rapportinhoud beschikbaar'
+    },
+    // Standaard Rapport Secties
+    reportSections: {
+      corePersonalityPattern: 'Je Kern Persoonlijkheidspatroon',
+      decisionMakingStyle: 'Hoe Je Beslissingen Neemt',
+      relationshipStyle: 'Je Relatiestijl',
+      lifePathPurpose: 'Je Levenspad & Doel',
+      currentEnergyTiming: 'Huidige Energie & Timing',
+      integratedSummary: 'Geïntegreerde Samenvatting'
     },
     // Persoonlijkheidsbeoordeling
     personality: {

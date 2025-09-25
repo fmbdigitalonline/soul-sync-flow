@@ -89,7 +89,7 @@ class AIPersonalityReportService {
       user_meta: {
         ...blueprint.user_meta,
         user_id: blueprint.user_meta?.user_id || blueprint.user_id,
-        preferred_name: blueprint.user_meta?.preferred_name || blueprint.user_meta?.full_name?.split(' ')[0],
+        preferred_name: blueprint.user_meta?.preferred_name || blueprint.user_meta?.full_name || 'User',
         full_name: blueprint.user_meta?.full_name || 'User',
         // CRITICAL: Preserve the complete personality object with Big Five data
         personality: blueprint.user_meta?.personality || {}
