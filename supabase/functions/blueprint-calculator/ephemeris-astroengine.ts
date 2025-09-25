@@ -6,8 +6,8 @@ console.log("🔧 EPHEMERIS MODULE: Starting to load...");
 
 let Astronomy;
 try {
-  console.log("🔧 EPHEMERIS MODULE: Importing astronomy-engine...");
-  Astronomy = await import("npm:astronomy-engine@2");
+  console.log("🔧 EPHEMERIS MODULE: Importing astronomy-engine from esm.sh...");
+  Astronomy = await import("https://esm.sh/astronomy-engine@2");
   console.log("✅ EPHEMERIS MODULE: Successfully imported astronomy-engine");
 } catch (error) {
   console.error("❌ EPHEMERIS MODULE: Failed to import astronomy-engine:", error);

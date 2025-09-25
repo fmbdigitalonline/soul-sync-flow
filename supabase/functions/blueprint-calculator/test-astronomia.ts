@@ -18,8 +18,8 @@ async function testAstronomia(req) {
     
     let responseMessage = `=== ASTRONOMIA FINAL INTEGRATION TEST ===\n`;
 
-    // Import astronomia main library
-    const astronomia = await import('npm:astronomia@4.1.1');
+    // Import astronomia main library from esm.sh
+    const astronomia = await import('https://esm.sh/astronomia@4.1.1');
     console.log('Astronomia imported successfully');
     
     responseMessage += `✅ Astronomia loaded successfully\n\n`;
@@ -30,7 +30,7 @@ async function testAstronomia(req) {
     
     for (const planetName of planetNames) {
       try {
-        const dataModule = await import(`npm:astronomia@4.1.1/data/vsop87${planetName.charAt(0).toUpperCase() + planetName.slice(1)}`);
+        const dataModule = await import(`https://esm.sh/astronomia@4.1.1/data/vsop87${planetName.charAt(0).toUpperCase() + planetName.slice(1)}`);
         vsop87Data[planetName] = dataModule.default || dataModule;
         responseMessage += `✅ VSOP87 data loaded for ${planetName}\n`;
       } catch (e) {

@@ -1,5 +1,5 @@
 
-import { DateTime } from "npm:luxon@3.4.4";
+// Removed luxon dependency - using native JavaScript Date instead
 
 interface GeoCoordinates {
   latitude: number;
@@ -239,25 +239,26 @@ export async function calculatePlanetaryPositions(
     
     console.log(`Using IANA timezone: ${tzId}`);
     
-    // Parse the birth date and time using Luxon with the timezone
-    let localDateTime: DateTime;
+    // Parse the birth date and time using native JavaScript Date with timezone
+    let localDateTime: Date;
     
     if (birthTime) {
       // If birth time is provided, use the full datetime
-      localDateTime = DateTime.fromISO(`${birthDate}T${birthTime}`, { zone: tzId });
-      if (!localDateTime.isValid) {
-        console.error(`Invalid datetime: ${localDateTime.invalidReason}, ${localDateTime.invalidExplanation}`);
+      const dateTimeStr = `${birthDate}T${birthTime}`;
+      localDateTime = new Date(dateTimeStr);
+      if (isNaN(localDateTime.getTime())) {
+        console.error(`Invalid datetime: ${dateTimeStr}`);
         // Fallback to noon if time parsing fails
-        localDateTime = DateTime.fromISO(`${birthDate}T12:00`, { zone: tzId });
+        localDateTime = new Date(`${birthDate}T12:00`);
       }
     } else {
-      // If no birth time, default to noon in the timezone
-      localDateTime = DateTime.fromISO(`${birthDate}T12:00`, { zone: tzId });
+      // If no birth time, default to noon
+      localDateTime = new Date(`${birthDate}T12:00`);
     }
     
-    // Convert local time to UTC
-    const utcDateTime = localDateTime.toUTC();
-    console.log(`Converted local time ${localDateTime.toString()} to UTC ${utcDateTime.toString()}`);
+    // Convert to UTC (JavaScript Date is already in UTC internally)
+    const utcDateTime = new Date(localDateTime.getTime());
+    console.log(`Converted local time ${localDateTime.toISOString()} to UTC ${utcDateTime.toISOString()}`);
     
     // Calculate Julian day from UTC datetime
     const jd = calculateJulianDayFromDateTime(utcDateTime);
@@ -273,15 +274,15 @@ export async function calculatePlanetaryPositions(
   }
 }
 
-// Calculate Julian Day directly from Luxon DateTime
-function calculateJulianDayFromDateTime(dt: DateTime): number {
-  // Extract date components from Luxon DateTime
-  const y = dt.year;
-  const m = dt.month;
-  const d = dt.day;
-  const hour = dt.hour;
-  const minute = dt.minute;
-  const second = dt.second;
+// Calculate Julian Day directly from JavaScript Date
+function calculateJulianDayFromDateTime(dt: Date): number {
+  // Extract date components from JavaScript Date
+  const y = dt.getUTCFullYear();
+  const m = dt.getUTCMonth() + 1; // JavaScript months are 0-based
+  const d = dt.getUTCDate();
+  const hour = dt.getUTCHours();
+  const minute = dt.getUTCMinutes();
+  const second = dt.getUTCSeconds();
   
   // Calculate decimal day with time
   const decimalDay = d + (hour + minute/60 + second/3600) / 24;
