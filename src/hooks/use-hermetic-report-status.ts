@@ -32,6 +32,7 @@ export const useHermeticReportStatus = () => {
   });
 
   const [lastProgressMilestone, setLastProgressMilestone] = useState<number>(0);
+  const [displayedMilestones, setDisplayedMilestones] = useState<Set<number>>(new Set());
 
   const [recentCompletion, setRecentCompletion] = useState<{
     timestamp: number;
@@ -105,15 +106,32 @@ export const useHermeticReportStatus = () => {
     return undefined;
   }, []);
 
-  // Clear progress insight
+  // Clear progress insight and mark milestone as displayed
   const clearProgressInsight = useCallback(() => {
+    // Get the current milestone from the progress insight if it exists
+    const currentProgress = status.progress;
+    const currentMilestone = Math.floor(currentProgress / 10) * 10;
+    
+    console.log(`🧹 CLEAR INSIGHT: Clearing progress insight for milestone ${currentMilestone}%`);
+    
+    // Mark this milestone as already displayed to prevent regeneration
+    if (currentMilestone >= 50) {
+      setDisplayedMilestones(prev => {
+        const updated = new Set(prev);
+        updated.add(currentMilestone);
+        console.log(`🎯 MILESTONE TRACKING: Added ${currentMilestone}% to displayed milestones:`, [...updated]);
+        return updated;
+      });
+      setLastProgressMilestone(currentMilestone);
+    }
+    
     setStatus(prev => ({
       ...prev,
       progressInsight: undefined,
       progressInsightReady: false,
       milestoneGlow: false
     }));
-  }, []);
+  }, [status.progress]);
 
   const cleanupZombieJob = useCallback(async (jobId: string) => {
     try {
@@ -141,6 +159,9 @@ export const useHermeticReportStatus = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.log('🔍 HERMETIC STATUS: No authenticated user');
+        // Reset milestone tracking when no user
+        setDisplayedMilestones(new Set());
+        setLastProgressMilestone(0);
         setStatus({ 
           hasReport: false, 
           loading: false, 
@@ -168,6 +189,11 @@ export const useHermeticReportStatus = () => {
 
       if (veryRecentJobs && veryRecentJobs.length > 0) {
         console.log('🚀 HERMETIC STATUS: Detected very recent job within 30s:', veryRecentJobs[0]);
+        
+        // Reset milestone tracking for new generation
+        setDisplayedMilestones(new Set());
+        setLastProgressMilestone(0);
+        console.log('🔄 MILESTONE RESET: Cleared displayed milestones for new generation');
         
         // Immediately set as generating to bridge the gap
         setStatus(prev => ({ 
@@ -264,11 +290,12 @@ export const useHermeticReportStatus = () => {
         currentStep = 'Report generated but not saved - please retry';
       }
 
-      // Progress milestone detection (every 10% starting from 50%)
+      // Progress milestone detection (every 10% starting from 50%) - prevent duplicates
       const currentMilestone = Math.floor(progress / 10) * 10;
       const shouldShowProgressMessage = progress >= 50 && 
-                                       currentMilestone > lastProgressMilestone && 
+                                       currentMilestone >= 50 &&
                                        currentMilestone % 10 === 0 &&
+                                       !displayedMilestones.has(currentMilestone) &&
                                        !hasZombieJob &&
                                        isGenerating;
       
@@ -277,12 +304,16 @@ export const useHermeticReportStatus = () => {
       let milestoneGlow = status.milestoneGlow;
       
       if (shouldShowProgressMessage) {
-        console.log(`🎉 HERMETIC MILESTONE: Reached ${currentMilestone}% progress!`);
+        console.log(`🎉 HERMETIC MILESTONE: Reached ${currentMilestone}% progress! (First time)`);
+        console.log(`🎯 MILESTONE TRACKING: Current displayed milestones:`, [...displayedMilestones]);
+        
         progressInsight = generateProgressInsight(progress, currentStep);
         progressInsightReady = true;
         milestoneGlow = [75, 100].includes(currentMilestone);
-        setLastProgressMilestone(currentMilestone);
-
+        
+        // Note: We don't mark as displayed here - only when user dismisses
+        // This prevents the insight from reappearing due to polling
+        
         // Auto-clear milestone glow after 3 seconds
         if (milestoneGlow) {
           setTimeout(() => {
