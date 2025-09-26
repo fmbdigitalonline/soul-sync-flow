@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { calculatePlanetaryPositionsWithAstro, eclipticLongitudeByJd } from "./ephemeris-astroengine.ts";
 // Fixed: Use namespace import
-import * as Astronomy from "npm:astronomy-engine@2";
+import * as Astronomy from "https://esm.sh/astronomy-engine@2";
 
 // CORS headers for browser requests
 const corsHeaders = {

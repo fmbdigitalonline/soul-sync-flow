@@ -2,6 +2,14 @@
 import * as path from "https://deno.land/std@0.168.0/path/mod.ts";
 import initializeWasm from "./astro.js";  // Default import is now the init function
 
+// Helper function to safely extract error message
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
 // Cache for the initialized WASM module (as a promise to prevent parallel compilation)
 let wasmPromiseCache: Promise<any> | null = null;
 
@@ -78,7 +86,7 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (customUrlError) {
-        console.warn(`❌ Custom URL failed: ${customUrlError.message}, trying next source...`);
+        console.warn(`❌ Custom URL failed: ${getErrorMessage(customUrlError)}, trying next source...`);
         error = customUrlError;
       }
       
@@ -112,7 +120,7 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (storageError) {
-        console.warn(`❌ Storage bucket failed: ${storageError.message}, trying next source...`);
+        console.warn(`❌ Storage bucket failed: ${getErrorMessage(storageError)}, trying next source...`);
         error = storageError;
       }
       
@@ -134,7 +142,7 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBinary);
         return wasmModule;
       } catch (localError) {
-        console.warn(`❌ Local WASM failed: ${localError.message}, trying next source...`);
+        console.warn(`❌ Local WASM failed: ${getErrorMessage(localError)}, trying next source...`);
         error = localError;
       }
       
@@ -155,7 +163,7 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBinary);
         return wasmModule;
       } catch (sharedError) {
-        console.warn(`❌ Shared WASM failed: ${sharedError.message}, trying next source...`);
+        console.warn(`❌ Shared WASM failed: ${getErrorMessage(sharedError)}, trying next source...`);
         error = sharedError;
       }
       
@@ -181,7 +189,7 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (githubError) {
-        console.warn(`❌ GitHub CDN failed: ${githubError.message}, trying last resort...`);
+        console.warn(`❌ GitHub CDN failed: ${getErrorMessage(githubError)}, trying last resort...`);
         error = githubError;
       }
       
@@ -207,8 +215,8 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (jsdelivrError) {
-        console.error(`❌ All WASM sources failed. Last error: ${jsdelivrError.message}`);
-        error = new Error(`Failed to load WASM from any source. Last error: ${jsdelivrError.message}`);
+      console.error(`❌ All WASM sources failed. Last error: ${getErrorMessage(jsdelivrError)}`);
+      error = new Error(`Failed to load WASM from any source. Last error: ${getErrorMessage(jsdelivrError)}`);
         throw error;
       }
     })();
