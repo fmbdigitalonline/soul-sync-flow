@@ -34,6 +34,7 @@ interface UseJourneyTrackingReturn {
   trackStepComplete: (stepId?: string, completionData?: any) => Promise<{ success: boolean; error?: string }>;
   trackStepAbandonment: (stepId?: string, reason?: string) => Promise<{ success: boolean; error?: string }>;
   trackValidationError: (stepId: string, errors: string[]) => Promise<{ success: boolean; error?: string }>;
+  linkWithUser: (userId: string) => Promise<{ success: boolean; error?: string }>;
   completeJourney: () => Promise<{ success: boolean; session_data?: JourneySession; error?: string }>;
   
   // Diagnostic
@@ -243,6 +244,7 @@ export const useJourneyTracking = (): UseJourneyTrackingReturn => {
     trackStepComplete,
     trackStepAbandonment,
     trackValidationError,
+    linkWithUser: userJourneyTrackingService.linkWithUser.bind(userJourneyTrackingService),
     completeJourney,
     
     // Diagnostic
