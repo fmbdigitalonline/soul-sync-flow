@@ -583,7 +583,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     if (progressInsightReady && progressInsight && !showProgressInsightDisplay) {
       console.log('🎯 FloatingHACSOrb: Adding hermetic progress insight to queue');
       addInsightToQueue(progressInsight);
-      clearProgressInsight();
+      // Extract milestone from the progress insight to prevent stale closure
+      const milestoneMatch = progressInsight.text.match(/(\d+)%/);
+      const milestone = milestoneMatch ? parseInt(milestoneMatch[1]) : undefined;
+      clearProgressInsight(milestone);
       return;
     }
 
@@ -891,13 +894,19 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           insight={progressInsight}
           onAcknowledge={() => {
             console.log('🎯 AUTO-DISPLAY: Acknowledging progress insight');
-            clearProgressInsight();
-            setShowProgressInsightDisplay(false);
+            // Extract milestone from the progress insight to prevent stale closure
+            const milestoneMatch = progressInsight?.text.match(/(\d+)%/);
+            const milestone = milestoneMatch ? parseInt(milestoneMatch[1]) : undefined;
+            setShowProgressInsightDisplay(false); // Clear display first
+            clearProgressInsight(milestone);
           }}
           onDismiss={() => {
             console.log('🎯 AUTO-DISPLAY: Dismissing progress insight');
-            clearProgressInsight();
-            setShowProgressInsightDisplay(false);
+            // Extract milestone from the progress insight to prevent stale closure
+            const milestoneMatch = progressInsight?.text.match(/(\d+)%/);
+            const milestone = milestoneMatch ? parseInt(milestoneMatch[1]) : undefined;
+            setShowProgressInsightDisplay(false); // Clear display first
+            clearProgressInsight(milestone);
           }}
           position="top-center"
         />

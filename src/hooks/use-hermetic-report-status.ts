@@ -107,10 +107,9 @@ export const useHermeticReportStatus = () => {
   }, []);
 
   // Clear progress insight and mark milestone as displayed
-  const clearProgressInsight = useCallback(() => {
-    // Get the current milestone from the progress insight if it exists
-    const currentProgress = status.progress;
-    const currentMilestone = Math.floor(currentProgress / 10) * 10;
+  const clearProgressInsight = useCallback((milestone?: number) => {
+    // Get milestone from parameter or calculate from current progress
+    const currentMilestone = milestone || Math.floor(status.progress / 10) * 10;
     
     console.log(`🧹 CLEAR INSIGHT: Clearing progress insight for milestone ${currentMilestone}%`);
     
@@ -131,7 +130,7 @@ export const useHermeticReportStatus = () => {
       progressInsightReady: false,
       milestoneGlow: false
     }));
-  }, [status.progress]);
+  }, []);
 
   const cleanupZombieJob = useCallback(async (jobId: string) => {
     try {
