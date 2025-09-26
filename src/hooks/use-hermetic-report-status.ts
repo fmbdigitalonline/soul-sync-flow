@@ -156,6 +156,33 @@ export const useHermeticReportStatus = () => {
         return;
       }
 
+      // AGGRESSIVE JOB DETECTION: Check for very recent jobs first (within last 30 seconds)
+      const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString();
+      const { data: veryRecentJobs } = await supabase
+        .from('hermetic_processing_jobs')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('created_at', thirtySecondsAgo)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (veryRecentJobs && veryRecentJobs.length > 0) {
+        console.log('🚀 HERMETIC STATUS: Detected very recent job within 30s:', veryRecentJobs[0]);
+        
+        // Immediately set as generating to bridge the gap
+        setStatus(prev => ({ 
+          ...prev, 
+          loading: false, 
+          isGenerating: true,
+          progress: 5, // Show immediate progress
+          currentStep: 'Starting hermetic analysis...',
+          hasZombieJob: false,
+          zombieJobInfo: null
+        }));
+        
+        // Continue with normal flow to get full details
+      }
+
       console.log('🔍 HERMETIC STATUS: Checking status for user:', user.id);
 
       // Check for completed reports

@@ -203,8 +203,21 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   }, [subscribeStreaming]);
 
   // Update orb stage based on authentic HACS state + hermetic generation
+  // BRIDGE FIX: Also check steward introduction's isGeneratingReport for immediate UI response
+  const isStewardGeneratingReport = isGeneratingReport; // From steward introduction hook
+  const isAnyReportGenerating = isGeneratingHermeticReport || isStewardGeneratingReport;
+  
   useEffect(() => {
-    if (isGenerating || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport) {
+    console.log('🎯 ORB STAGE UPDATE:', {
+      isGenerating,
+      isGeneratingInsight, 
+      isStewardGeneratingReport,
+      isGeneratingHermeticReport,
+      isAnyReportGenerating,
+      currentStage: orbStage
+    });
+    
+    if (isGenerating || isGeneratingInsight || isStewardGeneratingReport || isGeneratingHermeticReport) {
       setOrbStage("generating");
     } else if (currentQuestion) {
       setOrbStage("collecting");
@@ -217,7 +230,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     } else {
       setOrbStage("welcome");
     }
-  }, [isGenerating, isGeneratingInsight, isGeneratingReport, isGeneratingHermeticReport, currentQuestion, currentInsight, intelligenceLevel]);
+  }, [isGenerating, isGeneratingInsight, isStewardGeneratingReport, isGeneratingHermeticReport, currentQuestion, currentInsight, intelligenceLevel]);
 
   // Monitor hermetic report completion status for glow effects
   useEffect(() => {

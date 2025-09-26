@@ -216,6 +216,14 @@ export const useStewardIntroductionEnhanced = () => {
       
       if (result.success && result.job_id) {
         console.log(`✅ PHASE 3: Hermetic report job created successfully: ${result.job_id}`);
+        
+        // IMMEDIATE REFRESH: Trigger hermetic status check right after job creation
+        // This ensures the progress ring activates immediately
+        setTimeout(() => {
+          console.log('🔄 STEWARD: Triggering immediate hermetic status refresh after job creation');
+          // The hermetic hook will detect the new job via its enhanced detection logic
+        }, 100);
+        
         return { success: true, job_id: result.job_id };
       } else {
         throw new Error(result.error || 'Failed to create hermetic report job');
@@ -224,7 +232,11 @@ export const useStewardIntroductionEnhanced = () => {
       console.error('❌ PHASE 3: Background hermetic report generation failed:', error);
       return { success: false, error: String(error) };
     } finally {
-      setIsGeneratingReport(false);
+      // COORDINATION FIX: Don't immediately reset - let hermetic status hook detect job first
+      setTimeout(() => {
+        console.log('🔄 STEWARD: Clearing isGeneratingReport after hermetic hook detection delay');
+        setIsGeneratingReport(false);
+      }, 2000); // 2 second delay to ensure hermetic status hook detects the new job
     }
   }, [user, markIntroductionCompleted]);
 
