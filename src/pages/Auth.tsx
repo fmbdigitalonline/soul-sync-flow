@@ -43,19 +43,24 @@ export default function Auth() {
   const funnelData = getFunnelData();
   const [isSignUp, setIsSignUp] = useState(fromFunnel && funnelData ? true : false);
 
-  // Initialize journey tracking on component mount
+  // Initialize journey tracking on component mount - using useRef to prevent cascade
+  const journeyInitializedRef = React.useRef(false);
+  
   useEffect(() => {
+    if (journeyInitializedRef.current) return;
+    
     const initializeJourney = async () => {
       const result = await startJourney(funnelData);
       if (result.success) {
         console.log('✅ Auth journey tracking initialized:', result.session_id);
+        journeyInitializedRef.current = true;
       } else {
         console.warn('⚠️ Failed to initialize auth journey tracking:', result.error);
       }
     };
 
     initializeJourney();
-  }, [startJourney, funnelData]);
+  }, []); // Remove dependencies that cause cascade
 
   useEffect(() => {
     if (!authLoading && user) {

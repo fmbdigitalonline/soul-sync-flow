@@ -87,8 +87,19 @@ export const useJourneyTracking = (): UseJourneyTrackingReturn => {
 
   /**
    * Principle #1: Never Break - Start journey without disrupting existing flow
+   * Enhanced to check for existing sessions before starting new ones
    */
   const startJourney = useCallback(async (funnelData?: any) => {
+    // Check if we already have an active session before starting
+    const existingSession = userJourneyTrackingService.getCurrentSession();
+    if (existingSession && !existingSession.completed_at && !existingSession.abandoned_at) {
+      console.log('🔄 JOURNEY HOOK: Using existing active session');
+      setCurrentSession(existingSession);
+      setIsTracking(true);
+      setCurrentStepId(existingSession.current_step_id || null);
+      return { success: true, session_id: existingSession.session_id };
+    }
+    
     setIsTracking(true);
     
     const result = await userJourneyTrackingService.startJourney(funnelData);

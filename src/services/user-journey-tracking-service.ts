@@ -57,9 +57,29 @@ class UserJourneyTrackingService {
 
   /**
    * Principle #7: Build Transparently - Start journey with clear state
+   * Principle #1: Never Break - Check for existing session before creating new one
    */
   async startJourney(funnelData?: any): Promise<{ success: boolean; session_id?: string; error?: string }> {
     try {
+      // Check if we already have an active session
+      if (this.currentSession && !this.currentSession.completed_at && !this.currentSession.abandoned_at) {
+        console.log('🔄 JOURNEY TRACKING: Using existing active session', {
+          session_id: this.currentSession.session_id,
+          current_phase: this.currentSession.current_phase,
+          steps_count: this.currentSession.steps.length
+        });
+        
+        // Update funnel data if provided and not already set
+        if (funnelData && !this.currentSession.funnel_data) {
+          this.currentSession.funnel_data = funnelData;
+          this.saveSessionToStorage();
+          console.log('📝 JOURNEY TRACKING: Updated existing session with funnel data');
+        }
+        
+        return { success: true, session_id: this.currentSession.session_id };
+      }
+
+      // Create new session only if no active session exists
       const sessionId = this.generateSessionId();
       const session: JourneySession = {
         session_id: sessionId,
