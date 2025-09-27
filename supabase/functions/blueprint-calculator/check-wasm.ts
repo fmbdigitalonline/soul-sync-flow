@@ -16,9 +16,9 @@ serve(async (req) => {
   try {
     console.log("Checking WASM configuration...");
     
-    // Check if WASI is supported in this Deno environment
-    const wasiSupported = typeof Deno.Wasi === 'function';
-    console.log(`WASI support detected: ${wasiSupported ? 'Yes' : 'No'}`);
+    // Check if we're in a Deno environment (WASI support varies by version)
+    const isDeno = typeof Deno !== 'undefined';
+    console.log(`Deno environment detected: ${isDeno ? 'Yes' : 'No'}`);
     
     // Gather environment info
     const wasmSource = Deno.env.get("WASM_SOURCE") || "storage_bucket";
@@ -85,7 +85,7 @@ serve(async (req) => {
     } catch (fetchError) {
       console.error("Error fetching WASM file:", fetchError);
       wasmStatus = "fetch_error";
-      errorDetails = fetchError.message;
+      errorDetails = fetchError instanceof Error ? fetchError.message : String(fetchError);
     }
     
     // Check custom URL too
@@ -124,7 +124,7 @@ serve(async (req) => {
     } catch (fetchError) {
       console.error("Error fetching custom WASM URL:", fetchError);
       customUrlStatus = "fetch_error";
-      customErrorDetails = fetchError.message;
+      customErrorDetails = fetchError instanceof Error ? fetchError.message : String(fetchError);
     }
     
     // Also check local paths for completeness
@@ -169,7 +169,7 @@ serve(async (req) => {
           supabase_project: supabaseProject,
           wasm_bucket: wasmBucket,
           wasm_path: wasmPath,
-          wasi_supported: wasiSupported,
+          wasi_supported: false, // WASI not available in current Deno version
           deno_version: Deno.version
         },
         storage: {
@@ -199,8 +199,8 @@ serve(async (req) => {
           contentLength < 630000 && customContentLength < 630000 && wasmStatus === "accessible" && customUrlStatus === "accessible" ? 
             "File seems too small. Ensure it's the correct Emscripten build (should be ~632 KB or ~1.1 MB)" : 
             null,
-          !wasiSupported && (wasmType === "WASI" || customWasmType === "WASI") ?
-            "Your WASM file appears to be a WASI build but this Deno environment doesn't support WASI. Try an Emscripten build instead." :
+          (wasmType === "WASI" || customWasmType === "WASI") ?
+            "Your WASM file appears to be a WASI build but WASI is not supported in this Deno environment. Try an Emscripten build instead." :
             null,
           "Set Cache-Control: public, max-age=31536000, immutable on the WASM file"
         ].filter(Boolean)
@@ -218,9 +218,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: 'WASM check failed',
-        details: error.message,
-        stack: error.stack,
-        wasi_supported: typeof Deno.Wasi === 'function',
+        details: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
         deno_version: Deno.version
       }),
       {
