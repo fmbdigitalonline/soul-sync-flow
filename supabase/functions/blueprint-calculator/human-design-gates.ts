@@ -12,12 +12,12 @@ export const GATE_TO_CENTER_MAP = {
   45: "Throat", 33: "Throat", 8: "Throat", 31: "Throat", 7: "Throat",
   1: "Throat", 13: "Throat", 10: "Throat", 20: "Throat", 16: "Throat",
   // G Center
-  25: "G", 46: "G", 22: "G", 36: "G", 2: "G", 15: "G", 5: "G", 14: "G",
+  25: "G", 46: "G", 2: "G", 15: "G",
   // Heart/Ego
   21: "Heart", 40: "Heart", 26: "Heart", 51: "Heart",
   // Solar Plexus
   6: "Solar Plexus", 37: "Solar Plexus", 30: "Solar Plexus", 55: "Solar Plexus",
-  49: "Solar Plexus", 19: "Solar Plexus", 39: "Solar Plexus", 41: "Solar Plexus",
+  49: "Solar Plexus",
   22: "Solar Plexus", 36: "Solar Plexus",
   // Sacral
   34: "Sacral", 5: "Sacral", 14: "Sacral", 29: "Sacral", 59: "Sacral",

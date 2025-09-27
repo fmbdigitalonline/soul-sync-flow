@@ -67,7 +67,7 @@ const GATE_TO_CENTER_MAP = {
   10:"Throat", 20:"Throat", 16:"Throat",
   
   // G Center
-  25:"G", 46:"G", 22:"G", 36:"G", 2:"G", 15:"G", 5:"G", 14:"G",
+  25:"G", 46:"G", 2:"G", 15:"G",
   
   // Heart/Ego Center
   21:"Heart", 40:"Heart", 26:"Heart", 51:"Heart",
@@ -246,8 +246,8 @@ async function calculateChartHonest({ birthDate, birthTime, coordinates }: {
     
     // Mark defined channels - a channel exists when both gates are present
     CHANNELS.forEach(([a, b]) => {
-      const centerA = GATE_TO_CENTER_MAP[a];
-      const centerB = GATE_TO_CENTER_MAP[b];
+      const centerA = (GATE_TO_CENTER_MAP as any)[a];
+      const centerB = (GATE_TO_CENTER_MAP as any)[b];
       
       if(centerA && centerB && 
          centers[centerA].gates.includes(a) && 
@@ -283,7 +283,7 @@ async function calculateChartHonest({ birthDate, birthTime, coordinates }: {
     if(sacral && throat) {
       // Check for direct sacral-throat connection for ManGen
       const sacralToThroat = centers.Sacral.channels.some((ch: number[]) =>
-        GATE_TO_CENTER_MAP[ch[0]]==="Throat"||GATE_TO_CENTER_MAP[ch[1]]==="Throat"
+        (GATE_TO_CENTER_MAP as any)[ch[0]]==="Throat"||(GATE_TO_CENTER_MAP as any)[ch[1]]==="Throat"
       );
       if(sacralToThroat) return "Manifesting Generator";
       return "Generator";
@@ -305,8 +305,8 @@ async function calculateChartHonest({ birthDate, birthTime, coordinates }: {
         // Check if there's a channel connecting this motor to throat
         for(let ch of centers[motor].channels) {
           const [gA, gB] = ch;
-          const cA = GATE_TO_CENTER_MAP[gA];
-          const cB = GATE_TO_CENTER_MAP[gB];
+          const cA = (GATE_TO_CENTER_MAP as any)[gA];
+          const cB = (GATE_TO_CENTER_MAP as any)[gB];
           if((cA===motor && cB==="Throat")||(cB===motor && cA==="Throat")){
             return true;
           }
@@ -339,7 +339,7 @@ async function calculateChartHonest({ birthDate, birthTime, coordinates }: {
   console.log(`[HD] Design Earth gate/line: ${dEarth.gate}.${dEarth.line}`);
   
   const profileNum = `${pSun.line}/${dEarth.line}`;
-  const profile = `${profileNum} (${PROFILE_LABELS[pSun.line]||""}/${PROFILE_LABELS[dEarth.line]||""})`;
+  const profile = `${profileNum} (${(PROFILE_LABELS as any)[pSun.line]||""}/${(PROFILE_LABELS as any)[dEarth.line]||""})`;
   
   console.log(`[HD] Calculated profile: ${profile}`);
 
@@ -376,8 +376,8 @@ async function calculateChartHonest({ birthDate, birthTime, coordinates }: {
     for(let c of definedCenters){
       for(let ch of centers[c].channels){
         const [gA, gB] = ch;
-        const ca = GATE_TO_CENTER_MAP[gA];
-        const cb = GATE_TO_CENTER_MAP[gB];
+        const ca = (GATE_TO_CENTER_MAP as any)[gA];
+        const cb = (GATE_TO_CENTER_MAP as any)[gB];
         if(ca !== cb && definedCenters.includes(ca) && definedCenters.includes(cb)){
           if(!adj[ca].includes(cb)) adj[ca].push(cb);
           if(!adj[cb].includes(ca)) adj[cb].push(ca);
@@ -387,17 +387,18 @@ async function calculateChartHonest({ birthDate, birthTime, coordinates }: {
     
     // Find connected components using BFS
     const visited: any = {};
-    const groups = [];
+    const groups: string[][] = [];
     for(let c of definedCenters){
       if(!visited[c]){
         let q = [c];
         groups.push([]);
         while(q.length){
           let n = q.shift();
-          if(!visited[n]){
+          if(n && !visited[n]){
             visited[n] = true;
-            groups.at(-1).push(n);
-            for(let nb of adj[n]||[]) if(!visited[nb]) q.push(nb);
+            const lastGroup = groups.at(-1);
+            if(lastGroup) lastGroup.push(n);
+            for(let nb of (adj as any)[n]||[]) if(!visited[nb]) q.push(nb);
           }
         }
       }
@@ -465,7 +466,8 @@ async function geocodeLocation(locationName: string): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    console.warn("[HD] Google geocoding failed:", error.message);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown geocoding error';
+    console.warn("[HD] Google geocoding failed:", errorMessage);
     return await tryNominatimGeocoding(locationName);
   }
 }
