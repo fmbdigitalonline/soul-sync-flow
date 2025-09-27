@@ -792,10 +792,6 @@ async function processSingleSynthesisAgent(job: any, synthesisType: string, lang
 
   await updateJobStatus(jobId, 'processing', `Creating ${synthesisType}...`);
   
-  // Add language instruction for non-English languages
-  const languageInstruction = language && language !== 'en' ? 
-    `**IMPORTANT: Write your entire analysis in ${getLanguageName(language)}. Use natural, fluent ${getLanguageName(language)} throughout the response.**\n\n` : '';
-  
   // Get comprehensive context from all previous sections
   const systemSections = progress_data?.system_sections || [];
   const hermeticSections = progress_data?.hermetic_sections || [];
