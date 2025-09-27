@@ -5,7 +5,12 @@ import { initializeSwephModule } from '../_shared/sweph/sweph-loader.ts';
 /**
  * Calculate planetary positions using Swiss Ephemeris
  */
-export async function calculatePlanetaryPositionsWithSweph(date, time, location, timezone) {
+export async function calculatePlanetaryPositionsWithSweph(
+  date: string, 
+  time: string, 
+  location: string, 
+  timezone: string
+): Promise<any> {
   try {
     console.log(`SwEph: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
@@ -40,7 +45,7 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
       'chiron': sweph.SE_CHIRON,
     };
     
-    const positions = {};
+    const positions: any = {};
     
     for (const [body, id] of Object.entries(celestialBodies)) {
       const result = new Float64Array(6);

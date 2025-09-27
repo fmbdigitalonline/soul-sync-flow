@@ -4,11 +4,11 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { GATE_TO_CENTER_MAP, CHANNELS, HD_PLANETS, PROFILE_LABELS } from "./human-design-gates.ts";
 
 export async function calculateHumanDesign(
-  birthDate,
-  birthTime,
-  location,
-  timezone,
-  celestialData // <- this argument is kept for function compatibility, but not used, as we do our own ephemeris calls now
+  birthDate: string,
+  birthTime: string,
+  location: string,
+  timezone: string,
+  celestialData: any // <- this argument is kept for function compatibility, but not used, as we do our own ephemeris calls now
 ) {
   try {
     console.log("🎯 [HD] Starting Human Design calculation (proper dual ephemeris)...");
@@ -50,10 +50,10 @@ export async function calculateHumanDesign(
     ];
 
     // ---- PATCH: HD GATE EXPANSION AND ORDERING ----
-    function canonicalOrder(gatesArray) {
+    function canonicalOrder(gatesArray: any[]) {
       // Return only one (first, latest) gate/line per planet, sorted in canonical Human Design order
       return HD_PLANETS.map(planet => {
-        const found = gatesArray.find(g => g.planet === planet && g.gate && g.line);
+        const found = gatesArray.find((g: any) => g.planet === planet && g.gate && g.line);
         return found ? { ...found } : null;
       }).filter(Boolean);
     }
@@ -72,8 +72,8 @@ export async function calculateHumanDesign(
     const authority = determineHDAuthority(centers);
 
     // ----- FIX PROFILE: Personality Sun line, Design Earth line -----
-    function getGateByPlanet(gatesArr, planet) {
-      return gatesArr.find(g => g.planet === planet);
+    function getGateByPlanet(gatesArr: any[], planet: string) {
+      return gatesArr.find((g: any) => g.planet === planet);
     }
     const profileLabels = {
       1: "Investigator", 2: "Hermit", 3: "Martyr", 4: "Opportunist", 5: "Heretic", 6: "Role Model"
@@ -86,10 +86,10 @@ export async function calculateHumanDesign(
     const profile = `${conscious}/${unconscious} (${getProfileLabel(conscious) || ""}/${getProfileLabel(unconscious) || ""})`;
 
     // ---- PATCH: Robust channel graph definition evaluation ----
-    function calculateHDDefinition(centers) {
+    function calculateHDDefinition(centers: any) {
       // Construct graph: nodes = defined centers, edges = channels connecting them
       const definedCenters = Object.keys(centers).filter(cn => centers[cn].defined);
-      const adj = {};
+      const adj: { [key: string]: string[] } = {};
       definedCenters.forEach(center => adj[center] = []);
       // Build adjacency list
       for (const center of definedCenters) {
@@ -129,8 +129,8 @@ export async function calculateHumanDesign(
       if (groupCount === 3) return "Triple Split Definition";
       return "Quadruple Split Definition";
     }
-    function getCenterOfGate(gateNum) {
-      return GATE_TO_CENTER_MAP[gateNum];
+    function getCenterOfGate(gateNum: any) {
+      return GATE_TO_CENTER_MAP[gateNum.toString()] as string;
     }
 
     const definition = calculateHDDefinition(centers);
