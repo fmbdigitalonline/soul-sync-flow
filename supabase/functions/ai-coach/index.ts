@@ -200,7 +200,7 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
     
     return new Response(
       JSON.stringify({
-        error: (error instanceof Error ? error.message : String(error)) || 'Internal server error',
+        error: error.message || 'Internal server error',
       }),
       {
         status: 500,

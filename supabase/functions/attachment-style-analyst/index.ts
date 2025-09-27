@@ -64,7 +64,7 @@ Generate a comprehensive 3,000-4,000 word analysis covering attachment patterns,
     });
   } catch (error) {
     console.error('❌ Attachment Style Analyst error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
