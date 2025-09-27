@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { hermeticPersonalityReportService } from '@/services/hermetic-personality-report-service';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { interpolateTranslation } from '@/utils/translation-utils';
 import { HACSInsight } from './use-hacs-insights';
 
 export interface HermeticReportStatus {
@@ -18,6 +22,10 @@ export interface HermeticReportStatus {
 }
 
 export const useHermeticReportStatus = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { t } = useLanguage();
+
   const [status, setStatus] = useState<HermeticReportStatus>({
     hasReport: false,
     loading: true,
@@ -46,103 +54,44 @@ export const useHermeticReportStatus = () => {
     const stepInfo = currentStep?.toLowerCase() || '';
     const stepType = stepInfo.match(/processing (\w+)/)?.[1] || '';
     
-    // Map processing stages to educational messages
-    const stageMessages: Record<string, { message: string; description: string }> = {
-      'rhythm_analyst': {
-        message: "Learning your natural rhythms and energy patterns...",
-        description: "Your rhythm profile reveals how you sync with life's natural cycles, peak performance times, and energy management patterns."
-      },
-      'mentalism_analyst': {
-        message: "Learning your mental processing patterns and cognitive style...",
-        description: "Understanding how your mind processes information, makes decisions, and approaches problem-solving challenges."
-      },
-      'hermetic_core': {
-        message: "Learning your core hermetic intelligence signatures...",
-        description: "Discovering the fundamental patterns that shape your personality, consciousness, and life approach."
-      },
-      'personality_matrix': {
-        message: "Learning your unique personality architecture...",
-        description: "Mapping the complex interplay of traits, behaviors, and psychological patterns that make you unique."
-      },
-      'consciousness_analyst': {
-        message: "Learning your consciousness patterns and awareness levels...",
-        description: "Understanding how you perceive reality, process experiences, and maintain self-awareness."
-      },
-      'wisdom_integration': {
-        message: "Learning how wisdom integrates within your personality...",
-        description: "Discovering how life experiences have shaped your insights, judgment, and decision-making wisdom."
-      }
+    // Get translated stage messages
+    const getStageMessage = (stage: string) => {
+      const stageKey = `hermeticProgress.stages.${stage}`;
+      return {
+        message: t(`${stageKey}.message`),
+        description: t(`${stageKey}.description`)
+      };
     };
     
-    // Progress-based fallback messages for when no specific stage is detected
-    const progressMessages: Record<number, { message: string; description: string }> = {
-      0: {
-        message: "Beginning to learn your soul's intelligence patterns...",
-        description: "Initiating comprehensive hermetic intelligence mapping to understand your unique consciousness signature."
-      },
-      10: {
-        message: "Learning your foundational personality structures...",
-        description: "Discovering the core building blocks that form your psychological foundation and behavioral patterns."
-      },
-      20: {
-        message: "Learning your cognitive processing preferences...",
-        description: "Understanding how your mind naturally processes information, makes connections, and forms insights."
-      },
-      30: {
-        message: "Learning your emotional intelligence patterns...",
-        description: "Discovering how you experience, process, and integrate emotional information into your decision-making."
-      },
-      40: {
-        message: "Learning your unique interaction styles...",
-        description: "Understanding how you naturally connect with others, communicate, and navigate social dynamics."
-      },
-      50: {
-        message: "Learning your deeper psychological layers...",
-        description: "Exploring the complex psychological patterns that drive your motivations, fears, and aspirations."
-      },
-      60: {
-        message: "Learning your consciousness expansion patterns...",
-        description: "Understanding how you grow, evolve, and expand your awareness throughout your life journey."
-      },
-      70: {
-        message: "Learning your wisdom integration methods...",
-        description: "Discovering how you process life experiences into practical wisdom and meaningful insights."
-      },
-      80: {
-        message: "Learning your authentic self-expression patterns...",
-        description: "Understanding how your true self manifests in the world through your unique talents and perspectives."
-      },
-      90: {
-        message: "Learning your soul's highest potential pathways...",
-        description: "Mapping the routes through which you can actualize your deepest purpose and fullest expression."
-      },
-      100: {
-        message: "Your hermetic intelligence profile is complete and ready!",
-        description: "Your comprehensive soul intelligence map is now available, revealing the full spectrum of your consciousness patterns."
-      }
+    // Get translated milestone messages
+    const getMilestoneMessage = (milestone: number) => {
+      const milestoneKey = `hermeticProgress.milestones.${milestone}`;
+      return {
+        message: t(`${milestoneKey}.message`),
+        description: t(`${milestoneKey}.description`)
+      };
     };
     
     // Determine which message to use
     let selectedMessage: { message: string; description: string };
     
-    if (stepType && stageMessages[stepType]) {
-      selectedMessage = stageMessages[stepType];
+    if (stepType && t(`hermeticProgress.stages.${stepType}.message`)) {
+      selectedMessage = getStageMessage(stepType);
     } else {
       const milestone = Math.floor(progress / 10) * 10;
-      selectedMessage = progressMessages[milestone] || progressMessages[0];
+      selectedMessage = getMilestoneMessage(milestone);
     }
     
     return {
       id: `hermetic-progress-${progress}-${Date.now()}`,
-      text: selectedMessage.message,
+      text: `${selectedMessage.message} ${selectedMessage.description}`,
       module: 'Hermetic Intelligence',
       type: 'hermetic_progress',
       confidence: 100,
       evidence: [
-        `Learning progress: ${progress}%`,
-        `Current stage: ${currentStep || 'Processing personality matrix'}`,
-        selectedMessage.description,
-        ...(stepType ? [`Learning from: ${stepType} data`] : [])
+        interpolateTranslation(t('hermeticProgress.progressTemplate'), { progress: progress.toString() }),
+        interpolateTranslation(t('hermeticProgress.currentStageTemplate'), { stage: currentStep || 'Processing personality matrix' }),
+        ...(stepType ? [interpolateTranslation(t('hermeticProgress.learningFromTemplate'), { type: stepType })] : [])
       ],
       timestamp: new Date(),
       acknowledged: false,
