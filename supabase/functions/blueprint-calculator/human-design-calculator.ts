@@ -74,8 +74,7 @@ const GATE_TO_CENTER_MAP = {
   
   // Solar Plexus Center
   6:"Solar Plexus", 37:"Solar Plexus", 30:"Solar Plexus", 55:"Solar Plexus",
-  49:"Solar Plexus", 19:"Solar Plexus", 39:"Solar Plexus", 41:"Solar Plexus",
-  22:"Solar Plexus", 36:"Solar Plexus",
+  49:"Solar Plexus", 22:"Solar Plexus", 36:"Solar Plexus",
   
   // Sacral Center
   34:"Sacral", 5:"Sacral", 14:"Sacral", 29:"Sacral", 59:"Sacral",
@@ -85,7 +84,7 @@ const GATE_TO_CENTER_MAP = {
   48:"Spleen", 57:"Spleen", 44:"Spleen", 50:"Spleen", 32:"Spleen", 28:"Spleen", 18:"Spleen",
   
   // Root Center
-  53:"Root", 60:"Root", 52:"Root", 19:"Root", 39:"Root", 41:"Root", 58:"Root", 38:"Root", 54:"Root"
+  53:"Root", 60:"Root", 52:"Root", 41:"Root", 58:"Root", 38:"Root", 54:"Root"
 };
 
 const CHANNELS = [
@@ -239,7 +238,7 @@ async function calculateChartHonest({ birthDate, birthTime, coordinates }: {
     
     // Add gates to their centers
     gateArr.forEach(info => {
-      const center = GATE_TO_CENTER_MAP[info.gate];
+      const center = (GATE_TO_CENTER_MAP as any)[info.gate];
       if(center && !centers[center].gates.includes(info.gate)){
         centers[center].gates.push(info.gate);
       }
