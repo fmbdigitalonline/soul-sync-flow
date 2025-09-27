@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getErrorMessage } from '../_shared/error-utils.ts';
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -7,7 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function testAstrometry(req) {
+export default async function testAstrometry(req: Request): Promise<Response> {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -46,7 +47,7 @@ async function testAstrometry(req) {
       ];
       
       responseMessage += `=== REQUIRED FUNCTION AVAILABILITY ===\n`;
-      const availableFunctions = {};
+      const availableFunctions: Record<string, boolean> = {};
       
       requiredFunctions.forEach(funcName => {
         const isAvailable = typeof astrometry[funcName] === 'function';
@@ -85,8 +86,8 @@ async function testAstrometry(req) {
             try {
               const sunLon = astrometry.getEclipticLongitude('sun', testCase.date);
               responseMessage += `  Sun Longitude: ${sunLon}°\n`;
-            } catch (e) {
-              responseMessage += `  Sun Longitude Error: ${e.message}\n`;
+            } catch (e: unknown) {
+              responseMessage += `  Sun Longitude Error: ${getErrorMessage(e)}\n`;
             }
           }
           
@@ -94,13 +95,13 @@ async function testAstrometry(req) {
             try {
               const obliquity = astrometry.getObliquityOfEcliptic(testCase.date);
               responseMessage += `  Obliquity: ${obliquity}°\n`;
-            } catch (e) {
-              responseMessage += `  Obliquity Error: ${e.message}\n`;
+            } catch (e: unknown) {
+              responseMessage += `  Obliquity Error: ${getErrorMessage(e)}\n`;
             }
           }
           
-        } catch (dateError) {
-          responseMessage += `  ❌ Date processing failed: ${dateError.message}\n`;
+        } catch (dateError: unknown) {
+          responseMessage += `  ❌ Date processing failed: ${getErrorMessage(dateError)}\n`;
           console.error(`Date test failed for ${testCase.name}:`, dateError);
         }
       }
@@ -113,28 +114,28 @@ async function testAstrometry(req) {
         const coordinates = await import('https://esm.sh/@observerly/astrometry@1.0.0/coordinates');
         responseMessage += `✅ Coordinates module imported\n`;
         console.log('Coordinates module exports:', Object.keys(coordinates));
-      } catch (e) {
-        responseMessage += `❌ Coordinates module import failed: ${e.message}\n`;
+      } catch (e: unknown) {
+        responseMessage += `❌ Coordinates module import failed: ${getErrorMessage(e)}\n`;
       }
       
       try {
         const epochs = await import('https://esm.sh/@observerly/astrometry@1.0.0/epochs');
         responseMessage += `✅ Epochs module imported\n`;
         console.log('Epochs module exports:', Object.keys(epochs));
-      } catch (e) {
-        responseMessage += `❌ Epochs module import failed: ${e.message}\n`;
+      } catch (e: unknown) {
+        responseMessage += `❌ Epochs module import failed: ${getErrorMessage(e)}\n`;
       }
       
       try {
         const planets = await import('https://esm.sh/@observerly/astrometry@1.0.0/planets');
         responseMessage += `✅ Planets module imported\n`;
         console.log('Planets module exports:', Object.keys(planets));
-      } catch (e) {
-        responseMessage += `❌ Planets module import failed: ${e.message}\n`;
+      } catch (e: unknown) {
+        responseMessage += `❌ Planets module import failed: ${getErrorMessage(e)}\n`;
       }
       
-    } catch (importError) {
-      responseMessage += `❌ CRITICAL: Failed to import @observerly/astrometry: ${importError.message}\n`;
+    } catch (importError: unknown) {
+      responseMessage += `❌ CRITICAL: Failed to import @observerly/astrometry: ${getErrorMessage(importError)}\n`;
       status = 500;
       console.error('Import error:', importError);
     }
@@ -154,8 +155,8 @@ async function testAstrometry(req) {
         console.log(`Testing ${pkg}...`);
         const altPackage = await import(`https://esm.sh/${pkg}`);
         responseMessage += `✅ ${pkg}: Successfully imported (${Object.keys(altPackage).length} exports)\n`;
-      } catch (e) {
-        responseMessage += `❌ ${pkg}: Import failed - ${e.message}\n`;
+      } catch (e: unknown) {
+        responseMessage += `❌ ${pkg}: Import failed - ${getErrorMessage(e)}\n`;
       }
     }
     
@@ -174,11 +175,11 @@ async function testAstrometry(req) {
       } 
     });
     
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Unexpected error in astrometry test:", error);
     
     return new Response(
-      `Unexpected error in astrometry evaluation: ${error.message}\nStack: ${error.stack}`,
+      `Unexpected error in astrometry evaluation: ${getErrorMessage(error)}\nStack: ${error instanceof Error ? error.stack : 'No stack trace'}`,
       { 
         status: 500,
         headers: { 
@@ -189,9 +190,6 @@ async function testAstrometry(req) {
     );
   }
 }
-
-// Export for direct serving and for import by main router
-export default testAstrometry;
 
 // Also support direct serving if this file is run independently
 if (import.meta.main) {

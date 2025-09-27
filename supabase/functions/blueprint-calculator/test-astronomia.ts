@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getErrorMessage } from '../_shared/error-utils.ts';
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -7,7 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function testAstronomia(req) {
+export default async function testAstronomia(req: Request): Promise<Response> {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -34,7 +35,7 @@ async function testAstronomia(req) {
         vsop87Data[planetName] = dataModule.default || dataModule;
         responseMessage += `✅ VSOP87 data loaded for ${planetName}\n`;
       } catch (e) {
-        responseMessage += `⚠️ VSOP87 data import failed for ${planetName}: ${e.message}\n`;
+        responseMessage += `⚠️ VSOP87 data import failed for ${planetName}: ${getErrorMessage(e)}\n`;
         vsop87Data[planetName] = null;
       }
     }
@@ -54,7 +55,7 @@ async function testAstronomia(req) {
         // Step 1: Calculate Julian Day
         let jd;
         try {
-          const julian = astronomia.julian || astronomia.default?.julian;
+          const julian = astronomia.julian || (astronomia as any).default?.julian;
           if (julian && julian.CalendarGregorianToJD) {
             jd = julian.CalendarGregorianToJD(
               testCase.date.getUTCFullYear(),
@@ -72,33 +73,33 @@ async function testAstronomia(req) {
                  (testCase.date.getUTCHours() + testCase.date.getUTCMinutes()/60 + testCase.date.getUTCSeconds()/3600) / 24;
           }
           responseMessage += `  Julian Day: ${jd}\n`;
-        } catch (e) {
-          responseMessage += `  Julian Day ERROR: ${e.message}\n`;
+        } catch (e: unknown) {
+          responseMessage += `  Julian Day ERROR: ${getErrorMessage(e)}\n`;
           continue;
         }
 
         // Step 2: Calculate True Obliquity (IN RADIANS)
         let trueObliquityRad;
         try {
-          const nutation = astronomia.nutation || astronomia.default?.nutation;
+          const nutation = astronomia.nutation || (astronomia as any).default?.nutation;
           if (nutation) {
             const meanObliquityRad = nutation.meanObliquity(jd);
             const nutationResult = nutation.nutation(jd);
-            const deltaEpsilon = Array.isArray(nutationResult) ? nutationResult[1] : (nutationResult.deltaEpsilon || 0);
+            const deltaEpsilon = Array.isArray(nutationResult) ? nutationResult[1] : ((nutationResult as any).deltaEpsilon || 0);
             trueObliquityRad = meanObliquityRad + deltaEpsilon;
             responseMessage += `  True Obliquity: ${(trueObliquityRad * 180 / Math.PI).toFixed(6)}° (${trueObliquityRad.toFixed(8)} rad)\n`;
           } else {
             throw new Error("nutation module not available");
           }
-        } catch (e) {
-          responseMessage += `  True Obliquity ERROR: ${e.message}\n`;
+        } catch (e: unknown) {
+          responseMessage += `  True Obliquity ERROR: ${getErrorMessage(e)}\n`;
           continue;
         }
 
         // Step 3: Calculate Sun Position with PROPER COORDINATE CONVERSION (ALL RADIANS)
         try {
-          const solar = astronomia.solar || astronomia.default?.solar;
-          const coord = astronomia.coord || astronomia.default?.coord;
+          const solar = astronomia.solar || (astronomia as any).default?.solar;
+          const coord = astronomia.coord || (astronomia as any).default?.coord;
           
           if (solar && coord && trueObliquityRad !== undefined) {
             const sunEquatorial = solar.apparentEquatorial(jd);
@@ -124,7 +125,7 @@ async function testAstronomia(req) {
                   
                   responseMessage += `  ✅ Sun Ecliptic: ${sunEclipticLonDeg.toFixed(6)}° lon, ${sunEclipticLatDeg.toFixed(6)}° lat\n`;
                 } catch (convError) {
-                  responseMessage += `  Sun Coordinate Conversion Error: ${convError.message}\n`;
+                  responseMessage += `  Sun Coordinate Conversion Error: ${getErrorMessage(convError)}\n`;
                 }
               } else {
                 responseMessage += `  Sun: Coordinate conversion classes not available\n`;
@@ -133,8 +134,8 @@ async function testAstronomia(req) {
               responseMessage += `  Sun: No valid equatorial coordinates returned\n`;
             }
           }
-        } catch (e) {
-          responseMessage += `  Sun ERROR: ${e.message}\n`;
+        } catch (e: unknown) {
+          responseMessage += `  Sun ERROR: ${getErrorMessage(e)}\n`;
         }
 
         // Step 4: Calculate Moon Position with PROPER COORDINATE CONVERSION (ALL RADIANS)
@@ -293,8 +294,6 @@ async function testAstronomia(req) {
     );
   }
 }
-
-export default testAstronomia;
 
 if (import.meta.main) {
   serve(testAstronomia);
