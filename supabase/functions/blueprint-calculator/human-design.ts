@@ -2,6 +2,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { GATE_TO_CENTER_MAP, CHANNELS, HD_PLANETS, PROFILE_LABELS } from "./human-design-gates.ts";
+import { getErrorMessage } from "../_shared/error-utils.ts";
 
 export async function calculateHumanDesign(
   birthDate: string,
@@ -86,7 +87,7 @@ export async function calculateHumanDesign(
     const profile = `${conscious}/${unconscious} (${getProfileLabel(conscious) || ""}/${getProfileLabel(unconscious) || ""})`;
 
     // ---- PATCH: Robust channel graph definition evaluation ----
-    function calculateHDDefinition(centers: any) {
+    function calculateHDDefinition(centers: any): string {
       // Construct graph: nodes = defined centers, edges = channels connecting them
       const definedCenters = Object.keys(centers).filter(cn => centers[cn].defined);
       const adj: { [key: string]: string[] } = {};
@@ -105,17 +106,17 @@ export async function calculateHumanDesign(
         }
       }
       // Count connected components via BFS
-      const visited = {};
+      const visited: { [key: string]: boolean } = {};
       let groupCount = 0;
       for (const center of definedCenters) {
         if (!visited[center]) {
           groupCount++;
-          const queue = [center];
+          const queue: string[] = [center];
           while (queue.length) {
             const node = queue.shift();
-            if (!visited[node]) {
+            if (node && !visited[node]) {
               visited[node] = true;
-              (adj[node] || []).forEach(nbr => {
+              (adj[node] || []).forEach((nbr: string) => {
                 if (!visited[nbr]) queue.push(nbr);
               });
             }
@@ -129,8 +130,8 @@ export async function calculateHumanDesign(
       if (groupCount === 3) return "Triple Split Definition";
       return "Quadruple Split Definition";
     }
-    function getCenterOfGate(gateNum: any) {
-      return GATE_TO_CENTER_MAP[gateNum.toString()] as string;
+    function getCenterOfGate(gateNum: number): string {
+      return GATE_TO_CENTER_MAP[gateNum as keyof typeof GATE_TO_CENTER_MAP] || "";
     }
 
     const definition = calculateHDDefinition(centers);
@@ -164,7 +165,7 @@ export async function calculateHumanDesign(
 
 // --- Helper functions ported from your API logic ---
 
-async function geocodeLocation(locationName) {
+async function geocodeLocation(locationName: string): Promise<string | null> {
   console.log(`[HD] Geocoding: ${locationName}`);
   const googleApiKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
   // Try Google first, fallback to Nominatim if missing
@@ -181,13 +182,13 @@ async function geocodeLocation(locationName) {
     }
     return null;
   } catch (error) {
-    console.warn('[HD] Google geocoding failed:', error.message);
+    console.warn('[HD] Google geocoding failed:', getErrorMessage(error));
     // fallback to Nominatim
     return await tryNominatimGeocoding(locationName);
   }
 }
 
-async function tryNominatimGeocoding(locationName) {
+async function tryNominatimGeocoding(locationName: string): Promise<string | null> {
   const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}&limit=1`);
   if (!response.ok) throw new Error(`Nominatim failed`);
   const data = await response.json();
@@ -197,7 +198,7 @@ async function tryNominatimGeocoding(locationName) {
   return null;
 }
 
-async function fetchEphemerisData(dateTime, location, timezone, coordinates, label) {
+async function fetchEphemerisData(dateTime: Date, location: string, timezone: string, coordinates: string, label: string): Promise<any> {
   const year = dateTime.getFullYear();
   const month = String(dateTime.getMonth() + 1).padStart(2, '0');
   const day = String(dateTime.getDate()).padStart(2, '0');
@@ -228,10 +229,10 @@ async function fetchEphemerisData(dateTime, location, timezone, coordinates, lab
 }
 
 // Calculate HD gates from celestial data using HD standard
-function calculateHDGatesFromCelestialData(celestialData, type) {
+function calculateHDGatesFromCelestialData(celestialData: any, type: string): any[] {
   // Standard HD order: ['sun', 'earth', 'north_node',...]
   const gates = [];
-  function longitudeToHDGate(longitude) {
+  function longitudeToHDGate(longitude: number): { gate: number; line: number } {
     // Official mapping: 64 gates, each 5.625°, line = each 0.9375°
     const hdMandala = [
       41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3,
@@ -278,46 +279,27 @@ function calculateHDGatesFromCelestialData(celestialData, type) {
   return gates;
 }
 
-function calculateCentersFromChannels(allGates) {
+function calculateCentersFromChannels(allGates: any[]): any {
   const centers = {
-    Head: { defined: false, gates: [], channels: [] },
-    Ajna: { defined: false, gates: [], channels: [] },
-    Throat: { defined: false, gates: [], channels: [] },
-    G: { defined: false, gates: [], channels: [] },
-    Heart: { defined: false, gates: [], channels: [] },
-    "Solar Plexus": { defined: false, gates: [], channels: [] },
-    Sacral: { defined: false, gates: [], channels: [] },
-    Spleen: { defined: false, gates: [], channels: [] },
-    Root: { defined: false, gates: [], channels: [] }
-  };
-  
-  const gateToCenterMap = {
-    64: 'Head', 61: 'Head', 63: 'Head',
-    47: 'Ajna', 24: 'Ajna', 4: 'Ajna', 17: 'Ajna', 43: 'Ajna', 11: 'Ajna',
-    62: 'Throat', 23: 'Throat', 56: 'Throat', 35: 'Throat', 12: 'Throat',
-    45: 'Throat', 33: 'Throat', 8: 'Throat', 31: 'Throat', 7: 'Throat',
-    1: 'Throat', 13: 'Throat', 10: 'Throat', 20: 'Throat', 16: 'Throat',
-    25: 'G', 46: 'G', 22: 'G', 36: 'G', 2: 'G', 15: 'G', 5: 'G', 14: 'G',
-    21: 'Heart', 40: 'Heart', 26: 'Heart', 51: 'Heart',
-    6: 'Solar Plexus', 37: 'Solar Plexus', 30: 'Solar Plexus', 55: 'Solar Plexus',
-    49: 'Solar Plexus', 19: 'Solar Plexus', 39: 'Solar Plexus',
-    41: 'Solar Plexus', 22: 'Solar Plexus', 36: 'Solar Plexus',
-    34: 'Sacral', 5: 'Sacral', 14: 'Sacral', 29: 'Sacral', 59: 'Sacral',
-    9: 'Sacral', 3: 'Sacral', 42: 'Sacral', 27: 'Sacral',
-    48: 'Spleen', 57: 'Spleen', 44: 'Spleen', 50: 'Spleen', 32: 'Spleen', 28: 'Spleen', 18: 'Spleen',
-    53: 'Root', 60: 'Root', 52: 'Root', 19: 'Root', 39: 'Root', 41: 'Root',
-    58: 'Root', 38: 'Root', 54: 'Root'
+    Head: { defined: false, gates: [] as number[], channels: [] as number[][] },
+    Ajna: { defined: false, gates: [] as number[], channels: [] as number[][] },
+    Throat: { defined: false, gates: [] as number[], channels: [] as number[][] },
+    G: { defined: false, gates: [] as number[], channels: [] as number[][] },
+    Heart: { defined: false, gates: [] as number[], channels: [] as number[][] },
+    "Solar Plexus": { defined: false, gates: [] as number[], channels: [] as number[][] },
+    Sacral: { defined: false, gates: [] as number[], channels: [] as number[][] },
+    Spleen: { defined: false, gates: [] as number[], channels: [] as number[][] },
+    Root: { defined: false, gates: [] as number[], channels: [] as number[][] }
   };
   
   allGates.forEach(gateInfo => {
-    const gateNum = gateInfo.gate;
-    const centerName = gateToCenterMap[gateNum];
-    if (centerName && centers[centerName] && !centers[centerName].gates.includes(gateNum)) {
-      centers[centerName].gates.push(gateNum);
-      centers[centerName].defined = true;
+    const gateNum: number = gateInfo.gate;
+    const centerName = GATE_TO_CENTER_MAP[gateNum as keyof typeof GATE_TO_CENTER_MAP];
+    if (centerName && centers[centerName as keyof typeof centers] && !centers[centerName as keyof typeof centers].gates.includes(gateNum)) {
+      centers[centerName as keyof typeof centers].gates.push(gateNum);
+      centers[centerName as keyof typeof centers].defined = true;
     }
   });
-  
   const channels = [
     [64, 47], [61, 24], [63, 4],
     [17, 62], [43, 23], [11, 56],
@@ -331,27 +313,27 @@ function calculateCentersFromChannels(allGates) {
   ];
   
   channels.forEach(([gateA, gateB]) => {
-    const centerA = gateToCenterMap[gateA];
-    const centerB = gateToCenterMap[gateB];
+    const centerA = GATE_TO_CENTER_MAP[gateA as keyof typeof GATE_TO_CENTER_MAP];
+    const centerB = GATE_TO_CENTER_MAP[gateB as keyof typeof GATE_TO_CENTER_MAP];
     
     if (centerA && centerB && 
-        centers[centerA].gates.includes(gateA) && 
-        centers[centerB].gates.includes(gateB)) {
+        centers[centerA as keyof typeof centers].gates.includes(gateA) && 
+        centers[centerB as keyof typeof centers].gates.includes(gateB)) {
       
-      centers[centerA].defined = true;
-      centers[centerB].defined = true;
+      centers[centerA as keyof typeof centers].defined = true;
+      centers[centerB as keyof typeof centers].defined = true;
       
       const channel = [gateA, gateB];
-      if (!centers[centerA].channels.some(ch => 
+      if (!centers[centerA as keyof typeof centers].channels.some(ch => 
           (ch[0] === channel[0] && ch[1] === channel[1]) || 
           (ch[0] === channel[1] && ch[1] === channel[0]))) {
-        centers[centerA].channels.push(channel);
+        centers[centerA as keyof typeof centers].channels.push(channel);
       }
       
-      if (centerA !== centerB && !centers[centerB].channels.some(ch => 
+      if (centerA !== centerB && !centers[centerB as keyof typeof centers].channels.some(ch => 
           (ch[0] === channel[0] && ch[1] === channel[1]) || 
           (ch[0] === channel[1] && ch[1] === channel[0]))) {
-        centers[centerB].channels.push(channel);
+        centers[centerB as keyof typeof centers].channels.push(channel);
       }
     }
   });
@@ -359,7 +341,7 @@ function calculateCentersFromChannels(allGates) {
   return centers;
 }
 
-function determineHDType(centers) {
+function determineHDType(centers: any): string {
   const sacralDefined = centers.Sacral?.defined || false;
   const throatDefined = centers.Throat?.defined || false;
   const heartDefined = centers.Heart?.defined || false;
@@ -381,7 +363,7 @@ function determineHDType(centers) {
     return 'Generator';
   }
   
-  const definedCenters = Object.values(centers).filter(center => center.defined).length;
+  const definedCenters = Object.values(centers).filter((center: any) => center.defined).length;
   if (definedCenters === 0) {
     return 'Reflector';
   }
@@ -389,15 +371,15 @@ function determineHDType(centers) {
   return 'Projector';
 }
 
-function checkMotorToThroatConnection(centers) {
+function checkMotorToThroatConnection(centers: any): boolean {
   const motorToThroatChannels = [
     [21, 45], [26, 44], 
     [35, 36], [12, 22]
   ];
   
   return motorToThroatChannels.some(([gateA, gateB]) => {
-    const hasGateA = Object.values(centers).some(center => center.gates.includes(gateA));
-    const hasGateB = Object.values(centers).some(center => center.gates.includes(gateB));
+    const hasGateA = Object.values(centers).some((center: any) => center.gates.includes(gateA));
+    const hasGateB = Object.values(centers).some((center: any) => center.gates.includes(gateB));
     
     const isMotorToThroat = (
       (centers.Heart?.gates.includes(gateA) && centers.Throat?.gates.includes(gateB)) ||
@@ -410,7 +392,7 @@ function checkMotorToThroatConnection(centers) {
   });
 }
 
-function checkSacralToThroatConnection(centers) {
+function checkSacralToThroatConnection(centers: any): boolean {
   const sacralToThroatChannels = [
     [34, 20], [34, 10], [34, 57], [5, 15], [14, 2], [29, 46]
   ];
@@ -421,7 +403,7 @@ function checkSacralToThroatConnection(centers) {
   });
 }
 
-function determineHDAuthority(centers) {
+function determineHDAuthority(centers: any): string {
   if (centers['Solar Plexus']?.defined) return "Emotional";
   if (centers.Sacral?.defined) return "Sacral";
   if (centers.Spleen?.defined) return "Splenic";
@@ -431,7 +413,7 @@ function determineHDAuthority(centers) {
   return "Lunar (Reflector)";
 }
 
-function calculateHDProfile(sunGateInfo, designSunGateInfo) {
+function calculateHDProfile(sunGateInfo: any, designSunGateInfo: any): string {
   if (!sunGateInfo || !designSunGateInfo) return "1/3 (Investigator/Martyr)";
   const profileLabels = {
     "1": "Investigator",
@@ -447,10 +429,14 @@ function calculateHDProfile(sunGateInfo, designSunGateInfo) {
 }
 
 // REPLACE calculateDefinition with an HD-correct channel graph method:
-function calculateHDDefinition(centers) {
+function calculateHDDefinition(centers: any): string {
+  function getCenterOfGate(gateNum: number): string {
+    return GATE_TO_CENTER_MAP[gateNum as keyof typeof GATE_TO_CENTER_MAP] || "";
+  }
+
   // Construct graph: nodes = defined centers, edges = channels connecting them
   const definedCenters = Object.keys(centers).filter(cn => centers[cn].defined);
-  const adj = {};
+  const adj: { [key: string]: string[] } = {};
   definedCenters.forEach(center => adj[center] = []);
   // Build adjacency list
   for (const center of definedCenters) {
@@ -466,17 +452,17 @@ function calculateHDDefinition(centers) {
     }
   }
   // Count connected components via BFS
-  const visited = {};
+  const visited: { [key: string]: boolean } = {};
   let groupCount = 0;
   for (const center of definedCenters) {
     if (!visited[center]) {
       groupCount++;
-      const queue = [center];
+      const queue: string[] = [center];
       while (queue.length) {
         const node = queue.shift();
-        if (!visited[node]) {
+        if (node && !visited[node]) {
           visited[node] = true;
-          (adj[node] || []).forEach(nbr => {
+          (adj[node] || []).forEach((nbr: string) => {
             if (!visited[nbr]) queue.push(nbr);
           });
         }
@@ -491,8 +477,8 @@ function calculateHDDefinition(centers) {
   return "Quadruple Split Definition";
 }
 
-function getStrategyForType(type) {
-  const strategies = {
+function getStrategyForType(type: string): string {
+  const strategies: { [key: string]: string } = {
     'Generator': 'Wait to respond',
     'Manifesting Generator': 'Wait to respond then inform',
     'Manifestor': 'Inform before acting',
@@ -502,8 +488,8 @@ function getStrategyForType(type) {
   return strategies[type] || 'Unknown';
 }
 
-function getNotSelfThemeForType(type) {
-  const themes = {
+function getNotSelfThemeForType(type: string): string {
+  const themes: { [key: string]: string } = {
     'Generator': 'Frustration',
     'Manifesting Generator': 'Frustration and anger',
     'Manifestor': 'Anger',
@@ -513,6 +499,42 @@ function getNotSelfThemeForType(type) {
   return themes[type] || 'Unknown';
 }
 
-function getProfileLabel(lineNum) {
-  return PROFILE_LABELS[lineNum] || "";
+function getProfileLabel(lineNum: number): string {
+  return PROFILE_LABELS[lineNum as keyof typeof PROFILE_LABELS] || "";
+}
+
+function generateLifePurpose(type: string, profile: string, authority: string): string {
+  const baseThemes: { [key: string]: string } = {
+    'Generator': 'To respond to life with passion and build sustainable energy through meaningful work',
+    'Manifesting Generator': 'To respond to life with passion while manifesting through efficient, multi-focused action',
+    'Manifestor': 'To initiate change and manifest new directions while informing others of their impact',
+    'Projector': 'To guide and direct others\' energy efficiently when invited and recognized',
+    'Reflector': 'To reflect the health of their community and environment back to others'
+  };
+  
+  const profileNumber = profile.split('/')[0];
+  const profileThemes: { [key: string]: string } = {
+    '1': 'through deep investigation and mastery',
+    '2': 'through natural talent that emerges when called forth',
+    '3': 'through experiential learning and trial-and-error discovery',
+    '4': 'through network connections and opportunities from relationships',
+    '5': 'through providing practical solutions and leadership when projected upon',
+    '6': 'through three-life phases: trial/error, withdrawal/observation, and role modeling'
+  };
+  
+  const authorityThemes: { [key: string]: string } = {
+    'Emotional': 'following emotional clarity over time',
+    'Sacral': 'following gut responses and life force energy',
+    'Splenic': 'following intuitive knowing in the present moment',
+    'Ego': 'following what serves their willpower and commitments',
+    'G Center/Self-Projected': 'following what feels right for their identity and direction',
+    'Mental': 'following what sounds right when spoken aloud',
+    'Lunar (Reflector)': 'following the lunar cycle for major decisions'
+  };
+  
+  const base = baseThemes[type] || 'To live authentically according to their design';
+  const profileTheme = profileThemes[profileNumber] || 'through their unique approach to life';
+  const authorityTheme = authorityThemes[authority] || 'following their inner authority';
+  
+  return `${base} ${profileTheme}, ${authorityTheme}.`;
 }

@@ -70,7 +70,7 @@ serve(async (req) => {
           return new Response(
             JSON.stringify({ 
               error: "Invalid request format",
-              details: parseError.message,
+              details: getErrorMessage(parseError),
               code: "INVALID_REQUEST_FORMAT"
             }),
             { 
@@ -85,7 +85,7 @@ serve(async (req) => {
       }
     }
 
-    const { birthDate, birthTime, birthLocation, fullName } = requestData;
+    const { birthDate, birthTime, birthLocation, fullName } = requestData as any;
 
     // Validate required fields for main blueprint calculation
     if (!birthDate || !birthTime || !birthLocation) {
@@ -134,7 +134,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: "Internal server error",
-        details: error.message,
+        details: getErrorMessage(error),
         code: "INTERNAL_ERROR"
       }),
       { 
@@ -412,7 +412,7 @@ async function generateHumanDesign(birthDate: string, birthTime: string, birthLo
     
     console.log("✅ Human Design calculation completed via Vercel API");
     console.log("Result type:", humanDesignResult.type);
-    console.log("Result profile:", humanDesignResult.profile);
+    console.log("Result profile:", (humanDesignResult as any)?.profile);
     console.log("Result authority:", humanDesignResult.authority);
     
     // Check if this is a fallback result
