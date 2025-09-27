@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { getErrorMessage } from '../_shared/error-utils.ts';
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -271,7 +270,7 @@ export default async function handler(req: Request) {
     return new Response(
       JSON.stringify({
         error: "Prokerala planet-position API test failed",
-        details: getErrorMessage(error),
+        details: error.message,
         code: "PROKERALA_PLANET_POSITION_API_ERROR"
       }),
       { 

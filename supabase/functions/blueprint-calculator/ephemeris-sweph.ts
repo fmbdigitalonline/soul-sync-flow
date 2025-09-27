@@ -5,7 +5,7 @@ import { initializeSwephModule } from '../_shared/sweph/sweph-loader.ts';
 /**
  * Calculate planetary positions using Swiss Ephemeris
  */
-export async function calculatePlanetaryPositionsWithSweph(date: any, time: any, location: any, timezone: any) {
+export async function calculatePlanetaryPositionsWithSweph(date, time, location, timezone) {
   try {
     console.log(`SwEph: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
@@ -53,7 +53,7 @@ export async function calculatePlanetaryPositionsWithSweph(date: any, time: any,
         continue;
       }
       
-      (positions as any)[body] = {
+      positions[body] = {
         longitude: result[0],
         latitude: result[1],
         distance: result[2],
@@ -71,30 +71,30 @@ export async function calculatePlanetaryPositionsWithSweph(date: any, time: any,
     
     sweph.swe_houses(jd, coords.latitude, coords.longitude, 'P', houses, ascmc);
     
-    (positions as any)['ascendant'] = {
+    positions['ascendant'] = {
       longitude: ascmc[sweph.SE_ASC],
       latitude: 0,
       house: 1
     };
     
-    (positions as any)['mc'] = {
+    positions['mc'] = {
       longitude: ascmc[sweph.SE_MC],
       latitude: 0,
       house: 10
     };
     
-    console.log(`SwEph: Ascendant: ${(positions as any)['ascendant'].longitude.toFixed(6)}`);
-    console.log(`SwEph: MC: ${(positions as any)['mc'].longitude.toFixed(6)}`);
+    console.log(`SwEph: Ascendant: ${positions['ascendant'].longitude.toFixed(6)}`);
+    console.log(`SwEph: MC: ${positions['mc'].longitude.toFixed(6)}`);
     
     // Add house cusps
-    (positions as any)['houses'] = Array.from(houses.slice(1, 13)).map((cusp, index) => ({
+    positions['houses'] = Array.from(houses.slice(1, 13)).map((cusp, index) => ({
       cusp: index + 1,
       longitude: cusp
     }));
     
     // Add timestamp for reference
-    (positions as any)['timestamp'] = Date.parse(`${date}T${time}`);
-    (positions as any)['source'] = 'swiss_ephemeris';
+    positions['timestamp'] = Date.parse(`${date}T${time}`);
+    positions['source'] = 'swiss_ephemeris';
     
     return positions;
   } catch (error) {

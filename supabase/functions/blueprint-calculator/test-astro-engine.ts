@@ -1,9 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { calculatePlanetaryPositionsWithAstro, eclipticLongitudeByJd } from "./ephemeris-astroengine.ts";
-import { getErrorMessage } from '../_shared/error-utils.ts';
 // Fixed: Use namespace import
-import * as Astronomy from "https://esm.sh/astronomy-engine@2";
+import * as Astronomy from "npm:astronomy-engine@2";
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -11,14 +10,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Interface for planetary positions
-interface PlanetaryPositions {
-  sun?: { longitude: number };
-  moon?: { longitude: number };
-  ascendant?: { longitude: number };
-}
-
-export default async function testAstroEngine(req: Request): Promise<Response> {
+serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -38,33 +30,29 @@ export default async function testAstroEngine(req: Request): Promise<Response> {
     
     console.log(`Testing calculation for ${testDate} ${testTime} at ${testLocation}`);
     
-    // Initialize variables outside try-catch for proper scope
-    let testJd = 2460000; // ~2023-01-21
-    let sunLonByJd = 0;
-    let moonLonByJd = 0;
-    let testJd2 = 2460080.5; // 2025-05-22 noon TT
-    
     // Test Julian Day conversion function with a known value
     try {
-      sunLonByJd = eclipticLongitudeByJd("Sun", testJd);
-      moonLonByJd = eclipticLongitudeByJd("Moon", testJd);
+      const testJd = 2460000; // ~2023-01-21
+      const sunLonByJd = eclipticLongitudeByJd("Sun", testJd);
+      const moonLonByJd = eclipticLongitudeByJd("Moon", testJd);
       console.log(`Sanity test with Julian Day (${testJd}): Sun lon: ${sunLonByJd}°, Moon lon: ${moonLonByJd}°`);
       
       // Additional sanity check with different Julian Day
+      const testJd2 = 2460080.5; // 2025-05-22 noon TT
       console.log(`Additional JD test (${testJd2}): Sun: ${eclipticLongitudeByJd("Sun", testJd2)}°, Moon: ${eclipticLongitudeByJd("Moon", testJd2)}°`);
-    } catch (error: unknown) {
-      console.error("Julian day test failed:", getErrorMessage(error));
+    } catch (error) {
+      console.error("Julian day test failed:", error);
       // Continue with the rest of the tests
     }
     
     // Calculate positions using Astronomy Engine
-    const positions: PlanetaryPositions = await calculatePlanetaryPositionsWithAstro(
+    const positions = await calculatePlanetaryPositionsWithAstro(
       testDate, testTime, testLocation, testTimezone
     );
     
-    // Extract sun sign and moon sign with safety checks
-    const sunLongitude = positions.sun?.longitude ?? 0;
-    const moonLongitude = positions.moon?.longitude ?? 0;
+    // Extract sun sign and moon sign
+    const sunLongitude = positions.sun.longitude;
+    const moonLongitude = positions.moon.longitude;
     const sunSign = Math.floor(sunLongitude / 30);
     const moonSign = Math.floor(moonLongitude / 30);
     
@@ -103,8 +91,8 @@ export default async function testAstroEngine(req: Request): Promise<Response> {
             sign_index: moonSign
           },
           ascendant: {
-            longitude: positions.ascendant?.longitude ?? 0,
-            sign: zodiacSigns[Math.floor((positions.ascendant?.longitude ?? 0) / 30)]
+            longitude: positions.ascendant.longitude,
+            sign: zodiacSigns[Math.floor(positions.ascendant.longitude / 30)]
           },
           jd_test: {
             jd: testJd,
@@ -129,14 +117,14 @@ export default async function testAstroEngine(req: Request): Promise<Response> {
         } 
       }
     );
-  } catch (error: unknown) {
-    console.error("Astronomy Engine test failed:", getErrorMessage(error));
+  } catch (error) {
+    console.error("Astronomy Engine test failed:", error);
     
     return new Response(
       JSON.stringify({
         success: false,
-        error: getErrorMessage(error),
-        stack: error instanceof Error ? error.stack : 'No stack trace',
+        error: error.message,
+        stack: error.stack,
         message: "Failed to test the Astronomy Engine implementation"
       }),
       { 
@@ -148,4 +136,4 @@ export default async function testAstroEngine(req: Request): Promise<Response> {
       }
     );
   }
-}
+});

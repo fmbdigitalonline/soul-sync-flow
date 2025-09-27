@@ -1,4 +1,5 @@
 
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { initializeSwephModule } from '../_shared/sweph/sweph-loader.ts';
 
 // CORS headers for browser requests
@@ -7,7 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-export default async function testWasm(req: Request): Promise<Response> {
+serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -94,4 +95,4 @@ export default async function testWasm(req: Request): Promise<Response> {
       }
     );
   }
-}
+});

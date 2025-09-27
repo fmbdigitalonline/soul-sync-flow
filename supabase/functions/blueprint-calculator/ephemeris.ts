@@ -1,5 +1,5 @@
 
-import { DateTime } from "https://esm.sh/luxon@3.4.4";
+import { DateTime } from "npm:luxon@3.4.4";
 
 interface GeoCoordinates {
   latitude: number;
@@ -269,7 +269,7 @@ export async function calculatePlanetaryPositions(
     return celestialData;
   } catch (error) {
     console.error('Error calculating planetary positions:', error);
-    throw new Error(`Failed to calculate planetary positions: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(`Failed to calculate planetary positions: ${error.message}`);
   }
 }
 

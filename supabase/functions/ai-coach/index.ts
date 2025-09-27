@@ -198,10 +198,9 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
   } catch (error) {
     console.error('Error in AI Coach function:', error);
     
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return new Response(
       JSON.stringify({
-        error: errorMessage,
+        error: error.message || 'Internal server error',
       }),
       {
         status: 500,

@@ -64,8 +64,7 @@ Generate a comprehensive 3,000-4,000 word analysis covering learning styles, fee
     });
   } catch (error) {
     console.error('❌ Adaptive Feedback Analyst error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

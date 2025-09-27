@@ -231,9 +231,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Error in ai-coach-stream function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(JSON.stringify({ 
-      error: errorMessage,
+      error: error.message,
       details: 'Authentication or service error occurred'
     }), {
       status: 500,

@@ -27,7 +27,7 @@ export default async function debugEndpoint(req: Request) {
       debug_result: debugResult,
       analysis: {
         timezone_issue: debugResult?.timezoneOffset !== -10800 ? "Timezone offset should be -10800 seconds (UTC-3), not " + debugResult?.timezoneOffset : "Timezone OK",
-        sun_position_issue: debugResult?.error && debugResult.error > 10 ? `Sun position error of ${debugResult.error}° indicates major calculation problem` : "Sun position within acceptable range",
+        sun_position_issue: debugResult?.error > 10 ? `Sun position error of ${debugResult?.error}° indicates major calculation problem` : "Sun position within acceptable range",
         recommendations: [
           "Check ephemeris API datetime format",
           "Verify coordinate system (tropical vs sidereal)",
@@ -44,12 +44,9 @@ export default async function debugEndpoint(req: Request) {
 
   } catch (error) {
     console.error("Debug endpoint error:", error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    
     return new Response(JSON.stringify({
-      error: errorMessage,
-      stack: errorStack
+      error: error.message,
+      stack: error.stack
     }), {
       status: 500,
       headers: { 
