@@ -1,4 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getErrorMessage } from '../_shared/error-utils.ts';
+
+// Request data interface
+interface BirthDataRequest {
+  birthDate?: string;
+  birthTime?: string;
+  birthLocation?: string;
+  fullName?: string;
+}
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -59,18 +68,18 @@ serve(async (req) => {
     }
 
     // Parse JSON for main blueprint calculation endpoints and POST requests
-    let requestData = {};
+    let requestData: BirthDataRequest = {};
     if (req.method === 'POST') {
       const text = await req.text();
       if (text.trim()) {
         try {
-          requestData = JSON.parse(text);
-        } catch (parseError) {
+          requestData = JSON.parse(text) as BirthDataRequest;
+        } catch (parseError: unknown) {
           console.error("Failed to parse request body:", parseError);
           return new Response(
             JSON.stringify({ 
               error: "Invalid request format",
-              details: parseError.message,
+              details: getErrorMessage(parseError),
               code: "INVALID_REQUEST_FORMAT"
             }),
             { 
@@ -128,13 +137,13 @@ serve(async (req) => {
       }
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error in blueprint calculator:", error);
     
     return new Response(
       JSON.stringify({
         error: "Internal server error",
-        details: error.message,
+        details: getErrorMessage(error),
         code: "INTERNAL_ERROR"
       }),
       { 
@@ -242,7 +251,7 @@ async function generateBlueprintWithAutomaticTimezone(birthDate: string, birthTi
       celestialData
     };
     
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error in automatic timezone blueprint generation:", error);
     throw error;
   }
@@ -412,17 +421,21 @@ async function generateHumanDesign(birthDate: string, birthTime: string, birthLo
     
     console.log("✅ Human Design calculation completed via Vercel API");
     console.log("Result type:", humanDesignResult.type);
-    console.log("Result profile:", humanDesignResult.profile);
-    console.log("Result authority:", humanDesignResult.authority);
+    if ('profile' in humanDesignResult) {
+      console.log("Result profile:", humanDesignResult.profile);
+    }
+    if ('authority' in humanDesignResult) {
+      console.log("Result authority:", humanDesignResult.authority);
+    }
     
     // Check if this is a fallback result
-    if (humanDesignResult.metadata?.calculation_method === "FALLBACK_NEEDS_PROPER_LIBRARY") {
+    if ('metadata' in humanDesignResult && 'method' in humanDesignResult.metadata && humanDesignResult.metadata.method === "FALLBACK_NEEDS_PROPER_LIBRARY") {
       console.log("⚠️ WARNING: Using fallback Human Design calculation - proper library integration needed");
     }
     
     return humanDesignResult;
     
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error in Human Design generation:", error);
     throw error;
   }
