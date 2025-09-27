@@ -39,71 +39,115 @@ export const useHermeticReportStatus = () => {
     jobId: string;
   } | null>(null);
 
-  // Generate witty progress insights as HACSInsight objects
+  // Generate educational progress insights based on actual processing stages
   const generateProgressInsight = useCallback((progress: number, currentStep?: string): HACSInsight | undefined => {
-    const milestone = Math.floor(progress / 10) * 10;
     
     // Extract relevant info from current step
     const stepInfo = currentStep?.toLowerCase() || '';
-    const isProcessingStep = stepInfo.includes('processing');
     const stepType = stepInfo.match(/processing (\w+)/)?.[1] || '';
     
-    const messages: Record<number, string[]> = {
-      50: [
-        "Plot twist: Your personality is actually more complex than my algorithms expected 🤔",
-        "Warning: Detecting unusual levels of fascinating contradictions ahead! 🎭",
-        "Your mind's blueprint is starting to confuse my sensors... in the best way! 🧠"
-      ],
-      60: [
-        "Breaking: Local human shows signs of intriguing depth (scientists baffled!) 📊",
-        "Update: Your hermetic profile is looking suspiciously interesting... 🔍",
-        "Alert: Intelligence patterns emerging that don't fit standard templates! ⚡"
-      ],
-      70: [
-        "Status report: Your personality matrix is officially \"complicated\" 🌀",
-        "Discovery: You might actually be more interesting than initially calculated 🎯",
-        "Progress note: My algorithms are having fun with your unique patterns! ✨"
-      ],
-      80: [
-        "Achievement unlocked: Confusing AI systems with your complexity! 🏆",
-        "Warning: Intelligence levels rising beyond normal parameters 📈",
-        "Update: Your hermetic signature is becoming genuinely intriguing... 🌟"
-      ],
-      90: [
-        "Final stretch: Your soul's blueprint is almost legend-worthy! 🚀",
-        "Alert: Approaching maximum personality analysis capacity! 💫",
-        "Status: Your hermetic profile is reaching epic proportions... 🎭"
-      ],
-      100: [
-        "Mission accomplished! Your soul's intelligence map is ready for exploration 🎯",
-        "Complete: Your hermetic profile has achieved legendary status! 👑",
-        "Success: Your personality analysis is now a work of art! 🎨"
-      ]
+    // Map processing stages to educational messages
+    const stageMessages: Record<string, { message: string; description: string }> = {
+      'rhythm_analyst': {
+        message: "Learning your natural rhythms and energy patterns...",
+        description: "Your rhythm profile reveals how you sync with life's natural cycles, peak performance times, and energy management patterns."
+      },
+      'mentalism_analyst': {
+        message: "Learning your mental processing patterns and cognitive style...",
+        description: "Understanding how your mind processes information, makes decisions, and approaches problem-solving challenges."
+      },
+      'hermetic_core': {
+        message: "Learning your core hermetic intelligence signatures...",
+        description: "Discovering the fundamental patterns that shape your personality, consciousness, and life approach."
+      },
+      'personality_matrix': {
+        message: "Learning your unique personality architecture...",
+        description: "Mapping the complex interplay of traits, behaviors, and psychological patterns that make you unique."
+      },
+      'consciousness_analyst': {
+        message: "Learning your consciousness patterns and awareness levels...",
+        description: "Understanding how you perceive reality, process experiences, and maintain self-awareness."
+      },
+      'wisdom_integration': {
+        message: "Learning how wisdom integrates within your personality...",
+        description: "Discovering how life experiences have shaped your insights, judgment, and decision-making wisdom."
+      }
     };
-
-    const messageArray = messages[milestone];
-    if (messageArray) {
-      const randomIndex = Math.floor(Math.random() * messageArray.length);
-      const message = messageArray[randomIndex];
-      
-      return {
-        id: `hermetic-progress-${milestone}-${Date.now()}`,
-        text: message,
-        module: 'Hermetic Intelligence',
-        type: 'hermetic_progress',
-        confidence: 100,
-        evidence: [
-          `Analysis progress: ${progress}%`,
-          `Current stage: ${currentStep || 'Processing personality matrix'}`,
-          ...(stepType ? [`Processing: ${stepType} data`] : [])
-        ],
-        timestamp: new Date(),
-        acknowledged: false,
-        showContinue: true
-      };
+    
+    // Progress-based fallback messages for when no specific stage is detected
+    const progressMessages: Record<number, { message: string; description: string }> = {
+      0: {
+        message: "Beginning to learn your soul's intelligence patterns...",
+        description: "Initiating comprehensive hermetic intelligence mapping to understand your unique consciousness signature."
+      },
+      10: {
+        message: "Learning your foundational personality structures...",
+        description: "Discovering the core building blocks that form your psychological foundation and behavioral patterns."
+      },
+      20: {
+        message: "Learning your cognitive processing preferences...",
+        description: "Understanding how your mind naturally processes information, makes connections, and forms insights."
+      },
+      30: {
+        message: "Learning your emotional intelligence patterns...",
+        description: "Discovering how you experience, process, and integrate emotional information into your decision-making."
+      },
+      40: {
+        message: "Learning your unique interaction styles...",
+        description: "Understanding how you naturally connect with others, communicate, and navigate social dynamics."
+      },
+      50: {
+        message: "Learning your deeper psychological layers...",
+        description: "Exploring the complex psychological patterns that drive your motivations, fears, and aspirations."
+      },
+      60: {
+        message: "Learning your consciousness expansion patterns...",
+        description: "Understanding how you grow, evolve, and expand your awareness throughout your life journey."
+      },
+      70: {
+        message: "Learning your wisdom integration methods...",
+        description: "Discovering how you process life experiences into practical wisdom and meaningful insights."
+      },
+      80: {
+        message: "Learning your authentic self-expression patterns...",
+        description: "Understanding how your true self manifests in the world through your unique talents and perspectives."
+      },
+      90: {
+        message: "Learning your soul's highest potential pathways...",
+        description: "Mapping the routes through which you can actualize your deepest purpose and fullest expression."
+      },
+      100: {
+        message: "Your hermetic intelligence profile is complete and ready!",
+        description: "Your comprehensive soul intelligence map is now available, revealing the full spectrum of your consciousness patterns."
+      }
+    };
+    
+    // Determine which message to use
+    let selectedMessage: { message: string; description: string };
+    
+    if (stepType && stageMessages[stepType]) {
+      selectedMessage = stageMessages[stepType];
+    } else {
+      const milestone = Math.floor(progress / 10) * 10;
+      selectedMessage = progressMessages[milestone] || progressMessages[0];
     }
     
-    return undefined;
+    return {
+      id: `hermetic-progress-${progress}-${Date.now()}`,
+      text: selectedMessage.message,
+      module: 'Hermetic Intelligence',
+      type: 'hermetic_progress',
+      confidence: 100,
+      evidence: [
+        `Learning progress: ${progress}%`,
+        `Current stage: ${currentStep || 'Processing personality matrix'}`,
+        selectedMessage.description,
+        ...(stepType ? [`Learning from: ${stepType} data`] : [])
+      ],
+      timestamp: new Date(),
+      acknowledged: false,
+      showContinue: true
+    };
   }, []);
 
   // Clear progress insight and mark milestone as displayed
@@ -114,7 +158,7 @@ export const useHermeticReportStatus = () => {
     console.log(`🧹 CLEAR INSIGHT: Clearing progress insight for milestone ${currentMilestone}%`);
     
     // Mark this milestone as already displayed to prevent regeneration
-    if (currentMilestone >= 50) {
+    if (currentMilestone >= 0) {
       setDisplayedMilestones(prev => {
         const updated = new Set(prev);
         updated.add(currentMilestone);
@@ -289,10 +333,10 @@ export const useHermeticReportStatus = () => {
         currentStep = 'Report generated but not saved - please retry';
       }
 
-      // Progress milestone detection (every 10% starting from 50%) - prevent duplicates
+      // Progress milestone detection (every 10% starting from 0%) - prevent duplicates
       const currentMilestone = Math.floor(progress / 10) * 10;
-      const shouldShowProgressMessage = progress >= 50 && 
-                                       currentMilestone >= 50 &&
+      const shouldShowProgressMessage = progress >= 0 && 
+                                       currentMilestone >= 0 &&
                                        currentMilestone % 10 === 0 &&
                                        !displayedMilestones.has(currentMilestone) &&
                                        !hasZombieJob &&
