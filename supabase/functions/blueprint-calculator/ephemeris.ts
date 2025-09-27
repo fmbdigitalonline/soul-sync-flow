@@ -1,5 +1,5 @@
 
-import { DateTime } from "npm:luxon@3.4.4";
+import { DateTime } from "luxon";
 
 interface GeoCoordinates {
   latitude: number;

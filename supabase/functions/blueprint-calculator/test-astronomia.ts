@@ -19,7 +19,7 @@ async function testAstronomia(req) {
     let responseMessage = `=== ASTRONOMIA FINAL INTEGRATION TEST ===\n`;
 
     // Import astronomia main library
-    const astronomia = await import('npm:astronomia@4.1.1');
+    const astronomia = await import('astronomia');
     console.log('Astronomia imported successfully');
     
     responseMessage += `✅ Astronomia loaded successfully\n\n`;
