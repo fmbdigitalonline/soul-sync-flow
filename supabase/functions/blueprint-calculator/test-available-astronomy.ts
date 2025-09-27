@@ -68,7 +68,7 @@ async function testAvailableAstronomy(req) {
     // Test 2: Try importing Luxon (which we know works) for date handling
     responseMessage += `\n=== TESTING KNOWN WORKING LIBRARIES ===\n`;
     try {
-      const luxon = await import('npm:luxon@3.4.4');
+      const luxon = await import('luxon');
       responseMessage += `✅ Luxon: Available for date/time handling\n`;
       
       // Test basic date functionality
@@ -133,11 +133,11 @@ async function testAvailableAstronomy(req) {
         let lib;
         
         if (libName === 'astronomia') {
-          lib = await import('npm:astronomia@4.1.1');
+          lib = await import('astronomia');
         } else if (libName === 'astronomy-engine') {
-          lib = await import('npm:astronomy-engine@2');
+          lib = await import('astronomy-engine');
         } else if (libName === 'luxon') {
-          lib = await import('npm:luxon@3.4.4');
+          lib = await import('luxon');
         }
         
         const exports = Object.keys(lib).sort();
