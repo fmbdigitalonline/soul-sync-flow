@@ -1122,6 +1122,15 @@ const translations: Record<Language, Translations> = {
         }
       }
     },
+    // Personalized Messages for Real-time Learning
+    personalizedMessages: {
+      career_vocational: "I'm learning how you approach career decisions and what truly motivates your professional journey",
+      rhythm_analyst: "I'm discovering your natural energy patterns and when you perform at your peak",
+      mentalism_analyst: "I'm understanding how your mind processes information and makes connections",
+      processing: "I'm analyzing your personality matrix to understand who you really are",
+      fractal_synthesis: "I'm weaving together all the pieces to create your complete personality portrait",
+      default: "I'm learning something fascinating about your unique personality"
+    },
     // Personalized Quotes
     personalizedQuotes: {
       loading: 'Loading your personalized inspiration...',
@@ -2633,6 +2642,15 @@ const translations: Record<Language, Translations> = {
           learningEvidence: 'Leerevidentie:'
         }
       }
+    },
+    // Gepersonaliseerde Berichten voor Real-time Leren
+    personalizedMessages: {
+      career_vocational: "Ik leer hoe je carrièrebeslissingen benadert en wat je professionele reis echt motiveert",
+      rhythm_analyst: "Ik ontdek je natuurlijke energiepatronen en wanneer je op je best presteert",
+      mentalism_analyst: "Ik begrijp hoe jouw geest informatie verwerkt en verbindingen legt",
+      processing: "Ik analyseer je persoonlijkheidsmatrix om te begrijpen wie je werkelijk bent",
+      fractal_synthesis: "Ik weef alle stukjes samen om je complete persoonlijkheidsportret te creëren",
+      default: "Ik leer iets fascinerends over jouw unieke persoonlijkheid"
     },
     // Gepersonaliseerde Citaten
     personalizedQuotes: {

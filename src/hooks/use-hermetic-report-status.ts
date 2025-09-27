@@ -54,6 +54,19 @@ export const useHermeticReportStatus = () => {
     const stepInfo = currentStep?.toLowerCase() || '';
     const stepType = stepInfo.match(/processing (\w+)/)?.[1] || '';
     
+    // Generate personalized message based on current step
+    const getPersonalizedMessage = (step: string | undefined): string => {
+      if (!step) return t('personalizedMessages.default');
+      
+      if (step.includes('career_vocational')) return t('personalizedMessages.career_vocational');
+      if (step.includes('rhythm_analyst')) return t('personalizedMessages.rhythm_analyst');
+      if (step.includes('mentalism_analyst')) return t('personalizedMessages.mentalism_analyst');
+      if (step.includes('fractal_synthesis')) return t('personalizedMessages.fractal_synthesis');
+      if (step.includes('processing')) return t('personalizedMessages.processing');
+      
+      return t('personalizedMessages.default');
+    };
+    
     // Get translated stage messages
     const getStageMessage = (stage: string) => {
       const stageKey = `hermeticProgress.stages.${stage}`;
@@ -87,7 +100,8 @@ export const useHermeticReportStatus = () => {
       text: `${selectedMessage.message} ${selectedMessage.description}`,
       module: 'Hermetic Intelligence',
       type: 'hermetic_progress',
-      confidence: 100,
+      personalizedMessage: getPersonalizedMessage(currentStep),
+      confidence: 1.0,
       evidence: [
         interpolateTranslation(t('hermeticProgress.progressTemplate'), { progress: progress.toString() }),
         interpolateTranslation(t('hermeticProgress.currentStageTemplate'), { stage: currentStep || 'Processing personality matrix' }),
