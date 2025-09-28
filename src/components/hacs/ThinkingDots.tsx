@@ -18,7 +18,7 @@ export const ThinkingDots: React.FC<ThinkingDotsProps> = ({
       transition: {
         duration: 1.5,
         repeat: Infinity,
-        ease: "easeInOut"
+        ease: [0.4, 0, 0.6, 1] // cubic-bezier equivalent of easeInOut
       }
     },
     idle: {
