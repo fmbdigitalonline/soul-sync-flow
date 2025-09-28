@@ -1,12 +1,11 @@
-
 {
   "imports": {
     "std/": "https://deno.land/std@0.177.0/",
     "datetime": "https://deno.land/std@0.177.0/datetime/mod.ts",
-    "http/": "https://deno.land/std@0.177.0/http/",
+    "http/": "https://deno.land/std@0.177.0/",
     "path": "https://deno.land/std@0.177.0/path/mod.ts",
-    "astronomia": "npm:astronomia@4.1.1",
     "astronomy-engine": "npm:astronomy-engine@2",
-    "luxon": "npm:luxon@3.4.4"
+    "date-fns": "npm:date-fns@3.6.0",
+    "date-fns-tz": "npm:date-fns-tz@3.0.0"
   }
 }
