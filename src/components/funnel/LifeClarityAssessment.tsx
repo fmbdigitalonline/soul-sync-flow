@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LifeClarityGuide } from "./LifeClarityGuide";
 import { LanguageSelector } from "@/components/ui/language-selector";
-import { useJourneyTracking as useOnboardingJourneyTracking } from "@/hooks/use-onboarding-journey-tracking";
 
 interface FunnelData {
   painPoint: string;
@@ -37,9 +36,6 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
     previousAttempts: [],
     vision: ""
   });
-
-  // SoulSync Principle #1: Never Break - Add journey tracking without disrupting existing flow
-  const { startJourney, trackStepStart, trackStepComplete, trackValidationError, currentStepId } = useOnboardingJourneyTracking();
 
   const totalSteps = 5;
   const progress = (currentStep / totalSteps) * 100;
@@ -79,109 +75,27 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
     { key: "nothing", label: t('funnel.previousAttempts.options.nothing') }
   ];
 
-  const handleNext = useCallback(async () => {
-    // SoulSync Principle #2: Real Data Only - Track actual step completion
-    if (currentStepId) {
-      await trackStepComplete(currentStepId, { step_data: getStepData() });
-    }
-
+  const handleNext = useCallback(() => {
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
       setGuideIntroComplete(false); // Reset for next step
-      
-      // Track new step start
-      await trackStepStart(
-        'funnel',
-        `Step ${currentStep + 1}: ${getStepName(currentStep + 1)}`,
-        currentStep + 1,
-        totalSteps,
-        { step_validation: isStepValid() }
-      );
     } else {
-      // Complete funnel and start journey
-      await trackStepComplete(currentStepId, { funnel_completion_data: funnelData });
       onComplete(funnelData);
     }
-  }, [currentStep, totalSteps, funnelData, onComplete, currentStepId, trackStepComplete, trackStepStart]);
+  }, [currentStep, totalSteps, funnelData, onComplete]);
 
-  const handleBack = useCallback(async () => {
-    // SoulSync Principle #3: No Fallbacks That Mask Errors - Track navigation abandonment
-    if (currentStepId) {
-      await trackStepComplete(currentStepId, { navigation_direction: 'back' });
-    }
-
+  const handleBack = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
       setGuideIntroComplete(false); // Reset for previous step
-      
-      // Start tracking previous step
-      await trackStepStart(
-        'funnel',
-        `Step ${currentStep - 1}: ${getStepName(currentStep - 1)}`,
-        currentStep - 1,
-        totalSteps
-      );
     } else {
       navigate("/");
     }
-  }, [currentStep, navigate, currentStepId, trackStepComplete, trackStepStart]);
+  }, [currentStep, navigate]);
 
-  const updateFunnelData = useCallback(async (updates: Partial<FunnelData>) => {
+  const updateFunnelData = useCallback((updates: Partial<FunnelData>) => {
     setFunnelData(prev => ({ ...prev, ...updates }));
-    
-    // SoulSync Principle #2: Real Data Only - Track data changes for validation insights
-    if (currentStepId) {
-      const newData = { ...funnelData, ...updates };
-      const isValid = validateStepData(currentStep, newData);
-      
-      if (!isValid) {
-        const validationErrors = getValidationErrors(currentStep, newData);
-        await trackValidationError(currentStepId, validationErrors);
-      }
-    }
-  }, [currentStepId, trackValidationError, funnelData, currentStep]);
-
-  // SoulSync Principle #3: No Fallbacks That Mask Errors - Surface validation failures
-  const validateStepData = (step: number, data: FunnelData) => {
-    switch (step) {
-      case 1: return !!data.painPoint;
-      case 2: return Object.keys(data.lifeSatisfaction).length >= 3;
-      case 3: return !!data.changeStyle;
-      case 4: return data.previousAttempts.length > 0;
-      case 5: return data.vision.trim().length > 10;
-      default: return true;
-    }
-  };
-
-  const getValidationErrors = (step: number, data: FunnelData): string[] => {
-    const errors: string[] = [];
-    
-    switch (step) {
-      case 1:
-        if (!data.painPoint) errors.push('Pain point selection required');
-        break;
-      case 2:
-        if (Object.keys(data.lifeSatisfaction).length < 3) {
-          errors.push('At least 3 life domain ratings required');
-        }
-        break;  
-      case 3:
-        if (!data.changeStyle) errors.push('Change style selection required');
-        break;
-      case 4:
-        if (data.previousAttempts.length === 0) {
-          errors.push('At least one previous attempt selection required');
-        }
-        break;
-      case 5:
-        if (data.vision.trim().length <= 10) {
-          errors.push('Vision must be at least 10 characters');
-        }
-        break;
-    }
-    
-    return errors;
-  };
+  }, []);
 
   const handleSatisfactionChange = useCallback((domain: string, value: number) => {
     updateFunnelData({
@@ -205,29 +119,6 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
       case 4: return funnelData.previousAttempts.length > 0;
       case 5: return funnelData.vision.trim().length > 10;
       default: return false;
-    }
-  };
-
-  // SoulSync Principle #7: Build Transparently - Helper functions for step tracking
-  const getStepName = (step: number) => {
-    switch (step) {
-      case 1: return 'Pain Point Selection';
-      case 2: return 'Life Satisfaction Assessment';
-      case 3: return 'Change Style Preference';
-      case 4: return 'Previous Attempts Review';
-      case 5: return 'Vision Definition';
-      default: return `Step ${step}`;
-    }
-  };
-
-  const getStepData = () => {
-    switch (currentStep) {
-      case 1: return { painPoint: funnelData.painPoint };
-      case 2: return { lifeSatisfaction: funnelData.lifeSatisfaction };
-      case 3: return { changeStyle: funnelData.changeStyle };
-      case 4: return { previousAttempts: funnelData.previousAttempts };
-      case 5: return { vision: funnelData.vision };
-      default: return {};
     }
   };
 
@@ -374,24 +265,6 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
         return null;
     }
   };
-
-  // SoulSync Principle #1: Never Break - Initialize journey tracking on component mount
-  React.useEffect(() => {
-    const initializeTracking = async () => {
-      const result = await startJourney();
-      if (result.success) {
-        await trackStepStart(
-          'funnel',
-          `Step ${currentStep}: ${getStepName(currentStep)}`,
-          currentStep,
-          totalSteps,
-          { initial_step: true }
-        );
-      }
-    };
-    
-    initializeTracking();
-  }, []); // Only run once on mount
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-primary/5 flex items-center justify-center p-3 sm:p-4 relative">

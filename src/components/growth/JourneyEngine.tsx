@@ -47,7 +47,7 @@ export const JourneyEngine: React.FC<JourneyEngineProps> = ({ selectedArea, onBa
       selectedArea: selectedArea.name,
       areaDescription: selectedArea.description,
       recentMoods: growthJourney?.mood_entries?.slice(-3) || [],
-      focusAreas: growthJourney?.current_focus_area ? [growthJourney.current_focus_area] : [],
+      focusAreas: growthJourney?.current_focus_areas || [],
       recentReflections: growthJourney?.reflection_entries?.slice(-2) || [],
       insightPatterns: growthJourney?.insight_entries?.slice(-3) || [],
       blueprintSummary: blueprintData ? {
@@ -223,9 +223,9 @@ Be warm, wise, and encouraging.`;
 
       // Log the interaction
       if (step.type === 'reflection') {
-        addReflectionEntry({ title: step.title, content: response, timestamp: new Date().toISOString() });
+        addReflectionEntry(step.title, response);
       } else if (step.type === 'insight') {
-        addInsightEntry({ content: response, tags: [selectedArea.name, step.type], timestamp: new Date().toISOString() });
+        addInsightEntry(response, [selectedArea.name, step.type]);
       }
 
       // Auto-advance after a moment

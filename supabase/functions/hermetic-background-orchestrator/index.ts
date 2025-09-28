@@ -790,10 +790,6 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
 async function processSingleSynthesisAgent(job: any, synthesisType: string, language: string = 'en') {
   const { id: jobId, blueprint_data: blueprint, progress_data } = job;
 
-  // Add language instruction for non-English languages
-  const languageInstruction = language && language !== 'en' ? 
-    `**IMPORTANT: Write your entire analysis in ${getLanguageName(language)}. Use natural, fluent ${getLanguageName(language)} throughout the response.**\n\n` : '';
-
   await updateJobStatus(jobId, 'processing', `Creating ${synthesisType}...`);
   
   // Get comprehensive context from all previous sections

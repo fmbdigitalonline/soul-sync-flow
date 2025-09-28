@@ -1,6 +1,6 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
 const corsHeaders = {
@@ -229,11 +229,10 @@ serve(async (req) => {
       },
     });
 
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('❌ Error in ai-coach-stream function:', error);
-    const msg = error instanceof Error ? error.message : String(error);
     return new Response(JSON.stringify({ 
-      error: msg,
+      error: error.message,
       details: 'Authentication or service error occurred'
     }), {
       status: 500,

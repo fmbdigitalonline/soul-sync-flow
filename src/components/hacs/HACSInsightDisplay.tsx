@@ -109,7 +109,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
               <div>
                 <h4 className="font-semibold text-sm">{t('hacs.insight')}</h4>
                 <p className={`text-xs font-medium ${getModuleColor(insight.module)}`}>
-                  {(insight as any).personalizedMessage || `${insight.module} • ${insight.type}`}
+                  {insight.module} • {insight.type}
                 </p>
               </div>
             </div>

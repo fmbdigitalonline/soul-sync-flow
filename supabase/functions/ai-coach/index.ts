@@ -1,5 +1,5 @@
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -195,13 +195,12 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
       }
     );
 
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Error in AI Coach function:', error);
-    const msg = error instanceof Error ? error.message : String(error);
     
     return new Response(
       JSON.stringify({
-        error: msg || 'Internal server error',
+        error: error.message || 'Internal server error',
       }),
       {
         status: 500,

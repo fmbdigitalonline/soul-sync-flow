@@ -1,5 +1,5 @@
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -19,7 +19,7 @@ async function testAstronomia(req) {
     let responseMessage = `=== ASTRONOMIA FINAL INTEGRATION TEST ===\n`;
 
     // Import astronomia main library
-    const astronomia = await import('astronomia');
+    const astronomia = await import('npm:astronomia@4.1.1');
     console.log('Astronomia imported successfully');
     
     responseMessage += `✅ Astronomia loaded successfully\n\n`;

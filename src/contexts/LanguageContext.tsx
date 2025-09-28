@@ -916,85 +916,6 @@ const translations: Record<Language, Translations> = {
       generationFailed: 'Generation Failed',
       hermeticGenerationFailed: 'Hermetic Generation Failed'
     },
-    
-    // Hermetic Progress Messages
-    hermeticProgress: {
-      stages: {
-        rhythm_analyst: {
-          message: "Learning your natural rhythms and energy patterns...",
-          description: "Your rhythm profile reveals how you sync with life's natural cycles, peak performance times, and energy management patterns."
-        },
-        mentalism_analyst: {
-          message: "Learning your mental processing patterns and cognitive style...",
-          description: "Understanding how your mind processes information, makes decisions, and approaches problem-solving challenges."
-        },
-        hermetic_core: {
-          message: "Learning your core hermetic intelligence signatures...",
-          description: "Discovering the fundamental patterns that shape your personality, consciousness, and life approach."
-        },
-        personality_matrix: {
-          message: "Learning your unique personality architecture...",
-          description: "Mapping the complex interplay of traits, behaviors, and psychological patterns that make you unique."
-        },
-        consciousness_analyst: {
-          message: "Learning your consciousness patterns and awareness levels...",
-          description: "Understanding how you perceive reality, process experiences, and maintain self-awareness."
-        },
-        wisdom_integration: {
-          message: "Learning how wisdom integrates within your personality...",
-          description: "Discovering how life experiences have shaped your insights, judgment, and decision-making wisdom."
-        }
-      },
-      milestones: {
-        0: {
-          message: "Beginning to learn your soul's intelligence patterns...",
-          description: "Initiating comprehensive hermetic intelligence mapping to understand your unique consciousness signature."
-        },
-        10: {
-          message: "Learning your foundational personality structures...",
-          description: "Discovering the core building blocks that form your psychological foundation and behavioral patterns."
-        },
-        20: {
-          message: "Learning your cognitive processing preferences...",
-          description: "Understanding how your mind naturally processes information, makes connections, and forms insights."
-        },
-        30: {
-          message: "Learning your emotional intelligence patterns...",
-          description: "Discovering how you experience, process, and integrate emotional information into your decision-making."
-        },
-        40: {
-          message: "Learning your unique interaction styles...",
-          description: "Understanding how you naturally connect with others, communicate, and navigate social dynamics."
-        },
-        50: {
-          message: "Learning your deeper psychological layers...",
-          description: "Exploring the complex psychological patterns that drive your motivations, fears, and aspirations."
-        },
-        60: {
-          message: "Learning your consciousness expansion patterns...",
-          description: "Understanding how you grow, evolve, and expand your awareness throughout your life journey."
-        },
-        70: {
-          message: "Learning your wisdom integration methods...",
-          description: "Discovering how you process life experiences into practical wisdom and meaningful insights."
-        },
-        80: {
-          message: "Learning your authentic self-expression patterns...",
-          description: "Understanding how your true self manifests in the world through your unique talents and perspectives."
-        },
-        90: {
-          message: "Learning your soul's highest potential pathways...",
-          description: "Mapping the routes through which you can actualize your deepest purpose and fullest expression."
-        },
-        100: {
-          message: "Your hermetic intelligence profile is complete and ready!",
-          description: "Your comprehensive soul intelligence map is now available, revealing the full spectrum of your consciousness patterns."
-        }
-      },
-      progressTemplate: "Learning progress: {progress}%",
-      currentStageTemplate: "Current stage: {stage}",
-      learningFromTemplate: "Learning from: {type} data"
-    },
     // Onboarding Flow
     onboarding: {
       welcome: 'Welcome to Your Spiritual Journey',
@@ -1076,8 +997,8 @@ const translations: Record<Language, Translations> = {
         'ESTP': 'Energetic and pragmatic, you likely enjoy taking action and adapting quickly to new situations.',
         'ESFP': 'Spontaneous and enthusiastic, you probably love being around people and creating memorable experiences.'
       },
-      showEvidence: 'More Information',
-      hideEvidence: 'Less Information',
+      showEvidence: 'Show Evidence',
+      hideEvidence: 'Hide Evidence',
       dismiss: 'Dismiss',
       continue: 'Continue',
       gotIt: 'Got It',
@@ -1121,15 +1042,6 @@ const translations: Record<Language, Translations> = {
           learningEvidence: 'Learning Evidence:'
         }
       }
-    },
-    // Personalized Messages for Real-time Learning
-    personalizedMessages: {
-      career_vocational: "I'm learning how you approach career decisions and what truly motivates your professional journey",
-      rhythm_analyst: "I'm discovering your natural energy patterns and when you perform at your peak",
-      mentalism_analyst: "I'm understanding how your mind processes information and makes connections",
-      processing: "I'm analyzing your personality matrix to understand who you really are",
-      fractal_synthesis: "I'm weaving together all the pieces to create your complete personality portrait",
-      default: "I'm learning something fascinating about your unique personality"
     },
     // Personalized Quotes
     personalizedQuotes: {
@@ -2437,85 +2349,6 @@ const translations: Record<Language, Translations> = {
       generationFailed: 'Genereren Mislukt',
       hermeticGenerationFailed: 'Hermetisch Genereren Mislukt'
     },
-    
-    // Hermetic Progress Messages
-    hermeticProgress: {
-      stages: {
-        rhythm_analyst: {
-          message: "Leren je natuurlijke ritmes en energiepatronen...",
-          description: "Je ritmeprofiel onthult hoe je synchroniseert met de natuurlijke cycli van het leven, piektijden en energiebeheerpatronen."
-        },
-        mentalism_analyst: {
-          message: "Leren je mentale verwerkingspatronen en cognitieve stijl...",
-          description: "Begrijpen hoe je geest informatie verwerkt, beslissingen neemt en probleemoplossingsuitdagingen benadert."
-        },
-        hermetic_core: {
-          message: "Leren je kern hermetische intelligentiesignaturen...",
-          description: "Ontdekken van de fundamentele patronen die je persoonlijkheid, bewustzijn en levensaanpak vormgeven."
-        },
-        personality_matrix: {
-          message: "Leren je unieke persoonlijkheidsarchitectuur...",
-          description: "Het in kaart brengen van het complexe samenspel van eigenschappen, gedragingen en psychologische patronen die je uniek maken."
-        },
-        consciousness_analyst: {
-          message: "Leren je bewustzijnspatronen en bewustzijnsniveaus...",
-          description: "Begrijpen hoe je de werkelijkheid waarneemt, ervaringen verwerkt en zelfbewustzijn onderhoudt."
-        },
-        wisdom_integration: {
-          message: "Leren hoe wijsheid integreert binnen je persoonlijkheid...",
-          description: "Ontdekken hoe levenservaringen je inzichten, oordeel en besluitnemingswijsheid hebben gevormd."
-        }
-      },
-      milestones: {
-        0: {
-          message: "Beginnen te leren van je ziel's intelligentiepatronen...",
-          description: "Initiëren van uitgebreide hermetische intelligentie-mapping om je unieke bewustzijnssignatuur te begrijpen."
-        },
-        10: {
-          message: "Leren je fundamentale persoonlijkheidsstructuren...",
-          description: "Ontdekken van de kernbouwstenen die je psychologische basis en gedragspatronen vormen."
-        },
-        20: {
-          message: "Leren je cognitieve verwerkingsvoorkeuren...",
-          description: "Begrijpen hoe je geest natuurlijk informatie verwerkt, verbindingen maakt en inzichten vormt."
-        },
-        30: {
-          message: "Leren je emotionele intelligentiepatronen...",
-          description: "Ontdekken hoe je emotionele informatie ervaart, verwerkt en integreert in je besluitvorming."
-        },
-        40: {
-          message: "Leren je unieke interactiestijlen...",
-          description: "Begrijpen hoe je natuurlijk verbinding maakt met anderen, communiceert en sociale dynamiek navigeert."
-        },
-        50: {
-          message: "Leren je diepere psychologische lagen...",
-          description: "Verkennen van de complexe psychologische patronen die je motivaties, angsten en aspiraties aandrijven."
-        },
-        60: {
-          message: "Leren je bewustzijnsuitbreidingspatronen...",
-          description: "Begrijpen hoe je groeit, evolueert en je bewustzijn uitbreidt gedurende je levensreis."
-        },
-        70: {
-          message: "Leren je wijsheidsintegratiemethoden...",
-          description: "Ontdekken hoe je levenservaringen verwerkt tot praktische wijsheid en betekenisvolle inzichten."
-        },
-        80: {
-          message: "Leren je authentieke zelfexpressiepatronen...",
-          description: "Begrijpen hoe je ware zelf zich manifesteert in de wereld door je unieke talenten en perspectieven."
-        },
-        90: {
-          message: "Leren de hoogste potentiaalpaden van je ziel...",
-          description: "Het in kaart brengen van de routes waardoor je je diepste doel en volledige expressie kunt actualiseren."
-        },
-        100: {
-          message: "Je hermetische intelligentieprofiel is compleet en klaar!",
-          description: "Je uitgebreide zielintelligentiekaart is nu beschikbaar en onthult het volledige spectrum van je bewustzijnspatronen."
-        }
-      },
-      progressTemplate: "Leervoortgang: {progress}%",
-      currentStageTemplate: "Huidige fase: {stage}",
-      learningFromTemplate: "Leren van: {type} gegevens"
-    },
     // Onboarding Flow
     onboarding: {
       welcome: 'Je gids is bijna klaar om je te ontmoeten.',
@@ -2597,8 +2430,8 @@ const translations: Record<Language, Translations> = {
         'ESTP': 'Energiek en pragmatisch, je houdt waarschijnlijk van actie ondernemen en je snel aanpassen aan nieuwe situaties.',
         'ESFP': 'Spontaan en enthousiast, je houdt waarschijnlijk van het samenzijn met mensen en het creëren van gedenkwaardige ervaringen.'
       },
-      showEvidence: 'Meer Informatie',
-      hideEvidence: 'Minder Informatie',
+      showEvidence: 'Toon Bewijs',
+      hideEvidence: 'Verberg Bewijs',
       dismiss: 'Wegwijzen',
       continue: 'Doorgaan',
       gotIt: 'Begrepen',
@@ -2642,15 +2475,6 @@ const translations: Record<Language, Translations> = {
           learningEvidence: 'Leerevidentie:'
         }
       }
-    },
-    // Gepersonaliseerde Berichten voor Real-time Leren
-    personalizedMessages: {
-      career_vocational: "Ik leer hoe je carrièrebeslissingen benadert en wat je professionele reis echt motiveert",
-      rhythm_analyst: "Ik ontdek je natuurlijke energiepatronen en wanneer je op je best presteert",
-      mentalism_analyst: "Ik begrijp hoe jouw geest informatie verwerkt en verbindingen legt",
-      processing: "Ik analyseer je persoonlijkheidsmatrix om te begrijpen wie je werkelijk bent",
-      fractal_synthesis: "Ik weef alle stukjes samen om je complete persoonlijkheidsportret te creëren",
-      default: "Ik leer iets fascinerends over jouw unieke persoonlijkheid"
     },
     // Gepersonaliseerde Citaten
     personalizedQuotes: {

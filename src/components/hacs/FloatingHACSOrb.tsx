@@ -50,7 +50,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [showChat, setShowChat] = useState(false);
   const [showMicroLearning, setShowMicroLearning] = useState(false);
   const [showInsightDisplay, setShowInsightDisplay] = useState(false);
-  const [showProgressInsightDisplay, setShowProgressInsightDisplay] = useState(false);
   const [orbStage, setOrbStage] = useState<"welcome" | "collecting" | "generating" | "complete">("welcome");
   const [activeModule, setActiveModule] = useState<string | undefined>();
   const [moduleActivity, setModuleActivity] = useState(false);
@@ -204,21 +203,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   }, [subscribeStreaming]);
 
   // Update orb stage based on authentic HACS state + hermetic generation
-  // BRIDGE FIX: Also check steward introduction's isGeneratingReport for immediate UI response
-  const isStewardGeneratingReport = isGeneratingReport; // From steward introduction hook
-  const isAnyReportGenerating = isGeneratingHermeticReport || isStewardGeneratingReport;
-  
   useEffect(() => {
-    console.log('🎯 ORB STAGE UPDATE:', {
-      isGenerating,
-      isGeneratingInsight, 
-      isStewardGeneratingReport,
-      isGeneratingHermeticReport,
-      isAnyReportGenerating,
-      currentStage: orbStage
-    });
-    
-    if (isGenerating || isGeneratingInsight || isStewardGeneratingReport || isGeneratingHermeticReport) {
+    if (isGenerating || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport) {
       setOrbStage("generating");
     } else if (currentQuestion) {
       setOrbStage("collecting");
@@ -231,7 +217,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     } else {
       setOrbStage("welcome");
     }
-  }, [isGenerating, isGeneratingInsight, isStewardGeneratingReport, isGeneratingHermeticReport, currentQuestion, currentInsight, intelligenceLevel]);
+  }, [isGenerating, isGeneratingInsight, isGeneratingReport, isGeneratingHermeticReport, currentQuestion, currentInsight, intelligenceLevel]);
 
   // Monitor hermetic report completion status for glow effects
   useEffect(() => {
@@ -321,14 +307,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       return () => clearTimeout(timer);
     }
   }, [isSystemReady, userProfile?.id, loading, introductionState.isActive, getSubconsciousInsights]);
-
-  // Auto-display hermetic progress insights at top-center
-  useEffect(() => {
-    if (progressInsightReady && progressInsight) {
-      console.log('🎯 AUTO-DISPLAY: Showing hermetic progress insight automatically at top-center');
-      setShowProgressInsightDisplay(true);
-    }
-  }, [progressInsightReady, progressInsight]);
 
   // ✅ INSIGHTS ACTIVATED - Feature flag for automatic insight generation
   const AUTO_INSIGHTS_ENABLED = true; // Activated to enable red exclamation notifications
@@ -575,18 +553,14 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       hasUnacknowledgedInsight: !!(currentInsight && !currentInsight.acknowledged),
       adviceReady,
       patternDetected,
-      progressInsightReady,
-      showProgressInsightDisplay
+      progressInsightReady
     });
 
-    // Priority 1: Show hermetic progress insight if available (but not already auto-displayed)
-    if (progressInsightReady && progressInsight && !showProgressInsightDisplay) {
+    // Priority 1: Show hermetic progress insight if available
+    if (progressInsightReady && progressInsight) {
       console.log('🎯 FloatingHACSOrb: Adding hermetic progress insight to queue');
       addInsightToQueue(progressInsight);
-      // Extract milestone from the progress insight to prevent stale closure
-      const milestoneMatch = progressInsight.text.match(/(\d+)%/);
-      const milestone = milestoneMatch ? parseInt(milestoneMatch[1]) : undefined;
-      clearProgressInsight(milestone);
+      clearProgressInsight();
       return;
     }
 
@@ -886,30 +860,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             )}
           </div>
         </div>
-      )}
-
-      {/* Progress Insight Auto-Display - Top Center */}
-      {showProgressInsightDisplay && progressInsight && (
-        <HACSInsightDisplay
-          insight={progressInsight}
-          onAcknowledge={() => {
-            console.log('🎯 AUTO-DISPLAY: Acknowledging progress insight');
-            // Extract milestone from the progress insight to prevent stale closure
-            const milestoneMatch = progressInsight?.text.match(/(\d+)%/);
-            const milestone = milestoneMatch ? parseInt(milestoneMatch[1]) : undefined;
-            setShowProgressInsightDisplay(false); // Clear display first
-            clearProgressInsight(milestone);
-          }}
-          onDismiss={() => {
-            console.log('🎯 AUTO-DISPLAY: Dismissing progress insight');
-            // Extract milestone from the progress insight to prevent stale closure
-            const milestoneMatch = progressInsight?.text.match(/(\d+)%/);
-            const milestone = milestoneMatch ? parseInt(milestoneMatch[1]) : undefined;
-            setShowProgressInsightDisplay(false); // Clear display first
-            clearProgressInsight(milestone);
-          }}
-          position="top-center"
-        />
       )}
 
       {/* Insight Display - Click-triggered only */}

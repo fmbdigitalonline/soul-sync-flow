@@ -21,7 +21,6 @@ import { useLanguage, Language } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageSelectionStep } from "@/components/onboarding/LanguageSelectionStep";
 import { userLanguagePreferenceService } from "@/services/user-language-preference-service";
-import { useJourneyTracking } from "@/hooks/use-onboarding-journey-tracking";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -29,17 +28,6 @@ export default function Onboarding() {
   const { speak } = useSoulOrb();
   const { user, loading: authLoading } = useAuth();
   const { t, language } = useLanguage();
-  
-  // Initialize journey tracking
-  const {
-    startJourney,
-    trackStepStart,
-    trackStepComplete,
-    trackStepAbandonment,
-    linkWithUser,
-    completeJourney,
-    currentSession
-  } = useJourneyTracking();
   
   // Detect development mode
   const isDevelopment = import.meta.env.DEV;
@@ -73,9 +61,6 @@ export default function Onboarding() {
   // Refs to prevent navigation loops
   const navigationTriggeredRef = useRef(false);
   const goalSelectionTriggeredRef = useRef(false);
-  
-  // Journey tracking state
-  const [currentStepId, setCurrentStepId] = useState<string | null>(null);
 
   // Steps mapping - Language selection is now first
   const steps = [
@@ -110,8 +95,8 @@ export default function Onboarding() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1919 }, (_, i) => currentYear - i);
 
-  // Navigation functions with journey tracking
-  const goToNextStep = async () => {
+  // Navigation functions
+  const goToNextStep = () => {
     if (isTransitioning) return;
     
     // Add boundary check to prevent advancing beyond valid steps
@@ -120,32 +105,11 @@ export default function Onboarding() {
       return;
     }
     
-    // Complete current step if being tracked
-    if (currentStepId) {
-      await trackStepComplete(currentStepId, {
-        stepName: steps[currentStep],
-        formData: currentStep === 2 ? { name: formData.name } : 
-                 currentStep === 3 ? { birthDate: formData.birthDate } :
-                 currentStep === 4 ? { birthTime: formData.birthTime } :
-                 currentStep === 5 ? { birthLocation: formData.birthLocation } :
-                 currentStep === 6 ? { personality: formData.personality } : {}
-      });
-      setCurrentStepId(null);
-    }
-    
     console.log(`Advancing from step ${currentStep} to ${currentStep + 1} (${steps[currentStep + 1]})`);
     setIsTransitioning(true);
-    setTimeout(async () => {
+    setTimeout(() => {
       setCurrentStep(prev => prev + 1);
       setIsTransitioning(false);
-      
-      // Start tracking the next step
-      if (currentStep + 1 < steps.length - 1) { // Don't track the last step (goal selection)
-        const stepResult = await trackStepStart('onboarding', steps[currentStep + 1], currentStep + 1, steps.length);
-        if (stepResult.step_id) {
-          setCurrentStepId(stepResult.step_id);
-        }
-      }
     }, 300);
   };
 
@@ -177,15 +141,9 @@ export default function Onboarding() {
     setBirthDateComponents(prev => ({ ...prev, [component]: value }));
   };
 
-  // Handle language selection with tracking
+  // Handle language selection
   const handleLanguageSelect = async (lang: Language) => {
     setSelectedLanguage(lang);
-    
-    // Complete language selection step
-    if (currentStepId) {
-      await trackStepComplete(currentStepId, { selectedLanguage: lang });
-      setCurrentStepId(null);
-    }
     
     // Save language preference immediately if user is authenticated
     if (user) {
@@ -198,18 +156,8 @@ export default function Onboarding() {
     }
     
     // Move to next step automatically after a brief delay
-    setTimeout(async () => {
-      setIsTransitioning(true);
-      setTimeout(async () => {
-        setCurrentStep(prev => prev + 1);
-        setIsTransitioning(false);
-        
-        // Start tracking welcome step
-        const stepResult = await trackStepStart('onboarding', steps[1], 1, steps.length);
-        if (stepResult.step_id) {
-          setCurrentStepId(stepResult.step_id);
-        }
-      }, 300);
+    setTimeout(() => {
+      goToNextStep();
     }, 500);
   };
 
@@ -231,8 +179,8 @@ export default function Onboarding() {
     return dayNum <= daysInMonth;
   };
   
-  // Handle blueprint generation completion with tracking
-  const handleBlueprintComplete = async (newBlueprint?: BlueprintData) => {
+  // Handle blueprint generation completion
+  const handleBlueprintComplete = (newBlueprint?: BlueprintData) => {
     // Prevent multiple executions
     if (navigationTriggeredRef.current || blueprintGenerated) {
       console.log("Blueprint generation already started, ignoring duplicate completion");
@@ -251,19 +199,6 @@ export default function Onboarding() {
       // Standard personality report will be generated through proper steward activation flow
     }
     
-    // Track blueprint generation completion
-    if (currentStepId) {
-      await trackStepComplete(currentStepId, {
-        blueprintGenerated: true,
-        blueprintData: newBlueprint ? {
-          mbti: newBlueprint.mbti,
-          humanDesign: newBlueprint.human_design,
-          astrology: newBlueprint.astrology
-        } : null
-      });
-      setCurrentStepId(null);
-    }
-    
     toast({
       title: t('blueprint.generated'),
       description: t('blueprint.generatedDescription'),
@@ -271,20 +206,9 @@ export default function Onboarding() {
     
     speak(t('blueprint.generatedDescription'));
     
-    setTimeout(async () => {
-      setIsTransitioning(true);
-      setTimeout(async () => {
-        setCurrentStep(prev => prev + 1);
-        setIsTransitioning(false);
-        
-        // Start tracking goal selection step
-        const stepResult = await trackStepStart('onboarding', steps[8], 8, steps.length);
-        if (stepResult.step_id) {
-          setCurrentStepId(stepResult.step_id);
-        }
-        
-        navigationTriggeredRef.current = false;
-      }, 300);
+    setTimeout(() => {
+      goToNextStep();
+      navigationTriggeredRef.current = false;
     }, 1500);
   };
 
@@ -350,7 +274,7 @@ export default function Onboarding() {
     }
   };
 
-  // Handle goal selection completion with journey tracking
+  // Handle goal selection completion with back navigation support
   const handleGoalSelectionComplete = async (preferences: { 
     primary_goal: string; 
     support_style: number; 
@@ -364,15 +288,6 @@ export default function Onboarding() {
     
     goalSelectionTriggeredRef.current = true;
     console.log("Goal selection completed with preferences:", preferences);
-    
-    // Complete goal selection step tracking
-    if (currentStepId) {
-      await trackStepComplete(currentStepId, {
-        goalSelectionComplete: true,
-        preferences
-      });
-      setCurrentStepId(null);
-    }
     
     if (isDevelopment) {
       console.log("Development mode detected - handling onboarding completion gracefully");
@@ -391,15 +306,6 @@ export default function Onboarding() {
           const langResult = await userLanguagePreferenceService.saveLanguagePreference(user.id, selectedLanguage);
           if (langResult.success) {
             console.log('✅ Final language preference save successful');
-          }
-        }
-        
-        // Link journey with user and complete it
-        if (user?.id) {
-          await linkWithUser(user.id);
-          const completionResult = await completeJourney();
-          if (completionResult.success) {
-            console.log('✅ Onboarding journey completed successfully');
           }
         }
         
@@ -427,11 +333,6 @@ export default function Onboarding() {
       console.error("Error in goal selection completion:", error);
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       
-      // Track goal selection failure
-      if (currentStepId) {
-        await trackStepAbandonment(currentStepId, `Goal selection failed: ${errorMessage}`);
-      }
-      
       toast({
         title: t('goals.errorSaving'),
         description: errorMessage,
@@ -451,27 +352,10 @@ export default function Onboarding() {
     }
   };
 
-  // Initialize journey tracking and title
+  // On first render
   useEffect(() => {
     document.title = "SoulSync - Onboarding";
-    
-    const initializeOnboardingJourney = async () => {
-      const result = await startJourney();
-      if (result.success) {
-        console.log('✅ Onboarding journey tracking initialized:', result.session_id);
-        
-        // Start tracking the first step (language selection)
-        const stepResult = await trackStepStart('onboarding', steps[0], 0, steps.length);
-        if (stepResult.step_id) {
-          setCurrentStepId(stepResult.step_id);
-        }
-      } else {
-        console.warn('⚠️ Failed to initialize onboarding journey tracking:', result.error);
-      }
-    };
-
-    initializeOnboardingJourney();
-  }, [startJourney, trackStepStart]);
+  }, []);
   
   // Removed conflicting navigation useEffect that was causing race condition
   // Blueprint generation now properly advances to Goal Selection step via handleBlueprintComplete()

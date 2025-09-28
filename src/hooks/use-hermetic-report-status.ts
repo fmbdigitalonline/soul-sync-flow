@@ -1,10 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { hermeticPersonalityReportService } from '@/services/hermetic-personality-report-service';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { interpolateTranslation } from '@/utils/translation-utils';
 import { HACSInsight } from './use-hacs-insights';
 
 export interface HermeticReportStatus {
@@ -22,10 +18,6 @@ export interface HermeticReportStatus {
 }
 
 export const useHermeticReportStatus = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const { t } = useLanguage();
-
   const [status, setStatus] = useState<HermeticReportStatus>({
     hasReport: false,
     loading: true,
@@ -40,97 +32,81 @@ export const useHermeticReportStatus = () => {
   });
 
   const [lastProgressMilestone, setLastProgressMilestone] = useState<number>(0);
-  const [displayedMilestones, setDisplayedMilestones] = useState<Set<number>>(new Set());
 
   const [recentCompletion, setRecentCompletion] = useState<{
     timestamp: number;
     jobId: string;
   } | null>(null);
 
-  // Generate educational progress insights based on actual processing stages
+  // Generate witty progress insights as HACSInsight objects
   const generateProgressInsight = useCallback((progress: number, currentStep?: string): HACSInsight | undefined => {
+    const milestone = Math.floor(progress / 10) * 10;
     
     // Extract relevant info from current step
     const stepInfo = currentStep?.toLowerCase() || '';
+    const isProcessingStep = stepInfo.includes('processing');
     const stepType = stepInfo.match(/processing (\w+)/)?.[1] || '';
     
-    // Generate personalized message based on current step
-    const getPersonalizedMessage = (step: string | undefined): string => {
-      if (!step) return t('personalizedMessages.default');
+    const messages: Record<number, string[]> = {
+      50: [
+        "Plot twist: Your personality is actually more complex than my algorithms expected 🤔",
+        "Warning: Detecting unusual levels of fascinating contradictions ahead! 🎭",
+        "Your mind's blueprint is starting to confuse my sensors... in the best way! 🧠"
+      ],
+      60: [
+        "Breaking: Local human shows signs of intriguing depth (scientists baffled!) 📊",
+        "Update: Your hermetic profile is looking suspiciously interesting... 🔍",
+        "Alert: Intelligence patterns emerging that don't fit standard templates! ⚡"
+      ],
+      70: [
+        "Status report: Your personality matrix is officially \"complicated\" 🌀",
+        "Discovery: You might actually be more interesting than initially calculated 🎯",
+        "Progress note: My algorithms are having fun with your unique patterns! ✨"
+      ],
+      80: [
+        "Achievement unlocked: Confusing AI systems with your complexity! 🏆",
+        "Warning: Intelligence levels rising beyond normal parameters 📈",
+        "Update: Your hermetic signature is becoming genuinely intriguing... 🌟"
+      ],
+      90: [
+        "Final stretch: Your soul's blueprint is almost legend-worthy! 🚀",
+        "Alert: Approaching maximum personality analysis capacity! 💫",
+        "Status: Your hermetic profile is reaching epic proportions... 🎭"
+      ],
+      100: [
+        "Mission accomplished! Your soul's intelligence map is ready for exploration 🎯",
+        "Complete: Your hermetic profile has achieved legendary status! 👑",
+        "Success: Your personality analysis is now a work of art! 🎨"
+      ]
+    };
+
+    const messageArray = messages[milestone];
+    if (messageArray) {
+      const randomIndex = Math.floor(Math.random() * messageArray.length);
+      const message = messageArray[randomIndex];
       
-      if (step.includes('career_vocational')) return t('personalizedMessages.career_vocational');
-      if (step.includes('rhythm_analyst')) return t('personalizedMessages.rhythm_analyst');
-      if (step.includes('mentalism_analyst')) return t('personalizedMessages.mentalism_analyst');
-      if (step.includes('fractal_synthesis')) return t('personalizedMessages.fractal_synthesis');
-      if (step.includes('processing')) return t('personalizedMessages.processing');
-      
-      return t('personalizedMessages.default');
-    };
-    
-    // Get translated stage messages
-    const getStageMessage = (stage: string) => {
-      const stageKey = `hermeticProgress.stages.${stage}`;
       return {
-        message: t(`${stageKey}.message`),
-        description: t(`${stageKey}.description`)
+        id: `hermetic-progress-${milestone}-${Date.now()}`,
+        text: message,
+        module: 'Hermetic Intelligence',
+        type: 'hermetic_progress',
+        confidence: 100,
+        evidence: [
+          `Analysis progress: ${progress}%`,
+          `Current stage: ${currentStep || 'Processing personality matrix'}`,
+          ...(stepType ? [`Processing: ${stepType} data`] : [])
+        ],
+        timestamp: new Date(),
+        acknowledged: false,
+        showContinue: true
       };
-    };
-    
-    // Get translated milestone messages
-    const getMilestoneMessage = (milestone: number) => {
-      const milestoneKey = `hermeticProgress.milestones.${milestone}`;
-      return {
-        message: t(`${milestoneKey}.message`),
-        description: t(`${milestoneKey}.description`)
-      };
-    };
-    
-    // Determine which message to use
-    let selectedMessage: { message: string; description: string };
-    
-    if (stepType && t(`hermeticProgress.stages.${stepType}.message`)) {
-      selectedMessage = getStageMessage(stepType);
-    } else {
-      const milestone = Math.floor(progress / 10) * 10;
-      selectedMessage = getMilestoneMessage(milestone);
     }
     
-    return {
-      id: `hermetic-progress-${progress}-${Date.now()}`,
-      text: `${selectedMessage.message} ${selectedMessage.description}`,
-      module: 'Hermetic Intelligence',
-      type: 'hermetic_progress',
-      personalizedMessage: getPersonalizedMessage(currentStep),
-      confidence: 1.0,
-      evidence: [
-        interpolateTranslation(t('hermeticProgress.progressTemplate'), { progress: progress.toString() }),
-        interpolateTranslation(t('hermeticProgress.currentStageTemplate'), { stage: currentStep || 'Processing personality matrix' }),
-        ...(stepType ? [interpolateTranslation(t('hermeticProgress.learningFromTemplate'), { type: stepType })] : [])
-      ],
-      timestamp: new Date(),
-      acknowledged: false,
-      showContinue: true
-    };
+    return undefined;
   }, []);
 
-  // Clear progress insight and mark milestone as displayed
-  const clearProgressInsight = useCallback((milestone?: number) => {
-    // Get milestone from parameter or calculate from current progress
-    const currentMilestone = milestone || Math.floor(status.progress / 10) * 10;
-    
-    console.log(`🧹 CLEAR INSIGHT: Clearing progress insight for milestone ${currentMilestone}%`);
-    
-    // Mark this milestone as already displayed to prevent regeneration
-    if (currentMilestone >= 0) {
-      setDisplayedMilestones(prev => {
-        const updated = new Set(prev);
-        updated.add(currentMilestone);
-        console.log(`🎯 MILESTONE TRACKING: Added ${currentMilestone}% to displayed milestones:`, [...updated]);
-        return updated;
-      });
-      setLastProgressMilestone(currentMilestone);
-    }
-    
+  // Clear progress insight
+  const clearProgressInsight = useCallback(() => {
     setStatus(prev => ({
       ...prev,
       progressInsight: undefined,
@@ -165,9 +141,6 @@ export const useHermeticReportStatus = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.log('🔍 HERMETIC STATUS: No authenticated user');
-        // Reset milestone tracking when no user
-        setDisplayedMilestones(new Set());
-        setLastProgressMilestone(0);
         setStatus({ 
           hasReport: false, 
           loading: false, 
@@ -181,38 +154,6 @@ export const useHermeticReportStatus = () => {
         milestoneGlow: false,
       });
         return;
-      }
-
-      // AGGRESSIVE JOB DETECTION: Check for very recent jobs first (within last 30 seconds)
-      const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString();
-      const { data: veryRecentJobs } = await supabase
-        .from('hermetic_processing_jobs')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('created_at', thirtySecondsAgo)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (veryRecentJobs && veryRecentJobs.length > 0) {
-        console.log('🚀 HERMETIC STATUS: Detected very recent job within 30s:', veryRecentJobs[0]);
-        
-        // Reset milestone tracking for new generation
-        setDisplayedMilestones(new Set());
-        setLastProgressMilestone(0);
-        console.log('🔄 MILESTONE RESET: Cleared displayed milestones for new generation');
-        
-        // Immediately set as generating to bridge the gap
-        setStatus(prev => ({ 
-          ...prev, 
-          loading: false, 
-          isGenerating: true,
-          progress: 5, // Show immediate progress
-          currentStep: 'Starting hermetic analysis...',
-          hasZombieJob: false,
-          zombieJobInfo: null
-        }));
-        
-        // Continue with normal flow to get full details
       }
 
       console.log('🔍 HERMETIC STATUS: Checking status for user:', user.id);
@@ -296,12 +237,11 @@ export const useHermeticReportStatus = () => {
         currentStep = 'Report generated but not saved - please retry';
       }
 
-      // Progress milestone detection (every 10% starting from 0%) - prevent duplicates
+      // Progress milestone detection (every 10% starting from 50%)
       const currentMilestone = Math.floor(progress / 10) * 10;
-      const shouldShowProgressMessage = progress >= 0 && 
-                                       currentMilestone >= 0 &&
+      const shouldShowProgressMessage = progress >= 50 && 
+                                       currentMilestone > lastProgressMilestone && 
                                        currentMilestone % 10 === 0 &&
-                                       !displayedMilestones.has(currentMilestone) &&
                                        !hasZombieJob &&
                                        isGenerating;
       
@@ -310,16 +250,12 @@ export const useHermeticReportStatus = () => {
       let milestoneGlow = status.milestoneGlow;
       
       if (shouldShowProgressMessage) {
-        console.log(`🎉 HERMETIC MILESTONE: Reached ${currentMilestone}% progress! (First time)`);
-        console.log(`🎯 MILESTONE TRACKING: Current displayed milestones:`, [...displayedMilestones]);
-        
+        console.log(`🎉 HERMETIC MILESTONE: Reached ${currentMilestone}% progress!`);
         progressInsight = generateProgressInsight(progress, currentStep);
         progressInsightReady = true;
         milestoneGlow = [75, 100].includes(currentMilestone);
-        
-        // Note: We don't mark as displayed here - only when user dismisses
-        // This prevents the insight from reappearing due to polling
-        
+        setLastProgressMilestone(currentMilestone);
+
         // Auto-clear milestone glow after 3 seconds
         if (milestoneGlow) {
           setTimeout(() => {

@@ -33,7 +33,6 @@ export interface HACSInsight {
   timestamp: Date;
   acknowledged: boolean;
   showContinue?: boolean;
-  personalizedMessage?: string;
   onContinue?: () => void;
   priority?: 'low' | 'medium' | 'high' | 'critical';
 }
