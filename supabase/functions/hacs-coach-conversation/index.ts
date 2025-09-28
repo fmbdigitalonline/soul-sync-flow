@@ -388,7 +388,7 @@ serve(async (req) => {
       const factsSection = structuredFacts.length > 0 ? `
 
 PRODUCTIVITY BLUEPRINT INSIGHTS FOR ${userName.toUpperCase()}:
-${structuredFacts.map(fact => {
+${structuredFacts.map((fact: any) => {
   const value = fact.value_json?.value || fact.value_json;
   const label = fact.value_json?.label || fact.key.replace(/_/g, ' ');
   return `• **${label}**: ${typeof value === 'object' ? JSON.stringify(value) : value}`;
@@ -397,7 +397,7 @@ ${structuredFacts.map(fact => {
       const narrativeSection = semanticChunks.length > 0 ? `
 
 PERSONALITY-BASED PRODUCTIVITY INSIGHTS:
-${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')}` : '';
+${semanticChunks.map((chunk: any) => chunk.chunk_content || chunk.content).join('\n\n')}` : '';
 
       systemPrompt = `You are ${userName}'s specialized PRODUCTIVITY COACH with deep knowledge of their personality blueprint and productivity patterns.
 
@@ -633,7 +633,7 @@ Provide actionable, practical productivity advice. Stay focused on productivity 
     console.error('❌ Enhanced Productivity Coach Error:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         response: 'Your productivity coach is temporarily gathering insights. Please try again in a moment.'
       }),
       {

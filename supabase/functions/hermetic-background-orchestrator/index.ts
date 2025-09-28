@@ -257,7 +257,7 @@ serve(async (req) => {
         .from('hermetic_processing_jobs')
         .update({
           current_step: `${nextStage}[${nextStepIndex}] - retry pending`,
-          error_message: `Self-invocation failed: ${error.message} - retry will be attempted`,
+          error_message: `Self-invocation failed: ${error instanceof Error ? error.message : String(error)} - retry will be attempted`,
           updated_at: new Date().toISOString()
         })
         .eq('id', jobId);
@@ -280,8 +280,8 @@ serve(async (req) => {
     }
     
     console.error(`❌ Orchestrator failed for job ${errorJobId || 'unknown'}:`, {
-      error: error.message,
-      stack: error.stack,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : 'No stack trace',
       jobId: errorJobId,
       requestBody: originalRequestBody
     });
@@ -290,8 +290,8 @@ serve(async (req) => {
       // Enhanced error logging similar to client service
       const errorUpdate = {
         status: 'failed',
-        current_step: `Error: ${error.message}`,
-        error_message: `Processing failed at step: ${error.message}. Check logs for recovery options.`,
+        current_step: `Error: ${error instanceof Error ? error.message : String(error)}`,
+        error_message: `Processing failed at step: ${error instanceof Error ? error.message : String(error)}. Check logs for recovery options.`,
         updated_at: new Date().toISOString()
       };
       
@@ -372,7 +372,7 @@ Focus on your specific system expertise.`
   }
   
   const content = data.content.trim();
-  const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+  const wordCount = content.split(/\s+/).filter((word: string) => word.length > 0).length;
   
   console.log(`📊 ${translator} SUCCESS:`, {
     wordCount,
@@ -444,7 +444,7 @@ Focus on your specific system expertise.`
       ...(progressData.synthesis_sections || [])
     ];
     const currentWordCount = allCurrentSections.reduce((total, section) => {
-      return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+      return total + (section.content || '').split(/\s+/).filter((word: string) => word.length > 0).length;
     }, 0);
     
     await updateJobStatus(jobId, 'processing', `Completed ${translator}`, undefined, currentWordCount);
@@ -503,7 +503,7 @@ Generate comprehensive analysis with practical applications.`
   }
   
   const content = data.content.trim();
-  const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+  const wordCount = content.split(/\s+/).filter((word: string) => word.length > 0).length;
   
   console.log(`📊 ${agent} SUCCESS:`, {
     wordCount,
@@ -575,8 +575,8 @@ Generate comprehensive analysis with practical applications.`
       ...(progressData.intelligence_sections || []),
       ...(progressData.synthesis_sections || [])
     ];
-    const currentWordCount = allCurrentSections.reduce((total, section) => {
-      return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    const currentWordCount = allCurrentSections.reduce((total: number, section: any) => {
+      return total + (section.content || '').split(/\s+/).filter((word: string) => word.length > 0).length;
     }, 0);
     
     await updateJobStatus(jobId, 'processing', `Completed ${agent}`, undefined, currentWordCount);
@@ -671,8 +671,8 @@ Focus specifically on Gate ${gateNumber} and how it expresses through each Herme
       ...gateSections,
       ...(progressData.intelligence_sections || [])
     ];
-    const currentWordCount = allCurrentSections.reduce((total, section) => {
-      return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    const currentWordCount = allCurrentSections.reduce((total: number, section: any) => {
+      return total + (section.content || '').split(/\s+/).filter((word: string) => word.length > 0).length;
     }, 0);
     
     await updateJobStatus(jobId, 'processing', `Completed Gate ${gateNumber} analysis`, undefined, currentWordCount);
@@ -700,7 +700,7 @@ async function processSingleIntelligenceAgent(job: any, agent: string, language:
     console.log(`📋 Using dedicated execution-bias-analyst function for ${agent}`);
     
     // Compile hermetic analysis content
-    const hermeticChunk = allSections.map(s => s.content).join('\n\n');
+    const hermeticChunk = allSections.map((s: any) => s.content).join('\n\n');
     
     // Extract previous intelligence insights from completed sub-jobs
     const completedIntelligence = progress_data?.intelligence_sections || [];
@@ -734,7 +734,7 @@ async function processSingleIntelligenceAgent(job: any, agent: string, language:
 ${JSON.stringify(blueprint, null, 2)}
 
 Enhanced Context from Analysis:
-${allSections.map(s => s.content.substring(0, 500)).join('\n\n')}
+${allSections.map((s: any) => s.content.substring(0, 500)).join('\n\n')}
 
 Provide 800+ words of deep analysis focused specifically on the ${dimensionName} dimension.`
           }
@@ -811,8 +811,8 @@ Provide 800+ words of deep analysis focused specifically on the ${dimensionName}
       ...(progressData.gate_sections || []),
       ...intelligenceSections
     ];
-    const currentWordCount = allCurrentSections.reduce((total, section) => {
-      return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    const currentWordCount = allCurrentSections.reduce((total: number, section: any) => {
+      return total + (section.content || '').split(/\s+/).filter((word: string) => word.length > 0).length;
     }, 0);
     
     await updateJobStatus(jobId, 'processing', `Completed ${dimensionName} intelligence extraction`, undefined, currentWordCount);
@@ -831,7 +831,7 @@ async function processSingleSynthesisAgent(job: any, synthesisType: string, lang
   const intelligenceSections = progress_data?.intelligence_sections || [];
   
   const allSections = [...systemSections, ...hermeticSections, ...gateSections, ...intelligenceSections];
-  const contextSummary = allSections.map(s => s.content.substring(0, 800)).join('\n\n');
+  const contextSummary = allSections.map((s: any) => s.content.substring(0, 800)).join('\n\n');
   
   let expectedWords = 1500;
   if (synthesisType === 'comprehensive_overview') {
@@ -925,8 +925,8 @@ Generate ${expectedWords.toLocaleString()}+ words of captivating, profile-style 
       ...(progressData.intelligence_sections || []),
       ...synthesisSections
     ];
-    const currentWordCount = allCurrentSections.reduce((total, section) => {
-      return total + (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+    const currentWordCount = allCurrentSections.reduce((total: number, section: any) => {
+      return total + (section.content || '').split(/\s+/).filter((word: string) => word.length > 0).length;
     }, 0);
     
     await updateJobStatus(jobId, 'processing', `Completed ${synthesisType} synthesis`, undefined, currentWordCount);
@@ -946,34 +946,34 @@ async function finalizeReport(job: any) {
   const synthesisSections = progress_data?.synthesis_sections || [];
   
   const finalSections = [...systemSections, ...hermeticSections, ...gateSections, ...intelligenceSections, ...synthesisSections];
-  const totalWordCount = finalSections.reduce((total, section) => {
-    const actualWordCount = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+  const totalWordCount = finalSections.reduce((total: number, section: any) => {
+    const actualWordCount = (section.content || '').split(/\s+/).filter((word: string) => word.length > 0).length;
     return total + actualWordCount;
   }, 0);
   
   // CRITICAL: Enhanced logging and validation with detailed breakdown
-  const systemWordCount = systemSections.reduce((total, section) => {
-    const words = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+  const systemWordCount = systemSections.reduce((total: number, section: any) => {
+    const words = (section.content || '').split(/\s+/).filter((word: string) => word.length > 0).length;
     return total + words;
   }, 0);
   
-  const hermeticWordCount = hermeticSections.reduce((total, section) => {
-    const words = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+  const hermeticWordCount = hermeticSections.reduce((total: number, section: any) => {
+    const words = (section.content || '').split(/\s+/).filter((word: string) => word.length > 0).length;
     return total + words;
   }, 0);
   
-  const gateWordCount = gateSections.reduce((total, section) => {
-    const words = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+  const gateWordCount = gateSections.reduce((total: number, section: any) => {
+    const words = (section.content || '').split(/\s+/).filter((word: string) => word.length > 0).length;
     return total + words;
   }, 0);
   
-  const intelligenceWordCount = intelligenceSections.reduce((total, section) => {
-    const words = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+  const intelligenceWordCount = intelligenceSections.reduce((total: number, section: any) => {
+    const words = (section.content || '').split(/\s+/).filter((word: string) => word.length > 0).length;
     return total + words;
   }, 0);
   
-  const synthesisWordCount = synthesisSections.reduce((total, section) => {
-    const words = (section.content || '').split(/\s+/).filter(word => word.length > 0).length;
+  const synthesisWordCount = synthesisSections.reduce((total: number, section: any) => {
+    const words = (section.content || '').split(/\s+/).filter((word: string) => word.length > 0).length;
     return total + words;
   }, 0);
 
@@ -1030,7 +1030,7 @@ async function finalizeReport(job: any) {
   // CRITICAL FIX: Build proper personality report structure for database storage
   const personalityReportContent = {
     // Comprehensive Overview (from synthesis)
-    comprehensive_overview: synthesisSections.find(s => s.agent_type === 'comprehensive_overview')?.content || "Overview synthesis pending - please regenerate report.",
+    comprehensive_overview: synthesisSections.find((s: any) => s.agent_type === 'comprehensive_overview')?.content || "Overview synthesis pending - please regenerate report.",
     
     // Standard personality report sections (enhanced with synthesis)
     core_personality_pattern: combineRelevantSections(finalSections, ['mbti_hermetic_translator', 'mentalism_analyst']),
@@ -1038,35 +1038,35 @@ async function finalizeReport(job: any) {
     relationship_style: combineRelevantSections(finalSections, ['astrology_hermetic_translator', 'polarity_analyst']),
     life_path_purpose: combineRelevantSections(finalSections, ['numerology_hermetic_translator', 'correspondence_analyst']),
     current_energy_timing: combineRelevantSections(finalSections, ['chinese_astrology_hermetic_translator', 'rhythm_analyst']),
-    integrated_summary: synthesisSections.find(s => s.agent_type === 'comprehensive_overview')?.content || `Comprehensive hermetic analysis revealing ${totalWordCount.toLocaleString()} words of deep personality insights with shadow work integration and synthesis.`,
+    integrated_summary: synthesisSections.find((s: any) => s.agent_type === 'comprehensive_overview')?.content || `Comprehensive hermetic analysis revealing ${totalWordCount.toLocaleString()} words of deep personality insights with shadow work integration and synthesis.`,
     
     // Enhanced Hermetic Blueprint sections
-    hermetic_fractal_analysis: synthesisSections.find(s => s.agent_type === 'fractal_synthesis')?.content || combineRelevantSections(finalSections, ['correspondence_analyst', 'mentalism_analyst']),
-    consciousness_integration_map: synthesisSections.find(s => s.agent_type === 'consciousness_mapping')?.content || combineRelevantSections(finalSections, intelligenceSections.map(s => s.agent_type)),
-    practical_activation_framework: synthesisSections.find(s => s.agent_type === 'practical_applications')?.content || combineRelevantSections(finalSections, ['vibration_analyst', 'gender_analyst']),
+    hermetic_fractal_analysis: synthesisSections.find((s: any) => s.agent_type === 'fractal_synthesis')?.content || combineRelevantSections(finalSections, ['correspondence_analyst', 'mentalism_analyst']),
+    consciousness_integration_map: synthesisSections.find((s: any) => s.agent_type === 'consciousness_mapping')?.content || combineRelevantSections(finalSections, intelligenceSections.map((s: any) => s.agent_type)),
+    practical_activation_framework: synthesisSections.find((s: any) => s.agent_type === 'practical_applications')?.content || combineRelevantSections(finalSections, ['vibration_analyst', 'gender_analyst']),
     
     // Seven laws integration
     seven_laws_integration: {
-      mentalism: hermeticSections.find(s => s.agent_type === 'mentalism_analyst')?.content || '',
-      correspondence: hermeticSections.find(s => s.agent_type === 'correspondence_analyst')?.content || '',
-      vibration: hermeticSections.find(s => s.agent_type === 'vibration_analyst')?.content || '',
-      polarity: hermeticSections.find(s => s.agent_type === 'polarity_analyst')?.content || '',
-      rhythm: hermeticSections.find(s => s.agent_type === 'rhythm_analyst')?.content || '',
-      causation: hermeticSections.find(s => s.agent_type === 'causation_analyst')?.content || '',
-      gender: hermeticSections.find(s => s.agent_type === 'gender_analyst')?.content || ''
+      mentalism: hermeticSections.find((s: any) => s.agent_type === 'mentalism_analyst')?.content || '',
+      correspondence: hermeticSections.find((s: any) => s.agent_type === 'correspondence_analyst')?.content || '',
+      vibration: hermeticSections.find((s: any) => s.agent_type === 'vibration_analyst')?.content || '',
+      polarity: hermeticSections.find((s: any) => s.agent_type === 'polarity_analyst')?.content || '',
+      rhythm: hermeticSections.find((s: any) => s.agent_type === 'rhythm_analyst')?.content || '',
+      causation: hermeticSections.find((s: any) => s.agent_type === 'causation_analyst')?.content || '',
+      gender: hermeticSections.find((s: any) => s.agent_type === 'gender_analyst')?.content || ''
     },
     
     // System translations
     system_translations: {
-      mbti_hermetic: systemSections.find(s => s.agent_type === 'mbti_hermetic_translator')?.content || '',
-      astrology_hermetic: systemSections.find(s => s.agent_type === 'astrology_hermetic_translator')?.content || '',
-      numerology_hermetic: systemSections.find(s => s.agent_type === 'numerology_hermetic_translator')?.content || '',
-      human_design_hermetic: systemSections.find(s => s.agent_type === 'human_design_hermetic_translator')?.content || '',
-      chinese_astrology_hermetic: systemSections.find(s => s.agent_type === 'chinese_astrology_hermetic_translator')?.content || ''
+      mbti_hermetic: systemSections.find((s: any) => s.agent_type === 'mbti_hermetic_translator')?.content || '',
+      astrology_hermetic: systemSections.find((s: any) => s.agent_type === 'astrology_hermetic_translator')?.content || '',
+      numerology_hermetic: systemSections.find((s: any) => s.agent_type === 'numerology_hermetic_translator')?.content || '',
+      human_design_hermetic: systemSections.find((s: any) => s.agent_type === 'human_design_hermetic_translator')?.content || '',
+      chinese_astrology_hermetic: systemSections.find((s: any) => s.agent_type === 'chinese_astrology_hermetic_translator')?.content || ''
     },
     
     // Gate analyses
-    gate_analyses: gateSections.reduce((gates, section) => {
+    gate_analyses: gateSections.reduce((gates: any, section: any) => {
       if (section.gate_number) {
         gates[`gate_${section.gate_number}`] = section.content;
       }
@@ -1084,19 +1084,19 @@ async function finalizeReport(job: any) {
     word_count: totalWordCount,
     // Enhanced metadata tracking similar to client service expectations
     generation_metadata: {
-      agents_used: finalSections.map(s => s.agent_type),
+      agents_used: finalSections.map((s: any) => s.agent_type),
       total_processing_time: Date.now() - new Date(job.created_at).getTime(),
       hermetic_depth_score: Math.min(100, Math.floor(totalWordCount / 500)),
-      gates_analyzed: gateSections.map(s => s.gate_number).filter(Boolean),
+      gates_analyzed: gateSections.map((s: any) => s.gate_number).filter(Boolean),
       intelligence_status: 'completed',
-      intelligence_analysts: intelligenceSections.map(s => s.agent_type),
+      intelligence_analysts: intelligenceSections.map((s: any) => s.agent_type),
       // Additional client service compatibility
       word_count_breakdown: {
-        system_sections: systemSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
-        hermetic_sections: hermeticSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
-        gate_sections: gateSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
-        intelligence_sections: intelligenceSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
-        synthesis_sections: synthesisSections.reduce((sum, s) => sum + (s.word_count || 0), 0)
+        system_sections: systemSections.reduce((sum: number, s: any) => sum + (s.word_count || 0), 0),
+        hermetic_sections: hermeticSections.reduce((sum: number, s: any) => sum + (s.word_count || 0), 0),
+        gate_sections: gateSections.reduce((sum: number, s: any) => sum + (s.word_count || 0), 0),
+        intelligence_sections: intelligenceSections.reduce((sum: number, s: any) => sum + (s.word_count || 0), 0),
+        synthesis_sections: synthesisSections.reduce((sum: number, s: any) => sum + (s.word_count || 0), 0)
       },
       processing_quality: totalWordCount >= 40000 ? 'comprehensive' : 'partial',
       version: '2.0'
@@ -1113,11 +1113,11 @@ async function finalizeReport(job: any) {
       synthesisSections: synthesisSections.length
     },
     wordCountBreakdown: {
-      system: systemSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
-      hermetic: hermeticSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
-      gates: gateSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
-      intelligence: intelligenceSections.reduce((sum, s) => sum + (s.word_count || 0), 0),
-      synthesis: synthesisSections.reduce((sum, s) => sum + (s.word_count || 0), 0)
+      system: systemSections.reduce((sum: number, s: any) => sum + (s.word_count || 0), 0),
+      hermetic: hermeticSections.reduce((sum: number, s: any) => sum + (s.word_count || 0), 0),
+      gates: gateSections.reduce((sum: number, s: any) => sum + (s.word_count || 0), 0),
+      intelligence: intelligenceSections.reduce((sum: number, s: any) => sum + (s.word_count || 0), 0),
+      synthesis: synthesisSections.reduce((sum: number, s: any) => sum + (s.word_count || 0), 0)
     },
     totalWords: totalWordCount
   });

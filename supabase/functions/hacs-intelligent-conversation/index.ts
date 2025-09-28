@@ -47,7 +47,6 @@ function getThinkingStyleDescription(mbtiType: string): string {
     'ISTP': 'practical and adaptable craftsperson',
     'ESTP': 'bold and perceptive entrepreneur',
     'INTP': 'logical and innovative thinker',
-    'ENTP': 'quick-witted and clever innovator',
     'ISTJ': 'practical and fact-minded logistician',
     'ESTJ': 'efficient and hardworking executive'
   };
@@ -388,7 +387,7 @@ serve(async (req) => {
 
         // Additional improvements based on content complexity
         if (userMessage.length > 100) {
-          moduleImprovements.TWS = 0.1; // Temporal wisdom from complex discussions
+          moduleImprovements.ACS = (moduleImprovements.ACS || 0) + 0.1; // Temporal wisdom from complex discussions
         }
 
         const currentModuleScores = intelligenceData.module_scores || {};
@@ -477,7 +476,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in hacs-intelligent-conversation:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       response: 'I\'m here to support your growth journey.',
       generatedQuestion: null
     }), {
@@ -499,14 +498,14 @@ async function generateAutonomousQuestion(
   try {
     // CRITICAL FIX: Safely handle module scores with null reference protection
     const moduleScores = intelligenceData.module_scores || {};
-    const moduleEntries = Object.entries(moduleScores);
+    let moduleEntries: [string, number][] = Object.entries(moduleScores).map(([key, value]) => [key, Number(value)]);
     
     // Safety check: ensure we have module scores to work with
     if (moduleEntries.length === 0) {
       console.warn('No module scores available, using default HACS modules');
       // Initialize with default module scores if none exist
-      const defaultModules = HACS_MODULES.reduce((acc, module) => ({ ...acc, [module]: 0 }), {});
-      moduleEntries.push(...Object.entries(defaultModules));
+      const defaultModules: Record<string, number> = HACS_MODULES.reduce((acc, module) => ({ ...acc, [module]: 0 }), {});
+      moduleEntries = Object.entries(defaultModules).map(([key, value]) => [key, Number(value)]);
     }
     
     const lowestModule = moduleEntries
@@ -546,7 +545,7 @@ async function generateAutonomousQuestion(
       goals: blueprint.goal_stack || []
     } : null,
     recentConversation: messageHistory.slice(-3),
-    recentQuestions: recentQuestions?.map(q => q.question_text) || []
+    recentQuestions: recentQuestions?.map((q: any) => q.question_text) || []
   };
 
   const systemPrompt = `You are HACS (Holistic Adaptive Cognitive System), an advanced AI learning companion${personalityContext?.name ? ` for ${personalityContext.name}` : ''}.

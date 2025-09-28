@@ -155,7 +155,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in hacs-response-analysis function:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       analysis: {
         comprehensionScore: 0,
         learningEvidence: [],

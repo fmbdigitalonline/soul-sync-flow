@@ -96,7 +96,7 @@ serve(async (req) => {
       behavioralInsights,
       learningProgress,
       blueprint,
-      recentConversations,
+      recentConversations || [],
       currentContext
     );
 
@@ -201,7 +201,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in hacs-authentic-insights function:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       insight: null
     }), {
       status: 500,
