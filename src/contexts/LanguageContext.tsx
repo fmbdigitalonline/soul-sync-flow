@@ -947,8 +947,8 @@ const translations: Record<Language, Translations> = {
       },
       milestones: {
         0: {
-          message: "Beginning to learn your soul's intelligence patterns...",
-          description: "Initiating comprehensive hermetic intelligence mapping to understand your unique consciousness signature."
+          message: "I am learning about you...",
+          description: "You can explore your blueprint and use the app in the meantime, while I learn all the parts of your blueprint and personality."
         },
         10: {
           message: "Learning your foundational personality structures...",
@@ -2468,8 +2468,8 @@ const translations: Record<Language, Translations> = {
       },
       milestones: {
         0: {
-          message: "Beginnen te leren van je ziel's intelligentiepatronen...",
-          description: "Initiëren van uitgebreide hermetische intelligentie-mapping om je unieke bewustzijnssignatuur te begrijpen."
+          message: "Ik ben aan het leren over jou...",
+          description: "Je kunt ondertussen je blauwdruk bekijken en de app verkennen, terwijl ik je alle onder delen van je blauwdruk en persoonlijkheid aan het leren ben."
         },
         10: {
           message: "Leren je fundamentale persoonlijkheidsstructuren...",
