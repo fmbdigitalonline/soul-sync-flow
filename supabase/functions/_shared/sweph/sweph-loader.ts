@@ -1,5 +1,5 @@
 
-import * as path from "https://deno.land/std@0.168.0/path/mod.ts";
+import * as path from "https://deno.land/std@0.177.0/path/mod.ts";
 import initializeWasm from "./astro.js";  // Default import is now the init function
 
 // Cache for the initialized WASM module (as a promise to prevent parallel compilation)
