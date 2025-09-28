@@ -163,14 +163,14 @@ function extractBlueprintFacts(blueprint: any, userId: string): any[] {
     
     // Conscious personality gates
     if (gates.conscious_personality && Array.isArray(gates.conscious_personality)) {
-      gates.conscious_personality.forEach((gate, index) => {
+      gates.conscious_personality.forEach((gate: string, index: number) => {
         addFact('human_design_gates', `conscious_${index + 1}`, gate, `Conscious Gate ${index + 1}`)
       })
     }
     
     // Unconscious design gates  
     if (gates.unconscious_design && Array.isArray(gates.unconscious_design)) {
-      gates.unconscious_design.forEach((gate, index) => {
+      gates.unconscious_design.forEach((gate: string, index: number) => {
         addFact('human_design_gates', `unconscious_${index + 1}`, gate, `Unconscious Gate ${index + 1}`)
       })
     }

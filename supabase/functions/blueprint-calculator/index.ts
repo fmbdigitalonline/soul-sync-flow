@@ -15,7 +15,8 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     
-    // Add Human Design test endpoint FIRST for testing your specific birth data
+    // Temporarily disable test endpoints with TypeScript issues
+    // Note: test-human-design and debug-calculation are still enabled
     if (url.pathname.includes('/test-human-design')) {
       const { default: testHumanDesign } = await import('./test-human-design.ts');
       return await testHumanDesign(req);
@@ -27,18 +28,14 @@ serve(async (req) => {
       return await debugEndpoint(req);
     }
     
-    // Handle test endpoints FIRST, before any other processing
-    // Temporarily disable problematic test endpoints for TypeScript stability
-    
-    if (url.pathname.includes('/test-astronomia') || 
-        url.pathname.includes('/test-moon-minimal') || 
-        url.pathname.includes('/test-astrometry') ||
-        url.pathname.includes('/test-available-astronomy') ||
-        url.pathname.includes('/test-wasm')) {
+    // ALL TEST ENDPOINTS TEMPORARILY DISABLED FOR TYPESCRIPT STABILITY
+    if (url.pathname.includes('/test-')) {
+      const testType = url.pathname.split('/test-')[1] || 'unknown';
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: `Test endpoint ${url.pathname} temporarily disabled for TypeScript stability` 
+          message: `Test endpoint '${testType}' temporarily disabled for TypeScript stability`,
+          note: "All test endpoints are disabled to prevent TypeScript compilation issues"
         }),
         { 
           headers: { 
