@@ -692,16 +692,44 @@ async function processSingleIntelligenceAgent(job: any, agent: string, language:
     ...(progress_data?.gate_sections || [])
   ];
   
-  const { data, error } = await supabase.functions.invoke('openai-agent', {
-    body: {
-      messages: [
-        {
-          role: 'system',
-          content: getPersonalizedIntelligencePrompt(agent, dimensionName, blueprint, language)
-        },
-        {
-          role: 'user',
-          content: `Generate comprehensive ${dimensionName} analysis for this blueprint:
+  let data: any;
+  let error: any;
+  
+  // Handle execution_bias_analyst with dedicated edge function
+  if (agent === 'execution_bias_analyst') {
+    console.log(`📋 Using dedicated execution-bias-analyst function for ${agent}`);
+    
+    // Compile hermetic analysis content
+    const hermeticChunk = allSections.map(s => s.content).join('\n\n');
+    
+    // Extract previous intelligence insights from completed sub-jobs
+    const completedIntelligence = progress_data?.intelligence_sections || [];
+    const previousInsights = completedIntelligence.map((section: any) => 
+      `${section.intelligence_dimension}: ${section.content.substring(0, 300)}...`
+    ).join('\n\n');
+    
+    const response = await supabase.functions.invoke('execution-bias-analyst', {
+      body: {
+        hermeticChunk,
+        previousInsights,
+        blueprintContext: blueprint
+      }
+    });
+    
+    data = response.data;
+    error = response.error;
+  } else {
+    // Use generic openai-agent for all other intelligence agents
+    const response = await supabase.functions.invoke('openai-agent', {
+      body: {
+        messages: [
+          {
+            role: 'system',
+            content: getPersonalizedIntelligencePrompt(agent, dimensionName, blueprint, language)
+          },
+          {
+            role: 'user',
+            content: `Generate comprehensive ${dimensionName} analysis for this blueprint:
 
 ${JSON.stringify(blueprint, null, 2)}
 
@@ -709,12 +737,16 @@ Enhanced Context from Analysis:
 ${allSections.map(s => s.content.substring(0, 500)).join('\n\n')}
 
 Provide 800+ words of deep analysis focused specifically on the ${dimensionName} dimension.`
-        }
-      ],
-      model: 'gpt-4.1-mini-2025-04-14'
-      // FIXED: Removed temperature parameter for GPT-4.1+ models
-    }
-  });
+          }
+        ],
+        model: 'gpt-4.1-mini-2025-04-14'
+        // FIXED: Removed temperature parameter for GPT-4.1+ models
+      }
+    });
+    
+    data = response.data;
+    error = response.error;
+  }
   
   if (error) throw new Error(`Failed on intelligence agent ${agent}: ${error.message}`);
   
