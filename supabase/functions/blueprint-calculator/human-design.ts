@@ -494,28 +494,39 @@ function calculateHDDefinition(centers: any): string {
   return "Quadruple Split Definition";
 }
 
+type HdType = 'Generator' | 'Manifesting Generator' | 'Manifestor' | 'Projector' | 'Reflector';
+type ProfileLineNum = 1 | 2 | 3 | 4 | 5 | 6;
+
 function getStrategyForType(type: string): string {
-  const strategies = {
+  const strategies: Record<HdType, string> = {
     'Generator': 'Wait to respond',
     'Manifesting Generator': 'Wait to respond then inform',
     'Manifestor': 'Inform before acting',
     'Projector': 'Wait for the invitation',
     'Reflector': 'Wait a lunar cycle'
   };
-  return strategies[type] || 'Unknown';
+  return strategies[type as HdType] || 'Unknown';
 }
 
-function getNotSelfThemeForType(type) {
-  const themes = {
+function getNotSelfThemeForType(type: string): string {
+  const themes: Record<HdType, string> = {
     'Generator': 'Frustration',
     'Manifesting Generator': 'Frustration and anger',
     'Manifestor': 'Anger',
     'Projector': 'Bitterness',
     'Reflector': 'Disappointment'
   };
-  return themes[type] || 'Unknown';
+  return themes[type as HdType] || 'Unknown';
 }
 
 function getProfileLabel(lineNum: number): string {
-  return PROFILE_LABELS[lineNum] || "";
+  const profileLabels: Record<ProfileLineNum, string> = {
+    1: "Investigator", 
+    2: "Hermit", 
+    3: "Martyr", 
+    4: "Opportunist", 
+    5: "Heretic", 
+    6: "Role Model"
+  };
+  return profileLabels[lineNum as ProfileLineNum] || "";
 }

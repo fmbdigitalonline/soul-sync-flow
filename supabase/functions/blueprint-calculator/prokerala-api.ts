@@ -270,7 +270,7 @@ export default async function handler(req: Request) {
     return new Response(
       JSON.stringify({
         error: "Prokerala planet-position API test failed",
-        details: error.message,
+        details: error instanceof Error ? error.message : String(error),
         code: "PROKERALA_PLANET_POSITION_API_ERROR"
       }),
       { 
