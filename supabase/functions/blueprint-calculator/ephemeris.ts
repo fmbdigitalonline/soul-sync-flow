@@ -269,7 +269,7 @@ export async function calculatePlanetaryPositions(
     return celestialData;
   } catch (error) {
     console.error('Error calculating planetary positions:', error);
-    throw new Error(`Failed to calculate planetary positions: ${error.message}`);
+    throw new Error(`Failed to calculate planetary positions: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

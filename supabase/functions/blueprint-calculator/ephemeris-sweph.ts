@@ -2,10 +2,52 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { initializeSwephModule } from '../_shared/sweph/sweph-loader.ts';
 
+// Type definitions
+interface CelestialPosition {
+  longitude: number;
+  latitude: number;
+  distance?: number;
+  longitudeSpeed?: number;
+  latitudeSpeed?: number;
+  distanceSpeed?: number;
+  house?: number;
+}
+
+interface HouseCusp {
+  cusp: number;
+  longitude: number;
+}
+
+interface PlanetaryPositions {
+  [key: string]: any;
+  sun: CelestialPosition;
+  moon: CelestialPosition;
+  mercury: CelestialPosition;
+  venus: CelestialPosition;
+  mars: CelestialPosition;
+  jupiter: CelestialPosition;
+  saturn: CelestialPosition;
+  uranus: CelestialPosition;
+  neptune: CelestialPosition;
+  pluto: CelestialPosition;
+  north_node: CelestialPosition;
+  chiron: CelestialPosition;
+  ascendant: CelestialPosition;
+  mc: CelestialPosition;
+  houses: HouseCusp[];
+  timestamp: number;
+  source: string;
+}
+
 /**
  * Calculate planetary positions using Swiss Ephemeris
  */
-export async function calculatePlanetaryPositionsWithSweph(date, time, location, timezone) {
+export async function calculatePlanetaryPositionsWithSweph(
+  date: string, 
+  time: string, 
+  location: string, 
+  timezone: string
+): Promise<PlanetaryPositions> {
   try {
     console.log(`SwEph: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
@@ -40,7 +82,7 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
       'chiron': sweph.SE_CHIRON,
     };
     
-    const positions = {};
+    const positions: Partial<PlanetaryPositions> = {};
     
     for (const [body, id] of Object.entries(celestialBodies)) {
       const result = new Float64Array(6);
@@ -96,7 +138,7 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
     positions['timestamp'] = Date.parse(`${date}T${time}`);
     positions['source'] = 'swiss_ephemeris';
     
-    return positions;
+    return positions as PlanetaryPositions;
   } catch (error) {
     console.error("SwEph: Error calculating positions:", error);
     throw error;
