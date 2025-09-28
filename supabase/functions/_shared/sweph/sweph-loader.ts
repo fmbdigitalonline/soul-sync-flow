@@ -78,7 +78,7 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (customUrlError) {
-        console.warn(`❌ Custom URL failed: ${customUrlError.message}, trying next source...`);
+        console.warn(`❌ Custom URL failed: ${customUrlError instanceof Error ? customUrlError.message : String(customUrlError)}, trying next source...`);
         error = customUrlError;
       }
       
@@ -112,7 +112,7 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (storageError) {
-        console.warn(`❌ Storage bucket failed: ${storageError.message}, trying next source...`);
+        console.warn(`❌ Storage bucket failed: ${storageError instanceof Error ? storageError.message : String(storageError)}, trying next source...`);
         error = storageError;
       }
       
@@ -134,7 +134,7 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBinary);
         return wasmModule;
       } catch (localError) {
-        console.warn(`❌ Local WASM failed: ${localError.message}, trying next source...`);
+        console.warn(`❌ Local WASM failed: ${localError instanceof Error ? localError.message : String(localError)}, trying next source...`);
         error = localError;
       }
       
@@ -155,7 +155,7 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBinary);
         return wasmModule;
       } catch (sharedError) {
-        console.warn(`❌ Shared WASM failed: ${sharedError.message}, trying next source...`);
+        console.warn(`❌ Shared WASM failed: ${sharedError instanceof Error ? sharedError.message : String(sharedError)}, trying next source...`);
         error = sharedError;
       }
       
@@ -181,7 +181,7 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (githubError) {
-        console.warn(`❌ GitHub CDN failed: ${githubError.message}, trying last resort...`);
+        console.warn(`❌ GitHub CDN failed: ${githubError instanceof Error ? githubError.message : String(githubError)}, trying last resort...`);
         error = githubError;
       }
       
@@ -207,8 +207,8 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (jsdelivrError) {
-        console.error(`❌ All WASM sources failed. Last error: ${jsdelivrError.message}`);
-        error = new Error(`Failed to load WASM from any source. Last error: ${jsdelivrError.message}`);
+        console.error(`❌ All WASM sources failed. Last error: ${jsdelivrError instanceof Error ? jsdelivrError.message : String(jsdelivrError)}`);
+        error = new Error(`Failed to load WASM from any source. Last error: ${jsdelivrError instanceof Error ? jsdelivrError.message : String(jsdelivrError)}`);
         throw error;
       }
     })();
