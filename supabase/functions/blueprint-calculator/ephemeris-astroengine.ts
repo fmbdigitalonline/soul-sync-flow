@@ -14,7 +14,7 @@ try {
   const msg = error instanceof Error ? error.message : String(error);
   throw new Error(`Failed to import astronomy-engine: ${msg}`);
 }
-import * as path from "https://deno.land/std@0.168.0/path/mod.ts";
+import * as path from "https://deno.land/std@0.177.0/path/mod.ts";
 import { calculateHouseCusps } from './house-system-calculator.ts';
 
 // Helper function to convert Julian Day to JavaScript Date
@@ -25,13 +25,13 @@ function jdToDate(jd: number): Date {
 
 // Safe wrapper for heliocentric vector
 function safeHelioVector(body: string, astroTime: any) {
-  return Astronomy.HelioVector(body as Astronomy.Body, astroTime);
+  return Astronomy.HelioVector(body as any, astroTime);
 }
 
-// Safe wrapper for sidereal time - now takes AstroTime and Observer instance
+// Safe wrapper for sidereal time
 function safeSiderealTime(
-  astroTime: Astronomy.AstroTime, 
-  observer: Astronomy.Observer
+  astroTime: any, 
+  observer: any
 ): number {
   return Astronomy.SiderealTime(astroTime, observer);
 }
@@ -163,9 +163,10 @@ export async function calculatePlanetaryPositionsWithAstro(
       
       const testMoonLon = Astronomy.EclipticLongitude("Moon", testAstroTime);
       console.log(`✅ Self-test passed: Moon @ J2000 = ${testMoonLon.toFixed(6)}°`);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("❌ Self-test failed:", error);
-      throw new Error(`Astronomy engine self-test failed: ${error.message}`);
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new Error(`Astronomy engine self-test failed: ${msg}`);
     }
     
     // Parse the date and time with CORRECTED handling
@@ -186,9 +187,10 @@ export async function calculatePlanetaryPositionsWithAstro(
       console.log(`🔧 Geocoding location: ${location}`);
       coords = await getLocationCoordinates(location);
       console.log(`✅ Location coordinates: lat ${coords.latitude}, long ${coords.longitude}`);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("❌ Geocoding failed:", error);
-      throw new Error(`Failed to geocode location: ${location}. Error: ${error.message}`);
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to geocode location: ${location}. Error: ${msg}`);
     }
     
     // CRITICAL FIX: Create proper UTC Date object
@@ -293,8 +295,9 @@ export async function calculatePlanetaryPositionsWithAstro(
       { id: "neptune", name: "Neptune" },
       { id: "pluto", name: "Pluto" }
     ];
-    
-    const positions = {};
+
+    // Create positions object with proper typing
+    const positions: Record<string, any> = {};
     
     // Calculate positions for each celestial body
     for (const body of bodies) {
@@ -319,7 +322,7 @@ export async function calculatePlanetaryPositionsWithAstro(
           console.log(`🔧 Sun longitude raw calculation: atan2(${earthVec.y.toFixed(6)}, ${earthVec.x.toFixed(6)}) = ${lonRad.toFixed(6)} rad = ${(lonRad * 180/Math.PI + 180).toFixed(6)}°`);
         } else {
           // Use reliable EclipticLongitude for all other bodies
-          longitude = Astronomy.EclipticLongitude(body.name as Astronomy.Body, astroTime);
+          longitude = Astronomy.EclipticLongitude(body.name as any, astroTime);
           
           if (typeof longitude !== 'number' || isNaN(longitude)) {
             console.error(`❌ Invalid longitude for ${body.id}: ${longitude}`);
@@ -356,7 +359,7 @@ export async function calculatePlanetaryPositionsWithAstro(
         // Calculate equatorial coordinates (optional, with fallback)
         let rightAscension = 0, declination = 0;
         try {
-          const equatorial = Astronomy.Equator(body.name as Astronomy.Body, astroTime, observer, false, true);
+          const equatorial = Astronomy.Equator(body.name as any, astroTime, observer, false, true);
           if (equatorial && typeof equatorial.ra === 'number' && typeof equatorial.dec === 'number') {
             rightAscension = equatorial.ra;
             declination = equatorial.dec;
@@ -391,9 +394,10 @@ export async function calculatePlanetaryPositionsWithAstro(
         };
         
         console.log(`✅ ${body.id} position calculated successfully`);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(`❌ Failed to calculate position for ${body.id}:`, error);
-        throw new Error(`Planetary calculation failed for ${body.id}: ${error.message}`);
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`Planetary calculation failed for ${body.id}: ${msg}`);
       }
     }
     
@@ -409,9 +413,10 @@ export async function calculatePlanetaryPositionsWithAstro(
         latitudeSpeed: 0
       };
       console.log(`✅ North node position: lon ${nodes.northNode.toFixed(6)}°`);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("❌ Failed to calculate lunar nodes:", error);
-      throw new Error(`Lunar nodes calculation failed: ${error.message}`);
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new Error(`Lunar nodes calculation failed: ${msg}`);
     }
     
     // Calculate house cusps and angles with fallbacks
@@ -451,9 +456,10 @@ export async function calculatePlanetaryPositionsWithAstro(
         }));
         
         console.log(`✅ Fallback house calculations complete`);
-      } catch (fallbackError) {
+      } catch (fallbackError: unknown) {
         console.error("❌ Even fallback house calculations failed:", fallbackError);
-        throw new Error(`House calculations completely failed: ${fallbackError.message}`);
+        const msg = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+        throw new Error(`House calculations completely failed: ${msg}`);
       }
     }
     
@@ -471,11 +477,11 @@ export async function calculatePlanetaryPositionsWithAstro(
     console.log(`🔧 Final position count: ${Object.keys(positions).length}`);
     
     return positions;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("❌ CRITICAL ERROR in calculatePlanetaryPositionsWithAstro:", error);
-    console.error("❌ Error name:", error.name);
-    console.error("❌ Error message:", error.message);
-    console.error("❌ Error stack:", error.stack);
+    console.error("❌ Error name:", error instanceof Error ? error.name : 'Unknown');
+    console.error("❌ Error message:", error instanceof Error ? error.message : String(error));
+    console.error("❌ Error stack:", error instanceof Error ? error.stack : 'No stack');
     throw error; // Re-throw with full error details
   }
 }
@@ -547,5 +553,5 @@ export function convertJdToDate(jd: number): Date {
 export function eclipticLongitudeByJd(body: string, jd: number): number {
   const date = jdToDate(jd);
   const astroTime = Astronomy.MakeTime(date);
-  return Astronomy.EclipticLongitude(body as Astronomy.Body, astroTime);
+  return Astronomy.EclipticLongitude(body as any, astroTime);
 }
