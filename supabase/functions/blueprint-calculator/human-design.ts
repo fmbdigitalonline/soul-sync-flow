@@ -4,11 +4,11 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { GATE_TO_CENTER_MAP, CHANNELS, HD_PLANETS, PROFILE_LABELS } from "./human-design-gates.ts";
 
 export async function calculateHumanDesign(
-  birthDate: string,
-  birthTime: string,
-  location: string,
-  timezone: string,
-  celestialData: any // <- this argument is kept for function compatibility, but not used, as we do our own ephemeris calls now
+  birthDate,
+  birthTime,
+  location,
+  timezone,
+  celestialData // <- this argument is kept for function compatibility, but not used, as we do our own ephemeris calls now
 ) {
   try {
     console.log("🎯 [HD] Starting Human Design calculation (proper dual ephemeris)...");
@@ -50,10 +50,10 @@ export async function calculateHumanDesign(
     ];
 
     // ---- PATCH: HD GATE EXPANSION AND ORDERING ----
-    function canonicalOrder(gatesArray: any[]) {
+    function canonicalOrder(gatesArray) {
       // Return only one (first, latest) gate/line per planet, sorted in canonical Human Design order
       return HD_PLANETS.map(planet => {
-        const found = gatesArray.find((g: any) => g.planet === planet && g.gate && g.line);
+        const found = gatesArray.find(g => g.planet === planet && g.gate && g.line);
         return found ? { ...found } : null;
       }).filter(Boolean);
     }
@@ -72,8 +72,8 @@ export async function calculateHumanDesign(
     const authority = determineHDAuthority(centers);
 
     // ----- FIX PROFILE: Personality Sun line, Design Earth line -----
-    function getGateByPlanet(gatesArr: any[], planet: string) {
-      return gatesArr.find((g: any) => g.planet === planet);
+    function getGateByPlanet(gatesArr, planet) {
+      return gatesArr.find(g => g.planet === planet);
     }
     const profileLabels = {
       1: "Investigator", 2: "Hermit", 3: "Martyr", 4: "Opportunist", 5: "Heretic", 6: "Role Model"
@@ -86,10 +86,10 @@ export async function calculateHumanDesign(
     const profile = `${conscious}/${unconscious} (${getProfileLabel(conscious) || ""}/${getProfileLabel(unconscious) || ""})`;
 
     // ---- PATCH: Robust channel graph definition evaluation ----
-    function calculateHDDefinition(centers: any) {
+    function calculateHDDefinition(centers) {
       // Construct graph: nodes = defined centers, edges = channels connecting them
       const definedCenters = Object.keys(centers).filter(cn => centers[cn].defined);
-      const adj: {[key: string]: string[]} = {};
+      const adj = {};
       definedCenters.forEach(center => adj[center] = []);
       // Build adjacency list
       for (const center of definedCenters) {
@@ -105,7 +105,7 @@ export async function calculateHumanDesign(
         }
       }
       // Count connected components via BFS
-      const visited: {[key: string]: boolean} = {};
+      const visited = {};
       let groupCount = 0;
       for (const center of definedCenters) {
         if (!visited[center]) {
@@ -113,9 +113,9 @@ export async function calculateHumanDesign(
           const queue = [center];
           while (queue.length) {
             const node = queue.shift();
-            if (node && !visited[node]) {
+            if (!visited[node]) {
               visited[node] = true;
-              (adj[node] || []).forEach((nbr: string) => {
+              (adj[node] || []).forEach(nbr => {
                 if (!visited[nbr]) queue.push(nbr);
               });
             }
@@ -129,7 +129,7 @@ export async function calculateHumanDesign(
       if (groupCount === 3) return "Triple Split Definition";
       return "Quadruple Split Definition";
     }
-    function getCenterOfGate(gateNum: number): string {
+    function getCenterOfGate(gateNum) {
       return GATE_TO_CENTER_MAP[gateNum];
     }
 
@@ -143,7 +143,7 @@ export async function calculateHumanDesign(
       strategy: getStrategyForType(type),
       definition,
       not_self_theme: getNotSelfThemeForType(type),
-      life_purpose: `Purpose for ${type} with ${profile} profile and ${authority} authority`,
+      life_purpose: generateLifePurpose(type, profile, authority),
       centers,
       gates: {
         unconscious_design: designGatesOrdered.map(g => `${g.gate}.${g.line}`),
@@ -164,7 +164,7 @@ export async function calculateHumanDesign(
 
 // --- Helper functions ported from your API logic ---
 
-async function geocodeLocation(locationName: string): Promise<string | null> {
+async function geocodeLocation(locationName) {
   console.log(`[HD] Geocoding: ${locationName}`);
   const googleApiKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
   // Try Google first, fallback to Nominatim if missing
@@ -181,13 +181,13 @@ async function geocodeLocation(locationName: string): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    console.warn('[HD] Google geocoding failed:', error instanceof Error ? error.message : String(error));
+    console.warn('[HD] Google geocoding failed:', error.message);
     // fallback to Nominatim
     return await tryNominatimGeocoding(locationName);
   }
 }
 
-async function tryNominatimGeocoding(locationName: string): Promise<string | null> {
+async function tryNominatimGeocoding(locationName) {
   const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}&limit=1`);
   if (!response.ok) throw new Error(`Nominatim failed`);
   const data = await response.json();
@@ -197,13 +197,7 @@ async function tryNominatimGeocoding(locationName: string): Promise<string | nul
   return null;
 }
 
-async function fetchEphemerisData(
-  dateTime: Date, 
-  location: string, 
-  timezone: string, 
-  coordinates: string, 
-  label: string
-): Promise<any> {
+async function fetchEphemerisData(dateTime, location, timezone, coordinates, label) {
   const year = dateTime.getFullYear();
   const month = String(dateTime.getMonth() + 1).padStart(2, '0');
   const day = String(dateTime.getDate()).padStart(2, '0');
@@ -234,10 +228,10 @@ async function fetchEphemerisData(
 }
 
 // Calculate HD gates from celestial data using HD standard
-function calculateHDGatesFromCelestialData(celestialData: any, type: string): any[] {
+function calculateHDGatesFromCelestialData(celestialData, type) {
   // Standard HD order: ['sun', 'earth', 'north_node',...]
   const gates = [];
-  function longitudeToHDGate(longitude: number): {gate: number, line: number} {
+  function longitudeToHDGate(longitude) {
     // Official mapping: 64 gates, each 5.625°, line = each 0.9375°
     const hdMandala = [
       41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3,
@@ -284,8 +278,8 @@ function calculateHDGatesFromCelestialData(celestialData: any, type: string): an
   return gates;
 }
 
-function calculateCentersFromChannels(allGates: any[]): any {
-  const centers: {[key: string]: any} = {
+function calculateCentersFromChannels(allGates) {
+  const centers = {
     Head: { defined: false, gates: [], channels: [] },
     Ajna: { defined: false, gates: [], channels: [] },
     Throat: { defined: false, gates: [], channels: [] },
@@ -297,24 +291,27 @@ function calculateCentersFromChannels(allGates: any[]): any {
     Root: { defined: false, gates: [], channels: [] }
   };
   
-  const gateToCenterMap: {[key: number]: string} = {
+  const gateToCenterMap = {
     64: 'Head', 61: 'Head', 63: 'Head',
     47: 'Ajna', 24: 'Ajna', 4: 'Ajna', 17: 'Ajna', 43: 'Ajna', 11: 'Ajna',
     62: 'Throat', 23: 'Throat', 56: 'Throat', 35: 'Throat', 12: 'Throat',
     45: 'Throat', 33: 'Throat', 8: 'Throat', 31: 'Throat', 7: 'Throat',
     1: 'Throat', 13: 'Throat', 10: 'Throat', 20: 'Throat', 16: 'Throat',
-    25: 'G', 46: 'G', 2: 'G', 15: 'G',
+    25: 'G', 46: 'G', 22: 'G', 36: 'G', 2: 'G', 15: 'G', 5: 'G', 14: 'G',
     21: 'Heart', 40: 'Heart', 26: 'Heart', 51: 'Heart',
     6: 'Solar Plexus', 37: 'Solar Plexus', 30: 'Solar Plexus', 55: 'Solar Plexus',
-    49: 'Solar Plexus', 19: 'Solar Plexus', 39: 'Solar Plexus', 41: 'Solar Plexus', 22: 'Solar Plexus', 36: 'Solar Plexus',
-    34: 'Sacral', 29: 'Sacral', 59: 'Sacral', 9: 'Sacral', 3: 'Sacral', 42: 'Sacral', 27: 'Sacral', 5: 'Sacral', 14: 'Sacral',
+    49: 'Solar Plexus', 19: 'Solar Plexus', 39: 'Solar Plexus',
+    41: 'Solar Plexus', 22: 'Solar Plexus', 36: 'Solar Plexus',
+    34: 'Sacral', 5: 'Sacral', 14: 'Sacral', 29: 'Sacral', 59: 'Sacral',
+    9: 'Sacral', 3: 'Sacral', 42: 'Sacral', 27: 'Sacral',
     48: 'Spleen', 57: 'Spleen', 44: 'Spleen', 50: 'Spleen', 32: 'Spleen', 28: 'Spleen', 18: 'Spleen',
-    53: 'Root', 60: 'Root', 52: 'Root', 58: 'Root', 38: 'Root', 54: 'Root'
+    53: 'Root', 60: 'Root', 52: 'Root', 19: 'Root', 39: 'Root', 41: 'Root',
+    58: 'Root', 38: 'Root', 54: 'Root'
   };
   
-  allGates.forEach((gateInfo: any) => {
+  allGates.forEach(gateInfo => {
     const gateNum = gateInfo.gate;
-    const centerName = gateToCenterMap[gateNum as keyof typeof gateToCenterMap];
+    const centerName = gateToCenterMap[gateNum];
     if (centerName && centers[centerName] && !centers[centerName].gates.includes(gateNum)) {
       centers[centerName].gates.push(gateNum);
       centers[centerName].defined = true;
@@ -345,13 +342,13 @@ function calculateCentersFromChannels(allGates: any[]): any {
       centers[centerB].defined = true;
       
       const channel = [gateA, gateB];
-      if (!centers[centerA].channels.some((ch: any) => 
+      if (!centers[centerA].channels.some(ch => 
           (ch[0] === channel[0] && ch[1] === channel[1]) || 
           (ch[0] === channel[1] && ch[1] === channel[0]))) {
         centers[centerA].channels.push(channel);
       }
       
-      if (centerA !== centerB && !centers[centerB].channels.some((ch: any) => 
+      if (centerA !== centerB && !centers[centerB].channels.some(ch => 
           (ch[0] === channel[0] && ch[1] === channel[1]) || 
           (ch[0] === channel[1] && ch[1] === channel[0]))) {
         centers[centerB].channels.push(channel);
@@ -362,7 +359,7 @@ function calculateCentersFromChannels(allGates: any[]): any {
   return centers;
 }
 
-function determineHDType(centers: any): string {
+function determineHDType(centers) {
   const sacralDefined = centers.Sacral?.defined || false;
   const throatDefined = centers.Throat?.defined || false;
   const heartDefined = centers.Heart?.defined || false;
@@ -384,7 +381,7 @@ function determineHDType(centers: any): string {
     return 'Generator';
   }
   
-  const definedCenters = Object.values(centers).filter((center: any) => center.defined).length;
+  const definedCenters = Object.values(centers).filter(center => center.defined).length;
   if (definedCenters === 0) {
     return 'Reflector';
   }
@@ -392,15 +389,15 @@ function determineHDType(centers: any): string {
   return 'Projector';
 }
 
-function checkMotorToThroatConnection(centers: any): boolean {
+function checkMotorToThroatConnection(centers) {
   const motorToThroatChannels = [
     [21, 45], [26, 44], 
     [35, 36], [12, 22]
   ];
   
   return motorToThroatChannels.some(([gateA, gateB]) => {
-    const hasGateA = Object.values(centers).some((center: any) => center.gates.includes(gateA));
-    const hasGateB = Object.values(centers).some((center: any) => center.gates.includes(gateB));
+    const hasGateA = Object.values(centers).some(center => center.gates.includes(gateA));
+    const hasGateB = Object.values(centers).some(center => center.gates.includes(gateB));
     
     const isMotorToThroat = (
       (centers.Heart?.gates.includes(gateA) && centers.Throat?.gates.includes(gateB)) ||
@@ -413,7 +410,7 @@ function checkMotorToThroatConnection(centers: any): boolean {
   });
 }
 
-function checkSacralToThroatConnection(centers: any): boolean {
+function checkSacralToThroatConnection(centers) {
   const sacralToThroatChannels = [
     [34, 20], [34, 10], [34, 57], [5, 15], [14, 2], [29, 46]
   ];
@@ -424,7 +421,7 @@ function checkSacralToThroatConnection(centers: any): boolean {
   });
 }
 
-function determineHDAuthority(centers: any): string {
+function determineHDAuthority(centers) {
   if (centers['Solar Plexus']?.defined) return "Emotional";
   if (centers.Sacral?.defined) return "Sacral";
   if (centers.Spleen?.defined) return "Splenic";
@@ -434,7 +431,7 @@ function determineHDAuthority(centers: any): string {
   return "Lunar (Reflector)";
 }
 
-function calculateHDProfile(sunGateInfo: any, designSunGateInfo: any): string {
+function calculateHDProfile(sunGateInfo, designSunGateInfo) {
   if (!sunGateInfo || !designSunGateInfo) return "1/3 (Investigator/Martyr)";
   const profileLabels = {
     "1": "Investigator",
@@ -450,18 +447,18 @@ function calculateHDProfile(sunGateInfo: any, designSunGateInfo: any): string {
 }
 
 // REPLACE calculateDefinition with an HD-correct channel graph method:
-function calculateHDDefinition(centers: any): string {
+function calculateHDDefinition(centers) {
   // Construct graph: nodes = defined centers, edges = channels connecting them
   const definedCenters = Object.keys(centers).filter(cn => centers[cn].defined);
-  const adj: {[key: string]: string[]} = {};
+  const adj = {};
   definedCenters.forEach(center => adj[center] = []);
   // Build adjacency list
   for (const center of definedCenters) {
     for (const ch of centers[center].channels || []) {
       // For each channel, get the other connected center (if both defined)
       const [a, b] = ch;
-      const ca = GATE_TO_CENTER_MAP[a];
-      const cb = GATE_TO_CENTER_MAP[b];
+      const ca = getCenterOfGate(a);
+      const cb = getCenterOfGate(b);
       if (ca !== cb && definedCenters.includes(ca) && definedCenters.includes(cb)) {
         if (!adj[ca].includes(cb)) adj[ca].push(cb);
         if (!adj[cb].includes(ca)) adj[cb].push(ca);
@@ -469,7 +466,7 @@ function calculateHDDefinition(centers: any): string {
     }
   }
   // Count connected components via BFS
-  const visited: {[key: string]: boolean} = {};
+  const visited = {};
   let groupCount = 0;
   for (const center of definedCenters) {
     if (!visited[center]) {
@@ -477,9 +474,9 @@ function calculateHDDefinition(centers: any): string {
       const queue = [center];
       while (queue.length) {
         const node = queue.shift();
-        if (node && !visited[node]) {
+        if (!visited[node]) {
           visited[node] = true;
-          (adj[node] || []).forEach((nbr: string) => {
+          (adj[node] || []).forEach(nbr => {
             if (!visited[nbr]) queue.push(nbr);
           });
         }
@@ -488,45 +485,34 @@ function calculateHDDefinition(centers: any): string {
   }
   // Map to labels
   if (groupCount === 0) return "No Definition";
-  if (groupCount === 1) return "Single Definition";  
+  if (groupCount === 1) return "Single Definition";
   if (groupCount === 2) return "Split Definition";
   if (groupCount === 3) return "Triple Split Definition";
   return "Quadruple Split Definition";
 }
 
-type HdType = 'Generator' | 'Manifesting Generator' | 'Manifestor' | 'Projector' | 'Reflector';
-type ProfileLineNum = 1 | 2 | 3 | 4 | 5 | 6;
-
-function getStrategyForType(type: string): string {
-  const strategies: Record<HdType, string> = {
+function getStrategyForType(type) {
+  const strategies = {
     'Generator': 'Wait to respond',
     'Manifesting Generator': 'Wait to respond then inform',
     'Manifestor': 'Inform before acting',
     'Projector': 'Wait for the invitation',
     'Reflector': 'Wait a lunar cycle'
   };
-  return strategies[type as HdType] || 'Unknown';
+  return strategies[type] || 'Unknown';
 }
 
-function getNotSelfThemeForType(type: string): string {
-  const themes: Record<HdType, string> = {
+function getNotSelfThemeForType(type) {
+  const themes = {
     'Generator': 'Frustration',
     'Manifesting Generator': 'Frustration and anger',
     'Manifestor': 'Anger',
     'Projector': 'Bitterness',
     'Reflector': 'Disappointment'
   };
-  return themes[type as HdType] || 'Unknown';
+  return themes[type] || 'Unknown';
 }
 
-function getProfileLabel(lineNum: number): string {
-  const profileLabels: Record<ProfileLineNum, string> = {
-    1: "Investigator", 
-    2: "Hermit", 
-    3: "Martyr", 
-    4: "Opportunist", 
-    5: "Heretic", 
-    6: "Role Model"
-  };
-  return profileLabels[lineNum as ProfileLineNum] || "";
+function getProfileLabel(lineNum) {
+  return PROFILE_LABELS[lineNum] || "";
 }

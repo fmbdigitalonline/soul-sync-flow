@@ -226,7 +226,7 @@ Provide scores that reflect the nuanced reality of the conversation, not generic
     
     return new Response(JSON.stringify({
       error: 'Assessment processing failed',
-      details: error instanceof Error ? error.message : String(error)
+      details: error.message
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -79,7 +79,7 @@ serve(async (req) => {
       userName: userMeta.preferred_name || userMeta.full_name || 'User',
       bigFiveOpenness: bigFive.openness,
       likelyMBTI: personality.likelyType,
-      mbtiTopProbability: Object.entries(mbtiProbs as Record<string, number>).sort((a, b) => b[1] - a[1]).slice(0, 1)[0],
+      mbtiTopProbability: Object.entries(mbtiProbs).sort((a, b) => b[1] - a[1]).slice(0, 1)[0],
       humanDesignType: humanDesign.type,
       lifePathNumber: numerology.life_path_number,
       chineseSign: chineseAstrology.animal,
@@ -124,7 +124,7 @@ KRITIEKE INDELING VEREISTE: Je moet precies 6 gedetailleerde secties maken gevol
           }
         }
       };
-      return (prompts as Record<string, any>)[language] || prompts.en;
+      return prompts[language] || prompts.en;
     };
 
     const languagePrompts = getLanguagePrompts(language);
@@ -143,7 +143,7 @@ BIG FIVE SCORES:
 
 MBTI ANALYSIS:
 Most Likely Type: ${personality.likelyType || 'Unknown'}
-Top Probabilities: ${Object.entries(mbtiProbs as Record<string, number>).sort((a, b) => (b[1] as number) - (a[1] as number)).slice(0, 3).map(([type, prob]) => `${type}: ${((prob as number) * 100).toFixed(1)}%`).join(', ') || 'Not available'}
+Top Probabilities: ${Object.entries(mbtiProbs).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([type, prob]) => `${type}: ${(prob * 100).toFixed(1)}%`).join(', ') || 'Not available'}
 
 CHINESE ASTROLOGY: ${chineseAstrology.animal || 'Unknown'} ${chineseAstrology.element || 'Unknown'} (${chineseAstrology.yin_yang || 'Unknown'})
 
@@ -229,7 +229,7 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
       /(\d+)\.\s*([A-Z][A-Z\s&]+)[\s\S]*?(?=\d+\.\s*[A-Z][A-Z\s&]+|$)/gi
     ];
     
-    let sectionMatches: any[] = [];
+    let sectionMatches = [];
     for (const pattern of sectionPatterns) {
       sectionMatches = [...(reportPart || '').matchAll(pattern)];
       if (sectionMatches.length >= 6) break;
@@ -318,7 +318,7 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
       // If no quotes found with patterns, try simple line-by-line parsing
       if (quotes.length === 0) {
         console.log('⚠️ Pattern matching failed, trying line-by-line parsing');
-        const lines = quotesPart.split('\n').filter((line: string) => line.trim().includes('"'));
+        const lines = quotesPart.split('\n').filter(line => line.trim().includes('"'));
         for (const line of lines.slice(0, 10)) { // Limit to 10 quotes
           const quoteMatch = line.match(/"([^"]+)"/);
           if (quoteMatch) {
@@ -410,7 +410,7 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
     console.error('💥 Error generating personality report:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error instanceof Error ? error.message : String(error) 
+      error: error.message 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

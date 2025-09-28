@@ -13,6 +13,7 @@ import { Loader2, Eye, EyeOff, Sparkles } from "lucide-react";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { getFunnelData, clearFunnelData, getFunnelSummary } from "@/utils/funnel-data";
+import { useJourneyTracking } from "@/hooks/use-onboarding-journey-tracking";
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -27,10 +28,39 @@ export default function Auth() {
   const { user, loading: authLoading } = useAuth();
   const { t } = useLanguage();
 
+  // Initialize journey tracking
+  const {
+    startJourney,
+    trackStepStart,
+    trackStepComplete,
+    trackStepAbandonment,
+    linkWithUser,
+    completeJourney
+  } = useJourneyTracking();
+
   const from = location.state?.from?.pathname || "/";
   const fromFunnel = searchParams.get('from') === 'funnel';
   const funnelData = getFunnelData();
   const [isSignUp, setIsSignUp] = useState(fromFunnel && funnelData ? true : false);
+
+  // Initialize journey tracking on component mount - using useRef to prevent cascade
+  const journeyInitializedRef = React.useRef(false);
+  
+  useEffect(() => {
+    if (journeyInitializedRef.current) return;
+    
+    const initializeJourney = async () => {
+      const result = await startJourney(funnelData);
+      if (result.success) {
+        console.log('✅ Auth journey tracking initialized:', result.session_id);
+        journeyInitializedRef.current = true;
+      } else {
+        console.warn('⚠️ Failed to initialize auth journey tracking:', result.error);
+      }
+    };
+
+    initializeJourney();
+  }, []); // Remove dependencies that cause cascade
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -66,10 +96,17 @@ export default function Auth() {
 
     setIsLoading(true);
 
+    // Track registration attempt
+    const stepResult = await trackStepStart('auth', 'Registration', 1, 2, {
+      email,
+      fromFunnel,
+      funnelDataPresent: !!funnelData
+    });
+
     try {
       const redirectUrl = `${window.location.origin}/onboarding`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -78,6 +115,20 @@ export default function Auth() {
       });
 
       if (error) throw error;
+
+      // Track successful registration
+      if (stepResult.step_id) {
+        await trackStepComplete(stepResult.step_id, {
+          success: true,
+          userId: data.user?.id,
+          redirectTo: 'onboarding'
+        });
+      }
+
+      // Link journey with new user
+      if (data.user?.id) {
+        await linkWithUser(data.user.id);
+      }
 
       toast({
         title: t('auth.success'),
@@ -90,6 +141,12 @@ export default function Auth() {
       
     } catch (error: any) {
       console.error("Sign up error:", error);
+      
+      // Track registration failure
+      if (stepResult.step_id) {
+        await trackStepAbandonment(stepResult.step_id, `Registration failed: ${error.message}`);
+      }
+      
       toast({
         title: t('error'),
         description: error.message || t('auth.signUpFailed'),
@@ -104,13 +161,34 @@ export default function Auth() {
     e.preventDefault();
     setIsLoading(true);
 
+    // Track sign-in attempt
+    const stepResult = await trackStepStart('auth', 'Sign In', 1, 1, {
+      email,
+      fromFunnel,
+      returnTo: from
+    });
+
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
+
+      // Track successful sign-in
+      if (stepResult.step_id) {
+        await trackStepComplete(stepResult.step_id, {
+          success: true,
+          userId: data.user?.id,
+          redirectTo: from
+        });
+      }
+
+      // Link journey with existing user
+      if (data.user?.id) {
+        await linkWithUser(data.user.id);
+      }
 
       toast({
         title: t('auth.welcomeBack'),
@@ -125,6 +203,12 @@ export default function Auth() {
       
     } catch (error: any) {
       console.error("Sign in error:", error);
+      
+      // Track sign-in failure
+      if (stepResult.step_id) {
+        await trackStepAbandonment(stepResult.step_id, `Sign-in failed: ${error.message}`);
+      }
+      
       toast({
         title: t('error'),
         description: error.message || t('auth.signInFailed'),

@@ -232,7 +232,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('❌ Error in ai-coach-stream function:', error);
     return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : String(error),
+      error: error.message,
       details: 'Authentication or service error occurred'
     }), {
       status: 500,

@@ -50,13 +50,13 @@ serve(async (req) => {
     } : { name: 'there', mbti: 'ENFP', sunSign: 'Aquarius' };
 
     // Define word limits and tones by message type
-    const messageSpecs: Record<string, { maxWords: number; tone: string }> = {
+    const messageSpecs = {
       quick_bubble: { maxWords: 25, tone: 'brief and encouraging' },
       intervention_prompt: { maxWords: 50, tone: 'supportive and actionable' },
       deep_conversation: { maxWords: 100, tone: 'thoughtful and conversational' }
     };
 
-    const spec = messageSpecs[messageType as keyof typeof messageSpecs] || messageSpecs.quick_bubble;
+    const spec = messageSpecs[messageType];
     const intelligenceLevel = hacsData?.intelligence_level || 50;
 
     // Create system prompt based on HACS module and personality
@@ -120,7 +120,7 @@ Generate a personalized HACS message for this situation.`;
   } catch (error) {
     console.error('Error in hacs-autonomous-text function:', error);
     return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : String(error),
+      error: error.message,
       generatedText: 'I\'m here to support your growth journey.' // Fallback message
     }), {
       status: 500,

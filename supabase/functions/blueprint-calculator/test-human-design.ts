@@ -42,9 +42,9 @@ export default async function testHumanDesign(req: Request) {
         success: false,
         error: {
           step: "import_error",
-          name: importError instanceof Error ? importError.name : 'ImportError',
-          message: importError instanceof Error ? importError.message : String(importError),
-          stack: importError instanceof Error ? importError.stack : 'No stack available',
+          name: importError.name,
+          message: importError.message,
+          stack: importError.stack,
           details: "Failed to import calculatePlanetaryPositionsWithAstro from ephemeris-astroengine.ts"
         },
         test_failed: true,
@@ -70,9 +70,9 @@ export default async function testHumanDesign(req: Request) {
         success: false,
         error: {
           step: "import_error",
-          name: importError instanceof Error ? importError.name : 'ImportError',
-          message: importError instanceof Error ? importError.message : String(importError),
-          stack: importError instanceof Error ? importError.stack : 'No stack available',
+          name: importError.name,
+          message: importError.message,
+          stack: importError.stack,
           details: "Failed to import calculateHumanDesign from human-design-calculator.ts"
         },
         test_failed: true,
@@ -99,22 +99,22 @@ export default async function testHumanDesign(req: Request) {
         timezone
       );
       console.log("✅ Personality celestial data calculated successfully");
-      console.log("🔧 Sun position:", (personalityCelestialData as any)?.sun?.longitude);
-      console.log("🔧 Moon position:", (personalityCelestialData as any)?.moon?.longitude);
+      console.log("🔧 Sun position:", personalityCelestialData?.sun?.longitude);
+      console.log("🔧 Moon position:", personalityCelestialData?.moon?.longitude);
       console.log("🔧 Total celestial objects:", Object.keys(personalityCelestialData || {}).length);
     } catch (celestialError) {
       console.error("❌ CRITICAL: Celestial calculation failed:", celestialError);
-      console.error("❌ Error name:", celestialError instanceof Error ? celestialError.name : 'UnknownError');
-      console.error("❌ Error message:", celestialError instanceof Error ? celestialError.message : String(celestialError));
-      console.error("❌ Error stack:", celestialError instanceof Error ? celestialError.stack : 'No stack available');
+      console.error("❌ Error name:", celestialError.name);
+      console.error("❌ Error message:", celestialError.message);
+      console.error("❌ Error stack:", celestialError.stack);
       
       return new Response(JSON.stringify({
         success: false,
         error: {
           step: "celestial_calculation",
-          name: celestialError instanceof Error ? celestialError.name : 'UnknownError',
-          message: celestialError instanceof Error ? celestialError.message : String(celestialError),
-          stack: celestialError instanceof Error ? celestialError.stack : 'No stack available',
+          name: celestialError.name,
+          message: celestialError.message,
+          stack: celestialError.stack,
           details: "Failed to calculate planetary positions"
         },
         test_failed: true,
@@ -150,18 +150,18 @@ export default async function testHumanDesign(req: Request) {
     console.log("🔧 Celestial data keys:", Object.keys(personalityCelestialData));
     
     // Validate essential celestial data
-    if (!(personalityCelestialData as any).sun || !(personalityCelestialData as any).moon) {
+    if (!personalityCelestialData.sun || !personalityCelestialData.moon) {
       console.error("❌ CRITICAL: Missing essential celestial data");
-      console.error("❌ Sun data:", (personalityCelestialData as any).sun);
-      console.error("❌ Moon data:", (personalityCelestialData as any).moon);
+      console.error("❌ Sun data:", personalityCelestialData.sun);
+      console.error("❌ Moon data:", personalityCelestialData.moon);
       
       return new Response(JSON.stringify({
         success: false,
         error: {
           step: "essential_data_validation",
           message: "Missing essential sun or moon data",
-          sun_available: !!(personalityCelestialData as any).sun,
-          moon_available: !!(personalityCelestialData as any).moon,
+          sun_available: !!personalityCelestialData.sun,
+          moon_available: !!personalityCelestialData.moon,
           available_keys: Object.keys(personalityCelestialData)
         },
         test_failed: true
@@ -190,17 +190,17 @@ export default async function testHumanDesign(req: Request) {
       console.log("✅ Human Design calculation complete!");
     } catch (humanDesignError) {
       console.error("❌ CRITICAL: Human Design calculation failed:", humanDesignError);
-      console.error("❌ HD Error name:", humanDesignError instanceof Error ? humanDesignError.name : 'UnknownError');
-      console.error("❌ HD Error message:", humanDesignError instanceof Error ? humanDesignError.message : String(humanDesignError));
-      console.error("❌ HD Error stack:", humanDesignError instanceof Error ? humanDesignError.stack : 'No stack available');
+      console.error("❌ HD Error name:", humanDesignError.name);
+      console.error("❌ HD Error message:", humanDesignError.message);
+      console.error("❌ HD Error stack:", humanDesignError.stack);
       
       return new Response(JSON.stringify({
         success: false,
         error: {
           step: "human_design_calculation",
-          name: humanDesignError instanceof Error ? humanDesignError.name : 'UnknownError',
-          message: humanDesignError instanceof Error ? humanDesignError.message : String(humanDesignError),
-          stack: humanDesignError instanceof Error ? humanDesignError.stack : 'No stack available',
+          name: humanDesignError.name,
+          message: humanDesignError.message,
+          stack: humanDesignError.stack,
           details: "Failed to calculate Human Design",
           celestial_data_available: !!personalityCelestialData
         },
@@ -249,15 +249,15 @@ export default async function testHumanDesign(req: Request) {
     // Analyze results
     const analysis = {
       type_match: humanDesignResult.type === expectedData.type,
-      authority_match: ('authority' in humanDesignResult) ? humanDesignResult.authority === expectedData.authority : false,
-      gate_count_personality: ('gates' in humanDesignResult) ? humanDesignResult.gates?.conscious_personality?.length || 0 : 0,
-      gate_count_design: ('gates' in humanDesignResult) ? humanDesignResult.gates?.unconscious_design?.length || 0 : 0,
+      authority_match: humanDesignResult.authority === expectedData.authority,
+      gate_count_personality: humanDesignResult.gates?.conscious_personality?.length || 0,
+      gate_count_design: humanDesignResult.gates?.unconscious_design?.length || 0,
       expected_gate_count_personality: expectedData.expectedGates.conscious_personality.length,
       expected_gate_count_design: expectedData.expectedGates.unconscious_design.length,
-      calculated_gates: ('gates' in humanDesignResult) ? humanDesignResult.gates : null,
-      centers_defined: ('centers' in humanDesignResult) ? Object.entries(humanDesignResult.centers || {})
+      calculated_gates: humanDesignResult.gates,
+      centers_defined: Object.entries(humanDesignResult.centers || {})
         .filter(([_, center]: [string, any]) => center.defined)
-        .map(([name, _]: [string, any]) => name) : []
+        .map(([name, _]: [string, any]) => name)
     };
     
     console.log("✅ Analysis complete - sending results");
@@ -287,11 +287,11 @@ export default async function testHumanDesign(req: Request) {
       },
       debug_info: {
         personality_celestial_data_available: !!personalityCelestialData,
-        sun_longitude: (personalityCelestialData as any)?.sun?.longitude,
-        moon_longitude: (personalityCelestialData as any)?.moon?.longitude,
+        sun_longitude: personalityCelestialData?.sun?.longitude,
+        moon_longitude: personalityCelestialData?.moon?.longitude,
         total_planets_available: Object.keys(personalityCelestialData || {}).length,
-        julian_date: (personalityCelestialData as any)?.julian_date,
-        calculation_source: (personalityCelestialData as any)?.source
+        julian_date: personalityCelestialData?.julian_date,
+        calculation_source: personalityCelestialData?.source
       }
     }, null, 2), {
       headers: { 
@@ -303,21 +303,21 @@ export default async function testHumanDesign(req: Request) {
   } catch (topLevelError) {
     // Catch-all for any unhandled errors
     console.error("❌ TOP-LEVEL ERROR:", topLevelError);
-    console.error("❌ Top Error name:", topLevelError instanceof Error ? topLevelError.name : 'UnknownError');
-    console.error("❌ Top Error message:", topLevelError instanceof Error ? topLevelError.message : String(topLevelError));
-    console.error("❌ Top Error stack:", topLevelError instanceof Error ? topLevelError.stack : 'No stack available');
-    console.error("❌ Top Error toString:", String(topLevelError));
+    console.error("❌ Top Error name:", topLevelError.name);
+    console.error("❌ Top Error message:", topLevelError.message);
+    console.error("❌ Top Error stack:", topLevelError.stack);
+    console.error("❌ Top Error toString:", topLevelError.toString());
     
     return new Response(JSON.stringify({
       success: false,
       error: {
         step: "top_level_handler",
-        name: topLevelError instanceof Error ? topLevelError.name : "UnknownError",
-        message: topLevelError instanceof Error ? topLevelError.message : String(topLevelError),
-        stack: topLevelError instanceof Error ? topLevelError.stack : "No stack trace available",
+        name: topLevelError.name || "UnknownError",
+        message: topLevelError.message || topLevelError.toString(),
+        stack: topLevelError.stack || "No stack trace available",
         details: "Unhandled error in test function",
         error_type: typeof topLevelError,
-        error_constructor: topLevelError instanceof Error ? topLevelError.constructor?.name : "Unknown"
+        error_constructor: topLevelError.constructor?.name
       },
       test_failed: true,
       timestamp: new Date().toISOString()

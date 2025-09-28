@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function testAstrometry(req: Request): Promise<Response> {
+async function testAstrometry(req) {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -46,7 +46,7 @@ async function testAstrometry(req: Request): Promise<Response> {
       ];
       
       responseMessage += `=== REQUIRED FUNCTION AVAILABILITY ===\n`;
-      const availableFunctions: Record<string, boolean> = {};
+      const availableFunctions = {};
       
       requiredFunctions.forEach(funcName => {
         const isAvailable = typeof astrometry[funcName] === 'function';
@@ -86,7 +86,7 @@ async function testAstrometry(req: Request): Promise<Response> {
               const sunLon = astrometry.getEclipticLongitude('sun', testCase.date);
               responseMessage += `  Sun Longitude: ${sunLon}°\n`;
             } catch (e) {
-              responseMessage += `  Sun Longitude Error: ${e instanceof Error ? e.message : String(e)}\n`;
+              responseMessage += `  Sun Longitude Error: ${e.message}\n`;
             }
           }
           
@@ -95,12 +95,12 @@ async function testAstrometry(req: Request): Promise<Response> {
               const obliquity = astrometry.getObliquityOfEcliptic(testCase.date);
               responseMessage += `  Obliquity: ${obliquity}°\n`;
             } catch (e) {
-              responseMessage += `  Obliquity Error: ${e instanceof Error ? e.message : String(e)}\n`;
+              responseMessage += `  Obliquity Error: ${e.message}\n`;
             }
           }
           
         } catch (dateError) {
-          responseMessage += `  ❌ Date processing failed: ${dateError instanceof Error ? dateError.message : String(dateError)}\n`;
+          responseMessage += `  ❌ Date processing failed: ${dateError.message}\n`;
           console.error(`Date test failed for ${testCase.name}:`, dateError);
         }
       }
@@ -114,7 +114,7 @@ async function testAstrometry(req: Request): Promise<Response> {
         responseMessage += `✅ Coordinates module imported\n`;
         console.log('Coordinates module exports:', Object.keys(coordinates));
       } catch (e) {
-        responseMessage += `❌ Coordinates module import failed: ${e instanceof Error ? e.message : String(e)}\n`;
+        responseMessage += `❌ Coordinates module import failed: ${e.message}\n`;
       }
       
       try {
@@ -122,7 +122,7 @@ async function testAstrometry(req: Request): Promise<Response> {
         responseMessage += `✅ Epochs module imported\n`;
         console.log('Epochs module exports:', Object.keys(epochs));
       } catch (e) {
-        responseMessage += `❌ Epochs module import failed: ${e instanceof Error ? e.message : String(e)}\n`;
+        responseMessage += `❌ Epochs module import failed: ${e.message}\n`;
       }
       
       try {
@@ -130,11 +130,11 @@ async function testAstrometry(req: Request): Promise<Response> {
         responseMessage += `✅ Planets module imported\n`;
         console.log('Planets module exports:', Object.keys(planets));
       } catch (e) {
-        responseMessage += `❌ Planets module import failed: ${e instanceof Error ? e.message : String(e)}\n`;
+        responseMessage += `❌ Planets module import failed: ${e.message}\n`;
       }
       
     } catch (importError) {
-      responseMessage += `❌ CRITICAL: Failed to import @observerly/astrometry: ${importError instanceof Error ? importError.message : String(importError)}\n`;
+      responseMessage += `❌ CRITICAL: Failed to import @observerly/astrometry: ${importError.message}\n`;
       status = 500;
       console.error('Import error:', importError);
     }
@@ -155,7 +155,7 @@ async function testAstrometry(req: Request): Promise<Response> {
         const altPackage = await import(`https://esm.sh/${pkg}`);
         responseMessage += `✅ ${pkg}: Successfully imported (${Object.keys(altPackage).length} exports)\n`;
       } catch (e) {
-        responseMessage += `❌ ${pkg}: Import failed - ${e instanceof Error ? e.message : String(e)}\n`;
+        responseMessage += `❌ ${pkg}: Import failed - ${e.message}\n`;
       }
     }
     
@@ -178,7 +178,7 @@ async function testAstrometry(req: Request): Promise<Response> {
     console.error("Unexpected error in astrometry test:", error);
     
     return new Response(
-      `Unexpected error in astrometry evaluation: ${error instanceof Error ? error.message : String(error)}\nStack: ${error instanceof Error ? error.stack || 'No stack available' : 'No stack available'}`,
+      `Unexpected error in astrometry evaluation: ${error.message}\nStack: ${error.stack}`,
       { 
         status: 500,
         headers: { 

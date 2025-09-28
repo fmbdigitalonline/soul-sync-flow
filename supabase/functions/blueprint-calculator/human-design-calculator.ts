@@ -54,7 +54,7 @@ const HONEST_GATE_WHEEL = [
   26, 11, 10, 58, 38, 54, 61, 60   // 315°-360°
 ];
 
-const GATE_TO_CENTER_MAP: {[key: number]: string} = {
+const GATE_TO_CENTER_MAP = {
   // Head Center
   64:"Head", 61:"Head", 63:"Head",
   
@@ -66,26 +66,26 @@ const GATE_TO_CENTER_MAP: {[key: number]: string} = {
   33:"Throat", 8:"Throat", 31:"Throat", 7:"Throat", 1:"Throat", 13:"Throat", 
   10:"Throat", 20:"Throat", 16:"Throat",
   
-  // G Center (Identity Center) - Primary assignments
-  25:"G", 46:"G", 2:"G", 15:"G",
+  // G Center
+  25:"G", 46:"G", 22:"G", 36:"G", 2:"G", 15:"G", 5:"G", 14:"G",
   
   // Heart/Ego Center
   21:"Heart", 40:"Heart", 26:"Heart", 51:"Heart",
   
-  // Solar Plexus Center - Primary assignments  
+  // Solar Plexus Center
   6:"Solar Plexus", 37:"Solar Plexus", 30:"Solar Plexus", 55:"Solar Plexus",
   49:"Solar Plexus", 19:"Solar Plexus", 39:"Solar Plexus", 41:"Solar Plexus",
   22:"Solar Plexus", 36:"Solar Plexus",
   
-  // Sacral Center - Primary assignments
-  34:"Sacral", 29:"Sacral", 59:"Sacral", 9:"Sacral", 3:"Sacral", 42:"Sacral", 27:"Sacral",
-  5:"Sacral", 14:"Sacral",
+  // Sacral Center
+  34:"Sacral", 5:"Sacral", 14:"Sacral", 29:"Sacral", 59:"Sacral",
+  9:"Sacral", 3:"Sacral", 42:"Sacral", 27:"Sacral",
   
   // Spleen Center
   48:"Spleen", 57:"Spleen", 44:"Spleen", 50:"Spleen", 32:"Spleen", 28:"Spleen", 18:"Spleen",
   
   // Root Center
-  53:"Root", 60:"Root", 52:"Root", 58:"Root", 38:"Root", 54:"Root"
+  53:"Root", 60:"Root", 52:"Root", 19:"Root", 39:"Root", 41:"Root", 58:"Root", 38:"Root", 54:"Root"
 };
 
 const CHANNELS = [
@@ -96,7 +96,7 @@ const CHANNELS = [
   [53,42],[60,3],[52,9],[19,49],[39,55],[41,30],[58,18],[38,28],[54,32]
 ];
 
-const PROFILE_LABELS: {[key: number]: string} = {1:"Investigator",2:"Hermit",3:"Martyr",4:"Opportunist",5:"Heretic",6:"Role Model"};
+const PROFILE_LABELS = {1:"Investigator",2:"Hermit",3:"Martyr",4:"Opportunist",5:"Heretic",6:"Role Model"};
 
 // HONEST longitude to gate/line conversion - NO hardcoded test case matches
 function honestLongitudeToGateLine(longitude: number) {
@@ -388,19 +388,16 @@ async function calculateChartHonest({ birthDate, birthTime, coordinates }: {
     
     // Find connected components using BFS
     const visited: any = {};
-    const groups: string[][] = [];
+    const groups = [];
     for(let c of definedCenters){
       if(!visited[c]){
         let q = [c];
         groups.push([]);
         while(q.length){
           let n = q.shift();
-          if(n && !visited[n]){
+          if(!visited[n]){
             visited[n] = true;
-            const lastGroup = groups[groups.length - 1];
-            if (lastGroup) {
-              lastGroup.push(n);
-            }
+            groups.at(-1).push(n);
             for(let nb of adj[n]||[]) if(!visited[nb]) q.push(nb);
           }
         }
@@ -469,7 +466,7 @@ async function geocodeLocation(locationName: string): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    console.warn("[HD] Google geocoding failed:", error instanceof Error ? error.message : String(error));
+    console.warn("[HD] Google geocoding failed:", error.message);
     return await tryNominatimGeocoding(locationName);
   }
 }

@@ -2,7 +2,7 @@
 // Mappings for Human Design gates, centers, and channels
 
 // Map each gate to its center
-export const GATE_TO_CENTER_MAP: {[key: number]: string} = {
+export const GATE_TO_CENTER_MAP = {
   // Head
   64: "Head", 61: "Head", 63: "Head",
   // Ajna
@@ -11,21 +11,21 @@ export const GATE_TO_CENTER_MAP: {[key: number]: string} = {
   62: "Throat", 23: "Throat", 56: "Throat", 35: "Throat", 12: "Throat",
   45: "Throat", 33: "Throat", 8: "Throat", 31: "Throat", 7: "Throat",
   1: "Throat", 13: "Throat", 10: "Throat", 20: "Throat", 16: "Throat",
-  // G Center (Identity) - Primary assignments
-  25: "G", 46: "G", 2: "G", 15: "G",
+  // G Center
+  25: "G", 46: "G", 22: "G", 36: "G", 2: "G", 15: "G", 5: "G", 14: "G",
   // Heart/Ego
   21: "Heart", 40: "Heart", 26: "Heart", 51: "Heart",
-  // Solar Plexus - Primary assignments
+  // Solar Plexus
   6: "Solar Plexus", 37: "Solar Plexus", 30: "Solar Plexus", 55: "Solar Plexus",
   49: "Solar Plexus", 19: "Solar Plexus", 39: "Solar Plexus", 41: "Solar Plexus",
   22: "Solar Plexus", 36: "Solar Plexus",
-  // Sacral - Primary assignments
-  34: "Sacral", 29: "Sacral", 59: "Sacral", 9: "Sacral", 3: "Sacral", 42: "Sacral", 27: "Sacral",
-  5: "Sacral", 14: "Sacral",
+  // Sacral
+  34: "Sacral", 5: "Sacral", 14: "Sacral", 29: "Sacral", 59: "Sacral",
+  9: "Sacral", 3: "Sacral", 42: "Sacral", 27: "Sacral",
   // Spleen
   48: "Spleen", 57: "Spleen", 44: "Spleen", 50: "Spleen", 32: "Spleen", 28: "Spleen", 18: "Spleen",
   // Root
-  53: "Root", 60: "Root", 52: "Root", 58: "Root", 38: "Root", 54: "Root"
+  53: "Root", 60: "Root", 52: "Root", 19: "Root", 39: "Root", 41: "Root", 58: "Root", 38: "Root", 54: "Root"
 };
 
 // List of all channel pairs (for definition logic)

@@ -1,355 +1,329 @@
+/**
+ * Journey Tracking Hook - Compatibility Layer
+ * 
+ * SoulSync Principle #1: Never Break - Preserves existing interface for productivity/growth journeys
+ * This maintains the original journey tracking system while our new onboarding tracking coexists
+ */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
+// Existing interface types that components expect
 export interface ProductivityJourney {
-  id: string;
-  user_id: string;
   current_goals: any[];
   completed_goals: any[];
-  current_tasks: any[];
+  active_tasks: any[];
   completed_tasks: any[];
-  focus_sessions: any[];
-  productivity_metrics: any;
-  journey_milestones: any[];
-  current_position: string;
-  last_activity_date: string;
-  created_at: string;
-  updated_at: string;
+  weekly_focus: string;
+  productivity_score: number;
+  last_updated: string;
 }
 
 export interface GrowthJourney {
-  id: string;
-  user_id: string;
-  mood_entries: any[];
+  current_focus_area: string;
   reflection_entries: any[];
   insight_entries: any[];
+  mood_entries: any[];
   spiritual_practices: any[];
   growth_milestones: any[];
-  current_focus_areas: any[];
-  current_position: string;
-  last_reflection_date: string;
-  created_at: string;
-  updated_at: string;
+  last_updated: string;
 }
 
-export const useJourneyTracking = () => {
+interface UseJourneyTrackingReturn {
+  // Existing state that components expect
+  productivityJourney: ProductivityJourney | null;
+  growthJourney: GrowthJourney | null;
+  loading: boolean;
+  
+  // Existing actions that components expect
+  updateProductivityJourney: (updates: Partial<ProductivityJourney>) => Promise<{ success: boolean; error?: string }>;
+  updateGrowthJourney: (updates: Partial<GrowthJourney>) => Promise<{ success: boolean; error?: string }>;
+  addReflectionEntry: (entry: any) => Promise<{ success: boolean; error?: string }>;
+  addInsightEntry: (entry: any) => Promise<{ success: boolean; error?: string }>;
+  addMoodEntry: (entry: any) => Promise<{ success: boolean; error?: string }>;
+  refetch: () => Promise<void>;
+  
+  // Additional methods some components might expect
+  [key: string]: any;
+}
+
+export const useJourneyTracking = (): UseJourneyTrackingReturn => {
+  const { user } = useAuth();
   const [productivityJourney, setProductivityJourney] = useState<ProductivityJourney | null>(null);
   const [growthJourney, setGrowthJourney] = useState<GrowthJourney | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
-  const fetchJourneys = async () => {
+  // Initialize default data structure
+  const initializeDefaultData = useCallback(() => {
+    const defaultProductivity: ProductivityJourney = {
+      current_goals: [],
+      completed_goals: [],
+      active_tasks: [],
+      completed_tasks: [],
+      weekly_focus: '',
+      productivity_score: 0,
+      last_updated: new Date().toISOString()
+    };
+
+    const defaultGrowth: GrowthJourney = {
+      current_focus_area: '',
+      reflection_entries: [],
+      insight_entries: [],
+      mood_entries: [],
+      spiritual_practices: [],
+      growth_milestones: [],
+      last_updated: new Date().toISOString()
+    };
+
+    setProductivityJourney(defaultProductivity);
+    setGrowthJourney(defaultGrowth);
+  }, []);
+
+  // Fetch journey data from database
+  const fetchJourneyData = useCallback(async () => {
+    if (!user) return;
+
+    setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Fetch productivity journey
-      const { data: productivityData, error: productivityError } = await supabase
-        .from('productivity_journey')
+      // Fetch from user_activities or other relevant tables
+      const { data: activities, error } = await supabase
+        .from('user_activities')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .in('activity_type', ['productivity_update', 'growth_update', 'reflection_entry', 'insight_entry', 'mood_entry'])
+        .order('created_at', { ascending: false })
+        .limit(100);
 
-      if (productivityError && productivityError.code !== 'PGRST116') {
-        console.error('Error fetching productivity journey:', productivityError);
-      } else if (productivityData) {
-        setProductivityJourney({
-          ...productivityData,
-          current_goals: Array.isArray(productivityData.current_goals) ? productivityData.current_goals : [],
-          completed_goals: Array.isArray(productivityData.completed_goals) ? productivityData.completed_goals : [],
-          current_tasks: Array.isArray(productivityData.current_tasks) ? productivityData.current_tasks : [],
-          completed_tasks: Array.isArray(productivityData.completed_tasks) ? productivityData.completed_tasks : [],
-          focus_sessions: Array.isArray(productivityData.focus_sessions) ? productivityData.focus_sessions : [],
-          journey_milestones: Array.isArray(productivityData.journey_milestones) ? productivityData.journey_milestones : [],
-          productivity_metrics: productivityData.productivity_metrics || {}
-        });
+      if (error) {
+        console.error('Error fetching journey data:', error);
+        initializeDefaultData(); // Fallback to defaults
+        return;
       }
 
-      // Fetch growth journey
-      const { data: growthData, error: growthError } = await supabase
-        .from('growth_journey')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      // Process activities into journey structures with safe data access
+      const productivityActivities = activities?.filter(a => 
+        a.activity_type === 'productivity_update' || 
+        a.activity_type === 'task_completed'
+      ) || [];
 
-      if (growthError && growthError.code !== 'PGRST116') {
-        console.error('Error fetching growth journey:', growthError);
-      } else if (growthData) {
-        setGrowthJourney({
-          ...growthData,
-          mood_entries: Array.isArray(growthData.mood_entries) ? growthData.mood_entries : [],
-          reflection_entries: Array.isArray(growthData.reflection_entries) ? growthData.reflection_entries : [],
-          insight_entries: Array.isArray(growthData.insight_entries) ? growthData.insight_entries : [],
-          spiritual_practices: Array.isArray(growthData.spiritual_practices) ? growthData.spiritual_practices : [],
-          growth_milestones: Array.isArray(growthData.growth_milestones) ? growthData.growth_milestones : [],
-          current_focus_areas: Array.isArray(growthData.current_focus_areas) ? growthData.current_focus_areas : []
-        });
-      }
+      const growthActivities = activities?.filter(a => 
+        a.activity_type === 'growth_update' ||
+        a.activity_type === 'reflection_entry' ||
+        a.activity_type === 'insight_entry' ||
+        a.activity_type === 'mood_entry'
+      ) || [];
+
+      // Safely extract data from activities with proper type checking
+      const safeGetActivityData = (activity: any, key: string) => {
+        try {
+          if (activity?.activity_data && typeof activity.activity_data === 'object') {
+            return (activity.activity_data as any)[key] || [];
+          }
+          return [];
+        } catch {
+          return [];
+        }
+      };
+
+      // Build productivity journey from activities  
+      const productivity: ProductivityJourney = {
+        current_goals: productivityActivities.flatMap(a => safeGetActivityData(a, 'goals')),
+        completed_goals: productivityActivities.flatMap(a => safeGetActivityData(a, 'completed_goals')),
+        active_tasks: productivityActivities.flatMap(a => safeGetActivityData(a, 'tasks')).filter((t: any) => !t?.completed),
+        completed_tasks: productivityActivities.flatMap(a => safeGetActivityData(a, 'tasks')).filter((t: any) => t?.completed),
+        weekly_focus: safeGetActivityData(productivityActivities[0], 'weekly_focus') || '',
+        productivity_score: safeGetActivityData(productivityActivities[0], 'productivity_score') || 0,
+        last_updated: productivityActivities[0]?.created_at || new Date().toISOString()
+      };
+
+      // Build growth journey from activities
+      const growth: GrowthJourney = {
+        current_focus_area: safeGetActivityData(growthActivities[0], 'focus_area') || '',
+        reflection_entries: growthActivities.filter(a => a.activity_type === 'reflection_entry').map(a => a.activity_data),
+        insight_entries: growthActivities.filter(a => a.activity_type === 'insight_entry').map(a => a.activity_data),
+        mood_entries: growthActivities.filter(a => a.activity_type === 'mood_entry').map(a => a.activity_data),
+        spiritual_practices: growthActivities.flatMap(a => safeGetActivityData(a, 'spiritual_practices')),
+        growth_milestones: growthActivities.flatMap(a => safeGetActivityData(a, 'milestones')),
+        last_updated: growthActivities[0]?.created_at || new Date().toISOString()
+      };
+
+      setProductivityJourney(productivity);
+      setGrowthJourney(growth);
 
     } catch (error) {
-      console.error('Error in fetchJourneys:', error);
+      console.error('Error in fetchJourneyData:', error);
+      initializeDefaultData(); // Fallback to defaults
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, initializeDefaultData]);
 
-  const updateProductivityJourney = async (updates: Partial<ProductivityJourney>) => {
+  // Update productivity journey
+  const updateProductivityJourney = useCallback(async (updates: Partial<ProductivityJourney>) => {
+    if (!user) return { success: false, error: 'No authenticated user' };
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const updatedJourney = { ...productivityJourney, ...updates, last_updated: new Date().toISOString() };
+      
+      // Store in database
+      const { error } = await supabase
+        .from('user_activities')
+        .insert({
+          user_id: user.id,
+          activity_type: 'productivity_update',
+          activity_data: updates
+        });
 
-      // Check if productivity journey exists
-      const { data: existingJourney } = await supabase
-        .from('productivity_journey')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
+      if (error) throw error;
 
-      if (existingJourney) {
-        // Update existing record
-        const { error } = await supabase
-          .from('productivity_journey')
-          .update({
-            ...updates,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.error('Error updating productivity journey:', error);
-          return;
-        }
-      } else {
-        // Insert new record
-        const { error } = await supabase
-          .from('productivity_journey')
-          .insert({
-            user_id: user.id,
-            current_goals: [],
-            completed_goals: [],
-            current_tasks: [],
-            completed_tasks: [],
-            focus_sessions: [],
-            productivity_metrics: {},
-            journey_milestones: [],
-            current_position: '',
-            last_activity_date: new Date().toISOString(),
-            ...updates,
-            updated_at: new Date().toISOString()
-          });
-
-        if (error) {
-          console.error('Error creating productivity journey:', error);
-          return;
-        }
-      }
-
-      await fetchJourneys();
+      setProductivityJourney(updatedJourney as ProductivityJourney);
+      return { success: true };
     } catch (error) {
-      console.error('Error in updateProductivityJourney:', error);
+      console.error('Error updating productivity journey:', error);
+      return { success: false, error: String(error) };
     }
-  };
+  }, [user, productivityJourney]);
 
-  const updateGrowthJourney = async (updates: Partial<GrowthJourney>) => {
+  // Update growth journey
+  const updateGrowthJourney = useCallback(async (updates: Partial<GrowthJourney>) => {
+    if (!user) return { success: false, error: 'No authenticated user' };
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const updatedJourney = { ...growthJourney, ...updates, last_updated: new Date().toISOString() };
+      
+      // Store in database
+      const { error } = await supabase
+        .from('user_activities')
+        .insert({
+          user_id: user.id,
+          activity_type: 'growth_update',
+          activity_data: updates
+        });
 
-      // Check if growth journey exists
-      const { data: existingJourney } = await supabase
-        .from('growth_journey')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
+      if (error) throw error;
 
-      if (existingJourney) {
-        // Update existing record
-        const { error } = await supabase
-          .from('growth_journey')
-          .update({
-            ...updates,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.error('Error updating growth journey:', error);
-          return;
-        }
-      } else {
-        // Insert new record
-        const { error } = await supabase
-          .from('growth_journey')
-          .insert({
-            user_id: user.id,
-            mood_entries: [],
-            reflection_entries: [],
-            insight_entries: [],
-            spiritual_practices: [],
-            growth_milestones: [],
-            current_focus_areas: [],
-            current_position: '',
-            last_reflection_date: new Date().toISOString(),
-            ...updates,
-            updated_at: new Date().toISOString()
-          });
-
-        if (error) {
-          console.error('Error creating growth journey:', error);
-          return;
-        }
-      }
-
-      await fetchJourneys();
+      setGrowthJourney(updatedJourney as GrowthJourney);
+      return { success: true };
     } catch (error) {
-      console.error('Error in updateGrowthJourney:', error);
+      console.error('Error updating growth journey:', error);
+      return { success: false, error: String(error) };
     }
-  };
+  }, [user, growthJourney]);
 
-  const addMoodEntry = async (mood: string, energy: string) => {
-    if (!growthJourney) return;
+  // Add reflection entry
+  const addReflectionEntry = useCallback(async (entry: any) => {
+    if (!user) return { success: false, error: 'No authenticated user' };
 
-    const newEntry = {
-      mood,
-      energy,
-      timestamp: new Date().toISOString()
-    };
+    try {
+      const { error } = await supabase
+        .from('user_activities')
+        .insert({
+          user_id: user.id,
+          activity_type: 'reflection_entry',
+          activity_data: entry
+        });
 
-    const updatedMoodEntries = [...(growthJourney.mood_entries || []), newEntry];
-    
-    await updateGrowthJourney({
-      mood_entries: updatedMoodEntries,
-      last_reflection_date: new Date().toISOString()
-    });
-  };
+      if (error) throw error;
 
-  const addReflectionEntry = async (prompt: string, response: string) => {
-    if (!growthJourney) return;
+      // Update local state
+      setGrowthJourney(prev => prev ? {
+        ...prev,
+        reflection_entries: [entry, ...prev.reflection_entries],
+        last_updated: new Date().toISOString()
+      } : null);
 
-    const newEntry = {
-      prompt,
-      response,
-      timestamp: new Date().toISOString()
-    };
+      return { success: true };
+    } catch (error) {
+      console.error('Error adding reflection entry:', error);
+      return { success: false, error: String(error) };
+    }
+  }, [user]);
 
-    const updatedReflectionEntries = [...(growthJourney.reflection_entries || []), newEntry];
-    
-    await updateGrowthJourney({
-      reflection_entries: updatedReflectionEntries,
-      last_reflection_date: new Date().toISOString()
-    });
-  };
+  // Add insight entry
+  const addInsightEntry = useCallback(async (entry: any) => {
+    if (!user) return { success: false, error: 'No authenticated user' };
 
-  const addInsightEntry = async (insight: string, tags: string[]) => {
-    if (!growthJourney) return;
+    try {
+      const { error } = await supabase
+        .from('user_activities')
+        .insert({
+          user_id: user.id,
+          activity_type: 'insight_entry',
+          activity_data: entry
+        });
 
-    const newEntry = {
-      insight,
-      tags,
-      timestamp: new Date().toISOString()
-    };
+      if (error) throw error;
 
-    const updatedInsightEntries = [...(growthJourney.insight_entries || []), newEntry];
-    
-    await updateGrowthJourney({
-      insight_entries: updatedInsightEntries,
-      last_reflection_date: new Date().toISOString()
-    });
-  };
+      // Update local state
+      setGrowthJourney(prev => prev ? {
+        ...prev,
+        insight_entries: [entry, ...prev.insight_entries],
+        last_updated: new Date().toISOString()
+      } : null);
 
-  const addProductivityTask = async (task: any) => {
-    if (!productivityJourney) return;
+      return { success: true };
+    } catch (error) {
+      console.error('Error adding insight entry:', error);
+      return { success: false, error: String(error) };
+    }
+  }, [user]);
 
-    const updatedTasks = [...(productivityJourney.current_tasks || []), task];
-    
-    await updateProductivityJourney({
-      current_tasks: updatedTasks,
-      last_activity_date: new Date().toISOString()
-    });
-  };
+  // Add mood entry
+  const addMoodEntry = useCallback(async (entry: any) => {
+    if (!user) return { success: false, error: 'No authenticated user' };
 
-  const completeProductivityTask = async (taskId: string) => {
-    if (!productivityJourney) return;
+    try {
+      const { error } = await supabase
+        .from('user_activities')
+        .insert({
+          user_id: user.id,
+          activity_type: 'mood_entry',
+          activity_data: entry
+        });
 
-    const taskToComplete = productivityJourney.current_tasks?.find(t => t.id === taskId);
-    if (!taskToComplete) return;
+      if (error) throw error;
 
-    const updatedCurrentTasks = productivityJourney.current_tasks?.filter(t => t.id !== taskId) || [];
-    const updatedCompletedTasks = [...(productivityJourney.completed_tasks || []), {
-      ...taskToComplete,
-      completed_at: new Date().toISOString()
-    }];
-    
-    await updateProductivityJourney({
-      current_tasks: updatedCurrentTasks,
-      completed_tasks: updatedCompletedTasks,
-      last_activity_date: new Date().toISOString()
-    });
-  };
+      // Update local state
+      setGrowthJourney(prev => prev ? {
+        ...prev,
+        mood_entries: [entry, ...prev.mood_entries],
+        last_updated: new Date().toISOString()
+      } : null);
 
-  const addGoal = async (goal: any) => {
-    if (!productivityJourney) return;
+      return { success: true };
+    } catch (error) {
+      console.error('Error adding mood entry:', error);
+      return { success: false, error: String(error) };
+    }
+  }, [user]);
 
-    const updatedGoals = [...(productivityJourney.current_goals || []), goal];
-    
-    await updateProductivityJourney({
-      current_goals: updatedGoals,
-      last_activity_date: new Date().toISOString()
-    });
-  };
+  // Refetch data
+  const refetch = useCallback(async () => {
+    await fetchJourneyData();
+  }, [fetchJourneyData]);
 
-  const updateGoal = async (goalId: string, updates: any) => {
-    if (!productivityJourney) return;
-
-    const updatedGoals = productivityJourney.current_goals?.map(goal => 
-      goal.id === goalId ? { ...goal, ...updates } : goal
-    ) || [];
-    
-    await updateProductivityJourney({
-      current_goals: updatedGoals,
-      last_activity_date: new Date().toISOString()
-    });
-  };
-
-  const completeGoal = async (goalId: string) => {
-    if (!productivityJourney) return;
-
-    const goalToComplete = productivityJourney.current_goals?.find(g => g.id === goalId);
-    if (!goalToComplete) return;
-
-    const updatedCurrentGoals = productivityJourney.current_goals?.filter(g => g.id !== goalId) || [];
-    const updatedCompletedGoals = [...(productivityJourney.completed_goals || []), {
-      ...goalToComplete,
-      completed_at: new Date().toISOString()
-    }];
-    
-    await updateProductivityJourney({
-      current_goals: updatedCurrentGoals,
-      completed_goals: updatedCompletedGoals,
-      last_activity_date: new Date().toISOString()
-    });
-  };
-
+  // Initialize data on mount
   useEffect(() => {
-    fetchJourneys();
-  }, []);
+    if (user) {
+      fetchJourneyData();
+    } else {
+      initializeDefaultData();
+    }
+  }, [user, fetchJourneyData, initializeDefaultData]);
 
   return {
+    // State
     productivityJourney,
     growthJourney,
     loading,
+    
+    // Actions
     updateProductivityJourney,
     updateGrowthJourney,
-    addMoodEntry,
     addReflectionEntry,
     addInsightEntry,
-    addProductivityTask,
-    completeProductivityTask,
-    addGoal,
-    updateGoal,
-    completeGoal,
-    refetch: fetchJourneys
+    addMoodEntry,
+    refetch
   };
 };

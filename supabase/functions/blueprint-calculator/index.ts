@@ -15,8 +15,7 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     
-    // Temporarily disable test endpoints with TypeScript issues
-    // Note: test-human-design and debug-calculation are still enabled
+    // Add Human Design test endpoint FIRST for testing your specific birth data
     if (url.pathname.includes('/test-human-design')) {
       const { default: testHumanDesign } = await import('./test-human-design.ts');
       return await testHumanDesign(req);
@@ -28,22 +27,30 @@ serve(async (req) => {
       return await debugEndpoint(req);
     }
     
-    // ALL TEST ENDPOINTS TEMPORARILY DISABLED FOR TYPESCRIPT STABILITY
-    if (url.pathname.includes('/test-')) {
-      const testType = url.pathname.split('/test-')[1] || 'unknown';
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: `Test endpoint '${testType}' temporarily disabled for TypeScript stability`,
-          note: "All test endpoints are disabled to prevent TypeScript compilation issues"
-        }),
-        { 
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders 
-          } 
-        }
-      );
+    // Handle test endpoints FIRST, before any other processing
+    if (url.pathname.includes('/test-astronomia')) {
+      const { default: testAstronomia } = await import('./test-astronomia.ts');
+      return await testAstronomia(req);
+    }
+    
+    if (url.pathname.includes('/test-moon-minimal')) {
+      const { default: testMoonMinimal } = await import('./test-moon-minimal.ts');
+      return await testMoonMinimal(req);
+    }
+    
+    if (url.pathname.includes('/test-astrometry')) {
+      const { default: testAstrometry } = await import('./test-astrometry.ts');
+      return await testAstrometry(req);
+    }
+    
+    if (url.pathname.includes('/test-available-astronomy')) {
+      const { default: testAvailableAstronomy } = await import('./test-available-astronomy.ts');
+      return await testAvailableAstronomy(req);
+    }
+    
+    if (url.pathname.includes('/test-wasm')) {
+      const { default: testWasm } = await import('./test-wasm.ts');
+      return await testWasm(req);
     }
 
     if (url.pathname.includes('/test-prokerala')) {
@@ -52,25 +59,18 @@ serve(async (req) => {
     }
 
     // Parse JSON for main blueprint calculation endpoints and POST requests
-    interface RequestData {
-      birthDate?: string;
-      birthTime?: string;
-      birthLocation?: string;
-      fullName?: string;
-    }
-    
-    let requestData: RequestData = {};
+    let requestData = {};
     if (req.method === 'POST') {
       const text = await req.text();
       if (text.trim()) {
         try {
-          requestData = JSON.parse(text) as RequestData;
+          requestData = JSON.parse(text);
         } catch (parseError) {
           console.error("Failed to parse request body:", parseError);
           return new Response(
             JSON.stringify({ 
               error: "Invalid request format",
-              details: parseError instanceof Error ? parseError.message : String(parseError),
+              details: parseError.message,
               code: "INVALID_REQUEST_FORMAT"
             }),
             { 
@@ -134,7 +134,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: "Internal server error",
-        details: error instanceof Error ? error.message : String(error),
+        details: error.message,
         code: "INTERNAL_ERROR"
       }),
       { 
@@ -412,18 +412,11 @@ async function generateHumanDesign(birthDate: string, birthTime: string, birthLo
     
     console.log("✅ Human Design calculation completed via Vercel API");
     console.log("Result type:", humanDesignResult.type);
+    console.log("Result profile:", humanDesignResult.profile);
+    console.log("Result authority:", humanDesignResult.authority);
     
-    // Check for valid result structure before accessing properties
-    if ('profile' in humanDesignResult && 'authority' in humanDesignResult) {
-      console.log("Result profile:", humanDesignResult.profile);
-      console.log("Result authority:", humanDesignResult.authority);
-    }
-    
-    // Check if this is a fallback result with proper type checking
-    if ('metadata' in humanDesignResult && 
-        humanDesignResult.metadata && 
-        'method' in humanDesignResult.metadata &&
-        humanDesignResult.metadata.method === "FALLBACK_NEEDS_PROPER_LIBRARY") {
+    // Check if this is a fallback result
+    if (humanDesignResult.metadata?.calculation_method === "FALLBACK_NEEDS_PROPER_LIBRARY") {
       console.log("⚠️ WARNING: Using fallback Human Design calculation - proper library integration needed");
     }
     

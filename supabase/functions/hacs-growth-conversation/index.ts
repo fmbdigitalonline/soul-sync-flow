@@ -115,7 +115,7 @@ INTELLIGENCE LEVEL: ${intelligence?.intelligence_level || 50}/100
 
 FOCUS AREAS: Spiritual awakening, inner wisdom, shadow work, life purpose, mindfulness, energy alignment, compassion cultivation.
 
-${recentHistory.length > 0 ? `RECENT CONTEXT: ${recentHistory.map((m: any) => `${m.role}: ${m.content}`).join(' | ')}` : ''}
+${recentHistory.length > 0 ? `RECENT CONTEXT: ${recentHistory.map(m => `${m.role}: ${m.content}`).join(' | ')}` : ''}
 
 USER MESSAGE: "${message}"
 
