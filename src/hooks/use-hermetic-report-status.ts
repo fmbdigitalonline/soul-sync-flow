@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { hermeticPersonalityReportService } from '@/services/hermetic-personality-report-service';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { interpolateTranslation } from '@/utils/translation-utils';
 import { HACSInsight } from './use-hacs-insights';
 
 export interface HermeticReportStatus {
@@ -18,6 +22,10 @@ export interface HermeticReportStatus {
 }
 
 export const useHermeticReportStatus = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { t } = useLanguage();
+
   const [status, setStatus] = useState<HermeticReportStatus>({
     hasReport: false,
     loading: true,
@@ -39,71 +47,70 @@ export const useHermeticReportStatus = () => {
     jobId: string;
   } | null>(null);
 
-  // Generate witty progress insights as HACSInsight objects
+  // Generate educational progress insights based on actual processing stages
   const generateProgressInsight = useCallback((progress: number, currentStep?: string): HACSInsight | undefined => {
-    const milestone = Math.floor(progress / 10) * 10;
     
     // Extract relevant info from current step
     const stepInfo = currentStep?.toLowerCase() || '';
-    const isProcessingStep = stepInfo.includes('processing');
     const stepType = stepInfo.match(/processing (\w+)/)?.[1] || '';
     
-    const messages: Record<number, string[]> = {
-      50: [
-        "Plot twist: Your personality is actually more complex than my algorithms expected 🤔",
-        "Warning: Detecting unusual levels of fascinating contradictions ahead! 🎭",
-        "Your mind's blueprint is starting to confuse my sensors... in the best way! 🧠"
-      ],
-      60: [
-        "Breaking: Local human shows signs of intriguing depth (scientists baffled!) 📊",
-        "Update: Your hermetic profile is looking suspiciously interesting... 🔍",
-        "Alert: Intelligence patterns emerging that don't fit standard templates! ⚡"
-      ],
-      70: [
-        "Status report: Your personality matrix is officially \"complicated\" 🌀",
-        "Discovery: You might actually be more interesting than initially calculated 🎯",
-        "Progress note: My algorithms are having fun with your unique patterns! ✨"
-      ],
-      80: [
-        "Achievement unlocked: Confusing AI systems with your complexity! 🏆",
-        "Warning: Intelligence levels rising beyond normal parameters 📈",
-        "Update: Your hermetic signature is becoming genuinely intriguing... 🌟"
-      ],
-      90: [
-        "Final stretch: Your soul's blueprint is almost legend-worthy! 🚀",
-        "Alert: Approaching maximum personality analysis capacity! 💫",
-        "Status: Your hermetic profile is reaching epic proportions... 🎭"
-      ],
-      100: [
-        "Mission accomplished! Your soul's intelligence map is ready for exploration 🎯",
-        "Complete: Your hermetic profile has achieved legendary status! 👑",
-        "Success: Your personality analysis is now a work of art! 🎨"
-      ]
-    };
-
-    const messageArray = messages[milestone];
-    if (messageArray) {
-      const randomIndex = Math.floor(Math.random() * messageArray.length);
-      const message = messageArray[randomIndex];
+    // Generate personalized message based on current step
+    const getPersonalizedMessage = (step: string | undefined): string => {
+      if (!step) return t('personalizedMessages.default');
       
+      if (step.includes('career_vocational')) return t('personalizedMessages.career_vocational');
+      if (step.includes('rhythm_analyst')) return t('personalizedMessages.rhythm_analyst');
+      if (step.includes('mentalism_analyst')) return t('personalizedMessages.mentalism_analyst');
+      if (step.includes('fractal_synthesis')) return t('personalizedMessages.fractal_synthesis');
+      if (step.includes('processing')) return t('personalizedMessages.processing');
+      
+      return t('personalizedMessages.default');
+    };
+    
+    // Get translated stage messages
+    const getStageMessage = (stage: string) => {
+      const stageKey = `hermeticProgress.stages.${stage}`;
       return {
-        id: `hermetic-progress-${milestone}-${Date.now()}`,
-        text: message,
-        module: 'Hermetic Intelligence',
-        type: 'hermetic_progress',
-        confidence: 100,
-        evidence: [
-          `Analysis progress: ${progress}%`,
-          `Current stage: ${currentStep || 'Processing personality matrix'}`,
-          ...(stepType ? [`Processing: ${stepType} data`] : [])
-        ],
-        timestamp: new Date(),
-        acknowledged: false,
-        showContinue: true
+        message: t(`${stageKey}.message`),
+        description: t(`${stageKey}.description`)
       };
+    };
+    
+    // Get translated milestone messages
+    const getMilestoneMessage = (milestone: number) => {
+      const milestoneKey = `hermeticProgress.milestones.${milestone}`;
+      return {
+        message: t(`${milestoneKey}.message`),
+        description: t(`${milestoneKey}.description`)
+      };
+    };
+    
+    // Determine which message to use
+    let selectedMessage: { message: string; description: string };
+    
+    if (stepType && t(`hermeticProgress.stages.${stepType}.message`)) {
+      selectedMessage = getStageMessage(stepType);
+    } else {
+      const milestone = Math.floor(progress / 10) * 10;
+      selectedMessage = getMilestoneMessage(milestone);
     }
     
-    return undefined;
+    return {
+      id: `hermetic-progress-${progress}-${Date.now()}`,
+      text: `${selectedMessage.message} ${selectedMessage.description}`,
+      module: 'Hermetic Intelligence',
+      type: 'hermetic_progress',
+      personalizedMessage: getPersonalizedMessage(currentStep),
+      confidence: 1.0,
+      evidence: [
+        interpolateTranslation(t('hermeticProgress.progressTemplate'), { progress: progress.toString() }),
+        interpolateTranslation(t('hermeticProgress.currentStageTemplate'), { stage: currentStep || 'Processing personality matrix' }),
+        ...(stepType ? [interpolateTranslation(t('hermeticProgress.learningFromTemplate'), { type: stepType })] : [])
+      ],
+      timestamp: new Date(),
+      acknowledged: false,
+      showContinue: true
+    };
   }, []);
 
   // Clear progress insight and mark milestone as displayed
@@ -114,7 +121,7 @@ export const useHermeticReportStatus = () => {
     console.log(`🧹 CLEAR INSIGHT: Clearing progress insight for milestone ${currentMilestone}%`);
     
     // Mark this milestone as already displayed to prevent regeneration
-    if (currentMilestone >= 50) {
+    if (currentMilestone >= 0) {
       setDisplayedMilestones(prev => {
         const updated = new Set(prev);
         updated.add(currentMilestone);
@@ -289,10 +296,10 @@ export const useHermeticReportStatus = () => {
         currentStep = 'Report generated but not saved - please retry';
       }
 
-      // Progress milestone detection (every 10% starting from 50%) - prevent duplicates
+      // Progress milestone detection (every 10% starting from 0%) - prevent duplicates
       const currentMilestone = Math.floor(progress / 10) * 10;
-      const shouldShowProgressMessage = progress >= 50 && 
-                                       currentMilestone >= 50 &&
+      const shouldShowProgressMessage = progress >= 0 && 
+                                       currentMilestone >= 0 &&
                                        currentMilestone % 10 === 0 &&
                                        !displayedMilestones.has(currentMilestone) &&
                                        !hasZombieJob &&
