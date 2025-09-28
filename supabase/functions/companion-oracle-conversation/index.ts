@@ -23,7 +23,6 @@ function getThinkingStyleDescription(mbtiType: string): string {
     'ISTP': 'practical and adaptable craftsperson',
     'ESTP': 'bold and perceptive entrepreneur',
     'INTP': 'logical and innovative thinker',
-    'ENTP': 'quick-witted and clever innovator',
     'ISTJ': 'practical and fact-minded logistician',
     'ESTJ': 'efficient and hardworking executive'
   };
@@ -405,22 +404,18 @@ serve(async (req) => {
           }
         });
 
-          sidecarResult = {
-            success: !!sidecarResponse.data,
-            error: sidecarResponse.error?.message || null,
-            factsFound: sidecarResponse.data?.facts?.length || 0,
-            passagesFound: sidecarResponse.data?.passages?.length || 0,
-            intent: sidecarResponse.data?.intent || 'unknown',
-            facts: sidecarResponse.data?.facts || [],
-            passages: sidecarResponse.data?.passages || []
-          };
+        let sidecarResult: any = {
+          intent: 'unknown'
+        };
+
+        try {
 
           console.log('🔮 SIDECAR RESULT:', sidecarResult);
 
           if (sidecarResponse.data && !sidecarResponse.error) {
             // Use sidecar results
-            structuredFacts = sidecarResult.facts;
-            const sidecarPassages = sidecarResult.passages;
+            structuredFacts = sidecarResult.facts || [];
+            const sidecarPassages = sidecarResult.passages || [];
             
             // Convert sidecar passages to semantic chunks format
             semanticChunks = sidecarPassages.map((passage: any, index: number) => ({
@@ -476,7 +471,7 @@ serve(async (req) => {
         try {
           // Create contextual search text by combining current message with conversation context
           const contextualSearchText = conversationHistory.length > 0 
-            ? `${conversationHistory.slice(-5).map(msg => `${msg.role}: ${msg.content}`).join(' ')} current: ${message}`
+            ? `${conversationHistory.slice(-5).map((msg: any) => `${msg.role}: ${msg.content}`).join(' ')} current: ${message}`
             : message;
 
           console.log('🔮 STEP 3: Generating embedding for contextual search:', {
@@ -500,7 +495,6 @@ serve(async (req) => {
             embeddingLength: embeddingResponse.data?.embedding?.length || 0,
             processingTime: embeddingDuration + 'ms',
             error: embeddingResponse.error?.message || null,
-            statusCode: embeddingResponse.status,
             responseDataKeys: Object.keys(embeddingResponse.data || {}),
             responseErrorKeys: Object.keys(embeddingResponse.error || {})
           });
@@ -508,7 +502,6 @@ serve(async (req) => {
           if (embeddingResponse.error) {
             console.error('❌ ORACLE FATAL: Embedding generation failed with error:', {
               error: embeddingResponse.error,
-              status: embeddingResponse.status,
               data: embeddingResponse.data
             });
             throw new Error('Failed to generate message embedding: ' + embeddingResponse.error.message);
@@ -569,7 +562,7 @@ serve(async (req) => {
             searchErrorDetails: searchError?.details || null,
             searchErrorHint: searchError?.hint || null,
             rawResult: matchingChunks ? 'array' : 'null/undefined',
-            resultSample: matchingChunks?.slice(0, 2).map(c => ({
+            resultSample: matchingChunks?.slice(0, 2).map((c: any) => ({
               id: c.id,
               similarity: c.similarity,
               contentLength: c.chunk_content?.length || 0,
@@ -620,9 +613,9 @@ serve(async (req) => {
             oracleStatus = 'full_oracle';
             console.log('🎯 ORACLE SUCCESS: Retrieved semantic chunks:', {
               totalChunks: semanticChunks.length,
-              similarities: semanticChunks.map(c => c.relevance.toFixed(3)),
-              avgSimilarity: (semanticChunks.reduce((sum, c) => sum + c.relevance, 0) / semanticChunks.length).toFixed(3),
-              totalContentLength: semanticChunks.reduce((sum, c) => sum + c.content.length, 0),
+              similarities: semanticChunks.map((c: any) => c.relevance.toFixed(3)),
+              avgSimilarity: (semanticChunks.reduce((sum: number, c: any) => sum + c.relevance, 0) / semanticChunks.length).toFixed(3),
+              totalContentLength: semanticChunks.reduce((sum: number, c: any) => sum + c.content.length, 0),
               oracleStatus: oracleStatus
             });
           } else {
@@ -644,10 +637,10 @@ serve(async (req) => {
           
         } catch (vectorError) {
           console.error('❌ ORACLE PIPELINE EXCEPTION: Vector search process failed:', {
-            error: vectorError.message,
-            stack: vectorError.stack,
+            error: vectorError instanceof Error ? vectorError.message : String(vectorError),
+            stack: vectorError instanceof Error ? vectorError.stack : undefined,
             phase: 'vector_search',
-            cause: vectorError.cause
+            cause: vectorError instanceof Error ? vectorError.cause : undefined
           });
           
           // EMERGENCY FALLBACK: Use personality reports directly
@@ -716,7 +709,6 @@ serve(async (req) => {
           requiredProcessing: 'process-blueprint-embeddings function'
         });
         oracleStatus = 'initializing';
-        }
       } // End legacy pipeline fallback
     } else {
       console.log('🔮 ENHANCED ORACLE: Skipped - Oracle mode disabled or no personality context');
@@ -1173,7 +1165,7 @@ Respond helpfully while building rapport and understanding.`
   } catch (error) {
     console.error('❌ Oracle Conversation Error:', error)
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       response: 'The cosmic channels are temporarily disrupted. Please try again, seeker.'
     }), {
       status: 500,

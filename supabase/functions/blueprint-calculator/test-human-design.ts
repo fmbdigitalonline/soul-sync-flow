@@ -288,10 +288,10 @@ export default async function testHumanDesign(req: Request) {
       debug_info: {
         personality_celestial_data_available: !!personalityCelestialData,
         sun_longitude: (personalityCelestialData as any)?.sun?.longitude,
-        moon_longitude: personalityCelestialData?.moon?.longitude,
+        moon_longitude: (personalityCelestialData as any)?.moon?.longitude,
         total_planets_available: Object.keys(personalityCelestialData || {}).length,
-        julian_date: personalityCelestialData?.julian_date,
-        calculation_source: personalityCelestialData?.source
+        julian_date: (personalityCelestialData as any)?.julian_date,
+        calculation_source: (personalityCelestialData as any)?.source
       }
     }, null, 2), {
       headers: { 
@@ -312,12 +312,12 @@ export default async function testHumanDesign(req: Request) {
       success: false,
       error: {
         step: "top_level_handler",
-        name: topLevelError.name || "UnknownError",
-        message: topLevelError.message || topLevelError.toString(),
-        stack: topLevelError.stack || "No stack trace available",
+        name: topLevelError instanceof Error ? topLevelError.name : "UnknownError",
+        message: topLevelError instanceof Error ? topLevelError.message : String(topLevelError),
+        stack: topLevelError instanceof Error ? topLevelError.stack : "No stack trace available",
         details: "Unhandled error in test function",
         error_type: typeof topLevelError,
-        error_constructor: topLevelError.constructor?.name
+        error_constructor: topLevelError instanceof Error ? topLevelError.constructor?.name : "Unknown"
       },
       test_failed: true,
       timestamp: new Date().toISOString()
