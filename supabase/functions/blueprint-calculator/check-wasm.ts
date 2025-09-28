@@ -1,5 +1,5 @@
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -17,7 +17,14 @@ serve(async (req) => {
     console.log("Checking WASM configuration...");
     
     // Check if WASI is supported in this Deno environment
-    const wasiSupported = typeof Deno.Wasi === 'function';
+    let wasiSupported = false;
+    try {
+      // Safe feature detection for WASI
+      const Wasi = (Deno as any)?.Wasi;
+      wasiSupported = typeof Wasi === 'function';
+    } catch (_: unknown) {
+      wasiSupported = false;
+    }
     console.log(`WASI support detected: ${wasiSupported ? 'Yes' : 'No'}`);
     
     // Gather environment info
@@ -30,7 +37,7 @@ serve(async (req) => {
     const storageUrl = `https://${supabaseProject}.supabase.co/storage/v1/object/public/${wasmBucket}${wasmPath}`;
     
     // Add custom URL check too
-    const customUrl = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm//astro.wasm";
+    const customUrl = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm/astro.wasm";
     
     console.log(`Testing WASM URL: ${storageUrl}`);
     console.log(`Also testing custom WASM URL: ${customUrl}`);
@@ -82,10 +89,10 @@ serve(async (req) => {
         console.error(`❌ WASM file not accessible. Status: ${response.status} ${response.statusText}`);
         errorDetails = `HTTP ${response.status}: ${response.statusText}`;
       }
-    } catch (fetchError) {
+    } catch (fetchError: unknown) {
       console.error("Error fetching WASM file:", fetchError);
       wasmStatus = "fetch_error";
-      errorDetails = fetchError.message;
+      errorDetails = fetchError instanceof Error ? fetchError.message : String(fetchError);
     }
     
     // Check custom URL too
@@ -121,10 +128,10 @@ serve(async (req) => {
         console.error(`❌ Custom WASM URL not accessible. Status: ${customResponse.status} ${customResponse.statusText}`);
         customErrorDetails = `HTTP ${customResponse.status}: ${customResponse.statusText}`;
       }
-    } catch (fetchError) {
+    } catch (fetchError: unknown) {
       console.error("Error fetching custom WASM URL:", fetchError);
       customUrlStatus = "fetch_error";
-      customErrorDetails = fetchError.message;
+      customErrorDetails = fetchError instanceof Error ? fetchError.message : String(fetchError);
     }
     
     // Also check local paths for completeness
@@ -212,15 +219,25 @@ serve(async (req) => {
         }
       }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error checking WASM configuration:", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+    
+    let wasiCheck = false;
+    try {
+      const Wasi = (Deno as any)?.Wasi;
+      wasiCheck = typeof Wasi === 'function';
+    } catch (_: unknown) {
+      wasiCheck = false;
+    }
     
     return new Response(
       JSON.stringify({
         error: 'WASM check failed',
-        details: error.message,
-        stack: error.stack,
-        wasi_supported: typeof Deno.Wasi === 'function',
+        details: msg,
+        stack: stack,
+        wasi_supported: wasiCheck,
         deno_version: Deno.version
       }),
       {

@@ -1,5 +1,5 @@
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { initializeSwephModule } from '../_shared/sweph/sweph-loader.ts';
 
 // CORS headers for browser requests
@@ -21,7 +21,14 @@ serve(async (req) => {
     const startTime = performance.now();
     
     // Check if WASI is supported in this Deno environment
-    const wasiSupported = typeof Deno.Wasi === 'function';
+    let wasiSupported = false;
+    try {
+      // Safe feature detection for WASI
+      const Wasi = (Deno as any)?.Wasi;
+      wasiSupported = typeof Wasi === 'function';
+    } catch (_: unknown) {
+      wasiSupported = false;
+    }
     console.log(`WASI support detected: ${wasiSupported ? 'Yes' : 'No'}`);
     
     // Try to initialize the WASM module
@@ -74,15 +81,25 @@ serve(async (req) => {
         } 
       }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("WASM test failed:", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+    
+    let wasiCheck = false;
+    try {
+      const Wasi = (Deno as any)?.Wasi;
+      wasiCheck = typeof Wasi === 'function';
+    } catch (_: unknown) {
+      wasiCheck = false;
+    }
     
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
-        stack: error.stack,
-        wasi_support: typeof Deno.Wasi === 'function',
+        error: msg,
+        stack: stack,
+        wasi_support: wasiCheck,
         deno_version: Deno.version,
         message: "Failed to initialize or test the Swiss Ephemeris WASM module"
       }),

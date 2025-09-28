@@ -15,7 +15,7 @@ const WASM_OBJECT_PATH = Deno.env.get("WASM_OBJECT_PATH") || "/astro.wasm";  // 
 const STORAGE_URL = `https://${SUPABASE_PROJECT}.supabase.co/storage/v1/object/public/${WASM_BUCKET}${WASM_OBJECT_PATH}`;
 
 // Add the specific URL provided by the user
-const CUSTOM_STORAGE_URL = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm//astro.wasm";
+const CUSTOM_STORAGE_URL = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm/astro.wasm";
 
 // Updated CDN URLs to use the latest builds from the SwissEph project
 const GITHUB_CDN_URL = "https://cdn.jsdelivr.net/npm/@swisseph/swisseph-wasm@3.0.1/dist/swisseph.wasm";

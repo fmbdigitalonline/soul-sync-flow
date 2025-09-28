@@ -1,17 +1,18 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 // Test import immediately
 console.log("🔧 EPHEMERIS MODULE: Starting to load...");
 
-let Astronomy;
+let Astronomy: any;
 try {
   console.log("🔧 EPHEMERIS MODULE: Importing astronomy-engine...");
   Astronomy = await import("npm:astronomy-engine@2");
   console.log("✅ EPHEMERIS MODULE: Successfully imported astronomy-engine");
-} catch (error) {
+} catch (error: unknown) {
   console.error("❌ EPHEMERIS MODULE: Failed to import astronomy-engine:", error);
-  throw new Error(`Failed to import astronomy-engine: ${error.message}`);
+  const msg = error instanceof Error ? error.message : String(error);
+  throw new Error(`Failed to import astronomy-engine: ${msg}`);
 }
 import * as path from "https://deno.land/std@0.168.0/path/mod.ts";
 import { calculateHouseCusps } from './house-system-calculator.ts';
@@ -63,7 +64,7 @@ function calculateEclipticLatitude(body: string, astroTime: any): number {
       return 0; // Sun is always on the ecliptic
     }
     
-    const inclination = bodyInclinations[body] || 0;
+    const inclination = (bodyInclinations as any)[body] || 0;
     // Simplified calculation - assume random position in orbital plane
     const T = (astroTime.tt - 2451545.0) / 36525.0;
     const phase = (T * 365.25 * body.length) % 360; // pseudo-random based on time and body
