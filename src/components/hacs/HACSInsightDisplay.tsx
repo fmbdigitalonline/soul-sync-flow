@@ -52,7 +52,6 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
       case 'growth': return Brain;
       case 'learning': return Lightbulb;
       case 'steward_introduction': return Brain;
-      case 'steward_completion': return Brain;
       default: return Lightbulb;
     }
   };
@@ -64,7 +63,6 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
       case 'growth': return 'text-green-400';
       case 'learning': return 'text-orange-400';
       case 'steward_introduction': return 'text-primary';
-      case 'steward_completion': return 'text-purple-400';
       default: return 'text-primary';
     }
   };
@@ -166,13 +164,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
 
           {/* Insight Text */}
           <div className="mb-4">
-            {insight.type === 'steward_completion' ? (
-              <p className="text-sm leading-relaxed text-purple-400 font-medium">
-                I'm now learning in the background! You can continue using the app while I learn the deepest parts of your blueprint
-              </p>
-            ) : (
-              <p className="text-sm leading-relaxed">{insight.text}</p>
-            )}
+            <p className="text-sm leading-relaxed">{insight.text}</p>
           </div>
 
           {/* Evidence Toggle */}

@@ -27,7 +27,7 @@ export interface HACSInsight {
   id: string;
   text: string;
   module: string;
-  type: 'productivity' | 'behavioral' | 'growth' | 'learning' | 'intelligence_trend' | 'learning_streak' | 'performance_trend' | 'peak_times' | 'activity_frequency' | 'module_performance' | 'memory_patterns' | 'difficulty_progression' | 'steward_introduction' | 'steward_completion' | 'memory_enhanced' | 'behavioral_enhanced' | 'predictive' | 'conversation_shadow' | 'conversation_nullification' | 'hermetic_progress';
+  type: 'productivity' | 'behavioral' | 'growth' | 'learning' | 'intelligence_trend' | 'learning_streak' | 'performance_trend' | 'peak_times' | 'activity_frequency' | 'module_performance' | 'memory_patterns' | 'difficulty_progression' | 'steward_introduction' | 'memory_enhanced' | 'behavioral_enhanced' | 'predictive' | 'conversation_shadow' | 'conversation_nullification' | 'hermetic_progress';
   confidence: number;
   evidence: string[];
   timestamp: Date;
@@ -827,37 +827,16 @@ export const useHACSInsights = () => {
     return null;
   }, [trackActivity, generateInsight, currentInsight]);
 
-  // Auto-dismiss insights after 10 minutes if not acknowledged (prevents conflict with manual dismissal)
+  // Auto-dismiss insights after 2 minutes if not acknowledged
   useEffect(() => {
     if (currentInsight && !currentInsight.acknowledged) {
       const timer = setTimeout(() => {
-        console.log('⏰ Auto-dismissing insight after 10 minutes:', currentInsight.id);
         dismissInsight();
-      }, 10 * 60 * 1000); // 10 minutes
+      }, 2 * 60 * 1000); // 2 minutes
 
       return () => clearTimeout(timer);
     }
   }, [currentInsight, dismissInsight]);
-
-  // Generate steward completion insight
-  const generateStewardCompletionInsight = useCallback(() => {
-    if (!user) return;
-
-    const stewardCompletionInsight: HACSInsight = {
-      id: `steward_completion_${Date.now()}`,
-      text: "I'm now learning in the background! You can continue using the app while I learn the deepest parts of your blueprint",
-      module: 'Steward',
-      type: 'steward_completion',
-      confidence: 1.0,
-      evidence: ['Steward introduction completed', 'Background learning activated'],
-      timestamp: new Date(),
-      acknowledged: false,
-      priority: 'high'
-    };
-
-    addInsightToQueue(stewardCompletionInsight);
-    console.log('✅ Generated steward completion insight');
-  }, [user, addInsightToQueue]);
 
   return {
     currentInsight,
@@ -881,8 +860,6 @@ export const useHACSInsights = () => {
     introductionState,
     isGeneratingReport,
     // Step 1: Historical insights loader
-    loadHistoricalInsights,
-    // Steward completion insight
-    generateStewardCompletionInsight
+    loadHistoricalInsights
   };
 };
