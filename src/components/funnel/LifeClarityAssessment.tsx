@@ -413,12 +413,13 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
             <Progress value={progress} className="w-full h-2" />
           </CardHeader>
           <CardContent className={cn(
-            "space-y-4 sm:space-y-6",
-            isUltraNarrow ? "px-3" : "px-4 sm:px-6"
+            "space-y-4 sm:space-y-6 transition-all duration-500 ease-in-out",
+            isUltraNarrow ? "px-3" : "px-4 sm:px-6",
+            !guideIntroComplete ? "backdrop-blur-lg opacity-30 pointer-events-none" : ""
           )}>
             <div className={cn(
               "transition-all duration-500 ease-in-out",
-              guideIntroComplete ? "opacity-100 pointer-events-auto" : "backdrop-blur-md opacity-60 pointer-events-none"
+              guideIntroComplete ? "opacity-100 pointer-events-auto" : "pointer-events-none"
             )}>
               {renderStep()}
               <div className="flex justify-center pt-4 sm:pt-6">

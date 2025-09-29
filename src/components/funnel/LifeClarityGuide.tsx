@@ -191,7 +191,7 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
     <div className={cn(
       "z-50 transition-all duration-500 ease-in-out",
       isStreaming && showBubble
-        ? "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" // Centered when speaking
+        ? "fixed top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2" // Centered at headline level
         : "fixed top-6 right-2 sm:right-6", // Original position
       className
     )}>
