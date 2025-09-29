@@ -581,7 +581,7 @@ const translations: Record<Language, Translations> = {
       welcomeComplete: 'Welcome to Your Soul Journey!',
       welcomeCompleteDesc: 'Your personalized spiritual path is ready. Your Soul companion will guide you through insights, growth tools, and personalized recommendations.',
       // Onboarding goal selection
-      primaryFocus: 'Personal Growth',
+      primaryFocus: 'What would you like to focus on?',
       exploring: 'Exploring my purpose and direction',
       personalGrowth: 'Personal growth and self-discovery',
       careerSuccess: 'Career development and success',
@@ -2224,7 +2224,7 @@ const translations: Record<Language, Translations> = {
       welcomeComplete: 'Welkom bij Je Ontdekkingsreis!',
       welcomeCompleteDesc: 'Je gepersonaliseerde spirituele pad is klaar. Je Soul metgezel zal je begeleiden door inzichten, groei-tools en gepersonaliseerde aanbevelingen.',
       // Onboarding doelselectie
-      primaryFocus: 'Persoonlijke Groei',
+      primaryFocus: 'Waar wil je je op richten?',
       exploring: 'Mijn doel en richting verkennen',
       personalGrowth: 'Persoonlijke groei en zelfontdekking',
       careerSuccess: 'Carrièreontwikkeling en succes',
