@@ -30,6 +30,7 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
   const { isUltraNarrow } = useIsMobile();
   const [currentStep, setCurrentStep] = useState(1);
   const [guideIntroComplete, setGuideIntroComplete] = useState(false);
+  const [isGuideSpeaking, setIsGuideSpeaking] = useState(false);
   const [funnelData, setFunnelData] = useState<FunnelData>({
     painPoint: "",
     lifeSatisfaction: {},
@@ -415,7 +416,7 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
           <CardContent className={cn(
             "space-y-4 sm:space-y-6 transition-all duration-500 ease-in-out",
             isUltraNarrow ? "px-3" : "px-4 sm:px-6",
-            !guideIntroComplete ? "bg-muted/80 backdrop-blur-lg pointer-events-none" : ""
+            (!guideIntroComplete || isGuideSpeaking) ? "bg-muted/80 backdrop-blur-lg pointer-events-none" : ""
           )}>
             <div className={cn(
               "transition-all duration-500 ease-in-out",
@@ -439,14 +440,15 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
       </div>
 
       {/* Interactive Life Clarity Guide */}
-      <LifeClarityGuide
-        currentStep={currentStep}
-        totalSteps={totalSteps}
-        funnelData={funnelData}
-        isStepValid={isStepValid()}
-        onIntroComplete={() => setGuideIntroComplete(true)}
-        guideIntroComplete={guideIntroComplete}
-      />
+        <LifeClarityGuide
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          funnelData={funnelData}
+          isStepValid={isStepValid()}
+          onIntroComplete={() => setGuideIntroComplete(true)}
+          guideIntroComplete={guideIntroComplete}
+          onSpeakingStateChange={setIsGuideSpeaking}
+        />
     </div>
   );
 };
