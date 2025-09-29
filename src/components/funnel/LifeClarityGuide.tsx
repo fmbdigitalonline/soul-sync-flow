@@ -14,6 +14,7 @@ interface LifeClarityGuideProps {
   className?: string;
   onIntroComplete: () => void;
   guideIntroComplete: boolean;
+  onSpeakingChange: (speaking: boolean) => void;
 }
 
 interface GuideMessage {
@@ -30,7 +31,8 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
   isStepValid,
   className,
   onIntroComplete,
-  guideIntroComplete
+  guideIntroComplete,
+  onSpeakingChange
 }) => {
   const [showBubble, setShowBubble] = useState(false);
   const [orbStage, setOrbStage] = useState<"welcome" | "collecting" | "generating" | "complete">("welcome");
@@ -186,6 +188,11 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
       return () => clearTimeout(timer);
     }
   }, [messageType, isStreaming]);
+
+  // Communicate speaking state to parent
+  useEffect(() => {
+    onSpeakingChange(showBubble);
+  }, [showBubble, onSpeakingChange]);
 
   return (
     <div className={cn(
