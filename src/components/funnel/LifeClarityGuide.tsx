@@ -14,7 +14,6 @@ interface LifeClarityGuideProps {
   className?: string;
   onIntroComplete: () => void;
   guideIntroComplete: boolean;
-  onSpeakingChange: (speaking: boolean) => void;
 }
 
 interface GuideMessage {
@@ -31,8 +30,7 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
   isStepValid,
   className,
   onIntroComplete,
-  guideIntroComplete,
-  onSpeakingChange
+  guideIntroComplete
 }) => {
   const [showBubble, setShowBubble] = useState(false);
   const [orbStage, setOrbStage] = useState<"welcome" | "collecting" | "generating" | "complete">("welcome");
@@ -189,23 +187,9 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
     }
   }, [messageType, isStreaming]);
 
-  // Communicate speaking state to parent
-  useEffect(() => {
-    onSpeakingChange(showBubble);
-  }, [showBubble, onSpeakingChange]);
-
   return (
-    <div className={cn(
-      "z-50 transition-all duration-500 ease-in-out",
-      isStreaming && showBubble
-        ? "fixed top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2" // Centered at headline level
-        : "fixed top-6 right-2 sm:right-6", // Original position
-      className
-    )}>
-      <div className={cn(
-        "flex items-start gap-2 sm:gap-4",
-        isStreaming && showBubble ? "flex-col items-center" : "" // Stack vertically when centered
-      )}>
+    <div className={cn("fixed top-6 right-2 sm:right-6 z-50", className)}>
+      <div className="flex items-start gap-2 sm:gap-4">
         {/* Speech bubble on the left side */}
         <AnimatePresence>
           {showBubble && currentMessage && (
@@ -215,16 +199,12 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
               animate={{ opacity: 1, scale: 1, x: 0 }}
               exit={{ opacity: 0, scale: 0.9, x: 20 }}
               transition={{ duration: 0.3 }}
-              className={cn(
-                "cursor-pointer",
-                isStreaming && showBubble ? "mb-4" : "" // Space from centered orb
-              )}
+              className="cursor-pointer"
             >
               <div className={cn(
                 "relative w-48 sm:w-64 max-w-sm px-3 sm:px-4 py-2 sm:py-3 cosmic-card",
-                isStreaming && showBubble 
-                  ? "before:content-[''] before:absolute before:bottom-[-6px] sm:before:bottom-[-8px] before:left-1/2 before:-translate-x-1/2 before:w-0 before:h-0 before:border-[6px] sm:before:border-[8px] before:border-transparent before:border-t-card" // Arrow below when centered
-                  : "before:content-[''] before:absolute before:right-[-6px] sm:before:right-[-8px] before:top-1/2 before:-translate-y-1/2 before:w-0 before:h-0 before:border-[6px] sm:before:border-[8px] before:border-transparent before:border-l-card" // Arrow right when in corner
+                "before:content-[''] before:absolute before:right-[-6px] sm:before:right-[-8px] before:top-1/2 before:-translate-y-1/2",
+                "before:w-0 before:h-0 before:border-[6px] sm:before:border-[8px] before:border-transparent before:border-l-card"
               )}>
                 <div className="text-xs sm:text-sm leading-relaxed text-foreground">
                   {isStreaming ? streamingContent : currentMessage}

@@ -30,7 +30,6 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
   const { isUltraNarrow } = useIsMobile();
   const [currentStep, setCurrentStep] = useState(1);
   const [guideIntroComplete, setGuideIntroComplete] = useState(false);
-  const [isGuideSpeaking, setIsGuideSpeaking] = useState(false);
   const [funnelData, setFunnelData] = useState<FunnelData>({
     painPoint: "",
     lifeSatisfaction: {},
@@ -414,13 +413,12 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
             <Progress value={progress} className="w-full h-2" />
           </CardHeader>
           <CardContent className={cn(
-            "space-y-4 sm:space-y-6 transition-all duration-500 ease-in-out",
-            isUltraNarrow ? "px-3" : "px-4 sm:px-6",
-            (!guideIntroComplete || isGuideSpeaking) ? "backdrop-blur-lg opacity-70 pointer-events-none" : ""
+            "space-y-4 sm:space-y-6",
+            isUltraNarrow ? "px-3" : "px-4 sm:px-6"
           )}>
             <div className={cn(
               "transition-all duration-500 ease-in-out",
-              guideIntroComplete ? "opacity-100 pointer-events-auto" : "pointer-events-none"
+              guideIntroComplete ? "opacity-100 pointer-events-auto" : "opacity-30 pointer-events-none"
             )}>
               {renderStep()}
               <div className="flex justify-center pt-4 sm:pt-6">
@@ -440,15 +438,14 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
       </div>
 
       {/* Interactive Life Clarity Guide */}
-        <LifeClarityGuide
-          currentStep={currentStep}
-          totalSteps={totalSteps}
-          funnelData={funnelData}
-          isStepValid={isStepValid()}
-          onIntroComplete={() => setGuideIntroComplete(true)}
-          guideIntroComplete={guideIntroComplete}
-          onSpeakingChange={setIsGuideSpeaking}
-        />
+      <LifeClarityGuide
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        funnelData={funnelData}
+        isStepValid={isStepValid()}
+        onIntroComplete={() => setGuideIntroComplete(true)}
+        guideIntroComplete={guideIntroComplete}
+      />
     </div>
   );
 };
