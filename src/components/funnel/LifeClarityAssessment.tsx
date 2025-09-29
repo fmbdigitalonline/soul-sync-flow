@@ -415,7 +415,7 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
           <CardContent className={cn(
             "space-y-4 sm:space-y-6 transition-all duration-500 ease-in-out",
             isUltraNarrow ? "px-3" : "px-4 sm:px-6",
-            !guideIntroComplete ? "backdrop-blur-lg opacity-30 pointer-events-none" : ""
+            !guideIntroComplete ? "backdrop-blur-lg opacity-70 pointer-events-none" : ""
           )}>
             <div className={cn(
               "transition-all duration-500 ease-in-out",
