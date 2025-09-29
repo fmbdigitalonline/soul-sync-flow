@@ -17,6 +17,8 @@ export const useHACSAutonomy = () => {
   const [currentMessage, setCurrentMessage] = useState<HACSMessage | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [messageHistory, setMessageHistory] = useState<HACSMessage[]>([]);
+  const [dismissedMessages, setDismissedMessages] = useState<Map<string, number>>(new Map());
+  const [lastMessageTime, setLastMessageTime] = useState<number>(0);
 
   const generateHACSMessage = useCallback(async (
     hacsModule: string,
@@ -26,7 +28,22 @@ export const useHACSAutonomy = () => {
   ) => {
     if (!user) return null;
 
+    // Check global cooldown (30 minutes between any messages)
+    const now = Date.now();
+    if (now - lastMessageTime < 30 * 60 * 1000) {
+      console.log('🔒 HACS message blocked by global cooldown');
+      return null;
+    }
+
+    // Check if this message type was recently dismissed (10 minutes)
+    const lastDismissed = dismissedMessages.get(messageType);
+    if (lastDismissed && now - lastDismissed < 10 * 60 * 1000) {
+      console.log('🔒 HACS message blocked - recently dismissed:', messageType);
+      return null;
+    }
+
     setIsGenerating(true);
+    setLastMessageTime(now);
     try {
       // Try the new intelligent conversation system first
       const { data: intelligentData, error: intelligentError } = await supabase.functions.invoke('hacs-intelligent-conversation', {
@@ -84,21 +101,27 @@ export const useHACSAutonomy = () => {
     } catch (error) {
       console.error('Error generating HACS message:', error);
       // Fallback message
-      const fallbackMessage: HACSMessage = {
-        id: `hacs_fallback_${Date.now()}`,
-        text: 'I\'m here to support your journey.',
-        hacsModule,
-        interventionType,
-        messageType,
-        timestamp: new Date(),
-        acknowledged: false
-      };
+        // Create fallback based on intervention type
+        let fallbackText = 'I\'m here to support your journey.';
+        if (interventionType === 'steward_completion') {
+          fallbackText = 'Your learning system is now active! You can continue using the app while I learn and provide insights tailored to your journey.';
+        }
+        
+        const fallbackMessage: HACSMessage = {
+          id: `hacs_fallback_${Date.now()}`,
+          text: fallbackText,
+          hacsModule,
+          interventionType,
+          messageType,
+          timestamp: new Date(),
+          acknowledged: false
+        };
       setCurrentMessage(fallbackMessage);
       return fallbackMessage;
     } finally {
       setIsGenerating(false);
     }
-  }, [user]);
+  }, [user, lastMessageTime, dismissedMessages]);
 
   const acknowledgeMessage = useCallback((messageId: string) => {
     setCurrentMessage(prev => 
@@ -112,8 +135,12 @@ export const useHACSAutonomy = () => {
   }, []);
 
   const dismissMessage = useCallback(() => {
-    setCurrentMessage(null);
-  }, []);
+    if (currentMessage) {
+      // Track dismissed message type with timestamp
+      setDismissedMessages(prev => new Map(prev).set(currentMessage.messageType, Date.now()));
+      setCurrentMessage(null);
+    }
+  }, [currentMessage]);
 
   // Autonomous triggers based on HACS modules
   const triggerPIEInsight = useCallback((activityPattern: string) => {
@@ -152,6 +179,16 @@ export const useHACSAutonomy = () => {
     );
   }, [generateHACSMessage]);
 
+  // New: Post-steward introduction message
+  const triggerPostStewardMessage = useCallback(() => {
+    return generateHACSMessage(
+      'HACS',
+      'steward_completion',
+      'User has completed steward introduction - system learning activated',
+      'quick_bubble'
+    );
+  }, [generateHACSMessage]);
+
   return {
     currentMessage,
     messageHistory,
@@ -163,6 +200,7 @@ export const useHACSAutonomy = () => {
     triggerPIEInsight,
     triggerCNRPrompt,
     triggerTMGValidation,
-    triggerDPEMAdaptation
+    triggerDPEMAdaptation,
+    triggerPostStewardMessage
   };
 };

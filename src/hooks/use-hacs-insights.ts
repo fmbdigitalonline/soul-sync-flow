@@ -58,6 +58,7 @@ export const useHACSInsights = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [insightHistory, setInsightHistory] = useState<HACSInsight[]>([]);
   const [lastInsightTime, setLastInsightTime] = useState<number>(0);
+  const [dismissedInsightTypes, setDismissedInsightTypes] = useState<Map<string, number>>(new Map());
   
   // Computed current insight from queue
   const currentInsight = insightQueue.length > 0 ? insightQueue[currentInsightIndex] : null;
@@ -751,9 +752,13 @@ export const useHACSInsights = () => {
     });
   }, []);
 
-  // Dismiss current insight
+  // Dismiss current insight with anti-spam tracking
   const dismissInsight = useCallback(() => {
     if (currentInsight) {
+      // Track dismissed insight type to prevent re-spamming
+      setDismissedInsightTypes(prev => new Map(prev).set(currentInsight.type, Date.now()));
+      console.log('🚫 Insight dismissed and type blocked:', currentInsight.type);
+      
       acknowledgeInsight(currentInsight.id);
       removeCurrentInsight();
     }
@@ -825,7 +830,7 @@ export const useHACSInsights = () => {
 
     console.log('🔍 No insight generated for activity:', activityType);
     return null;
-  }, [trackActivity, generateInsight, currentInsight]);
+  }, [trackActivity, generateInsight, currentInsight, lastInsightTime, dismissedInsightTypes]);
 
   // Auto-dismiss insights after 2 minutes if not acknowledged
   useEffect(() => {
