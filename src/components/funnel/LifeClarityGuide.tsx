@@ -191,9 +191,9 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
 
   // Notify parent about speaking state changes
   useEffect(() => {
-    const isSpeaking = showBubble;
+    const isSpeaking = showBubble && isStreaming;
     onSpeakingStateChange?.(isSpeaking);
-  }, [showBubble, onSpeakingStateChange]);
+  }, [showBubble, isStreaming, onSpeakingStateChange]);
 
   return (
     <div className={cn(

@@ -397,12 +397,7 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-primary/5 flex items-center justify-center p-3 sm:p-4 relative">
       <div className="w-full max-w-2xl mx-auto">
-        <Card className="w-full relative">
-          {/* Absolute overlay for blur effect */}
-          {(!guideIntroComplete || isGuideSpeaking) && (
-            <div className="absolute inset-0 bg-muted/90 backdrop-blur-xl pointer-events-none z-10 rounded-lg" />
-          )}
-          
+        <Card className="w-full">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between mb-4">
               <Button variant="ghost" size="sm" onClick={handleBack} className="flex items-center gap-2 px-2 py-1 h-auto">
@@ -420,7 +415,8 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
           </CardHeader>
           <CardContent className={cn(
             "space-y-4 sm:space-y-6 transition-all duration-500 ease-in-out",
-            isUltraNarrow ? "px-3" : "px-4 sm:px-6"
+            isUltraNarrow ? "px-3" : "px-4 sm:px-6",
+            (!guideIntroComplete || isGuideSpeaking) ? "bg-muted/80 backdrop-blur-lg pointer-events-none" : ""
           )}>
             <div className={cn(
               "transition-all duration-500 ease-in-out",
