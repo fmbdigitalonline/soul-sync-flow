@@ -101,7 +101,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     nextInsight,
     previousInsight,
     removeCurrentInsight,
-    addInsightToQueue
+    addInsightToQueue,
+    generateStewardCompletionInsight
   } = useHACSInsights();
   
   // NEW: Add autonomous orchestration
@@ -173,7 +174,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [showWhisperBubble, setShowWhisperBubble] = useState(false);
   const [currentWhisper, setCurrentWhisper] = useState<string>('');
 
-  console.log('FloatingHACSOrb render:', { 
+  // State for preventing message spam
+  const [lastMessageTime, setLastMessageTime] = useState<number>(0);
+  const [stewardCompletionTriggered, setStewardCompletionTriggered] = useState(false);
+
+  console.log('FloatingHACSOrb render:', {
     loading, 
     intelligence, 
     currentQuestion, 
@@ -340,6 +345,14 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       return;
     }
 
+    // Add cooldown to prevent spamming (5 minute minimum between autonomous triggers)
+    const now = Date.now();
+    const cooldownPeriod = 5 * 60 * 1000; // 5 minutes
+    if (now - lastMessageTime < cooldownPeriod) {
+      console.log('🕐 Autonomous trigger on cooldown, waiting...');
+      return;
+    }
+
     // 🔒 INSIGHTS PAUSED - Only show learning, no automatic insights
     if (AUTO_INSIGHTS_ENABLED) {
       const activityTimer = setTimeout(() => {
@@ -392,6 +405,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
                   advancedContext 
                 });
                 await refreshIntelligence();
+                setLastMessageTime(Date.now()); // Update cooldown timer
               } else {
                 // Phase 3: Generate context-aware micro-learning with advanced intelligence
                 const comprehensiveContext = {
@@ -526,7 +540,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       }, 60000);
       return () => clearTimeout(debugTimer);
     }
-  }, [intelligence, currentInsight, isGeneratingInsight, triggerInsightCheck, AUTO_INSIGHTS_ENABLED]);
+  }, [intelligence, currentInsight, isGeneratingInsight, triggerInsightCheck, AUTO_INSIGHTS_ENABLED, lastMessageTime]);
 
   // Automatic steward introduction trigger - critical missing piece
   useEffect(() => {
@@ -543,6 +557,17 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     databaseValidation.shouldShow,
     databaseValidation.loading
   ]);
+
+  // Trigger steward completion insight when introduction completes
+  useEffect(() => {
+    if (introductionState.completed && !stewardCompletionTriggered) {
+      console.log('✅ Steward introduction completed - triggering completion insight');
+      setTimeout(() => {
+        generateStewardCompletionInsight();
+        setStewardCompletionTriggered(true);
+      }, 1000); // Small delay to ensure smooth transition
+    }
+  }, [introductionState.completed, stewardCompletionTriggered, generateStewardCompletionInsight]);
 
   // Module activity based on current question or insight
   useEffect(() => {
@@ -931,6 +956,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             console.log('🎯 FloatingHACSOrb: Dismissing insight and clearing display');
             dismissInsight();
             setShowInsightDisplay(false);
+            setLastMessageTime(Date.now()); // Add cooldown when dismissing to prevent immediate re-appearance
           }}
           position="bottom-right"
           // Step 3: Pass navigation props
