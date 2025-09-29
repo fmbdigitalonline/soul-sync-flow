@@ -418,7 +418,7 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
           )}>
             <div className={cn(
               "transition-all duration-500 ease-in-out",
-              guideIntroComplete ? "opacity-100 pointer-events-auto" : "opacity-30 pointer-events-none"
+              guideIntroComplete ? "opacity-100 pointer-events-auto" : "backdrop-blur-md opacity-60 pointer-events-none"
             )}>
               {renderStep()}
               <div className="flex justify-center pt-4 sm:pt-6">
