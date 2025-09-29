@@ -2656,7 +2656,7 @@ const translations: Record<Language, Translations> = {
       mentalism_analyst: "Ik begrijp hoe jouw geest informatie verwerkt en verbindingen legt",
       processing: "Ik analyseer je persoonlijkheidsmatrix om te begrijpen wie je werkelijk bent",
       fractal_synthesis: "Ik weef alle stukjes samen om je complete persoonlijkheidsportret te creëren",
-      default: "Ik leer iets fascinerends over jouw unieke persoonlijkheid"
+      default: "Ik ben nu op de achtergrond aan het leren! Je kunt de app gewoon blijven gebruiken terwijl ik de diepste delen van je blauwdruk verken"
     },
     // Gepersonaliseerde Citaten
     personalizedQuotes: {
