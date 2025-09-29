@@ -827,12 +827,13 @@ export const useHACSInsights = () => {
     return null;
   }, [trackActivity, generateInsight, currentInsight]);
 
-  // Auto-dismiss insights after 2 minutes if not acknowledged
+  // Auto-dismiss insights after 10 minutes if not acknowledged (prevents conflict with manual dismissal)
   useEffect(() => {
     if (currentInsight && !currentInsight.acknowledged) {
       const timer = setTimeout(() => {
+        console.log('⏰ Auto-dismissing insight after 10 minutes:', currentInsight.id);
         dismissInsight();
-      }, 2 * 60 * 1000); // 2 minutes
+      }, 10 * 60 * 1000); // 10 minutes
 
       return () => clearTimeout(timer);
     }
