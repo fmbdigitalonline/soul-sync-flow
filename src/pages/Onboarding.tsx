@@ -56,7 +56,9 @@ export default function Onboarding() {
     birthDate: "",
     birthTime: "",
     birthLocation: "",
-    personality: null as any // Changed to store full personality profile
+    personality: null as any, // Changed to store full personality profile
+    timeKnown: true,
+    timePrecision: 'exact' as 'exact' | 'approximate' | 'unknown'
   });
 
   // Birth date components state
@@ -663,26 +665,57 @@ export default function Onboarding() {
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.whatTimeWereBorn')}</h2>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="space-y-2">
-                <Label htmlFor="birthTime">{t('onboarding.birthTime')}</Label>
-                <Input
-                  id="birthTime"
-                  type="time"
-                  value={formData.birthTime}
-                  onChange={(e) => updateFormData({ birthTime: e.target.value })}
-                  className="bg-white/5 border-white/10"
-                  required
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 space-y-4">
+              {/* Toggle for unknown birth time */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="timeUnknown"
+                  checked={!formData.timeKnown}
+                  onChange={(e) => {
+                    const timeUnknown = e.target.checked;
+                    updateFormData({ 
+                      timeKnown: !timeUnknown,
+                      timePrecision: timeUnknown ? 'unknown' : 'exact',
+                      birthTime: timeUnknown ? '12:00' : formData.birthTime
+                    });
+                  }}
+                  className="rounded border-white/20 bg-white/5"
                 />
-                <p className="text-sm text-foreground/80">
-                  {t('onboarding.birthTimeDesc')}
-                </p>
+                <Label htmlFor="timeUnknown" className="text-sm">
+                  {t('onboarding.dontKnowBirthTime')}
+                </Label>
+                {!formData.timeKnown && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-amber-500/20 text-amber-200 border border-amber-500/30">
+                    {t('onboarding.lessPrecise')}
+                  </span>
+                )}
               </div>
+
+              {/* Time input - only show if time is known */}
+              {formData.timeKnown && (
+                <div className="space-y-2">
+                  <Label htmlFor="birthTime">{t('onboarding.birthTime')}</Label>
+                  <Input
+                    id="birthTime"
+                    type="time"
+                    value={formData.birthTime}
+                    onChange={(e) => updateFormData({ birthTime: e.target.value })}
+                    className="bg-white/5 border-white/10"
+                    required={formData.timeKnown}
+                  />
+                </div>
+              )}
+
+              {/* Explanatory text */}
+              <p className="text-sm text-foreground/70">
+                {t('onboarding.timeAccuracyNote')}
+              </p>
             </div>
             <div className="flex justify-between pt-4">
               <Button variant="ghost" onClick={goToPrevStep}>{t('back')}</Button>
               <Button 
-                disabled={!formData.birthTime}
+                disabled={formData.timeKnown && !formData.birthTime}
                 onClick={goToNextStep}
               >
                 {t('continue')}
