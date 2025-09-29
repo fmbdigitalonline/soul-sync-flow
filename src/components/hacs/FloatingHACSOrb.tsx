@@ -33,7 +33,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useEnhancedFeedbackSystem } from '@/hooks/use-enhanced-feedback-system';
 import { EnhancedFeedbackModal } from '@/components/feedback/EnhancedFeedbackModal';
 import { useSubconsciousOrb } from '@/hooks/use-subconscious-orb';
-import { useHACSAutonomy } from '@/hooks/use-hacs-autonomy';
 // Phase 1: Critical Error Recovery
 import { 
   HACSErrorBoundary, 
@@ -108,9 +107,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   // NEW: Add autonomous orchestration
   const { triggerIntelligentIntervention, generatePersonalizedInsight } = useAutonomousOrchestration();
   const { generateOraclePrompt, getOptimalTimingPreferences } = usePersonalityEngine();
-  
-  // HACS Autonomy for post-steward messaging
-  const { triggerPostStewardMessage, currentMessage: hacsAutonomousMessage, dismissMessage: dismissHACSMessage } = useHACSAutonomy();
   
   // Phase 3: Enhanced introduction system with database integration
   const {
@@ -381,8 +377,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
                 await triggerInsightCheck('periodic_activity', { 
                   source: 'autonomous_trigger',
                   language,
-                  enhancedPersonalization: true,
-                  advancedContext
+                  enhancedPersonalization: true
                 });
                 
                 console.log('🔮 Phase 3: Advanced autonomous insight generation:', {
@@ -390,6 +385,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
                   conversationHistory: advancedContext.conversationHistory.length,
                   memoryHits: advancedContext.memoryMetrics.hotHits,
                   pieInsightsCount: advancedContext.pieInsights.length
+                });
+                
+                await triggerInsightCheck('periodic_activity', { 
+                  source: 'autonomous_trigger',
+                  advancedContext 
                 });
                 await refreshIntelligence();
               } else {
@@ -461,7 +461,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             setModuleActivity(false);
           }, 1500);
         }
-      }, 1800000); // Every 30 minutes check for triggers (reduced frequency)
+      }, 300000); // Every 5 minutes check for triggers
       return () => clearTimeout(activityTimer);
     } else {
       // 🔒 INSIGHTS PAUSED - Log when automatic triggers would have fired
@@ -514,7 +514,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             intelligence_level: intelligence.intelligence_level 
           });
         }
-      }, 300000); // Every 5 minutes (reduced frequency)
+      }, 60000); // Every 60 seconds
       
       return () => clearInterval(analyticsTimer);
     } else if (!AUTO_INSIGHTS_ENABLED && intelligence && intelligence.interaction_count > 0) {
@@ -542,25 +542,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     startIntroduction,
     databaseValidation.shouldShow,
     databaseValidation.loading
-  ]);
-
-  // Post-steward introduction message trigger
-  useEffect(() => {
-    // Trigger post-steward message when introduction completes and system is ready
-    if (introductionState.completed && !introductionState.isActive && !isGeneratingReport && !loading) {
-      const triggerDelay = setTimeout(() => {
-        console.log('🎯 HACS: Triggering post-steward learning activation message');
-        triggerPostStewardMessage();
-      }, 3000); // 3 second delay after completion
-      
-      return () => clearTimeout(triggerDelay);
-    }
-  }, [
-    introductionState.completed, 
-    introductionState.isActive, 
-    isGeneratingReport, 
-    loading, 
-    triggerPostStewardMessage
   ]);
 
   // Module activity based on current question or insight
@@ -988,29 +969,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       <HACSChatOverlay
         isOpen={showChat}
         onClose={handleCloseChat}
-        currentMessage={hacsAutonomousMessage}
+        currentMessage={null}
         intelligenceLevel={intelligenceLevel}
       />
-
-      {/* HACS Autonomous Message Bubble */}
-      {hacsAutonomousMessage && !hacsAutonomousMessage.acknowledged && !showChat && (
-        <div className="absolute top-[-120px] left-1/2 transform -translate-x-1/2 z-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            className="bg-background/95 backdrop-blur-sm border border-border/50 rounded-xl p-4 shadow-lg max-w-xs relative"
-          >
-            <button
-              onClick={dismissHACSMessage}
-              className="absolute top-2 right-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ✕
-            </button>
-            <p className="text-sm text-foreground pr-6">{hacsAutonomousMessage.text}</p>
-          </motion.div>
-        </div>
-      )}
 
       {/* Steward Introduction Modal */}
       <Dialog open={introductionState.isActive} onOpenChange={() => {}}>
