@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ModeProvider } from './contexts/ModeContext';
@@ -49,13 +50,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AuthProvider>
-          <AutomationWrapper>
-            <LanguageProvider>
-              <ModeProvider>
-                <SoulOrbProvider>
-                  <BlueprintCacheProvider>
-                    <div className="min-h-screen bg-background">
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <AuthProvider>
+            <AutomationWrapper>
+              <LanguageProvider>
+                <ModeProvider>
+                  <SoulOrbProvider>
+                    <BlueprintCacheProvider>
+                      <div className="min-h-screen bg-background">
                       <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/get-started" element={<LifeClarityFunnel />} />
@@ -95,6 +97,7 @@ function App() {
             </LanguageProvider>
           </AutomationWrapper>
         </AuthProvider>
+      </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );

@@ -86,8 +86,8 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
   };
 
   const positionClasses = position === 'bottom-right' 
-    ? 'fixed bottom-20 right-6 z-40' 
-    : 'fixed top-20 left-1/2 transform -translate-x-1/2 z-40';
+    ? 'fixed bottom-4 right-4 left-4 sm:left-auto sm:right-6 sm:bottom-20 z-40' 
+    : 'fixed top-20 left-4 right-4 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2 z-40';
 
   const TypeIcon = getTypeIcon(insight.type);
 
@@ -97,7 +97,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
         initial={{ opacity: 0, scale: 0.8, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.8, y: 20 }}
-        className={`${positionClasses} w-80 max-w-sm`}
+        className={`${positionClasses} w-full sm:w-80 max-w-sm`}
       >
         <Card className="p-4 shadow-lg border-l-4 border-l-primary bg-background/95 backdrop-blur-sm">
           {/* Header */}

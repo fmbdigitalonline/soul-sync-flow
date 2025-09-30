@@ -58,6 +58,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [showCompletionIndicator, setShowCompletionIndicator] = useState(false);
   const [showRadiantGlow, setShowRadiantGlow] = useState(false);
   const [milestoneGlow, setMilestoneGlow] = useState(false);
+  const [dismissalCooldown, setDismissalCooldown] = useState(false);
   
   // Enhanced feedback system
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -332,11 +333,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
   // Trigger HACSInsight display immediately after steward activation
   useEffect(() => {
-    if (introductionState.completed && !showInsightDisplay) {
+    if (introductionState.completed && !showInsightDisplay && !dismissalCooldown) {
       console.log('🎯 STEWARD COMPLETE: Opening HACSInsight display immediately');
       setShowInsightDisplay(true);
     }
-  }, [introductionState.completed, showInsightDisplay]);
+  }, [introductionState.completed, showInsightDisplay, dismissalCooldown]);
 
   // ✅ INSIGHTS DISABLED - No more automatic hermetic progress insight generation
   const AUTO_INSIGHTS_ENABLED = false; // Disabled to prevent spamming messages
@@ -746,6 +747,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             console.log('🎯 FloatingHACSOrb: Dismissing insight and clearing display');
             dismissInsight();
             setShowInsightDisplay(false);
+            // Add cooldown to prevent immediate reappearance
+            setDismissalCooldown(true);
+            setTimeout(() => {
+              setDismissalCooldown(false);
+            }, 5000); // 5 second cooldown
           }}
           position="bottom-right"
           // Step 3: Pass navigation props
@@ -848,8 +854,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
                introductionState.steps[introductionState.currentStep].showContinue && (
                 <button
                   onClick={async () => {
-                    // Handle final step - trigger report generation and close modal immediately
+                    // Handle final step - trigger report generation and immediately open HACSInsight display
                     if (introductionState.currentStep === introductionState.steps.length - 1) {
+                      console.log('🎯 STEWARD ACTIVATION: Button clicked - triggering display immediately');
+                      setShowInsightDisplay(true);
+                      setDismissalCooldown(false); // Reset cooldown on activation
                       await completeIntroductionWithReport();
                     } else {
                       continueIntroduction();
