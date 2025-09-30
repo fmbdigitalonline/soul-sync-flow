@@ -204,7 +204,7 @@ const Dreams = () => {
   }, [location.pathname, createdGoal, navigate, toast]);
 
   const getBlueprintInsight = useCallback(() => {
-    if (!blueprintData) return "Your journey will be personalized once your blueprint is complete";
+    if (!blueprintData) return t('dreams.blueprintInsight');
     
     const traits = [];
     if (blueprintData.cognition_mbti?.type && blueprintData.cognition_mbti.type !== 'Unknown') {
@@ -218,11 +218,11 @@ const Dreams = () => {
     }
     
     if (traits.length === 0) {
-      return "Your journey will be personalized based on your unique blueprint";
+      return t('dreams.blueprintInsight');
     }
     
     return `This journey will be optimized for your ${traits.slice(0, 2).join(' & ')} nature`;
-  }, [blueprintData]);
+  }, [blueprintData, t]);
 
   // Removed duplicate authentication logic - trusting ProtectedRoute wrapper
 

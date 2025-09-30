@@ -335,6 +335,7 @@ const translations: Record<Language, Translations> = {
       creatingJourney: 'Creating Your Journey...',
       createJourney: 'Create My Journey',
       viewJourney: 'View My Journey',
+      blueprintInsight: 'Your journey will be personalized once your blueprint is complete',
       
       // Validation & errors
       dreamRequired: 'Dream Required',
@@ -1411,7 +1412,8 @@ Help them transform their dream interest into a specific, actionable goal. Use t
         processingAI: 'Processing through AI coach...',
         generatingStructure: 'Generating milestone structure...',
         creatingBreakdowns: 'Creating task breakdowns...',
-        applyingInsights: 'Applying blueprint insights...'
+        applyingInsights: 'Applying blueprint insights...',
+        deepAnalysis: 'Deep analysis in progress'
       },
       reassurance: {
         beautiful: '"{dreamTitle}" is a beautiful dream - deep ones take a moment to unfold',
@@ -1420,6 +1422,15 @@ Help them transform their dream interest into a specific, actionable goal. Use t
         universe: 'The universe is conspiring to help you succeed... patience, dear soul',
         complexGoals: 'Complex goals require deeper AI analysis - this ensures better results',
         extraCare: 'Your personalized journey is being crafted with extra care'
+      },
+      stages: {
+        analyzing: 'Analyzing Your Dream',
+        creating: 'Creating Milestones',
+        designing: 'Designing Personalized Tasks',
+        preparing: 'Preparing Your Journey'
+      },
+      progress: {
+        creating: 'Creating your journey... {progress}%'
       },
       processingTime: 'Processing for {seconds}s',
       aiTime: 'AI: {seconds}s',
@@ -2119,6 +2130,7 @@ Help them transform their dream interest into a specific, actionable goal. Use t
       creatingJourney: 'Je Reis Wordt Gemaakt...',
       createJourney: 'Mijn Reis Creëren',
       viewJourney: 'Mijn Reis Bekijken',
+      blueprintInsight: 'Je reis wordt gepersonaliseerd zodra je blauwdruk compleet is',
       
       // Validation & errors
       dreamRequired: 'Droom Vereist',
@@ -3014,6 +3026,67 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
         title: 'Geen Actieve Droomreis',
         description: 'Maak je eerste droom aan om je persoonlijke routekaart te zien'
       }
+    },
+
+    mobileTabs: {
+      overview: 'Overzicht',
+      roadmap: 'Routekaart',
+      nextTask: 'Volgende Taak',
+      task: 'Taak'
+    },
+
+    // Ontleding proces
+    decomposition: {
+      errors: {
+        creationFailed: 'Aanmaken Mislukt',
+        tryAgain: 'Opnieuw Proberen'
+      },
+      processing: {
+        initializing: 'Initialiseren...',
+        preparingAnalysis: 'Je droomanalyse voorbereiden...'
+      },
+      loading: {
+        interpretingSymbolism: 'Diepere symboliek interpreteren...',
+        connectingThemes: 'Thema\'s verbinden met je blauwdruk...',
+        weavingInsights: 'Inzichten samen weven...',
+        discoveringPatterns: 'Verborgen patronen ontdekken...',
+        aligningSoul: 'Afstemmen op je zielritme...',
+        craftingPathway: 'Je gepersonaliseerde pad creëren...',
+        processingAI: 'Verwerken via AI coach...',
+        generatingStructure: 'Mijlpaal structuur genereren...',
+        creatingBreakdowns: 'Taak analyses maken...',
+        applyingInsights: 'Blauwdruk inzichten toepassen...',
+        deepAnalysis: 'Diepgaande analyse bezig'
+      },
+      reassurance: {
+        beautiful: '"{dreamTitle}" is een prachtige droom - diepere dromen hebben een moment nodig om zich te ontvouwen',
+        richBlueprint: 'Je blauwdruk is rijk aan wijsheid... we eren elk detail',
+        greatDreams: 'Grote dromen verdienen zorgvuldige planning - bijna klaar!',
+        universe: 'Het universum werkt samen om je te helpen slagen... geduld, lieve ziel',
+        complexGoals: 'Complexe doelen vereisen diepere AI analyse - dit zorgt voor betere resultaten',
+        extraCare: 'Je gepersonaliseerde reis wordt met extra zorg gecreëerd'
+      },
+      stages: {
+        analyzing: 'Je Droom Analyseren',
+        creating: 'Mijlpalen Creëren',
+        designing: 'Gepersonaliseerde Taken Ontwerpen',
+        preparing: 'Je Reis Voorbereiden'
+      },
+      progress: {
+        creating: 'Je reis creëren... {progress}%'
+      },
+      processingTime: 'Verwerken voor {seconds}s',
+      aiTime: 'AI: {seconds}s',
+      complexDream: 'Complexe droom gedetecteerd',
+      richGoals: 'Rijke doelen vereisen diepere AI analyse. We zorgen voor de hoogste kwaliteit personalisatie voor je.',
+      deeperDream: '💫 Hoe dieper de droom, hoe rijker de reis die voor je ligt',
+      processingDetails: 'Verwerkingsdetails',
+      totalTime: 'Totale tijd: {seconds}s',
+      aiProcessing: 'AI verwerking: {status}',
+      stage: 'Fase: {current}/{total}',
+      status: 'Status: {status}',
+      inProgress: 'Bezig...',
+      aiCompleted: 'AI voltooid, afronden...'
     },
     // Bedtijd
     bedtime: {

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, Clock, Sparkles } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface EnhancedProgressAnimationProps {
   progress: number;
@@ -22,6 +23,8 @@ export const EnhancedProgressAnimation: React.FC<EnhancedProgressAnimationProps>
   hasBeenLoadingLong,
   stages
 }) => {
+  const { t } = useLanguage();
+  
   return (
     <div className="space-y-4">
       {/* Animated Progress Bar */}
@@ -43,12 +46,12 @@ export const EnhancedProgressAnimation: React.FC<EnhancedProgressAnimationProps>
         
         <div className="flex justify-between items-center">
           <p className="text-sm text-gray-600">
-            Creating your journey... {Math.round(progress)}%
+            {t('decomposition.progress.creating').replace('{progress}', Math.round(progress).toString())}
           </p>
           {hasBeenLoadingLong && (
             <div className="flex items-center gap-1 text-xs text-soul-purple">
               <Clock className="h-3 w-3 animate-pulse" />
-              <span>Deep analysis in progress</span>
+              <span>{t('decomposition.loading.deepAnalysis')}</span>
             </div>
           )}
         </div>

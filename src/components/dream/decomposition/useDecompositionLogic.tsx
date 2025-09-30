@@ -5,6 +5,7 @@ import { soulGoalDecompositionService, SoulGeneratedGoal } from '@/services/soul
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Brain, Target, MapPin, Sparkles } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DecompositionStage {
   id: string;
@@ -34,6 +35,7 @@ export const useDecompositionLogic = ({
 }: UseDecompositionLogicProps) => {
   const { speak, speaking } = useSoulOrb();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [completedStages, setCompletedStages] = useState<string[]>([]);
@@ -173,14 +175,14 @@ export const useDecompositionLogic = ({
   const stages: DecompositionStage[] = useMemo(() => [
     {
       id: 'analyzing',
-      title: 'Analyzing Your Dream',
+      title: t('decomposition.stages.analyzing'),
       message: `Congratulations on creating "${dreamTitle}"! Let me analyze this through your unique soul blueprint...`,
       icon: <Brain className="h-5 w-5" />,
       duration: 3000
     },
     {
       id: 'milestones',
-      title: 'Creating Milestones',
+      title: t('decomposition.stages.creating'),
       message: `I'm identifying the perfect milestones for your ${userType} energy. Each one will honor your natural rhythm...`,
       icon: <Target className="h-5 w-5" />,
       duration: 4000,
@@ -188,19 +190,19 @@ export const useDecompositionLogic = ({
     },
     {
       id: 'tasks',
-      title: 'Designing Personalized Tasks',
+      title: t('decomposition.stages.designing'),
       message: `Now creating tasks that align with your cognitive functions and decision-making style. This will feel natural to you...`,
       icon: <MapPin className="h-5 w-5" />,
       duration: 3500
     },
     {
       id: 'finalizing',
-      title: 'Preparing Your Journey',
+      title: t('decomposition.stages.preparing'),
       message: `Almost ready! I'm preparing your complete roadmap with blueprint insights and optimal timing suggestions...`,
       icon: <Sparkles className="h-5 w-5" />,
       duration: 2500
     }
-  ], [dreamTitle, userType, decomposeWithSoul]);
+  ], [dreamTitle, userType, decomposeWithSoul, t]);
 
   // Safe currentStage access with fallback
   const currentStage = stages[currentStageIndex] || stages[0];
