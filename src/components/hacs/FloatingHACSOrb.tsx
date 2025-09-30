@@ -337,15 +337,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   //     setShowProgressInsightDisplay(true);
   //   }
   // }, [progressInsightReady, progressInsight]);
-
-  // Trigger HACSInsight display immediately after steward activation
-  useEffect(() => {
-    if (introductionState.completed && !showInsightDisplay && !dismissalCooldown) {
-      console.log('🎯 STEWARD COMPLETE: Opening HACSInsight display immediately');
-      setShowInsightDisplay(true);
-    }
-  }, [introductionState.completed, showInsightDisplay, dismissalCooldown]);
-
+  // ✅ AUTO-TRIGGER REMOVED: Users now manually click the exclamation mark to view insights
   // ✅ INSIGHTS DISABLED - No more automatic hermetic progress insight generation
   const AUTO_INSIGHTS_ENABLED = false; // Disabled to prevent spamming messages
 
