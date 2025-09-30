@@ -196,29 +196,64 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
             <motion.div 
               onClick={handleBubbleClick}
               initial={{ opacity: 0, scale: 0.9, x: 20 }}
-              animate={{ opacity: 1, scale: 1, x: 0 }}
+              animate={{ 
+                opacity: 1, 
+                scale: 1, 
+                x: 0,
+              }}
               exit={{ opacity: 0, scale: 0.9, x: 20 }}
               transition={{ duration: 0.3 }}
               className="cursor-pointer"
             >
-              <div className={cn(
-                "relative w-48 sm:w-64 max-w-sm px-3 sm:px-4 py-2 sm:py-3 cosmic-card",
-                "before:content-[''] before:absolute before:right-[-6px] sm:before:right-[-8px] before:top-1/2 before:-translate-y-1/2",
-                "before:w-0 before:h-0 before:border-[6px] sm:before:border-[8px] before:border-transparent before:border-l-card"
-              )}>
-                <div className="text-xs sm:text-sm leading-relaxed text-foreground">
-                  {isStreaming ? streamingContent : currentMessage}
-                  {isStreaming && (
-                    <motion.span
-                      animate={{ opacity: [1, 0, 1] }}
-                      transition={{ duration: 1, repeat: Infinity }}
-                      className="ml-1"
-                    >
-                      ▊
-                    </motion.span>
-                  )}
+              <motion.div 
+                animate={messageType === 'welcome' || messageType === 'encouragement' ? {
+                  scale: [1, 1.02, 1],
+                  boxShadow: [
+                    "0 4px 20px rgba(var(--primary), 0.1)",
+                    "0 6px 30px rgba(var(--primary), 0.2)",
+                    "0 4px 20px rgba(var(--primary), 0.1)"
+                  ]
+                } : {}}
+                transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+                className={cn(
+                  "relative w-56 sm:w-72 md:w-80 px-4 sm:px-5 py-3 sm:py-4",
+                  "cosmic-card shadow-soul-glow border-2",
+                  messageType === 'welcome' && "border-primary/30 bg-gradient-to-br from-card via-card to-primary/5",
+                  messageType === 'guidance' && "border-accent/30 bg-gradient-to-br from-card via-card to-accent/5",
+                  messageType === 'encouragement' && "border-success/30 bg-gradient-to-br from-card via-card to-success/5",
+                  messageType === 'completion' && "border-soul-glow/30 bg-gradient-to-br from-card via-card to-soul-glow/5",
+                  "before:content-[''] before:absolute before:right-[-8px] sm:before:right-[-10px] before:top-1/2 before:-translate-y-1/2",
+                  "before:w-0 before:h-0 before:border-[8px] sm:before:border-[10px] before:border-transparent before:border-l-card"
+                )}
+              >
+                <div className="flex items-start gap-2 sm:gap-3">
+                  {/* Contextual icon */}
+                  <motion.span 
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ duration: 0.5, type: "spring" }}
+                    className="text-lg sm:text-xl flex-shrink-0 mt-0.5"
+                  >
+                    {messageType === 'welcome' && '✨'}
+                    {messageType === 'guidance' && '💫'}
+                    {messageType === 'encouragement' && '🎯'}
+                    {messageType === 'completion' && '🌟'}
+                  </motion.span>
+                  
+                  <div className="text-sm sm:text-base md:text-lg leading-6 sm:leading-7 font-medium text-foreground flex-1">
+                    {isStreaming ? streamingContent : currentMessage}
+                    {isStreaming && (
+                      <motion.span
+                        animate={{ opacity: [1, 0, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="ml-1"
+                      >
+                        ▊
+                      </motion.span>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
