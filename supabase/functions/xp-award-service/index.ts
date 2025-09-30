@@ -152,12 +152,13 @@ serve(async (req) => {
       .from('user_xp_events')
       .insert({
         user_id: userId,
-        timestamp: now.toISOString(),
-        dims_awarded: dims,
-        xp_gained: deltaXP,
-        quality_multiplier: quality,
-        event_kinds: kinds,
-        source_system: source || 'unknown',
+        occurred_at: now.toISOString(),
+        delta_xp: deltaXP,
+        xp_total_after: newState.xp_total,
+        dims: dims,
+        quality: quality,
+        kinds: kinds,
+        note: `Source: ${source || 'unknown'}`,
       });
 
     console.log('✅ XP Awarded:', { 
