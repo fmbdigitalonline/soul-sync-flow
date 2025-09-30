@@ -943,6 +943,10 @@ const translations: Record<Language, Translations> = {
         wisdom_integration: {
           message: "Learning how wisdom integrates within your personality...",
           description: "Discovering how life experiences have shaped your insights, judgment, and decision-making wisdom."
+        },
+        behavioral_triggers: {
+          message: "Learning your behavioral triggers and response patterns...",
+          description: "Understanding the specific situations, events, and conditions that activate your behavioral responses and decision-making patterns."
         }
       },
       milestones: {
@@ -2467,6 +2471,10 @@ const translations: Record<Language, Translations> = {
         wisdom_integration: {
           message: "Leren hoe wijsheid integreert binnen je persoonlijkheid...",
           description: "Ontdekken hoe levenservaringen je inzichten, oordeel en besluitnemingswijsheid hebben gevormd."
+        },
+        behavioral_triggers: {
+          message: "Leren je gedragstriggers en responspatronen...",
+          description: "Begrijpen van de specifieke situaties, gebeurtenissen en omstandigheden die je gedragsreacties en besluitnemingspatronen activeren."
         }
       },
       milestones: {

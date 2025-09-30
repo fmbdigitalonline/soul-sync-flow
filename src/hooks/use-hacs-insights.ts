@@ -751,13 +751,13 @@ export const useHACSInsights = () => {
     });
   }, []);
 
-  // Dismiss current insight
+  // Dismiss current insight (without acknowledging - user wants it gone)
   const dismissInsight = useCallback(() => {
     if (currentInsight) {
-      acknowledgeInsight(currentInsight.id);
+      console.log('🚫 User dismissed insight:', currentInsight.id);
       removeCurrentInsight();
     }
-  }, [currentInsight, acknowledgeInsight, removeCurrentInsight]);
+  }, [currentInsight, removeCurrentInsight]);
 
   // Smart insight triggers based on real activity patterns
   const triggerInsightCheck = useCallback(async (activityType: string, context?: any) => {
@@ -827,16 +827,7 @@ export const useHACSInsights = () => {
     return null;
   }, [trackActivity, generateInsight, currentInsight]);
 
-  // Auto-dismiss insights after 2 minutes if not acknowledged
-  useEffect(() => {
-    if (currentInsight && !currentInsight.acknowledged) {
-      const timer = setTimeout(() => {
-        dismissInsight();
-      }, 2 * 60 * 1000); // 2 minutes
-
-      return () => clearTimeout(timer);
-    }
-  }, [currentInsight, dismissInsight]);
+  // Removed auto-dismiss timer - let user control dismissal
 
   return {
     currentInsight,
