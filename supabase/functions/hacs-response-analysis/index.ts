@@ -124,6 +124,25 @@ serve(async (req) => {
         newLevel: newIntelligenceLevel,
         growth: analysis.intelligenceGrowth 
       });
+
+      // PHASE 3.2: Award XP for HACS Intelligence Update
+      const cmpXP = Math.min(4, (analysis.comprehensionScore / 100) * 4);
+      const quality = analysis.comprehensionScore / 100;
+      
+      try {
+        await supabase.functions.invoke('xp-award-service', {
+          body: {
+            userId,
+            dims: { CMP: cmpXP },
+            quality,
+            kinds: ['hacs.learning', 'hacs.comprehension', `module.${questionModule}`],
+            source: 'hacs-response-analysis'
+          }
+        });
+        console.log('✅ XP awarded for HACS learning:', { cmpXP, quality });
+      } catch (xpError) {
+        console.error('⚠️ Failed to award XP:', xpError);
+      }
     }
 
     // Log the interaction

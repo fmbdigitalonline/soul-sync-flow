@@ -120,6 +120,26 @@ serve(async (req) => {
 
     console.log(`[${effectiveProcessingId}] ✅ Unified Brain: All 11 Hermetic components processed successfully`);
 
+    // PHASE 3.4: Award XP for Unified Brain Processing
+    const successCount = hermeticResults.filter(r => r.processed).length;
+    const hppXP = Math.min(4, (successCount / 11) * 4);
+    const quality = successCount / 11;
+    
+    try {
+      await supabase.functions.invoke('xp-award-service', {
+        body: {
+          userId,
+          dims: { HPP: hppXP },
+          quality,
+          kinds: ['hermetic.processing', 'brain.unified', `modules.${successCount}`],
+          source: 'unified-brain-processor'
+        }
+      });
+      console.log(`[${effectiveProcessingId}] ✅ XP awarded for hermetic processing:`, { hppXP, quality, successCount });
+    } catch (xpError) {
+      console.error(`[${effectiveProcessingId}] ⚠️ Failed to award XP:`, xpError);
+    }
+
     return new Response(JSON.stringify({ 
       response: unifiedResponse,
       hermeticResults: hermeticResults.filter(r => r.processed),

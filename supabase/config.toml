@@ -222,5 +222,15 @@ verify_jwt = false
 cors = ["*"]
 methods = ["POST", "OPTIONS"]
 
+[functions.xp-award-service]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.hacs-coach-conversation]
+verify_jwt = false
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
 [analytics]
 enabled = false

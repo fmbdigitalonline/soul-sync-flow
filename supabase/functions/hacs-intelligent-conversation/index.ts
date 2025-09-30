@@ -424,6 +424,27 @@ serve(async (req) => {
           messageQuality 
         });
 
+        // PHASE 3.6: Award XP for Conversation Quality
+        const covXP = Math.min(3, messageQuality * 3);
+        const isDeep = userMessage.length > 100;
+        
+        try {
+          await supabase.functions.invoke('xp-award-service', {
+            body: {
+              userId,
+              dims: { COV: covXP },
+              quality: messageQuality,
+              kinds: isDeep 
+                ? ['conversation.quality', 'conversation.deep', 'hacs.dialogue'] 
+                : ['conversation.quality', 'hacs.dialogue'],
+              source: 'hacs-intelligent-conversation'
+            }
+          });
+          console.log('✅ XP awarded for conversation:', { covXP, messageQuality, isDeep });
+        } catch (xpError) {
+          console.error('⚠️ Failed to award XP:', xpError);
+        }
+
         // Generate question if needed
         if (shouldGenerateQuestion || forceQuestionGeneration) {
           const questionResult = await generateAutonomousQuestion(
