@@ -928,6 +928,63 @@ const translations: Record<Language, Translations> = {
         chineseAstrologyAdds: "Chinese astrology adds generational wisdom to your profile"
       }
     },
+    dreamCategories: {
+      creativity: "Creativity",
+      career: "Career",
+      relationships: "Relationships",
+      personal_growth: "Personal Growth",
+      spiritual: "Spiritual",
+      health: "Health",
+      financial: "Financial"
+    },
+    dreamContent: {
+      mbti: {
+        "creative-expression": {
+          title: "Creative Expression & Authentic Impact",
+          description: "Channel your authentic self through creative work that inspires and helps others discover their potential",
+          blueprintReason: "Your {mbtiType} nature thrives on authentic self-expression and helping others grow"
+        },
+        "innovative-solution": {
+          title: "Innovative Solution Creation",
+          description: "Build systems, products, or solutions that solve complex problems and improve how people live or work",
+          blueprintReason: "Your {mbtiType} type excels at seeing possibilities and creating innovative solutions"
+        },
+        "community-service": {
+          title: "Community Impact & Service",
+          description: "Create programs, services, or initiatives that directly support and uplift your community",
+          blueprintReason: "Your {mbtiType} nature finds fulfillment in practical service to others"
+        }
+      },
+      humanDesign: {
+        "mastery-sharing": {
+          title: "Master & Share Your Craft",
+          description: "Become exceptionally skilled at something you love, then teach and share that mastery with the world",
+          blueprintReason: "Your {hdType} energy is designed to master work you love and respond to opportunities"
+        },
+        "guidance-wisdom": {
+          title: "Guide & Optimize Systems",
+          description: "Use your natural ability to see the big picture to guide others and optimize how things work",
+          blueprintReason: "Your Projector type excels at seeing efficiency and guiding others when invited"
+        },
+        "initiate-movement": {
+          title: "Initiate Revolutionary Change",
+          description: "Start something new that creates significant impact and inspires others to follow",
+          blueprintReason: "Your Manifestor energy is designed to initiate and create new realities"
+        }
+      },
+      astrology: {
+        "leadership-inspiration": {
+          title: "Lead & Inspire Others",
+          description: "Take on leadership roles where you can motivate, inspire, and energize others toward meaningful goals",
+          blueprintReason: "Your {sunSign} sun brings natural leadership and inspirational energy"
+        },
+        "healing-transformation": {
+          title: "Facilitate Healing & Transformation",
+          description: "Help others through emotional healing, spiritual growth, or transformative experiences",
+          blueprintReason: "Your {sunSign} sun carries deep intuitive and healing abilities"
+        }
+      }
+    },
     
     // Report section
     report: {
@@ -2493,6 +2550,63 @@ const translations: Record<Language, Translations> = {
         approachable: "Benaderbaar",
         collaborative: "Samenwerkend",
         chineseAstrologyAdds: "Chinese astrologie voegt generationele wijsheid toe aan je profiel"
+      }
+    },
+    dreamCategories: {
+      creativity: "Creativiteit",
+      career: "Carrière",
+      relationships: "Relaties",
+      personal_growth: "Persoonlijke Groei",
+      spiritual: "Spiritueel",
+      health: "Gezondheid",
+      financial: "Financieel"
+    },
+    dreamContent: {
+      mbti: {
+        "creative-expression": {
+          title: "Creatieve Expressie & Authentieke Impact",
+          description: "Kanaliseer je authentieke zelf door creatief werk dat inspireert en anderen helpt hun potentieel te ontdekken",
+          blueprintReason: "Je {mbtiType} natuur gedijt bij authentieke zelfexpressie en het helpen groeien van anderen"
+        },
+        "innovative-solution": {
+          title: "Innovatieve Oplossingen Creëren",
+          description: "Bouw systemen, producten of oplossingen die complexe problemen oplossen en verbeteren hoe mensen leven of werken",
+          blueprintReason: "Je {mbtiType} type blinkt uit in het zien van mogelijkheden en het creëren van innovatieve oplossingen"
+        },
+        "community-service": {
+          title: "Gemeenschapsimpact & Dienstverlening",
+          description: "Creëer programma's, diensten of initiatieven die direct je gemeenschap ondersteunen en verheffen",
+          blueprintReason: "Je {mbtiType} natuur vindt vervulling in praktische dienstverlening aan anderen"
+        }
+      },
+      humanDesign: {
+        "mastery-sharing": {
+          title: "Beheers & Deel Je Vak",
+          description: "Word uitzonderlijk bekwaam in iets waar je van houdt, en deel die meesterschap met de wereld",
+          blueprintReason: "Je {hdType} energie is ontworpen om werk te beheersen waar je van houdt en te reageren op kansen"
+        },
+        "guidance-wisdom": {
+          title: "Begeleid & Optimaliseer Systemen",
+          description: "Gebruik je natuurlijke vermogen om het grote plaatje te zien om anderen te begeleiden en te optimaliseren hoe dingen werken",
+          blueprintReason: "Je Projector type blinkt uit in het zien van efficiëntie en het begeleiden van anderen wanneer uitgenodigd"
+        },
+        "initiate-movement": {
+          title: "Initieer Revolutionaire Verandering",
+          description: "Start iets nieuws dat significante impact creëert en anderen inspireert om te volgen",
+          blueprintReason: "Je Manifestor energie is ontworpen om te initiëren en nieuwe realiteiten te creëren"
+        }
+      },
+      astrology: {
+        "leadership-inspiration": {
+          title: "Leid & Inspireer Anderen",
+          description: "Neem leiderschapsrollen aan waar je anderen kunt motiveren, inspireren en energiek maken richting betekenisvolle doelen",
+          blueprintReason: "Je {sunSign} zon brengt natuurlijke leiderschap en inspirerende energie"
+        },
+        "healing-transformation": {
+          title: "Faciliteer Genezing & Transformatie",
+          description: "Help anderen door emotionele genezing, spirituele groei of transformerende ervaringen",
+          blueprintReason: "Je {sunSign} zon draagt diepe intuïtieve en genezende vermogens"
+        }
       }
     },
     

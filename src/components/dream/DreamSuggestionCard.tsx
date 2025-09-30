@@ -52,6 +52,8 @@ export const DreamSuggestionCard: React.FC<DreamSuggestionCardProps> = ({
   const { t } = useLanguage();
   const CategoryIcon = getCategoryIcon(suggestion.category);
   const categoryColor = getCategoryColor(suggestion.category);
+  
+  const translatedCategory = t(`dreamCategories.${suggestion.category}`) || suggestion.category;
 
   return (
     <Card className={`border-2 transition-colors duration-300 cursor-pointer hover:bg-accent/30 ${
@@ -64,7 +66,7 @@ export const DreamSuggestionCard: React.FC<DreamSuggestionCardProps> = ({
         <div className="flex items-center justify-between mb-3">
           <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full border ${categoryColor} ${getTextSize('text-xs')}`}>
             <CategoryIcon className={`${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
-            <span className="font-medium capitalize">{suggestion.category.replace('_', ' ')}</span>
+            <span className="font-medium">{translatedCategory}</span>
           </div>
           <div className={`flex items-center gap-1 text-soul-purple ${getTextSize('text-xs')}`}>
             <Sparkles className={`${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />

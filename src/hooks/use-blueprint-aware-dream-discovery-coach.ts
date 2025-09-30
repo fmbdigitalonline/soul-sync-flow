@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useEnhancedAICoach } from "./use-enhanced-ai-coach";
 import { dreamActivityLogger } from "@/services/dream-activity-logger";
 import { useBlueprintData } from "./use-blueprint-data";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { safeInterpolateTranslation } from "@/utils/translation-utils";
 
 interface DreamIntakeData {
   title: string;
@@ -25,6 +27,7 @@ type ConversationPhase = 'blueprint_analysis' | 'suggestion_presentation' | 'exp
 export const useBlueprintAwareDreamDiscoveryCoach = () => {
   const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useEnhancedAICoach("guide", "dreams");
   const { blueprintData, getPersonalityTraits, getDisplayName } = useBlueprintData();
+  const { t } = useLanguage();
   
   const [messageCount, setMessageCount] = useState(0);
   const [conversationPhase, setConversationPhase] = useState<ConversationPhase>('blueprint_analysis');
@@ -47,110 +50,143 @@ export const useBlueprintAwareDreamDiscoveryCoach = () => {
     if (!blueprintData) return [];
 
     const suggestions: DreamSuggestion[] = [];
-    const traits = getPersonalityTraits();
     const mbtiType = blueprintData.cognition_mbti?.type;
     const hdType = blueprintData.energy_strategy_human_design?.type;
     const sunSign = blueprintData.archetype_western?.sun_sign;
 
+    // Helper to get dream content translations
+    const getDreamContent = (category: 'mbti' | 'humanDesign' | 'astrology', key: string) => {
+      const contentKey = `dreamContent.${category}.${key}`;
+      const content = t(contentKey) as any;
+      // If translation returns the key itself, it means translation is not found
+      if (typeof content === 'string' && content === contentKey) {
+        console.warn(`Dream content translation not found for: ${contentKey}`);
+        return null;
+      }
+      return content;
+    };
+
     // MBTI-based suggestions
     if (mbtiType && mbtiType !== 'Unknown') {
       if (mbtiType.includes('NF')) { // Idealists
-        suggestions.push({
-          id: 'creative-expression',
-          title: 'Creative Expression & Authentic Impact',
-          description: 'Channel your authentic self through creative work that inspires and helps others discover their potential',
-          category: 'creativity',
-          confidence: 0.9,
-          blueprintReason: `Your ${mbtiType} nature thrives on authentic self-expression and helping others grow`
-        });
+        const content = getDreamContent('mbti', 'creative-expression');
+        if (content) {
+          suggestions.push({
+            id: 'creative-expression',
+            title: content.title,
+            description: content.description,
+            category: 'creativity',
+            confidence: 0.9,
+            blueprintReason: safeInterpolateTranslation(content.blueprintReason, { mbtiType })
+          });
+        }
       }
       
       if (mbtiType.includes('NT')) { // Rationals
-        suggestions.push({
-          id: 'innovative-solution',
-          title: 'Innovative Solution Creation',
-          description: 'Build systems, products, or solutions that solve complex problems and improve how people live or work',
-          category: 'career',
-          confidence: 0.85,
-          blueprintReason: `Your ${mbtiType} type excels at seeing possibilities and creating innovative solutions`
-        });
+        const content = getDreamContent('mbti', 'innovative-solution');
+        if (content) {
+          suggestions.push({
+            id: 'innovative-solution',
+            title: content.title,
+            description: content.description,
+            category: 'career',
+            confidence: 0.85,
+            blueprintReason: safeInterpolateTranslation(content.blueprintReason, { mbtiType })
+          });
+        }
       }
 
       if (mbtiType.includes('SF')) { // Guardians with feeling
-        suggestions.push({
-          id: 'community-service',
-          title: 'Community Impact & Service',
-          description: 'Create programs, services, or initiatives that directly support and uplift your community',
-          category: 'relationships',
-          confidence: 0.8,
-          blueprintReason: `Your ${mbtiType} nature finds fulfillment in practical service to others`
-        });
+        const content = getDreamContent('mbti', 'community-service');
+        if (content) {
+          suggestions.push({
+            id: 'community-service',
+            title: content.title,
+            description: content.description,
+            category: 'relationships',
+            confidence: 0.8,
+            blueprintReason: safeInterpolateTranslation(content.blueprintReason, { mbtiType })
+          });
+        }
       }
     }
 
     // Human Design-based suggestions
     if (hdType && hdType !== 'Unknown') {
       if (hdType === 'Generator' || hdType === 'Manifesting Generator') {
-        suggestions.push({
-          id: 'mastery-sharing',
-          title: 'Master & Share Your Craft',
-          description: 'Become exceptionally skilled at something you love, then teach and share that mastery with the world',
-          category: 'personal_growth',
-          confidence: 0.8,
-          blueprintReason: `Your ${hdType} energy is designed to master work you love and respond to opportunities`
-        });
+        const content = getDreamContent('humanDesign', 'mastery-sharing');
+        if (content) {
+          suggestions.push({
+            id: 'mastery-sharing',
+            title: content.title,
+            description: content.description,
+            category: 'personal_growth',
+            confidence: 0.8,
+            blueprintReason: safeInterpolateTranslation(content.blueprintReason, { hdType })
+          });
+        }
       }
 
       if (hdType === 'Projector') {
-        suggestions.push({
-          id: 'guidance-wisdom',
-          title: 'Guide & Optimize Systems',
-          description: 'Use your natural ability to see the big picture to guide others and optimize how things work',
-          category: 'career',
-          confidence: 0.85,
-          blueprintReason: `Your Projector type excels at seeing efficiency and guiding others when invited`
-        });
+        const content = getDreamContent('humanDesign', 'guidance-wisdom');
+        if (content) {
+          suggestions.push({
+            id: 'guidance-wisdom',
+            title: content.title,
+            description: content.description,
+            category: 'career',
+            confidence: 0.85,
+            blueprintReason: content.blueprintReason
+          });
+        }
       }
 
       if (hdType === 'Manifestor') {
-        suggestions.push({
-          id: 'initiate-movement',
-          title: 'Initiate Revolutionary Change',
-          description: 'Start something new that creates significant impact and inspires others to follow',
-          category: 'career',
-          confidence: 0.9,
-          blueprintReason: `Your Manifestor energy is designed to initiate and create new realities`
-        });
+        const content = getDreamContent('humanDesign', 'initiate-movement');
+        if (content) {
+          suggestions.push({
+            id: 'initiate-movement',
+            title: content.title,
+            description: content.description,
+            category: 'career',
+            confidence: 0.9,
+            blueprintReason: content.blueprintReason
+          });
+        }
       }
     }
 
     // Astrological-based suggestions
     if (sunSign && sunSign !== 'Unknown') {
       const fireSign = ['Aries', 'Leo', 'Sagittarius'].includes(sunSign);
-      const earthSign = ['Taurus', 'Virgo', 'Capricorn'].includes(sunSign);
-      const airSign = ['Gemini', 'Libra', 'Aquarius'].includes(sunSign);
       const waterSign = ['Cancer', 'Scorpio', 'Pisces'].includes(sunSign);
 
       if (fireSign) {
-        suggestions.push({
-          id: 'leadership-inspiration',
-          title: 'Lead & Inspire Others',
-          description: 'Take on leadership roles where you can motivate, inspire, and energize others toward meaningful goals',
-          category: 'career',
-          confidence: 0.75,
-          blueprintReason: `Your ${sunSign} sun brings natural leadership and inspirational energy`
-        });
+        const content = getDreamContent('astrology', 'leadership-inspiration');
+        if (content) {
+          suggestions.push({
+            id: 'leadership-inspiration',
+            title: content.title,
+            description: content.description,
+            category: 'career',
+            confidence: 0.75,
+            blueprintReason: safeInterpolateTranslation(content.blueprintReason, { sunSign })
+          });
+        }
       }
 
       if (waterSign) {
-        suggestions.push({
-          id: 'healing-transformation',
-          title: 'Facilitate Healing & Transformation',
-          description: 'Help others through emotional healing, spiritual growth, or transformative experiences',
-          category: 'spiritual',
-          confidence: 0.8,
-          blueprintReason: `Your ${sunSign} sun carries deep intuitive and healing abilities`
-        });
+        const content = getDreamContent('astrology', 'healing-transformation');
+        if (content) {
+          suggestions.push({
+            id: 'healing-transformation',
+            title: content.title,
+            description: content.description,
+            category: 'spiritual',
+            confidence: 0.8,
+            blueprintReason: safeInterpolateTranslation(content.blueprintReason, { sunSign })
+          });
+        }
       }
     }
 
@@ -160,7 +196,7 @@ export const useBlueprintAwareDreamDiscoveryCoach = () => {
     );
 
     return uniqueSuggestions.sort((a, b) => b.confidence - a.confidence).slice(0, 3);
-  }, [blueprintData, getPersonalityTraits]);
+  }, [blueprintData, t]);
 
   // Initialize with blueprint analysis
   useEffect(() => {
