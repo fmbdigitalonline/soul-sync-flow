@@ -323,13 +323,13 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   }, [isSystemReady, userProfile?.id, loading, introductionState.isActive, getSubconsciousInsights]);
 
-  // Auto-display hermetic progress insights at top-center
-  useEffect(() => {
-    if (progressInsightReady && progressInsight) {
-      console.log('🎯 AUTO-DISPLAY: Showing hermetic progress insight automatically at top-center');
-      setShowProgressInsightDisplay(true);
-    }
-  }, [progressInsightReady, progressInsight]);
+  // Auto-display hermetic progress insights at top-center - DISABLED (manual only)
+  // useEffect(() => {
+  //   if (progressInsightReady && progressInsight) {
+  //     console.log('🎯 AUTO-DISPLAY: Showing hermetic progress insight automatically at top-center');
+  //     setShowProgressInsightDisplay(true);
+  //   }
+  // }, [progressInsightReady, progressInsight]);
 
   // Trigger HACSInsight display immediately after steward activation
   useEffect(() => {
