@@ -5,6 +5,7 @@ import { useHacsIntelligence } from './use-hacs-intelligence';
 import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
 import { createErrorHandler } from '@/utils/error-recovery';
 import { conversationMemoryService } from '@/services/conversation-memory-service';
+import { useXPEventEmitter } from './use-xp-event-emitter';
 
 export interface ConversationMessage {
   id: string;
@@ -34,6 +35,7 @@ export interface HACSQuestion {
 export const useHACSConversation = () => {
   const { user } = useAuth();
   const { recordConversationInteraction, refreshIntelligence } = useHacsIntelligence();
+  const { emitXPEvent } = useXPEventEmitter();
   
   // Coordinated loading for streaming operations
   const { startLoading, completeLoading } = useCoordinatedLoading();
@@ -267,6 +269,15 @@ export const useHACSConversation = () => {
   const sendMessage = useCallback(async (content: string, skipUserMessage: boolean = false) => {
     if (!user || !content.trim()) return;
 
+    console.log('🚀 HACS CONVERSATION: sendMessage called', {
+      userExists: !!user,
+      userId: user?.id,
+      contentLength: content.length,
+      skipUserMessage,
+      currentSessionId,
+      timestamp: new Date().toISOString()
+    });
+
     setIsLoading(true);
     setIsTyping(true);
 
@@ -283,9 +294,18 @@ export const useHACSConversation = () => {
         };
 
         setMessages(prev => [...prev, userMessage]);
+        console.log('✅ User message added to state');
       }
 
       // Send to HACS intelligent conversation
+      console.log('📡 Invoking hacs-intelligent-conversation edge function...', {
+        action: 'respond_to_user',
+        userId: user.id,
+        sessionId: currentSessionId || `companion_${user.id}`,
+        conversationId,
+        messageCount: messages.length
+      });
+
       const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
         body: {
           action: 'respond_to_user',
@@ -302,7 +322,24 @@ export const useHACSConversation = () => {
         }
       });
 
-      if (error) throw error;
+      console.log('📡 Edge function response:', {
+        hasData: !!data,
+        hasError: !!error,
+        dataKeys: data ? Object.keys(data) : [],
+        errorMessage: error?.message
+      });
+
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        throw error;
+      }
+
+      console.log('✅ HACS response received:', {
+        responseLength: data.response?.length,
+        module: data.module,
+        mode: data.mode,
+        intelligence_bonus: data.intelligence_bonus
+      });
 
       // Add HACS response
       const hacsMessage: ConversationMessage = {
@@ -316,6 +353,7 @@ export const useHACSConversation = () => {
       };
 
       setMessages(prev => [...prev, hacsMessage]);
+      console.log('✅ HACS message added to state');
 
       // Save conversation to database
       const userMessageForSave = skipUserMessage ? 
@@ -337,11 +375,51 @@ export const useHACSConversation = () => {
 
       // Update HACS intelligence if provided
       if (data.intelligence_bonus && data.intelligence_bonus > 0) {
+        console.log('🧠 Updating HACS intelligence:', {
+          bonus: data.intelligence_bonus,
+          messageLength: content.length
+        });
         await updateHACSIntelligence(data.intelligence_bonus, content, data.response);
+      }
+
+      // ✅ CLIENT-SIDE XP TRACKING: Award XP for conversation quality
+      if (user) {
+        const messageQualityLabel = determineResponseQuality(data.response || '', content);
+        // Convert quality label to numeric value for XP
+        const qualityToNumber: Record<string, number> = {
+          'excellent': 1.0,
+          'good': 0.8,
+          'average': 0.5,
+          'poor': 0.2
+        };
+        const messageQuality = qualityToNumber[messageQualityLabel] || 0.5;
+        const covXPAmount = Math.min(3, messageQuality * 3);
+        const isDeep = content.length > 100;
+        
+        console.log('💎 CLIENT XP: Emitting conversation XP', {
+          qualityLabel: messageQualityLabel,
+          qualityNumber: messageQuality,
+          covXP: covXPAmount,
+          isDeep,
+          userId: user.id
+        });
+        
+        const xpResult = await emitXPEvent(
+          user.id,
+          { COV: covXPAmount },
+          messageQuality,
+          isDeep 
+            ? ['conversation.quality', 'conversation.deep', 'hacs.dialogue'] 
+            : ['conversation.quality', 'hacs.dialogue'],
+          'hacs-conversation-client'
+        );
+        
+        console.log('💎 CLIENT XP: Result', xpResult);
       }
 
       // Generate follow-up question if provided
       if (data.question) {
+        console.log('❓ Follow-up question generated:', data.question);
         setCurrentQuestion({
           id: `question_${Date.now()}`,
           text: data.question,
@@ -350,8 +428,14 @@ export const useHACSConversation = () => {
         });
       }
 
+      console.log('✅ HACS CONVERSATION: sendMessage complete');
+
     } catch (error) {
-      console.error('Error in HACS conversation:', error);
+      console.error('❌ CRITICAL ERROR in HACS conversation:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       const errorMessage: ConversationMessage = {
         id: `error_${Date.now()}`,
         role: 'hacs',
@@ -360,10 +444,11 @@ export const useHACSConversation = () => {
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
+      console.log('🏁 HACS CONVERSATION: Cleaning up loading states');
       setIsLoading(false);
       setIsTyping(false);
     }
-  }, [user, messages, conversationId, saveConversation, updateHACSIntelligence]);
+  }, [user, messages, conversationId, currentSessionId, saveConversation, updateHACSIntelligence]);
 
   // Enhanced Oracle message with conversation context
   const sendOracleMessage = useCallback(async (content: string, oracleResponse?: any, skipUserMessage: boolean = false) => {
