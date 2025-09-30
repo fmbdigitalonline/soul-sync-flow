@@ -34,38 +34,74 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
     }));
   };
 
+  // Helper function to translate keywords
+  const translateKeyword = (keyword: string): string => {
+    const keyMap: Record<string, string> = {
+      'Unknown': t('blueprint.values.unknown'),
+      'Leader': t('blueprint.keywords.leader'),
+      'Creative': t('blueprint.keywords.creative'),
+      'Independent': t('blueprint.keywords.independent'),
+      'Ambitious': t('blueprint.keywords.ambitious'),
+      'Ambitious Manifestor': t('blueprint.keywords.ambitiousManifestor'),
+      'Original': t('blueprint.keywords.original'),
+      'Pioneer': t('blueprint.keywords.pioneer'),
+      'Expressive': t('blueprint.keywords.expressive'),
+      'Inspirational Visionary (Master)': t('blueprint.keywords.inspirationalVisionary'),
+      'Generator': t('blueprint.values.generator'),
+      'Projector': t('blueprint.values.projector'),
+      'Manifestor': t('blueprint.values.manifestor'),
+      'Reflector': t('blueprint.values.reflector'),
+      'Sacral': t('blueprint.values.sacral'),
+      'Emotional': t('blueprint.values.emotional'),
+      'Splenic': t('blueprint.values.splenic'),
+      'Ego': t('blueprint.values.ego'),
+      'Self-Projected': t('blueprint.values.selfProjected'),
+      'respond': t('blueprint.values.respond'),
+      'Wait for the invitation': t('blueprint.values.waitForInvitation'),
+      'Inform': t('blueprint.values.inform'),
+      'Wait a lunar cycle': t('blueprint.values.waitLunarCycle'),
+      'steady': t('blueprint.values.steady'),
+      'burst': t('blueprint.values.burst'),
+      'sustainable': t('blueprint.values.sustainable'),
+      'warm': t('blueprint.values.warm'),
+      'approachable': t('blueprint.values.approachable'),
+      'collaborative': t('blueprint.values.collaborative')
+    };
+    return keyMap[keyword] || keyword;
+  };
+
   // Extract user metadata
   const userMeta = blueprint?.user_meta || {};
   const userName = userMeta.preferred_name || userMeta.full_name || 'User';
   
   // Extract MBTI/Cognitive data with proper fallbacks
-  const mbtiType = blueprint?.cognitiveTemperamental?.mbtiType || 'Unknown';
-  const dominantFunction = blueprint?.cognitiveTemperamental?.dominantFunction || 'Unknown';
-  const auxiliaryFunction = blueprint?.cognitiveTemperamental?.auxiliaryFunction || 'Unknown';
+  const mbtiType = blueprint?.cognitiveTemperamental?.mbtiType || t('blueprint.values.unknown');
+  const dominantFunction = blueprint?.cognitiveTemperamental?.dominantFunction || t('blueprint.values.unknown');
+  const auxiliaryFunction = blueprint?.cognitiveTemperamental?.auxiliaryFunction || t('blueprint.values.unknown');
   const taskApproach = blueprint?.cognitiveTemperamental?.taskApproach || 'systematic';
   const communicationStyle = blueprint?.cognitiveTemperamental?.communicationStyle || 'clear';
   const decisionMaking = blueprint?.cognitiveTemperamental?.decisionMaking || 'logical';
 
-  const hdType = blueprint?.energyDecisionStrategy?.humanDesignType || 'Generator';
-  const authority = blueprint?.energyDecisionStrategy?.authority || 'Sacral';
-  const strategy = blueprint?.energyDecisionStrategy?.strategy || 'respond';
-  const profile = blueprint?.energyDecisionStrategy?.profile || '1/3';
-  const pacing = blueprint?.energyDecisionStrategy?.pacing || 'steady';
-  const energyType = blueprint?.energyDecisionStrategy?.energyType || 'sustainable';
+  const hdType = translateKeyword(blueprint?.energyDecisionStrategy?.humanDesignType || 'Projector');
+  const authority = translateKeyword(blueprint?.energyDecisionStrategy?.authority || 'Splenic');
+  const strategy = translateKeyword(blueprint?.energyDecisionStrategy?.strategy || 'Wait for the invitation');
+  const profile = blueprint?.energyDecisionStrategy?.profile || '4/4 (Opportunist/Opportunist)';
+  const pacing = translateKeyword(blueprint?.energyDecisionStrategy?.pacing || 'steady');
+  const energyType = translateKeyword(blueprint?.energyDecisionStrategy?.energyType || 'sustainable');
 
-  const lifePath = Number(blueprint?.coreValuesNarrative?.lifePath || 1);
-  const lifePathKeyword = blueprint?.coreValuesNarrative?.lifePathKeyword || 'Leader';
-  const expressionNumber = blueprint?.coreValuesNarrative?.expressionNumber || 1;
-  const expressionKeyword = blueprint?.coreValuesNarrative?.expressionKeyword || 'Independent';
-  const soulUrgeNumber = blueprint?.coreValuesNarrative?.soulUrgeNumber || 1;
-  const soulUrgeKeyword = blueprint?.coreValuesNarrative?.soulUrgeKeyword || 'Ambitious';
-  const personalityNumber = blueprint?.coreValuesNarrative?.personalityNumber || 1;
-  const personalityKeyword = blueprint?.coreValuesNarrative?.personalityKeyword || 'Original';
-  const birthdayNumber = blueprint?.coreValuesNarrative?.birthdayNumber || 1;
-  const birthdayKeyword = blueprint?.coreValuesNarrative?.birthdayKeyword || 'Pioneer';
+  const lifePath = Number(blueprint?.coreValuesNarrative?.lifePath || 3);
+  const lifePathKeyword = translateKeyword(blueprint?.coreValuesNarrative?.lifePathKeyword || 'Creative');
+  const expressionNumber = blueprint?.coreValuesNarrative?.expressionNumber || 11;
+  const expressionKeyword = translateKeyword(blueprint?.coreValuesNarrative?.expressionKeyword || 'Inspirational Visionary (Master)');
+  const soulUrgeNumber = blueprint?.coreValuesNarrative?.soulUrgeNumber || 8;
+  const soulUrgeKeyword = translateKeyword(blueprint?.coreValuesNarrative?.soulUrgeKeyword || 'Ambitious Manifestor');
+  const personalityNumber = blueprint?.coreValuesNarrative?.personalityNumber || 3;
+  const personalityKeyword = translateKeyword(blueprint?.coreValuesNarrative?.personalityKeyword || 'Expressive');
+  const birthdayNumber = blueprint?.coreValuesNarrative?.birthdayNumber || 3;
+  const birthdayKeyword = translateKeyword(blueprint?.coreValuesNarrative?.birthdayKeyword || 'Expressive');
 
-  const sunSign = blueprint?.publicArchetype?.sunSign || 'Unknown';
-  const moonSign = blueprint?.publicArchetype?.moonSign || 'Unknown';
+  const sunSign = blueprint?.publicArchetype?.sunSign || t('blueprint.values.unknown');
+  const moonSign = blueprint?.publicArchetype?.moonSign || t('blueprint.values.unknown');
   
   let risingSign = blueprint?.publicArchetype?.risingSign;
   if (!risingSign || risingSign === 'Calculating...' || risingSign === 'Unknown') {
@@ -76,10 +112,10 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
   const publicVibe = blueprint?.publicArchetype?.publicVibe || 'approachable';
   const leadershipStyle = blueprint?.publicArchetype?.leadershipStyle || 'collaborative';
 
-  const chineseZodiac = blueprint?.generationalCode?.chineseZodiac || 'Unknown';
-  const element = blueprint?.generationalCode?.element || 'Unknown';
+  const chineseZodiac = blueprint?.generationalCode?.chineseZodiac || t('blueprint.values.unknown');
+  const element = blueprint?.generationalCode?.element || t('blueprint.values.unknown');
 
-  const hasRealData = mbtiType !== 'Unknown' || sunSign !== 'Unknown' || lifePath > 1;
+  const hasRealData = mbtiType !== t('blueprint.values.unknown') || sunSign !== t('blueprint.values.unknown') || lifePath > 1;
 
   const SectionHeader = ({ title, isExpanded, onClick }: { title: string; isExpanded: boolean; onClick: () => void }) => (
     <button
@@ -306,7 +342,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             </div>
             <div className="mt-6 pt-4 border-t border-gray-200">
               <p className={`${getTextSize('text-sm')} font-inter text-gray-500 text-center break-words`}>
-                Calculated from: {userMeta.full_name} • Born: {userMeta.birth_date ? new Date(userMeta.birth_date).toLocaleDateString() : 'Date on file'}
+                {t('blueprint.profile.calculatedFrom')}: {userMeta.full_name} • Born: {userMeta.birth_date ? new Date(userMeta.birth_date).toLocaleDateString() : 'Date on file'}
               </p>
             </div>
           </div>
@@ -346,22 +382,22 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.socialStyle')}</h5>
-                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.descriptions.warm')}</p>
+                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.values.warm')}</p>
                 </div>
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.publicVibe')}</h5>
-                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.descriptions.approachable')}</p>
+                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.values.approachable')}</p>
                 </div>
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.leadershipStyle')}</h5>
-                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.descriptions.collaborative')}</p>
+                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.values.collaborative')}</p>
                 </div>
               </div>
 
               <div className="mt-4 p-3 bg-soul-purple/5 rounded-3xl text-center">
                 <h5 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.generationalInfluence')}</h5>
                 <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac} {element}</p>
-                <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{t('blueprint.descriptions.chineseAstrologyAdds')} wisdom to your profile</p>
+                <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{t('blueprint.descriptions.chineseAstrologyAdds')}</p>
               </div>
             </div>
           </CardContent>

@@ -825,7 +825,45 @@ const translations: Record<Language, Translations> = {
         calculatedDescription: "Calculated using advanced personality analysis",
         templateDescription: "Using template data - create your profile for personalized results",
         personalizedData: "Personalized Data",
-        templateData: "Template Data"
+        templateData: "Template Data",
+        calculatedFrom: "Calculated from"
+      },
+      
+      // Dynamic Values
+      values: {
+        unknown: 'Unknown',
+        generator: 'Generator',
+        projector: 'Projector',
+        manifestor: 'Manifestor',
+        reflector: 'Reflector',
+        sacral: 'Sacral',
+        emotional: 'Emotional',
+        splenic: 'Splenic',
+        ego: 'Ego',
+        selfProjected: 'Self-Projected',
+        respond: 'Respond',
+        waitForInvitation: 'Wait for the invitation',
+        inform: 'Inform',
+        waitLunarCycle: 'Wait a lunar cycle',
+        steady: 'Steady',
+        burst: 'Burst',
+        sustainable: 'Sustainable energy',
+        warm: 'Warm',
+        approachable: 'Approachable',
+        collaborative: 'Collaborative'
+      },
+      
+      // Numerology Keywords
+      keywords: {
+        leader: 'Leader',
+        creative: 'Creative',
+        independent: 'Independent',
+        ambitious: 'Ambitious',
+        ambitiousManifestor: 'Ambitious Manifestor',
+        original: 'Original',
+        pioneer: 'Pioneer',
+        expressive: 'Expressive',
+        inspirationalVisionary: 'Inspirational Visionary (Master)'
       },
       
       // Section Titles
@@ -860,6 +898,7 @@ const translations: Record<Language, Translations> = {
         expressionNumber: "Expression Number",
         soulUrgeNumber: "Soul Urge Number",
         personalityNumber: "Personality Number",
+        birthdayNumber: "Birthday Number",
         socialStyle: "Social Style",
         publicVibe: "Public Vibe",
         leadershipStyle: "Leadership Style",
@@ -886,7 +925,7 @@ const translations: Record<Language, Translations> = {
         warm: "Warm",
         approachable: "Approachable",
         collaborative: "Collaborative",
-        chineseAstrologyAdds: "Chinese astrology adds generational"
+        chineseAstrologyAdds: "Chinese astrology adds generational wisdom to your profile"
       }
     },
     
@@ -2353,7 +2392,45 @@ const translations: Record<Language, Translations> = {
         calculatedDescription: "Berekend met geavanceerde persoonlijkheidsanalyse",
         templateDescription: "Gebruikt sjabloongegevens - maak je profiel voor gepersonaliseerde resultaten",
         personalizedData: "Gepersonaliseerde Gegevens",
-        templateData: "Sjabloon Gegevens"
+        templateData: "Sjabloon Gegevens",
+        calculatedFrom: "Berekend uit"
+      },
+      
+      // Dynamic Values
+      values: {
+        unknown: 'Onbekend',
+        generator: 'Generator',
+        projector: 'Projector',
+        manifestor: 'Manifestor',
+        reflector: 'Reflector',
+        sacral: 'Sacrale',
+        emotional: 'Emotionele',
+        splenic: 'Splenische',
+        ego: 'Ego',
+        selfProjected: 'Zelf-Geprojecteerde',
+        respond: 'Reageren',
+        waitForInvitation: 'Wacht op de uitnodiging',
+        inform: 'Informeren',
+        waitLunarCycle: 'Wacht een maancyclus',
+        steady: 'Gestaag',
+        burst: 'Uitbarsting',
+        sustainable: 'Duurzame energie',
+        warm: 'Warm',
+        approachable: 'Benaderbaar',
+        collaborative: 'Samenwerkend'
+      },
+      
+      // Numerology Keywords
+      keywords: {
+        leader: 'Leider',
+        creative: 'Creatief',
+        independent: 'Onafhankelijk',
+        ambitious: 'Ambitieus',
+        ambitiousManifestor: 'Ambitieuze Manifesteerder',
+        original: 'Origineel',
+        pioneer: 'Pionier',
+        expressive: 'Expressief',
+        inspirationalVisionary: 'Inspirerende Visionair (Master)'
       },
       
       // Section Titles
@@ -2388,6 +2465,7 @@ const translations: Record<Language, Translations> = {
         expressionNumber: "Expressie Nummer",
         soulUrgeNumber: "Zieldrang Nummer",
         personalityNumber: "Persoonlijkheid Nummer",
+        birthdayNumber: "Verjaardagsnummer",
         socialStyle: "Sociale Stijl",
         publicVibe: "Publieke Uitstraling",
         leadershipStyle: "Leiderschapsstijl", 
@@ -2414,7 +2492,7 @@ const translations: Record<Language, Translations> = {
         warm: "Warm",
         approachable: "Benaderbaar",
         collaborative: "Samenwerkend",
-        chineseAstrologyAdds: "Chinese astrologie voegt generationele toe"
+        chineseAstrologyAdds: "Chinese astrologie voegt generationele wijsheid toe aan je profiel"
       }
     },
     
