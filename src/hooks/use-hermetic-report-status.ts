@@ -50,9 +50,24 @@ export const useHermeticReportStatus = () => {
   // Generate educational progress insights based on actual processing stages
   const generateProgressInsight = useCallback((progress: number, currentStep?: string): HACSInsight | undefined => {
     
-    // Extract relevant info from current step
+    // Extract relevant info from current step - match any agent name pattern
     const stepInfo = currentStep?.toLowerCase() || '';
-    const stepType = stepInfo.match(/processing (\w+)/)?.[1] || '';
+    // Try multiple patterns to extract agent name
+    let stepType = stepInfo.match(/processing (\w+)_data/)?.[1] || // "processing health_wellness_data"
+                   stepInfo.match(/processing (\w+_\w+)/)?.[1] || // "processing health_wellness"
+                   stepInfo.match(/processing (\w+)/)?.[1] || // "processing analyst"
+                   '';
+    
+    // Convert to agent format if needed (e.g., "health_wellness" -> "health_wellness_analyst")
+    if (stepType && !stepType.includes('analyst') && !stepType.includes('translator') && !stepType.includes('overview')) {
+      const possibleAgentName = `${stepType}_analyst`;
+      const testKey = `hermeticProgress.stages.${possibleAgentName}.message`;
+      const testTranslation = t(testKey);
+      // If the agent version exists, use it
+      if (testTranslation !== testKey) {
+        stepType = possibleAgentName;
+      }
+    }
     
     // Generate personalized message based on current step
     const getPersonalizedMessage = (step: string | undefined): string => {
@@ -65,6 +80,12 @@ export const useHermeticReportStatus = () => {
       if (step.includes('processing')) return t('personalizedMessages.processing');
       
       return t('personalizedMessages.default');
+    };
+    
+    // Check if a translation key exists (not just returns the key itself)
+    const translationExists = (key: string): boolean => {
+      const translation = t(key);
+      return translation !== key;
     };
     
     // Get translated stage messages
@@ -88,9 +109,14 @@ export const useHermeticReportStatus = () => {
     // Determine which message to use
     let selectedMessage: { message: string; description: string };
     
-    if (stepType && t(`hermeticProgress.stages.${stepType}.message`)) {
+    // Check if stage translation exists before using it
+    if (stepType && translationExists(`hermeticProgress.stages.${stepType}.message`)) {
+      console.log(`✅ Using stage translation for: ${stepType}`);
       selectedMessage = getStageMessage(stepType);
     } else {
+      if (stepType) {
+        console.log(`⚠️ No translation found for stage: ${stepType}, falling back to milestone`);
+      }
       const milestone = Math.floor(progress / 10) * 10;
       selectedMessage = getMilestoneMessage(milestone);
     }

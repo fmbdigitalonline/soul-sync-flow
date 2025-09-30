@@ -1057,6 +1057,7 @@ Help them transform their dream interest into a specific, actionable goal. Use t
     // Hermetic Progress Messages
     hermeticProgress: {
       stages: {
+        // Core Analysts
         rhythm_analyst: {
           message: "Learning your natural rhythms and energy patterns...",
           description: "Your rhythm profile reveals how you sync with life's natural cycles, peak performance times, and energy management patterns."
@@ -1084,6 +1085,134 @@ Help them transform their dream interest into a specific, actionable goal. Use t
         behavioral_triggers: {
           message: "Learning your behavioral triggers and response patterns...",
           description: "Understanding the specific situations, events, and conditions that activate your behavioral responses and decision-making patterns."
+        },
+        
+        // Intelligence Extraction Agents
+        identity_constructs_analyst: {
+          message: "Learning your core identity constructs and self-concept patterns...",
+          description: "Understanding how you define yourself and maintain your sense of identity across different contexts."
+        },
+        execution_bias_analyst: {
+          message: "Learning your execution patterns and decision-making biases...",
+          description: "Discovering how you take action and the cognitive biases that influence your decisions."
+        },
+        internal_conflicts_analyst: {
+          message: "Learning your internal conflict patterns and resolution strategies...",
+          description: "Understanding the psychological tensions within you and how you navigate them."
+        },
+        spiritual_dimension_analyst: {
+          message: "Learning your spiritual dimensions and transcendent patterns...",
+          description: "Exploring your connection to meaning, purpose, and experiences beyond the material."
+        },
+        adaptive_feedback_analyst: {
+          message: "Learning your adaptability patterns and feedback integration...",
+          description: "Understanding how you respond to change and incorporate new information into your worldview."
+        },
+        temporal_biology_analyst: {
+          message: "Learning your time-based patterns and biological rhythms...",
+          description: "Discovering your chronobiology and how time influences your energy and performance."
+        },
+        metacognitive_biases_analyst: {
+          message: "Learning your thinking about thinking patterns...",
+          description: "Understanding how you observe and regulate your own cognitive processes."
+        },
+        attachment_style_analyst: {
+          message: "Learning your attachment patterns and relationship dynamics...",
+          description: "Exploring how you form bonds and navigate closeness with others."
+        },
+        goal_archetypes_analyst: {
+          message: "Learning your goal-setting patterns and achievement archetypes...",
+          description: "Understanding your approach to setting goals and the motivational patterns that drive you."
+        },
+        crisis_handling_analyst: {
+          message: "Learning your crisis response patterns and resilience strategies...",
+          description: "Discovering how you handle stress, adversity, and unexpected challenges."
+        },
+        identity_flexibility_analyst: {
+          message: "Learning your identity adaptation and flexibility patterns...",
+          description: "Understanding how you evolve your sense of self across different life phases."
+        },
+        linguistic_fingerprint_analyst: {
+          message: "Learning your unique communication patterns and language use...",
+          description: "Analyzing your distinctive way of expressing thoughts and connecting through words."
+        },
+        cognitive_functions_analyst: {
+          message: "Learning your cognitive processing functions and mental operations...",
+          description: "Understanding the specific mental tools you use to perceive and judge information."
+        },
+        career_vocational_analyst: {
+          message: "Learning your career patterns and vocational calling...",
+          description: "Discovering your professional strengths, work style, and calling in life."
+        },
+        health_wellness_analyst: {
+          message: "Learning your health patterns and wellness approaches...",
+          description: "Understanding your relationship with physical health, vitality, and well-being practices."
+        },
+        compatibility_analyst: {
+          message: "Learning your relationship compatibility patterns...",
+          description: "Exploring how you connect with different personality types and relationship dynamics."
+        },
+        financial_archetype_analyst: {
+          message: "Learning your financial patterns and money archetypes...",
+          description: "Understanding your relationship with money, abundance, and financial decision-making."
+        },
+        karmic_patterns_analyst: {
+          message: "Learning your karmic patterns and life lesson themes...",
+          description: "Discovering the recurring patterns and soul lessons that shape your journey."
+        },
+        
+        // Hermetic Translators
+        mbti_hermetic_translator: {
+          message: "Learning your MBTI patterns through hermetic intelligence...",
+          description: "Translating your Myers-Briggs type into deeper hermetic wisdom and soul patterns."
+        },
+        astrology_hermetic_translator: {
+          message: "Learning your astrological patterns through hermetic intelligence...",
+          description: "Integrating your cosmic blueprint with hermetic understanding of consciousness."
+        },
+        numerology_hermetic_translator: {
+          message: "Learning your numerological patterns through hermetic intelligence...",
+          description: "Translating the mathematical patterns of your life into soul intelligence."
+        },
+        human_design_hermetic_translator: {
+          message: "Learning your Human Design patterns through hermetic intelligence...",
+          description: "Synthesizing your energetic blueprint with hermetic consciousness principles."
+        },
+        chinese_astrology_hermetic_translator: {
+          message: "Learning your Chinese astrology patterns through hermetic intelligence...",
+          description: "Integrating Eastern cosmic wisdom with Western hermetic understanding."
+        },
+        
+        // Hermetic Principle Analysts
+        correspondence_analyst: {
+          message: "Learning your correspondence patterns and universal connections...",
+          description: "Understanding how 'as above, so below' manifests in your life patterns."
+        },
+        vibration_analyst: {
+          message: "Learning your vibrational patterns and energetic frequencies...",
+          description: "Discovering the energetic signature that defines your presence and attraction."
+        },
+        polarity_analyst: {
+          message: "Learning your polarity patterns and balance dynamics...",
+          description: "Understanding how you navigate opposite forces and find equilibrium."
+        },
+        causation_analyst: {
+          message: "Learning your cause-and-effect patterns and manifestation...",
+          description: "Discovering how you create reality through thought, belief, and action."
+        },
+        gender_analyst: {
+          message: "Learning your masculine and feminine energy patterns...",
+          description: "Understanding the balance of receptive and active energies within you."
+        },
+        
+        // System Agents
+        gate_hermetic_analyst: {
+          message: "Learning your gate patterns and threshold experiences...",
+          description: "Understanding the key transition points and breakthrough moments in your journey."
+        },
+        comprehensive_overview: {
+          message: "Learning your comprehensive personality overview...",
+          description: "Integrating all aspects into a unified understanding of your soul blueprint."
         }
       },
       milestones: {
@@ -2732,33 +2861,162 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
     // Hermetic Progress Messages
     hermeticProgress: {
       stages: {
+        // Core Analysts
         rhythm_analyst: {
-          message: "Leren je natuurlijke ritmes en energiepatronen...",
+          message: "Ik leer nu je natuurlijke ritmes en energiepatronen...",
           description: "Je ritmeprofiel onthult hoe je synchroniseert met de natuurlijke cycli van het leven, piektijden en energiebeheerpatronen."
         },
         mentalism_analyst: {
-          message: "Leren je mentale verwerkingspatronen en cognitieve stijl...",
+          message: "Ik leer nu je mentale verwerkingspatronen en cognitieve stijl...",
           description: "Begrijpen hoe je geest informatie verwerkt, beslissingen neemt en probleemoplossingsuitdagingen benadert."
         },
         hermetic_core: {
-          message: "Leren je kern hermetische intelligentiesignaturen...",
+          message: "Ik leer nu je kern hermetische intelligentiesignaturen...",
           description: "Ontdekken van de fundamentele patronen die je persoonlijkheid, bewustzijn en levensaanpak vormgeven."
         },
         personality_matrix: {
-          message: "Leren je unieke persoonlijkheidsarchitectuur...",
+          message: "Ik leer nu je unieke persoonlijkheidsarchitectuur...",
           description: "Het in kaart brengen van het complexe samenspel van eigenschappen, gedragingen en psychologische patronen die je uniek maken."
         },
         consciousness_analyst: {
-          message: "Leren je bewustzijnspatronen en bewustzijnsniveaus...",
+          message: "Ik leer nu je bewustzijnspatronen en bewustzijnsniveaus...",
           description: "Begrijpen hoe je de werkelijkheid waarneemt, ervaringen verwerkt en zelfbewustzijn onderhoudt."
         },
         wisdom_integration: {
-          message: "Leren hoe wijsheid integreert binnen je persoonlijkheid...",
+          message: "Ik leer nu hoe wijsheid integreert binnen je persoonlijkheid...",
           description: "Ontdekken hoe levenservaringen je inzichten, oordeel en besluitnemingswijsheid hebben gevormd."
         },
         behavioral_triggers: {
-          message: "Leren je gedragstriggers en responspatronen...",
+          message: "Ik leer nu je gedragstriggers en responspatronen...",
           description: "Begrijpen van de specifieke situaties, gebeurtenissen en omstandigheden die je gedragsreacties en besluitnemingspatronen activeren."
+        },
+        
+        // Intelligence Extraction Agents
+        identity_constructs_analyst: {
+          message: "Ik leer nu je kernidentiteitsconstructies en zelfconceptpatronen...",
+          description: "Begrijpen hoe je jezelf definieert en je gevoel van identiteit in verschillende contexten behoudt."
+        },
+        execution_bias_analyst: {
+          message: "Ik leer nu je uitvoeringspatronen en besluitvormingsvooroordelen...",
+          description: "Ontdekken hoe je actie onderneemt en de cognitieve vooroordelen die je beslissingen beïnvloeden."
+        },
+        internal_conflicts_analyst: {
+          message: "Ik leer nu je interne conflictpatronen en oplossingsstrategieën...",
+          description: "Begrijpen van de psychologische spanningen binnen jou en hoe je ermee omgaat."
+        },
+        spiritual_dimension_analyst: {
+          message: "Ik leer nu je spirituele dimensies en transcendente patronen...",
+          description: "Verkennen van je verbinding met betekenis, doel en ervaringen voorbij het materiële."
+        },
+        adaptive_feedback_analyst: {
+          message: "Ik leer nu je aanpassingspatronen en feedbackintegratie...",
+          description: "Begrijpen hoe je reageert op verandering en nieuwe informatie integreert in je wereldbeeld."
+        },
+        temporal_biology_analyst: {
+          message: "Ik leer nu je tijdsgebaseerde patronen en biologische ritmes...",
+          description: "Ontdekken van je chronobiologie en hoe tijd je energie en prestaties beïnvloedt."
+        },
+        metacognitive_biases_analyst: {
+          message: "Ik leer nu je denken over denken patronen...",
+          description: "Begrijpen hoe je je eigen cognitieve processen observeert en reguleert."
+        },
+        attachment_style_analyst: {
+          message: "Ik leer nu je hechtingspatronen en relatiedynamiek...",
+          description: "Verkennen hoe je banden vormt en nabijheid met anderen navigeert."
+        },
+        goal_archetypes_analyst: {
+          message: "Ik leer nu je doelstellingspatronen en prestatiearchetypen...",
+          description: "Begrijpen van je aanpak bij het stellen van doelen en de motivatiepatronen die je aandrijven."
+        },
+        crisis_handling_analyst: {
+          message: "Ik leer nu je crisisreactiepatronen en veerkrachtstrategieën...",
+          description: "Ontdekken hoe je omgaat met stress, tegenspoed en onverwachte uitdagingen."
+        },
+        identity_flexibility_analyst: {
+          message: "Ik leer nu je identiteitsaanpassing en flexibiliteitspatronen...",
+          description: "Begrijpen hoe je je gevoel van zelf ontwikkelt in verschillende levensfasen."
+        },
+        linguistic_fingerprint_analyst: {
+          message: "Ik leer nu je unieke communicatiepatronen en taalgebruik...",
+          description: "Analyseren van je onderscheidende manier van gedachten uiten en verbinden door woorden."
+        },
+        cognitive_functions_analyst: {
+          message: "Ik leer nu je cognitieve verwerkingsfuncties en mentale operaties...",
+          description: "Begrijpen van de specifieke mentale tools die je gebruikt om informatie waar te nemen en te beoordelen."
+        },
+        career_vocational_analyst: {
+          message: "Ik leer nu je carrièrepatronen en roepingspatronen...",
+          description: "Ontdekken van je professionele sterktes, werkstijl en roeping in het leven."
+        },
+        health_wellness_analyst: {
+          message: "Ik leer nu je gezondheidspatronen en welzijnsbenaderingen...",
+          description: "Begrijpen van je relatie met fysieke gezondheid, vitaliteit en welzijnspraktijken."
+        },
+        compatibility_analyst: {
+          message: "Ik leer nu je relatiecompatibiliteitspatronen...",
+          description: "Verkennen hoe je verbindt met verschillende persoonlijkheidstypes en relatiedynamiek."
+        },
+        financial_archetype_analyst: {
+          message: "Ik leer nu je financiële patronen en geldarchetypen...",
+          description: "Begrijpen van je relatie met geld, overvloed en financiële besluitvorming."
+        },
+        karmic_patterns_analyst: {
+          message: "Ik leer nu je karmische patronen en levenslessenthema's...",
+          description: "Ontdekken van de terugkerende patronen en ziellessen die je reis vormgeven."
+        },
+        
+        // Hermetic Translators
+        mbti_hermetic_translator: {
+          message: "Ik leer nu je MBTI-patronen via hermetische intelligentie...",
+          description: "Vertalen van je Myers-Briggs type naar diepere hermetische wijsheid en zielpatronen."
+        },
+        astrology_hermetic_translator: {
+          message: "Ik leer nu je astrologische patronen via hermetische intelligentie...",
+          description: "Integreren van je kosmische blauwdruk met hermetisch begrip van bewustzijn."
+        },
+        numerology_hermetic_translator: {
+          message: "Ik leer nu je numerologische patronen via hermetische intelligentie...",
+          description: "Vertalen van de wiskundige patronen van je leven naar zielintelligentie."
+        },
+        human_design_hermetic_translator: {
+          message: "Ik leer nu je Human Design patronen via hermetische intelligentie...",
+          description: "Synthetiseren van je energetische blauwdruk met hermetische bewustzijnsprincipes."
+        },
+        chinese_astrology_hermetic_translator: {
+          message: "Ik leer nu je Chinese astrologie patronen via hermetische intelligentie...",
+          description: "Integreren van Oosterse kosmische wijsheid met Westers hermetisch begrip."
+        },
+        
+        // Hermetic Principle Analysts
+        correspondence_analyst: {
+          message: "Ik leer nu je correspondentiepatronen en universele verbindingen...",
+          description: "Begrijpen hoe 'zoals boven, zo beneden' zich manifesteert in je levenspatronen."
+        },
+        vibration_analyst: {
+          message: "Ik leer nu je vibratiepatronen en energetische frequenties...",
+          description: "Ontdekken van de energetische signatuur die je aanwezigheid en aantrekkingskracht definieert."
+        },
+        polarity_analyst: {
+          message: "Ik leer nu je polariteitspatronen en balansdynamiek...",
+          description: "Begrijpen hoe je tegengestelde krachten navigeert en evenwicht vindt."
+        },
+        causation_analyst: {
+          message: "Ik leer nu je oorzaak-en-gevolgpatronen en manifestatie...",
+          description: "Ontdekken hoe je realiteit creëert door gedachte, geloof en actie."
+        },
+        gender_analyst: {
+          message: "Ik leer nu je mannelijke en vrouwelijke energiepatronen...",
+          description: "Begrijpen van de balans van receptieve en actieve energieën binnen jou."
+        },
+        
+        // System Agents
+        gate_hermetic_analyst: {
+          message: "Ik leer nu je poortpatronen en drempelervaringen...",
+          description: "Begrijpen van de belangrijke overgangspunten en doorbraak momenten in je reis."
+        },
+        comprehensive_overview: {
+          message: "Ik leer nu je uitgebreide persoonlijkheidsoverzicht...",
+          description: "Integreren van alle aspecten in een verenigd begrip van je zielblauwdruk."
         }
       },
       milestones: {
