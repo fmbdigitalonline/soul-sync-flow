@@ -233,55 +233,43 @@ export const useBlueprintAwareDreamDiscoveryCoach = () => {
     const displayName = getDisplayName();
     const blueprintContext = traits.length > 0 ? traits.join(', ') : 'unique personality';
 
-    const baseContext = `
-BLUEPRINT-AWARE DREAM DISCOVERY CONTEXT:
-You are ${displayName}'s deeply empathetic dream discovery guide who understands their unique personality blueprint.
-
-PERSONALITY BLUEPRINT:
-- Core Traits: ${blueprintContext}
-- MBTI: ${blueprintData?.cognition_mbti?.type || 'Unknown'}
-- Human Design: ${blueprintData?.energy_strategy_human_design?.type || 'Unknown'}
-- Sun Sign: ${blueprintData?.archetype_western?.sun_sign || 'Unknown'}
-
-CONVERSATION APPROACH:
-- Reference their specific personality traits naturally in conversation
-- Make personalized suggestions based on their blueprint
-- Ask targeted questions that align with their personality type
-- Help them see connections between their traits and potential dreams
-
-USER MESSAGE: ${userMessage}`;
+    // Build base context with translations
+    const baseContext = safeInterpolateTranslation(
+      t('aiCoachPrompts.baseContext'),
+      {
+        displayName,
+        blueprintContext,
+        mbtiType: blueprintData?.cognition_mbti?.type || 'Unknown',
+        humanDesignType: blueprintData?.energy_strategy_human_design?.type || 'Unknown',
+        sunSign: blueprintData?.archetype_western?.sun_sign || 'Unknown',
+        userMessage
+      }
+    );
 
     switch (phase) {
       case 'suggestion_presentation':
-        return `${baseContext}
-
-PHASE: PRESENTING BLUEPRINT-BASED SUGGESTIONS
-Present the dream suggestions I've generated based on their personality blueprint. Explain how each suggestion connects to their specific traits. Ask them which resonates most or if they'd like to explore something different.
-
-SUGGESTIONS TO PRESENT:
-${dreamSuggestions.map(s => `- ${s.title}: ${s.description} (Reason: ${s.blueprintReason})`).join('\n')}
-
-Be warm, personalized, and help them see how their unique blueprint points toward these potential dreams.`;
+        const suggestionsText = dreamSuggestions.map(s => 
+          `- ${s.title}: ${s.description} (${t('common.reason')}: ${s.blueprintReason})`
+        ).join('\n');
+        
+        return `${baseContext}\n\n${safeInterpolateTranslation(
+          t('aiCoachPrompts.suggestionPresentation'),
+          { suggestions: suggestionsText }
+        )}`;
 
       case 'exploration':
-        return `${baseContext}
-
-PHASE: EXPLORING SELECTED DREAM
-They've shown interest in: ${selectedSuggestion?.title || 'a dream area'}
-Ask deeper questions to understand what specifically excites them about this direction. Reference their personality traits to help them explore further.`;
+        return `${baseContext}\n\n${safeInterpolateTranslation(
+          t('aiCoachPrompts.exploration'),
+          { selectedDream: selectedSuggestion?.title || 'a dream area' }
+        )}`;
 
       case 'refinement':
-        return `${baseContext}
-
-PHASE: REFINING DREAM INTO CONCRETE GOAL
-Help them transform their dream interest into a specific, actionable goal. Use their blueprint to suggest approaches that would work well for their personality type.`;
+        return `${baseContext}\n\n${t('aiCoachPrompts.refinement')}`;
 
       default:
-        return `${baseContext}
-
-Continue the empathetic dream discovery conversation, always keeping their unique personality blueprint in mind.`;
+        return `${baseContext}\n\n${t('aiCoachPrompts.default')}`;
     }
-  }, [blueprintData, dreamSuggestions, selectedSuggestion, getPersonalityTraits, getDisplayName]);
+  }, [blueprintData, dreamSuggestions, selectedSuggestion, getPersonalityTraits, getDisplayName, t]);
 
   // Enhanced send message with blueprint-aware context
   const sendBlueprintAwareDreamMessage = useCallback(async (message: string) => {
