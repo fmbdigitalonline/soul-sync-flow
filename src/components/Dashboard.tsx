@@ -8,10 +8,13 @@ import { Clock, Target, Calendar, TrendingUp, Star, Play, CheckCircle, Brain } f
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PIEDashboardPanel } from "@/components/pie/PIEDashboardPanel";
 import { PIEContextualInsights } from "@/components/pie/PIEContextualInsights";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { format } from "date-fns";
 
 
 const Dashboard = () => {
   const { t } = useLanguage();
+  const { stats, recentActivities, weeklyProgress, loading } = useDashboardData();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-6">
@@ -46,19 +49,19 @@ const Dashboard = () => {
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">12</div>
+                <div className="text-2xl font-bold text-purple-600">{loading ? '...' : stats.tasksCompleted}</div>
                 <div className="text-sm text-gray-600">{t('dashboard.tasksCompleted')}</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">3</div>
+                <div className="text-2xl font-bold text-blue-600">{loading ? '...' : stats.focusSessions}</div>
                 <div className="text-sm text-gray-600">{t('dashboard.focusSessions')}</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">85%</div>
+                <div className="text-2xl font-bold text-green-600">{loading ? '...' : `${weeklyProgress.productivity}%`}</div>
                 <div className="text-sm text-gray-600">{t('dashboard.productivity')}</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">7</div>
+                <div className="text-2xl font-bold text-orange-600">{loading ? '...' : stats.currentStreak}</div>
                 <div className="text-sm text-gray-600">{t('dashboard.dayStreak')}</div>
               </div>
             </div>
@@ -132,31 +135,33 @@ const Dashboard = () => {
               {t('dashboard.recentActivities')}
             </h2>
             
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm">{t('dashboard.completedMorningRoutine')}</span>
-                </div>
-                <Badge variant="secondary">+10 pts</Badge>
+            {loading ? (
+              <div className="text-center text-gray-500 py-8">Loading...</div>
+            ) : recentActivities.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                No recent activities yet. Start your journey!
               </div>
-              
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Clock className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm">{t('dashboard.focusSession25min')}</span>
-                </div>
-                <Badge variant="secondary">+15 pts</Badge>
+            ) : (
+              <div className="space-y-3">
+                {recentActivities.map((activity) => (
+                  <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      {activity.type === 'focus_session' && <Clock className="w-5 h-5 text-blue-600" />}
+                      {activity.type === 'task_completed' && <CheckCircle className="w-5 h-5 text-green-600" />}
+                      {activity.type === 'coach_conversation' && <Brain className="w-5 h-5 text-purple-600" />}
+                      {!['focus_session', 'task_completed', 'coach_conversation'].includes(activity.type) && (
+                        <Star className="w-5 h-5 text-orange-600" />
+                      )}
+                      <div>
+                        <div className="text-sm font-medium">{activity.description}</div>
+                        <div className="text-xs text-gray-500">{format(activity.timestamp, 'MMM d, h:mm a')}</div>
+                      </div>
+                    </div>
+                    {activity.points > 0 && <Badge variant="secondary">+{activity.points} pts</Badge>}
+                  </div>
+                ))}
               </div>
-              
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Brain className="w-5 h-5 text-purple-600" />
-                  <span className="text-sm">{t('dashboard.aiCoachSession')}</span>
-                </div>
-                <Badge variant="secondary">+5 pts</Badge>
-              </div>
-            </div>
+            )}
           </CosmicCard>
 
           <CosmicCard className="p-6">
@@ -165,39 +170,49 @@ const Dashboard = () => {
               {t('dashboard.weeklyProgress')}
             </h2>
             
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t('dashboard.productivity')}</span>
-                  <span>85%</span>
+            {loading ? (
+              <div className="text-center text-gray-500 py-8">Loading...</div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>{t('dashboard.productivity')}</span>
+                    <span>{weeklyProgress.productivity}%</span>
+                  </div>
+                  <Progress value={weeklyProgress.productivity} className="h-2" />
                 </div>
-                <Progress value={85} className="h-2" />
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t('dashboard.focusTime')}</span>
-                  <span>12h 30m</span>
+                
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>{t('dashboard.focusTime')}</span>
+                    <span>{weeklyProgress.focusTime}</span>
+                  </div>
+                  <Progress value={Math.min((parseInt(weeklyProgress.focusTime) / 20) * 100, 100)} className="h-2" />
                 </div>
-                <Progress value={75} className="h-2" />
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t('dashboard.goalsProgress')}</span>
-                  <span>3/4</span>
+                
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>{t('dashboard.goalsProgress')}</span>
+                    <span>{weeklyProgress.goalsProgress.completed}/{weeklyProgress.goalsProgress.total}</span>
+                  </div>
+                  <Progress 
+                    value={weeklyProgress.goalsProgress.total > 0 
+                      ? (weeklyProgress.goalsProgress.completed / weeklyProgress.goalsProgress.total) * 100 
+                      : 0
+                    } 
+                    className="h-2" 
+                  />
                 </div>
-                <Progress value={75} className="h-2" />
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t('dashboard.consistency')}</span>
-                  <span>7 days</span>
+                
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>{t('dashboard.consistency')}</span>
+                    <span>{weeklyProgress.consistency} days</span>
+                  </div>
+                  <Progress value={Math.min((weeklyProgress.consistency / 7) * 100, 100)} className="h-2" />
                 </div>
-                <Progress value={100} className="h-2" />
               </div>
-            </div>
+            )}
           </CosmicCard>
         </div>
       </div>
