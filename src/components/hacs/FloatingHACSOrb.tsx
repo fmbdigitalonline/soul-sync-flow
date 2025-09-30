@@ -33,6 +33,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useEnhancedFeedbackSystem } from '@/hooks/use-enhanced-feedback-system';
 import { EnhancedFeedbackModal } from '@/components/feedback/EnhancedFeedbackModal';
 import { useSubconsciousOrb } from '@/hooks/use-subconscious-orb';
+// NEW: Multi-Dimensional XP Progression System
+import { useXPProgression } from '@/hooks/use-xp-progression';
 // Phase 1: Critical Error Recovery
 import { 
   HACSErrorBoundary, 
@@ -72,6 +74,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [streamingTiming, setStreamingTiming] = useState(75);
   
   const { intelligence, loading, refreshIntelligence } = useHacsIntelligence();
+  
+  // NEW: XP Progression System
+  const { progress: xpProgress, loading: xpLoading } = useXPProgression();
   const { 
     hasReport: hasHermeticReport, 
     loading: hermeticLoading, 
@@ -188,7 +193,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     introductionActive: introductionState.isActive
   });
 
+  // Use XP-based progress if available, otherwise fall back to legacy intelligence level
   const intelligenceLevel = intelligence?.intelligence_level || 0;
+  const displayProgress = xpProgress?.percent ?? intelligenceLevel;
 
   // Phase 3: Enhanced system readiness check 
   const isSystemReady = !loading && !databaseValidation.loading && !hermeticLoading && !!intelligence;
@@ -595,8 +602,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               size="sm"
               stage={orbStage}
               speaking={isGenerating || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport}
+              xpProgress={displayProgress}
               intelligenceLevel={intelligenceLevel}
-              showProgressRing={intelligenceLevel > 0}
+              showProgressRing={displayProgress > 0}
               showIntelligenceTooltip={false}
               isThinking={isThinking || chatLoading}
               activeModule={activeModule}
@@ -667,12 +675,13 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       {isGeneratingReport && (
         <div className="fixed bottom-4 right-4 z-40 bg-card/95 backdrop-blur border border-border rounded-lg p-4 shadow-lg">
           <div className="flex items-center gap-3">
-            <IntelligentSoulOrb
-              size="sm"
-              stage={isGeneratingReport ? "generating" : "complete"}
-              speaking={isGeneratingReport}
-              intelligenceLevel={intelligenceLevel}
-              showProgressRing={true}
+          <IntelligentSoulOrb
+            size="sm"
+            stage={isGeneratingReport ? "generating" : "complete"}
+            speaking={isGeneratingReport}
+            xpProgress={displayProgress}
+            intelligenceLevel={intelligenceLevel}
+            showProgressRing={true}
               className={isGeneratingReport ? "animate-pulse" : ""}
               hermeticProgress={
                 hasHermeticReport 

@@ -11,7 +11,8 @@ interface IntelligentSoulOrbProps {
   className?: string;
   stage?: "welcome" | "collecting" | "generating" | "complete";
   onClick?: () => void;
-  intelligenceLevel?: number; // 0-100
+  intelligenceLevel?: number; // 0-100 (LEGACY: kept for backward compatibility)
+  xpProgress?: number; // NEW: XP-based progress percentage (0-100)
   showProgressRing?: boolean;
   showIntelligenceTooltip?: boolean;
   isThinking?: boolean;
@@ -25,6 +26,8 @@ interface IntelligentSoulOrbProps {
   subconsciousMode?: 'dormant' | 'detecting' | 'pattern_found' | 'thinking' | 'advice_ready';
   patternDetected?: boolean;
   adviceReady?: boolean;
+  // XP micro-pulse
+  onXPGain?: () => void; // Callback for XP gain animations
 }
 
 const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
@@ -34,7 +37,8 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   className,
   stage = "welcome",
   onClick,
-  intelligenceLevel = 0,
+  intelligenceLevel = 0, // LEGACY
+  xpProgress, // NEW: XP-based progress
   showProgressRing = true,
   showIntelligenceTooltip = false,
   isThinking = false,
@@ -47,7 +51,10 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   subconsciousMode = 'dormant',
   patternDetected = false,
   adviceReady = false,
+  onXPGain,
 }) => {
+  // Use XP progress if provided, otherwise fall back to legacy intelligenceLevel
+  const progressPercent = xpProgress !== undefined ? xpProgress : intelligenceLevel;
   const orbRef = useRef<HTMLDivElement>(null);
   const [particles, setParticles] = useState<Array<{ x: number, y: number, size: number, speed: number, angle: number, hue?: number }>>([]);
   const [isLevelingUp, setIsLevelingUp] = useState(false);
@@ -71,19 +78,19 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
 
   // Reverse color psychology: Yellow (learning) → Teal (mastery)
   const getOrbColors = useMemo(() => {
-    // Intelligence Evolution Journey: Yellow → Teal
-    if (intelligenceLevel >= 100) {
+    // Intelligence Evolution Journey: Yellow → Teal (using XP-based progress)
+    if (progressPercent >= 100) {
       return "from-teal-400 via-teal-300 to-teal-200"; // Pure teal mastery
-    } else if (intelligenceLevel >= 75) {
+    } else if (progressPercent >= 75) {
       return "from-teal-300 via-cyan-300 to-cyan-200"; // Advanced - teal dominant
-    } else if (intelligenceLevel >= 50) {
+    } else if (progressPercent >= 50) {
       return "from-cyan-400 via-yellow-300 to-yellow-200"; // Developing - transition phase
-    } else if (intelligenceLevel >= 25) {
+    } else if (progressPercent >= 25) {
       return "from-yellow-400 via-yellow-300 to-yellow-200"; // Learning - yellow dominant
     } else {
       return "from-amber-400 via-yellow-300 to-yellow-200"; // Awakening - warm yellow
     }
-  }, [intelligenceLevel]);
+  }, [progressPercent]);
 
   // Subconscious orb colors based on mode
   const getSubconsciousOrbColors = useMemo(() => {
@@ -151,11 +158,11 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
     return animations[activeModule as keyof typeof animations] || { animate: {}, transition: undefined };
   }, [activeModule, moduleActivity]);
 
-  // Calculate circumference for progress ring (outer - intelligence)
+  // Calculate circumference for progress ring (outer - XP-based intelligence)
   const radius = (ringSize[size] - 6) / 2; // Account for stroke width
   const circumference = 2 * Math.PI * radius;
   const strokeDasharray = circumference;
-  const strokeDashoffset = circumference - (intelligenceLevel / 100) * circumference;
+  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
   // Calculate circumference for inner progress ring (hermetic) - with 40% baseline
   const innerRadius = radius * 0.7; // 70% of outer radius
@@ -165,10 +172,10 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   const hermeticBaselineProgress = Math.max(40, Math.min(100, hermeticProgress));
   const innerStrokeDashoffset = innerCircumference - (hermeticBaselineProgress / 100) * innerCircumference;
 
-  // Initialize particles with intelligence-based count
+  // Initialize particles with XP-based intelligence count
   useEffect(() => {
     const baseParticleCount = 8; // Reduced from 12
-    const bonusParticles = Math.floor(intelligenceLevel / 15); // Adjusted for smaller count
+    const bonusParticles = Math.floor(progressPercent / 15); // Adjusted for smaller count
     const particleCount = Math.min(baseParticleCount + bonusParticles, 16);
     const newParticles = [];
     
@@ -176,15 +183,15 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
       newParticles.push({
         x: 50,
         y: 50,
-        size: Math.random() * 2 + 1 + (intelligenceLevel / 150), // Smaller particles
-        speed: Math.random() * 0.25 + 0.25 + (intelligenceLevel / 250), // Adjusted speed
+        size: Math.random() * 2 + 1 + (progressPercent / 150), // Smaller particles
+        speed: Math.random() * 0.25 + 0.25 + (progressPercent / 250), // Adjusted speed
         angle: (Math.PI * 2 / particleCount) * i,
         hue: i * (360 / particleCount), // Rainbow hue for each particle
       });
     }
     
     setParticles(newParticles);
-  }, [intelligenceLevel]);
+  }, [progressPercent]);
    
   // Animation loop for particles - optimized with pause conditions
   useEffect(() => {
@@ -195,10 +202,10 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
     
     const shouldAnimate = () => {
       // Pause animations when:
-      // 1. Not speaking and intelligence is maxed
+      // 1. Not speaking and XP progress is maxed
       // 2. Hermetic progress is complete and not glowing
       // 3. Subconscious mode is dormant
-      if (!speaking && intelligenceLevel >= 100 && hermeticProgress >= 100 && !showRadiantGlow && subconsciousMode === 'dormant') {
+      if (!speaking && progressPercent >= 100 && hermeticProgress >= 100 && !showRadiantGlow && subconsciousMode === 'dormant') {
         return false;
       }
       return true;
@@ -241,29 +248,29 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
         cancelAnimationFrame(animationId);
       }
     };
-  }, [speaking, intelligenceLevel, showRadiantGlow, hermeticProgress, subconsciousMode]);
+  }, [speaking, progressPercent, showRadiantGlow, hermeticProgress, subconsciousMode]);
 
   // Level up animation trigger
   useEffect(() => {
-    if (intelligenceLevel === 100) {
+    if (progressPercent === 100) {
       setIsLevelingUp(true);
       const timeout = setTimeout(() => setIsLevelingUp(false), 2000);
       return () => clearTimeout(timeout);
     }
-  }, [intelligenceLevel]);
+  }, [progressPercent]);
 
   const getIntelligencePhase = () => {
-    if (intelligenceLevel >= 100) return t('intelligencePhases.autonomous');
-    if (intelligenceLevel >= 75) return t('intelligencePhases.advanced');
-    if (intelligenceLevel >= 50) return t('intelligencePhases.developing');
-    if (intelligenceLevel >= 25) return t('intelligencePhases.learning');
+    if (progressPercent >= 100) return t('intelligencePhases.autonomous');
+    if (progressPercent >= 75) return t('intelligencePhases.advanced');
+    if (progressPercent >= 50) return t('intelligencePhases.developing');
+    if (progressPercent >= 25) return t('intelligencePhases.learning');
     return t('intelligencePhases.awakening');
   };
 
   return (
     <div className="relative flex items-center justify-center">
-      {/* Outer Progress Ring - Intelligence Level */}
-      {showProgressRing && intelligenceLevel > 0 && (
+      {/* Outer Progress Ring - XP-Based Intelligence Level */}
+      {showProgressRing && progressPercent > 0 && (
         <svg
           className="absolute"
           width={ringSize[size]}
@@ -294,7 +301,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             animate={{ strokeDashoffset }}
             transition={{ duration: 1, ease: "easeInOut" }}
             className={cn(
-              intelligenceLevel >= 100 && "drop-shadow-lg",
+              progressPercent >= 100 && "drop-shadow-lg",
               isLevelingUp && "animate-pulse"
             )}
             style={{
@@ -378,7 +385,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             "absolute inset-0 rounded-full", 
             speaking && "animate-pulse",
             isLevelingUp && "animate-ping",
-            (showRadiantGlow && intelligenceLevel >= 100) || hermeticProgress >= 100 && "animate-pulse"
+            (showRadiantGlow && progressPercent >= 100) || hermeticProgress >= 100 && "animate-pulse"
           )}
           style={{
             background: hermeticProgress >= 100
@@ -386,7 +393,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
                   rgb(34 211 238 / 0.9), 
                   rgb(103 232 249 / 0.6), 
                   rgb(165 243 252 / 0.3))`
-              : showRadiantGlow && intelligenceLevel >= 100
+              : showRadiantGlow && progressPercent >= 100
               ? `radial-gradient(circle, 
                   hsl(var(--soul-teal) / 0.9), 
                   hsl(var(--soul-teal) / 0.6), 
@@ -394,12 +401,12 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
               : undefined,
             boxShadow: hermeticProgress >= 100
               ? "0 0 20px rgb(34 211 238 / 0.8), 0 0 40px rgb(34 211 238 / 0.6), 0 0 60px rgb(34 211 238 / 0.4)"
-              : showRadiantGlow && intelligenceLevel >= 100
+              : showRadiantGlow && progressPercent >= 100
               ? "0 0 20px hsl(var(--soul-teal) / 0.8), 0 0 40px hsl(var(--soul-teal) / 0.6), 0 0 60px hsl(var(--soul-teal) / 0.4)"
               : undefined
           }}
         >
-          {hermeticProgress < 100 && (!showRadiantGlow || intelligenceLevel < 100) && (
+          {hermeticProgress < 100 && (!showRadiantGlow || progressPercent < 100) && (
             <div className={cn("absolute inset-0 rounded-full bg-gradient-to-r", getSubconsciousOrbColors)} />
           )}
           {hermeticProgress >= 100 && (
@@ -412,10 +419,10 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
           className={cn(
             "absolute inset-0 rounded-full blur-sm", // Reduced blur for smaller orb
             hermeticProgress >= 100 ? "bg-cyan-400 opacity-50" : // Hermetic mastery - full cyan
-            intelligenceLevel >= 100 ? "bg-teal-400 opacity-40" : // Pure teal mastery
-            intelligenceLevel >= 75 ? "bg-teal-400 opacity-30" : // Advanced teal
-            intelligenceLevel >= 50 ? "bg-cyan-400 opacity-25" : // Transition phase
-            intelligenceLevel >= 25 ? "bg-yellow-400 opacity-25" : // Learning yellow
+            progressPercent >= 100 ? "bg-teal-400 opacity-40" : // Pure teal mastery
+            progressPercent >= 75 ? "bg-teal-400 opacity-30" : // Advanced teal
+            progressPercent >= 50 ? "bg-cyan-400 opacity-25" : // Transition phase
+            progressPercent >= 25 ? "bg-yellow-400 opacity-25" : // Learning yellow
             "bg-amber-400 opacity-20" // Awakening warm yellow
           )} 
         />

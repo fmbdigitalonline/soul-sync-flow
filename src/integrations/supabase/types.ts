@@ -3884,6 +3884,93 @@ export type Database = {
         }
         Relationships: []
       }
+      user_xp_events: {
+        Row: {
+          blocked_gate: string | null
+          delta_xp: number
+          dims: Json
+          id: number
+          kinds: string[]
+          note: string | null
+          occurred_at: string
+          quality: number
+          user_id: string
+          xp_total_after: number
+        }
+        Insert: {
+          blocked_gate?: string | null
+          delta_xp: number
+          dims: Json
+          id?: number
+          kinds: string[]
+          note?: string | null
+          occurred_at?: string
+          quality: number
+          user_id: string
+          xp_total_after: number
+        }
+        Update: {
+          blocked_gate?: string | null
+          delta_xp?: number
+          dims?: Json
+          id?: number
+          kinds?: string[]
+          note?: string | null
+          occurred_at?: string
+          quality?: number
+          user_id?: string
+          xp_total_after?: number
+        }
+        Relationships: []
+      }
+      user_xp_progress: {
+        Row: {
+          created_at: string
+          daily_xp: number
+          dim_scores_ewma: Json
+          last_adp_at: string | null
+          last_milestone_hit: number
+          last_reset_day: string
+          last_reset_week: number
+          repeats_today: Json
+          session_xp: number
+          updated_at: string
+          user_id: string
+          weekly_xp: number
+          xp_total: number
+        }
+        Insert: {
+          created_at?: string
+          daily_xp?: number
+          dim_scores_ewma?: Json
+          last_adp_at?: string | null
+          last_milestone_hit?: number
+          last_reset_day?: string
+          last_reset_week?: number
+          repeats_today?: Json
+          session_xp?: number
+          updated_at?: string
+          user_id: string
+          weekly_xp?: number
+          xp_total?: number
+        }
+        Update: {
+          created_at?: string
+          daily_xp?: number
+          dim_scores_ewma?: Json
+          last_adp_at?: string | null
+          last_milestone_hit?: number
+          last_reset_day?: string
+          last_reset_week?: number
+          repeats_today?: Json
+          session_xp?: number
+          updated_at?: string
+          user_id?: string
+          weekly_xp?: number
+          xp_total?: number
+        }
+        Relationships: []
+      }
       waitlist_entries: {
         Row: {
           created_at: string
@@ -4096,6 +4183,10 @@ export type Database = {
           id: string
           similarity: number
         }[]
+      }
+      migrate_intelligence_to_xp: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       restart_hermetic_job: {
         Args: { job_id_param: string }
