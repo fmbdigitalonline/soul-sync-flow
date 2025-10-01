@@ -9,6 +9,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { StewardIntroductionStep, StewardIntroductionState } from '@/types/steward-introduction';
@@ -181,11 +182,14 @@ export const useStewardIntroductionEnhanced = () => {
     const completionSuccess = await markIntroductionCompleted();
 
     // Close modal immediately regardless of completion status (Principle #1: Never Break)
-    setIntroductionState(prev => ({
-      ...prev,
-      isActive: false,
-      completed: true
-    }));
+    // Use flushSync to force immediate UI update
+    flushSync(() => {
+      setIntroductionState(prev => ({
+        ...prev,
+        isActive: false,
+        completed: true
+      }));
+    });
 
     // Only proceed with report generation if completion was successful
     if (!completionSuccess) {
@@ -217,12 +221,12 @@ export const useStewardIntroductionEnhanced = () => {
       if (result.success && result.job_id) {
         console.log(`✅ PHASE 3: Hermetic report job created successfully: ${result.job_id}`);
         
-        // IMMEDIATE REFRESH: Trigger hermetic status check right after job creation
-        // This ensures the progress ring activates immediately
-        setTimeout(() => {
-          console.log('🔄 STEWARD: Triggering immediate hermetic status refresh after job creation');
-          // The hermetic hook will detect the new job via its enhanced detection logic
-        }, 100);
+        // Force immediate UI update to show generation state
+        flushSync(() => {
+          setIsGeneratingReport(false);
+        });
+        
+        console.log('🔄 STEWARD: Hermetic job created - hermetic hook will detect via aggressive polling');
         
         return { success: true, job_id: result.job_id };
       } else {
@@ -232,11 +236,8 @@ export const useStewardIntroductionEnhanced = () => {
       console.error('❌ PHASE 3: Background hermetic report generation failed:', error);
       return { success: false, error: String(error) };
     } finally {
-      // COORDINATION FIX: Don't immediately reset - let hermetic status hook detect job first
-      setTimeout(() => {
-        console.log('🔄 STEWARD: Clearing isGeneratingReport after hermetic hook detection delay');
-        setIsGeneratingReport(false);
-      }, 2000); // 2 second delay to ensure hermetic status hook detects the new job
+      // Reset generation state - hermetic hook has already taken over
+      setIsGeneratingReport(false);
     }
   }, [user, markIntroductionCompleted]);
 

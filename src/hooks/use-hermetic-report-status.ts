@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { hermeticPersonalityReportService } from '@/services/hermetic-personality-report-service';
 import { useAuth } from '@/contexts/AuthContext';
@@ -227,16 +228,20 @@ export const useHermeticReportStatus = () => {
         setLastProgressMilestone(0);
         console.log('🔄 MILESTONE RESET: Cleared displayed milestones for new generation');
         
-        // Immediately set as generating to bridge the gap
-        setStatus(prev => ({ 
-          ...prev, 
-          loading: false, 
-          isGenerating: true,
-          progress: 5, // Show immediate progress
-          currentStep: 'Starting hermetic analysis...',
-          hasZombieJob: false,
-          zombieJobInfo: null
-        }));
+        // Force immediate UI update using flushSync
+        flushSync(() => {
+          setStatus(prev => ({ 
+            ...prev, 
+            loading: false, 
+            isGenerating: true,
+            progress: 5, // Show immediate progress
+            currentStep: 'Starting hermetic analysis...',
+            hasZombieJob: false,
+            zombieJobInfo: null
+          }));
+        });
+        
+        console.log('✅ HERMETIC STATUS: Forced immediate UI update with flushSync');
         
         // Continue with normal flow to get full details
       }
