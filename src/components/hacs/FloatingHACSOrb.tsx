@@ -18,6 +18,8 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useStewardIntroductionEnhanced } from '@/hooks/use-steward-introduction-enhanced';
 import { useStewardIntroductionDatabase } from '@/hooks/use-steward-introduction-database';
+import { useTutorialFlow } from '@/hooks/use-tutorial-flow';
+import { StewardActivationCompletionScreen } from '@/components/steward/StewardActivationCompletionScreen';
 import { HACSLoadingDiagnostics } from './HACSLoadingDiagnostics';
 import { useGlobalChatState } from '@/hooks/use-global-chat-state';
 import { useStreamingSyncState } from '@/hooks/use-streaming-sync-state';
@@ -118,15 +120,20 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const {
     introductionState,
     isGeneratingReport,
+    showCompletionScreen,
     startIntroduction,
     continueIntroduction,
     completeIntroductionWithReport,
+    closeCompletionScreen,
     shouldStartIntroduction,
     databaseValidation
   } = useStewardIntroductionEnhanced();
 
   // Phase 2: Database-driven Steward Introduction validation
   const stewardDatabase = useStewardIntroductionDatabase();
+  
+  // Tutorial flow for completion screen
+  const { startTutorial } = useTutorialFlow();
   
   // Mobile responsiveness
   const { isMobile } = useIsMobile();
@@ -895,6 +902,13 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      {/* NEW: Steward Activation Completion Screen (Principle #8: Only Add) */}
+      <StewardActivationCompletionScreen
+        isOpen={showCompletionScreen}
+        onClose={closeCompletionScreen}
+        onStartTutorial={startTutorial}
+      />
       </>
     </HACSErrorBoundary>
   );

@@ -155,6 +155,24 @@ const Dreams = () => {
     }
   }, [isReadyForDecomposition, intakeData]);
 
+  // NEW: Handle pre-filled form data from steward completion screen (Principle #8: Only Add)
+  useEffect(() => {
+    const prefillData = sessionStorage.getItem('dreamFormPrefill');
+    if (prefillData && currentView === 'create') {
+      try {
+        const parsedData = JSON.parse(prefillData);
+        setDreamForm(parsedData);
+        sessionStorage.removeItem('dreamFormPrefill'); // Clear after use
+        console.log('✅ DREAMS: Form pre-filled from steward completion:', parsedData);
+        
+        // Scroll to form
+        scrollToForm();
+      } catch (error) {
+        console.error('❌ DREAMS: Failed to parse prefill data:', error);
+      }
+    }
+  }, [currentView, scrollToForm]);
+
   const navigate = useNavigate();
   const location = useLocation();
 

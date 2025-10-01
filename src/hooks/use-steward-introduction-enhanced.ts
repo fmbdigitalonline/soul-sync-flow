@@ -29,6 +29,9 @@ export const useStewardIntroductionEnhanced = () => {
     completed: false
   });
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  
+  // NEW: Completion screen state (Principle #8: Only Add)
+  const [showCompletionScreen, setShowCompletionScreen] = useState(false);
 
   // Session-based tracking to prevent re-triggering during same session
   const getSessionIntroductionKey = () => `steward_intro_completed_${user?.id}`;
@@ -181,7 +184,7 @@ export const useStewardIntroductionEnhanced = () => {
     // CRITICAL: Mark introduction as completed IMMEDIATELY to prevent re-triggering (Principle #3: No Fallbacks That Mask Errors)
     const completionSuccess = await markIntroductionCompleted();
 
-    // Close modal immediately regardless of completion status (Principle #1: Never Break)
+    // PHASE 1: Close steward modal immediately (Principle #1: Never Break existing flow)
     // Use flushSync to force immediate UI update
     flushSync(() => {
       setIntroductionState(prev => ({
@@ -191,7 +194,14 @@ export const useStewardIntroductionEnhanced = () => {
       }));
     });
 
-    // Only proceed with report generation if completion was successful
+    // PHASE 2: Show completion screen for guided next steps (NEW FEATURE - Principle #8: Only Add)
+    flushSync(() => {
+      setShowCompletionScreen(true);
+    });
+
+    console.log('✅ STEWARD: Modal closed, completion screen activated');
+
+    // PHASE 3: Proceed with report generation if completion was successful
     if (!completionSuccess) {
       console.error('❌ PHASE 3: Could not mark completion, skipping report generation');
       return { success: false, error: 'Failed to mark completion in database' };
@@ -241,12 +251,22 @@ export const useStewardIntroductionEnhanced = () => {
     }
   }, [user, markIntroductionCompleted]);
 
+  /**
+   * NEW FUNCTION: Close completion screen (Principle #8: Only Add)
+   */
+  const closeCompletionScreen = useCallback(() => {
+    setShowCompletionScreen(false);
+    console.log('✅ STEWARD: Completion screen closed');
+  }, []);
+
   return {
     introductionState,
     isGeneratingReport,
+    showCompletionScreen,
     startIntroduction,
     continueIntroduction,
     completeIntroductionWithReport,
+    closeCompletionScreen,
     shouldStartIntroduction,
     // Phase 3: Expose database validation for transparency (Principle #7)
     databaseValidation
