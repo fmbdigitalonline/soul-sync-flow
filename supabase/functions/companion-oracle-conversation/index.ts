@@ -785,8 +785,9 @@ serve(async (req) => {
           requiredProcessing: 'process-blueprint-embeddings function'
         });
         oracleStatus = 'initializing';
-      } // End legacy pipeline fallback
-    } else {
+      } // End inner if (embeddingCheck)
+    } // End legacy pipeline fallback if (semanticChunks.length === 0)
+  } else {
       console.log('🔮 ENHANCED ORACLE: Skipped - Oracle mode disabled or no personality context');
       console.log('🔮 PIPELINE STATUS:', {
         useOracleMode,
