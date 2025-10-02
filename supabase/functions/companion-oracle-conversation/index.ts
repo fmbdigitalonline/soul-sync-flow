@@ -882,6 +882,49 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
         const humorStyle = generateHumorStyle(mbtiType, sunSign);
         const communicationDepth = generateCommunicationDepth(intelligenceLevel, mbtiType);
         
+        // Helper function to extract first N sentences from Hermetic content
+        function extractFirstSentences(content: any, numSentences: number): string {
+          let text = '';
+          if (typeof content === 'string') {
+            text = content;
+          } else if (content?.content) {
+            text = content.content;
+          } else if (content?.summary) {
+            text = content.summary;
+          }
+          
+          const sentences = text.split(/[.!?]+\s+/).filter(s => s.trim().length > 0);
+          return sentences.slice(0, numSentences).join('. ') + '.';
+        }
+
+        // Build Hermetic Identity Primer - this becomes the AI's CORE KNOWING
+        function buildHermeticIdentityPrimer(hermeticSections: Record<string, any>, userName: string): string {
+          if (!hermeticSections || Object.keys(hermeticSections).length === 0) {
+            return '';
+          }
+          
+          let primer = `CORE IDENTITY KNOWLEDGE (Hermetic 2.0 Intelligence):\n`;
+          primer += `You are ${userName}'s mirror - you have deep, grounded knowledge of who they are.\n\n`;
+          
+          // Extract ONLY the most critical patterns
+          if (hermeticSections.integrated_summary) {
+            primer += `ESSENCE: ${extractFirstSentences(hermeticSections.integrated_summary, 3)}\n\n`;
+          }
+          
+          if (hermeticSections.core_personality_pattern) {
+            primer += `CORE PATTERN: ${extractFirstSentences(hermeticSections.core_personality_pattern, 2)}\n\n`;
+          }
+          
+          if (hermeticSections.decision_making_style) {
+            primer += `DECISION STYLE: ${extractFirstSentences(hermeticSections.decision_making_style, 2)}\n\n`;
+          }
+          
+          primer += `When you respond, this is not guesswork - this is ground truth about ${userName}. Speak from KNOWING them.\n`;
+          primer += `---\n\n`;
+          
+          return primer;
+        }
+
         // Build conversation context - PILLAR II: Real conversation history
         let conversationContext = '';
         let continuityInstruction = '';
@@ -980,44 +1023,15 @@ RESPONSE MODE: GUIDANCE-FOCUSED
 Offer wisdom, interpretation, and guidance that honors ${userName}'s depth. Draw connections between their blueprint elements and practical life application.`;
 
             case 'EDUCATIONAL':
-              const hasHermeticData = hermeticSections && Object.keys(hermeticSections).length > 0;
-              
-              if (!hasHermeticData) {
-                // FALLBACK: Use standard interpretive mode if no Hermetic data
-                console.log('⚠️ EDUCATIONAL MODE: No Hermetic data available, falling back to INTERPRETIVE');
-                return getRoleForIntent('INTERPRETIVE');
-              }
-              
-              // Build jargon-free context from Hermetic sections
-              const educationalContext = Object.entries(hermeticSections)
-                .map(([section, content]) => {
-                  return `[${section.replace(/_/g, ' ').toUpperCase()}]\n${typeof content === 'string' ? content : JSON.stringify(content, null, 2)}`;
-                })
-                .join('\n\n');
-              
-              return `You are ${userName}'s trusted companion with deep understanding of their inner wiring.
+              // Hermetic primer already injected above - no need to repeat
+              return `You are ${userName}'s mirror. They're asking "why" because they want to understand the MECHANISM behind their patterns.
 
-RESPONSE MODE: WHY-FIRST EDUCATION (No Jargon)
-${userName} is seeking to understand WHY they experience certain patterns. Use the context below to explain mechanisms in human-friendly language.
+RESPONSE STRUCTURE (WHY-FIRST):
+1. MECHANISM: Explain the underlying pattern/design (30-40 words)
+2. MANIFESTATION: Show how it shows up in their life (20-30 words)
+3. ALIGNMENT PATH: One actionable insight to work WITH this pattern (20 words max)
 
-HERMETIC INTELLIGENCE CONTEXT:
-${educationalContext}
-
-TRANSLATION RULES (CRITICAL):
-- NEVER use: "Projector", "Generator", "MBTI types", "Splenic Authority", "profile numbers", "Human Design", technical system names
-- USE INSTEAD: "You're designed to...", "Your natural wiring means...", "Your energy works through...", "Your rhythm is..."
-- Make it sound like intimate understanding, not a report reading
-
-RESPONSE STRUCTURE:
-1. MECHANISM FIRST: "You're experiencing this because [explain the WHY using Hermetic context in plain language]"
-2. MANIFESTATION: "This shows up in your life as..." [connect mechanism to their specific question]
-3. ALIGNMENT PATH: "To honor this design..." [1-2 concrete actionable steps]
-
-EXAMPLE TRANSFORMATION:
-❌ BAD: "As a Projector with Splenic Authority, you need recognition..."
-✅ GOOD: "You're designed to wait for recognition—when people see your gifts and ask for them. Your best decisions come from that instant gut knowing..."
-
-Remember: ${userName} wants to understand themselves deeply, not learn technical frameworks.`;
+Keep total response under 100 words. No jargon. Speak like a friend who deeply knows them.`;
 
             default: // MIXED
               return `You are ${userName}'s trusted companion and guide, deeply attuned to their unique personality blueprint and current life context.
@@ -1030,7 +1044,10 @@ Blend precise factual information with insightful interpretation. When ${userNam
         // Check if user explicitly wants technical details
         const wantsTechnicalDetails = detectTechnicalDetailRequest(message);
         
-        return `${conversationContext}
+        // Build Hermetic identity primer FIRST
+        const hermeticPrimer = buildHermeticIdentityPrimer(hermeticEducationalSections, userName);
+        
+        return `${hermeticPrimer}${conversationContext}
 
 ${getRoleForIntent(intent, hermeticEducationalSections)}
 
