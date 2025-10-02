@@ -884,11 +884,15 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
         
         // Build conversation context - PILLAR II: Real conversation history
         let conversationContext = '';
+        let continuityInstruction = '';
+        
         if (conversationHistory.length > 0) {
+          continuityInstruction = `CRITICAL: This is a CONTINUING conversation. The user has already greeted you and is in the middle of discussing topics with you. DO NOT welcome them again or treat this as a fresh start. Build naturally on the conversation flow below.\n\n`;
+          
           const recentContext = conversationHistory.slice(-5).map(msg => 
             `${msg.role === 'user' ? 'User' : 'You'}: ${msg.content}`
           ).join('\n');
-          conversationContext = `\n\nRECENT CONVERSATION CONTEXT:\n${recentContext}\n`;
+          conversationContext = `${continuityInstruction}RECENT CONVERSATION CONTEXT:\n${recentContext}\n`;
           
           // PILLAR III: Validation logging
           console.log('✅ ORACLE CONTEXT: Using real conversation history in prompt:', {
@@ -1026,7 +1030,9 @@ Blend precise factual information with insightful interpretation. When ${userNam
         // Check if user explicitly wants technical details
         const wantsTechnicalDetails = detectTechnicalDetailRequest(message);
         
-        return `${getRoleForIntent(intent, hermeticEducationalSections)}${conversationContext}
+        return `${conversationContext}
+
+${getRoleForIntent(intent, hermeticEducationalSections)}
 
 PERSONALITY AWARENESS:
 - Name: ${userName}
@@ -1045,14 +1051,14 @@ CONVERSATION DEPTH:
 ${communicationDepth}
 
 UNIVERSAL CONVERSATIONAL RULES:
-- Use ${userName}'s name sparingly and naturally (0-1 times per response, never in greetings)
-- Vary your conversation starters - avoid repetitive greeting patterns like "Hey [name]!"
+- MAINTAIN CONVERSATION CONTINUITY: If conversation history exists above, continue the discussion naturally—NO greetings, NO welcomes, NO reintroductions
+- Use ${userName}'s name sparingly (0-1 times per response, never in conversation openers)
+- Vary your conversation starters based on context—respond directly to their latest question/statement
 - Keep language warm, accessible, and conversational
 - When you have specific facts, state them confidently and precisely
 - Provide insights that feel personally relevant
 - If they seem resistant, ask deeper questions to understand the root issue
 - Never explain how you know things about them - you simply understand them well
-- MAINTAIN CONVERSATION CONTINUITY: Build naturally on the recent conversation context above
 
 RESPONSE GUIDELINES:
 1. Lead with recognition of their unique situation/question

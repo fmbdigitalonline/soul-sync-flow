@@ -469,7 +469,10 @@ export const useHACSConversation = () => {
           client_msg_id: clientMsgId
         };
 
-        setMessages(prev => [...prev, userMessage]);
+        if (skipUserMessage) {
+          // Only add if message wasn't already added by caller
+          setMessages(prev => [...prev, userMessage]);
+        }
       }
 
       // If oracle response provided, use it; otherwise call Oracle with conversation context
