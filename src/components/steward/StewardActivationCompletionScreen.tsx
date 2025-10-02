@@ -6,6 +6,8 @@ import { Sparkles, MessageCircle, FileText, HelpCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getFunnelData } from '@/utils/funnel-data';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useScrollLock } from '@/hooks/use-scroll-lock';
+import { cn } from '@/lib/utils';
 
 interface StewardActivationCompletionScreenProps {
   isOpen: boolean;
@@ -21,6 +23,9 @@ export const StewardActivationCompletionScreen: React.FC<StewardActivationComple
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { isMobile } = useIsMobile();
+  
+  // Lock body scroll when modal is open
+  useScrollLock(isOpen);
   const funnelData = getFunnelData();
 
   const handleNavigate = (path: string) => {
@@ -83,15 +88,22 @@ export const StewardActivationCompletionScreen: React.FC<StewardActivationComple
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[90vh]' : 'max-w-3xl max-h-[85vh]'} overflow-hidden p-0 flex flex-col bg-gradient-to-br from-background via-background to-muted/20 border-border`}>
+      <DialogContent className={cn(
+        "p-0 flex flex-col",
+        isMobile ? "max-w-[95vw] max-h-[calc(90vh-env(safe-area-inset-bottom))]" : "max-w-3xl max-h-[85vh]"
+      )}>
         
         {/* Gradient header bar */}
         <div className="w-full h-1 bg-gradient-to-r from-primary via-secondary to-primary" />
 
-        {/* Content */}
-        <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-6' : 'p-8'}`}>
-          {/* Header with icon */}
-          <div className="flex flex-col items-center text-center mb-8">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto touch-pan-y">
+          <div className={cn(
+            "bg-gradient-to-br from-background via-background to-muted/20",
+            isMobile ? "p-4 pb-24" : "p-8 pb-24"
+          )}>
+            {/* Header with icon */}
+            <div className="flex flex-col items-center text-center mb-8">
             <div className="p-4 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 border border-primary/30 mb-4">
               <Sparkles className="h-8 w-8 text-primary" />
             </div>
@@ -130,15 +142,19 @@ export const StewardActivationCompletionScreen: React.FC<StewardActivationComple
                 <div className={`absolute bottom-4 right-4 w-2 h-2 rounded-full bg-gradient-to-r ${option.gradient} opacity-0 group-hover:opacity-100 transition-opacity`} />
               </button>
             ))}
-          </div>
+            </div>
 
-          {/* Footer hint */}
-          <div className="mt-8 text-center">
-            <p className="text-xs text-muted-foreground">
-              Je kunt altijd later andere opties verkennen via het hoofdmenu
-            </p>
+            {/* Footer hint */}
+            <div className="mt-8 text-center">
+              <p className="text-xs text-muted-foreground">
+                Je kunt altijd later andere opties verkennen via het hoofdmenu
+              </p>
+            </div>
           </div>
         </div>
+        
+        {/* Gradient overlay to indicate scrollable content */}
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background via-background/80 to-transparent" />
       </DialogContent>
     </Dialog>
   );

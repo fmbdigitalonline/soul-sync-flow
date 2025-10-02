@@ -99,9 +99,11 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
         exit={{ opacity: 0, scale: 0.8, y: 20 }}
         className={`${positionClasses} w-full sm:w-80 max-w-sm`}
       >
-        <Card className="p-4 shadow-lg border-l-4 border-l-primary bg-background/95 backdrop-blur-sm">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-3">
+        <Card className="flex flex-col shadow-lg border-l-4 border-l-primary bg-background/95 backdrop-blur-sm max-h-[calc(90vh-8rem)] overflow-hidden">
+          {/* Scrollable Content Area */}
+          <div className="flex-1 overflow-y-auto p-4 pb-2">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-full bg-primary/10">
                 <TypeIcon className={`h-4 w-4 ${getTypeColor(insight.type)}`} />
@@ -201,9 +203,11 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
               </AnimatePresence>
             </div>
           )}
+          </div>
 
-          {/* Actions */}
-          <div className="flex gap-2">
+          {/* Actions - Sticky at bottom */}
+          <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/50 p-4 pt-3">
+            <div className="flex gap-2">
             {insight.type === 'steward_introduction' && insight.showContinue ? (
               <>
                 <Button
@@ -247,11 +251,12 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
                 </Button>
               </>
             )}
-          </div>
+            </div>
 
-          {/* Timestamp */}
-          <div className="mt-2 text-xs text-muted-foreground text-center">
-            {t('hacs.generated')} {insight.timestamp.toLocaleTimeString()}
+            {/* Timestamp */}
+            <div className="mt-2 text-xs text-muted-foreground text-center">
+              {t('hacs.generated')} {insight.timestamp.toLocaleTimeString()}
+            </div>
           </div>
         </Card>
       </motion.div>

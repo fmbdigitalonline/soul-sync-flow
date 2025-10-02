@@ -805,18 +805,18 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       {/* Steward Introduction Modal */}
       <Dialog open={introductionState.isActive} onOpenChange={() => {}}>
         <DialogContent className={cn(
-          "max-w-md p-0 gap-0 border-border/50",
-          isMobile && "max-w-[95vw] max-h-[90vh]"
+          "max-w-md p-0 gap-0 border-border/50 flex flex-col",
+          isMobile && "max-w-[95vw] max-h-[calc(90vh-env(safe-area-inset-bottom))]"
         )}>
           <ScrollArea className={cn(
-            "w-full",
-            isMobile ? "max-h-[85vh]" : "max-h-[70vh]"
+            "w-full touch-pan-y",
+            isMobile ? "max-h-[calc(90vh-env(safe-area-inset-bottom)-2rem)] min-h-[400px]" : "max-h-[70vh]"
           )}>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="p-6 text-center"
+              className={cn("text-center pb-20", isMobile ? "p-4 pt-6" : "p-6")}
             >
               {/* Soul Alchemist Orb - Speaking State */}
               <div className="flex justify-center mb-6">

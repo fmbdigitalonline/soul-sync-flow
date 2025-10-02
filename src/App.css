@@ -107,7 +107,11 @@
     max-width: 100vw;
   }
   
-  /* Prevent any element from exceeding viewport width */
+  /* Prevent any element from exceeding viewport width - scoped to exclude modals */
+  body > *:not([role="dialog"]):not([data-radix-portal]):not([data-state]) {
+    max-width: 100vw;
+  }
+  
   .w-full {
     max-width: 100vw;
   }

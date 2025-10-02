@@ -4,6 +4,9 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X, ArrowRight, Sparkles } from 'lucide-react';
 import { TutorialState } from '@/types/tutorial';
+import { useScrollLock } from '@/hooks/use-scroll-lock';
+import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TutorialModalProps {
   isOpen: boolean;
@@ -23,8 +26,12 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({
   console.log('🎭 TutorialModal render - isOpen:', isOpen);
   console.log('🎭 TutorialModal - tutorialState:', tutorialState);
 
+  const { isMobile } = useIsMobile();
   const currentStep = tutorialState.steps[tutorialState.currentStep];
   const isLastStep = tutorialState.currentStep === tutorialState.steps.length - 1;
+  
+  // Lock body scroll when modal is open
+  useScrollLock(isOpen);
 
   const handleContinue = () => {
     if (isLastStep) {
@@ -39,7 +46,11 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden p-0 flex flex-col bg-gradient-to-br from-background via-background to-muted/20 border-border">
+      <DialogContent className={cn(
+        "max-w-2xl p-0 flex flex-col bg-gradient-to-br from-background via-background to-muted/20 border-border",
+        isMobile && "max-w-[95vw] max-h-[calc(90vh-env(safe-area-inset-bottom))]",
+        !isMobile && "max-h-[85vh]"
+      )}>
         {/* Close button */}
         <div className="absolute top-4 right-4 z-50">
           <Button
@@ -62,8 +73,12 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({
           />
         </div>
 
-        {/* Content */}
-        <div className="flex-1 p-8 pt-12 flex flex-col min-h-[500px]">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto touch-pan-y min-h-0">
+          <div className={cn(
+            "flex flex-col min-h-full pb-24",
+            isMobile ? "p-4 pt-12" : "p-8 pt-12"
+          )}>
           {/* Header with icon */}
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 border border-primary/30">
@@ -74,13 +89,13 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({
             </div>
           </div>
 
-          {/* Title */}
-          <h2 className="text-2xl font-heading font-bold mb-6 leading-tight gradient-text">
-            {currentStep.title}
-          </h2>
+            {/* Title */}
+            <h2 className="text-2xl font-heading font-bold mb-6 leading-tight gradient-text">
+              {currentStep.title}
+            </h2>
 
-          {/* Content */}
-          <div className="flex-1 mb-8">
+            {/* Content */}
+            <div className="flex-1 mb-8">
             <div className="prose prose-sm max-w-none text-foreground">
               {currentStep.content.split('\n').map((paragraph, index) => {
                 if (paragraph.trim() === '') {
@@ -124,11 +139,14 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({
                   </p>
                 );
               })}
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Action buttons */}
-          <div className="flex justify-between items-center pt-4 border-t border-border/50">
+        {/* Sticky Action buttons with gradient overlay */}
+        <div className="sticky bottom-0 bg-gradient-to-t from-background via-background/95 to-transparent pt-6 pb-4 px-8 border-t border-border/50">
+          <div className="flex justify-between items-center">
             <div className="text-xs text-muted-foreground font-medium">
               {isLastStep ? 'Ready to begin your journey' : 'Continue when you\'re ready'}
             </div>
