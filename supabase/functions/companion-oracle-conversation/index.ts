@@ -793,7 +793,7 @@ serve(async (req) => {
       hasPersonalityContext: !!personalityContext,
       reason: !useOracleMode ? 'Oracle mode disabled' : 'No personality context'
     });
-  }
+    }
     
   console.log('🔮 ENHANCED ORACLE COMPLETE: Final status summary:', {
       oracleStatus,
