@@ -795,7 +795,7 @@ serve(async (req) => {
     });
   }
     
-    console.log('🔮 ENHANCED ORACLE COMPLETE: Final status summary:', {
+  console.log('🔮 ENHANCED ORACLE COMPLETE: Final status summary:', {
       oracleStatus,
       structuredFactsFound: structuredFacts.length,
       semanticChunksFound: semanticChunks.length,
