@@ -785,7 +785,6 @@ serve(async (req) => {
           requiredProcessing: 'process-blueprint-embeddings function'
         });
         oracleStatus = 'initializing';
-      } // End else (no embeddings found)
   } // End if (semanticChunks.length === 0)
 } else {
     console.log('🔮 ENHANCED ORACLE: Skipped - Oracle mode disabled or no personality context');
