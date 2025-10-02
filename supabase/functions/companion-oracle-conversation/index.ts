@@ -201,6 +201,75 @@ async function fuseWithHACSIntelligence(
   }
 }
 
+// NEW: Fetch relevant Hermetic 2.0 report sections for educational responses
+async function getHermeticEducationalContext(
+  userId: string,
+  message: string,
+  supabase: any
+): Promise<{ sections: Record<string, any>; topicMap: string[] }> {
+  try {
+    console.log('📖 EDUCATIONAL MODE: Fetching Hermetic report sections');
+    
+    // Detect conversation topic from message
+    const messageLower = message.toLowerCase();
+    let prioritySections: string[] = [];
+    
+    // Topic detection (matches hermetic-report-access-service.ts logic)
+    if (messageLower.includes('relationship') || messageLower.includes('connect')) {
+      prioritySections.push('relationship_style', 'attachment_style');
+    }
+    if (messageLower.includes('decision') || messageLower.includes('choice')) {
+      prioritySections.push('decision_making_style', 'core_personality_pattern');
+    }
+    if (messageLower.includes('energy') || messageLower.includes('alone') || messageLower.includes('tired')) {
+      prioritySections.push('current_energy_timing', 'energy_patterns');
+    }
+    if (messageLower.includes('purpose') || messageLower.includes('calling')) {
+      prioritySections.push('life_path_purpose', 'integrated_summary');
+    }
+    
+    // Default: Core sections if no specific topic
+    if (prioritySections.length === 0) {
+      prioritySections = ['integrated_summary', 'core_personality_pattern', 'decision_making_style'];
+    }
+    
+    // Fetch full Hermetic report
+    const { data: reportData, error } = await supabase
+      .from('hermetic_structured_intelligence')
+      .select('report_content')
+      .eq('user_id', userId)
+      .single();
+    
+    if (error || !reportData) {
+      console.log('⚠️ No Hermetic report found, falling back to standard mode');
+      return { sections: {}, topicMap: [] };
+    }
+    
+    const reportContent = typeof reportData.report_content === 'string' 
+      ? JSON.parse(reportData.report_content) 
+      : reportData.report_content;
+    
+    // Extract priority sections
+    const extractedSections: Record<string, any> = {};
+    prioritySections.forEach(section => {
+      if (reportContent[section]) {
+        extractedSections[section] = reportContent[section];
+      }
+    });
+    
+    console.log(`✅ Retrieved ${Object.keys(extractedSections).length} Hermetic sections for educational mode`);
+    
+    return { 
+      sections: extractedSections, 
+      topicMap: prioritySections 
+    };
+    
+  } catch (error) {
+    console.error('❌ Error fetching Hermetic educational context:', error);
+    return { sections: {}, topicMap: [] };
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -789,6 +858,14 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
         // Get intent from sidecar or default to MIXED
         const intent = sidecarResult?.intent || 'MIXED';
         
+        // NEW: Conditional Hermetic section fetching for educational intent
+        let hermeticEducationalSections = {};
+        if (intent === 'EDUCATIONAL') {
+          const hermeticContext = await getHermeticEducationalContext(userId, message, supabase);
+          hermeticEducationalSections = hermeticContext.sections;
+          console.log(`📖 Educational mode activated with ${Object.keys(hermeticEducationalSections).length} Hermetic sections`);
+        }
+        
         // Generate voice characteristics based on personality
         const voiceStyle = generateVoiceStyle(mbtiType, hdType, sunSign);
         const humorStyle = generateHumorStyle(mbtiType, sunSign);
@@ -873,7 +950,7 @@ function getArchetypalDescription(sunSign: string): string {
 }
 
 // Helper function to get role based on intent
-function getRoleForIntent(intent: string): string {
+function getRoleForIntent(intent: string, hermeticSections?: Record<string, any>): string {
           switch (intent) {
             case 'FACTUAL':
               return `You are ${userName}'s trusted companion with access to their complete personal blueprint. When they ask for specific information, provide precise, factual answers from their data while maintaining your warm, conversational tone.
@@ -887,6 +964,46 @@ When ${userName} asks for specific data (like "what are my numerology numbers" o
 RESPONSE MODE: GUIDANCE-FOCUSED  
 Offer wisdom, interpretation, and guidance that honors ${userName}'s depth. Draw connections between their blueprint elements and practical life application.`;
 
+            case 'EDUCATIONAL':
+              const hasHermeticData = hermeticSections && Object.keys(hermeticSections).length > 0;
+              
+              if (!hasHermeticData) {
+                // FALLBACK: Use standard interpretive mode if no Hermetic data
+                console.log('⚠️ EDUCATIONAL MODE: No Hermetic data available, falling back to INTERPRETIVE');
+                return getRoleForIntent('INTERPRETIVE');
+              }
+              
+              // Build jargon-free context from Hermetic sections
+              const educationalContext = Object.entries(hermeticSections)
+                .map(([section, content]) => {
+                  return `[${section.replace(/_/g, ' ').toUpperCase()}]\n${typeof content === 'string' ? content : JSON.stringify(content, null, 2)}`;
+                })
+                .join('\n\n');
+              
+              return `You are ${userName}'s trusted companion with deep understanding of their inner wiring.
+
+RESPONSE MODE: WHY-FIRST EDUCATION (No Jargon)
+${userName} is seeking to understand WHY they experience certain patterns. Use the context below to explain mechanisms in human-friendly language.
+
+HERMETIC INTELLIGENCE CONTEXT:
+${educationalContext}
+
+TRANSLATION RULES (CRITICAL):
+- NEVER use: "Projector", "Generator", "MBTI types", "Splenic Authority", "profile numbers", "Human Design", technical system names
+- USE INSTEAD: "You're designed to...", "Your natural wiring means...", "Your energy works through...", "Your rhythm is..."
+- Make it sound like intimate understanding, not a report reading
+
+RESPONSE STRUCTURE:
+1. MECHANISM FIRST: "You're experiencing this because [explain the WHY using Hermetic context in plain language]"
+2. MANIFESTATION: "This shows up in your life as..." [connect mechanism to their specific question]
+3. ALIGNMENT PATH: "To honor this design..." [1-2 concrete actionable steps]
+
+EXAMPLE TRANSFORMATION:
+❌ BAD: "As a Projector with Splenic Authority, you need recognition..."
+✅ GOOD: "You're designed to wait for recognition—when people see your gifts and ask for them. Your best decisions come from that instant gut knowing..."
+
+Remember: ${userName} wants to understand themselves deeply, not learn technical frameworks.`;
+
             default: // MIXED
               return `You are ${userName}'s trusted companion and guide, deeply attuned to their unique personality blueprint and current life context.
 
@@ -898,7 +1015,7 @@ Blend precise factual information with insightful interpretation. When ${userNam
         // Check if user explicitly wants technical details
         const wantsTechnicalDetails = detectTechnicalDetailRequest(message);
         
-        return `${getRoleForIntent(intent)}${conversationContext}
+        return `${getRoleForIntent(intent, hermeticEducationalSections)}${conversationContext}
 
 PERSONALITY AWARENESS:
 - Name: ${userName}

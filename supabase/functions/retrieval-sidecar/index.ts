@@ -7,7 +7,7 @@ const corsHeaders = {
 }
 
 // Intent classification
-function classifyIntent(query: string): 'FACTUAL' | 'INTERPRETIVE' | 'MIXED' {
+function classifyIntent(query: string): 'FACTUAL' | 'INTERPRETIVE' | 'EDUCATIONAL' | 'MIXED' {
   const factualPatterns = [
     /what\s+(is|are|were)\s+my/i,
     /\b(numerology|life\s*path|expression|soul\s*urge|personality)\s+(number|score)/i,
@@ -26,11 +26,35 @@ function classifyIntent(query: string): 'FACTUAL' | 'INTERPRETIVE' | 'MIXED' {
     /feel|emotion|energy/i
   ]
   
+  // Educational intent patterns - explicit and implicit understanding-seeking
+  const educationalPatterns = [
+    // Explicit "why/how/when" understanding
+    /\b(why do i|why am i|why can't i|why is it|why does|why don't i)\b/i,
+    /\b(how come i|how is it that i|what makes me|what causes me to)\b/i,
+    /\b(understand (why|myself|my|how|this))\b/i,
+    /\b(explain (why|my|this pattern|how i))\b/i,
+    /\b(makes me (this way|act like|feel like|different))\b/i,
+    /\b(when should i|how do i know when|what's the right time)\b/i,
+    
+    // Implicit understanding-seeking patterns
+    /\bi don't (understand|get) why i\b/i,
+    /\bi keep (doing|feeling|thinking|struggling)\b/i,
+    /\bthis always happens\b/i,
+    /\bi struggle (with|to understand)\b/i,
+    /\b(never|can't seem to) understand\b/i,
+    /\bwhy is it (so hard|difficult|challenging)\b/i,
+    /\bhelp me understand\b/i
+  ]
+  
   const factualScore = factualPatterns.reduce((score, pattern) => 
     score + (pattern.test(query) ? 1 : 0), 0)
   const interpretiveScore = interpretivePatterns.reduce((score, pattern) => 
     score + (pattern.test(query) ? 1 : 0), 0)
+  const educationalScore = educationalPatterns.reduce((score, pattern) => 
+    score + (pattern.test(query) ? 1 : 0), 0)
   
+  // Educational takes priority when detected (but existing logic preserved)
+  if (educationalScore > 0) return 'EDUCATIONAL'
   if (factualScore > interpretiveScore) return 'FACTUAL'
   if (interpretiveScore > factualScore) return 'INTERPRETIVE'
   return 'MIXED'
