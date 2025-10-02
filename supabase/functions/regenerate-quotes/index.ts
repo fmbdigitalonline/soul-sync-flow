@@ -70,6 +70,65 @@ serve(async (req) => {
     const chineseAstrology = blueprintData.archetype_chinese || {};
     const numerology = blueprintData.values_life_path || {};
 
+    // Extract user's first name
+    const userName = userMeta?.preferred_name ||
+                     userMeta?.full_name?.split(' ')[0] ||
+                     'Friend';
+
+    console.log('👤 User name for quotes:', userName);
+
+    // Blueprint-to-Human Translation Function (NO JARGON)
+    const translateToHumanLanguage = (blueprint: any) => {
+      const hdType = blueprint.energy_strategy_human_design?.type || '';
+      const hdAuthority = blueprint.energy_strategy_human_design?.authority || '';
+      const mbtiType = blueprint.cognition_mbti?.type || '';
+      
+      const typeTranslations: Record<string, string> = {
+        'Projector': 'natural guide who sees what others miss',
+        'Manifestor': 'initiator who sparks change',
+        'Generator': 'powerhouse of sustained energy',
+        'Manifesting Generator': 'multi-passionate creator',
+        'Reflector': 'mirror who senses the truth of any space',
+      };
+      
+      const authorityTranslations: Record<string, string> = {
+        'Splenic': 'instant gut knowing',
+        'Emotional': 'clarity through feeling over time',
+        'Sacral': "body's yes/no wisdom",
+        'Ego': 'heart-centered willpower',
+        'Self-Projected': 'truth in your own voice',
+        'Mental': 'clarity through discussion',
+        'Lunar': 'wisdom through full moon cycles',
+      };
+      
+      const mbtiTranslations: Record<string, string> = {
+        'INFJ': 'visionary who feels deeply',
+        'INTJ': 'strategic thinker with bold vision',
+        'INFP': 'idealist with authentic heart',
+        'INTP': 'logical explorer of ideas',
+        'ENFJ': 'natural leader who inspires others',
+        'ENTJ': 'decisive commander of change',
+        'ENFP': 'enthusiastic innovator',
+        'ENTP': 'clever debater and inventor',
+        'ISFJ': 'caring protector of traditions',
+        'ISTJ': 'reliable guardian of order',
+        'ISFP': 'gentle artist of the moment',
+        'ISTP': 'practical problem-solver',
+        'ESFJ': 'warm host who brings people together',
+        'ESTJ': 'organized manager of results',
+        'ESFP': 'spontaneous entertainer',
+        'ESTP': 'bold action-taker',
+      };
+      
+      return {
+        coreGift: typeTranslations[hdType] || 'unique way of being',
+        decisionWisdom: authorityTranslations[hdAuthority] || 'inner knowing',
+        thinkingStyle: mbtiTranslations[mbtiType] || 'perspective',
+      };
+    };
+
+    const humanTraits = translateToHumanLanguage(blueprintData);
+
     // Extract deep insights from personality report
     const reportContent = reportData.report_content || {};
     const corePattern = reportContent.core_personality_pattern || '';
@@ -78,43 +137,49 @@ serve(async (req) => {
     const energyTiming = reportContent.current_energy_timing || '';
     const integratedSummary = reportContent.integrated_summary || '';
 
-    // Generate 10 personalized quotes using OpenAI with deep context
+    // Generate 25 personalized quotes using OpenAI with deep context
     const languageInstruction = language === 'nl' ? 
-      'Generate all quotes in DUTCH (Nederlands). Use natural, flowing Dutch language that feels authentic and inspiring.' :
-      'Generate all quotes in English.';
+      'Write ALL quotes in DUTCH (Nederlands). Use natural, flowing Dutch that feels warm and personal.' :
+      'Write ALL quotes in English.';
     
-    const systemPrompt = `You are a master personality analyst creating deeply personalized, emotionally resonant quotes. Generate exactly 10 unique quotes that feel like they were written specifically for this person's soul journey.
+    const systemPrompt = `You are a wise mentor creating 25 deeply personal, empowering quotes for ${userName}.
 
 LANGUAGE REQUIREMENT: ${languageInstruction}
 
-DEEP PERSONALITY INSIGHTS:
+${userName}'S CORE STRENGTHS:
+- ${userName} is a ${humanTraits.coreGift}
+- Makes best decisions through ${humanTraits.decisionWisdom}
+- Natural ${humanTraits.thinkingStyle}
+
+KEY INSIGHTS FROM THEIR JOURNEY:
 ${integratedSummary}
 
-CORE PATTERN: ${corePattern}
-DECISION STYLE: ${decisionStyle}
-RELATIONSHIP APPROACH: ${relationshipStyle}
-ENERGY & TIMING: ${energyTiming}
+CONCRETE PATTERNS TO HONOR:
+- ${corePattern}
+- ${decisionStyle}
+- ${relationshipStyle}
+- ${energyTiming}
 
-PERSONALITY ARCHITECTURE:
-- Type: ${personality.likelyType || 'Unique'} with ${humanDesign.type} energy (${humanDesign.authority} authority)
-- Archetype: ${chineseAstrology.animal} ${chineseAstrology.element} with Life Path ${numerology.life_path_number}
-- Profile: ${humanDesign.profile} - ${humanDesign.strategy}
+CRITICAL RULES:
+1. Use ${userName}'s name in 40% of quotes naturally
+2. NEVER use jargon: No "Projector", "INFJ", "Splenic Authority", "Life Path", "Generator", "Manifestor", etc.
+3. Write in everyday empowering language a best friend would use
+4. Each quote must be concrete, actionable, and deeply personal
+5. 10-25 words per quote
+6. Make ${userName} feel SEEN and EMPOWERED
 
-SPECIALIZED QUOTE CATEGORIES (use these specific to their journey):
-- visionary_grounding, intuitive_logic_balance, projector_energy_wisdom, splenic_authority_trust, creative_expression, meaningful_connections, practical_imagination, harmonious_navigation, growth_through_grace, authentic_leadership
+EXAMPLES OF GOOD QUOTES:
+- "${userName}, your ability to sense what's off in a room? That's not anxiety—that's wisdom. Trust it."
+- "You don't need to force momentum. Your energy works in bursts of brilliance. Honor the rhythm."
+- "When everyone else is rushing, you pause. That's not hesitation—that's your superpower of timing."
+
+SPECIALIZED QUOTE CATEGORIES (blend these naturally):
+- visionary_grounding, intuitive_wisdom, energy_mastery, decision_trust, creative_expression, meaningful_connections, practical_magic, harmonious_flow, growth_grace, authentic_leadership
 
 FORMAT REQUIRED:
-1. "Quote text here" - Category: visionary_grounding - Why it resonates: Deep personal explanation
-2. "Quote text here" - Category: intuitive_logic_balance - Why it resonates: Deep personal explanation
-[Continue for exactly 10 quotes]
-
-CRITICAL REQUIREMENTS:
-- Each quote must feel personally crafted for THIS specific soul
-- Draw from their actual personality insights, not generic types
-- Use language that echoes their journey: "grace and insight", "harmonious interplay", "visionary with pragmatic edge"
-- Create quotes that acknowledge their unique challenges and gifts
-- Make each quote emotionally moving and deeply inspiring
-- Quote length: 10-25 words for emotional impact`;
+1. "Quote text here" - Category: visionary_grounding - Why: Personal connection to their traits
+2. "Quote text here" - Category: intuitive_wisdom - Why: Personal connection to their traits
+[Continue for exactly 25 quotes]`;
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -128,11 +193,11 @@ CRITICAL REQUIREMENTS:
           { role: 'system', content: systemPrompt },
           { 
             role: 'user', 
-            content: `Generate 10 personalized quotes for this ${personality.likelyType || 'unique'} ${humanDesign.type} ${chineseAstrology.animal} personality. Make them inspiring but specific to their traits.` 
+            content: `Generate 25 personalized quotes for ${userName}. Make them deeply personal, empowering, and speak directly to who ${userName} is. Use their name naturally in 40% of quotes.` 
           }
         ],
         temperature: 0.8,
-        max_tokens: 2000,
+        max_tokens: 4000,
       }),
     });
 
@@ -147,18 +212,16 @@ CRITICAL REQUIREMENTS:
 
     // Parse the quotes
     const quotes = [];
-    const quotePattern = /\d+\.\s*"([^"]+)"\s*-\s*Category:\s*([^-]+)\s*-\s*Why it resonates:\s*(.+?)(?=\d+\.|$)/g;
+    const quotePattern = /\d+\.\s*"([^"]+)"\s*-\s*Category:\s*([^-]+)\s*-\s*Why:\s*(.+?)(?=\d+\.|$)/gs;
     
     let match;
-    while ((match = quotePattern.exec(generatedContent)) !== null && quotes.length < 10) {
+    while ((match = quotePattern.exec(generatedContent)) !== null && quotes.length < 25) {
       quotes.push({
         quote_text: match[1].trim(),
         category: match[2].trim().toLowerCase(),
         personality_alignment: {
+          user_name: userName,
           explanation: match[3].trim(),
-          mbti_connection: personality.likelyType || null,
-          hd_connection: humanDesign.type || null,
-          astro_connection: `${chineseAstrology.animal} ${chineseAstrology.element}` || astrology.sun_sign || null
         }
       });
     }
