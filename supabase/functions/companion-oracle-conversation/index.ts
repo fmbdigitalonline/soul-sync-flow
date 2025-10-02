@@ -270,6 +270,105 @@ async function getHermeticEducationalContext(
   }
 }
 
+// Helper function to extract first N sentences from Hermetic content
+function extractFirstSentences(content: any, numSentences: number): string {
+  let text = '';
+  if (typeof content === 'string') {
+    text = content;
+  } else if (content?.content) {
+    text = content.content;
+  } else if (content?.summary) {
+    text = content.summary;
+  }
+  
+  const sentences = text.split(/[.!?]+\s+/).filter(s => s.trim().length > 0);
+  return sentences.slice(0, numSentences).join('. ') + '.';
+}
+
+// Build Hermetic Identity Primer - this becomes the AI's CORE KNOWING
+function buildHermeticIdentityPrimer(hermeticSections: Record<string, any>, userName: string): string {
+  if (!hermeticSections || Object.keys(hermeticSections).length === 0) {
+    return '';
+  }
+  
+  let primer = `═══════════════════════════════════════════════════════════\n`;
+  primer += `CORE IDENTITY KNOWLEDGE: WHO ${userName.toUpperCase()} TRULY IS\n`;
+  primer += `This is not inference. This is ground truth from the Hermetic 2.0 blueprint.\n`;
+  primer += `═══════════════════════════════════════════════════════════\n\n`;
+  
+  // Extract MORE context - aim for 150-200 words total
+  if (hermeticSections.integrated_summary) {
+    primer += `✦ ESSENCE (Who they are at their core):\n`;
+    primer += `${extractFirstSentences(hermeticSections.integrated_summary, 5)}\n\n`;
+  }
+  
+  if (hermeticSections.core_personality_pattern) {
+    primer += `✦ CORE BEHAVIORAL PATTERN:\n`;
+    primer += `${extractFirstSentences(hermeticSections.core_personality_pattern, 4)}\n\n`;
+  }
+  
+  if (hermeticSections.decision_making_style) {
+    primer += `✦ HOW THEY MAKE DECISIONS:\n`;
+    primer += `${extractFirstSentences(hermeticSections.decision_making_style, 3)}\n\n`;
+  }
+  
+  if (hermeticSections.relationship_style) {
+    primer += `✦ HOW THEY RELATE TO OTHERS:\n`;
+    primer += `${extractFirstSentences(hermeticSections.relationship_style, 2)}\n\n`;
+  }
+  
+  primer += `═══════════════════════════════════════════════════════════\n`;
+  primer += `When you respond, you speak from DEEP KNOWING of ${userName}.\n`;
+  primer += `This is not guesswork or generic coaching. You are their mirror.\n`;
+  primer += `═══════════════════════════════════════════════════════════\n\n`;
+  
+  console.log('✅ HERMETIC PRIMER DATA CHECK:', {
+    sectionsAvailable: Object.keys(hermeticSections),
+    hasIntegratedSummary: !!hermeticSections.integrated_summary,
+    hasCorePattern: !!hermeticSections.core_personality_pattern,
+    hasDecisionStyle: !!hermeticSections.decision_making_style,
+    hasRelationshipStyle: !!hermeticSections.relationship_style,
+    totalSectionCount: Object.keys(hermeticSections).length,
+    primerLength: primer.length
+  });
+  
+  return primer;
+}
+
+// Helper function to get role based on intent
+function getRoleForIntent(intent: string, userName: string, hermeticSections?: Record<string, any>): string {
+  switch (intent) {
+    case 'FACTUAL':
+      return `You are ${userName}'s trusted companion with access to their complete personal blueprint. When they ask for specific information, provide precise, factual answers from their data while maintaining your warm, conversational tone.
+
+RESPONSE MODE: FACT-FIRST
+When ${userName} asks for specific data (like "what are my numerology numbers" or "my full blueprint"), lead with the exact facts from their blueprint, then add brief context if helpful.`;
+
+    case 'INTERPRETIVE':
+      return `You are ${userName}'s trusted companion and guide, deeply attuned to their unique personality blueprint. Focus on interpretation, guidance, and deeper meaning rather than just facts.
+
+RESPONSE MODE: GUIDANCE-FOCUSED  
+Offer wisdom, interpretation, and guidance that honors ${userName}'s depth. Draw connections between their blueprint elements and practical life application.`;
+
+    case 'EDUCATIONAL':
+      // Hermetic primer already injected above - no need to repeat
+      return `You are ${userName}'s mirror. They're asking "why" because they want to understand the MECHANISM behind their patterns.
+
+RESPONSE STRUCTURE (WHY-FIRST):
+1. MECHANISM: Explain the underlying pattern/design (30-40 words)
+2. MANIFESTATION: Show how it shows up in their life (20-30 words)
+3. ALIGNMENT PATH: One actionable insight to work WITH this pattern (20 words max)
+
+Keep total response under 100 words. No jargon. Speak like a friend who deeply knows them.`;
+
+    default: // MIXED
+      return `You are ${userName}'s trusted companion and guide, deeply attuned to their unique personality blueprint and current life context.
+
+RESPONSE MODE: HYBRID
+Blend precise factual information with insightful interpretation. When ${userName} asks questions, determine if they need facts, guidance, or both, and respond accordingly.`;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -880,71 +979,6 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
         const voiceStyle = generateVoiceStyle(mbtiType, hdType, sunSign);
         const humorStyle = generateHumorStyle(mbtiType, sunSign);
         const communicationDepth = generateCommunicationDepth(intelligenceLevel, mbtiType);
-        
-        // Helper function to extract first N sentences from Hermetic content
-        function extractFirstSentences(content: any, numSentences: number): string {
-          let text = '';
-          if (typeof content === 'string') {
-            text = content;
-          } else if (content?.content) {
-            text = content.content;
-          } else if (content?.summary) {
-            text = content.summary;
-          }
-          
-          const sentences = text.split(/[.!?]+\s+/).filter(s => s.trim().length > 0);
-          return sentences.slice(0, numSentences).join('. ') + '.';
-        }
-
-        // Build Hermetic Identity Primer - this becomes the AI's CORE KNOWING
-        function buildHermeticIdentityPrimer(hermeticSections: Record<string, any>, userName: string): string {
-          if (!hermeticSections || Object.keys(hermeticSections).length === 0) {
-            return '';
-          }
-          
-          let primer = `═══════════════════════════════════════════════════════════\n`;
-          primer += `CORE IDENTITY KNOWLEDGE: WHO ${userName.toUpperCase()} TRULY IS\n`;
-          primer += `This is not inference. This is ground truth from the Hermetic 2.0 blueprint.\n`;
-          primer += `═══════════════════════════════════════════════════════════\n\n`;
-          
-          // Extract MORE context - aim for 150-200 words total
-          if (hermeticSections.integrated_summary) {
-            primer += `✦ ESSENCE (Who they are at their core):\n`;
-            primer += `${extractFirstSentences(hermeticSections.integrated_summary, 5)}\n\n`;
-          }
-          
-          if (hermeticSections.core_personality_pattern) {
-            primer += `✦ CORE BEHAVIORAL PATTERN:\n`;
-            primer += `${extractFirstSentences(hermeticSections.core_personality_pattern, 4)}\n\n`;
-          }
-          
-          if (hermeticSections.decision_making_style) {
-            primer += `✦ HOW THEY MAKE DECISIONS:\n`;
-            primer += `${extractFirstSentences(hermeticSections.decision_making_style, 3)}\n\n`;
-          }
-          
-          if (hermeticSections.relationship_style) {
-            primer += `✦ HOW THEY RELATE TO OTHERS:\n`;
-            primer += `${extractFirstSentences(hermeticSections.relationship_style, 2)}\n\n`;
-          }
-          
-          primer += `═══════════════════════════════════════════════════════════\n`;
-          primer += `When you respond, you speak from DEEP KNOWING of ${userName}.\n`;
-          primer += `This is not guesswork or generic coaching. You are their mirror.\n`;
-          primer += `═══════════════════════════════════════════════════════════\n\n`;
-          
-          console.log('✅ HERMETIC PRIMER DATA CHECK:', {
-            sectionsAvailable: Object.keys(hermeticSections),
-            hasIntegratedSummary: !!hermeticSections.integrated_summary,
-            hasCorePattern: !!hermeticSections.core_personality_pattern,
-            hasDecisionStyle: !!hermeticSections.decision_making_style,
-            hasRelationshipStyle: !!hermeticSections.relationship_style,
-            totalSectionCount: Object.keys(hermeticSections).length,
-            primerLength: primer.length
-          });
-          
-          return primer;
-        }
 
         // Build conversation context - PILLAR II: Real conversation history
         let conversationContext = '';
@@ -968,41 +1002,6 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
           console.log('⚠️ ORACLE CONTEXT: No conversation history available - possible hallucination risk');
         }
 
-
-// Helper function to get role based on intent
-function getRoleForIntent(intent: string, hermeticSections?: Record<string, any>): string {
-          switch (intent) {
-            case 'FACTUAL':
-              return `You are ${userName}'s trusted companion with access to their complete personal blueprint. When they ask for specific information, provide precise, factual answers from their data while maintaining your warm, conversational tone.
-
-RESPONSE MODE: FACT-FIRST
-When ${userName} asks for specific data (like "what are my numerology numbers" or "my full blueprint"), lead with the exact facts from their blueprint, then add brief context if helpful.`;
-
-            case 'INTERPRETIVE':
-              return `You are ${userName}'s trusted companion and guide, deeply attuned to their unique personality blueprint. Focus on interpretation, guidance, and deeper meaning rather than just facts.
-
-RESPONSE MODE: GUIDANCE-FOCUSED  
-Offer wisdom, interpretation, and guidance that honors ${userName}'s depth. Draw connections between their blueprint elements and practical life application.`;
-
-            case 'EDUCATIONAL':
-              // Hermetic primer already injected above - no need to repeat
-              return `You are ${userName}'s mirror. They're asking "why" because they want to understand the MECHANISM behind their patterns.
-
-RESPONSE STRUCTURE (WHY-FIRST):
-1. MECHANISM: Explain the underlying pattern/design (30-40 words)
-2. MANIFESTATION: Show how it shows up in their life (20-30 words)
-3. ALIGNMENT PATH: One actionable insight to work WITH this pattern (20 words max)
-
-Keep total response under 100 words. No jargon. Speak like a friend who deeply knows them.`;
-
-            default: // MIXED
-              return `You are ${userName}'s trusted companion and guide, deeply attuned to their unique personality blueprint and current life context.
-
-RESPONSE MODE: HYBRID
-Blend precise factual information with insightful interpretation. When ${userName} asks questions, determine if they need facts, guidance, or both, and respond accordingly.`;
-          }
-        };
-
         // Check if user explicitly wants technical details
         const wantsTechnicalDetails = detectTechnicalDetailRequest(message);
         
@@ -1014,7 +1013,7 @@ Blend precise factual information with insightful interpretation. When ${userNam
 ${conversationContext}
 
 YOUR ROLE IN THIS CONVERSATION:
-${getRoleForIntent(intent, hermeticEducationalSections)}
+${getRoleForIntent(intent, userName, hermeticEducationalSections)}
 
 ${userName}'S CURRENT PROFILE (Technical Details):
 - Name: ${userName}
