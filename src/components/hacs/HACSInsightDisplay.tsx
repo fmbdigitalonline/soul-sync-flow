@@ -23,7 +23,7 @@ interface HACSInsightDisplayProps {
   insight: HACSInsight;
   onAcknowledge: () => void;
   onDismiss: () => void;
-  position?: 'bottom-right' | 'top-center';
+  position?: 'bottom-right' | 'top-center' | 'below-orb-center';
   // Step 3: Queue navigation props
   currentIndex?: number;
   totalInsights?: number;
@@ -85,9 +85,12 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
     return colors[module] || 'text-primary';
   };
 
-  const positionClasses = position === 'bottom-right' 
-    ? 'fixed bottom-4 right-4 left-4 sm:left-auto sm:right-6 sm:bottom-20 z-40' 
-    : 'fixed top-20 left-4 right-4 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2 z-40';
+  const positionClasses = 
+    position === 'below-orb-center'
+      ? 'fixed top-32 sm:top-36 lg:top-52 left-1/2 -translate-x-1/2 z-40'
+      : position === 'bottom-right' 
+        ? 'fixed bottom-4 right-4 left-4 sm:left-auto sm:right-6 sm:bottom-20 z-40' 
+        : 'fixed top-20 left-4 right-4 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2 z-40';
 
   const TypeIcon = getTypeIcon(insight.type);
 

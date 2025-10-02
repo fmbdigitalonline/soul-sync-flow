@@ -761,7 +761,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               setDismissalCooldown(false);
             }, 5000); // 5 second cooldown
           }}
-          position="bottom-right"
+          position="below-orb-center"
           // Step 3: Pass navigation props
           currentIndex={currentInsightIndex}
           totalInsights={insightQueue.length}
