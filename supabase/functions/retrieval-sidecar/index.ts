@@ -54,10 +54,19 @@ function classifyIntent(query: string): 'FACTUAL' | 'INTERPRETIVE' | 'EDUCATIONA
     score + (pattern.test(query) ? 1 : 0), 0)
   
   // Educational takes priority when detected (but existing logic preserved)
-  if (educationalScore > 0) return 'EDUCATIONAL'
-  if (factualScore > interpretiveScore) return 'FACTUAL'
-  if (interpretiveScore > factualScore) return 'INTERPRETIVE'
-  return 'MIXED'
+  const detectedIntent = educationalScore > 0 ? 'EDUCATIONAL' :
+                        factualScore > interpretiveScore ? 'FACTUAL' :
+                        interpretiveScore > factualScore ? 'INTERPRETIVE' : 'MIXED';
+  
+  console.log('🎓 INTENT CLASSIFICATION:', {
+    query: query.substring(0, 100),
+    factualScore,
+    interpretiveScore,
+    educationalScore,
+    detectedIntent
+  });
+  
+  return detectedIntent;
 }
 
 // Fetch structured facts

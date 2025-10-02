@@ -615,11 +615,11 @@ export const useHACSConversation = () => {
           timestamp: new Date().toISOString() 
         };
         
-      await saveConversation([...messages.filter(m => m.content !== content.trim() || m.role !== 'user'), userMessageForSave, oracleMessage]);
+      await saveConversation([...messages.filter(m => !(m.content === content.trim() && m.role === 'user')), userMessageForSave, oracleMessage]);
 
       console.log('✅ ORACLE MESSAGE: Stored in conversation system', {
         sessionId: currentSessionId || `companion_${user.id}`,
-        messageCount: [...messages.filter(m => m.content !== content.trim() || m.role !== 'user'), userMessageForSave, oracleMessage].length,
+        messageCount: [...messages.filter(m => !(m.content === content.trim() && m.role === 'user')), userMessageForSave, oracleMessage].length,
         oracleStatus: response.oracleStatus,
         semanticChunks: response.semanticChunks,
         messageId: oracleMessage.id

@@ -856,7 +856,18 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
         const sunSign = personalityContext.sunSign || 'Unknown';
         
         // Get intent from sidecar or default to MIXED
-        const intent = sidecarResult?.intent || 'MIXED';
+        let intent = sidecarResult?.intent || 'MIXED';
+        
+        // NEW: Fallback educational detection if sidecar didn't classify properly
+        if (intent === 'MIXED' || intent === 'unknown') {
+          const educationalKeywords = /\b(why (do i|am i|can't i|does|is it)|how come|what makes me|i keep|i don't understand)\b/i;
+          if (educationalKeywords.test(message.toLowerCase())) {
+            console.log('📖 EDUCATIONAL FALLBACK: Detected educational intent locally');
+            intent = 'EDUCATIONAL';
+          }
+        }
+        
+        console.log('🎯 FINAL INTENT:', intent);
         
         // NEW: Conditional Hermetic section fetching for educational intent
         let hermeticEducationalSections = {};
@@ -1034,7 +1045,8 @@ CONVERSATION DEPTH:
 ${communicationDepth}
 
 UNIVERSAL CONVERSATIONAL RULES:
-- Use ${userName}'s name naturally in conversation (2-3 times per response)
+- Use ${userName}'s name sparingly and naturally (0-1 times per response, never in greetings)
+- Vary your conversation starters - avoid repetitive greeting patterns like "Hey [name]!"
 - Keep language warm, accessible, and conversational
 - When you have specific facts, state them confidently and precisely
 - Provide insights that feel personally relevant
