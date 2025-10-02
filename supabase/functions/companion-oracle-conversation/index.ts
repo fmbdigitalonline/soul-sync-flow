@@ -786,7 +786,6 @@ serve(async (req) => {
         });
         oracleStatus = 'initializing';
       } // End else (no embeddings found)
-    } // End if (embeddingCheck)
   } // End if (semanticChunks.length === 0)
 } else {
     console.log('🔮 ENHANCED ORACLE: Skipped - Oracle mode disabled or no personality context');
