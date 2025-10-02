@@ -1267,7 +1267,7 @@ Respond helpfully while building rapport and understanding.`
       backgroundFusion: enableBackgroundIntelligence,
       tokens: tokenUsage,
       responseLength: response.length
-    })
+});
 
     // FUSION STEP 4: Return immediate response (fusion happens in background)
     return new Response(JSON.stringify({
@@ -1281,7 +1281,7 @@ Respond helpfully while building rapport and understanding.`
       processingTime: Date.now() - startTime
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+});
 
   } catch (error) {
     console.error('❌ Oracle Conversation Error:', error)
@@ -1293,4 +1293,4 @@ Respond helpfully while building rapport and understanding.`
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
-})
+});
