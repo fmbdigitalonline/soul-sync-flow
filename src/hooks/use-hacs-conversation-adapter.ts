@@ -322,14 +322,23 @@ export const useHACSConversationAdapter = (
           }
 
           console.log('✅ ORACLE-FIRST SUCCESS: Oracle response generated', {
-            oracleStatus: oracleResponse.oracleStatus,
-            semanticChunks: oracleResponse.semanticChunks,
-            intelligenceLevel: oracleResponse.intelligenceLevel,
-            responseLength: oracleResponse.response?.length || 0
-          });
-          
-          // PHASE 2 FIX: Use sendOracleMessage and ensure conversation memory uses stable thread ID
-          await hacsConversation.sendOracleMessage(content, oracleResponse, true); // Skip user message - already added optimistically
+          oracleStatus: oracleResponse.oracleStatus,
+          semanticChunks: oracleResponse.semanticChunks,
+          intelligenceLevel: oracleResponse.intelligenceLevel,
+          responseLength: oracleResponse.response?.length || 0
+        });
+        
+        // Deduplication check to prevent race conditions
+        const lastMessage = hacsConversation.messages[hacsConversation.messages.length - 1];
+        const isDuplicate = lastMessage?.content === content.trim() && lastMessage?.role === 'user';
+        
+        if (isDuplicate) {
+          console.warn('🔄 ADAPTER: Duplicate user message detected, skipping redundant addition');
+          await hacsConversation.sendOracleMessage(content, oracleResponse, true);
+        } else {
+          // PHASE 2 FIX: Use sendOracleMessage and let hook add user message once
+          await hacsConversation.sendOracleMessage(content, oracleResponse, false);
+        }
           
           // PILLAR I & II: Store messages using enhanced ConversationMemoryService with semantic embeddings
           try {

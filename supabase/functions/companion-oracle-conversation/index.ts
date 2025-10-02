@@ -785,7 +785,6 @@ serve(async (req) => {
           requiredProcessing: 'process-blueprint-embeddings function'
         });
         oracleStatus = 'initializing';
-        }
       } // End legacy pipeline fallback
     } else {
       console.log('🔮 ENHANCED ORACLE: Skipped - Oracle mode disabled or no personality context');
@@ -903,24 +902,46 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
             return '';
           }
           
-          let primer = `CORE IDENTITY KNOWLEDGE (Hermetic 2.0 Intelligence):\n`;
-          primer += `You are ${userName}'s mirror - you have deep, grounded knowledge of who they are.\n\n`;
+          let primer = `═══════════════════════════════════════════════════════════\n`;
+          primer += `CORE IDENTITY KNOWLEDGE: WHO ${userName.toUpperCase()} TRULY IS\n`;
+          primer += `This is not inference. This is ground truth from the Hermetic 2.0 blueprint.\n`;
+          primer += `═══════════════════════════════════════════════════════════\n\n`;
           
-          // Extract ONLY the most critical patterns
+          // Extract MORE context - aim for 150-200 words total
           if (hermeticSections.integrated_summary) {
-            primer += `ESSENCE: ${extractFirstSentences(hermeticSections.integrated_summary, 3)}\n\n`;
+            primer += `✦ ESSENCE (Who they are at their core):\n`;
+            primer += `${extractFirstSentences(hermeticSections.integrated_summary, 5)}\n\n`;
           }
           
           if (hermeticSections.core_personality_pattern) {
-            primer += `CORE PATTERN: ${extractFirstSentences(hermeticSections.core_personality_pattern, 2)}\n\n`;
+            primer += `✦ CORE BEHAVIORAL PATTERN:\n`;
+            primer += `${extractFirstSentences(hermeticSections.core_personality_pattern, 4)}\n\n`;
           }
           
           if (hermeticSections.decision_making_style) {
-            primer += `DECISION STYLE: ${extractFirstSentences(hermeticSections.decision_making_style, 2)}\n\n`;
+            primer += `✦ HOW THEY MAKE DECISIONS:\n`;
+            primer += `${extractFirstSentences(hermeticSections.decision_making_style, 3)}\n\n`;
           }
           
-          primer += `When you respond, this is not guesswork - this is ground truth about ${userName}. Speak from KNOWING them.\n`;
-          primer += `---\n\n`;
+          if (hermeticSections.relationship_style) {
+            primer += `✦ HOW THEY RELATE TO OTHERS:\n`;
+            primer += `${extractFirstSentences(hermeticSections.relationship_style, 2)}\n\n`;
+          }
+          
+          primer += `═══════════════════════════════════════════════════════════\n`;
+          primer += `When you respond, you speak from DEEP KNOWING of ${userName}.\n`;
+          primer += `This is not guesswork or generic coaching. You are their mirror.\n`;
+          primer += `═══════════════════════════════════════════════════════════\n\n`;
+          
+          console.log('✅ HERMETIC PRIMER DATA CHECK:', {
+            sectionsAvailable: Object.keys(hermeticSections),
+            hasIntegratedSummary: !!hermeticSections.integrated_summary,
+            hasCorePattern: !!hermeticSections.core_personality_pattern,
+            hasDecisionStyle: !!hermeticSections.decision_making_style,
+            hasRelationshipStyle: !!hermeticSections.relationship_style,
+            totalSectionCount: Object.keys(hermeticSections).length,
+            primerLength: primer.length
+          });
           
           return primer;
         }
@@ -1047,27 +1068,26 @@ Blend precise factual information with insightful interpretation. When ${userNam
         // Build Hermetic identity primer FIRST
         const hermeticPrimer = buildHermeticIdentityPrimer(hermeticEducationalSections, userName);
         
-        return `${hermeticPrimer}${conversationContext}
+        return `${hermeticPrimer}
 
+${conversationContext}
+
+YOUR ROLE IN THIS CONVERSATION:
 ${getRoleForIntent(intent, hermeticEducationalSections)}
 
-PERSONALITY AWARENESS:
+${userName}'S CURRENT PROFILE (Technical Details):
 - Name: ${userName}
 - Natural thinking style: ${getThinkingStyleDescription(mbtiType)}${wantsTechnicalDetails ? ` (MBTI: ${mbtiType})` : ''}
 - Energy approach: ${getEnergyDescription(hdType)}${wantsTechnicalDetails ? ` (Human Design: ${hdType})` : ''}
 - Archetypal influence: ${getArchetypalDescription(sunSign)}${wantsTechnicalDetails ? ` (Sun Sign: ${sunSign})` : ''}
 - Intelligence Level: ${intelligenceLevel}/100${factsSection}${narrativeSection}
 
-COMMUNICATION STYLE (Personalized for ${userName}):
+COMMUNICATION GUIDELINES:
 ${voiceStyle}
-
-HUMOR & TONE:
 ${humorStyle}
-
-CONVERSATION DEPTH:
 ${communicationDepth}
 
-UNIVERSAL CONVERSATIONAL RULES:
+UNIVERSAL RULES:
 - MAINTAIN CONVERSATION CONTINUITY: If conversation history exists above, continue the discussion naturally—NO greetings, NO welcomes, NO reintroductions
 - Use ${userName}'s name sparingly (0-1 times per response, never in conversation openers)
 - Vary your conversation starters based on context—respond directly to their latest question/statement

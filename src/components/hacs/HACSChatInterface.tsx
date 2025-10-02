@@ -61,31 +61,13 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     if (!inputValue.trim()) return;
     
     const messageToSend = inputValue.trim();
-    const clientMsgId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    // OPTIMISTIC UI: Add user message immediately
-    const optimisticMessage: ConversationMessage = {
-      id: clientMsgId,
-      role: 'user',
-      content: messageToSend,
-      timestamp: new Date().toISOString(),
-      client_msg_id: clientMsgId,
-    };
-    
-    // Clear input immediately for responsive UI
-    setInputValue("");
-    
-    // Add optimistic message instantly to UI
-    if (onAddOptimisticMessage) {
-      onAddOptimisticMessage(optimisticMessage);
-    }
+    setInputValue(""); // Clear input immediately for responsive UI
     
     try {
-      await onSendMessage(messageToSend);
+      await onSendMessage(messageToSend); // Let adapter handle message state
     } catch (error) {
       console.error('Failed to send message:', error);
-      // Put the message back if it failed
-      setInputValue(messageToSend);
+      setInputValue(messageToSend); // Restore on error
     }
   };
 
