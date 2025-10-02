@@ -789,13 +789,13 @@ serve(async (req) => {
     } // End if (embeddingCheck)
   } // End if (semanticChunks.length === 0)
 } else {
-      console.log('🔮 ENHANCED ORACLE: Skipped - Oracle mode disabled or no personality context');
-      console.log('🔮 PIPELINE STATUS:', {
-        useOracleMode,
-        hasPersonalityContext: !!personalityContext,
-        reason: !useOracleMode ? 'Oracle mode disabled' : 'No personality context'
-      });
-    }
+    console.log('🔮 ENHANCED ORACLE: Skipped - Oracle mode disabled or no personality context');
+    console.log('🔮 PIPELINE STATUS:', {
+      useOracleMode,
+      hasPersonalityContext: !!personalityContext,
+      reason: !useOracleMode ? 'Oracle mode disabled' : 'No personality context'
+    });
+  }
     
     console.log('🔮 ENHANCED ORACLE COMPLETE: Final status summary:', {
       oracleStatus,
