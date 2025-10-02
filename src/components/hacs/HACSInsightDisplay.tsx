@@ -89,8 +89,8 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
     position === 'below-orb-center'
       ? 'fixed top-32 sm:top-36 lg:top-52 left-1/2 -translate-x-1/2 z-40'
       : position === 'bottom-right' 
-        ? 'fixed bottom-4 right-4 left-4 sm:left-auto sm:right-6 sm:bottom-20 z-40' 
-        : 'fixed top-20 left-4 right-4 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2 z-40';
+        ? 'fixed bottom-4 left-4 sm:left-auto sm:right-6 sm:bottom-20 z-40' 
+        : 'fixed top-20 left-1/2 -translate-x-1/2 z-40';
 
   const TypeIcon = getTypeIcon(insight.type);
 
@@ -100,7 +100,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
         initial={{ opacity: 0, scale: 0.8, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.8, y: 20 }}
-        className={`${positionClasses} w-full sm:w-80 max-w-sm`}
+        className={`${positionClasses} w-[calc(100vw-2rem)] sm:w-80 max-w-sm`}
       >
         <Card className="flex flex-col shadow-lg border-l-4 border-l-primary bg-background/95 backdrop-blur-sm max-h-[calc(90vh-8rem)] overflow-hidden">
           {/* Scrollable Content Area */}
