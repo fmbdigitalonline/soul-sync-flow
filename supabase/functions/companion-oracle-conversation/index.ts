@@ -335,6 +335,73 @@ function buildHermeticIdentityPrimer(hermeticSections: Record<string, any>, user
   return primer;
 }
 
+// Helper function to generate voice style based on personality
+function generateVoiceStyle(mbti: string, hd: string, sun: string): string {
+  let style = "- Speak conversationally and warmly\n";
+  
+  if (mbti.includes('E')) {
+    style += "- Match their extroverted energy with enthusiasm and engagement\n";
+  } else {
+    style += "- Respect their introverted nature with thoughtful, reflective responses\n";
+  }
+  
+  if (mbti.includes('N')) {
+    style += "- Explore possibilities, patterns, and big-picture connections\n";
+    style += "- Use metaphors and abstract concepts they'll appreciate\n";
+  } else {
+    style += "- Focus on practical, concrete guidance and real-world applications\n";
+  }
+  
+  if (mbti.includes('F')) {
+    style += "- Prioritize emotional resonance and personal values\n";
+  } else {
+    style += "- Emphasize logic, analysis, and objective problem-solving\n";
+  }
+  
+  if (hd === 'Projector') {
+    style += "- Recognize their need for recognition and invitation\n";
+    style += "- Honor their role as a guide and wise advisor\n";
+  }
+  
+  return style;
+}
+
+// Helper function to generate humor style
+function generateHumorStyle(mbti: string, sun: string): string {
+  let humor = "- Use appropriate humor to build rapport\n";
+  
+  if (mbti.includes('T')) {
+    humor += "- Dry wit and clever observations are appreciated\n";
+  } else {
+    humor += "- Warm, inclusive humor that builds connection\n";
+  }
+  
+  if (sun.includes('Aquarius')) {
+    humor += "- Appreciate quirky, unconventional perspectives\n";
+  }
+  
+  return humor;
+}
+
+// Helper function to generate communication depth
+function generateCommunicationDepth(intelligence: number, mbti: string): string {
+  let depth = "";
+  
+  if (intelligence > 80) {
+    depth += "- Engage with sophisticated concepts and nuanced thinking\n";
+  } else if (intelligence > 60) {
+    depth += "- Balance accessibility with meaningful depth\n";
+  } else {
+    depth += "- Keep concepts clear and actionable\n";
+  }
+  
+  if (mbti.includes('N')) {
+    depth += "- Explore underlying patterns and connections\n";
+  }
+  
+  return depth;
+}
+
 // Helper function to get role based on intent
 function getRoleForIntent(intent: string, userName: string, hermeticSections?: Record<string, any>): string {
   switch (intent) {
@@ -1050,71 +1117,6 @@ RESPONSE GUIDELINES:
 }
 
 Remember: You're ${userName}'s perceptive AI companion who has access to their detailed blueprint and can provide both specific facts and meaningful guidance through conversation.`;
-      }
-
-      // Helper functions for personality-driven prompt generation
-      const generateVoiceStyle = (mbti: string, hd: string, sun: string) => {
-        let style = "- Speak conversationally and warmly\n";
-        
-        if (mbti.includes('E')) {
-          style += "- Match their extroverted energy with enthusiasm and engagement\n";
-        } else {
-          style += "- Respect their introverted nature with thoughtful, reflective responses\n";
-        }
-        
-        if (mbti.includes('N')) {
-          style += "- Explore possibilities, patterns, and big-picture connections\n";
-          style += "- Use metaphors and abstract concepts they'll appreciate\n";
-        } else {
-          style += "- Focus on practical, concrete guidance and real-world applications\n";
-        }
-        
-        if (mbti.includes('F')) {
-          style += "- Prioritize emotional resonance and personal values\n";
-        } else {
-          style += "- Emphasize logic, analysis, and objective problem-solving\n";
-        }
-        
-        if (hd === 'Projector') {
-          style += "- Recognize their need for recognition and invitation\n";
-          style += "- Honor their role as a guide and wise advisor\n";
-        }
-        
-        return style;
-      }
-
-      const generateHumorStyle = (mbti: string, sun: string) => {
-        let humor = "- Use appropriate humor to build rapport\n";
-        
-        if (mbti.includes('T')) {
-          humor += "- Dry wit and clever observations are appreciated\n";
-        } else {
-          humor += "- Warm, inclusive humor that builds connection\n";
-        }
-        
-        if (sun.includes('Aquarius')) {
-          humor += "- Appreciate quirky, unconventional perspectives\n";
-        }
-        
-        return humor;
-      }
-
-      const generateCommunicationDepth = (intelligence: number, mbti: string) => {
-        let depth = "";
-        
-        if (intelligence > 80) {
-          depth += "- Engage with sophisticated concepts and nuanced thinking\n";
-        } else if (intelligence > 60) {
-          depth += "- Balance accessibility with meaningful depth\n";
-        } else {
-          depth += "- Keep concepts clear and actionable\n";
-        }
-        
-        if (mbti.includes('N')) {
-          depth += "- Explore underlying patterns and connections\n";
-        }
-        
-        return depth;
       }
 
       systemPrompt = await generateHybridPrompt();
