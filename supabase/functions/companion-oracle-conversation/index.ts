@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
+// Feature flag for early closure gate
+const CLOSURE_GATE_ENABLED = (Deno.env.get('CLOSURE_GATE_ENABLED') ?? 'true') === 'true';
+
 // Helper function to detect if user wants technical personality details
 function detectTechnicalDetailRequest(message: string): boolean {
   const technicalKeywords = /\b(mbti|human design|personality type|what.*type|technical|specific|sun sign|projector|enfp|intj|generator|manifestor|manifesting generator|reflector)\b/i;
@@ -612,6 +615,37 @@ serve(async (req) => {
     const conversationState = detectConversationState(message, finalHistory);
     console.log('🎯 CONVERSATION STATE:', conversationState);
 
+    // ═══════════════════════════════════════════════════════════
+    // EARLY CLOSURE GATE - Bypass AI for satisfaction/closure signals
+    // ═══════════════════════════════════════════════════════════
+    if (CLOSURE_GATE_ENABLED && (conversationState.userSatisfied || conversationState.closureSignalDetected)) {
+      console.log('🚪 CLOSURE GATE: Detected satisfaction/closure - bypassing Oracle + AI');
+      
+      // Translation-proof closure responses (simple, universal acknowledgments)
+      const closureResponses = [
+        "✨",
+        "🙏",
+        "💫",
+        "🌟"
+      ];
+      
+      const response = closureResponses[Math.floor(Math.random() * closureResponses.length)];
+      
+      return new Response(JSON.stringify({
+        response,
+        quality: 0.9,
+        semanticChunks: [],
+        structuredFacts: [],
+        personalityContext,
+        intelligenceLevel,
+        oracleStatus: 'bypassed_closure',
+        processingTime: Date.now() - startTime,
+        closureDetected: true
+      }), { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     // ENHANCED ORACLE PIPELINE: Hybrid retrieval with facts + narrative
     let semanticChunks = []
     let structuredFacts = []
@@ -952,7 +986,6 @@ serve(async (req) => {
         });
         oracleStatus = 'initializing';
       }
-      } // Close if (semanticChunks.length === 0 && structuredFacts.length === 0) from line 690
     } else {
     console.log('🔮 ENHANCED ORACLE: Skipped - Oracle mode disabled or no personality context');
     console.log('🔮 PIPELINE STATUS:', {
@@ -1137,6 +1170,9 @@ Respond helpfully while building rapport and understanding.`
                                    /\b(give me everything|show me all|tell me everything|full picture|complete picture)\b/i.test(message) ||
                                    /\b(my full\s*(self|personality|profile|analysis|blueprint))\b/i.test(message);
 
+    // CLOSURE DETECTION: Apply hard limits if gate is disabled but closure detected
+    const isClosure = conversationState.userSatisfied || conversationState.closureSignalDetected;
+    
     // DYNAMIC TOKEN ALLOCATION: Increase max_tokens for full blueprint requests
     const maxTokens = isFullBlueprintRequest ? 4000 : (useOracleMode ? 1500 : 500);
     
@@ -1144,19 +1180,42 @@ Respond helpfully while building rapport and understanding.`
       isFullBlueprintRequest,
       maxTokens,
       messagePattern: message.toLowerCase().substring(0, 50) + '...',
-      oracleMode: useOracleMode
+      oracleMode: useOracleMode,
+      closureDetected: isClosure
     });
 
     // MODEL SELECTION: Use GPT-4.1 mini for streaming capability and enhanced reasoning  
     const selectedModel = 'gpt-4.1-mini-2025-04-14';
 
     // CONVERSATION MEMORY: Build messages array with conversation history
-    const messages = [
-      { 
-        role: 'system', 
-        content: systemPrompt + '\n\nIMPORTANT: Use double line breaks (\\n\\n) between paragraphs to create natural reading pauses. Keep paragraphs to 2-3 sentences maximum for digestible, conversational flow.\n\nCONVERSATION CONTINUITY: Reference and build upon previous exchanges naturally. Acknowledge what has been discussed before while staying focused on the current query.'
-      }
-    ];
+    let messagesToSend: any[];
+    let completionParams: any;
+    
+    // CLOSURE PRESET: If gate disabled but closure detected, use hard-limited config
+    if (!CLOSURE_GATE_ENABLED && isClosure) {
+      console.log('⚠️ CLOSURE PRESET: Gate disabled, using limited closure config');
+      messagesToSend = [
+        { 
+          role: 'system', 
+          content: "User indicated satisfaction/closure. Reply with ONE simple emoji or very short acknowledgment (<= 5 words). No questions, no advice, no new info." 
+        },
+        { role: 'user', content: message }
+      ];
+      completionParams = {
+        model: selectedModel,
+        messages: messagesToSend,
+        temperature: 0.2,
+        max_completion_tokens: 20,
+        frequency_penalty: 0.6,
+        stop: ["\n\n", "Would you", "Does this", "Is there", "?"]
+      };
+    } else {
+      const messages = [
+        { 
+          role: 'system', 
+          content: systemPrompt + '\n\nIMPORTANT: Use double line breaks (\\n\\n) between paragraphs to create natural reading pauses. Keep paragraphs to 2-3 sentences maximum for digestible, conversational flow.\n\nCONVERSATION CONTINUITY: Reference and build upon previous exchanges naturally. Acknowledge what has been discussed before while staying focused on the current query.'
+        }
+      ];
 
     // Add conversation history if available (last 5 exchanges to stay within token limits)
     if (finalHistory && Array.isArray(finalHistory) && finalHistory.length > 0) {
@@ -1191,19 +1250,46 @@ Respond helpfully while building rapport and understanding.`
 
     console.log(`🔗 MESSAGE ARRAY: Total messages: ${messages.length}, History included: ${conversationHistory?.length || 0} original messages`);
 
+      messagesToSend = messages;
+      completionParams = {
+        model: selectedModel,
+        messages: messagesToSend,
+        temperature: useOracleMode ? 0.8 : 0.7,
+        max_completion_tokens: maxTokens
+      };
+    }
+
+    console.log('🔮 PREPARED MESSAGES:', {
+      messageCount: messagesToSend.length,
+      systemPromptLength: messagesToSend[0].content.length,
+      lastUserMessage: message.substring(0, 100) + '...',
+      closureMode: isClosure
+    });
+
+    // OPENAI API CALL: Send messages to GPT model
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not configured')
+    }
+
+    console.log('🔮 CALLING OPENAI API:', {
+      model: completionParams.model,
+      messageCount: messagesToSend.length,
+      maxTokens: completionParams.max_completion_tokens,
+      temperature: completionParams.temperature,
+      oracleStatus,
+      hasOracleContext: structuredFacts.length > 0 || semanticChunks.length > 0,
+      closurePreset: !CLOSURE_GATE_ENABLED && isClosure
+    });
+
     // Call OpenAI for response generation using current model
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: messages,
-        temperature: useOracleMode ? 0.8 : 0.7,
-        max_tokens: maxTokens
-      }),
+      body: JSON.stringify(completionParams),
     })
 
     // Enhanced error handling with full response details
@@ -1234,7 +1320,19 @@ Respond helpfully while building rapport and understanding.`
     }
     
     const aiResponse = JSON.parse(responseText);
-    const response = aiResponse.choices[0]?.message?.content || 'I sense a disturbance in our connection. Please try reaching out again.'
+    let response = aiResponse.choices[0]?.message?.content || 'I sense a disturbance in our connection. Please try reaching out again.'
+
+    // CLOSURE CLAMP: If gate disabled and closure detected, limit to first sentence
+    if (!CLOSURE_GATE_ENABLED && isClosure) {
+      console.log('🔒 CLOSURE CLAMP: Limiting response to one sentence');
+      const firstSentence = response.split(/[.!?]/)[0].trim();
+      const words = firstSentence.split(/\s+/);
+      if (words.length > 10) {
+        response = words.slice(0, 10).join(' ') + '…';
+      } else {
+        response = firstSentence || '✨';
+      }
+    }
 
     // FUSION STEP 2: Prepare oracle response data for HACS intelligence integration
     const oracleResponseData = {
