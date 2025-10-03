@@ -952,6 +952,7 @@ serve(async (req) => {
         });
         oracleStatus = 'initializing';
       }
+      } // Close if (semanticChunks.length === 0 && structuredFacts.length === 0) from line 690
     } else {
     console.log('🔮 ENHANCED ORACLE: Skipped - Oracle mode disabled or no personality context');
     console.log('🔮 PIPELINE STATUS:', {
