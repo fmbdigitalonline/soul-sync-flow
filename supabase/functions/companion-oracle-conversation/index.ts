@@ -1189,12 +1189,12 @@ Respond helpfully while building rapport and understanding.`
     let completionParams: any;
     
     // Build standard conversation memory (closure gate already handled early exit above)
-      const messages = [
-        { 
-          role: 'system', 
-          content: systemPrompt + '\n\nIMPORTANT: Use double line breaks (\\n\\n) between paragraphs to create natural reading pauses. Keep paragraphs to 2-3 sentences maximum for digestible, conversational flow.\n\nCONVERSATION CONTINUITY: Reference and build upon previous exchanges naturally. Acknowledge what has been discussed before while staying focused on the current query.'
-        }
-      ];
+    const messages = [
+      { 
+        role: 'system', 
+        content: systemPrompt + '\n\nIMPORTANT: Use double line breaks (\\n\\n) between paragraphs to create natural reading pauses. Keep paragraphs to 2-3 sentences maximum for digestible, conversational flow.\n\nCONVERSATION CONTINUITY: Reference and build upon previous exchanges naturally. Acknowledge what has been discussed before while staying focused on the current query.'
+      }
+    ];
 
     // Add conversation history if available (last 5 exchanges to stay within token limits)
     if (finalHistory && Array.isArray(finalHistory) && finalHistory.length > 0) {
