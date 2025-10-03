@@ -1267,7 +1267,7 @@ Respond helpfully while building rapport and understanding.`
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(completionParams),
-    })
+    });
 
     // Enhanced error handling with full response details
     const responseText = await openAIResponse.text();
