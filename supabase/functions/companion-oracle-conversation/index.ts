@@ -1,9 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
-// Feature flag for early closure gate
-const CLOSURE_GATE_ENABLED = (Deno.env.get('CLOSURE_GATE_ENABLED') ?? 'true') === 'true';
-
 // Helper function to detect if user wants technical personality details
 function detectTechnicalDetailRequest(message: string): boolean {
   const technicalKeywords = /\b(mbti|human design|personality type|what.*type|technical|specific|sun sign|projector|enfp|intj|generator|manifestor|manifesting generator|reflector)\b/i;
@@ -618,8 +615,8 @@ serve(async (req) => {
     // ═══════════════════════════════════════════════════════════
     // EARLY CLOSURE GATE - Bypass AI for satisfaction/closure signals
     // ═══════════════════════════════════════════════════════════
-    if (CLOSURE_GATE_ENABLED && (conversationState.userSatisfied || conversationState.closureSignalDetected)) {
-      console.log('🚪 CLOSURE GATE: Detected satisfaction/closure - bypassing Oracle + AI');
+    if (conversationState.userSatisfied || conversationState.closureSignalDetected) {
+      console.log('🚪 CLOSURE GATE ACTIVE: Detected satisfaction/closure - bypassing Oracle + AI');
       
       // Translation-proof closure responses (simple, universal acknowledgments)
       const closureResponses = [
@@ -1130,7 +1127,7 @@ ${communicationDepth}
 
 UNIVERSAL RULES:
 - MAINTAIN CONVERSATION CONTINUITY: If conversation history exists above, continue the discussion naturally—NO greetings, NO welcomes, NO reintroductions
-- Use ${userName}'s name sparingly (0-1 times per response, never in conversation openers)
+- Use ${userName}'s name naturally when it feels warm and personal—avoid overusing it, but don't be afraid to use it to make responses feel more connected
 - Vary your conversation starters based on context—respond directly to their latest question/statement
 - Keep language warm, accessible, and conversational
 - When you have specific facts, state them confidently and precisely
@@ -1191,25 +1188,7 @@ Respond helpfully while building rapport and understanding.`
     let messagesToSend: any[];
     let completionParams: any;
     
-    // CLOSURE PRESET: If gate disabled but closure detected, use hard-limited config
-    if (!CLOSURE_GATE_ENABLED && isClosure) {
-      console.log('⚠️ CLOSURE PRESET: Gate disabled, using limited closure config');
-      messagesToSend = [
-        { 
-          role: 'system', 
-          content: "User indicated satisfaction/closure. Reply with ONE simple emoji or very short acknowledgment (<= 5 words). No questions, no advice, no new info." 
-        },
-        { role: 'user', content: message }
-      ];
-      completionParams = {
-        model: selectedModel,
-        messages: messagesToSend,
-        temperature: 0.2,
-        max_completion_tokens: 20,
-        frequency_penalty: 0.6,
-        stop: ["\n\n", "Would you", "Does this", "Is there", "?"]
-      };
-    } else {
+    // Build standard conversation memory (closure gate already handled early exit above)
       const messages = [
         { 
           role: 'system', 
@@ -1250,14 +1229,13 @@ Respond helpfully while building rapport and understanding.`
 
     console.log(`🔗 MESSAGE ARRAY: Total messages: ${messages.length}, History included: ${conversationHistory?.length || 0} original messages`);
 
-      messagesToSend = messages;
-      completionParams = {
-        model: selectedModel,
-        messages: messagesToSend,
-        temperature: useOracleMode ? 0.8 : 0.7,
-        max_completion_tokens: maxTokens
-      };
-    }
+    messagesToSend = messages;
+    completionParams = {
+      model: selectedModel,
+      messages: messagesToSend,
+      temperature: useOracleMode ? 0.8 : 0.7,
+      max_completion_tokens: maxTokens
+    };
 
     console.log('🔮 PREPARED MESSAGES:', {
       messageCount: messagesToSend.length,
@@ -1278,8 +1256,7 @@ Respond helpfully while building rapport and understanding.`
       maxTokens: completionParams.max_completion_tokens,
       temperature: completionParams.temperature,
       oracleStatus,
-      hasOracleContext: structuredFacts.length > 0 || semanticChunks.length > 0,
-      closurePreset: !CLOSURE_GATE_ENABLED && isClosure
+      hasOracleContext: structuredFacts.length > 0 || semanticChunks.length > 0
     });
 
     // Call OpenAI for response generation using current model
@@ -1321,18 +1298,6 @@ Respond helpfully while building rapport and understanding.`
     
     const aiResponse = JSON.parse(responseText);
     let response = aiResponse.choices[0]?.message?.content || 'I sense a disturbance in our connection. Please try reaching out again.'
-
-    // CLOSURE CLAMP: If gate disabled and closure detected, limit to first sentence
-    if (!CLOSURE_GATE_ENABLED && isClosure) {
-      console.log('🔒 CLOSURE CLAMP: Limiting response to one sentence');
-      const firstSentence = response.split(/[.!?]/)[0].trim();
-      const words = firstSentence.split(/\s+/);
-      if (words.length > 10) {
-        response = words.slice(0, 10).join(' ') + '…';
-      } else {
-        response = firstSentence || '✨';
-      }
-    }
 
     // FUSION STEP 2: Prepare oracle response data for HACS intelligence integration
     const oracleResponseData = {
