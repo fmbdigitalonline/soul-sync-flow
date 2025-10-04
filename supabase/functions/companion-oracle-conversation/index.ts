@@ -1347,7 +1347,6 @@ Respond helpfully while building rapport and understanding.`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-
   } catch (error) {
     console.error('❌ Oracle Conversation Error:', error)
     return new Response(JSON.stringify({ 
