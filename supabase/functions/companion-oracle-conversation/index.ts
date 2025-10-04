@@ -1323,7 +1323,7 @@ Respond helpfully while building rapport and understanding.`
     }
 
     // Log metrics for cost tracking
-    const tokenUsage = aiResponse.usage || {}
+    const tokenUsage = aiResponse.usage || {};
     console.log('📊 FUSION: Oracle Response Metrics:', {
       mode: useOracleMode ? 'oracle' : 'standard',
       status: oracleStatus,
