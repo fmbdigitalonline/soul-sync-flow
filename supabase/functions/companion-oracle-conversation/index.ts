@@ -1078,27 +1078,7 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
         const humorStyle = generateHumorStyle(mbtiType, sunSign);
         const communicationDepth = generateCommunicationDepth(intelligenceLevel, mbtiType);
 
-        // Build conversation context - PILLAR II: Real conversation history
-        let conversationContext = '';
-        let continuityInstruction = '';
-        
-        if (conversationHistory.length > 0) {
-          continuityInstruction = `CRITICAL: This is a CONTINUING conversation. The user has already greeted you and is in the middle of discussing topics with you. DO NOT welcome them again or treat this as a fresh start. Build naturally on the conversation flow below.\n\n`;
-          
-          const recentContext = conversationHistory.slice(-5).map(msg => 
-            `${msg.role === 'user' ? 'User' : 'You'}: ${msg.content}`
-          ).join('\n');
-          conversationContext = `${continuityInstruction}RECENT CONVERSATION CONTEXT:\n${recentContext}\n`;
-          
-          // PILLAR III: Validation logging
-          console.log('✅ ORACLE CONTEXT: Using real conversation history in prompt:', {
-            contextLength: recentContext.length,
-            messageCount: conversationHistory.length,
-            userName: userName
-          });
-        } else {
-          console.log('⚠️ ORACLE CONTEXT: No conversation history available - possible hallucination risk');
-        }
+        // Conversation history is provided via messages array - no need for duplicate context
 
         // Check if user explicitly wants technical details
         const wantsTechnicalDetails = detectTechnicalDetailRequest(message);
@@ -1107,8 +1087,6 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
         const hermeticPrimer = buildHermeticIdentityPrimer(hermeticEducationalSections, userName);
         
         return `${hermeticPrimer}
-
-${conversationContext}
 
 YOUR ROLE IN THIS CONVERSATION:
 ${getRoleForIntent(intent, userName, hermeticEducationalSections)}
@@ -1126,9 +1104,10 @@ ${humorStyle}
 ${communicationDepth}
 
 UNIVERSAL RULES:
-- MAINTAIN CONVERSATION CONTINUITY: If conversation history exists above, continue the discussion naturally—NO greetings, NO welcomes, NO reintroductions
+- DO NOT repeat or paraphrase the user's question back to them - jump directly into your response
+- If this is a continuing conversation, NO greetings, NO welcomes, NO reintroductions
+- Respond directly and naturally to what they asked - don't echo their words
 - Use ${userName}'s name naturally when it feels warm and personal—avoid overusing it, but don't be afraid to use it to make responses feel more connected
-- Vary your conversation starters based on context—respond directly to their latest question/statement
 - Keep language warm, accessible, and conversational
 - When you have specific facts, state them confidently and precisely
 - Provide insights that feel personally relevant
@@ -1192,7 +1171,7 @@ Respond helpfully while building rapport and understanding.`
     const messages = [
       { 
         role: 'system', 
-        content: systemPrompt + '\n\nIMPORTANT: Use double line breaks (\\n\\n) between paragraphs to create natural reading pauses. Keep paragraphs to 2-3 sentences maximum for digestible, conversational flow.\n\nCONVERSATION CONTINUITY: Reference and build upon previous exchanges naturally. Acknowledge what has been discussed before while staying focused on the current query.'
+        content: systemPrompt + '\n\nIMPORTANT: Use double line breaks (\\n\\n) between paragraphs to create natural reading pauses. Keep paragraphs to 2-3 sentences maximum for digestible, conversational flow.\n\nRespond directly and naturally without repeating the user\'s question - they already know what they asked.'
       }
     ];
 
