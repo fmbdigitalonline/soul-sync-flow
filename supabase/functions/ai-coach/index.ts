@@ -167,10 +167,45 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
     });
 
     if (!response.ok) {
-      const errorData = await response.text();
-      console.error('OpenAI API error:', errorData);
-      const errorMessage = language === 'nl' ? `OpenAI API fout: ${response.status}` : `OpenAI API error: ${response.status}`;
-      throw new Error(errorMessage);
+      const errorText = await response.text();
+      console.error('🚨 OpenAI API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorBody: errorText,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Parse OpenAI error response
+      let errorType = 'UNKNOWN_ERROR';
+      let userMessage = 'AI service error occurred';
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        const openAIError = errorData.error;
+        
+        if (openAIError?.type === 'insufficient_quota' || openAIError?.code === 'insufficient_quota') {
+          errorType = 'QUOTA_EXCEEDED';
+          userMessage = language === 'nl' 
+            ? 'AI service heeft quotum bereikt. Probeer het over een moment opnieuw.'
+            : 'AI service quota exceeded. Please try again in a moment.';
+        } else if (response.status === 429) {
+          errorType = 'RATE_LIMIT';
+          userMessage = language === 'nl'
+            ? 'Te veel verzoeken. Even geduld alstublieft.'
+            : 'Too many requests. Please wait a moment.';
+        } else if (response.status === 401) {
+          errorType = 'AUTH_ERROR';
+          userMessage = language === 'nl'
+            ? 'Authenticatie probleem met AI service.'
+            : 'Authentication error with AI service.';
+        }
+      } catch (parseError) {
+        console.error('Failed to parse OpenAI error response:', parseError);
+      }
+      
+      const error = new Error(userMessage);
+      error.name = errorType;
+      throw error;
     }
 
     const data = await response.json();
@@ -198,6 +233,7 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
   } catch (error) {
     console.error('❌ AI Coach Edge Function Error:', {
       errorType: error.constructor.name,
+      errorName: error.name,
       message: error.message,
       timestamp: new Date().toISOString(),
       requestContext: {
@@ -208,22 +244,23 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
       }
     });
 
-    // Determine appropriate status code and user-friendly message
+    // Determine appropriate status code based on error type
     let statusCode = 500;
-    let userMessage = 'An unexpected error occurred while processing your request.';
-    let errorCode = 'UNKNOWN_ERROR';
+    let userMessage = error.message || 'An unexpected error occurred while processing your request.';
+    let errorCode = error.name || 'UNKNOWN_ERROR';
 
-    if (error.message?.includes('quota') || error.message?.includes('429')) {
+    // Map error types to status codes
+    if (error.name === 'QUOTA_EXCEEDED' || error.message?.includes('quota')) {
       statusCode = 429;
-      userMessage = 'AI service is temporarily at capacity. Please try again in a few moments.';
       errorCode = 'QUOTA_EXCEEDED';
-    } else if (error.message?.includes('API key') || error.message?.includes('401')) {
+    } else if (error.name === 'RATE_LIMIT' || error.message?.includes('429')) {
+      statusCode = 429;
+      errorCode = 'RATE_LIMIT';
+    } else if (error.name === 'AUTH_ERROR' || error.message?.includes('API key') || error.message?.includes('401')) {
       statusCode = 401;
-      userMessage = 'Authentication error with AI service. Please contact support.';
       errorCode = 'AUTH_ERROR';
     } else if (error.message?.includes('timeout')) {
       statusCode = 504;
-      userMessage = 'Request took too long to process. Please try with a shorter input.';
       errorCode = 'TIMEOUT';
     }
 
