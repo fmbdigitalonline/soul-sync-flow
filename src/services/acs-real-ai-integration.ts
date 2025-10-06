@@ -103,7 +103,7 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
       console.log(`📋 Context Window Management Evidence:`, contextWindowManagementEvidence);
 
       // Call real AI coach service with DYNAMIC parameters
-      const { data, error } = await supabase.functions.invoke("ai-coach-v2", {
+      const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
           message,
           sessionId: `acs_real_test_${Date.now()}`,
@@ -914,7 +914,7 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
     const startTime = performance.now();
     
     try {
-      const { data } = await supabase.functions.invoke("ai-coach-v2", {
+      const { data } = await supabase.functions.invoke("ai-coach", {
         body: {
           message: "test",
           sessionId: `timing_test_${Date.now()}`,

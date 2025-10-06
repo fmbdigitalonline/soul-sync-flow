@@ -90,7 +90,7 @@ class GoalDecompositionService {
       // Generate comprehensive system prompt for goal decomposition
       const systemPrompt = this.generateDecompositionPrompt(blueprintData);
       
-      const { data, error } = await supabase.functions.invoke("ai-coach-v2", {
+      const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
           message: `Break down this goal into a detailed, actionable plan:
 

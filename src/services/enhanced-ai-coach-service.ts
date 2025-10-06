@@ -341,7 +341,7 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
 
       const systemPrompt = await this.getOrCreatePersona(usePersona, agentType, message, userDisplayName);
       
-      const { data, error } = await supabase.functions.invoke("ai-coach-v2", {
+      const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
           message,
           sessionId,
@@ -361,7 +361,7 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
         console.log('⚠️ Primary model failed, attempting escalation...');
         const escalatedSelection = this.escalateOnFailure(modelSelection, error);
         
-        const { data: escalatedData, error: escalatedError } = await supabase.functions.invoke("ai-coach-v2", {
+        const { data: escalatedData, error: escalatedError } = await supabase.functions.invoke("ai-coach", {
           body: {
             message,
             sessionId,

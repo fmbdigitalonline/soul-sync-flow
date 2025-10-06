@@ -107,20 +107,20 @@ class SoulGoalDecompositionService {
         dataSource: personalityContext.dataSource 
       });
 
-      // STEP 3A: PHASE 4 - Verify ai-coach-v2 deployment version (NUCLEAR)
-      console.log('🔍 VERIFYING AI-COACH-V2 DEPLOYMENT VERSION...');
+      // STEP 3A: PHASE 4 - Verify edge function deployment version
+      console.log('🔍 VERIFYING AI-COACH DEPLOYMENT VERSION...');
       try {
         const versionCheck = await fetch(
-          'https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-v2',
+          'https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach',
           { method: 'GET' }
         );
         
         if (versionCheck.ok) {
           const versionData = await versionCheck.json();
-          console.log('✅ AI-COACH-V2 VERSION CHECK:', versionData);
+          console.log('✅ AI-COACH VERSION CHECK:', versionData);
           
-          if (versionData.version !== '2.2.0' || versionData.functionName !== 'ai-coach-v2') {
-            console.warn('⚠️ WRONG VERSION/FUNCTION:', versionData);
+          if (versionData.version !== '2.2.0') {
+            console.warn('⚠️ OLD VERSION DETECTED:', versionData.version);
             throw new Error('🔄 System update in progress. Please try again in 30 seconds.');
           }
         }
@@ -129,15 +129,15 @@ class SoulGoalDecompositionService {
         // Non-blocking - continue with decomposition attempt
       }
 
-      // STEP 3B: Call AI Coach V2 with enhanced prompt (NUCLEAR DEPLOYMENT)
-      console.log('📡 INVOKING AI-COACH-V2:', {
+      // STEP 3B: Call AI Coach with enhanced prompt
+      console.log('📡 INVOKING AI COACH:', {
         promptLength: comprehensivePrompt.length,
         context: 'razor_aligned_goal_decomposition',
         contextDepth: 'deep',
         timestamp: new Date().toISOString()
       });
 
-      const { data, error } = await supabase.functions.invoke('ai-coach-v2', {
+      const { data, error } = await supabase.functions.invoke('ai-coach', {
         body: {
           message: comprehensivePrompt,
           context: 'razor_aligned_goal_decomposition',
