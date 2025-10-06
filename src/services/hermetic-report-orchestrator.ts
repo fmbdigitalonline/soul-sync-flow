@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { BlueprintData } from "./blueprint-service";
+import { extractAndParseJSON } from '@/utils/json-extraction';
 
 export interface HermeticAnalysisSection {
   agent_type: string;
@@ -744,22 +745,22 @@ Focus on extracting the most detailed and accurate ${dimensionName} patterns fro
   }
 
   private parseIntelligenceResult(data: any, dimensionName: string): any {
-    try {
-      const content = this.safeExtractContent(data, dimensionName);
-      
-      // Clean content - remove markdown formatting
-      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      
-      const parsed = JSON.parse(cleanContent);
-      
-      if (parsed.extracted_data) {
-        return parsed;
-      } else {
-        console.warn(`⚠️ No extracted_data field in ${dimensionName} result`);
-        return null;
-      }
-    } catch (error) {
-      console.error(`❌ Failed to parse ${dimensionName} result:`, error);
+    const content = this.safeExtractContent(data, dimensionName);
+    
+    // Use robust JSON extraction utility
+    const result = extractAndParseJSON<any>(content, `Hermetic Report Dimension: ${dimensionName}`);
+
+    if (!result.success || !result.data) {
+      console.error(`❌ Failed to parse dimension extraction response: ${dimensionName}`);
+      return null;
+    }
+
+    const parsed = result.data;
+    
+    if (parsed.extracted_data) {
+      return parsed;
+    } else {
+      console.warn(`⚠️ No extracted_data field in ${dimensionName} result`);
       return null;
     }
   }

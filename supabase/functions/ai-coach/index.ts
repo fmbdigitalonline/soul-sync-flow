@@ -123,12 +123,23 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
     const finalTemperature = temperature !== undefined ? temperature : (selectedModel === 'gpt-4o' ? 0.7 : 0.5);
     const finalMaxTokens = maxTokens !== undefined ? maxTokens : (selectedModel === 'gpt-4o' ? 1500 : 1000);
 
-    console.log('🎯 Using layered model strategy:', {
-      model: selectedModel,
-      temperature: finalTemperature,
-      maxTokens: finalMaxTokens,
-      reasoning: `${agentType} + ${contextDepth} + blueprint:${includeBlueprint}`
-    });
+  // Set context and max tokens
+  const context = req_body.context || 'general';
+  const contextDepth = req_body.contextDepth || 'standard';
+  
+  // Set final temperature and maxTokens with defaults
+  // Increase token limit for complex decomposition tasks
+  const finalTemperature = undefined; // GPT-4.1 doesn't support temperature
+  const finalMaxTokens = maxTokens !== undefined 
+    ? maxTokens 
+    : (context === 'razor_aligned_goal_decomposition' ? 3000 : 2000);
+
+  console.log('🎯 Using layered model strategy:', {
+    model: selectedModel,
+    temperature: finalTemperature,
+    maxTokens: finalMaxTokens,
+    reasoning: `${agentType} + ${contextDepth} + blueprint:${includeBlueprint}`
+  });
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -197,6 +208,21 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
 
     const data = await response.json();
     const aiResponse = data.choices[0]?.message?.content;
+
+    // Validate response has content
+    if (!aiResponse || aiResponse.trim().length === 0) {
+      console.error('❌ Empty AI response received');
+      throw new Error('AI service returned empty response');
+    }
+
+    // Log response characteristics for debugging
+    console.log('📤 AI RESPONSE CHARACTERISTICS:', {
+      length: aiResponse.length,
+      startsWithJSON: aiResponse.trim().startsWith('{') || aiResponse.trim().startsWith('['),
+      hasMarkdown: aiResponse.includes('```'),
+      model: selectedModel,
+      timestamp: new Date().toISOString()
+    });
 
     if (!aiResponse) {
       const errorMessage = language === 'nl' ? 'Geen reactie van OpenAI' : 'No response from OpenAI';

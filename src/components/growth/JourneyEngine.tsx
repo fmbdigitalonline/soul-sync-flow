@@ -7,6 +7,7 @@ import { LifeArea } from "./LifeAreaSelector";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useAICoach } from "@/hooks/use-ai-coach";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
+import { extractAndParseJSON } from "@/utils/json-extraction";
 
 interface JourneyStep {
   id: string;
@@ -101,14 +102,13 @@ Format as JSON with this structure:
       const latestMessage = messages[messages.length - 1];
       const aiResponse = latestMessage?.sender === 'assistant' ? latestMessage.content : '';
       
-      // Try to parse AI response as JSON, fallback to structured creation if needed
+      // Try to parse AI response as JSON using robust extraction
       let aiSteps;
       try {
         if (aiResponse) {
-          const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            aiSteps = parsed.steps;
+          const result = extractAndParseJSON(aiResponse, 'Journey Engine Steps');
+          if (result.success && result.data) {
+            aiSteps = result.data.steps;
           }
         }
       } catch (parseError) {

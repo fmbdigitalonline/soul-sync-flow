@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { hermeticIntelligenceService } from './hermetic-intelligence-service';
 import { hermeticReportAccessService } from './hermetic-report-access-service';
 import type { HermeticStructuredIntelligence } from '@/types/hermetic-intelligence';
+import { extractAndParseJSON } from '@/utils/json-extraction';
 
 export interface SoulGeneratedGoal {
   id: string;
@@ -163,7 +164,10 @@ class SoulGoalDecompositionService {
       console.log('✅ AI RESPONSE RECEIVED:', { 
         length: data.response.length,
         hasErrorCode: !!data.errorCode,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        responsePreview: data.response.substring(0, 300),
+        containsJSON: data.response.includes('{'),
+        containsMarkdown: data.response.includes('```')
       });
 
       // STEP 4: Parse and validate AI response
@@ -425,6 +429,14 @@ Every milestone and task must be SPECIFIC to the dream domain. For example:
 5. Leverage their cognitive strengths
 6. Honor their decision-making authority
 
+**CRITICAL: RESPONSE FORMAT**
+Return ONLY the JSON object below. Do not include:
+- Explanatory text before or after the JSON
+- Markdown code blocks (no \`\`\`json)
+- Any commentary or notes
+
+Start your response with { and end with }
+
 Return as JSON:
 {
   "milestones": [
@@ -560,110 +572,116 @@ FINANCIAL PATTERNS:
     blueprint_insights?: string[];
     isGoalSpecific: boolean;
   }> => {
-    try {
-      // Extract JSON from AI response
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error('❌ No JSON found in AI response');
-        throw new Error('AI response missing JSON structure');
-      }
+    console.log('🔍 PARSING AI RESPONSE:', {
+      responseLength: aiResponse.length,
+      goalTitle,
+      category
+    });
 
-      const parsed = JSON.parse(jsonMatch[0]);
-
-      // DEFENSIVE TYPE COERCION: Ensure arrays are arrays
-      if (parsed.milestones) {
-        parsed.milestones.forEach((m: any) => {
-          if (m.completion_criteria && !Array.isArray(m.completion_criteria)) {
-            console.warn('⚠️ TYPE COERCION: completion_criteria was not an array:', m.completion_criteria);
-            m.completion_criteria = [String(m.completion_criteria)];
-          }
-        });
-      }
-
-      if (parsed.tasks) {
-        parsed.tasks.forEach((t: any) => {
-          if (t.prerequisites && !Array.isArray(t.prerequisites)) {
-            console.warn('⚠️ TYPE COERCION: prerequisites was not an array:', t.prerequisites);
-            t.prerequisites = [String(t.prerequisites)];
-          }
-        });
-      }
-
-      // VALIDATION: Check for generic milestones
-      const genericTerms = [
-        'Discovery & Vision',
-        'Foundation & Planning',
-        'Initial Implementation',
-        'Expansion & Growth',
-        'Mastery & Integration',
-        'Achievement & Celebration'
-      ];
-
-      const hasGenericMilestones = parsed.milestones?.some((m: any) =>
-        genericTerms.some(term => m.title?.includes(term))
-      );
-
-      if (hasGenericMilestones) {
-        console.warn('⚠️ VALIDATION WARNING: AI returned generic milestone templates');
-      }
-
-      // VALIDATION: Check if milestones reference the goal
-      const goalKeywords = goalTitle.toLowerCase().split(' ').filter(w => w.length > 3);
-      const milestonesReferenceGoal = parsed.milestones?.some((m: any) => {
-        const milestoneText = `${m.title} ${m.description}`.toLowerCase();
-        return goalKeywords.some(keyword => milestoneText.includes(keyword));
+    // Use robust extraction utility
+    const extractionResult = extractAndParseJSON(aiResponse, 'Soul Goal Decomposition');
+    
+    if (!extractionResult.success || !extractionResult.data) {
+      console.error('❌ JSON EXTRACTION FAILED:', {
+        error: extractionResult.error,
+        responsePreview: aiResponse.substring(0, 500)
       });
-
-      if (!milestonesReferenceGoal) {
-        console.warn('⚠️ VALIDATION WARNING: Milestones may not be goal-specific');
-      }
-
-      // Ensure all required fields exist
-      const validatedMilestones = (parsed.milestones || []).map((m: any, index: number) => ({
-        id: m.id || `milestone_${index + 1}_${Date.now()}`,
-        title: m.title || `Milestone ${index + 1}`,
-        description: m.description || '',
-        target_date: m.target_date || new Date().toISOString().split('T')[0],
-        completed: false,
-        completion_criteria: Array.isArray(m.completion_criteria) 
-          ? m.completion_criteria 
-          : (m.completion_criteria ? [String(m.completion_criteria)] : []),
-        blueprint_alignment: m.blueprint_alignment || {}
-      }));
-
-      const validatedTasks = (parsed.tasks || []).map((t: any, index: number) => ({
-        id: t.id || `task_${index + 1}_${Date.now()}`,
-        title: t.title || `Task ${index + 1}`,
-        description: t.description || '',
-        milestone_id: t.milestone_id || validatedMilestones[0]?.id,
-        completed: false,
-        estimated_duration: t.estimated_duration || '1-2 hours',
-        energy_level_required: t.energy_level_required || 'medium',
-        category: t.category || 'execution',
-        optimal_timing: t.optimal_timing,
-        blueprint_reasoning: t.blueprint_reasoning,
-        prerequisites: Array.isArray(t.prerequisites) 
-          ? t.prerequisites 
-          : (t.prerequisites ? [String(t.prerequisites)] : [])
-      }));
-
-      console.log('✅ PARSING COMPLETED:', {
-        milestones: validatedMilestones.length,
-        tasks: validatedTasks.length,
-        hasGeneric: hasGenericMilestones,
-        isGoalSpecific: milestonesReferenceGoal
-      });
-
-      return {
-        milestones: validatedMilestones,
-        tasks: validatedTasks,
-        blueprint_insights: parsed.blueprint_insights || [],
-        isGoalSpecific: milestonesReferenceGoal && !hasGenericMilestones
-      };
-    } catch (error) {
-      console.error('❌ PARSING ERROR:', error);
-      throw new Error(`Failed to parse AI response: ${error}`);
+      
+      throw new Error(`Failed to parse AI response: ${extractionResult.error}`);
     }
+
+    const parsed = extractionResult.data;
+
+    // DEFENSIVE TYPE COERCION: Ensure arrays are arrays
+    if (parsed.milestones) {
+      parsed.milestones.forEach((m: any) => {
+        if (m.completion_criteria && !Array.isArray(m.completion_criteria)) {
+          console.warn('⚠️ TYPE COERCION: completion_criteria was not an array:', m.completion_criteria);
+          m.completion_criteria = [String(m.completion_criteria)];
+        }
+      });
+    }
+
+    if (parsed.tasks) {
+      parsed.tasks.forEach((t: any) => {
+        if (t.prerequisites && !Array.isArray(t.prerequisites)) {
+          console.warn('⚠️ TYPE COERCION: prerequisites was not an array:', t.prerequisites);
+          t.prerequisites = [String(t.prerequisites)];
+        }
+      });
+    }
+
+    // VALIDATION: Check for generic milestones
+    const genericTerms = [
+      'Discovery & Vision',
+      'Foundation & Planning',
+      'Initial Implementation',
+      'Expansion & Growth',
+      'Mastery & Integration',
+      'Achievement & Celebration'
+    ];
+
+    const hasGenericMilestones = parsed.milestones?.some((m: any) =>
+      genericTerms.some(term => m.title?.includes(term))
+    );
+
+    if (hasGenericMilestones) {
+      console.warn('⚠️ VALIDATION WARNING: AI returned generic milestone templates');
+    }
+
+    // VALIDATION: Check if milestones reference the goal
+    const goalKeywords = goalTitle.toLowerCase().split(' ').filter(w => w.length > 3);
+    const milestonesReferenceGoal = parsed.milestones?.some((m: any) => {
+      const milestoneText = `${m.title} ${m.description}`.toLowerCase();
+      return goalKeywords.some(keyword => milestoneText.includes(keyword));
+    });
+
+    if (!milestonesReferenceGoal) {
+      console.warn('⚠️ VALIDATION WARNING: Milestones may not be goal-specific');
+    }
+
+    // Ensure all required fields exist
+    const validatedMilestones = (parsed.milestones || []).map((m: any, index: number) => ({
+      id: m.id || `milestone_${index + 1}_${Date.now()}`,
+      title: m.title || `Milestone ${index + 1}`,
+      description: m.description || '',
+      target_date: m.target_date || new Date().toISOString().split('T')[0],
+      completed: false,
+      completion_criteria: Array.isArray(m.completion_criteria) 
+        ? m.completion_criteria 
+        : (m.completion_criteria ? [String(m.completion_criteria)] : []),
+      blueprint_alignment: m.blueprint_alignment || {}
+    }));
+
+    const validatedTasks = (parsed.tasks || []).map((t: any, index: number) => ({
+      id: t.id || `task_${index + 1}_${Date.now()}`,
+      title: t.title || `Task ${index + 1}`,
+      description: t.description || '',
+      milestone_id: t.milestone_id || validatedMilestones[0]?.id,
+      completed: false,
+      estimated_duration: t.estimated_duration || '1-2 hours',
+      energy_level_required: t.energy_level_required || 'medium',
+      category: t.category || 'execution',
+      optimal_timing: t.optimal_timing,
+      blueprint_reasoning: t.blueprint_reasoning,
+      prerequisites: Array.isArray(t.prerequisites) 
+        ? t.prerequisites 
+        : (t.prerequisites ? [String(t.prerequisites)] : [])
+    }));
+
+    console.log('✅ PARSING COMPLETED:', {
+      milestones: validatedMilestones.length,
+      tasks: validatedTasks.length,
+      hasGeneric: hasGenericMilestones,
+      isGoalSpecific: milestonesReferenceGoal
+    });
+
+    return {
+      milestones: validatedMilestones,
+      tasks: validatedTasks,
+      blueprint_insights: parsed.blueprint_insights || [],
+      isGoalSpecific: milestonesReferenceGoal && !hasGenericMilestones
+    };
   }
 
   // ============================================

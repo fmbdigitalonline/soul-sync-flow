@@ -15,6 +15,7 @@ import {
   LifeOrchestratorPlan,
   DomainInterdependency 
 } from '@/types/growth-program';
+import { extractAndParseJSON } from '@/utils/json-extraction';
 
 export class LifeOrchestratorService {
   // Core Life Wheel Management
@@ -313,17 +314,14 @@ export class LifeOrchestratorService {
   }
 
   private parseAgentResponse(response: string): any {
-    try {
-      // Try to extract JSON from the response
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-    } catch (error) {
-      console.warn('⚠️ Failed to parse agent response as JSON');
+    const result = extractAndParseJSON(response, 'Life Orchestrator Agent');
+    
+    if (result.success && result.data) {
+      return result.data;
     }
     
-    return {}; // Return empty object as fallback
+    console.warn('⚠️ Failed to parse agent response as JSON, using empty object');
+    return {};
   }
 
   // Check if user needs life wheel assessment
