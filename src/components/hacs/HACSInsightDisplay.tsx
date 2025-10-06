@@ -95,8 +95,13 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
       <DialogContent 
         className={cn(
           "p-0 gap-0 border-border/50 flex flex-col",
-          "max-w-[95vw] sm:max-w-2xl max-h-[85vh] overflow-hidden"
+          "overflow-hidden"
         )}
+        style={{
+          maxWidth: 'min(95vw, 42rem)',
+          width: 'calc(100vw - 2rem)',
+          maxHeight: '85vh'
+        }}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -109,7 +114,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
             className="flex-1 touch-pan-y overscroll-contain"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
-            <div className="p-4 pb-2">
+            <div className="px-4 py-4 pb-2 sm:px-6">
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
