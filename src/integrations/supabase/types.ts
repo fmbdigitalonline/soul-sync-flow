@@ -4061,7 +4061,7 @@ export type Database = {
         Returns: string
       }
       detect_zombie_hermetic_jobs: {
-        Args: Record<PropertyKey, never> | { p_user_id?: string }
+        Args: { p_user_id?: string }
         Returns: {
           created_at: string
           current_step: string

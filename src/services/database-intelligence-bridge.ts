@@ -68,7 +68,7 @@ export class DatabaseIntelligenceBridge {
       // Get conversation patterns from user_session_memory  
       const { data: sessionMemoryData, error: sessionMemoryError } = await supabase
         .from('user_session_memory')
-        .select('memory_content, conversation_elements, emotional_indicators')
+        .select('memory_data, context_summary, memory_type, importance_score')
         .eq('user_id', userId)
         .eq('session_id', sessionId)
         .order('created_at', { ascending: false })
@@ -81,7 +81,7 @@ export class DatabaseIntelligenceBridge {
       // Get memory deltas for intent analysis
       const { data: memoryDeltasData, error: memoryDeltasError } = await supabase
         .from('memory_deltas')
-        .select('intent_analysis, emotional_state, conversation_topic')
+        .select('delta_data, delta_type, importance_score')
         .eq('user_id', userId)
         .eq('session_id', sessionId)
         .order('created_at', { ascending: false })
@@ -336,7 +336,10 @@ export class DatabaseIntelligenceBridge {
     let possibilities = 0;
 
     sessionData.forEach(session => {
-      const content = session.memory_content || '';
+      // Parse memory_data JSONB to extract content
+      const memoryData = this.safeParseJson(session.memory_data);
+      const content = memoryData.content || session.context_summary || '';
+      
       const problemWords = ['problem', 'issue', 'difficult', 'hard', 'struggle', 'challenge', 'cant', 'unable'];
       const possibilityWords = ['hope', 'opportunity', 'possible', 'maybe', 'could', 'might', 'potential', 'chance'];
       
@@ -360,7 +363,10 @@ export class DatabaseIntelligenceBridge {
     };
     
     deltaData.forEach(delta => {
-      const topic = delta.conversation_topic || '';
+      // Parse delta_data JSONB to extract conversation topic
+      const deltaContent = this.safeParseJson(delta.delta_data);
+      const topic = deltaContent.conversation_topic || deltaContent.topic || '';
+      
       // Simple time pattern detection
       if (topic.includes('morning') || topic.includes('ochtend')) patterns.morning++;
       if (topic.includes('afternoon') || topic.includes('middag')) patterns.afternoon++;  
@@ -392,7 +398,10 @@ export class DatabaseIntelligenceBridge {
     };
 
     sessionData.forEach(session => {
-      const indicators = session.emotional_indicators || {};
+      // Parse memory_data JSONB to extract emotional indicators
+      const memoryData = this.safeParseJson(session.memory_data);
+      const indicators = memoryData.emotional_indicators || {};
+      
       Object.keys(patterns).forEach(pattern => {
         if (indicators[pattern]) {
           patterns[pattern]++;
