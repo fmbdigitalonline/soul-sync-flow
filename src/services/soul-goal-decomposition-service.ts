@@ -201,8 +201,37 @@ class SoulGoalDecompositionService {
         actualModelUsed: data.modelUsed || 'unknown'
       });
 
-      // STEP 4: Parse and validate AI response
-      const parsedGoal = await this.parseAIResponseWithValidation(data.response, title, category);
+      // STEP 4: Parse and validate AI response (WITH HEALING FALLBACK)
+      let parsedGoal;
+      try {
+        // Attempt 1: Standard Parse
+        parsedGoal = await this.parseAIResponseWithValidation(data.response, title, category);
+      } catch (parseError: any) {
+        console.warn('⚠️ INITIAL PARSE FAILED. Attempting AI Self-Healing.', parseError.message);
+        
+        // If it was a JSON parse error, try to heal it
+        if (parseError.message.includes('Failed to parse AI response') || parseError.message.includes('JSON')) {
+          try {
+            // Attempt 2: AI Healing
+            const rawHealedJson = await this.attemptToHealMalformedJSON(
+              data.response, 
+              parseError.message
+            );
+            
+            // Run the healed JSON through validation (re-stringify and parse)
+            parsedGoal = await this.parseAIResponseWithValidation(JSON.stringify(rawHealedJson), title, category);
+            
+            console.log('✨ JSON SUCCESSFULLY HEALED AND VALIDATED');
+          } catch (healingError) {
+            console.error('❌ HEALING FAILED. Cannot recover goal.', healingError);
+            // Throw the original error as it's more descriptive
+            throw parseError; 
+          }
+        } else {
+          // If it wasn't a parse error (e.g. validation error), throw it
+          throw parseError;
+        }
+      }
       
       console.log('✅ VALIDATION PASSED:', {
         milestones: parsedGoal.milestones.length,
@@ -767,6 +796,51 @@ FINANCIAL PATTERNS:
   }
 
   // ============================================
+  // AI SELF-HEALING FOR MALFORMED JSON
+  // ============================================
+
+  private attemptToHealMalformedJSON = async (malformedString: string, errorContext: string): Promise<any> => {
+    console.log('🚑 INITIATING AI SELF-HEALING for malformed JSON...');
+
+    const healingPrompt = `You generated a response that is not valid JSON.
+ERROR CONTEXT: ${errorContext}
+
+YOUR TASK: Fix the syntax errors in the JSON string below.
+- Ensure no double commas (,,)
+- Ensure no trailing commas before } or ]
+- Ensure all quotes and brackets are balanced
+- RETURN ONLY THE RAW JSON OBJECT. NO MARKDOWN CODE FENCES. NO COMMENTARY.
+
+MALFORMED STRING:
+${malformedString}`;
+
+    // Call AI Coach specifically to fix the JSON
+    const { data, error } = await supabase.functions.invoke('ai-coach', {
+      body: {
+        message: healingPrompt,
+        context: 'json_repair_utility',
+        contextDepth: 'shallow'
+      }
+    });
+
+    if (error || !data?.response) {
+      throw new Error('Healing attempt failed: Could not get response from AI.');
+    }
+
+    console.log('✅ HEALING RESPONSE RECEIVED. Attempting parse...');
+    
+    // Try parsing the healed response using the extractor
+    const extractionResult = extractAndParseJSON(data.response, 'Healed JSON');
+    
+    if (!extractionResult.success || !extractionResult.data) {
+      throw new Error(`Healing failed. JSON still invalid: ${extractionResult.error}`);
+    }
+
+    console.log('✨ JSON SUCCESSFULLY HEALED BY AI.');
+    return extractionResult.data;
+  }
+
+  // ============================================
   // AI RESPONSE PARSING & VALIDATION
   // ============================================
 
@@ -798,23 +872,38 @@ FINANCIAL PATTERNS:
       totalLength: aiResponse.length
     });
 
-    // Pre-clean: Remove any // comments that might have leaked into response
-    let cleanedResponse = aiResponse
+    console.log('🧹 STARTING AGGRESSIVE JSON CLEANING...');
+
+    // 1. Remove Markdown fences if present (```json ... ```)
+    let cleanedResponse = aiResponse.replace(/```json\s*|\s*```/gi, '').trim();
+    // Also remove plain ``` if json tag wasn't used
+    cleanedResponse = cleanedResponse.replace(/```/g, '').trim();
+
+    // 2. Remove any text *before* the first { and *after* the last }
+    const firstBrace = cleanedResponse.indexOf('{');
+    const lastBrace = cleanedResponse.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      cleanedResponse = cleanedResponse.substring(firstBrace, lastBrace + 1);
+    }
+
+    // 3. Remove // comments (ensure it doesn't break URLs like http://)
+    cleanedResponse = cleanedResponse
       .split('\n')
       .filter(line => {
         const trimmed = line.trim();
-        return !trimmed.startsWith('//') && trimmed !== '//';
+        // Filter out lines that are JUST comments
+        return !trimmed.startsWith('//');
       })
       .join('\n');
 
-    // Remove trailing commas before ] or } (common LLM JSON generation error)
-    cleanedResponse = cleanedResponse.replace(/,(\s*[\]}])/g, '$1');
-    
-    // Remove double commas (another common LLM error)
-    cleanedResponse = cleanedResponse.replace(/,\s*,/g, ',');
+    // 4. Aggressively fix Double Commas (handles newlines between commas)
+    // Replace ", , " or ", \n ," with a single ","
+    cleanedResponse = cleanedResponse.replace(/,[\s\n]*,/g, ',');
 
-    console.log('🚨 FULL RAW AI RESPONSE FOR DEBUGGING:\n', aiResponse);
-    console.log('🧹 CLEANED RESPONSE (first 1000 chars):', cleanedResponse.substring(0, 1000));
+    // 5. Remove trailing commas before ] or }
+    cleanedResponse = cleanedResponse.replace(/,(\s*[\]}])/g, '$1');
+
+    console.log('✅ CLEANED RESPONSE (Ready for parsing):', cleanedResponse.substring(0, 500) + '...');
 
     // Use robust extraction utility with cleaned response
     const extractionResult = extractAndParseJSON(cleanedResponse, 'Soul Goal Decomposition');
