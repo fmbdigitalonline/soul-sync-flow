@@ -1052,7 +1052,8 @@ serve(async (req) => {
       const narrativeSection = semanticChunks.length > 0 ? `
 
 PERSONALITY INSIGHTS:
-${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')}` : '';
+${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')}
+` : '';
 
       // FUSION: Generate intent-aware prompt based on sidecar results
       const generateHybridPrompt = async () => {
