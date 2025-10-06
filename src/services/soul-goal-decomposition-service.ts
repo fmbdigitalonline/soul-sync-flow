@@ -38,6 +38,29 @@ export interface SoulGeneratedGoal {
 }
 
 class SoulGoalDecompositionService {
+  // ============================================
+  // DEFENSIVE ARRAY NORMALIZATION UTILITY
+  // ============================================
+  
+  private normalizeToArray = (value: any): string[] => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.map(String);
+    if (typeof value === 'object') {
+      // For objects like centers: { "Ajna": true, "G": false }
+      // or gates: { "1": { defined: true }, "2": { defined: false } }
+      return Object.entries(value)
+        .filter(([_, v]) => {
+          if (v === true) return true;
+          if (typeof v === 'object' && v !== null) {
+            return (v as any).defined === true || (v as any).active === true;
+          }
+          return false;
+        })
+        .map(([key, _]) => key);
+    }
+    return [String(value)];
+  }
+
   decomposeGoalWithSoul = async (
     title: string,
     description: string,
@@ -230,28 +253,49 @@ class SoulGoalDecompositionService {
   }
 
   private extractRichBlueprintSections = (blueprintData: any) => {
+    // LOG DATA STRUCTURE FOR DEBUGGING
+    console.log('🔍 EXTRACTING BLUEPRINT SECTIONS - Raw Data Types:', {
+      centers_type: blueprintData?.energy_strategy_human_design?.centers 
+        ? (Array.isArray(blueprintData.energy_strategy_human_design.centers) ? 'array' : typeof blueprintData.energy_strategy_human_design.centers)
+        : 'missing',
+      gates_type: blueprintData?.energy_strategy_human_design?.gates
+        ? (Array.isArray(blueprintData.energy_strategy_human_design.gates) ? 'array' : typeof blueprintData.energy_strategy_human_design.gates)
+        : 'missing',
+      cognitive_stack_type: blueprintData?.cognition_mbti?.cognitive_stack
+        ? (Array.isArray(blueprintData.cognition_mbti.cognitive_stack) ? 'array' : typeof blueprintData.cognition_mbti.cognitive_stack)
+        : 'missing',
+      aspects_type: blueprintData?.archetype_western?.aspects
+        ? (Array.isArray(blueprintData.archetype_western.aspects) ? 'array' : typeof blueprintData.archetype_western.aspects)
+        : 'missing',
+      core_values_type: blueprintData?.values_life_path?.core_values
+        ? (Array.isArray(blueprintData.values_life_path.core_values) ? 'array' : typeof blueprintData.values_life_path.core_values)
+        : 'missing'
+    });
+
     const sections: any = {};
 
     // MBTI/Cognition
     if (blueprintData?.cognition_mbti) {
+      const cognitiveStack = this.normalizeToArray(blueprintData.cognition_mbti.cognitive_stack);
       sections.cognition = {
         type: blueprintData.cognition_mbti.type,
-        cognitive_stack: blueprintData.cognition_mbti.cognitive_stack || [],
-        dominant_function: blueprintData.cognition_mbti.cognitive_stack?.[0],
+        cognitive_stack: cognitiveStack,
+        dominant_function: cognitiveStack[0] || null,
         decision_making: blueprintData.cognition_mbti.preferences
       };
     }
 
     // Human Design
     if (blueprintData?.energy_strategy_human_design) {
+      const hdData = blueprintData.energy_strategy_human_design;
       sections.human_design = {
-        type: blueprintData.energy_strategy_human_design.type,
-        strategy: blueprintData.energy_strategy_human_design.strategy,
-        authority: blueprintData.energy_strategy_human_design.authority,
-        profile: blueprintData.energy_strategy_human_design.profile,
-        centers: blueprintData.energy_strategy_human_design.centers || [],
-        gates: blueprintData.energy_strategy_human_design.gates || [],
-        channels: blueprintData.energy_strategy_human_design.channels || []
+        type: hdData.type,
+        strategy: hdData.strategy,
+        authority: hdData.authority,
+        profile: hdData.profile,
+        centers: this.normalizeToArray(hdData.centers),
+        gates: this.normalizeToArray(hdData.gates),
+        channels: this.normalizeToArray(hdData.channels)
       };
     }
 
@@ -261,7 +305,7 @@ class SoulGoalDecompositionService {
         sun_sign: blueprintData.archetype_western.sun_sign,
         moon_sign: blueprintData.archetype_western.moon_sign,
         rising_sign: blueprintData.archetype_western.rising_sign,
-        aspects: blueprintData.archetype_western.aspects || [],
+        aspects: this.normalizeToArray(blueprintData.archetype_western.aspects),
         houses: blueprintData.archetype_western.houses || {}
       };
     }
@@ -271,7 +315,7 @@ class SoulGoalDecompositionService {
       sections.numerology = {
         life_path: blueprintData.values_life_path.life_path_number,
         calculations: blueprintData.values_life_path.calculations || {},
-        core_values: blueprintData.values_life_path.core_values || []
+        core_values: this.normalizeToArray(blueprintData.values_life_path.core_values)
       };
     }
 
@@ -382,31 +426,41 @@ Return as JSON:
   }
 
   private buildHermetic2Context = (hermetic: HermeticStructuredIntelligence): string => {
+    const coreNarratives = this.normalizeToArray(hermetic.identity_constructs?.core_narratives);
+    const momentumTriggers = this.normalizeToArray(hermetic.execution_bias?.momentum_triggers);
+    const energyDips = this.normalizeToArray(hermetic.behavioral_triggers?.energy_dips);
+    const avoidancePatterns = this.normalizeToArray(hermetic.behavioral_triggers?.avoidance_patterns);
+    const activationRituals = this.normalizeToArray(hermetic.behavioral_triggers?.activation_rituals);
+    const cognitivePeaks = this.normalizeToArray(hermetic.temporal_biology?.cognitive_peaks);
+    const vulnerableTimes = this.normalizeToArray(hermetic.temporal_biology?.vulnerable_times);
+    const workArchetypes = this.normalizeToArray(hermetic.career_vocational?.work_archetypes);
+    const abundanceBlocks = this.normalizeToArray(hermetic.financial_archetypes?.abundance_blocks);
+
     return `🧬 HERMETIC 2.0 DEEP PERSONALITY CONTEXT:
 
 IDENTITY & NARRATIVES:
-${hermetic.identity_constructs?.core_narratives?.slice(0, 5).map(n => `- ${n}`).join('\n') || 'N/A'}
+${coreNarratives.slice(0, 5).map(n => `- ${n}`).join('\n') || 'N/A'}
 
 EXECUTION STYLE:
 - Preferred Style: ${hermetic.execution_bias?.preferred_style || 'N/A'}
 - Completion Patterns: ${hermetic.execution_bias?.completion_patterns || 'N/A'}
-- Momentum Triggers: ${hermetic.execution_bias?.momentum_triggers?.join(', ') || 'N/A'}
+- Momentum Triggers: ${momentumTriggers.join(', ') || 'N/A'}
 
 BEHAVIORAL TRIGGERS:
-- Energy Dips: ${hermetic.behavioral_triggers?.energy_dips?.join(', ') || 'N/A'}
-- Avoidance Patterns: ${hermetic.behavioral_triggers?.avoidance_patterns?.join(', ') || 'N/A'}
-- Activation Rituals: ${hermetic.behavioral_triggers?.activation_rituals?.join(', ') || 'N/A'}
+- Energy Dips: ${energyDips.join(', ') || 'N/A'}
+- Avoidance Patterns: ${avoidancePatterns.join(', ') || 'N/A'}
+- Activation Rituals: ${activationRituals.join(', ') || 'N/A'}
 
 TEMPORAL BIOLOGY:
-- Peak Times: ${hermetic.temporal_biology?.cognitive_peaks?.join(', ') || 'N/A'}
-- Vulnerable Times: ${hermetic.temporal_biology?.vulnerable_times?.join(', ') || 'N/A'}
+- Peak Times: ${cognitivePeaks.join(', ') || 'N/A'}
+- Vulnerable Times: ${vulnerableTimes.join(', ') || 'N/A'}
 
 CAREER ARCHETYPES:
-${hermetic.career_vocational?.work_archetypes?.slice(0, 3).map(a => `- ${a}`).join('\n') || 'N/A'}
+${workArchetypes.slice(0, 3).map(a => `- ${a}`).join('\n') || 'N/A'}
 
 FINANCIAL PATTERNS:
 - Money Relationship: ${hermetic.financial_archetypes?.money_relationship || 'N/A'}
-- Abundance Blocks: ${hermetic.financial_archetypes?.abundance_blocks?.join(', ') || 'N/A'}
+- Abundance Blocks: ${abundanceBlocks.join(', ') || 'N/A'}
 
 `;
   }
@@ -415,18 +469,20 @@ FINANCIAL PATTERNS:
     let context = '🎨 RICH BLUEPRINT CONTEXT:\n\n';
 
     if (sections.cognition) {
+      const cogStack = this.normalizeToArray(sections.cognition.cognitive_stack);
       context += `COGNITION (${sections.cognition.type}):\n`;
-      context += `- Dominant Function: ${sections.cognition.dominant_function}\n`;
-      context += `- Cognitive Stack: ${sections.cognition.cognitive_stack?.join(' → ')}\n\n`;
+      context += `- Dominant Function: ${sections.cognition.dominant_function || 'N/A'}\n`;
+      context += `- Cognitive Stack: ${cogStack.join(' → ') || 'N/A'}\n\n`;
     }
 
     if (sections.human_design) {
+      const centers = this.normalizeToArray(sections.human_design.centers);
       context += `HUMAN DESIGN:\n`;
       context += `- Type: ${sections.human_design.type}\n`;
       context += `- Strategy: ${sections.human_design.strategy}\n`;
       context += `- Authority: ${sections.human_design.authority}\n`;
       context += `- Profile: ${sections.human_design.profile}\n`;
-      context += `- Defined Centers: ${sections.human_design.centers?.join(', ')}\n\n`;
+      context += `- Defined Centers: ${centers.join(', ') || 'N/A'}\n\n`;
     }
 
     if (sections.western_astrology) {
@@ -437,9 +493,10 @@ FINANCIAL PATTERNS:
     }
 
     if (sections.numerology) {
+      const coreValues = this.normalizeToArray(sections.numerology.core_values);
       context += `NUMEROLOGY:\n`;
       context += `- Life Path: ${sections.numerology.life_path}\n`;
-      context += `- Core Values: ${sections.numerology.core_values?.join(', ')}\n\n`;
+      context += `- Core Values: ${coreValues.join(', ') || 'N/A'}\n\n`;
     }
 
     if (sections.chinese_astrology) {
