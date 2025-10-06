@@ -798,13 +798,16 @@ FINANCIAL PATTERNS:
     });
 
     // Pre-clean: Remove any // comments that might have leaked into response
-    const cleanedResponse = aiResponse
+    let cleanedResponse = aiResponse
       .split('\n')
       .filter(line => {
         const trimmed = line.trim();
         return !trimmed.startsWith('//') && trimmed !== '//';
       })
       .join('\n');
+
+    // Remove trailing commas before ] or } (common LLM JSON generation error)
+    cleanedResponse = cleanedResponse.replace(/,(\s*[\]}])/g, '$1');
 
     console.log('🧹 CLEANED RESPONSE (first 1000 chars):', cleanedResponse.substring(0, 1000));
 
