@@ -609,9 +609,20 @@ Return as JSON with **EXACTLY ${structure.milestoneCount} milestones** and **${s
         "leverages_strengths": ["Different strength leveraged"],
         "optimal_timing": "Why this timing"
       }
+    },
+    {
+      "id": "milestone_3",
+      "title": "THIRD FINISH LINE for ${title}",
+      "description": "What you will have ACHIEVED",
+      "target_date": "${structure.timeDistribution[2] || structure.timeDistribution[structure.timeDistribution.length - 1]}",
+      "completed": false,
+      "completion_criteria": ["Proof #1", "Proof #2"],
+      "blueprint_alignment": {
+        "addresses_patterns": ["Pattern"],
+        "leverages_strengths": ["Strength"],
+        "optimal_timing": "Timing"
+      }
     }
-    ${structure.milestoneCount > 2 ? `// ... CONTINUE FOR ALL ${structure.milestoneCount} MILESTONES` : ''}
-    ${structure.milestoneCount > 2 ? `// FINAL MILESTONE (${structure.milestoneCount}) MUST = DREAM FULLY ACHIEVED` : ''}
   ],
   "tasks": [
     {
@@ -639,9 +650,20 @@ Return as JSON with **EXACTLY ${structure.milestoneCount} milestones** and **${s
       "optimal_timing": "When ready for lighter work",
       "blueprint_reasoning": "Aligns with auxiliary function",
       "prerequisites": ["task_1_1"]
+    },
+    {
+      "id": "task_2_1",
+      "title": "First action for milestone 2",
+      "description": "What to do for milestone 2",
+      "milestone_id": "milestone_2",
+      "completed": false,
+      "estimated_duration": "2 hours",
+      "energy_level_required": "medium",
+      "category": "execution",
+      "optimal_timing": "Optimal time",
+      "blueprint_reasoning": "Why this fits",
+      "prerequisites": ["task_1_2"]
     }
-    // ... CONTINUE FOR ${structure.tasksPerMilestone} TASKS PER MILESTONE
-    // TOTAL: ${structure.milestoneCount} milestones × ${structure.tasksPerMilestone} tasks = ${structure.milestoneCount * structure.tasksPerMilestone} tasks
   ],
   "blueprint_insights": [
     "How this journey uses their Hermetic 2.0 identity constructs",
@@ -650,11 +672,14 @@ Return as JSON with **EXACTLY ${structure.milestoneCount} milestones** and **${s
   ]
 }
 
-**FINAL REMINDER:** 
+**EXPANSION INSTRUCTION:** The example shows 3 milestones and 3 tasks. Create exactly ${structure.milestoneCount} milestones and ${structure.tasksPerMilestone} tasks per milestone using the same structure.
+
+**FINAL REMINDER:**
 - Create ${structure.milestoneCount} milestones (not more, not less)
 - Each with ${structure.tasksPerMilestone} tasks
 - Final milestone = dream fully achieved
-- All milestones use keywords from "${title}"`;
+- All milestones use keywords from "${title}"
+- NO COMMENTS anywhere in your JSON response`;
   }
 
   private buildHermetic2Context = (hermetic: HermeticStructuredIntelligence): string => {
@@ -772,10 +797,34 @@ FINANCIAL PATTERNS:
       totalLength: aiResponse.length
     });
 
-    // Use robust extraction utility
-    const extractionResult = extractAndParseJSON(aiResponse, 'Soul Goal Decomposition');
+    // Pre-clean: Remove any // comments that might have leaked into response
+    const cleanedResponse = aiResponse
+      .split('\n')
+      .filter(line => {
+        const trimmed = line.trim();
+        return !trimmed.startsWith('//') && trimmed !== '//';
+      })
+      .join('\n');
+
+    console.log('🧹 CLEANED RESPONSE (first 1000 chars):', cleanedResponse.substring(0, 1000));
+
+    // Use robust extraction utility with cleaned response
+    const extractionResult = extractAndParseJSON(cleanedResponse, 'Soul Goal Decomposition');
     
     if (!extractionResult.success || !extractionResult.data) {
+      // Enhanced error logging with character context
+      const errorMatch = extractionResult.error?.match(/position (\d+)/);
+      if (errorMatch) {
+        const errorPos = parseInt(errorMatch[1], 10);
+        console.error('❌ JSON PARSE ERROR AT POSITION:', {
+          position: errorPos,
+          character: cleanedResponse.charAt(errorPos),
+          charCode: cleanedResponse.charCodeAt(errorPos),
+          context_before: cleanedResponse.substring(Math.max(0, errorPos - 100), errorPos),
+          context_after: cleanedResponse.substring(errorPos, Math.min(cleanedResponse.length, errorPos + 100))
+        });
+      }
+      
       console.error('❌ JSON EXTRACTION FAILED:', {
         error: extractionResult.error,
         responsePreview: aiResponse.substring(0, 500),
