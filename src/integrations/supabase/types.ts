@@ -3301,6 +3301,7 @@ export type Database = {
       }
       productivity_journey: {
         Row: {
+          agentic_tool_config: Json | null
           completed_goals: Json | null
           completed_tasks: Json | null
           created_at: string | null
@@ -3308,14 +3309,17 @@ export type Database = {
           current_position: string | null
           current_tasks: Json | null
           focus_sessions: Json | null
+          hermetic_alignment_context: Json | null
           id: string
           journey_milestones: Json | null
           last_activity_date: string | null
+          personalization_depth_score: number | null
           productivity_metrics: Json | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          agentic_tool_config?: Json | null
           completed_goals?: Json | null
           completed_tasks?: Json | null
           created_at?: string | null
@@ -3323,14 +3327,17 @@ export type Database = {
           current_position?: string | null
           current_tasks?: Json | null
           focus_sessions?: Json | null
+          hermetic_alignment_context?: Json | null
           id?: string
           journey_milestones?: Json | null
           last_activity_date?: string | null
+          personalization_depth_score?: number | null
           productivity_metrics?: Json | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          agentic_tool_config?: Json | null
           completed_goals?: Json | null
           completed_tasks?: Json | null
           created_at?: string | null
@@ -3338,9 +3345,11 @@ export type Database = {
           current_position?: string | null
           current_tasks?: Json | null
           focus_sessions?: Json | null
+          hermetic_alignment_context?: Json | null
           id?: string
           journey_milestones?: Json | null
           last_activity_date?: string | null
+          personalization_depth_score?: number | null
           productivity_metrics?: Json | null
           updated_at?: string | null
           user_id?: string

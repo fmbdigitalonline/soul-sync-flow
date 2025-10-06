@@ -48,8 +48,10 @@ export class JourneyAgenticTools {
       return `🎉 Celebrate completing "${milestone.title}"! Take a moment to acknowledge your progress.`;
     }
 
-    const celebrationStyle = hermeticData.identity_constructs.celebration_preferences || 
-      'Reflect on your achievement and share it with someone who matters';
+    // Use core narratives to frame celebration
+    const celebrationStyle = hermeticData.identity_constructs.core_narratives?.[0] 
+      ? `Celebrate in a way that honors your nature as someone who ${hermeticData.identity_constructs.core_narratives[0].toLowerCase()}`
+      : 'Reflect on your achievement and share it with someone who matters';
 
     return `🎉 ${celebrationStyle}\n\nMilestone Completed: ${milestone.title}\n\nThis achievement honors your journey and aligns with your unique path.`;
   }
@@ -74,12 +76,12 @@ export class JourneyAgenticTools {
     }
 
     const avoidancePatterns = hermeticData.behavioral_triggers?.avoidance_patterns || [];
-    const crisisHandling = hermeticData.crisis_handling || {};
+    const bounceBackRituals = hermeticData.crisis_handling?.bounce_back_rituals || [];
 
     return {
       commonObstacles: avoidancePatterns,
       personalizedStrategies: this.createAvoidanceStrategies(avoidancePatterns, hermeticData.execution_bias),
-      recoveryProtocol: crisisHandling.recovery_protocol || 'Pause, breathe, and reconnect with your why'
+      recoveryProtocol: bounceBackRituals[0] || 'Pause, breathe, and reconnect with your why'
     };
   }
 

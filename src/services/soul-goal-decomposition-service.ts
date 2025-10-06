@@ -150,268 +150,425 @@ class SoulGoalDecompositionService {
     }
   }
 
-  private generateEnhancedMilestones(title: string, timeframe: string, blueprintData: any, causalAnalysis?: any) {
-    // Generate 5-6 milestones with causal analysis integration
-    const milestones = [
-      {
-        id: `milestone_1_${Date.now()}`,
-        title: `Discovery & Vision`,
-        description: `Explore and clarify your vision for "${title}" with deep personal alignment`,
-        target_date: this.calculateMilestoneDate(timeframe, 0.15),
-        completed: false,
-        completion_criteria: [
-          'Vision statement created and refined',
-          'Personal alignment assessment completed',
-          'Initial research and exploration done',
-          'Commitment level evaluated'
-        ],
-        blueprint_alignment: {
-          phase: 'foundation',
-          energyType: this.getUserType(blueprintData),
-          recommendations: [`Optimized for your ${this.getUserType(blueprintData)} discovery process`]
-        }
-      },
-      {
-        id: `milestone_2_${Date.now() + 1}`,
-        title: `Foundation & Planning`,
-        description: `Establish solid groundwork and detailed action plan`,
-        target_date: this.calculateMilestoneDate(timeframe, 0.3),
-        completed: false,
-        completion_criteria: [
-          'Comprehensive plan created',
-          'Resources and tools identified',
-          'Support system established',
-          'First steps clearly defined'
-        ],
-        blueprint_alignment: {
-          phase: 'foundation',
-          energyType: this.getUserType(blueprintData),
-          recommendations: [`Structured for your ${this.getUserType(blueprintData)} planning style`]
-        }
-      },
-      {
-        id: `milestone_3_${Date.now() + 2}`,
-        title: `Initial Implementation`,
-        description: `Launch your journey with focused action and momentum building`,
-        target_date: this.calculateMilestoneDate(timeframe, 0.5),
-        completed: false,
-        completion_criteria: [
-          'Core activities initiated',
-          'Early wins achieved',
-          'Momentum established',
-          'Progress tracking system active'
-        ],
-        blueprint_alignment: {
-          phase: 'development',
-          energyType: this.getUserType(blueprintData),
-          recommendations: [`Designed for your ${this.getUserType(blueprintData)} action style`]
-        }
-      },
-      {
-        id: `milestone_4_${Date.now() + 3}`,
-        title: `Expansion & Growth`,
-        description: `Scale your efforts and deepen your engagement`,
-        target_date: this.calculateMilestoneDate(timeframe, 0.7),
-        completed: false,
-        completion_criteria: [
-          'Expanded scope of activities',
-          'Skill development progressing',
-          'Challenges overcome',
-          'Confidence building'
-        ],
-        blueprint_alignment: {
-          phase: 'development',
-          energyType: this.getUserType(blueprintData),
-          recommendations: [`Optimized for your ${this.getUserType(blueprintData)} growth patterns`]
-        }
-      },
-      {
-        id: `milestone_5_${Date.now() + 4}`,
-        title: `Mastery & Integration`,
-        description: `Refine your approach and integrate learnings`,
-        target_date: this.calculateMilestoneDate(timeframe, 0.85),
-        completed: false,
-        completion_criteria: [
-          'Advanced skills developed',
-          'Systems optimized',
-          'Knowledge integrated',
-          'Expertise demonstrated'
-        ],
-        blueprint_alignment: {
-          phase: 'refinement',
-          energyType: this.getUserType(blueprintData),
-          recommendations: [`Tailored for your ${this.getUserType(blueprintData)} mastery process`]
-        }
-      },
-      {
-        id: `milestone_6_${Date.now() + 5}`,
-        title: `Achievement & Celebration`,
-        description: `Complete your journey and celebrate your transformation`,
-        target_date: this.calculateMilestoneDate(timeframe, 1.0),
-        completed: false,
-        completion_criteria: [
-          'Primary goal achieved',
-          'Success celebrated',
-          'Impact assessed',
-          'Next chapter planned'
-        ],
-        blueprint_alignment: {
-          phase: 'completion',
-          energyType: this.getUserType(blueprintData),
-          recommendations: [`Honors your ${this.getUserType(blueprintData)} completion style`]
-        }
+  // ============================================
+  // HERMETIC INTELLIGENCE INTEGRATION
+  // ============================================
+
+  private async fetchPersonalityDataWithFallback(userId: string, blueprintData: any): Promise<{
+    dataSource: 'Hermetic 2.0' | 'Hermetic 1.0 Report' | 'Rich Blueprint' | 'Basic Blueprint';
+    depth: number;
+    hermetic2?: HermeticStructuredIntelligence;
+    hermetic1Report?: string;
+    blueprintSections?: any;
+  }> {
+    // Try Hermetic 2.0 first
+    try {
+      const h2Result = await hermeticIntelligenceService.getStructuredIntelligence(userId);
+      if (h2Result.success && h2Result.intelligence) {
+        console.log('🧬 Using Hermetic 2.0 structured intelligence');
+        return {
+          dataSource: 'Hermetic 2.0',
+          depth: 100,
+          hermetic2: h2Result.intelligence,
+          blueprintSections: this.extractRichBlueprintSections(blueprintData)
+        };
       }
-    ];
+    } catch (error) {
+      console.warn('⚠️ Hermetic 2.0 not available:', error);
+    }
 
-    return milestones;
-  }
+    // Try Hermetic 1.0 Report
+    try {
+      const h1Sections = await hermeticReportAccessService.getRelevantSections(userId, {
+        maxTokens: 15000,
+        prioritySections: [
+          'identity_constructs',
+          'execution_bias',
+          'behavioral_triggers',
+          'temporal_biology',
+          'career_vocational'
+        ]
+      });
 
-  private generateEnhancedTasks(milestones: any[], category: string, blueprintData: any, causalAnalysis?: any) {
-    const tasks: any[] = [];
-    const userType = this.getUserType(blueprintData);
-    
-    // Generate 3-4 tasks per milestone with causal prerequisites (18-24 total tasks)
-    milestones.forEach((milestone, milestoneIndex) => {
-      const tasksPerMilestone = 3 + (milestoneIndex % 2); // Alternate between 3 and 4 tasks
-      
-      for (let i = 0; i < tasksPerMilestone; i++) {
-        const taskId = `task_${milestone.id}_${i}_${Date.now()}`;
-        const energyLevels = ['low', 'medium', 'high'] as const;
-        const categories = ['research', 'planning', 'execution', 'review', 'communication'];
+      if (h1Sections && Object.keys(h1Sections).length > 0) {
+        console.log('📊 Using Hermetic 1.0 Report sections:', Object.keys(h1Sections));
+        const reportText = Object.entries(h1Sections)
+          .map(([section, data]: [string, any]) => `## ${section}\n${data.content}`)
+          .join('\n\n');
         
-        // Determine causal prerequisites for this task
-        const causalPrerequisites = this.determineCausalPrerequisites(
-          categories[i % categories.length], 
-          energyLevels[i % 3], 
-          causalAnalysis
-        );
-
-        tasks.push({
-          id: taskId,
-          title: this.generateTaskTitle(milestone.title, i, tasksPerMilestone),
-          description: this.generateTaskDescription(milestone.title, i, userType),
-          milestone_id: milestone.id,
-          completed: false,
-          estimated_duration: this.getEstimatedDuration(i, milestone.blueprint_alignment?.phase),
-          energy_level_required: energyLevels[i % 3],
-          category: categories[i % categories.length],
-          optimal_timing: this.getOptimalTiming(blueprintData, energyLevels[i % 3]),
-          blueprint_reasoning: `Designed for your ${userType} preferences and ${energyLevels[i % 3]} energy periods`,
-          prerequisites: causalPrerequisites
-        });
+        return {
+          dataSource: 'Hermetic 1.0 Report',
+          depth: 80,
+          hermetic1Report: reportText,
+          blueprintSections: this.extractRichBlueprintSections(blueprintData)
+        };
       }
-    });
+    } catch (error) {
+      console.warn('⚠️ Hermetic 1.0 Report not available:', error);
+    }
 
-    return tasks;
-  }
-
-  private generateTaskTitle(milestoneTitle: string, taskIndex: number, totalTasks: number): string {
-    const taskTypes = [
-      ['Research & Explore', 'Plan & Organize', 'Execute & Implement', 'Review & Refine'],
-      ['Discover & Assess', 'Design & Structure', 'Launch & Execute', 'Optimize & Improve'],
-      ['Investigate & Learn', 'Prepare & Setup', 'Act & Deliver', 'Evaluate & Adjust']
-    ];
+    // Fallback to Rich Blueprint Data
+    const blueprintSections = this.extractRichBlueprintSections(blueprintData);
+    const sectionCount = Object.keys(blueprintSections).length;
     
-    const typeSet = taskTypes[taskIndex % taskTypes.length];
-    const taskType = typeSet[Math.min(taskIndex, typeSet.length - 1)];
-    
-    return `${taskType}: ${milestoneTitle}`;
-  }
+    if (sectionCount > 2) {
+      console.log('🎨 Using Rich Blueprint Data:', Object.keys(blueprintSections));
+      return {
+        dataSource: 'Rich Blueprint',
+        depth: 60,
+        blueprintSections
+      };
+    }
 
-  private generateTaskDescription(milestoneTitle: string, taskIndex: number, userType: string): string {
-    const descriptions = [
-      `Conduct thorough research and exploration for ${milestoneTitle.toLowerCase()}, aligned with your ${userType} approach`,
-      `Create detailed plans and organize resources for ${milestoneTitle.toLowerCase()}, optimized for your working style`,
-      `Execute key activities and implement solutions for ${milestoneTitle.toLowerCase()}, matching your energy patterns`,
-      `Review progress and refine your approach for ${milestoneTitle.toLowerCase()}, honoring your reflection preferences`
-    ];
-    
-    return descriptions[taskIndex % descriptions.length];
-  }
-
-  private getEstimatedDuration(taskIndex: number, phase?: string): string {
-    const durations = {
-      foundation: ['2-3 hours', '1-2 hours', '3-4 hours', '1 hour'],
-      development: ['1-2 hours', '2-3 hours', '4-5 hours', '1-2 hours'],
-      refinement: ['1 hour', '2 hours', '3 hours', '30 minutes'],
-      completion: ['1-2 hours', '30 minutes', '2-3 hours', '1 hour']
+    // Last resort: Basic blueprint
+    console.log('⚠️ Using Basic Blueprint data only');
+    return {
+      dataSource: 'Basic Blueprint',
+      depth: 30,
+      blueprintSections: { basic: blueprintData }
     };
-    
-    const phaseDurations = durations[phase as keyof typeof durations] || durations.development;
-    return phaseDurations[taskIndex % phaseDurations.length];
   }
 
-  private generateEnhancedBlueprintInsights(blueprintData: any): string[] {
-    const insights = [
-      `Your ${this.getUserType(blueprintData)} energy type provides unique strengths for this journey`,
-      'Task sequence optimized for your natural workflow and energy patterns',
-      'Milestone timing aligned with your personal rhythm and decision-making style',
-      'Each phase designed to work with your cognitive preferences and motivational drivers'
-    ];
+  private extractRichBlueprintSections(blueprintData: any) {
+    const sections: any = {};
 
-    if (blueprintData?.cognition_mbti?.type) {
-      insights.push(`Tasks structured to leverage your ${blueprintData.cognition_mbti.type} cognitive strengths`);
-    }
-    
-    if (blueprintData?.energy_strategy_human_design?.strategy) {
-      insights.push(`Timing and approach honors your ${blueprintData.energy_strategy_human_design.strategy} strategy`);
+    // MBTI/Cognition
+    if (blueprintData?.cognition_mbti) {
+      sections.cognition = {
+        type: blueprintData.cognition_mbti.type,
+        cognitive_stack: blueprintData.cognition_mbti.cognitive_stack || [],
+        dominant_function: blueprintData.cognition_mbti.cognitive_stack?.[0],
+        decision_making: blueprintData.cognition_mbti.preferences
+      };
     }
 
-    return insights;
+    // Human Design
+    if (blueprintData?.energy_strategy_human_design) {
+      sections.human_design = {
+        type: blueprintData.energy_strategy_human_design.type,
+        strategy: blueprintData.energy_strategy_human_design.strategy,
+        authority: blueprintData.energy_strategy_human_design.authority,
+        profile: blueprintData.energy_strategy_human_design.profile,
+        centers: blueprintData.energy_strategy_human_design.centers || [],
+        gates: blueprintData.energy_strategy_human_design.gates || [],
+        channels: blueprintData.energy_strategy_human_design.channels || []
+      };
+    }
+
+    // Western Astrology
+    if (blueprintData?.archetype_western) {
+      sections.western_astrology = {
+        sun_sign: blueprintData.archetype_western.sun_sign,
+        moon_sign: blueprintData.archetype_western.moon_sign,
+        rising_sign: blueprintData.archetype_western.rising_sign,
+        aspects: blueprintData.archetype_western.aspects || [],
+        houses: blueprintData.archetype_western.houses || {}
+      };
+    }
+
+    // Numerology
+    if (blueprintData?.values_life_path) {
+      sections.numerology = {
+        life_path: blueprintData.values_life_path.life_path_number,
+        calculations: blueprintData.values_life_path.calculations || {},
+        core_values: blueprintData.values_life_path.core_values || []
+      };
+    }
+
+    // Chinese Astrology
+    if (blueprintData?.archetype_chinese) {
+      sections.chinese_astrology = {
+        animal: blueprintData.archetype_chinese.animal,
+        element: blueprintData.archetype_chinese.element,
+        four_pillars: blueprintData.archetype_chinese.four_pillars || {}
+      };
+    }
+
+    return sections;
   }
 
-  private getUserType(blueprintData: any): string {
-    if (!blueprintData) return 'unique soul';
-    
-    const mbti = blueprintData?.cognition_mbti?.type;
-    const hdType = blueprintData?.energy_strategy_human_design?.type;
-    
-    if (mbti && mbti !== 'Unknown') return mbti;
-    if (hdType && hdType !== 'Unknown' && hdType !== 'Generator') return hdType;
-    
-    const sunSign = blueprintData?.archetype_western?.sun_sign;
-    if (sunSign && sunSign !== 'Unknown') {
-      return `${sunSign} soul`;
+  // ============================================
+  // AI PROMPT CONSTRUCTION
+  // ============================================
+
+  private buildComprehensiveDecompositionPrompt(
+    title: string,
+    description: string,
+    whyItMatters: string,
+    category: string,
+    timeframe: string,
+    personalityContext: any
+  ): string {
+    const { dataSource, hermetic2, hermetic1Report, blueprintSections } = personalityContext;
+
+    let personalitySection = '';
+
+    // Build personality context based on available data
+    if (hermetic2) {
+      personalitySection = this.buildHermetic2Context(hermetic2);
+    } else if (hermetic1Report) {
+      personalitySection = `🧬 HERMETIC 1.0 REPORT INSIGHTS:\n\n${hermetic1Report}\n\n`;
+    } else if (blueprintSections) {
+      personalitySection = this.buildRichBlueprintContext(blueprintSections);
     }
-    
-    return 'unique soul';
+
+    return `You are an expert journey architect creating a SPECIFIC, HIGHLY PERSONALIZED plan.
+
+🎯 DREAM DETAILS:
+- Title: "${title}"
+- Description: ${description}
+- Why it matters: ${whyItMatters}
+- Category: ${category}
+- Timeframe: ${timeframe}
+
+${personalitySection}
+
+🎯 YOUR TASK:
+
+Create a RAZOR-ALIGNED journey plan with 5-6 milestones that are DIRECTLY RELATED to "${title}".
+
+**CRITICAL: DO NOT USE GENERIC TEMPLATES**
+
+Every milestone and task must be SPECIFIC to the dream domain. For example:
+- If dream is "10000 euro per maand verdienen met 1 app":
+  ✅ Milestone 1: "Validate App Idea & Dutch Market Fit"
+  ✅ Task: "Research top 20 revenue-generating apps in Dutch market"
+  ❌ NOT "Discovery & Vision" or "Conduct research"
+
+**PERSONALIZATION REQUIREMENTS:**
+1. Reference their execution style in task phrasing
+2. Align task timing with their energy patterns
+3. Address specific avoidance patterns proactively
+4. Use their momentum triggers
+5. Leverage their cognitive strengths
+6. Honor their decision-making authority
+
+Return as JSON:
+{
+  "milestones": [
+    {
+      "id": "milestone_1",
+      "title": "SPECIFIC milestone for ${title}",
+      "description": "Detailed explanation of HOW this achieves ${title}",
+      "target_date": "2025-11-06",
+      "completed": false,
+      "completion_criteria": ["Measurable", "specific", "criteria"],
+      "blueprint_alignment": {
+        "addresses_patterns": ["Which patterns this milestone helps with"],
+        "leverages_strengths": ["Which strengths this uses"],
+        "optimal_timing": "Based on energy patterns"
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_1",
+      "title": "Concrete actionable task for ${title}",
+      "description": "Step-by-step instructions",
+      "milestone_id": "milestone_1",
+      "completed": false,
+      "estimated_duration": "2-3 hours",
+      "energy_level_required": "medium",
+      "category": "execution",
+      "optimal_timing": "Best time based on patterns",
+      "blueprint_reasoning": "Why this task aligns with their nature",
+      "prerequisites": ["Previous tasks if any"]
+    }
+  ],
+  "blueprint_insights": [
+    "How this journey aligns with their unique nature"
+  ]
+}`;
   }
 
-  private calculateMilestoneDate(timeframe: string, percentage: number): string {
+  private buildHermetic2Context(hermetic: HermeticStructuredIntelligence): string {
+    return `🧬 HERMETIC 2.0 DEEP PERSONALITY CONTEXT:
+
+IDENTITY & NARRATIVES:
+${hermetic.identity_constructs?.core_narratives?.slice(0, 5).map(n => `- ${n}`).join('\n') || 'N/A'}
+
+EXECUTION STYLE:
+- Preferred Style: ${hermetic.execution_bias?.preferred_style || 'N/A'}
+- Completion Patterns: ${hermetic.execution_bias?.completion_patterns || 'N/A'}
+- Momentum Triggers: ${hermetic.execution_bias?.momentum_triggers?.join(', ') || 'N/A'}
+
+BEHAVIORAL TRIGGERS:
+- Energy Dips: ${hermetic.behavioral_triggers?.energy_dips?.join(', ') || 'N/A'}
+- Avoidance Patterns: ${hermetic.behavioral_triggers?.avoidance_patterns?.join(', ') || 'N/A'}
+- Activation Rituals: ${hermetic.behavioral_triggers?.activation_rituals?.join(', ') || 'N/A'}
+
+TEMPORAL BIOLOGY:
+- Peak Times: ${hermetic.temporal_biology?.cognitive_peaks?.join(', ') || 'N/A'}
+- Vulnerable Times: ${hermetic.temporal_biology?.vulnerable_times?.join(', ') || 'N/A'}
+
+CAREER ARCHETYPES:
+${hermetic.career_vocational?.work_archetypes?.slice(0, 3).map(a => `- ${a}`).join('\n') || 'N/A'}
+
+FINANCIAL PATTERNS:
+- Money Relationship: ${hermetic.financial_archetypes?.money_relationship || 'N/A'}
+- Abundance Blocks: ${hermetic.financial_archetypes?.abundance_blocks?.join(', ') || 'N/A'}
+
+`;
+  }
+
+  private buildRichBlueprintContext(sections: any): string {
+    let context = '🎨 RICH BLUEPRINT CONTEXT:\n\n';
+
+    if (sections.cognition) {
+      context += `COGNITION (${sections.cognition.type}):\n`;
+      context += `- Dominant Function: ${sections.cognition.dominant_function}\n`;
+      context += `- Cognitive Stack: ${sections.cognition.cognitive_stack?.join(' → ')}\n\n`;
+    }
+
+    if (sections.human_design) {
+      context += `HUMAN DESIGN:\n`;
+      context += `- Type: ${sections.human_design.type}\n`;
+      context += `- Strategy: ${sections.human_design.strategy}\n`;
+      context += `- Authority: ${sections.human_design.authority}\n`;
+      context += `- Profile: ${sections.human_design.profile}\n`;
+      context += `- Defined Centers: ${sections.human_design.centers?.join(', ')}\n\n`;
+    }
+
+    if (sections.western_astrology) {
+      context += `WESTERN ASTROLOGY:\n`;
+      context += `- Sun: ${sections.western_astrology.sun_sign}\n`;
+      context += `- Moon: ${sections.western_astrology.moon_sign}\n`;
+      context += `- Rising: ${sections.western_astrology.rising_sign}\n\n`;
+    }
+
+    if (sections.numerology) {
+      context += `NUMEROLOGY:\n`;
+      context += `- Life Path: ${sections.numerology.life_path}\n`;
+      context += `- Core Values: ${sections.numerology.core_values?.join(', ')}\n\n`;
+    }
+
+    if (sections.chinese_astrology) {
+      context += `CHINESE ASTROLOGY:\n`;
+      context += `- Animal: ${sections.chinese_astrology.animal}\n`;
+      context += `- Element: ${sections.chinese_astrology.element}\n\n`;
+    }
+
+    return context;
+  }
+
+  // ============================================
+  // AI RESPONSE PARSING & VALIDATION
+  // ============================================
+
+  private async parseAIResponseWithValidation(
+    aiResponse: string,
+    goalTitle: string,
+    category: string
+  ): Promise<{
+    milestones: any[];
+    tasks: any[];
+    blueprint_insights?: string[];
+    isGoalSpecific: boolean;
+  }> {
+    try {
+      // Extract JSON from AI response
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.error('❌ No JSON found in AI response');
+        throw new Error('AI response missing JSON structure');
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      // VALIDATION: Check for generic milestones
+      const genericTerms = [
+        'Discovery & Vision',
+        'Foundation & Planning',
+        'Initial Implementation',
+        'Expansion & Growth',
+        'Mastery & Integration',
+        'Achievement & Celebration'
+      ];
+
+      const hasGenericMilestones = parsed.milestones?.some((m: any) =>
+        genericTerms.some(term => m.title?.includes(term))
+      );
+
+      if (hasGenericMilestones) {
+        console.warn('⚠️ VALIDATION WARNING: AI returned generic milestone templates');
+      }
+
+      // VALIDATION: Check if milestones reference the goal
+      const goalKeywords = goalTitle.toLowerCase().split(' ').filter(w => w.length > 3);
+      const milestonesReferenceGoal = parsed.milestones?.some((m: any) => {
+        const milestoneText = `${m.title} ${m.description}`.toLowerCase();
+        return goalKeywords.some(keyword => milestoneText.includes(keyword));
+      });
+
+      if (!milestonesReferenceGoal) {
+        console.warn('⚠️ VALIDATION WARNING: Milestones may not be goal-specific');
+      }
+
+      // Ensure all required fields exist
+      const validatedMilestones = (parsed.milestones || []).map((m: any, index: number) => ({
+        id: m.id || `milestone_${index + 1}_${Date.now()}`,
+        title: m.title || `Milestone ${index + 1}`,
+        description: m.description || '',
+        target_date: m.target_date || new Date().toISOString().split('T')[0],
+        completed: false,
+        completion_criteria: m.completion_criteria || [],
+        blueprint_alignment: m.blueprint_alignment || {}
+      }));
+
+      const validatedTasks = (parsed.tasks || []).map((t: any, index: number) => ({
+        id: t.id || `task_${index + 1}_${Date.now()}`,
+        title: t.title || `Task ${index + 1}`,
+        description: t.description || '',
+        milestone_id: t.milestone_id || validatedMilestones[0]?.id,
+        completed: false,
+        estimated_duration: t.estimated_duration || '1-2 hours',
+        energy_level_required: t.energy_level_required || 'medium',
+        category: t.category || 'execution',
+        optimal_timing: t.optimal_timing,
+        blueprint_reasoning: t.blueprint_reasoning,
+        prerequisites: t.prerequisites || []
+      }));
+
+      console.log('✅ PARSING COMPLETED:', {
+        milestones: validatedMilestones.length,
+        tasks: validatedTasks.length,
+        hasGeneric: hasGenericMilestones,
+        isGoalSpecific: milestonesReferenceGoal
+      });
+
+      return {
+        milestones: validatedMilestones,
+        tasks: validatedTasks,
+        blueprint_insights: parsed.blueprint_insights || [],
+        isGoalSpecific: milestonesReferenceGoal && !hasGenericMilestones
+      };
+    } catch (error) {
+      console.error('❌ PARSING ERROR:', error);
+      throw new Error(`Failed to parse AI response: ${error}`);
+    }
+  }
+
+  // ============================================
+  // UTILITY METHODS
+  // ============================================
+
+  private calculateTargetDate(timeframe: string): string {
     const date = new Date();
-    
+
     if (timeframe.includes('month')) {
       const months = parseInt(timeframe) || 3;
-      date.setMonth(date.getMonth() + Math.floor(months * percentage));
+      date.setMonth(date.getMonth() + months);
     } else if (timeframe.includes('week')) {
       const weeks = parseInt(timeframe) || 12;
-      date.setDate(date.getDate() + Math.floor(weeks * 7 * percentage));
+      date.setDate(date.getDate() + weeks * 7);
     } else if (timeframe.includes('year')) {
       const years = parseInt(timeframe) || 1;
-      date.setFullYear(date.getFullYear() + Math.floor(years * percentage));
+      date.setFullYear(date.getFullYear() + years);
     } else {
-      date.setMonth(date.getMonth() + Math.floor(3 * percentage));
+      date.setMonth(date.getMonth() + 3);
     }
 
     return date.toISOString().split('T')[0];
-  }
-
-  private getOptimalTiming(blueprintData: any, energyLevel: string): string {
-    // Enhanced timing based on energy level and blueprint
-    const timingMap: Record<string, string> = {
-      high: 'Peak energy periods (9 AM - 12 PM)',
-      medium: 'Steady focus time (2 PM - 5 PM)',
-      low: 'Gentle activity periods (7 PM - 9 PM)'
-    };
-
-    const baseTime = timingMap[energyLevel] || 'During your preferred working hours';
-    
-    // Add blueprint-specific timing if available
-    if (blueprintData?.energy_strategy_human_design?.type === 'Generator') {
-      return `${baseTime} - Best when responding to opportunities`;
-    }
-    
-    return baseTime;
   }
 
   // ============================================
@@ -441,7 +598,8 @@ class SoulGoalDecompositionService {
             data_source: personalityContext.dataSource,
             depth: personalityContext.depth,
             created_at: new Date().toISOString()
-          }
+          },
+          personalization_depth_score: personalityContext.depth
         });
 
       if (journeyError) {
@@ -456,230 +614,9 @@ class SoulGoalDecompositionService {
     }
   }
 
-  // Legacy method (kept for backward compatibility)
-  private async performCausalAnalysis(title: string, category: string, blueprintData: any): Promise<any> {
-    console.log('🔗 CNR: Analyzing causal relationships for dream decomposition');
-    
-    const causalFactors = {
-      prerequisites: this.identifyPrerequisites(title, category),
-      dependencies: this.mapDependencies(title, blueprintData),
-      riskFactors: this.assessRiskFactors(title, category),
-      accelerators: this.findAccelerators(title, blueprintData)
-    };
-    
-    return causalFactors;
-  }
-
-  // Identify logical prerequisites for goal achievement
-  private identifyPrerequisites(title: string, category: string): string[] {
-    const lowerTitle = title.toLowerCase();
-    const prerequisites: string[] = [];
-    
-    if (lowerTitle.includes('business') || lowerTitle.includes('startup') || lowerTitle.includes('app') || lowerTitle.includes('launch')) {
-      prerequisites.push('market_research', 'financial_planning', 'skill_development', 'technical_planning');
-    } else if (lowerTitle.includes('fitness') || lowerTitle.includes('health')) {
-      prerequisites.push('baseline_assessment', 'routine_establishment', 'environment_setup');
-    } else if (lowerTitle.includes('relationship') || lowerTitle.includes('social')) {
-      prerequisites.push('self_awareness', 'communication_skills', 'emotional_intelligence');
-    } else if (lowerTitle.includes('career') || lowerTitle.includes('job')) {
-      prerequisites.push('skill_assessment', 'market_research', 'network_building');
-    } else if (lowerTitle.includes('creative') || lowerTitle.includes('art') || lowerTitle.includes('writing')) {
-      prerequisites.push('creative_practice', 'inspiration_gathering', 'skill_development');
-    } else {
-      prerequisites.push('goal_clarification', 'resource_assessment', 'commitment_evaluation');
-    }
-    
-    return prerequisites;
-  }
-
-  // Map dependencies based on blueprint personality
-  private mapDependencies(title: string, blueprintData: any): string[] {
-    const dependencies: string[] = [];
-    
-    // Add personality-based dependencies
-    if (blueprintData?.cognition_mbti?.type?.includes('I')) {
-      dependencies.push('solo_preparation_time', 'internal_processing');
-    }
-    if (blueprintData?.cognition_mbti?.type?.includes('E')) {
-      dependencies.push('social_support', 'external_feedback');
-    }
-    if (blueprintData?.cognition_mbti?.type?.includes('J')) {
-      dependencies.push('structured_planning', 'clear_deadlines');
-    }
-    if (blueprintData?.cognition_mbti?.type?.includes('P')) {
-      dependencies.push('flexible_approach', 'adaptation_space');
-    }
-    
-    // Add Human Design dependencies
-    if (blueprintData?.energy_strategy_human_design?.type === 'Manifestor') {
-      dependencies.push('independent_action', 'initiation_freedom');
-    } else if (blueprintData?.energy_strategy_human_design?.type === 'Generator') {
-      dependencies.push('response_opportunities', 'satisfaction_tracking');
-    } else if (blueprintData?.energy_strategy_human_design?.type === 'Projector') {
-      dependencies.push('recognition_invitations', 'energy_management');
-    } else if (blueprintData?.energy_strategy_human_design?.type === 'Reflector') {
-      dependencies.push('lunar_cycles', 'environmental_clarity');
-    }
-    
-    return dependencies;
-  }
-
-  // Assess risk factors that could impede progress
-  private assessRiskFactors(title: string, category: string): string[] {
-    const baseRisks = ['time_constraints', 'resource_limitations', 'motivation_fluctuation', 'external_obstacles'];
-    const lowerTitle = title.toLowerCase();
-    
-    if (lowerTitle.includes('business') || lowerTitle.includes('startup') || lowerTitle.includes('app')) {
-      baseRisks.push('market_volatility', 'technical_challenges', 'funding_gaps', 'competition');
-    } else if (lowerTitle.includes('health') || lowerTitle.includes('fitness')) {
-      baseRisks.push('injury_risk', 'plateau_periods', 'lifestyle_conflicts');
-    } else if (lowerTitle.includes('creative') || lowerTitle.includes('art')) {
-      baseRisks.push('creative_blocks', 'perfectionism', 'market_uncertainty');
-    }
-    
-    return baseRisks;
-  }
-
-  // Find accelerators that could speed up progress
-  private findAccelerators(title: string, blueprintData: any): string[] {
-    const accelerators: string[] = ['consistent_habits', 'support_system', 'clear_metrics', 'celebration_milestones'];
-    
-    // Add blueprint-specific accelerators
-    if (blueprintData?.energy_strategy_human_design?.type === 'Manifestor') {
-      accelerators.push('independent_action', 'clear_vision', 'initiation_power');
-    } else if (blueprintData?.energy_strategy_human_design?.type === 'Generator') {
-      accelerators.push('following_excitement', 'sustainable_pace', 'gut_response');
-    } else if (blueprintData?.energy_strategy_human_design?.type === 'Projector') {
-      accelerators.push('wise_guidance', 'recognition_systems', 'efficiency_focus');
-    } else if (blueprintData?.energy_strategy_human_design?.type === 'Reflector') {
-      accelerators.push('community_wisdom', 'patient_observation', 'lunar_timing');
-    }
-    
-    // Add MBTI-specific accelerators
-    if (blueprintData?.cognition_mbti?.type?.includes('N')) {
-      accelerators.push('big_picture_vision', 'innovation_opportunities');
-    }
-    if (blueprintData?.cognition_mbti?.type?.includes('S')) {
-      accelerators.push('practical_steps', 'tangible_progress');
-    }
-    if (blueprintData?.cognition_mbti?.type?.includes('T')) {
-      accelerators.push('logical_frameworks', 'objective_metrics');
-    }
-    if (blueprintData?.cognition_mbti?.type?.includes('F')) {
-      accelerators.push('value_alignment', 'personal_meaning');
-    }
-    
-    return accelerators;
-  }
-
-  // Determine causal prerequisites for tasks based on category and causal analysis
-  private determineCausalPrerequisites(taskCategory: string, energyLevel: string, causalAnalysis?: any): string[] {
-    const basePrerequisites: string[] = [];
-    
-    // Add category-specific prerequisites
-    switch (taskCategory) {
-      case 'research':
-        basePrerequisites.push('Information gathering tools', 'Research methodology');
-        break;
-      case 'planning':
-        basePrerequisites.push('Goal clarity', 'Resource assessment');
-        if (causalAnalysis?.dependencies?.includes('structured_planning')) {
-          basePrerequisites.push('Planning framework established');
-        }
-        break;
-      case 'execution':
-        basePrerequisites.push('Preparation completed', 'Resources available');
-        if (causalAnalysis?.dependencies?.includes('social_support')) {
-          basePrerequisites.push('Support system activated');
-        }
-        break;
-      case 'review':
-        basePrerequisites.push('Progress data collected', 'Evaluation criteria defined');
-        break;
-      case 'communication':
-        basePrerequisites.push('Key stakeholders identified', 'Communication plan');
-        break;
-    }
-    
-    // Add energy-level specific prerequisites
-    if (energyLevel === 'high') {
-      basePrerequisites.push('Peak energy period scheduled');
-      if (causalAnalysis?.dependencies?.includes('solo_preparation_time')) {
-        basePrerequisites.push('Uninterrupted time block secured');
-      }
-    } else if (energyLevel === 'medium') {
-      basePrerequisites.push('Moderate focus session planned');
-    } else if (energyLevel === 'low') {
-      basePrerequisites.push('Low-pressure environment established');
-    }
-    
-    // Add causal analysis prerequisites
-    if (causalAnalysis?.prerequisites) {
-      // Map general prerequisites to specific task requirements
-      if (causalAnalysis.prerequisites.includes('market_research') && taskCategory === 'research') {
-        basePrerequisites.push('Market analysis framework ready');
-      }
-      if (causalAnalysis.prerequisites.includes('skill_development') && taskCategory === 'execution') {
-        basePrerequisites.push('Required skills assessed and developed');
-      }
-      if (causalAnalysis.prerequisites.includes('financial_planning') && taskCategory === 'planning') {
-        basePrerequisites.push('Budget and financial resources planned');
-      }
-    }
-    
-    // Limit to most important prerequisites to avoid overwhelming
-    return basePrerequisites.slice(0, 3);
-  }
-
-  // Save enhanced goal with causal analysis to database
+  // Legacy method for backward compatibility - not used in new implementation
   private async saveEnhancedGoalToDatabase(goal: SoulGeneratedGoal, causalAnalysis: any): Promise<void> {
-    try {
-      console.log('💾 Saving enhanced goal with causal analysis to database:', goal.id);
-      
-      // Get current user ID
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('⚠️ No authenticated user found, skipping database save');
-        return;
-      }
-      
-      const { data, error } = await supabase
-        .from('user_goals')
-        .insert({
-          user_id: user.id,
-          title: goal.title,
-          description: goal.description,
-          category: goal.category,
-          status: 'active',
-          target_date: goal.target_completion,
-          progress: 0,
-          milestones: goal.milestones,
-          aligned_traits: {
-            blueprint_insights: goal.blueprint_insights,
-            personalization_notes: goal.personalization_notes,
-            causal_analysis: causalAnalysis,
-            enhanced_features: {
-              prerequisites: causalAnalysis.prerequisites,
-              dependencies: causalAnalysis.dependencies,
-              risk_factors: causalAnalysis.riskFactors,
-              accelerators: causalAnalysis.accelerators,
-              task_count: goal.tasks.length,
-              milestone_count: goal.milestones.length
-            }
-          }
-        });
-
-      if (error) {
-        console.error('❌ Database save error:', error);
-        throw new Error(`Database save failed: ${error.message}`);
-      }
-
-      console.log('✅ Enhanced goal saved to database successfully:', data);
-    } catch (error) {
-      console.error('❌ Failed to save enhanced goal to database:', error);
-      // Don't throw - goal decomposition should still succeed even if DB save fails
-      console.log('⚠️ Continuing with goal decomposition despite database save failure');
-    }
+    return this.saveGoalWithHermeticContext(goal, { dataSource: 'Basic Blueprint', depth: 30 });
   }
 }
 
