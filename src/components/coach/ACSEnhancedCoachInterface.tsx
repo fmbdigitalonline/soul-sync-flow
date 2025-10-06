@@ -81,7 +81,7 @@ const ACSEnhancedCoachInterface: React.FC<ACSEnhancedCoachInterfaceProps> = ({
         console.log("ACS failed, using regular Soul coach:", acsError);
         
         // Fallback to regular Soul coach
-        const { data, error } = await supabase.functions.invoke("ai-coach", {
+        const { data, error } = await supabase.functions.invoke("ai-coach-v2", {
           body: {
             message: inputValue.trim(),
             sessionId,

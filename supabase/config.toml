@@ -82,6 +82,12 @@ methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 verify_jwt = false
 cors = ["*"]
 methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+
+[functions.ai-coach-v2]
+verify_jwt = false
+cors = ["*"]
+methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+# NUCLEAR DEPLOYMENT: 2025-10-06T16:00:00Z - Force new function to bypass cache
 # DEPLOYMENT VERSION: 2.2.0 - Force fresh deployment (2025-10-06)
 
 [functions.blueprint-calculator]

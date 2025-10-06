@@ -112,7 +112,7 @@ class AICoachService {
         console.log("Using standard prompting system, prompt length:", systemPrompt?.length || 0);
       }
 
-      const { data, error } = await supabase.functions.invoke("ai-coach", {
+      const { data, error } = await supabase.functions.invoke("ai-coach-v2", {
         body: {
           message,
           sessionId,
