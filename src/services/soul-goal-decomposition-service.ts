@@ -108,6 +108,10 @@ class SoulGoalDecompositionService {
       });
 
       // STEP 3A: PHASE 4 - Verify edge function deployment version
+      // TEMPORARILY DISABLED: Version check commented out to bypass GET request error
+      // The deployed ai-coach function (v664) doesn't handle GET requests
+      // Keeping POST functionality intact for goal decomposition
+      /*
       console.log('🔍 VERIFYING AI-COACH DEPLOYMENT VERSION...');
       try {
         const versionCheck = await fetch(
@@ -128,6 +132,7 @@ class SoulGoalDecompositionService {
         console.warn('⚠️ Version check failed (non-blocking):', versionError);
         // Non-blocking - continue with decomposition attempt
       }
+      */
 
       // STEP 3B: Call AI Coach with enhanced prompt
       console.log('📡 INVOKING AI COACH:', {
