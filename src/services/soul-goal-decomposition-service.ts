@@ -1,4 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
+import { hermeticIntelligenceService } from './hermetic-intelligence-service';
+import { hermeticReportAccessService } from './hermetic-report-access-service';
+import type { HermeticStructuredIntelligence } from '@/types/hermetic-intelligence';
 
 export interface SoulGeneratedGoal {
   id: string;
@@ -40,9 +43,10 @@ class SoulGoalDecompositionService {
     description: string,
     timeframe: string,
     category: string,
-    blueprintData: any
+    blueprintData: any,
+    whyItMatters?: string
   ): Promise<SoulGeneratedGoal> {
-    console.log('🎯 Soul Goal Decomposition Service - Starting enhanced decomposition with causal analysis:', {
+    console.log('🎯 Soul Goal Decomposition Service - Starting razor-aligned decomposition:', {
       title,
       description,
       timeframe,
@@ -51,68 +55,68 @@ class SoulGoalDecompositionService {
     });
 
     try {
-      // CNR Integration: Perform causal analysis for enhanced goal decomposition
-      console.log('🔗 CNR: Analyzing causal relationships for dream decomposition');
-      const causalAnalysis = await this.performCausalAnalysis(title, category, blueprintData);
-      console.log('✅ CNR: Causal analysis completed:', {
-        prerequisites: causalAnalysis.prerequisites?.length || 0,
-        dependencies: causalAnalysis.dependencies?.length || 0,
-        riskFactors: causalAnalysis.riskFactors?.length || 0,
-        accelerators: causalAnalysis.accelerators?.length || 0
+      // STEP 1: Fetch deep personality data with fallback hierarchy
+      console.log('🧬 HERMETIC INTEGRATION: Fetching deep personality context...');
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const personalityContext = await this.fetchPersonalityDataWithFallback(userId!, blueprintData);
+      
+      console.log('✅ PERSONALITY CONTEXT:', {
+        dataSource: personalityContext.dataSource,
+        depth: personalityContext.depth,
+        hasHermetic2: !!personalityContext.hermetic2,
+        hasHermetic1: !!personalityContext.hermetic1Report,
+        hasBlueprintSections: Object.keys(personalityContext.blueprintSections || {}).length
       });
+
+      // STEP 2: Build comprehensive AI prompt with all available context
+      const comprehensivePrompt = this.buildComprehensiveDecompositionPrompt(
+        title,
+        description,
+        whyItMatters || '',
+        category,
+        timeframe,
+        personalityContext
+      );
+
+      console.log('📝 PROMPT BUILT:', { 
+        length: comprehensivePrompt.length,
+        dataSource: personalityContext.dataSource 
+      });
+
+      // STEP 3: Call AI Coach with enhanced prompt
       const { data, error } = await supabase.functions.invoke('ai-coach', {
         body: {
-          message: `Please help me break down this dream into a comprehensive, actionable journey:
-          
-Dream: ${title}
-Description: ${description}
-Timeframe: ${timeframe}
-Category: ${category}
-
-Please create a detailed breakdown with:
-1. 5-6 progressive milestones with specific target dates
-2. 3-4 specific tasks for each milestone (15-20 total tasks)
-3. Blueprint-aligned insights and optimal timing suggestions
-4. Energy level requirements for each task
-5. Detailed completion criteria for milestones
-
-Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
-          context: 'enhanced_goal_decomposition',
+          message: comprehensivePrompt,
+          context: 'razor_aligned_goal_decomposition',
+          contextDepth: 'deep',
           blueprintData
         }
       });
 
       if (error) {
-        console.error('❌ Soul Coach function error:', error);
-        throw new Error(`Soul Coach service error: ${error.message}`);
+        console.error('❌ AI Coach function error:', error);
+        throw new Error(`AI Coach service error: ${error.message}`);
       }
 
       if (!data?.response) {
-        console.error('❌ No response from Soul Coach service');
-        throw new Error('No response from Soul Coach service');
+        console.error('❌ No response from AI Coach service');
+        throw new Error('No response from AI Coach service');
       }
 
-      // Create enhanced structured goal from Soul Coach response
-      const goalId = `goal_${Date.now()}`;
-      const targetDate = new Date();
+      console.log('✅ AI RESPONSE RECEIVED:', { length: data.response.length });
+
+      // STEP 4: Parse and validate AI response
+      const parsedGoal = await this.parseAIResponseWithValidation(data.response, title, category);
       
-      // Calculate target completion based on timeframe
-      if (timeframe.includes('month')) {
-        const months = parseInt(timeframe) || 3;
-        targetDate.setMonth(targetDate.getMonth() + months);
-      } else if (timeframe.includes('week')) {
-        const weeks = parseInt(timeframe) || 12;
-        targetDate.setDate(targetDate.getDate() + (weeks * 7));
-      } else if (timeframe.includes('year')) {
-        const years = parseInt(timeframe) || 1;
-        targetDate.setFullYear(targetDate.getFullYear() + years);
-      } else {
-        targetDate.setMonth(targetDate.getMonth() + 3); // Default 3 months
-      }
+      console.log('✅ VALIDATION PASSED:', {
+        milestones: parsedGoal.milestones.length,
+        tasks: parsedGoal.tasks.length,
+        isGoalSpecific: parsedGoal.isGoalSpecific
+      });
 
-      // Generate enhanced milestones and tasks with causal analysis
-      const enhancedMilestones = this.generateEnhancedMilestones(title, timeframe, blueprintData, causalAnalysis);
-      const enhancedTasks = this.generateEnhancedTasks(enhancedMilestones, category, blueprintData, causalAnalysis);
+      // STEP 5: Create structured goal
+      const goalId = `goal_${Date.now()}`;
+      const targetDate = this.calculateTargetDate(timeframe);
 
       const soulGoal: SoulGeneratedGoal = {
         id: goalId,
@@ -120,28 +124,23 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
         description,
         category,
         timeframe,
-        target_completion: targetDate.toISOString().split('T')[0],
+        target_completion: targetDate,
         created_at: new Date().toISOString(),
-        milestones: enhancedMilestones,
-        tasks: enhancedTasks,
-        blueprint_insights: this.generateEnhancedBlueprintInsights(blueprintData),
-        personalization_notes: `This comprehensive journey has been deeply personalized for your ${this.getUserType(blueprintData)} energy type with ${enhancedMilestones.length} milestones and ${enhancedTasks.length} tasks.`
+        milestones: parsedGoal.milestones,
+        tasks: parsedGoal.tasks,
+        blueprint_insights: parsedGoal.blueprint_insights || [],
+        personalization_notes: `Razor-aligned journey created using ${personalityContext.dataSource} with ${parsedGoal.milestones.length} goal-specific milestones and ${parsedGoal.tasks.length} actionable tasks.`
       };
 
-      console.log('✅ Enhanced soul goal decomposition completed:', {
-        milestones: enhancedMilestones.length,
-        tasks: enhancedTasks.length,
+      console.log('✅ RAZOR-ALIGNED GOAL COMPLETED:', {
+        milestones: parsedGoal.milestones.length,
+        tasks: parsedGoal.tasks.length,
         goalId: soulGoal.id,
-        causalFactors: {
-          prerequisites: causalAnalysis.prerequisites?.length || 0,
-          dependencies: causalAnalysis.dependencies?.length || 0,
-          risks: causalAnalysis.riskFactors?.length || 0,
-          accelerators: causalAnalysis.accelerators?.length || 0
-        }
+        dataSource: personalityContext.dataSource
       });
 
-      // Save enhanced goal with causal analysis to database
-      await this.saveEnhancedGoalToDatabase(soulGoal, causalAnalysis);
+      // Save to database with hermetic alignment context
+      await this.saveGoalWithHermeticContext(soulGoal, personalityContext);
       
       return soulGoal;
 
@@ -415,7 +414,49 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
     return baseTime;
   }
 
-  // CNR Integration: Perform causal analysis for goal decomposition
+  // ============================================
+  // DATABASE OPERATIONS
+  // ============================================
+
+  private async saveGoalWithHermeticContext(goal: SoulGeneratedGoal, personalityContext: any): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Save to productivity_journey table
+      const { error: journeyError } = await supabase
+        .from('productivity_journey')
+        .insert({
+          user_id: user.id,
+          goal_title: goal.title,
+          goal_description: goal.description,
+          category: goal.category,
+          timeframe: goal.timeframe,
+          target_completion: goal.target_completion,
+          milestones: goal.milestones,
+          tasks: goal.tasks,
+          blueprint_insights: goal.blueprint_insights,
+          personalization_notes: goal.personalization_notes,
+          hermetic_alignment_context: {
+            data_source: personalityContext.dataSource,
+            depth: personalityContext.depth,
+            created_at: new Date().toISOString()
+          }
+        });
+
+      if (journeyError) {
+        console.error('❌ Error saving journey:', journeyError);
+        throw journeyError;
+      }
+
+      console.log('✅ SAVED TO DATABASE with hermetic context');
+    } catch (error) {
+      console.error('❌ Database save error:', error);
+      throw error;
+    }
+  }
+
+  // Legacy method (kept for backward compatibility)
   private async performCausalAnalysis(title: string, category: string, blueprintData: any): Promise<any> {
     console.log('🔗 CNR: Analyzing causal relationships for dream decomposition');
     
