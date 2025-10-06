@@ -1,12 +1,49 @@
-// Version: 2.1.0 - GPT-4.1-mini model fix with proper parameter handling
+// ==============================================
+// AI COACH EDGE FUNCTION - VERSION 2.2.0
+// DEPLOYMENT: 2025-10-06T15:30:00Z
+// MODEL: gpt-4.1-mini-2025-04-14 (QUOTA-SAFE)
+// CHANGES: Aggressive redeployment + version verification
+// ==============================================
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+
+const DEPLOYMENT_VERSION = "2.2.0";
+const DEPLOYMENT_TIMESTAMP = "2025-10-06T15:30:00Z";
+const DEPLOYMENT_MODEL = "gpt-4.1-mini-2025-04-14";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+console.log('🚀 AI-COACH EDGE FUNCTION INITIALIZED:', {
+  version: DEPLOYMENT_VERSION,
+  timestamp: DEPLOYMENT_TIMESTAMP,
+  model: DEPLOYMENT_MODEL,
+  deployment: 'FRESH_REDEPLOYMENT'
+});
+
 serve(async (req) => {
+  // PHASE 2: Version verification endpoint (GET request)
+  if (req.method === 'GET') {
+    return new Response(
+      JSON.stringify({
+        version: DEPLOYMENT_VERSION,
+        deployedAt: DEPLOYMENT_TIMESTAMP,
+        model: DEPLOYMENT_MODEL,
+        status: 'ACTIVE',
+        parameters: {
+          temperature: 'NOT_SUPPORTED',
+          max_completion_tokens: 'SUPPORTED'
+        }
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      }
+    );
+  }
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -23,9 +60,19 @@ serve(async (req) => {
       temperature,
       maxTokens,
       context,
-      contextDepth = 'normal', // New parameter for model selection
-      userDisplayName = 'friend'
+      contextDepth = 'normal',
+      userDisplayName = 'friend',
+      modelOverride // PHASE 3: Model override support
     } = await req.json();
+
+    // AGGRESSIVE VERSION LOGGING
+    console.log('🔥 AI-COACH REQUEST:', {
+      version: DEPLOYMENT_VERSION,
+      deployedAt: DEPLOYMENT_TIMESTAMP,
+      defaultModel: DEPLOYMENT_MODEL,
+      modelOverride: modelOverride || 'none',
+      timestamp: new Date().toISOString()
+    });
 
     console.log('AI Coach request:', {
       agentType,
@@ -47,13 +94,24 @@ serve(async (req) => {
       throw new Error(errorMessage);
     }
 
-const selectModel = (agentType: string, contextDepth: string, includeBlueprint: boolean) => {
-  // Always use gpt-4.1-mini-2025-04-14 for all requests (quota-safe)
-  console.log('🧠 Using GPT-4.1-mini-2025-04-14 for all AI coach requests');
-  return 'gpt-4.1-mini-2025-04-14';
+const selectModel = (
+  agentType: string, 
+  contextDepth: string, 
+  includeBlueprint: boolean, 
+  modelOverride?: string
+) => {
+  // PHASE 3: Respect model override if provided
+  if (modelOverride) {
+    console.log('🎯 USING MODEL OVERRIDE:', modelOverride);
+    return modelOverride;
+  }
+  
+  // Default: Always use gpt-4.1-mini-2025-04-14 (quota-safe)
+  console.log('🧠 USING DEFAULT MODEL:', DEPLOYMENT_MODEL);
+  return DEPLOYMENT_MODEL;
 };
 
-    const selectedModel = selectModel(agentType, contextDepth, includeBlueprint);
+    const selectedModel = selectModel(agentType, contextDepth, includeBlueprint, modelOverride);
 
     // Use custom system prompt if provided, otherwise fall back to default
     const getSystemPrompt = (agentType: string, language: string) => {
@@ -128,7 +186,9 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
       ? maxTokens 
       : (context === 'razor_aligned_goal_decomposition' ? 3000 : 2000);
 
-    console.log('🎯 FINAL MODEL CONFIGURATION:', {
+    console.log('🎯 FINAL MODEL CONFIGURATION (v' + DEPLOYMENT_VERSION + '):', {
+      deploymentVersion: DEPLOYMENT_VERSION,
+      deploymentTimestamp: DEPLOYMENT_TIMESTAMP,
       model: selectedModel,
       temperature: finalTemperature,
       maxTokens: finalMaxTokens,
@@ -137,7 +197,8 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
       agentType,
       includeBlueprint,
       clientRequestedTemp: temperature,
-      clientRequestedTokens: maxTokens
+      clientRequestedTokens: maxTokens,
+      modelOverride: modelOverride || 'none'
     });
 
     // Build request payload
@@ -239,14 +300,21 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
       throw new Error(errorMessage);
     }
 
-    console.log('✅ AI Coach response generated successfully with layered model strategy');
+    console.log('✅ AI COACH SUCCESS (v' + DEPLOYMENT_VERSION + '):', {
+      version: DEPLOYMENT_VERSION,
+      model: selectedModel,
+      tokensUsed: finalMaxTokens,
+      responseLength: aiResponse.length
+    });
 
     return new Response(
       JSON.stringify({
         response: aiResponse,
         conversationId: sessionId,
         modelUsed: selectedModel,
-        tokensUsed: finalMaxTokens
+        tokensUsed: finalMaxTokens,
+        deploymentVersion: DEPLOYMENT_VERSION,
+        deploymentTimestamp: DEPLOYMENT_TIMESTAMP
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

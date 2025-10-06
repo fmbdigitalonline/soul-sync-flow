@@ -107,7 +107,29 @@ class SoulGoalDecompositionService {
         dataSource: personalityContext.dataSource 
       });
 
-      // STEP 3: Call AI Coach with enhanced prompt
+      // STEP 3A: PHASE 4 - Verify edge function deployment version
+      console.log('🔍 VERIFYING AI-COACH DEPLOYMENT VERSION...');
+      try {
+        const versionCheck = await fetch(
+          'https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach',
+          { method: 'GET' }
+        );
+        
+        if (versionCheck.ok) {
+          const versionData = await versionCheck.json();
+          console.log('✅ AI-COACH VERSION CHECK:', versionData);
+          
+          if (versionData.version !== '2.2.0') {
+            console.warn('⚠️ OLD VERSION DETECTED:', versionData.version);
+            throw new Error('🔄 System update in progress. Please try again in 30 seconds.');
+          }
+        }
+      } catch (versionError) {
+        console.warn('⚠️ Version check failed (non-blocking):', versionError);
+        // Non-blocking - continue with decomposition attempt
+      }
+
+      // STEP 3B: Call AI Coach with enhanced prompt
       console.log('📡 INVOKING AI COACH:', {
         promptLength: comprehensivePrompt.length,
         context: 'razor_aligned_goal_decomposition',
@@ -167,7 +189,11 @@ class SoulGoalDecompositionService {
         timestamp: new Date().toISOString(),
         responsePreview: data.response.substring(0, 300),
         containsJSON: data.response.includes('{'),
-        containsMarkdown: data.response.includes('```')
+        containsMarkdown: data.response.includes('```'),
+        // PHASE 4: Log deployment metadata from response
+        deploymentVersion: data.deploymentVersion || 'unknown',
+        deploymentTimestamp: data.deploymentTimestamp || 'unknown',
+        actualModelUsed: data.modelUsed || 'unknown'
       });
 
       // STEP 4: Parse and validate AI response
