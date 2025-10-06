@@ -609,19 +609,59 @@ FINANCIAL PATTERNS:
       category
     });
 
+    // 🔬 DIAGNOSTIC LOGGING: Full AI Response
+    console.log('📝 RAW AI RESPONSE (first 2000 chars):', aiResponse.substring(0, 2000));
+    console.log('📝 RAW AI RESPONSE (last 500 chars):', aiResponse.substring(Math.max(0, aiResponse.length - 500)));
+    console.log('🔍 RESPONSE STRUCTURE ANALYSIS:', {
+      hasOpenBrace: aiResponse.includes('{'),
+      hasCloseBrace: aiResponse.includes('}'),
+      hasMarkdownFence: aiResponse.includes('```'),
+      firstBraceIndex: aiResponse.indexOf('{'),
+      lastBraceIndex: aiResponse.lastIndexOf('}'),
+      totalLength: aiResponse.length
+    });
+
     // Use robust extraction utility
     const extractionResult = extractAndParseJSON(aiResponse, 'Soul Goal Decomposition');
     
     if (!extractionResult.success || !extractionResult.data) {
       console.error('❌ JSON EXTRACTION FAILED:', {
         error: extractionResult.error,
-        responsePreview: aiResponse.substring(0, 500)
+        responsePreview: aiResponse.substring(0, 500),
+        extractedJson: extractionResult.extractedJson,
+        originalResponse: extractionResult.originalResponse?.substring(0, 1000)
       });
       
       throw new Error(`Failed to parse AI response: ${extractionResult.error}`);
     }
 
     const parsed = extractionResult.data;
+
+    // 🔬 DIAGNOSTIC LOGGING: Parsed Structure
+    console.log('✅ JSON EXTRACTION SUCCESS:', {
+      extractedJsonLength: extractionResult.extractedJson?.length,
+      parsedType: Array.isArray(parsed) ? 'array' : typeof parsed,
+      parsedKeys: typeof parsed === 'object' ? Object.keys(parsed) : 'N/A'
+    });
+    
+    console.log('📊 PARSED DATA STRUCTURE:', {
+      hasMilestones: !!parsed.milestones,
+      milestonesType: Array.isArray(parsed.milestones) ? 'array' : typeof parsed.milestones,
+      milestonesCount: parsed.milestones?.length || 0,
+      hasTasks: !!parsed.tasks,
+      tasksType: Array.isArray(parsed.tasks) ? 'array' : typeof parsed.tasks,
+      tasksCount: parsed.tasks?.length || 0,
+      hasInsights: !!parsed.blueprint_insights,
+      allKeys: Object.keys(parsed)
+    });
+
+    // 🔬 DIAGNOSTIC LOGGING: First milestone/task samples
+    if (parsed.milestones?.[0]) {
+      console.log('📌 FIRST MILESTONE SAMPLE:', JSON.stringify(parsed.milestones[0], null, 2));
+    }
+    if (parsed.tasks?.[0]) {
+      console.log('✅ FIRST TASK SAMPLE:', JSON.stringify(parsed.tasks[0], null, 2));
+    }
 
     // DEFENSIVE TYPE COERCION: Ensure arrays are arrays
     if (parsed.milestones) {
