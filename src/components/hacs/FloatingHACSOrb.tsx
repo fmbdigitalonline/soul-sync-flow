@@ -804,24 +804,25 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
       {/* Steward Introduction Modal */}
       <Dialog open={introductionState.isActive} onOpenChange={() => {}}>
-        <DialogContent className={cn(
-          "max-w-md p-0 gap-0 border-border/50 flex flex-col",
-          isMobile && "max-w-[95vw] max-h-[calc(90vh-env(safe-area-inset-bottom))]"
-        )}>
-          <div className="relative flex flex-col max-h-[calc(90vh-env(safe-area-inset-bottom))]">
-            <ScrollArea 
-              className={cn(
-                "w-full flex-1 touch-pan-y overscroll-contain",
-                isMobile ? "min-h-[400px]" : ""
-              )}
-              style={{ WebkitOverflowScrolling: 'touch' }}
+        <DialogContent 
+          className={cn(
+            "p-0 gap-0 border-border/50 flex flex-col",
+            isMobile ? "max-w-[95vw]" : "max-w-md"
+          )}
+          style={{
+            maxHeight: isMobile ? 'calc(85vh - env(safe-area-inset-bottom))' : '85vh'
+          }}
+        >
+          <ScrollArea 
+            className="flex-1 touch-pan-y overscroll-contain"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className={cn("text-center pb-32", isMobile ? "p-4 pt-6" : "p-6")}
             >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className={cn("text-center pb-6", isMobile ? "p-4 pt-6" : "p-6")}
-              >
               {/* Soul Alchemist Orb - Speaking State */}
               <div className="flex justify-center mb-6">
                 <IntelligentSoulOrb
@@ -862,7 +863,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
               {/* Step indicator */}
               {introductionState.steps && introductionState.steps.length > 1 && (
-                <div className="flex justify-center mt-4 space-x-2 pb-4">
+                <div className="flex justify-center mt-6 mb-4 space-x-2">
                   {introductionState.steps.map((_, index) => (
                     <div
                       key={index}
@@ -880,11 +881,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             </motion.div>
           </ScrollArea>
 
-          {/* Continue button - Sticky at bottom */}
+          {/* Continue button - Fixed at bottom */}
           {introductionState.steps && 
            introductionState.steps[introductionState.currentStep] && 
            introductionState.steps[introductionState.currentStep].showContinue && (
-            <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/50 p-4">
+            <div className="shrink-0 bg-background border-t border-border/50 p-4">
               <button
                 onClick={async () => {
                   // Handle final step - trigger report generation and immediately open HACSInsight display
@@ -906,7 +907,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               </button>
             </div>
           )}
-          </div>
         </DialogContent>
       </Dialog>
 
