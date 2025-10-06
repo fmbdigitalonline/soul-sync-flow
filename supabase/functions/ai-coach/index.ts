@@ -1,4 +1,4 @@
-
+// Version: 2.1.0 - GPT-4.1-mini model fix with proper parameter handling
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
