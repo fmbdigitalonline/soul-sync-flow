@@ -1,14 +1,14 @@
 // ==============================================
 // AI COACH EDGE FUNCTION - VERSION 2.2.0
-// DEPLOYMENT: 2025-10-06T15:30:00Z
+// DEPLOYMENT: 2025-10-06T15:45:00Z
 // MODEL: gpt-4.1-mini-2025-04-14 (QUOTA-SAFE)
-// CHANGES: Aggressive redeployment + version verification
+// CHANGES: Forced redeployment to activate GET handler
 // ==============================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const DEPLOYMENT_VERSION = "2.2.0";
-const DEPLOYMENT_TIMESTAMP = "2025-10-06T15:30:00Z";
+const DEPLOYMENT_TIMESTAMP = "2025-10-06T15:45:00Z"; // Updated to force redeployment
 const DEPLOYMENT_MODEL = "gpt-4.1-mini-2025-04-14";
 
 const corsHeaders = {
