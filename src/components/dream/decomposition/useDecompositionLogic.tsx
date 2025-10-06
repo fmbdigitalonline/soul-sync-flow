@@ -319,10 +319,19 @@ export const useDecompositionLogic = ({
           setStageProcessing(false);
         }
       } catch (stageError) {
-        console.error(`❌ STAGE ERROR - ${stage.title}:`, {
-          error: stageError instanceof Error ? stageError.message : 'Unknown error',
+        console.error(`❌ STAGE EXECUTION ERROR - ${stage.title}:`, {
+          errorType: stageError instanceof Error ? stageError.constructor.name : 'Unknown',
+          errorMessage: stageError instanceof Error ? stageError.message : String(stageError),
+          errorStack: stageError instanceof Error ? stageError.stack : undefined,
           stageIndex: currentStageIndex,
-          timestamp: Date.now()
+          stageDuration: stage.duration,
+          timestamp: new Date().toISOString(),
+          context: {
+            dreamTitle,
+            dreamCategory,
+            dreamTimeframe,
+            hasBlueprintData: !!blueprintData
+          }
         });
         
         const errorMessage = stageError instanceof Error ? stageError.message : 'Stage execution failed';
@@ -332,7 +341,8 @@ export const useDecompositionLogic = ({
         toast({
           title: "Dream Creation Error",
           description: errorMessage,
-          variant: "destructive"
+          variant: "destructive",
+          duration: 8000
         });
       }
     }, stage.duration);

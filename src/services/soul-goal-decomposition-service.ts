@@ -107,6 +107,13 @@ class SoulGoalDecompositionService {
       });
 
       // STEP 3: Call AI Coach with enhanced prompt
+      console.log('📡 INVOKING AI COACH:', {
+        promptLength: comprehensivePrompt.length,
+        context: 'razor_aligned_goal_decomposition',
+        contextDepth: 'deep',
+        timestamp: new Date().toISOString()
+      });
+
       const { data, error } = await supabase.functions.invoke('ai-coach', {
         body: {
           message: comprehensivePrompt,
@@ -117,16 +124,47 @@ class SoulGoalDecompositionService {
       });
 
       if (error) {
-        console.error('❌ AI Coach function error:', error);
-        throw new Error(`AI Coach service error: ${error.message}`);
+        console.error('❌ AI COACH ERROR - Detailed breakdown:', {
+          errorMessage: error.message,
+          errorName: error.name,
+          errorContext: error.context,
+          timestamp: new Date().toISOString(),
+          requestParams: {
+            titleLength: title.length,
+            descriptionLength: description.length,
+            timeframe,
+            category
+          }
+        });
+
+        // Parse error response for structured error codes
+        let userFriendlyMessage = 'Failed to generate your personalized goal breakdown.';
+        
+        if (error.message?.includes('capacity') || error.message?.includes('quota') || error.message?.includes('429')) {
+          userFriendlyMessage = '🔄 Our AI service is currently at capacity. Please try again in a few moments. Your data is safe!';
+        } else if (error.message?.includes('timeout') || error.message?.includes('504') || error.message?.includes('took too long')) {
+          userFriendlyMessage = '⏱️ The request took too long. Try simplifying your dream description.';
+        } else if (error.message?.includes('auth') || error.message?.includes('Authentication') || error.message?.includes('401')) {
+          userFriendlyMessage = '🔐 Authentication issue detected. Please try logging out and back in.';
+        }
+        
+        throw new Error(userFriendlyMessage);
       }
 
       if (!data?.response) {
-        console.error('❌ No response from AI Coach service');
-        throw new Error('No response from AI Coach service');
+        console.error('❌ EMPTY AI RESPONSE:', {
+          hasData: !!data,
+          dataKeys: data ? Object.keys(data) : [],
+          timestamp: new Date().toISOString()
+        });
+        throw new Error('AI service returned an empty response. Please try again.');
       }
 
-      console.log('✅ AI RESPONSE RECEIVED:', { length: data.response.length });
+      console.log('✅ AI RESPONSE RECEIVED:', { 
+        length: data.response.length,
+        hasErrorCode: !!data.errorCode,
+        timestamp: new Date().toISOString()
+      });
 
       // STEP 4: Parse and validate AI response
       const parsedGoal = await this.parseAIResponseWithValidation(data.response, title, category);

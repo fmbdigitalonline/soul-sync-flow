@@ -196,14 +196,46 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
     );
 
   } catch (error) {
-    console.error('Error in AI Coach function:', error);
-    
+    console.error('❌ AI Coach Edge Function Error:', {
+      errorType: error.constructor.name,
+      message: error.message,
+      timestamp: new Date().toISOString(),
+      requestContext: {
+        agentType,
+        contextDepth,
+        messageLength: message?.length,
+        userId: userId?.substring(0, 8) + '...'
+      }
+    });
+
+    // Determine appropriate status code and user-friendly message
+    let statusCode = 500;
+    let userMessage = 'An unexpected error occurred while processing your request.';
+    let errorCode = 'UNKNOWN_ERROR';
+
+    if (error.message?.includes('quota') || error.message?.includes('429')) {
+      statusCode = 429;
+      userMessage = 'AI service is temporarily at capacity. Please try again in a few moments.';
+      errorCode = 'QUOTA_EXCEEDED';
+    } else if (error.message?.includes('API key') || error.message?.includes('401')) {
+      statusCode = 401;
+      userMessage = 'Authentication error with AI service. Please contact support.';
+      errorCode = 'AUTH_ERROR';
+    } else if (error.message?.includes('timeout')) {
+      statusCode = 504;
+      userMessage = 'Request took too long to process. Please try with a shorter input.';
+      errorCode = 'TIMEOUT';
+    }
+
     return new Response(
-      JSON.stringify({
-        error: error.message || 'Internal server error',
+      JSON.stringify({ 
+        error: userMessage,
+        errorCode,
+        details: error.message,
+        timestamp: new Date().toISOString()
       }),
       {
-        status: 500,
+        status: statusCode,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
