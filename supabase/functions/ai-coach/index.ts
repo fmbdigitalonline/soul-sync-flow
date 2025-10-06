@@ -22,6 +22,7 @@ serve(async (req) => {
       language = 'en',
       temperature,
       maxTokens,
+      context,
       contextDepth = 'normal', // New parameter for model selection
       userDisplayName = 'friend'
     } = await req.json();
@@ -34,6 +35,7 @@ serve(async (req) => {
       includeBlueprint,
       hasCustomPrompt: !!systemPrompt,
       language,
+      context,
       contextDepth,
       acsTemperature: temperature,
       acsMaxTokens: maxTokens
@@ -119,27 +121,49 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
       }
     };
 
-    // Dynamic parameter selection based on model
-    const finalTemperature = temperature !== undefined ? temperature : (selectedModel === 'gpt-4o' ? 0.7 : 0.5);
-    const finalMaxTokens = maxTokens !== undefined ? maxTokens : (selectedModel === 'gpt-4o' ? 1500 : 1000);
+    // GPT-4.1-mini does NOT support temperature parameter - always undefined
+    // Ignore any client-passed temperature/maxTokens for GPT-4.1-mini compatibility
+    const finalTemperature = undefined;
+    const finalMaxTokens = maxTokens !== undefined 
+      ? maxTokens 
+      : (context === 'razor_aligned_goal_decomposition' ? 3000 : 2000);
 
-  // Set context and max tokens
-  const context = req_body.context || 'general';
-  const contextDepth = req_body.contextDepth || 'standard';
-  
-  // Set final temperature and maxTokens with defaults
-  // Increase token limit for complex decomposition tasks
-  const finalTemperature = undefined; // GPT-4.1 doesn't support temperature
-  const finalMaxTokens = maxTokens !== undefined 
-    ? maxTokens 
-    : (context === 'razor_aligned_goal_decomposition' ? 3000 : 2000);
+    console.log('🎯 FINAL MODEL CONFIGURATION:', {
+      model: selectedModel,
+      temperature: finalTemperature,
+      maxTokens: finalMaxTokens,
+      context,
+      contextDepth,
+      agentType,
+      includeBlueprint,
+      clientRequestedTemp: temperature,
+      clientRequestedTokens: maxTokens
+    });
 
-  console.log('🎯 Using layered model strategy:', {
-    model: selectedModel,
-    temperature: finalTemperature,
-    maxTokens: finalMaxTokens,
-    reasoning: `${agentType} + ${contextDepth} + blueprint:${includeBlueprint}`
-  });
+    // Build request payload
+    const requestPayload = {
+      model: selectedModel,
+      messages: [
+        {
+          role: 'system',
+          content: getSystemPrompt(agentType || 'guide', language)
+        },
+        {
+          role: 'user',
+          content: message
+        }
+      ],
+      max_completion_tokens: finalMaxTokens,
+    };
+
+    console.log('📤 SENDING TO OPENAI:', {
+      model: requestPayload.model,
+      max_completion_tokens: requestPayload.max_completion_tokens,
+      temperature: requestPayload.temperature,
+      systemPromptLength: requestPayload.messages[0].content.length,
+      userMessageLength: requestPayload.messages[1].content.length,
+      timestamp: new Date().toISOString()
+    });
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -147,21 +171,7 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
         'Authorization': `Bearer ${openAIKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: [
-          {
-            role: 'system',
-            content: getSystemPrompt(agentType || 'guide', language)
-          },
-          {
-            role: 'user',
-            content: message
-          }
-        ],
-        // GPT-4.1 does not support temperature parameter
-        max_completion_tokens: finalMaxTokens,
-      }),
+      body: JSON.stringify(requestPayload),
     });
 
     if (!response.ok) {
