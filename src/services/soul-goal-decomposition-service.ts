@@ -475,6 +475,25 @@ FINANCIAL PATTERNS:
 
       const parsed = JSON.parse(jsonMatch[0]);
 
+      // DEFENSIVE TYPE COERCION: Ensure arrays are arrays
+      if (parsed.milestones) {
+        parsed.milestones.forEach((m: any) => {
+          if (m.completion_criteria && !Array.isArray(m.completion_criteria)) {
+            console.warn('⚠️ TYPE COERCION: completion_criteria was not an array:', m.completion_criteria);
+            m.completion_criteria = [String(m.completion_criteria)];
+          }
+        });
+      }
+
+      if (parsed.tasks) {
+        parsed.tasks.forEach((t: any) => {
+          if (t.prerequisites && !Array.isArray(t.prerequisites)) {
+            console.warn('⚠️ TYPE COERCION: prerequisites was not an array:', t.prerequisites);
+            t.prerequisites = [String(t.prerequisites)];
+          }
+        });
+      }
+
       // VALIDATION: Check for generic milestones
       const genericTerms = [
         'Discovery & Vision',
@@ -511,7 +530,9 @@ FINANCIAL PATTERNS:
         description: m.description || '',
         target_date: m.target_date || new Date().toISOString().split('T')[0],
         completed: false,
-        completion_criteria: m.completion_criteria || [],
+        completion_criteria: Array.isArray(m.completion_criteria) 
+          ? m.completion_criteria 
+          : (m.completion_criteria ? [String(m.completion_criteria)] : []),
         blueprint_alignment: m.blueprint_alignment || {}
       }));
 
@@ -526,7 +547,9 @@ FINANCIAL PATTERNS:
         category: t.category || 'execution',
         optimal_timing: t.optimal_timing,
         blueprint_reasoning: t.blueprint_reasoning,
-        prerequisites: t.prerequisites || []
+        prerequisites: Array.isArray(t.prerequisites) 
+          ? t.prerequisites 
+          : (t.prerequisites ? [String(t.prerequisites)] : [])
       }));
 
       console.log('✅ PARSING COMPLETED:', {
