@@ -7,6 +7,16 @@ function detectTechnicalDetailRequest(message: string): boolean {
   return technicalKeywords.test(message);
 }
 
+function getConversationFlowGuidance(conversationState: any): string {
+  if (conversationState.shouldAskQuestion) {
+    return 'The user has explicitly requested suggestions or asked for more information. You may provide thoughtful guidance and ask follow-up questions.';
+  }
+  if (conversationState.userSatisfied || conversationState.closureSignalDetected) {
+    return 'The user appears satisfied or has indicated closure. Respond warmly with a gentle satisfaction check like "Does this help clarify things for you?" or "I hope this gives you the clarity you were looking for." Do NOT add suggestions or additional questions.';
+  }
+  return 'Provide a direct, helpful response and end with a simple satisfaction check like "Does this help clarify what you were looking for?" or "Is there anything about this you\'d like me to explore further?" Do NOT automatically provide suggestions unless explicitly requested.';
+}
+
 // Helper function to convert MBTI types to natural descriptions
 function getThinkingStyleDescription(mbtiType: string): string {
   const descriptions: Record<string, string> = {
@@ -1007,37 +1017,37 @@ serve(async (req) => {
     let systemPrompt = ''
     if (useOracleMode && personalityContext) {
       
-      // Generate sections based on available data
-      const factsSection = structuredFacts.length > 0 ? `
+      // Helper function to format facts by facet
+      const formatFactsByFacet = (facts: any[]) => {
+        const factsByFacet = facts.reduce((groups, fact) => {
+          const facet = fact.facet || 'general';
+          if (!groups[facet]) groups[facet] = [];
+          groups[facet].push(fact);
+          return groups;
+        }, {} as Record<string, any[]>);
+        
+        const facetOrder = ['numerology', 'astrology', 'mbti', 'human_design', 'big_five'];
+        const orderedFacets = facetOrder.filter(f => factsByFacet[f]).concat(
+          Object.keys(factsByFacet).filter(f => !facetOrder.includes(f))
+        );
+        
+        return orderedFacets.map(facet => {
+          const facetTitle = facet.replace(/_/g, ' ').toUpperCase();
+          const facetFacts = factsByFacet[facet];
+          const factsList = facetFacts.map(fact => {
+            const value = fact.value_json?.value || fact.value_json;
+            const label = fact.value_json?.label || fact.key.replace(/_/g, ' ');
+            return `  • **${label}**: ${typeof value === 'object' ? JSON.stringify(value) : value}`;
+          }).join('\n');
+          
+          return `**${facetTitle}** (${facetFacts.length} facts):\n${factsList}`;
+        }).join('\n\n');
+      };
 
-COMPREHENSIVE BLUEPRINT FOR ${personalityContext.name.toUpperCase()} (${structuredFacts.length} Facts Available):
-${(() => {
-  // Group facts by facet for organized presentation
-  const factsByFacet = structuredFacts.reduce((groups, fact) => {
-    const facet = fact.facet || 'general';
-    if (!groups[facet]) groups[facet] = [];
-    groups[facet].push(fact);
-    return groups;
-  }, {});
-  
-  // Order facets by importance for blueprint reading
-  const facetOrder = ['numerology', 'astrology', 'mbti', 'human_design', 'big_five'];
-  const orderedFacets = facetOrder.filter(f => factsByFacet[f]).concat(
-    Object.keys(factsByFacet).filter(f => !facetOrder.includes(f))
-  );
-  
-  return orderedFacets.map(facet => {
-    const facetTitle = facet.replace(/_/g, ' ').toUpperCase();
-    const facts = factsByFacet[facet];
-    const factsList = facts.map(fact => {
-      const value = fact.value_json?.value || fact.value_json;
-      const label = fact.value_json?.label || fact.key.replace(/_/g, ' ');
-      return `  • **${label}**: ${typeof value === 'object' ? JSON.stringify(value) : value}`;
-    }).join('\n');
-    
-    return `**${facetTitle}** (${facts.length} facts):\n${factsList}`;
-  }).join('\n\n');
-})()}` : '';
+      // Generate sections based on available data
+      const factsSection = structuredFacts.length > 0 
+        ? `\n\nCOMPREHENSIVE BLUEPRINT FOR ${personalityContext.name.toUpperCase()} (${structuredFacts.length} Facts Available):\n${formatFactsByFacet(structuredFacts)}` 
+        : '';
 
       const narrativeSection = semanticChunks.length > 0 ? `
 
@@ -1119,12 +1129,7 @@ RESPONSE GUIDELINES:
 2. For factual queries: Provide precise data first, then brief context
 3. For interpretive queries: Focus on insights and guidance
 4. For mixed queries: Balance facts with meaningful interpretation
-5. CONVERSATION FLOW INTELLIGENCE: ${conversationState.shouldAskQuestion ? 
-  'The user has explicitly requested suggestions or asked for more information. You may provide thoughtful guidance and ask follow-up questions.' : 
-  conversationState.userSatisfied || conversationState.closureSignalDetected ? 
-    'The user appears satisfied or has indicated closure. Respond warmly with a gentle satisfaction check like "Does this help clarify things for you?" or "I hope this gives you the clarity you were looking for." Do NOT add suggestions or additional questions.' :
-    'Provide a direct, helpful response and end with a simple satisfaction check like "Does this help clarify what you were looking for?" or "Is there anything about this you\'d like me to explore further?" Do NOT automatically provide suggestions unless explicitly requested.'
-}
+5. CONVERSATION FLOW INTELLIGENCE: ${getConversationFlowGuidance(conversationState)}
 
 Remember: You're ${userName}'s perceptive AI companion who has access to their detailed blueprint and can provide both specific facts and meaningful guidance through conversation.`;
       }
