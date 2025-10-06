@@ -799,11 +799,11 @@ FINANCIAL PATTERNS:
           target_completion: goal.target_completion,
           milestones: goal.milestones,
           tasks: goal.tasks,
-          blueprint_insights: goal.blueprint_insights,
-          personalization_notes: goal.personalization_notes,
           hermetic_alignment_context: {
             data_source: personalityContext.dataSource,
             depth: personalityContext.depth,
+            blueprint_insights: goal.blueprint_insights,
+            personalization_notes: goal.personalization_notes,
             created_at: new Date().toISOString()
           },
           personalization_depth_score: personalityContext.depth
