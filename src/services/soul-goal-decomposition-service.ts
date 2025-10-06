@@ -405,6 +405,87 @@ class SoulGoalDecompositionService {
   }
 
   // ============================================
+  // DYNAMIC MILESTONE STRUCTURE CALCULATOR
+  // ============================================
+
+  private parseTimeframeToMonths(timeframe: string): number {
+    const lower = timeframe.toLowerCase();
+    
+    // Extract number from timeframe
+    const numberMatch = lower.match(/(\d+)/);
+    const number = numberMatch ? parseInt(numberMatch[1]) : 3;
+    
+    if (lower.includes('week')) {
+      return Math.ceil(number / 4);
+    }
+    if (lower.includes('month')) {
+      return number;
+    }
+    if (lower.includes('year')) {
+      return number * 12;
+    }
+    
+    // Default to 3 months if unclear
+    return 3;
+  }
+
+  private calculateOptimalMilestoneStructure(
+    title: string,
+    description: string,
+    timeframe: string,
+    category: string
+  ): {
+    milestoneCount: number;
+    tasksPerMilestone: number;
+    timeDistribution: string[];
+    reasoning: string;
+  } {
+    // Parse timeframe to months
+    const months = this.parseTimeframeToMonths(timeframe);
+    
+    // Base calculation: 1 milestone per 1-2 months, minimum 3
+    let milestoneCount = Math.max(3, Math.ceil(months / 1.5));
+    
+    // Adjust based on category complexity
+    const categoryComplexity: Record<string, number> = {
+      'personal_growth': 1.2,
+      'career': 1.3,
+      'financial': 1.4,
+      'health': 1.0,
+      'relationships': 1.1,
+      'business': 1.5,
+      'creative': 1.2
+    };
+    
+    const complexityMultiplier = categoryComplexity[category.toLowerCase()] || 1.0;
+    milestoneCount = Math.ceil(milestoneCount * complexityMultiplier);
+    
+    // Cap between 3-10 milestones for realistic tracking
+    milestoneCount = Math.min(10, Math.max(3, milestoneCount));
+    
+    // Tasks per milestone: fewer milestones = more tasks each
+    const tasksPerMilestone = milestoneCount <= 4 ? 5 : 4;
+    
+    // Calculate realistic time distribution
+    const timeDistribution: string[] = [];
+    const today = new Date();
+    const monthsPerMilestone = months / milestoneCount;
+    
+    for (let i = 0; i < milestoneCount; i++) {
+      const targetDate = new Date(today);
+      targetDate.setMonth(today.getMonth() + Math.ceil((i + 1) * monthsPerMilestone));
+      timeDistribution.push(targetDate.toISOString().split('T')[0]);
+    }
+    
+    return {
+      milestoneCount,
+      tasksPerMilestone,
+      timeDistribution,
+      reasoning: `${milestoneCount} milestones over ${months} months (${category} domain, ${complexityMultiplier}x complexity)`
+    };
+  }
+
+  // ============================================
   // AI PROMPT CONSTRUCTION
   // ============================================
 
@@ -418,6 +499,9 @@ class SoulGoalDecompositionService {
   ): string => {
     const { dataSource, hermetic2, hermetic1Report, blueprintSections } = personalityContext;
 
+    // Calculate optimal structure based on goal reality
+    const structure = this.calculateOptimalMilestoneStructure(title, description, timeframe, category);
+
     let personalitySection = '';
 
     // Build personality context based on available data
@@ -429,7 +513,7 @@ class SoulGoalDecompositionService {
       personalitySection = this.buildRichBlueprintContext(blueprintSections);
     }
 
-    return `You are an expert journey architect creating a SPECIFIC, HIGHLY PERSONALIZED plan.
+    return `You are an expert journey architect creating a REALITY-BASED, HIGHLY PERSONALIZED plan.
 
 🎯 DREAM DETAILS:
 - Title: "${title}"
@@ -442,15 +526,38 @@ ${personalitySection}
 
 🎯 YOUR TASK:
 
-Create a RAZOR-ALIGNED journey plan with 5-6 milestones that are DIRECTLY RELATED to "${title}".
+Create a REALITY-ALIGNED journey plan with **EXACTLY ${structure.milestoneCount} MILESTONES** and **${structure.tasksPerMilestone} TASKS PER MILESTONE**.
 
-**CRITICAL: DO NOT USE GENERIC TEMPLATES**
+**WHY THIS STRUCTURE:**
+${structure.reasoning}
 
-Every milestone and task must be SPECIFIC to the dream domain. For example:
-- If dream is "10000 euro per maand verdienen met 1 app":
-  ✅ Milestone 1: "Validate App Idea & Dutch Market Fit"
-  ✅ Task: "Research top 20 revenue-generating apps in Dutch market"
-  ❌ NOT "Discovery & Vision" or "Conduct research"
+**🚨 CRITICAL MILESTONE REQUIREMENTS (NON-NEGOTIABLE):**
+
+1. **FINISH LINE PRINCIPLE**: Each milestone MUST be a REAL, MEASURABLE achievement that marks genuine progress. NOT a phase or theme.
+   ✅ GOOD: "Generate €1,000 monthly revenue from app"
+   ❌ BAD: "Revenue Growth Phase"
+
+2. **TIMELINE REALISM**: Milestones MUST be distributed realistically across ${timeframe}.
+   - Milestone 1 target: ${structure.timeDistribution[0]}
+   - Milestone 2 target: ${structure.timeDistribution[1]}
+   ${structure.timeDistribution.slice(2).map((date, i) => `   - Milestone ${i + 3} target: ${date}`).join('\n')}
+
+3. **SEQUENTIAL DEPENDENCIES**: Each milestone MUST build on the previous one. You can't achieve milestone 3 without completing milestone 2.
+
+4. **DREAM REALIZATION GUARANTEE**: The FINAL milestone (milestone ${structure.milestoneCount}) MUST equal the dream being FULLY ACHIEVED.
+   - Final milestone title must indicate SUCCESS/COMPLETION of "${title}"
+   - Example: If dream is "€10,000/month", final milestone: "Consistently Earning €10,000+ Monthly from App"
+
+5. **GOAL-SPECIFIC**: MUST use keywords from "${title}" in milestone titles. NO generic terms like:
+   ❌ "Discovery & Vision"
+   ❌ "Foundation & Planning"
+   ❌ "Initial Implementation"
+   ❌ "Mastery & Integration"
+
+6. **COMPLETION CRITERIA**: Each milestone MUST have 2-3 MEASURABLE criteria that PROVE it's achieved.
+   ✅ "App has 100+ active users"
+   ✅ "Generated €500+ in revenue"
+   ❌ "Made progress on development"
 
 **PERSONALIZATION REQUIREMENTS:**
 1. Reference their execution style in task phrasing
@@ -468,42 +575,86 @@ Return ONLY the JSON object below. Do not include:
 
 Start your response with { and end with }
 
-Return as JSON:
+Return as JSON with **EXACTLY ${structure.milestoneCount} milestones** and **${structure.tasksPerMilestone} tasks per milestone**:
 {
   "milestones": [
     {
       "id": "milestone_1",
-      "title": "SPECIFIC milestone for ${title}",
-      "description": "Detailed explanation of HOW this achieves ${title}",
-      "target_date": "2025-11-06",
+      "title": "SPECIFIC FINISH LINE for ${title} (use goal keywords)",
+      "description": "What you will have ACHIEVED when this is done (not 'what you will do')",
+      "target_date": "${structure.timeDistribution[0]}",
       "completed": false,
-      "completion_criteria": ["Measurable", "specific", "criteria"],
+      "completion_criteria": [
+        "Measurable proof #1 that this is DONE",
+        "Measurable proof #2 that this is DONE"
+      ],
       "blueprint_alignment": {
-        "addresses_patterns": ["Which patterns this milestone helps with"],
-        "leverages_strengths": ["Which strengths this uses"],
-        "optimal_timing": "Based on energy patterns"
+        "addresses_patterns": ["Specific avoidance pattern this milestone helps overcome"],
+        "leverages_strengths": ["Specific cognitive/energy strength this uses"],
+        "optimal_timing": "Why this timing works for their biology"
+      }
+    },
+    {
+      "id": "milestone_2",
+      "title": "SECOND FINISH LINE for ${title} (depends on milestone 1)",
+      "description": "What you will have ACHIEVED (builds on milestone 1)",
+      "target_date": "${structure.timeDistribution[1]}",
+      "completed": false,
+      "completion_criteria": [
+        "Measurable proof #1",
+        "Measurable proof #2"
+      ],
+      "blueprint_alignment": {
+        "addresses_patterns": ["Different pattern addressed"],
+        "leverages_strengths": ["Different strength leveraged"],
+        "optimal_timing": "Why this timing"
       }
     }
+    ${structure.milestoneCount > 2 ? `// ... CONTINUE FOR ALL ${structure.milestoneCount} MILESTONES` : ''}
+    ${structure.milestoneCount > 2 ? `// FINAL MILESTONE (${structure.milestoneCount}) MUST = DREAM FULLY ACHIEVED` : ''}
   ],
   "tasks": [
     {
-      "id": "task_1",
-      "title": "Concrete actionable task for ${title}",
-      "description": "Step-by-step instructions",
+      "id": "task_1_1",
+      "title": "First concrete action for milestone 1 of ${title}",
+      "description": "Step-by-step what to do RIGHT NOW",
       "milestone_id": "milestone_1",
       "completed": false,
       "estimated_duration": "2-3 hours",
       "energy_level_required": "medium",
       "category": "execution",
-      "optimal_timing": "Best time based on patterns",
-      "blueprint_reasoning": "Why this task aligns with their nature",
-      "prerequisites": ["Previous tasks if any"]
+      "optimal_timing": "Best time based on their peaks",
+      "blueprint_reasoning": "Why this task fits their nature",
+      "prerequisites": []
+    },
+    {
+      "id": "task_1_2",
+      "title": "Second action for milestone 1",
+      "description": "What to do AFTER task_1_1",
+      "milestone_id": "milestone_1",
+      "completed": false,
+      "estimated_duration": "1-2 hours",
+      "energy_level_required": "low",
+      "category": "planning",
+      "optimal_timing": "When ready for lighter work",
+      "blueprint_reasoning": "Aligns with auxiliary function",
+      "prerequisites": ["task_1_1"]
     }
+    // ... CONTINUE FOR ${structure.tasksPerMilestone} TASKS PER MILESTONE
+    // TOTAL: ${structure.milestoneCount} milestones × ${structure.tasksPerMilestone} tasks = ${structure.milestoneCount * structure.tasksPerMilestone} tasks
   ],
   "blueprint_insights": [
-    "How this journey aligns with their unique nature"
+    "How this journey uses their Hermetic 2.0 identity constructs",
+    "How timing respects their temporal biology",
+    "How structure prevents their known avoidance patterns"
   ]
-}`;
+}
+
+**FINAL REMINDER:** 
+- Create ${structure.milestoneCount} milestones (not more, not less)
+- Each with ${structure.tasksPerMilestone} tasks
+- Final milestone = dream fully achieved
+- All milestones use keywords from "${title}"`;
   }
 
   private buildHermetic2Context = (hermetic: HermeticStructuredIntelligence): string => {
@@ -710,6 +861,43 @@ FINANCIAL PATTERNS:
     if (!milestonesReferenceGoal) {
       console.warn('⚠️ VALIDATION WARNING: Milestones may not be goal-specific');
     }
+
+    // REALITY-BASED VALIDATION: Check final milestone indicates achievement
+    const lastMilestone = parsed.milestones?.[parsed.milestones.length - 1];
+    const achievementKeywords = ['achieved', 'completed', 'earning', 'generating', 'reached', 'success', 'mastered'];
+    const finalMilestoneIndicatesSuccess = lastMilestone && 
+      achievementKeywords.some(keyword => 
+        lastMilestone.title?.toLowerCase().includes(keyword) ||
+        lastMilestone.description?.toLowerCase().includes(keyword)
+      );
+
+    if (!finalMilestoneIndicatesSuccess) {
+      console.warn('⚠️ REALITY CHECK: Final milestone may not indicate dream achievement');
+    }
+
+    // REALITY-BASED VALIDATION: Check milestones have completion criteria
+    const milestonesWithCriteria = parsed.milestones?.filter((m: any) => 
+      Array.isArray(m.completion_criteria) && m.completion_criteria.length >= 2
+    ).length || 0;
+
+    if (milestonesWithCriteria < (parsed.milestones?.length || 0) * 0.8) {
+      console.warn('⚠️ REALITY CHECK: Most milestones lack sufficient completion criteria (need 2+ each)');
+    }
+
+    // REALITY-BASED VALIDATION: Check tasks have prerequisites (shows dependencies)
+    const tasksWithPrerequisites = parsed.tasks?.filter((t: any) => 
+      Array.isArray(t.prerequisites) && t.prerequisites.length > 0
+    ).length || 0;
+
+    if (tasksWithPrerequisites < (parsed.tasks?.length || 0) * 0.3) {
+      console.warn('⚠️ REALITY CHECK: Tasks lack prerequisite dependencies (sequential flow missing)');
+    }
+
+    console.log('✅ REALITY-BASED VALIDATION:', {
+      finalMilestoneIndicatesSuccess,
+      milestonesWithCriteria: `${milestonesWithCriteria}/${parsed.milestones?.length || 0}`,
+      tasksWithPrerequisites: `${tasksWithPrerequisites}/${parsed.tasks?.length || 0}`
+    });
 
     // Ensure all required fields exist
     const validatedMilestones = (parsed.milestones || []).map((m: any, index: number) => ({
