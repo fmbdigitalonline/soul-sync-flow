@@ -1104,9 +1104,9 @@ ${getRoleForIntent(intent, userName, hermeticEducationalSections)}
 
 ${userName}'S CURRENT PROFILE (Technical Details):
 - Name: ${userName}
-- Natural thinking style: ${getThinkingStyleDescription(mbtiType)}${wantsTechnicalDetails ? ` (MBTI: ${mbtiType})` : ''}
-- Energy approach: ${getEnergyDescription(hdType)}${wantsTechnicalDetails ? ` (Human Design: ${hdType})` : ''}
-- Archetypal influence: ${getArchetypalDescription(sunSign)}${wantsTechnicalDetails ? ` (Sun Sign: ${sunSign})` : ''}
+- Natural thinking style: ${getThinkingStyleDescription(mbtiType)}${wantsTechnicalDetails ? ' (MBTI: ' + mbtiType + ')' : ''}
+- Energy approach: ${getEnergyDescription(hdType)}${wantsTechnicalDetails ? ' (Human Design: ' + hdType + ')' : ''}
+- Archetypal influence: ${getArchetypalDescription(sunSign)}${wantsTechnicalDetails ? ' (Sun Sign: ' + sunSign + ')' : ''}
 - Intelligence Level: ${intelligenceLevel}/100${factsSection}${narrativeSection}
 
 COMMUNICATION GUIDELINES:
