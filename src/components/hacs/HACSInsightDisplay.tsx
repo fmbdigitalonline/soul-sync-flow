@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Lightbulb, 
   TrendingUp, 
@@ -18,6 +20,7 @@ import {
 import { HACSInsight } from '@/hooks/use-hacs-insights';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { interpolateTranslation } from '@/utils/translation-utils';
+import { cn } from '@/lib/utils';
 
 interface HACSInsightDisplayProps {
   insight: HACSInsight;
@@ -85,26 +88,28 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
     return colors[module] || 'text-primary';
   };
 
-  const positionClasses = 
-    position === 'below-orb-center'
-      ? 'fixed top-32 sm:top-36 lg:top-52 left-1/2 -translate-x-1/2 z-40'
-      : position === 'bottom-right' 
-        ? 'fixed bottom-4 left-4 sm:left-auto sm:right-6 sm:bottom-20 z-40' 
-        : 'fixed top-20 left-1/2 -translate-x-1/2 z-40';
-
   const TypeIcon = getTypeIcon(insight.type);
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.8, y: 20 }}
-        className={`${positionClasses} w-[calc(100vw-2rem)] sm:w-80 max-w-sm`}
+    <Dialog open={true} onOpenChange={() => {}}>
+      <DialogContent 
+        className={cn(
+          "p-0 gap-0 border-border/50 flex flex-col",
+          "max-w-[95vw] sm:max-w-2xl max-h-[85vh] overflow-hidden"
+        )}
       >
-        <Card className="flex flex-col shadow-lg border-l-4 border-l-primary bg-background/95 backdrop-blur-sm max-h-[calc(90vh-8rem)] overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="flex flex-col h-full"
+        >
           {/* Scrollable Content Area */}
-          <div className="flex-1 overflow-y-auto p-4 pb-2">
+          <ScrollArea 
+            className="flex-1 touch-pan-y overscroll-contain"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            <div className="p-4 pb-2">
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -206,10 +211,11 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
               </AnimatePresence>
             </div>
           )}
-          </div>
+            </div>
+          </ScrollArea>
 
           {/* Actions - Sticky at bottom */}
-          <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/50 p-4 pt-3">
+          <div className="bg-background/95 backdrop-blur-sm border-t border-border/50 p-4 pt-3">
             <div className="flex gap-2">
             {insight.type === 'steward_introduction' && insight.showContinue ? (
               <>
@@ -261,8 +267,8 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
               {t('hacs.generated')} {insight.timestamp.toLocaleTimeString()}
             </div>
           </div>
-        </Card>
-      </motion.div>
-    </AnimatePresence>
+        </motion.div>
+      </DialogContent>
+    </Dialog>
   );
 };

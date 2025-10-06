@@ -808,16 +808,20 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           "max-w-md p-0 gap-0 border-border/50 flex flex-col",
           isMobile && "max-w-[95vw] max-h-[calc(90vh-env(safe-area-inset-bottom))]"
         )}>
-          <ScrollArea className={cn(
-            "w-full touch-pan-y",
-            isMobile ? "max-h-[calc(90vh-env(safe-area-inset-bottom)-2rem)] min-h-[400px]" : "max-h-[70vh]"
-          )}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className={cn("text-center pb-20", isMobile ? "p-4 pt-6" : "p-6")}
+          <div className="relative flex flex-col max-h-[calc(90vh-env(safe-area-inset-bottom))]">
+            <ScrollArea 
+              className={cn(
+                "w-full flex-1 touch-pan-y overscroll-contain",
+                isMobile ? "min-h-[400px]" : ""
+              )}
+              style={{ WebkitOverflowScrolling: 'touch' }}
             >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className={cn("text-center pb-6", isMobile ? "p-4 pt-6" : "p-6")}
+              >
               {/* Soul Alchemist Orb - Speaking State */}
               <div className="flex justify-center mb-6">
                 <IntelligentSoulOrb
@@ -856,34 +860,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
                 </div>
               </div>
 
-              {/* Continue button */}
-              {introductionState.steps && 
-               introductionState.steps[introductionState.currentStep] && 
-               introductionState.steps[introductionState.currentStep].showContinue && (
-                <button
-                  onClick={async () => {
-                    // Handle final step - trigger report generation and immediately open HACSInsight display
-                    if (introductionState.currentStep === introductionState.steps.length - 1) {
-                      console.log('🎯 STEWARD ACTIVATION: Button clicked - triggering display immediately');
-                      setShowInsightDisplay(true);
-                      setDismissalCooldown(false); // Reset cooldown on activation
-                      await completeIntroductionWithReport();
-                    } else {
-                      continueIntroduction();
-                    }
-                  }}
-                  className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90 transition-colors font-medium min-h-[44px]"
-                >
-                  {introductionState.currentStep === introductionState.steps.length - 1 
-                    ? t('activateSteward') 
-                    : t('continue')
-                  }
-                </button>
-              )}
-
               {/* Step indicator */}
               {introductionState.steps && introductionState.steps.length > 1 && (
-                <div className="flex justify-center mt-4 space-x-2">
+                <div className="flex justify-center mt-4 space-x-2 pb-4">
                   {introductionState.steps.map((_, index) => (
                     <div
                       key={index}
@@ -900,6 +879,34 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               )}
             </motion.div>
           </ScrollArea>
+
+          {/* Continue button - Sticky at bottom */}
+          {introductionState.steps && 
+           introductionState.steps[introductionState.currentStep] && 
+           introductionState.steps[introductionState.currentStep].showContinue && (
+            <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/50 p-4">
+              <button
+                onClick={async () => {
+                  // Handle final step - trigger report generation and immediately open HACSInsight display
+                  if (introductionState.currentStep === introductionState.steps.length - 1) {
+                    console.log('🎯 STEWARD ACTIVATION: Button clicked - triggering display immediately');
+                    setShowInsightDisplay(true);
+                    setDismissalCooldown(false); // Reset cooldown on activation
+                    await completeIntroductionWithReport();
+                  } else {
+                    continueIntroduction();
+                  }
+                }}
+                className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90 transition-colors font-medium min-h-[44px]"
+              >
+                {introductionState.currentStep === introductionState.steps.length - 1 
+                  ? t('activateSteward') 
+                  : t('continue')
+                }
+              </button>
+            </div>
+          )}
+          </div>
         </DialogContent>
       </Dialog>
 

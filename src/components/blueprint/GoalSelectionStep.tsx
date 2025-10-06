@@ -103,7 +103,10 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
       )}
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4">
+      <div 
+        className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 pt-4 pb-24 min-h-0"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         <div className="space-y-6 max-w-md mx-auto">
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 space-y-6">
             {/* Primary Goal Selection */}
