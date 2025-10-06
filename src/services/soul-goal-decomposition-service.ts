@@ -679,7 +679,8 @@ Return as JSON with **EXACTLY ${structure.milestoneCount} milestones** and **${s
 - Each with ${structure.tasksPerMilestone} tasks
 - Final milestone = dream fully achieved
 - All milestones use keywords from "${title}"
-- NO COMMENTS anywhere in your JSON response`;
+- NO COMMENTS anywhere in your JSON response
+- **CRITICAL VALIDATION**: Before responding, ensure your JSON has NO double commas (,,), NO trailing commas before ] or }, and perfect syntax`;
   }
 
   private buildHermetic2Context = (hermetic: HermeticStructuredIntelligence): string => {
@@ -808,7 +809,11 @@ FINANCIAL PATTERNS:
 
     // Remove trailing commas before ] or } (common LLM JSON generation error)
     cleanedResponse = cleanedResponse.replace(/,(\s*[\]}])/g, '$1');
+    
+    // Remove double commas (another common LLM error)
+    cleanedResponse = cleanedResponse.replace(/,\s*,/g, ',');
 
+    console.log('🚨 FULL RAW AI RESPONSE FOR DEBUGGING:\n', aiResponse);
     console.log('🧹 CLEANED RESPONSE (first 1000 chars):', cleanedResponse.substring(0, 1000));
 
     // Use robust extraction utility with cleaned response
