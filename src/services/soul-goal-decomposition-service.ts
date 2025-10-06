@@ -111,7 +111,7 @@ class SoulGoalDecompositionService {
       console.log('🔍 VERIFYING AI-COACH DEPLOYMENT VERSION...');
       try {
         const versionCheck = await fetch(
-          'https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach',
+          'https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-v2',
           { method: 'GET' }
         );
         
@@ -119,7 +119,7 @@ class SoulGoalDecompositionService {
           const versionData = await versionCheck.json();
           console.log('✅ AI-COACH VERSION CHECK:', versionData);
           
-          if (versionData.version !== '2.2.0') {
+          if (versionData.version !== '2.2.0' || versionData.functionName !== 'ai-coach-v2') {
             console.warn('⚠️ OLD VERSION DETECTED:', versionData.version);
             throw new Error('🔄 System update in progress. Please try again in 30 seconds.');
           }
@@ -137,7 +137,7 @@ class SoulGoalDecompositionService {
         timestamp: new Date().toISOString()
       });
 
-      const { data, error } = await supabase.functions.invoke('ai-coach', {
+      const { data, error } = await supabase.functions.invoke('ai-coach-v2', {
         body: {
           message: comprehensivePrompt,
           context: 'razor_aligned_goal_decomposition',
