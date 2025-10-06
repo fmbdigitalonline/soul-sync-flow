@@ -787,26 +787,57 @@ FINANCIAL PATTERNS:
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Save to productivity_journey table
+      // Structure goal as JSONB object
+      const goalData = {
+        id: `goal_${Date.now()}`,
+        title: goal.title,
+        description: goal.description,
+        category: goal.category,
+        timeframe: goal.timeframe,
+        target_completion: goal.target_completion,
+        milestones: goal.milestones,
+        tasks: goal.tasks,
+        blueprint_insights: goal.blueprint_insights,
+        personalization_notes: goal.personalization_notes,
+        created_at: new Date().toISOString(),
+        status: 'active'
+      };
+
+      // Fetch existing journey or create structure for new one
+      const { data: existingJourney } = await supabase
+        .from('productivity_journey')
+        .select('current_goals, hermetic_alignment_context')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      // Safely handle existing goals array
+      const currentGoals = Array.isArray(existingJourney?.current_goals) 
+        ? existingJourney.current_goals 
+        : [];
+      const updatedGoals = [...currentGoals, goalData];
+
+      // Safely handle existing context
+      const existingContext = existingJourney?.hermetic_alignment_context;
+      const baseContext = existingContext && typeof existingContext === 'object' 
+        ? existingContext as Record<string, any>
+        : {};
+
+      // Upsert with proper JSONB structure
       const { error: journeyError } = await supabase
         .from('productivity_journey')
-        .insert({
+        .upsert({
           user_id: user.id,
-          goal_title: goal.title,
-          goal_description: goal.description,
-          category: goal.category,
-          timeframe: goal.timeframe,
-          target_completion: goal.target_completion,
-          milestones: goal.milestones,
-          tasks: goal.tasks,
+          current_goals: updatedGoals,
           hermetic_alignment_context: {
+            ...baseContext,
             data_source: personalityContext.dataSource,
             depth: personalityContext.depth,
-            blueprint_insights: goal.blueprint_insights,
-            personalization_notes: goal.personalization_notes,
-            created_at: new Date().toISOString()
+            last_goal_created: new Date().toISOString()
           },
-          personalization_depth_score: personalityContext.depth
+          personalization_depth_score: personalityContext.depth,
+          last_activity_date: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
         });
 
       if (journeyError) {
@@ -814,7 +845,7 @@ FINANCIAL PATTERNS:
         throw journeyError;
       }
 
-      console.log('✅ SAVED TO DATABASE with hermetic context');
+      console.log('✅ SAVED TO DATABASE with hermetic context:', { goalId: goalData.id });
     } catch (error) {
       console.error('❌ Database save error:', error);
       throw error;
