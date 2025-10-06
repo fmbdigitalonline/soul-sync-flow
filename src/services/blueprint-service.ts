@@ -478,7 +478,7 @@ class BlueprintService {
   }
 
   async updateBlueprintRuntimePreferences(preferences: {
-    primary_goal: string;
+    primary_goals: string[];
     support_style: number;
     time_horizon: string;
   }): Promise<{ success: boolean; error?: string }> {
@@ -512,7 +512,7 @@ class BlueprintService {
       const updatedBlueprintData = {
         ...currentBlueprintData,
         goal_stack: {
-          primary_goal: preferences.primary_goal,
+          primary_goals: preferences.primary_goals,
           support_style: preferences.support_style,
           time_horizon: preferences.time_horizon
         }

@@ -354,7 +354,7 @@ export default function Onboarding() {
 
   // Handle goal selection completion with journey tracking
   const handleGoalSelectionComplete = async (preferences: { 
-    primary_goal: string; 
+    primary_goals: string[]; 
     support_style: number; 
     time_horizon: string 
   }) => {

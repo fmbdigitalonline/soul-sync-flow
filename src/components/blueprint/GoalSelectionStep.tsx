@@ -2,14 +2,14 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { CheckCircle2, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface GoalSelectionStepProps {
   onComplete: (preferences: {
-    primary_goal: string;
+    primary_goals: string[];
     support_style: number;
     time_horizon: string;
   }) => void;
@@ -18,7 +18,7 @@ interface GoalSelectionStepProps {
 
 export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps) {
   const { t } = useLanguage();
-  const [primaryGoal, setPrimaryGoal] = useState('');
+  const [primaryGoals, setPrimaryGoals] = useState<string[]>([]);
   const [supportStyle, setSupportStyle] = useState([3]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -33,15 +33,23 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
     { id: 'spiritual_development', label: t('goals.spiritualDevelopment') }
   ];
 
+  const handleGoalToggle = (goalId: string) => {
+    setPrimaryGoals(prev => 
+      prev.includes(goalId) 
+        ? prev.filter(id => id !== goalId)
+        : [...prev, goalId]
+    );
+  };
+
   const handleSubmit = async () => {
-    if (!primaryGoal || isSubmitting) {
+    if (primaryGoals.length === 0 || isSubmitting) {
       return;
     }
 
     console.log('GoalSelectionStep: Starting submission with preferences:', {
-      primary_goal: primaryGoal,
+      primary_goals: primaryGoals,
       support_style: supportStyle[0],
-      time_horizon: 'flexible' // Default since we removed time selection
+      time_horizon: 'flexible'
     });
 
     setIsSubmitting(true);
@@ -49,9 +57,9 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
 
     try {
       await onComplete({
-        primary_goal: primaryGoal,
+        primary_goals: primaryGoals,
         support_style: supportStyle[0],
-        time_horizon: 'flexible' // Default value
+        time_horizon: 'flexible'
       });
       
       console.log('GoalSelectionStep: Submission completed successfully');
@@ -69,10 +77,12 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
     handleSubmit();
   };
 
-  const isValid = primaryGoal && !isSubmitting;
+  const isValid = primaryGoals.length > 0 && !isSubmitting;
 
-  // Get selected goal label for display
-  const selectedGoalLabel = goals.find(goal => goal.id === primaryGoal)?.label;
+  // Get selected goal labels for display
+  const selectedGoalLabels = goals
+    .filter(goal => primaryGoals.includes(goal.id))
+    .map(goal => goal.label);
 
   // Get support style description
   const getSupportStyleDescription = (level: number) => {
@@ -104,8 +114,11 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
 
       {/* Scrollable Content Area */}
       <div 
-        className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 pt-4 pb-24 min-h-0"
-        style={{ WebkitOverflowScrolling: 'touch' }}
+        className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 pt-4 pb-48 min-h-0"
+        style={{ 
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: 'max(12rem, env(safe-area-inset-bottom) + 12rem)'
+        }}
       >
         <div className="space-y-6 max-w-md mx-auto">
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 space-y-6">
@@ -114,24 +127,32 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
               <Label className="text-base font-medium text-center block">
                 {t('goals.primaryFocus')}
               </Label>
-              <RadioGroup value={primaryGoal} onValueChange={setPrimaryGoal} disabled={isSubmitting}>
-                <div className="space-y-3">
-                  {goals.map((goal) => (
-                    <div key={goal.id} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
-                      <RadioGroupItem value={goal.id} id={goal.id} className="mt-1 flex-shrink-0" />
-                      <Label 
-                        htmlFor={goal.id} 
-                        className="text-sm cursor-pointer leading-relaxed flex-1"
-                      >
-                        {goal.label}
-                      </Label>
-                      {primaryGoal === goal.id && (
-                        <CheckCircle2 className="w-4 h-4 text-soul-purple mt-1 flex-shrink-0" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </RadioGroup>
+              <div className="space-y-3">
+                {goals.map((goal) => (
+                  <div 
+                    key={goal.id} 
+                    className="flex items-start space-x-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                    onClick={() => !isSubmitting && handleGoalToggle(goal.id)}
+                  >
+                    <Checkbox
+                      id={goal.id}
+                      checked={primaryGoals.includes(goal.id)}
+                      onCheckedChange={() => handleGoalToggle(goal.id)}
+                      disabled={isSubmitting}
+                      className="mt-1 flex-shrink-0"
+                    />
+                    <Label 
+                      htmlFor={goal.id} 
+                      className="text-sm cursor-pointer leading-relaxed flex-1"
+                    >
+                      {goal.label}
+                    </Label>
+                    {primaryGoals.includes(goal.id) && (
+                      <CheckCircle2 className="w-4 h-4 text-soul-purple mt-1 flex-shrink-0" />
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Support Style */}
@@ -168,12 +189,17 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
           </div>
 
           {/* Selection Summary */}
-          {primaryGoal && (
+          {primaryGoals.length > 0 && (
             <div className="bg-white/5 rounded-lg p-4 space-y-2">
               <h4 className="text-sm font-medium text-soul-purple">{t('goals.yourSelections')}</h4>
               <div className="text-xs space-y-1">
-                <p><span className="text-white/60">{t('goals.focus')}</span> {selectedGoalLabel}</p>
-                <p><span className="text-white/60">{t('goals.guidanceLevelLabel')}</span> {supportStyle[0]}/5</p>
+                <p><span className="text-white/60">{t('goals.focus')}</span> {primaryGoals.length} {primaryGoals.length === 1 ? 'goal' : 'goals'} selected</p>
+                <ul className="list-disc list-inside pl-2 space-y-0.5">
+                  {selectedGoalLabels.map((label, index) => (
+                    <li key={index}>{label}</li>
+                  ))}
+                </ul>
+                <p className="pt-1"><span className="text-white/60">{t('goals.guidanceLevelLabel')}</span> {supportStyle[0]}/5</p>
               </div>
             </div>
           )}
