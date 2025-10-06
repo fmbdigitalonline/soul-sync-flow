@@ -45,24 +45,11 @@ serve(async (req) => {
       throw new Error(errorMessage);
     }
 
-    // Layered model selection based on context
-    const selectModel = (agentType: string, contextDepth: string, includeBlueprint: boolean) => {
-      // Core Brain Layer - deep personality integration
-      if (includeBlueprint && (contextDepth === 'deep' || agentType === 'guide')) {
-        console.log('🧠 Using Core Brain Layer: gpt-4o for personality integration');
-        return 'gpt-4o';
-      }
-      
-      // Exploration Coach Layer - emotional themes and onboarding
-      if (agentType === 'coach' && contextDepth === 'emotional') {
-        console.log('🧭 Using Exploration Coach Layer: gpt-4o for emotional themes');
-        return 'gpt-4o';
-      }
-      
-      // Default to cost-effective model for routine interactions
-      console.log('⚡ Using optimized model: gpt-4o-mini for routine interactions');
-      return 'gpt-4o-mini';
-    };
+const selectModel = (agentType: string, contextDepth: string, includeBlueprint: boolean) => {
+  // Always use gpt-4.1-mini-2025-04-14 for all requests (quota-safe)
+  console.log('🧠 Using GPT-4.1-mini-2025-04-14 for all AI coach requests');
+  return 'gpt-4.1-mini-2025-04-14';
+};
 
     const selectedModel = selectModel(agentType, contextDepth, includeBlueprint);
 
@@ -161,8 +148,8 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
             content: message
           }
         ],
-        temperature: finalTemperature,
-        max_tokens: finalMaxTokens,
+        // GPT-4.1 does not support temperature parameter
+        max_completion_tokens: finalMaxTokens,
       }),
     });
 

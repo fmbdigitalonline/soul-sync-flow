@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, model = 'gpt-4o', temperature = 0.7, max_tokens = 4000, analyst_type } = await req.json();
+    const { prompt, model = 'gpt-4.1-mini-2025-04-14', max_tokens = 4000, analyst_type } = await req.json();
     
     if (!prompt) {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), {
@@ -32,8 +32,8 @@ serve(async (req) => {
       body: JSON.stringify({
         model,
         messages: [{ role: 'user', content: prompt }],
-        temperature,
-        max_tokens,
+        // GPT-4.1 does not support temperature
+        max_completion_tokens: max_tokens,
       }),
     });
 

@@ -12,79 +12,58 @@ interface ConversationContext {
 interface ModelSelection {
   model: string;
   maxTokens: number;
-  temperature: number;
+  temperature: number | undefined;
   reasoning: string;
-  layer: 'core_brain' | 'tmg' | 'pie' | 'acs' | 'exploration_coach';
-  costTier: 'premium' | 'standard' | 'economy';
+  layer: 'core_brain' | 'tmg' | 'pie' | 'acs' | 'exploration_coach' | 'optimized';
+  costTier: 'premium' | 'standard' | 'economy' | 'low' | 'deprecated';
 }
 
 class ModelRouterService {
   private readonly MODEL_CONFIGS = {
-    // Core Brain Layer - VFP-Graph + Personality Fusion
+    // GPT-4.1-mini - Primary model for all operations
+    'gpt-4.1-mini-2025-04-14': {
+      maxTokens: 2000,
+      temperature: undefined, // Not supported by GPT-4.1
+      costPerToken: 0.000001,
+      layer: 'optimized' as const,
+      costTier: 'low' as const
+    },
+    // Legacy models (deprecated, kept for compatibility)
     'gpt-4o': {
       maxTokens: 1500,
       temperature: 0.7,
-      costPerToken: 0.00003, // Approximate
+      costPerToken: 0.00003,
       layer: 'core_brain' as const,
-      costTier: 'premium' as const
+      costTier: 'deprecated' as const
     },
     'gpt-4o-mini': {
       maxTokens: 1200,
       temperature: 0.6,
-      costPerToken: 0.000001, // Much cheaper
+      costPerToken: 0.000001,
       layer: 'core_brain' as const,
-      costTier: 'economy' as const
+      costTier: 'deprecated' as const
     },
-    // TMG + ACS Layers (keeping existing entries for compatibility)
     'o3-mini': {
       maxTokens: 1200,
       temperature: 0.6,
       costPerToken: 0.00002,
       layer: 'core_brain' as const,
-      costTier: 'standard' as const
+      costTier: 'deprecated' as const
     },
-    // PIE Layer Alternative
     'gpt-4.1-mini': {
       maxTokens: 800,
       temperature: 0.4,
       costPerToken: 0.000008,
       layer: 'pie' as const,
-      costTier: 'economy' as const
+      costTier: 'deprecated' as const
     }
   };
 
   selectModel(context: ConversationContext): ModelSelection {
-    console.log('🎯 Model Router: Analyzing context:', context);
+    console.log('🎯 Model Router: Using GPT-4.1-mini for all requests:', context);
 
-    // Only use premium gpt-4o for truly critical scenarios
-    if (this.requiresPremiumModel(context)) {
-      return this.buildSelection('gpt-4o', 'Critical complexity requires premium model');
-    }
-
-    // Core Brain Layer - Use gpt-4o-mini for most cases
-    if (this.requiresCoreLayer(context)) {
-      return this.buildSelection('gpt-4o-mini', 'Core brain layer with cost optimization');
-    }
-
-    // PIE Layer - Use cost-effective models
-    if (this.requiresPIELayer(context)) {
-      const model = context.importance > 9 ? 'gpt-4o' : 'gpt-4o-mini';
-      return this.buildSelection(model, 'PIE layer with cost optimization');
-    }
-
-    // Exploration Coach Layer - Use gpt-4o-mini primarily
-    if (this.requiresExplorationLayer(context)) {
-      const model = context.sessionType === 'crisis' ? 'gpt-4o' : 'gpt-4o-mini';
-      return this.buildSelection(model, 'Exploration coaching with cost optimization');
-    }
-
-    // TMG Layer - Always use economy tier
-    if (this.requiresTMGLayer(context)) {
-      return this.buildSelection('gpt-4o-mini', 'Memory operations with cost optimization');
-    }
-
-    // ACS Layer - Default to economy tier
-    return this.buildSelection('gpt-4o-mini', 'Cost-optimized default interaction');
+    // Always use gpt-4.1-mini-2025-04-14 (quota-safe model)
+    return this.buildSelection('gpt-4.1-mini-2025-04-14', 'Using quota-safe GPT-4.1-mini model');
   }
 
   private requiresPremiumModel(context: ConversationContext): boolean {
@@ -136,19 +115,11 @@ class ModelRouterService {
     };
   }
 
-  // Escalation logic for quality failures
   escalateModel(currentModel: string, reason: 'user_feedback' | 'low_quality' | 'timeout'): ModelSelection {
-    console.log(`🔄 Escalating from ${currentModel} due to: ${reason}`);
-
-    const escalationMap: Record<string, string> = {
-      'gpt-4o-mini': 'gpt-4o',
-      'gpt-4.1-mini': 'gpt-4o',
-      'o3-mini': 'gpt-4o',
-      'gpt-4o': 'gpt-4o' // Already at top tier
-    };
-
-    const escalatedModel = escalationMap[currentModel] || 'gpt-4o';
-    return this.buildSelection(escalatedModel, `Escalated from ${currentModel} due to ${reason}`);
+    console.log(`🔄 Escalation requested but staying with gpt-4.1-mini-2025-04-14 due to: ${reason}`);
+    
+    // Always use gpt-4.1-mini-2025-04-14 (no escalation needed)
+    return this.buildSelection('gpt-4.1-mini-2025-04-14', `Staying with quota-safe model despite ${reason}`);
   }
 
   // Cost optimization suggestions
@@ -159,14 +130,14 @@ class ModelRouterService {
       const config = this.MODEL_CONFIGS[usage.model as keyof typeof this.MODEL_CONFIGS];
       if (!config) continue;
 
-      // High frequency, expensive model
-      if (usage.frequency > 100 && config.costTier === 'premium') {
-        suggestions.push(`Consider using gpt-4o-mini for routine ${usage.model} calls`);
+      // High frequency usage - suggest optimization
+      if (usage.frequency > 100) {
+        suggestions.push(`High frequency detected for ${usage.model} - consider reviewing usage patterns`);
       }
 
-      // High token usage
-      if (usage.tokensUsed > 1500 && config.costTier !== 'economy') {
-        suggestions.push(`Compress prompts for ${usage.model} to reduce token usage`);
+      // High token usage - suggest compression
+      if (usage.tokensUsed > 1500) {
+        suggestions.push(`High token usage for ${usage.model} - consider compressing prompts`);
       }
     }
 

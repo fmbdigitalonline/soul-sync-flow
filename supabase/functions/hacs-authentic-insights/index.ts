@@ -378,13 +378,13 @@ Generate an authentic insight based ONLY on the real user data patterns provided
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-mini-2025-04-14',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 300,
-        temperature: 0.3, // Low temperature for consistent, data-driven insights
+        // GPT-4.1 does not support temperature
+        max_completion_tokens: 300,
       }),
     });
 

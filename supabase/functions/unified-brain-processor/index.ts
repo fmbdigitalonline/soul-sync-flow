@@ -413,13 +413,13 @@ Respond naturally and helpfully, integrating insights from your unified intellig
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-mini-2025-04-14',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
         ],
-        max_tokens: 500,
-        temperature: 0.7,
+        // GPT-4.1 does not support temperature
+        max_completion_tokens: 500,
       }),
     });
 

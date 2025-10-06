@@ -42,10 +42,10 @@ interface ConversationContext {
 interface ModelSelection {
   model: string;
   maxTokens: number;
-  temperature: number;
+  temperature: number | undefined;
   reasoning: string;
-  layer: 'core_brain' | 'tmg' | 'pie' | 'acs' | 'exploration_coach';
-  costTier: 'premium' | 'standard' | 'economy';
+  layer: 'core_brain' | 'tmg' | 'pie' | 'acs' | 'exploration_coach' | 'optimized';
+  costTier: 'premium' | 'standard' | 'economy' | 'low' | 'deprecated';
 }
 
 class EnhancedAICoachService {

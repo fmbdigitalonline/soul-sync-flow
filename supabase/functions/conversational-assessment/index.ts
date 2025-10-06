@@ -114,7 +114,7 @@ Provide scores that reflect the nuanced reality of the conversation, not generic
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-mini-2025-04-14',
         messages: [
           {
             role: 'system',
@@ -125,8 +125,8 @@ Provide scores that reflect the nuanced reality of the conversation, not generic
             content: assessmentPrompt
           }
         ],
-        temperature: 0.3,
-        max_tokens: 2000,
+        // GPT-4.1 does not support temperature
+        max_completion_tokens: 2000,
       }),
     });
 

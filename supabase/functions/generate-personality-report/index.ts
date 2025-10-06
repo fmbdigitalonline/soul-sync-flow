@@ -192,13 +192,13 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4.1-mini-2025-04-14',
         messages: [
           { role: 'system', content: personalityReportSystemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
-        max_tokens: 4000,
+        // GPT-4.1 does not support temperature
+        max_completion_tokens: 4000,
       }),
     });
 
