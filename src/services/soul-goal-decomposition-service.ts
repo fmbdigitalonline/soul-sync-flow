@@ -38,14 +38,14 @@ export interface SoulGeneratedGoal {
 }
 
 class SoulGoalDecompositionService {
-  async decomposeGoalWithSoul(
+  decomposeGoalWithSoul = async (
     title: string,
     description: string,
     timeframe: string,
     category: string,
     blueprintData: any,
     whyItMatters?: string
-  ): Promise<SoulGeneratedGoal> {
+  ): Promise<SoulGeneratedGoal> => {
     console.log('🎯 Soul Goal Decomposition Service - Starting razor-aligned decomposition:', {
       title,
       description,
@@ -154,13 +154,13 @@ class SoulGoalDecompositionService {
   // HERMETIC INTELLIGENCE INTEGRATION
   // ============================================
 
-  private async fetchPersonalityDataWithFallback(userId: string, blueprintData: any): Promise<{
+  private fetchPersonalityDataWithFallback = async (userId: string, blueprintData: any): Promise<{
     dataSource: 'Hermetic 2.0' | 'Hermetic 1.0 Report' | 'Rich Blueprint' | 'Basic Blueprint';
     depth: number;
     hermetic2?: HermeticStructuredIntelligence;
     hermetic1Report?: string;
     blueprintSections?: any;
-  }> {
+  }> => {
     // Try Hermetic 2.0 first
     try {
       const h2Result = await hermeticIntelligenceService.getStructuredIntelligence(userId);
@@ -229,7 +229,7 @@ class SoulGoalDecompositionService {
     };
   }
 
-  private extractRichBlueprintSections(blueprintData: any) {
+  private extractRichBlueprintSections = (blueprintData: any) => {
     const sections: any = {};
 
     // MBTI/Cognition
@@ -291,14 +291,14 @@ class SoulGoalDecompositionService {
   // AI PROMPT CONSTRUCTION
   // ============================================
 
-  private buildComprehensiveDecompositionPrompt(
+  private buildComprehensiveDecompositionPrompt = (
     title: string,
     description: string,
     whyItMatters: string,
     category: string,
     timeframe: string,
     personalityContext: any
-  ): string {
+  ): string => {
     const { dataSource, hermetic2, hermetic1Report, blueprintSections } = personalityContext;
 
     let personalitySection = '';
@@ -381,7 +381,7 @@ Return as JSON:
 }`;
   }
 
-  private buildHermetic2Context(hermetic: HermeticStructuredIntelligence): string {
+  private buildHermetic2Context = (hermetic: HermeticStructuredIntelligence): string => {
     return `🧬 HERMETIC 2.0 DEEP PERSONALITY CONTEXT:
 
 IDENTITY & NARRATIVES:
@@ -411,7 +411,7 @@ FINANCIAL PATTERNS:
 `;
   }
 
-  private buildRichBlueprintContext(sections: any): string {
+  private buildRichBlueprintContext = (sections: any): string => {
     let context = '🎨 RICH BLUEPRINT CONTEXT:\n\n';
 
     if (sections.cognition) {
@@ -455,7 +455,7 @@ FINANCIAL PATTERNS:
   // AI RESPONSE PARSING & VALIDATION
   // ============================================
 
-  private async parseAIResponseWithValidation(
+  private parseAIResponseWithValidation = async (
     aiResponse: string,
     goalTitle: string,
     category: string
@@ -464,7 +464,7 @@ FINANCIAL PATTERNS:
     tasks: any[];
     blueprint_insights?: string[];
     isGoalSpecific: boolean;
-  }> {
+  }> => {
     try {
       // Extract JSON from AI response
       const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
@@ -552,7 +552,7 @@ FINANCIAL PATTERNS:
   // UTILITY METHODS
   // ============================================
 
-  private calculateTargetDate(timeframe: string): string {
+  private calculateTargetDate = (timeframe: string): string => {
     const date = new Date();
 
     if (timeframe.includes('month')) {
@@ -575,7 +575,7 @@ FINANCIAL PATTERNS:
   // DATABASE OPERATIONS
   // ============================================
 
-  private async saveGoalWithHermeticContext(goal: SoulGeneratedGoal, personalityContext: any): Promise<void> {
+  private saveGoalWithHermeticContext = async (goal: SoulGeneratedGoal, personalityContext: any): Promise<void> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -615,7 +615,7 @@ FINANCIAL PATTERNS:
   }
 
   // Legacy method for backward compatibility - not used in new implementation
-  private async saveEnhancedGoalToDatabase(goal: SoulGeneratedGoal, causalAnalysis: any): Promise<void> {
+  private saveEnhancedGoalToDatabase = async (goal: SoulGeneratedGoal, causalAnalysis: any): Promise<void> => {
     return this.saveGoalWithHermeticContext(goal, { dataSource: 'Basic Blueprint', depth: 30 });
   }
 }
