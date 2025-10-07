@@ -147,7 +147,8 @@ class SoulGoalDecompositionService {
           message: comprehensivePrompt,
           context: 'razor_aligned_goal_decomposition',
           contextDepth: 'deep',
-          blueprintData
+          blueprintData,
+          maxTokens: 5000
         }
       });
 
