@@ -184,7 +184,7 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
     const finalTemperature = undefined;
     const finalMaxTokens = maxTokens !== undefined 
       ? maxTokens 
-      : (context === 'razor_aligned_goal_decomposition' ? 3000 : 2000);
+      : (context === 'razor_aligned_goal_decomposition' ? 5000 : 2000);
 
     console.log('🎯 FINAL MODEL CONFIGURATION (v' + DEPLOYMENT_VERSION + '):', {
       deploymentVersion: DEPLOYMENT_VERSION,

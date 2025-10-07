@@ -70,6 +70,25 @@ export const extractAndParseJSON = <T = any>(
       preview: extractedJson.substring(0, 200)
     });
 
+    // Pre-parse validation: Detect truncation
+    const trimmed = extractedJson.trim();
+    const endsWithValidChar = trimmed.endsWith('}') || trimmed.endsWith(']');
+    
+    if (!endsWithValidChar) {
+      console.error(`❌ TRUNCATION DETECTED - ${context}:`, {
+        length: extractedJson.length,
+        lastChars: trimmed.slice(-50),
+        endsCorrectly: false
+      });
+      
+      return {
+        success: false,
+        error: 'JSON appears truncated (response too large for token limit)',
+        originalResponse: aiResponse,
+        extractedJson
+      };
+    }
+
     const parsed = JSON.parse(extractedJson);
     
     console.log(`✅ JSON PARSE SUCCESS - ${context}:`, {
