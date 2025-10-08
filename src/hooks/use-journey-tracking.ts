@@ -86,66 +86,56 @@ export const useJourneyTracking = (): UseJourneyTrackingReturn => {
 
     setLoading(true);
     try {
-      // Fetch from user_activities or other relevant tables
-      const { data: activities, error } = await supabase
-        .from('user_activities')
-        .select('*')
-        .eq('user_id', user.id)
-        .in('activity_type', ['productivity_update', 'growth_update', 'reflection_entry', 'insight_entry', 'mood_entry'])
-        .order('created_at', { ascending: false })
-        .limit(100);
+      // Fetch directly from productivity_journey and growth_journey tables
+      const [productivityResult, growthResult] = await Promise.all([
+        supabase
+          .from('productivity_journey')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('growth_journey')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle()
+      ]);
 
-      if (error) {
-        console.error('Error fetching journey data:', error);
-        initializeDefaultData(); // Fallback to defaults
-        return;
+      if (productivityResult.error) {
+        console.error('Error fetching productivity journey:', productivityResult.error);
       }
 
-      // Process activities into journey structures with safe data access
-      const productivityActivities = activities?.filter(a => 
-        a.activity_type === 'productivity_update' || 
-        a.activity_type === 'task_completed'
-      ) || [];
+      if (growthResult.error) {
+        console.error('Error fetching growth journey:', growthResult.error);
+      }
 
-      const growthActivities = activities?.filter(a => 
-        a.activity_type === 'growth_update' ||
-        a.activity_type === 'reflection_entry' ||
-        a.activity_type === 'insight_entry' ||
-        a.activity_type === 'mood_entry'
-      ) || [];
-
-      // Safely extract data from activities with proper type checking
-      const safeGetActivityData = (activity: any, key: string) => {
-        try {
-          if (activity?.activity_data && typeof activity.activity_data === 'object') {
-            return (activity.activity_data as any)[key] || [];
-          }
-          return [];
-        } catch {
-          return [];
-        }
-      };
-
-      // Build productivity journey from activities  
+      // Build productivity journey from direct table data
+      const productivityData = productivityResult.data;
       const productivity: ProductivityJourney = {
-        current_goals: productivityActivities.flatMap(a => safeGetActivityData(a, 'goals')),
-        completed_goals: productivityActivities.flatMap(a => safeGetActivityData(a, 'completed_goals')),
-        active_tasks: productivityActivities.flatMap(a => safeGetActivityData(a, 'tasks')).filter((t: any) => !t?.completed),
-        completed_tasks: productivityActivities.flatMap(a => safeGetActivityData(a, 'tasks')).filter((t: any) => t?.completed),
-        weekly_focus: safeGetActivityData(productivityActivities[0], 'weekly_focus') || '',
-        productivity_score: safeGetActivityData(productivityActivities[0], 'productivity_score') || 0,
-        last_updated: productivityActivities[0]?.created_at || new Date().toISOString()
+        current_goals: Array.isArray(productivityData?.current_goals) ? productivityData.current_goals : [],
+        completed_goals: Array.isArray(productivityData?.completed_goals) ? productivityData.completed_goals : [],
+        active_tasks: Array.isArray(productivityData?.current_tasks) ? productivityData.current_tasks : [],
+        completed_tasks: Array.isArray(productivityData?.completed_tasks) ? productivityData.completed_tasks : [],
+        weekly_focus: String(productivityData?.current_position || ''),
+        productivity_score: 0,
+        last_updated: productivityData?.updated_at || new Date().toISOString()
       };
 
-      // Build growth journey from activities
+      // Build growth journey from direct table data
+      const growthData = growthResult.data;
       const growth: GrowthJourney = {
-        current_focus_area: safeGetActivityData(growthActivities[0], 'focus_area') || '',
-        reflection_entries: growthActivities.filter(a => a.activity_type === 'reflection_entry').map(a => a.activity_data),
-        insight_entries: growthActivities.filter(a => a.activity_type === 'insight_entry').map(a => a.activity_data),
-        mood_entries: growthActivities.filter(a => a.activity_type === 'mood_entry').map(a => a.activity_data),
-        spiritual_practices: growthActivities.flatMap(a => safeGetActivityData(a, 'spiritual_practices')),
-        growth_milestones: growthActivities.flatMap(a => safeGetActivityData(a, 'milestones')),
-        last_updated: growthActivities[0]?.created_at || new Date().toISOString()
+        current_focus_area: (() => {
+          const focusAreas = growthData?.current_focus_areas;
+          if (Array.isArray(focusAreas) && focusAreas.length > 0) {
+            return String(focusAreas[0]);
+          }
+          return '';
+        })(),
+        reflection_entries: Array.isArray(growthData?.reflection_entries) ? growthData.reflection_entries : [],
+        insight_entries: Array.isArray(growthData?.insight_entries) ? growthData.insight_entries : [],
+        mood_entries: Array.isArray(growthData?.mood_entries) ? growthData.mood_entries : [],
+        spiritual_practices: Array.isArray(growthData?.spiritual_practices) ? growthData.spiritual_practices : [],
+        growth_milestones: Array.isArray(growthData?.growth_milestones) ? growthData.growth_milestones : [],
+        last_updated: growthData?.updated_at || new Date().toISOString()
       };
 
       setProductivityJourney(productivity);
@@ -166,13 +156,16 @@ export const useJourneyTracking = (): UseJourneyTrackingReturn => {
     try {
       const updatedJourney = { ...productivityJourney, ...updates, last_updated: new Date().toISOString() };
       
-      // Store in database
+      // Store in productivity_journey table
       const { error } = await supabase
-        .from('user_activities')
-        .insert({
+        .from('productivity_journey')
+        .upsert({
           user_id: user.id,
-          activity_type: 'productivity_update',
-          activity_data: updates
+          current_goals: updatedJourney.current_goals,
+          completed_goals: updatedJourney.completed_goals,
+          current_tasks: updatedJourney.active_tasks,
+          completed_tasks: updatedJourney.completed_tasks,
+          updated_at: updatedJourney.last_updated
         });
 
       if (error) throw error;
@@ -192,13 +185,18 @@ export const useJourneyTracking = (): UseJourneyTrackingReturn => {
     try {
       const updatedJourney = { ...growthJourney, ...updates, last_updated: new Date().toISOString() };
       
-      // Store in database
+      // Store in growth_journey table
       const { error } = await supabase
-        .from('user_activities')
-        .insert({
+        .from('growth_journey')
+        .upsert({
           user_id: user.id,
-          activity_type: 'growth_update',
-          activity_data: updates
+          current_focus_areas: updatedJourney.current_focus_area ? [updatedJourney.current_focus_area] : [],
+          reflection_entries: updatedJourney.reflection_entries,
+          insight_entries: updatedJourney.insight_entries,
+          mood_entries: updatedJourney.mood_entries,
+          spiritual_practices: updatedJourney.spiritual_practices,
+          growth_milestones: updatedJourney.growth_milestones,
+          updated_at: updatedJourney.last_updated
         });
 
       if (error) throw error;
