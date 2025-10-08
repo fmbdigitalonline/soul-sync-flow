@@ -4,8 +4,7 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Target, TrendingUp, CheckCircle, Plus, MessageCircle, Brain, Clock, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
-import { useSubconsciousOrb } from "@/hooks/use-subconscious-orb";
+import { useAICoach } from "@/hooks/use-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { CoachInterface } from "@/components/coach/CoachInterface";
 import { PomodoroTimer } from "@/components/productivity/PomodoroTimer";
@@ -19,43 +18,13 @@ import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Tasks = () => {
-  const { 
-    messages: conversationMessages, 
-    isLoading, 
-    sendMessage: adapterSendMessage, 
-    resetConversation,
-    switchAgent,
-    currentAgent
-  } = useHACSConversationAdapter("coach");
-  
-  // Shadow detection integration
-  const { processMessage, isEnabled: orbEnabled } = useSubconsciousOrb();
-  
+  const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useAICoach();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'achievement' | 'planning' | 'timer' | 'habits' | 'goals' | 'chat'>('achievement');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
   const { isMobile } = useIsMobile();
-
-  // Transform ConversationMessage[] to Message[] for CoachInterface compatibility
-  const messages = conversationMessages.map(msg => ({
-    id: msg.id,
-    content: msg.content,
-    sender: msg.role === 'user' ? 'user' as const : 'assistant' as const,
-    timestamp: new Date(msg.timestamp)
-  }));
-
-  // Wrapper to integrate shadow detection with message sending
-  const sendMessage = async (message: string) => {
-    await adapterSendMessage(message);
-    
-    // Process message for shadow pattern detection
-    if (orbEnabled && message.trim()) {
-      const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      await processMessage(message, messageId);
-    }
-  };
 
   // Check authentication status
   useEffect(() => {
