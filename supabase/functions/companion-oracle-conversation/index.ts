@@ -1452,4 +1452,3 @@ Respond helpfully while building rapport and understanding.`
       response: "The cosmic channels are temporarily disrupted. Please try again, seeker."
     }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
-);
