@@ -46,8 +46,48 @@ export class ConversationShadowDetector {
 
   static async detectShadowPatterns(userId: string): Promise<ConversationInsight[]> {
     try {
-      // Get recent conversations (last 7 days)
-      const { data: conversations, error } = await supabase
+      console.log('🔍 SHADOW DETECTOR: Starting pattern detection for user:', userId);
+      
+      // CRITICAL FIX: Query hacs_conversations table (where companion messages are stored)
+      const { data: hacsConversations, error: hacsError } = await supabase
+        .from('hacs_conversations')
+        .select('conversation_data, created_at, session_id')
+        .eq('user_id', userId)
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      console.log('🔍 SHADOW DETECTOR: Query results from hacs_conversations:', {
+        found: hacsConversations?.length || 0,
+        error: hacsError?.message
+      });
+
+      // Parse JSONB conversation_data to extract user messages
+      let userMessages: Array<{content: string, created_at: string, role: string}> = [];
+      
+      if (hacsConversations && hacsConversations.length > 0) {
+        hacsConversations.forEach(conv => {
+          const conversationData = conv.conversation_data as any[];
+          if (Array.isArray(conversationData)) {
+            const userMsgs = conversationData
+              .filter((msg: any) => msg.role === 'user')
+              .map((msg: any) => ({
+                content: msg.content,
+                created_at: conv.created_at,
+                role: 'user'
+              }));
+            userMessages.push(...userMsgs);
+          }
+        });
+      }
+
+      console.log('🔍 SHADOW DETECTOR: Extracted user messages:', {
+        totalMessages: userMessages.length,
+        sampleContent: userMessages[0]?.content?.substring(0, 50)
+      });
+
+      // Fallback: Also check conversation_messages table for backward compatibility
+      const { data: legacyMessages } = await supabase
         .from('conversation_messages')
         .select('content, created_at, role')
         .eq('user_id', userId)
@@ -56,16 +96,23 @@ export class ConversationShadowDetector {
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error || !conversations?.length) {
-        console.log('🔍 No recent conversations found for shadow detection');
+      if (legacyMessages && legacyMessages.length > 0) {
+        console.log('🔍 SHADOW DETECTOR: Found legacy messages:', legacyMessages.length);
+        userMessages.push(...legacyMessages);
+      }
+
+      if (!userMessages.length) {
+        console.log('🔍 SHADOW DETECTOR: No messages found in either table');
         return [];
       }
 
-      const allText = conversations.map(c => c.content).join(' ').toLowerCase();
+      const allText = userMessages.map(c => c.content).join(' ').toLowerCase();
+      console.log('🔍 SHADOW DETECTOR: Analyzing text length:', allText.length);
       const insights: ConversationInsight[] = [];
 
       // Detect emotional triggers
-      const triggerPatterns = this.detectEmotionalTriggers(conversations, allText);
+      const triggerPatterns = this.detectEmotionalTriggers(userMessages, allText);
+      console.log('🔍 SHADOW DETECTOR: Emotional triggers found:', triggerPatterns.length);
       triggerPatterns.forEach(pattern => {
         if (pattern.confidence > 0.7) {
           insights.push(this.createInsightFromPattern(pattern, 'shadow_work'));
@@ -73,7 +120,8 @@ export class ConversationShadowDetector {
       });
 
       // Detect projection patterns
-      const projectionPatterns = this.detectProjections(conversations, allText);
+      const projectionPatterns = this.detectProjections(userMessages, allText);
+      console.log('🔍 SHADOW DETECTOR: Projection patterns found:', projectionPatterns.length);
       projectionPatterns.forEach(pattern => {
         if (pattern.confidence > 0.6) {
           insights.push(this.createInsightFromPattern(pattern, 'nullification'));
@@ -81,7 +129,8 @@ export class ConversationShadowDetector {
       });
 
       // Detect resistance patterns
-      const resistancePatterns = this.detectResistance(conversations, allText);
+      const resistancePatterns = this.detectResistance(userMessages, allText);
+      console.log('🔍 SHADOW DETECTOR: Resistance patterns found:', resistancePatterns.length);
       resistancePatterns.forEach(pattern => {
         if (pattern.confidence > 0.7) {
           insights.push(this.createInsightFromPattern(pattern, 'pattern_alert'));
@@ -89,14 +138,15 @@ export class ConversationShadowDetector {
       });
 
       // Detect limiting beliefs
-      const beliefPatterns = this.detectLimitingBeliefs(conversations, allText);
+      const beliefPatterns = this.detectLimitingBeliefs(userMessages, allText);
+      console.log('🔍 SHADOW DETECTOR: Limiting beliefs found:', beliefPatterns.length);
       beliefPatterns.forEach(pattern => {
         if (pattern.confidence > 0.8) {
           insights.push(this.createInsightFromPattern(pattern, 'shadow_work'));
         }
       });
 
-      console.log(`🔍 Detected ${insights.length} conversation insights`);
+      console.log(`🔍 SHADOW DETECTOR: Generated ${insights.length} total insights from ${userMessages.length} messages`);
       return insights.slice(0, 5); // Limit to top 5 insights
 
     } catch (error) {

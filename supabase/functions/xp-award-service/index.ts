@@ -214,15 +214,29 @@ function awardXP(
   let totalXP = 0;
   const contributors: Array<{ dim: Dim; xp: number }> = [];
 
+  console.log('🔍 XP CALC: Starting calculation with state:', {
+    session_xp: newState.session_xp,
+    daily_xp: newState.daily_xp,
+    weekly_xp: newState.weekly_xp,
+    xp_total: newState.xp_total
+  });
+
   for (const dim of Object.keys(ev.dims) as Dim[]) {
     let rawXP = ev.dims[dim]!;
+    console.log(`🔍 XP CALC: Processing ${dim}, raw: ${rawXP}`);
+    
     // Apply quality multiplier directly - dimension scores track progress, not caps
     rawXP *= ev.quality;
+    console.log(`🔍 XP CALC: After quality (${ev.quality}): ${rawXP}`);
 
-    if (rawXP <= 0) continue;
+    if (rawXP <= 0) {
+      console.log(`🔍 XP CALC: Skipping ${dim}, rawXP <= 0`);
+      continue;
+    }
 
     const diversityBonus = Object.keys(ev.dims).length > 2 ? 1.1 : 1.0;
     rawXP *= diversityBonus;
+    console.log(`🔍 XP CALC: After diversity bonus (${diversityBonus}): ${rawXP}`);
 
     totalXP += rawXP;
     newState.dim_scores_ewma[dim] = 
@@ -231,18 +245,29 @@ function awardXP(
     contributors.push({ dim, xp: rawXP });
   }
 
+  console.log('🔍 XP CALC: Total before novelty/caps:', totalXP);
+
   // Novelty bonus
   const allNovel = ev.kinds.every(
     k => !recentKinds.some(r => r.kind === k && Date.now() - r.at < 3600000)
   );
   if (allNovel && ev.kinds.length > 0) {
     totalXP *= Config.noveltyBonus;
+    console.log(`🔍 XP CALC: After novelty bonus (${Config.noveltyBonus}): ${totalXP}`);
   }
 
   // Apply caps
+  const beforeSessionCap = totalXP;
   totalXP = diminishing(totalXP, Config.sessionCap, newState.session_xp);
+  console.log(`🔍 XP CALC: After session cap (${beforeSessionCap} -> ${totalXP}), session_xp: ${newState.session_xp}/${Config.sessionCap}`);
+  
+  const beforeDayCap = totalXP;
   totalXP = diminishing(totalXP, Config.dayCap, newState.daily_xp);
+  console.log(`🔍 XP CALC: After day cap (${beforeDayCap} -> ${totalXP}), daily_xp: ${newState.daily_xp}/${Config.dayCap}`);
+  
+  const beforeWeekCap = totalXP;
   totalXP = diminishing(totalXP, Config.weekCap, newState.weekly_xp);
+  console.log(`🔍 XP CALC: After week cap (${beforeWeekCap} -> ${totalXP}), weekly_xp: ${newState.weekly_xp}/${Config.weekCap}`);
 
   if (totalXP > 0) {
     newState.xp_total += totalXP;
