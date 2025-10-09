@@ -75,73 +75,121 @@ function getArchetypalDescription(sunSign: string): string {
   return descriptions[sunSign] || 'individual archetypal influence';
 }
 
-// PHASE 4: Conversation state detection function
-function detectConversationState(message: string, conversationHistory: any[]) {
-  const cleanMessage = message.trim().toLowerCase();
+// PHASE 4: Enhanced conversation state detection with holistic taxonomy
+function detectConversationState(message: string, conversationHistory: any[] = []) {
+  const msg = message.toLowerCase();
   
-  // Gratitude patterns - strong signal for satisfaction
-  const gratitudePatterns = [
-    /\b(thank\s*you|thanks|thx|appreciate)\b/i,
-    /\b(grateful|perfect|great|excellent)\b/i,
-    /\b(exactly what i needed|that helps)\b/i
-  ];
-
-  // Closure patterns - direct signals for ending
-  const closurePatterns = [
-    /\b(that'?s\s*(it|all)|that is it)\b/i,
-    /\b(for now|good for now)\b/i,
-    /\b(no more|nothing else|i'?m done)\b/i,
-    /\b(bye|goodbye|talk later|see you)\b/i,
-    /\b(end|stop|enough)\b/i
-  ];
-
-  // Explicit suggestion request patterns - signals user wants guidance/suggestions
-  const suggestionRequestPatterns = [
-    /\b(what should i|what do you think i should|any suggestions|any advice)\b/i,
-    /\b(recommend|suggest|what would you|what next|where do i go)\b/i,
-    /\b(help me understand|guide me|show me the way)\b/i,
-    /\b(please advise|your thoughts|what's your take)\b/i,
-    /\b(any ideas|thoughts on|what do you suggest)\b/i
-  ];
-
-  // Explicit continuation patterns - only for clear requests for more info
-  const explicitContinuationPatterns = [
-    /\b(tell me more|explain further|elaborate|go deeper)\b/i,
-    /\b(what else|anything else|more about)\b/i,
-    /\b(i want to know more|can you expand|give me more details)\b/i
-  ];
-
-  const hasGratitude = gratitudePatterns.some(pattern => pattern.test(cleanMessage));
-  const hasClosure = closurePatterns.some(pattern => pattern.test(cleanMessage));
-  const hasSuggestionRequest = suggestionRequestPatterns.some(pattern => pattern.test(cleanMessage));
-  const hasExplicitContinuation = explicitContinuationPatterns.some(pattern => pattern.test(cleanMessage));
-
-  // Determine interaction type based on strongest signal - default to neutral
-  let lastInteractionType = 'neutral';
-  
-  if (hasGratitude && hasClosure) {
-    lastInteractionType = 'closure';
-  } else if (hasGratitude) {
-    lastInteractionType = 'gratitude';
-  } else if (hasClosure) {
-    lastInteractionType = 'closure';
-  } else if (hasSuggestionRequest || hasExplicitContinuation) {
-    lastInteractionType = 'continuation';
+  // Closure patterns (highest priority)
+  if (/^(ok(ay)?|thanks?|thx|cool|got it|fine)\s*[.!]?\s*$/.test(msg) || /\b(thanks|thank\s*you|appreciate)\b/.test(msg)) {
+    return {
+      isActive: false,
+      userSatisfied: true,
+      closureSignalDetected: true,
+      lastInteractionType: 'closure',
+      shouldAskQuestion: false,
+      detectionResult: {
+        cluster: 'closure',
+        subState: 'gratitude',
+        confidence: 0.9,
+        signals: [{ type: 'cluster_pattern', id: 'closure:gratitude', matched: 'thanks', weight: 2.4 }],
+        openingRule: 'Acknowledge and stop. No new content.',
+        allowedNextClusters: []
+      }
+    };
   }
-
-  // Calculate state flags - default to conservative approach
-  const closureSignalDetected = hasGratitude || hasClosure;
-  const userSatisfied = hasGratitude || (hasClosure && !hasSuggestionRequest);
-  const isActive = hasSuggestionRequest || hasExplicitContinuation;
-  // CRITICAL: Default to FALSE - only ask questions when explicitly requested
-  const shouldAskQuestion = hasSuggestionRequest || hasExplicitContinuation;
-
+  
+  // Meta-dialogue (instruction to AI)
+  if (/\b(just\s+facts|no\s+fluff|shorter|simpler|be\s+direct)\b/.test(msg)) {
+    return {
+      isActive: true,
+      userSatisfied: false,
+      closureSignalDetected: false,
+      lastInteractionType: 'meta',
+      shouldAskQuestion: false,
+      detectionResult: {
+        cluster: 'meta_dialogue',
+        subState: 'instruction_to_ai',
+        confidence: 0.85,
+        signals: [{ type: 'discourse_marker', id: 'meta_manage', matched: 'simpler', weight: 0.9 }],
+        openingRule: 'Acknowledge the instruction; adapt immediately; confirm new mode in ≤1 line.',
+        allowedNextClusters: ['clarification', 'decision', 'reflection']
+      }
+    };
+  }
+  
+  // Frustration (emphasis, venting)
+  if (/(!{2,}|[A-Z]{5,})/.test(message) || /\b(i'?m\s+so\s+done|nothing\s*works)\b/.test(msg)) {
+    return {
+      isActive: true,
+      userSatisfied: false,
+      closureSignalDetected: false,
+      lastInteractionType: 'frustration',
+      shouldAskQuestion: false,
+      detectionResult: {
+        cluster: 'frustration',
+        subState: 'venting',
+        confidence: 0.7,
+        signals: [{ type: 'paralinguistic', id: 'emphasis', matched: '!!!', weight: 0.6 }],
+        openingRule: 'Acknowledge in 1 line, then give friction-reducing step + quick win.',
+        allowedNextClusters: ['validation', 'decision']
+      }
+    };
+  }
+  
+  // Decision (planning, steps)
+  if (/\b(should\s+i|next\s*step|give\s+me\s+steps)\b/.test(msg)) {
+    return {
+      isActive: true,
+      userSatisfied: false,
+      closureSignalDetected: false,
+      lastInteractionType: 'planning',
+      shouldAskQuestion: true,
+      detectionResult: {
+        cluster: 'decision',
+        subState: 'plan_request',
+        confidence: 0.75,
+        signals: [{ type: 'sentence_form', id: 'imperative_plan', matched: 'give me steps', weight: 0.8 }],
+        openingRule: 'Start with the prioritized step; then 2–3 bullet plan. No recap.',
+        allowedNextClusters: ['reflection', 'constraint']
+      }
+    };
+  }
+  
+  // Clarification (why questions)
+  if (/\bwhy\b/.test(msg) || /\?$/.test(msg)) {
+    return {
+      isActive: true,
+      userSatisfied: false,
+      closureSignalDetected: false,
+      lastInteractionType: 'inquiry',
+      shouldAskQuestion: true,
+      detectionResult: {
+        cluster: 'clarification',
+        subState: 'why_question',
+        confidence: 0.7,
+        signals: [{ type: 'sentence_form', id: 'wh_question', matched: 'why', weight: 0.6 }],
+        openingRule: 'Skip empathy; give a crisp model/mechanism then 1 probing question.',
+        allowedNextClusters: ['decision', 'reflection']
+      }
+    };
+  }
+  
+  // Default: engagement/clarification based on turn count
+  const turnCount = Math.floor((conversationHistory.length + 1) / 2);
   return {
-    isActive,
-    userSatisfied,
-    closureSignalDetected,
-    lastInteractionType,
-    shouldAskQuestion
+    isActive: true,
+    userSatisfied: false,
+    closureSignalDetected: false,
+    lastInteractionType: 'inquiry',
+    shouldAskQuestion: turnCount <= 2,
+    detectionResult: {
+      cluster: turnCount <= 2 ? 'engagement' : 'clarification',
+      subState: 'context_setting',
+      confidence: 0.4,
+      signals: [],
+      openingRule: turnCount <= 2 ? 'Warm but brief open; move to user intent in <=1 sentence.' : 'Skip empathy; give a crisp model/mechanism.',
+      allowedNextClusters: ['clarification', 'decision']
+    }
   };
 }
 
