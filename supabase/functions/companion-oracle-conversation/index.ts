@@ -1389,7 +1389,7 @@ Respond helpfully while building rapport and understanding.`
         validation: ['that feeling', 'i hear that', 'it sounds like', 'the weight of'],
         clarification: ['to understand', 'let me break', 'essentially', 'in other words'],
         decision: ['so the path', 'here\'s what', 'the next step'],
-        reflection: ['what you've discovered', 'the key insight', 'looking back']
+        reflection: ['what you\'ve discovered', 'the key insight', 'looking back']
       };
       
       const currentCluster = conversationState.detectionResult.cluster;
