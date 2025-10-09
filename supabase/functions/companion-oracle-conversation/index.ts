@@ -1624,4 +1624,4 @@ ${messagesToSend[0].content}`;
       response: "The cosmic channels are temporarily disrupted. Please try again, seeker."
     }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
-);
+ );
