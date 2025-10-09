@@ -194,28 +194,49 @@ export const useHACSInsights = () => {
 
   // Generate conversation-derived insights (priority)
   const generateConversationInsights = useCallback(async (): Promise<HACSInsight[]> => {
-    if (!user) return [];
+    if (!user) {
+      console.log('🎯 generateConversationInsights: No user available');
+      return [];
+    }
 
     try {
-      console.log('🎯 Generating conversation-derived insights...');
+      console.log('🎯 Generating conversation-derived insights for user:', user.id);
       const conversationInsights = await SmartInsightController.generateConversationInsights(user.id);
       
-      return conversationInsights.map(insight => ({
+      console.log('🎯 Generated conversation insights:', {
+        count: conversationInsights.length,
+        types: conversationInsights.map(i => i.type)
+      });
+      
+      const formattedInsights: HACSInsight[] = conversationInsights.map(insight => ({
         id: insight.id,
         text: `${insight.message}\n\nActionable steps:\n${insight.actionableSteps.map(step => `• ${step}`).join('\n')}`,
         module: 'Conversation',
-        type: insight.type === 'shadow_work' ? 'conversation_shadow' : 'conversation_nullification',
+        type: (insight.type === 'shadow_work' ? 'conversation_shadow' : 'conversation_nullification') as HACSInsight['type'],
         confidence: insight.confidence,
         evidence: [insight.conversationContext, `Pattern frequency: ${insight.shadowPattern.frequency}`],
         timestamp: new Date(),
         acknowledged: false,
         priority: insight.priority
       }));
+      
+      // Add insights to queue
+      if (formattedInsights.length > 0) {
+        console.log('🎯 Adding conversation insights to queue:', formattedInsights.length);
+        formattedInsights.forEach(insight => addInsightToQueue(insight));
+        
+        // Record delivery
+        SmartInsightController.recordInsightDelivery(user.id, 'conversation');
+      } else {
+        console.log('🎯 No conversation insights to add to queue');
+      }
+      
+      return formattedInsights;
     } catch (error) {
-      console.error('Error generating conversation insights:', error);
+      console.error('🚨 Error generating conversation insights:', error);
       return [];
     }
-  }, [user]);
+  }, [user, addInsightToQueue]);
 
   // Generate analytics-based insights using real user data (secondary priority)
   const generateAnalyticsInsight = useCallback(async (personalityContext?: PersonalityContext): Promise<HACSInsight | null> => {
@@ -761,7 +782,12 @@ export const useHACSInsights = () => {
 
   // Smart insight triggers based on real activity patterns
   const triggerInsightCheck = useCallback(async (activityType: string, context?: any) => {
-    console.log('🔍 triggerInsightCheck called:', { activityType, currentInsight: !!currentInsight, isGenerating });
+    console.log('🔍 triggerInsightCheck called:', { 
+      activityType, 
+      currentInsight: !!currentInsight, 
+      isGenerating,
+      context 
+    });
     
     // Track the activity first
     await trackActivity(activityType, context);
@@ -796,6 +822,22 @@ export const useHACSInsights = () => {
       return null;
     }
 
+    // Check for conversation insights first (highest priority)
+    if (activityType === 'conversation_ended') {
+      console.log('💬 Conversation ended - checking for conversation insights');
+      try {
+        const conversationInsights = await generateConversationInsights();
+        if (conversationInsights.length > 0) {
+          console.log('✅ Generated and queued conversation insights:', conversationInsights.length);
+          return conversationInsights[0]; // Return first insight
+        } else {
+          console.log('💬 No conversation insights available');
+        }
+      } catch (error) {
+        console.error('🚨 Error generating conversation insights:', error);
+      }
+    }
+
     // Only generate insights for meaningful activities
     const meaningfulActivities = [
       'blueprint_completed',
@@ -825,7 +867,7 @@ export const useHACSInsights = () => {
 
     console.log('🔍 No insight generated for activity:', activityType);
     return null;
-  }, [trackActivity, generateInsight, currentInsight]);
+  }, [trackActivity, generateInsight, generateConversationInsights, currentInsight, shouldStartIntroduction, startIntroduction, createStewardIntroductionInsight, addInsightToQueue, setInsightHistory]);
 
   // Removed auto-dismiss timer - let user control dismissal
 

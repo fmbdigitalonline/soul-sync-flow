@@ -366,6 +366,37 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     databaseValidation.loading
   ]);
 
+  // Periodic insight checking for conversation insights
+  useEffect(() => {
+    if (!isSystemReady || !userProfile?.id) return;
+    
+    console.log('💡 Setting up periodic insight checking...');
+    
+    // Check for insights every 30 seconds
+    const checkInterval = setInterval(async () => {
+      // Don't check if there's already a current insight or if we're generating
+      if (currentInsight || isGenerating || isGeneratingInsight) {
+        console.log('💡 Skipping insight check - already have insight or generating');
+        return;
+      }
+      
+      console.log('💡 Periodic insight check - triggering conversation_ended check');
+      try {
+        await triggerInsightCheck('conversation_ended', { 
+          source: 'periodic_check',
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('💡 Error in periodic insight check:', error);
+      }
+    }, 30000); // Check every 30 seconds
+    
+    return () => {
+      console.log('💡 Cleaning up periodic insight checking');
+      clearInterval(checkInterval);
+    };
+  }, [isSystemReady, userProfile?.id, currentInsight, isGenerating, isGeneratingInsight, triggerInsightCheck]);
+
   // Module activity based on current question or insight
   useEffect(() => {
     if (currentQuestion) {

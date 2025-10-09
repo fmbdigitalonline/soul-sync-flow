@@ -154,24 +154,34 @@ export class SmartInsightController {
   // Generate conversation-derived insights
   static async generateConversationInsights(userId: string): Promise<ConversationInsight[]> {
     try {
-      console.log('🎯 Generating conversation-derived insights...');
+      console.log('🎯 SmartInsightController: Starting conversation insights generation for user:', userId);
       
       // Detect shadow patterns from recent conversations
+      console.log('🎯 SmartInsightController: Detecting shadow patterns...');
       const shadowPatterns = await ConversationShadowDetector.detectShadowPatterns(userId);
       
+      console.log('🎯 SmartInsightController: Shadow patterns detected:', {
+        count: shadowPatterns.length,
+        patterns: shadowPatterns.map(p => ({ type: p.shadowPattern.type, confidence: p.confidence }))
+      });
+      
       if (shadowPatterns.length === 0) {
-        console.log('🎯 No shadow patterns detected');
+        console.log('🎯 SmartInsightController: No shadow patterns detected - returning empty array');
         return [];
       }
 
       // Generate nullification advice based on patterns
+      console.log('🎯 SmartInsightController: Generating nullification advice...');
       const insights = await NullificationAdviceGenerator.generateNullificationAdvice(
         userId, 
         shadowPatterns.map(insight => insight.shadowPattern)
       );
+      
+      console.log('🎯 SmartInsightController: Nullification insights generated:', insights.length);
 
       // Add direct shadow work insights
       const shadowInsights = shadowPatterns.filter(insight => insight.confidence > 0.8);
+      console.log('🎯 SmartInsightController: High-confidence shadow insights:', shadowInsights.length);
       
       const allInsights = [...insights, ...shadowInsights];
       
@@ -183,11 +193,11 @@ export class SmartInsightController {
         return bWeight - aWeight;
       });
 
-      console.log(`🎯 Generated ${allInsights.length} conversation insights`);
+      console.log(`✅ SmartInsightController: Generated ${allInsights.length} total conversation insights (returning top 3)`);
       return allInsights.slice(0, 3); // Limit to top 3
 
     } catch (error) {
-      console.error('🚨 Error generating conversation insights:', error);
+      console.error('🚨 SmartInsightController: Error generating conversation insights:', error);
       return [];
     }
   }

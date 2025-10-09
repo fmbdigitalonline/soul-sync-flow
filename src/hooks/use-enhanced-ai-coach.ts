@@ -142,6 +142,7 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
     try {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (user?.id) {
+        console.log('💬 Tracking conversation activity for user:', user.id);
         const { SmartInsightController } = await import('@/services/smart-insight-controller');
         SmartInsightController.trackUserActivity(user.id, 'conversation');
       }
@@ -165,6 +166,11 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
       
       setMessages(prev => [...prev, assistantMessage]);
       
+      console.log('💬 Starting streaming conversation...', { 
+        agent: currentAgent, 
+        message: message.substring(0, 50) 
+      });
+      
       await aiCoachService.sendStreamingMessage(
         message,
         sessionIdRef.current,
@@ -180,7 +186,7 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
                 : msg
             ));
           },
-          onComplete: (fullResponse: string) => {
+          onComplete: async (fullResponse: string) => {
             setIsStreaming(false);
             setStreamingContent('');
             completeLoading('core');
@@ -189,6 +195,26 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
                 ? { ...msg, content: fullResponse }
                 : msg
             ));
+            
+            // Trigger insight generation after conversation completes
+            try {
+              console.log('💬 Conversation completed, triggering insight check...');
+              const { data: { user }, error } = await supabase.auth.getUser();
+              if (user?.id) {
+                const { useHACSInsights } = await import('@/hooks/use-hacs-insights');
+                // Note: This is a hook import, the actual trigger will be handled via a service
+                const { SmartInsightController } = await import('@/services/smart-insight-controller');
+                
+                // Check if we can deliver conversation insights
+                if (SmartInsightController.canDeliverConversationInsight(user.id)) {
+                  console.log('💬 Generating conversation insights...');
+                  await SmartInsightController.generateConversationInsights(user.id);
+                  console.log('✅ Conversation insights generated');
+                }
+              }
+            } catch (error) {
+              console.error('Error triggering insights:', error);
+            }
           },
           onError: (error: Error) => {
             console.error('Streaming error:', error);
