@@ -216,7 +216,7 @@ function awardXP(
 
   for (const dim of Object.keys(ev.dims) as Dim[]) {
     let rawXP = ev.dims[dim]!;
-    rawXP = diminishing(rawXP, Config.dimCap, newState.dim_scores_ewma[dim]);
+    // Apply quality multiplier directly - dimension scores track progress, not caps
     rawXP *= ev.quality;
 
     if (rawXP <= 0) continue;
