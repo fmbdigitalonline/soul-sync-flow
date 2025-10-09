@@ -30,6 +30,25 @@ export class ConversationStateService {
    * Routes between reflect vs plan vs close based on user signals
    */
   detectConversationState(message: string, conversationHistory: any[] = []): ConversationState {
+    // ✅ Layer 1: Defensive guard clause - prevent undefined.trim() crash
+    if (!message || typeof message !== 'string') {
+      console.error('❌ CONVERSATION STATE: Invalid message parameter', { 
+        messageType: typeof message, 
+        messageValue: message 
+      });
+      
+      // Return neutral state instead of crashing
+      return {
+        isActive: false,
+        userSatisfied: false,
+        closureSignalDetected: false,
+        lastInteractionType: 'neutral',
+        shouldAskQuestion: false,
+        intent: 'neutral'
+      };
+    }
+    
+    console.log('🎯 CONVERSATION STATE: Valid message received, analyzing...');
     const cleanMessage = message.trim().toLowerCase();
     
     // Gratitude patterns - strong signal for satisfaction

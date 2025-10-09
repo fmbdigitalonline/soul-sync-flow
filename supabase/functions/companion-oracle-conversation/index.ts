@@ -89,6 +89,26 @@ function getArchetypalDescription(sunSign: string): string {
 
 // PHASE 4: Enhanced conversation state detection with comprehensive cluster taxonomy
 function detectConversationState(message: string, conversationHistory: any[] = []) {
+  // ✅ Layer 1: Defensive guard clause - prevent undefined.trim() crash
+  if (!message || typeof message !== 'string') {
+    console.error('❌ EDGE FUNCTION: detectConversationState called with invalid message', { 
+      messageType: typeof message, 
+      messageValue: message 
+    });
+    
+    // Return neutral state instead of crashing
+    return {
+      isActive: false,
+      userSatisfied: false,
+      closureSignalDetected: false,
+      lastInteractionType: 'neutral',
+      shouldAskQuestion: false,
+      intent: 'neutral',
+      detectionResult: null
+    };
+  }
+  
+  console.log('🎯 EDGE FUNCTION: Valid message received, calling ConversationPhaseTracker...');
   const detection = ConversationPhaseTracker.detectState(message, conversationHistory);
   
   console.log('🎯 CONVERSATION STATE DETECTION:', {
@@ -590,6 +610,42 @@ serve(async (req) => {
     )
 
     const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = false, conversationHistory = [], userProfile = {}, threadId } = await req.json()
+    
+    // ✅ Layer 3: Request validation - fail fast with clear error messages
+    if (!message || typeof message !== 'string') {
+      console.error('❌ INVALID REQUEST: Missing or invalid message field', { 
+        messageType: typeof message,
+        messageValue: message 
+      });
+      return new Response(
+        JSON.stringify({ 
+          error: 'Bad Request: message field is required and must be a string',
+          received: { message: typeof message }
+        }), 
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!userId || typeof userId !== 'string') {
+      console.error('❌ INVALID REQUEST: Missing or invalid userId field', { 
+        userIdType: typeof userId,
+        userIdValue: userId 
+      });
+      return new Response(
+        JSON.stringify({ 
+          error: 'Bad Request: userId field is required and must be a string',
+          received: { userId: typeof userId }
+        }), 
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log('✅ REQUEST VALIDATED:', { 
+      messageLength: message.length, 
+      userId: userId.substring(0, 8),
+      threadId 
+    });
+    
     console.log('🔮 FUSION: Oracle Mode Request:', { 
       useOracleMode, 
       enableBackgroundIntelligence,
