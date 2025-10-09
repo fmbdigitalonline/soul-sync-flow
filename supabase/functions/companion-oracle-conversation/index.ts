@@ -1,10 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
-// PHASE 1: Import ConversationShadowDetector for insight generation
-// Import path is relative to edge function, resolving to project src
-import { ConversationShadowDetector } from '../../../src/services/conversation-shadow-detector.ts'
-import { ConversationPhaseTracker } from '../_shared/conversation-phase-tracker.ts'
+// PHASE 1: Import edge-compatible services from _shared directory
+import { ConversationShadowDetector } from '../_shared/conversation-shadow-detector.ts';
+import { ConversationPhaseTracker } from '../_shared/conversation-phase-tracker.ts';
 
 // Helper function to detect if user wants technical personality details
 function detectTechnicalDetailRequest(message: string): boolean {
