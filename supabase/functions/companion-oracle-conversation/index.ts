@@ -1549,21 +1549,45 @@ ${messagesToSend[0].content}`;
       try {
         console.log('🚀 BACKGROUND TASKS: Starting fusion and insight generation');
         
-        // Run both tasks in parallel using Promise.all
-        await Promise.all([
-          fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase)
-            .catch(error => {
-              console.error('❌ Fusion task failed:', error);
-              // Don't throw - let insight generation continue
-            }),
-          generateConversationInsights(userId, sessionId, supabase)
-            .catch(error => {
-              console.error('❌ Insight generation task failed:', error);
-              // Don't throw - let fusion continue
-            })
-        ]);
+        // Run both tasks with explicit error handling
+        const fusionPromise = fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase)
+          .then(() => {
+            console.log('✅ FUSION TASK: Completed successfully');
+            return { task: 'fusion', success: true };
+          })
+          .catch(error => {
+            console.error('❌ FUSION TASK FAILED:', {
+              name: error?.name,
+              message: error?.message,
+              stack: error?.stack?.split('\n').slice(0, 5),
+              userId,
+              sessionId
+            });
+            return { task: 'fusion', success: false, error };
+          });
         
-        console.log('✅ BACKGROUND TASKS: Both tasks completed');
+        const insightPromise = generateConversationInsights(userId, sessionId, supabase)
+          .then((insights) => {
+            console.log('✅ INSIGHT TASK: Completed', { insightCount: insights?.length || 0 });
+            return { task: 'insights', success: true, count: insights?.length || 0 };
+          })
+          .catch(error => {
+            console.error('❌ INSIGHT TASK FAILED:', {
+              name: error?.name,
+              message: error?.message,
+              stack: error?.stack?.split('\n').slice(0, 5),
+              userIdProvided: !!userId,
+              sessionIdProvided: !!sessionId
+            });
+            return { task: 'insights', success: false, error };
+          });
+        
+        // Wait for both with detailed status
+        const results = await Promise.allSettled([fusionPromise, insightPromise]);
+        console.log('📊 BACKGROUND TASKS: Completed', {
+          fusion: results[0].status === 'fulfilled' ? results[0].value : results[0].reason,
+          insights: results[1].status === 'fulfilled' ? results[1].value : results[1].reason
+        });
       } catch (error) {
         console.error('❌ BACKGROUND TASKS: Unexpected error', {
           error: error instanceof Error ? {

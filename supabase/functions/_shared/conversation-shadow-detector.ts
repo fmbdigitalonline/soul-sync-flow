@@ -26,7 +26,9 @@ export interface ConversationInsight {
 export class ConversationShadowDetector {
   protected static readonly EMOTIONAL_TRIGGERS = [
     'overwhelmed', 'frustrated', 'angry', 'annoyed', 'triggered', 'upset', 
-    'irritated', 'bothered', 'stressed', 'anxious', 'worried', 'concerned'
+    'irritated', 'bothered', 'stressed', 'anxious', 'worried', 'concerned',
+    'stuck', 'blocked', 'trapped', 'defeated', 'lost', 'confused',
+    'cant figure', 'dont know', 'no idea', 'give up', 'burnt out', 'drained'
   ];
 
   protected static readonly PROJECTION_PATTERNS = [
@@ -41,7 +43,16 @@ export class ConversationShadowDetector {
 
   protected static readonly LIMITING_BELIEFS = [
     'im not good', 'i cant do', 'im bad at', 'im terrible', 'i never',
-    'i always fail', 'not smart enough', 'not worthy', 'dont deserve'
+    'i always fail', 'not smart enough', 'not worthy', 'dont deserve',
+    'im not', 'i cant', 'never works', 'always fails', 'lost credibility',
+    'not good enough', 'bad at', 'too late', 'missed my chance', 'why bother',
+    'never seem to', 'cant seem to', 'just cant', 'doesnt work for me'
+  ];
+
+  protected static readonly INFORMAL_RESISTANCE = [
+    'yeah but', 'i know but', 'tried that', 'doesnt work for me',
+    'too hard', 'too much', 'not enough time', 'cant afford',
+    'but what if', 'but i', 'already tried'
   ];
 
   static async detectShadowPatterns(userId: string): Promise<ConversationInsight[]> {
@@ -152,6 +163,15 @@ export class ConversationShadowDetector {
         }
       });
 
+      // Detect informal resistance
+      const informalResistance = this.detectInformalResistance(userMessages, allText);
+      console.log('🔍 SHADOW DETECTOR: Informal resistance found:', informalResistance.length);
+      informalResistance.forEach(pattern => {
+        if (pattern.confidence > 0.6) {
+          insights.push(this.createInsightFromPattern(pattern, 'pattern_alert'));
+        }
+      });
+
       console.log(`🔍 SHADOW DETECTOR: Generated ${insights.length} total insights from ${userMessages.length} messages`);
       return insights.slice(0, 5); // Limit to top 5 insights
 
@@ -166,9 +186,18 @@ export class ConversationShadowDetector {
     const triggerCounts = new Map<string, { count: number, quotes: string[] }>();
 
     this.EMOTIONAL_TRIGGERS.forEach(trigger => {
-      const regex = new RegExp(`\\b${trigger}\\b`, 'gi');
+      // Handle multi-word triggers and contractions
+      const normalized = trigger.replace(/\s+/g, '\\s*');
+      const regex = new RegExp(normalized, 'gi');
       const matches = allText.match(regex);
-      if (matches && matches.length >= 2) {
+      
+      console.log(`🔍 Testing trigger "${trigger}":`, {
+        foundMatches: matches?.length || 0,
+        sampleMatch: matches?.[0],
+        textSample: allText.substring(0, 100)
+      });
+      
+      if (matches && matches.length >= 1) { // Lower threshold to 1 for better detection
         const quotes = conversations
           .filter(c => c.content.toLowerCase().includes(trigger))
           .map(c => c.content)
@@ -179,18 +208,24 @@ export class ConversationShadowDetector {
     });
 
     triggerCounts.forEach((data, trigger) => {
-      if (data.count >= 2) {
+      if (data.count >= 1) { // Lower threshold for better detection
         patterns.push({
           id: `trigger_${trigger}_${Date.now()}`,
           type: 'emotional_trigger',
           pattern: `Recurring emotional trigger: "${trigger}"`,
           userQuote: data.quotes[0] || '',
           frequency: data.count,
-          confidence: Math.min(0.9, 0.5 + (data.count * 0.1)),
+          confidence: Math.min(0.9, 0.6 + (data.count * 0.1)),
           lastSeen: new Date(),
-          emotionalIntensity: data.count >= 4 ? 0.9 : 0.7
+          emotionalIntensity: data.count >= 3 ? 0.9 : 0.7
         });
       }
+    });
+
+    console.log('🔍 EMOTIONAL TRIGGERS SUMMARY:', {
+      patternsFound: patterns.length,
+      totalTriggers: this.EMOTIONAL_TRIGGERS.length,
+      triggersUsed: patterns.map(p => p.pattern.split('"')[1])
     });
 
     return patterns;
@@ -254,11 +289,13 @@ export class ConversationShadowDetector {
     const patterns: ShadowPattern[] = [];
 
     this.LIMITING_BELIEFS.forEach(belief => {
-      const regex = new RegExp(belief.replace(' ', '\\s+'), 'gi');
+      // Handle multi-word patterns and contractions
+      const normalized = belief.replace(/\s+/g, '\\s*').replace(/'/g, "'?");
+      const regex = new RegExp(normalized, 'gi');
       const matches = allText.match(regex);
       if (matches && matches.length >= 1) {
         const quote = conversations.find(c => 
-          c.content.toLowerCase().includes(belief.toLowerCase())
+          regex.test(c.content.toLowerCase())
         )?.content || '';
 
         patterns.push({
@@ -274,6 +311,36 @@ export class ConversationShadowDetector {
       }
     });
 
+    return patterns;
+  }
+
+  private static detectInformalResistance(conversations: any[], allText: string): ShadowPattern[] {
+    const patterns: ShadowPattern[] = [];
+    
+    this.INFORMAL_RESISTANCE.forEach(pattern => {
+      // Flexible matching: allow variations and contractions
+      const normalized = pattern.replace(/\s+/g, '\\s*').replace(/'/g, "'?");
+      const regex = new RegExp(normalized, 'gi');
+      const matches = allText.match(regex);
+      
+      if (matches && matches.length >= 1) {
+        const quote = conversations.find(c => 
+          regex.test(c.content.toLowerCase())
+        )?.content || '';
+        
+        patterns.push({
+          id: `informal_resistance_${pattern.replace(/\s+/g, '_')}_${Date.now()}`,
+          type: 'resistance',
+          pattern: `Resistance signal: "${pattern}"`,
+          userQuote: quote,
+          frequency: matches.length,
+          confidence: 0.75, // Moderate confidence for informal signals
+          lastSeen: new Date(),
+          emotionalIntensity: 0.7
+        });
+      }
+    });
+    
     return patterns;
   }
 
