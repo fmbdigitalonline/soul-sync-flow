@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 // PHASE 1: Import ConversationShadowDetector for insight generation
 // Import path is relative to edge function, resolving to project src
 import { ConversationShadowDetector } from '../../../src/services/conversation-shadow-detector.ts'
+import { ConversationPhaseTracker } from '../../../src/services/conversation-phase-tracker.ts'
 
 // Helper function to detect if user wants technical personality details
 function detectTechnicalDetailRequest(message: string): boolean {
@@ -12,13 +13,25 @@ function detectTechnicalDetailRequest(message: string): boolean {
 }
 
 function getConversationFlowGuidance(conversationState: any): string {
-  if (conversationState.shouldAskQuestion) {
-    return 'The user has explicitly requested suggestions or asked for more information. You may provide thoughtful guidance and ask follow-up questions.';
+  const detection = conversationState.detectionResult;
+  
+  // Priority 1: Closure cluster
+  if (detection.cluster === 'closure') {
+    return `CLOSURE MODE: User signaled ${detection.subState}. Acknowledge warmly and STOP. No new content or questions.`;
   }
-  if (conversationState.userSatisfied || conversationState.closureSignalDetected) {
-    return 'The user appears satisfied or has indicated closure. Respond warmly with a gentle satisfaction check like "Does this help clarify things for you?" or "I hope this gives you the clarity you were looking for." Do NOT add suggestions or additional questions.';
+  
+  // Priority 2: Meta-dialogue cluster
+  if (detection.cluster === 'meta_dialogue') {
+    return `META MODE: User is giving instruction about conversation style (${detection.subState}). Acknowledge and adapt immediately in ≤1 line.`;
   }
-  return 'Provide a direct, helpful response and end with a simple satisfaction check like "Does this help clarify what you were looking for?" or "Is there anything about this you\'d like me to explore further?" Do NOT automatically provide suggestions unless explicitly requested.';
+  
+  // Priority 3: Frustration cluster
+  if (detection.cluster === 'frustration') {
+    return `FRUSTRATION MODE: User is ${detection.subState}. Acknowledge in 1 line, then give friction-reducing step + quick win.`;
+  }
+  
+  // Priority 4: Use schema-defined opening rule
+  return detection.openingRule;
 }
 
 // Helper function to convert MBTI types to natural descriptions
@@ -75,121 +88,26 @@ function getArchetypalDescription(sunSign: string): string {
   return descriptions[sunSign] || 'individual archetypal influence';
 }
 
-// PHASE 4: Enhanced conversation state detection with holistic taxonomy
+// PHASE 4: Enhanced conversation state detection with comprehensive cluster taxonomy
 function detectConversationState(message: string, conversationHistory: any[] = []) {
-  const msg = message.toLowerCase();
+  const detection = ConversationPhaseTracker.detectState(message, conversationHistory);
   
-  // Closure patterns (highest priority)
-  if (/^(ok(ay)?|thanks?|thx|cool|got it|fine)\s*[.!]?\s*$/.test(msg) || /\b(thanks|thank\s*you|appreciate)\b/.test(msg)) {
-    return {
-      isActive: false,
-      userSatisfied: true,
-      closureSignalDetected: true,
-      lastInteractionType: 'closure',
-      shouldAskQuestion: false,
-      detectionResult: {
-        cluster: 'closure',
-        subState: 'gratitude',
-        confidence: 0.9,
-        signals: [{ type: 'cluster_pattern', id: 'closure:gratitude', matched: 'thanks', weight: 2.4 }],
-        openingRule: 'Acknowledge and stop. No new content.',
-        allowedNextClusters: []
-      }
-    };
-  }
+  console.log('🎯 CONVERSATION STATE DETECTION:', {
+    cluster: detection.cluster,
+    subState: detection.subState,
+    confidence: detection.confidence,
+    signalCount: detection.signals.length,
+    topSignals: detection.signals.slice(0, 3).map(s => `${s.type}:${s.id}`)
+  });
   
-  // Meta-dialogue (instruction to AI)
-  if (/\b(just\s+facts|no\s+fluff|shorter|simpler|be\s+direct)\b/.test(msg)) {
-    return {
-      isActive: true,
-      userSatisfied: false,
-      closureSignalDetected: false,
-      lastInteractionType: 'meta',
-      shouldAskQuestion: false,
-      detectionResult: {
-        cluster: 'meta_dialogue',
-        subState: 'instruction_to_ai',
-        confidence: 0.85,
-        signals: [{ type: 'discourse_marker', id: 'meta_manage', matched: 'simpler', weight: 0.9 }],
-        openingRule: 'Acknowledge the instruction; adapt immediately; confirm new mode in ≤1 line.',
-        allowedNextClusters: ['clarification', 'decision', 'reflection']
-      }
-    };
-  }
-  
-  // Frustration (emphasis, venting)
-  if (/(!{2,}|[A-Z]{5,})/.test(message) || /\b(i'?m\s+so\s+done|nothing\s*works)\b/.test(msg)) {
-    return {
-      isActive: true,
-      userSatisfied: false,
-      closureSignalDetected: false,
-      lastInteractionType: 'frustration',
-      shouldAskQuestion: false,
-      detectionResult: {
-        cluster: 'frustration',
-        subState: 'venting',
-        confidence: 0.7,
-        signals: [{ type: 'paralinguistic', id: 'emphasis', matched: '!!!', weight: 0.6 }],
-        openingRule: 'Acknowledge in 1 line, then give friction-reducing step + quick win.',
-        allowedNextClusters: ['validation', 'decision']
-      }
-    };
-  }
-  
-  // Decision (planning, steps)
-  if (/\b(should\s+i|next\s*step|give\s+me\s+steps)\b/.test(msg)) {
-    return {
-      isActive: true,
-      userSatisfied: false,
-      closureSignalDetected: false,
-      lastInteractionType: 'planning',
-      shouldAskQuestion: true,
-      detectionResult: {
-        cluster: 'decision',
-        subState: 'plan_request',
-        confidence: 0.75,
-        signals: [{ type: 'sentence_form', id: 'imperative_plan', matched: 'give me steps', weight: 0.8 }],
-        openingRule: 'Start with the prioritized step; then 2–3 bullet plan. No recap.',
-        allowedNextClusters: ['reflection', 'constraint']
-      }
-    };
-  }
-  
-  // Clarification (why questions)
-  if (/\bwhy\b/.test(msg) || /\?$/.test(msg)) {
-    return {
-      isActive: true,
-      userSatisfied: false,
-      closureSignalDetected: false,
-      lastInteractionType: 'inquiry',
-      shouldAskQuestion: true,
-      detectionResult: {
-        cluster: 'clarification',
-        subState: 'why_question',
-        confidence: 0.7,
-        signals: [{ type: 'sentence_form', id: 'wh_question', matched: 'why', weight: 0.6 }],
-        openingRule: 'Skip empathy; give a crisp model/mechanism then 1 probing question.',
-        allowedNextClusters: ['decision', 'reflection']
-      }
-    };
-  }
-  
-  // Default: engagement/clarification based on turn count
-  const turnCount = Math.floor((conversationHistory.length + 1) / 2);
+  // Map to backward-compatible format for existing code
   return {
-    isActive: true,
-    userSatisfied: false,
-    closureSignalDetected: false,
-    lastInteractionType: 'inquiry',
-    shouldAskQuestion: turnCount <= 2,
-    detectionResult: {
-      cluster: turnCount <= 2 ? 'engagement' : 'clarification',
-      subState: 'context_setting',
-      confidence: 0.4,
-      signals: [],
-      openingRule: turnCount <= 2 ? 'Warm but brief open; move to user intent in <=1 sentence.' : 'Skip empathy; give a crisp model/mechanism.',
-      allowedNextClusters: ['clarification', 'decision']
-    }
+    isActive: detection.cluster !== 'closure',
+    userSatisfied: detection.cluster === 'closure' && detection.subState === 'gratitude',
+    closureSignalDetected: detection.cluster === 'closure',
+    lastInteractionType: detection.cluster,
+    shouldAskQuestion: ['exploration', 'clarification', 'validation'].includes(detection.cluster),
+    detectionResult: detection
   };
 }
 
@@ -1295,7 +1213,17 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
         // Build Hermetic identity primer FIRST
         const hermeticPrimer = buildHermeticIdentityPrimer(hermeticEducationalSections, userName);
         
+        // Phase guidance from conversation tracker
+        const phaseGuidance = ConversationPhaseTracker.getPhaseGuidance(
+          conversationState.detectionResult.cluster
+        );
+        
         return `${hermeticPrimer}
+
+${phaseGuidance}
+
+CRITICAL OPENING INSTRUCTION:
+${conversationState.detectionResult.openingRule}
 
 YOUR ROLE IN THIS CONVERSATION:
 ${getRoleForIntent(intent, userName, hermeticEducationalSections)}
@@ -1426,6 +1354,62 @@ Respond helpfully while building rapport and understanding.`
       lastUserMessage: message.substring(0, 100) + '...',
       closureMode: isClosure
     });
+
+    // ENHANCED DIAGNOSTICS: Full conversation state analysis
+    console.log('📊 ENHANCED CONVERSATION DIAGNOSTICS:', {
+      cluster: conversationState.detectionResult.cluster,
+      subState: conversationState.detectionResult.subState,
+      confidence: conversationState.detectionResult.confidence,
+      signalBreakdown: {
+        paralinguistic: conversationState.detectionResult.signals.filter(s => s.type === 'paralinguistic').length,
+        sentenceForm: conversationState.detectionResult.signals.filter(s => s.type === 'sentence_form').length,
+        discourseMarker: conversationState.detectionResult.signals.filter(s => s.type === 'discourse_marker').length,
+        clusterPattern: conversationState.detectionResult.signals.filter(s => s.type === 'cluster_pattern').length
+      },
+      topSignals: conversationState.detectionResult.signals
+        .sort((a, b) => b.weight - a.weight)
+        .slice(0, 3)
+        .map(s => ({ type: s.type, id: s.id, weight: s.weight })),
+      openingRule: conversationState.detectionResult.openingRule,
+      allowedNext: conversationState.detectionResult.allowedNextClusters,
+      turnCount: Math.floor((finalHistory?.length || 0 + 1) / 2)
+    });
+
+    // ANTI-REPETITION SENTINEL: Cluster-specific repetition detection
+    if (finalHistory && finalHistory.length >= 2 && conversationState.detectionResult.cluster !== 'engagement') {
+      const lastAssistantMessage = finalHistory
+        .slice()
+        .reverse()
+        .find(msg => msg.role === 'assistant')?.content || '';
+      
+      const lastOpening = lastAssistantMessage.substring(0, 150).toLowerCase();
+      
+      // Cluster-specific repetitive patterns
+      const repetitivePatterns: Record<string, string[]> = {
+        validation: ['that feeling', 'i hear that', 'it sounds like', 'the weight of'],
+        clarification: ['to understand', 'let me break', 'essentially', 'in other words'],
+        decision: ['so the path', 'here's what', 'the next step'],
+        reflection: ['what you've discovered', 'the key insight', 'looking back']
+      };
+      
+      const currentCluster = conversationState.detectionResult.cluster;
+      const patternsToCheck = repetitivePatterns[currentCluster] || [];
+      
+      const hasRepetitiveOpening = patternsToCheck.some(pattern => 
+        lastOpening.includes(pattern)
+      );
+      
+      if (hasRepetitiveOpening) {
+        console.log('🚨 REPETITION SENTINEL: Detected cluster-specific repetition', {
+          cluster: currentCluster,
+          pattern: patternsToCheck.find(p => lastOpening.includes(p))
+        });
+        
+        messagesToSend[0].content = `⚠️ CRITICAL: You just used similar opening language. ${conversationState.detectionResult.openingRule}
+
+${messagesToSend[0].content}`;
+      }
+    }
 
     // OPENAI API CALL: Send messages to GPT model
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
