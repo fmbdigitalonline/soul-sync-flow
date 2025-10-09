@@ -658,6 +658,39 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_insights: {
+        Row: {
+          created_at: string
+          dismissed_at: string | null
+          id: string
+          insight_data: Json
+          insight_type: string
+          session_id: string
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          insight_data: Json
+          insight_type: string
+          session_id: string
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          insight_data?: Json
+          insight_type?: string
+          session_id?: string
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
       conversation_memory: {
         Row: {
           conversation_stage: string | null

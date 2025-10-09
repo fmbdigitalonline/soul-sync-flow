@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
+// PHASE 1: Import ConversationShadowDetector for insight generation
+// Import path is relative to edge function, resolving to project src
+import { ConversationShadowDetector } from '../../../src/services/conversation-shadow-detector.ts'
+
 // Helper function to detect if user wants technical personality details
 function detectTechnicalDetailRequest(message: string): boolean {
   const technicalKeywords = /\b(mbti|human design|personality type|what.*type|technical|specific|sun sign|projector|enfp|intj|generator|manifestor|manifesting generator|reflector)\b/i;
@@ -168,6 +172,74 @@ function calculateCosineSimilarity(vecA: number[], vecB: number[]): number {
   }
   
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB))
+}
+
+// PHASE 2: Insight generation function - detects shadow patterns and stores insights
+async function generateConversationInsights(
+  userId: string,
+  sessionId: string,
+  supabase: any
+) {
+  const startTime = Date.now();
+  console.log('🔍 INSIGHT GENERATION: Starting shadow pattern detection', {
+    userId,
+    sessionId,
+    timestamp: new Date().toISOString()
+  });
+
+  try {
+    // Call the ConversationShadowDetector we fixed
+    const insights = await ConversationShadowDetector.detectShadowPatterns(userId);
+    
+    console.log('✅ INSIGHT GENERATION: Patterns detected', {
+      insightCount: insights.length,
+      patterns: insights.map(i => i.pattern.type),
+      duration: Date.now() - startTime + 'ms'
+    });
+
+    // Store insights in database for UI to display
+    if (insights.length > 0) {
+      const insightRecords = insights.map(insight => ({
+        user_id: userId,
+        session_id: sessionId,
+        insight_type: insight.type,
+        insight_data: {
+          pattern: insight.pattern,
+          title: insight.title,
+          message: insight.message,
+          actionableSteps: insight.actionableSteps,
+          priority: insight.priority
+        },
+        created_at: new Date().toISOString()
+      }));
+
+      const { error: insertError } = await supabase
+        .from('conversation_insights')
+        .insert(insightRecords);
+
+      if (insertError) {
+        console.error('❌ INSIGHT GENERATION: Failed to store insights', insertError);
+        throw insertError;
+      } else {
+        console.log('✅ INSIGHT GENERATION: Insights stored in database', {
+          recordCount: insightRecords.length
+        });
+      }
+    } else {
+      console.log('ℹ️ INSIGHT GENERATION: No patterns detected in conversation');
+    }
+
+    return insights;
+
+  } catch (error) {
+    console.error('❌ INSIGHT GENERATION FAILED:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      duration: Date.now() - startTime + 'ms'
+    });
+    // Throw to surface error (Principle #3: No error masking)
+    throw error;
+  }
 }
 
 // FUSION: Background task for HACS intelligence integration
@@ -1386,19 +1458,32 @@ Respond helpfully while building rapport and understanding.`
         oracleResponseDataKeys: Object.keys(oracleResponseData)
       });
 
-      // DIAGNOSTIC MODE: Temporarily use await instead of background to identify errors
-      // This violates the EdgeRuntime pattern but helps us find the issue
+      // PHASE 3: Run fusion and insight generation in parallel background tasks
       try {
-        console.log('⚠️ DIAGNOSTIC: Running fusion synchronously for debugging');
-        await fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase);
-        console.log('✅ DIAGNOSTIC: Fusion completed successfully');
-      } catch (fusionError) {
-        console.error('❌ DIAGNOSTIC: Fusion failed with error', {
-          error: fusionError instanceof Error ? {
-            name: fusionError.name,
-            message: fusionError.message,
-            stack: fusionError.stack
-          } : fusionError
+        console.log('🚀 BACKGROUND TASKS: Starting fusion and insight generation');
+        
+        // Run both tasks in parallel using Promise.all
+        await Promise.all([
+          fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase)
+            .catch(error => {
+              console.error('❌ Fusion task failed:', error);
+              // Don't throw - let insight generation continue
+            }),
+          generateConversationInsights(userId, sessionId, supabase)
+            .catch(error => {
+              console.error('❌ Insight generation task failed:', error);
+              // Don't throw - let fusion continue
+            })
+        ]);
+        
+        console.log('✅ BACKGROUND TASKS: Both tasks completed');
+      } catch (error) {
+        console.error('❌ BACKGROUND TASKS: Unexpected error', {
+          error: error instanceof Error ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+          } : error
         });
       }
 

@@ -193,6 +193,60 @@ export const useHACSInsights = () => {
   }, [user]);
 
   // Generate conversation-derived insights (priority)
+  // PHASE 5: Query conversation_insights table populated by edge function
+  const fetchStoredConversationInsights = useCallback(async (): Promise<HACSInsight[]> => {
+    if (!user?.id) {
+      console.log('🎯 fetchStoredConversationInsights: No user available');
+      return [];
+    }
+
+    try {
+      const { data: insights, error } = await supabase
+        .from('conversation_insights')
+        .select('*')
+        .eq('user_id', user.id)
+        .is('viewed_at', null) // Only unviewed insights
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error('❌ Error fetching stored insights:', error);
+        return [];
+      }
+
+      console.log('✅ Fetched stored conversation insights:', {
+        count: insights?.length || 0,
+        types: insights?.map(i => i.insight_type) || []
+      });
+
+      // Transform database records to HACSInsight format
+      const formattedInsights: HACSInsight[] = (insights || []).map(dbInsight => {
+        const data = typeof dbInsight.insight_data === 'string' 
+          ? JSON.parse(dbInsight.insight_data) 
+          : dbInsight.insight_data;
+          
+        return {
+          id: dbInsight.id,
+          text: data.message || '',
+          module: 'ConversationShadow',
+          type: dbInsight.insight_type as any,
+          confidence: data.pattern?.confidence || 0.7,
+          actionableSteps: data.actionableSteps || [],
+          evidence: data.pattern?.quotes || [],
+          timestamp: new Date(dbInsight.created_at),
+          acknowledged: false,
+          priority: data.priority || 'medium',
+          personalizedMessage: data.title || ''
+        };
+      });
+
+      return formattedInsights;
+    } catch (error) {
+      console.error('❌ Exception in fetchStoredConversationInsights:', error);
+      return [];
+    }
+  }, [user, supabase]);
+
   const generateConversationInsights = useCallback(async (): Promise<HACSInsight[]> => {
     if (!user) {
       console.log('🎯 generateConversationInsights: No user available');
@@ -434,12 +488,13 @@ export const useHACSInsights = () => {
       // PRIORITY 1: Conversation-Derived Insights (highest priority, no daily limit)
       console.log('🎯 Phase 1: Generating conversation-derived insights...');
       try {
-        const conversationInsights = await generateConversationInsights();
-        console.log('🎯 Conversation insights result:', { 
-          count: conversationInsights?.length || 0,
-          types: conversationInsights?.map(i => i.type) || []
+        // PHASE 5: Fetch insights from database instead of generating inline
+        const storedInsights = await fetchStoredConversationInsights();
+        console.log('✅ Fetched stored conversation insights for display:', {
+          count: storedInsights?.length || 0,
+          types: storedInsights?.map(i => i.type) || []
         });
-        insights.push(...(conversationInsights || []));
+        insights.push(...(storedInsights || []));
       } catch (conversationError) {
         console.error('🚨 Conversation insights error:', conversationError);
       }
