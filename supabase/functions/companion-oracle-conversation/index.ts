@@ -1369,7 +1369,7 @@ Respond helpfully while building rapport and understanding.`
       semanticChunks: semanticChunks.length,
       quality: intelligenceLevel > 70 ? 0.9 : 0.8, // Higher quality for advanced users
       personalityContext
-    }
+    };
 
     // FUSION STEP 3: Start background HACS intelligence processing (non-blocking)
     console.log('🔍 FUSION CHECK: Background intelligence flag', {
