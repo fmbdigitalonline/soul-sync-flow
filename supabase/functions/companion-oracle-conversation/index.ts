@@ -178,36 +178,114 @@ async function fuseWithHACSIntelligence(
   oracleResponse: any,
   supabase: any
 ) {
+  const fusionStartTime = Date.now();
+  console.log('🚀🧠 FUSION ENTRY: Background intelligence processing started', {
+    timestamp: new Date().toISOString(),
+    userId,
+    sessionId,
+    messageLength: userMessage?.length || 0,
+    hasOracleResponse: !!oracleResponse,
+    oracleResponseKeys: Object.keys(oracleResponse || {}),
+    stackTrace: new Error().stack?.split('\n').slice(0, 3)
+  });
+
   try {
-    console.log('🧠 FUSION: Starting background HACS intelligence processing');
+    // Validate inputs
+    if (!userId || !sessionId || !userMessage) {
+      console.error('❌ FUSION VALIDATION FAILED: Missing required parameters', {
+        hasUserId: !!userId,
+        hasSessionId: !!sessionId,
+        hasMessage: !!userMessage
+      });
+      throw new Error('Missing required parameters for fusion');
+    }
+
+    console.log('✅ FUSION VALIDATION PASSED: Preparing brain processor invocation');
+
+    // Prepare request body
+    const brainRequestBody = {
+      userId,
+      message: userMessage,
+      sessionId,
+      agentMode: 'companion',
+      agentResponse: oracleResponse.response,
+      oracleMetadata: {
+        personalityInsights: oracleResponse.semanticChunks,
+        oracleMode: true,
+        responseQuality: oracleResponse.quality || 0.8,
+        oracleStatus: oracleResponse.oracleStatus
+      }
+    };
+
+    console.log('🎯 FUSION: Invoking unified-brain-processor', {
+      requestBodyKeys: Object.keys(brainRequestBody),
+      agentMode: brainRequestBody.agentMode,
+      hasAgentResponse: !!brainRequestBody.agentResponse,
+      oracleMetadataKeys: Object.keys(brainRequestBody.oracleMetadata)
+    });
+
+    const brainInvokeStart = Date.now();
     
     // Invoke unified brain processor with oracle response for learning
     const { data: brainResult, error: brainError } = await supabase.functions.invoke('unified-brain-processor', {
-      body: {
-        userId,
-        message: userMessage,  // FUSION FIX: Use 'message' parameter expected by brain processor
-        sessionId,
-        agentMode: 'companion', // FUSION FIX: Add required agentMode parameter
-        agentResponse: oracleResponse.response,
-        oracleMetadata: {
-          personalityInsights: oracleResponse.semanticChunks,
-          oracleMode: true,
-          responseQuality: oracleResponse.quality || 0.8,
-          oracleStatus: oracleResponse.oracleStatus
-        }
-      }
+      body: brainRequestBody
+    });
+
+    const brainInvokeDuration = Date.now() - brainInvokeStart;
+
+    console.log('📥 FUSION: Brain processor response received', {
+      duration: brainInvokeDuration + 'ms',
+      hasError: !!brainError,
+      hasData: !!brainResult,
+      errorDetails: brainError ? {
+        message: brainError.message,
+        code: brainError.code,
+        details: brainError.details
+      } : null,
+      dataKeys: brainResult ? Object.keys(brainResult) : []
     });
 
     if (brainError) {
-      console.error('❌ FUSION ERROR: Unified brain processing failed', brainError);
+      console.error('❌ FUSION ERROR: Unified brain processing failed', {
+        error: brainError,
+        errorMessage: brainError.message,
+        errorCode: brainError.code,
+        errorDetails: brainError.details,
+        requestBody: brainRequestBody,
+        duration: brainInvokeDuration
+      });
     } else {
       console.log('✅ FUSION SUCCESS: HACS intelligence updated from oracle interaction', {
         processingId: brainResult?.processingId,
-        intelligenceLevel: brainResult?.newIntelligenceLevel
+        intelligenceLevel: brainResult?.newIntelligenceLevel,
+        modulesProcessed: brainResult?.modulesProcessed,
+        xpGained: brainResult?.xpGained,
+        totalDuration: Date.now() - fusionStartTime + 'ms'
       });
     }
+
+    console.log('🏁 FUSION COMPLETE: Background task finished', {
+      success: !brainError,
+      totalDuration: Date.now() - fusionStartTime + 'ms',
+      timestamp: new Date().toISOString()
+    });
+
   } catch (error) {
-    console.error('❌ FUSION ERROR: Background intelligence task failed', error);
+    const errorDuration = Date.now() - fusionStartTime;
+    console.error('❌ FUSION FATAL ERROR: Background intelligence task crashed', {
+      error: error instanceof Error ? {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      } : error,
+      duration: errorDuration + 'ms',
+      timestamp: new Date().toISOString(),
+      userId,
+      sessionId
+    });
+    
+    // Re-throw to surface the error (Principle #3: No error masking)
+    throw error;
   }
 }
 
@@ -1294,17 +1372,54 @@ Respond helpfully while building rapport and understanding.`
     }
 
     // FUSION STEP 3: Start background HACS intelligence processing (non-blocking)
+    console.log('🔍 FUSION CHECK: Background intelligence flag', {
+      enableBackgroundIntelligence,
+      hasEdgeRuntime: typeof EdgeRuntime !== 'undefined',
+      hasWaitUntil: typeof EdgeRuntime !== 'undefined' && !!EdgeRuntime.waitUntil,
+      timestamp: new Date().toISOString()
+    });
+
     if (enableBackgroundIntelligence) {
-      console.log('🚀 FUSION: Starting background HACS intelligence processing');
-      // Use EdgeRuntime.waitUntil to run background task without blocking response
-      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
-        EdgeRuntime.waitUntil(fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase));
-      } else {
-        // Fallback: Fire and forget background task
-        fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase).catch(error => {
-          console.error('Background fusion task failed:', error);
+      console.log('🚀 FUSION TRIGGERED: Starting background HACS intelligence processing', {
+        userId,
+        sessionId,
+        oracleResponseDataKeys: Object.keys(oracleResponseData)
+      });
+
+      // DIAGNOSTIC MODE: Temporarily use await instead of background to identify errors
+      // This violates the EdgeRuntime pattern but helps us find the issue
+      try {
+        console.log('⚠️ DIAGNOSTIC: Running fusion synchronously for debugging');
+        await fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase);
+        console.log('✅ DIAGNOSTIC: Fusion completed successfully');
+      } catch (fusionError) {
+        console.error('❌ DIAGNOSTIC: Fusion failed with error', {
+          error: fusionError instanceof Error ? {
+            name: fusionError.name,
+            message: fusionError.message,
+            stack: fusionError.stack
+          } : fusionError
         });
       }
+
+      /* ORIGINAL BACKGROUND EXECUTION (temporarily disabled for diagnostics)
+      // Use EdgeRuntime.waitUntil to run background task without blocking response
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+        console.log('📤 Using EdgeRuntime.waitUntil for background fusion');
+        EdgeRuntime.waitUntil(fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase));
+      } else {
+        console.log('📤 Using fallback fire-and-forget for background fusion');
+        // Fallback: Fire and forget background task
+        fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase).catch(error => {
+          console.error('❌ Background fusion task failed:', error);
+        });
+      }
+      */
+    } else {
+      console.log('⏭️ FUSION SKIPPED: Background intelligence disabled', {
+        flag: enableBackgroundIntelligence,
+        reason: 'enableBackgroundIntelligence is false'
+      });
     }
 
     // Log metrics for cost tracking

@@ -78,13 +78,30 @@ export class SubconsciousOrbController {
    * Target: <100ms response time with orb state update
    */
   static async processMessage(messageContent: string, messageId: string): Promise<void> {
+    console.log('🔮 SubconsciousOrb: processMessage ENTRY', {
+      messageId,
+      messageLength: messageContent?.length || 0,
+      messagePreview: messageContent?.substring(0, 50) + '...',
+      isInitialized: this.isInitialized,
+      currentMode: this.currentState?.mode,
+      timestamp: new Date().toISOString()
+    });
+
     if (!this.isInitialized) {
+      console.warn('⚠️ SubconsciousOrbController not initialized, initializing now...');
       await this.initialize();
+    }
+    
+    if (!messageContent || messageContent.trim().length === 0) {
+      console.warn('⚠️ Empty message received, skipping pattern detection');
+      return;
     }
     
     const startTime = performance.now();
     
     try {
+      console.log('🔄 SubconsciousOrb: Setting detecting state');
+      
       // Set detecting state immediately for visual feedback
       this.setState({
         mode: 'detecting',
@@ -95,11 +112,22 @@ export class SubconsciousOrbController {
         processingTime: 0
       });
 
+      console.log('🔍 SubconsciousOrb: Calling RealTimeShadowDetector.detectLivePattern');
+
       // Real-time pattern detection
       const result: LivePatternResult = await RealTimeShadowDetector.detectLivePattern(messageContent);
       
       const detectionTime = performance.now() - startTime;
       this.recordDetectionTime(detectionTime);
+
+      console.log('📊 SubconsciousOrb: Detection result', {
+        hasPattern: !!result.pattern,
+        patternType: result.pattern?.type,
+        confidence: result.confidence,
+        detectionTime: Math.round(detectionTime) + 'ms',
+        threshold: 0.6,
+        willTrigger: result.pattern && result.confidence > 0.6
+      });
 
       if (result.pattern && result.confidence > 0.6) {
         // Check for duplicate recent patterns

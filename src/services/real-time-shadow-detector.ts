@@ -31,12 +31,20 @@ export class RealTimeShadowDetector extends ConversationShadowDetector {
   static async detectLivePattern(messageContent: string): Promise<LivePatternResult> {
     const startTime = performance.now();
     
+    console.log('🔍 RealTimeShadowDetector: detectLivePattern ENTRY', {
+      messageLength: messageContent?.length || 0,
+      messagePreview: messageContent?.substring(0, 50) + '...',
+      circuitBreakerOpen: this.circuitBreakerOpen,
+      timestamp: new Date().toISOString()
+    });
+
     // Circuit breaker protection
     if (this.circuitBreakerOpen) {
       if (Date.now() - this.lastResetTime > 10000) { // Reset after 10s
         this.circuitBreakerOpen = false;
         console.log('🔧 RealTimeShadowDetector: Circuit breaker reset');
       } else {
+        console.warn('⚠️ RealTimeShadowDetector: Circuit breaker is OPEN, skipping detection');
         return { pattern: null, confidence: 0, processingTime: 0, cached: false };
       }
     }
@@ -44,12 +52,17 @@ export class RealTimeShadowDetector extends ConversationShadowDetector {
     // Debouncing for rapid messages
     const now = Date.now();
     if (now - this.lastProcessTime < this.debounceMs) {
+      console.log('⏭️ RealTimeShadowDetector: Debouncing, skipping detection', {
+        timeSinceLastProcess: now - this.lastProcessTime + 'ms',
+        debounceThreshold: this.debounceMs + 'ms'
+      });
       return { pattern: null, confidence: 0, processingTime: 0, cached: false };
     }
     this.lastProcessTime = now;
     
     try {
       const content = messageContent.toLowerCase();
+      console.log('🔬 RealTimeShadowDetector: Starting pattern analysis');
       let highestPattern: ShadowPattern | null = null;
       let highestConfidence = 0;
       let cached = false;
