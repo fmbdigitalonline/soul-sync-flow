@@ -425,6 +425,28 @@ export class ConversationPhaseTracker {
   }
   
   /**
+   * Get phase-specific guidance for AI to follow during conversation
+   * This method provides context-aware instructions for each conversation phase
+   */
+  static getPhaseGuidance(cluster: ConversationCluster): string {
+    const guidanceMap: Partial<Record<ConversationCluster, string>> = {
+      engagement: "PHASE: ENGAGEMENT. Your goal is to establish rapport and understand the initial context. Be warm and welcoming.",
+      exploration: "PHASE: EXPLORATION. Your goal is to help the user generate ideas and possibilities. Encourage divergent thinking.",
+      clarification: "PHASE: CLARIFICATION. Your goal is to understand the 'why' behind the user's query. Focus on mechanisms and definitions.",
+      decision: "PHASE: DECISION. Your goal is to help the user choose a path forward. Provide clear, actionable steps.",
+      reflection: "PHASE: REFLECTION. Your goal is to help the user synthesize and extract learnings from the conversation.",
+      validation: "PHASE: VALIDATION. Your goal is to provide safety and reassurance. Lead with empathy and stabilize the conversation.",
+      constraint: "PHASE: CONSTRAINT. Your goal is to help the user navigate limitations (time, money, etc.). Be practical and resourceful.",
+      frustration: "PHASE: FRUSTRATION. Your goal is to de-escalate and provide a quick win. Acknowledge the frustration directly.",
+      meta_dialogue: "PHASE: META-DIALOGUE. Your goal is to adapt to the user's instructions about the conversation itself. Adjust your style immediately.",
+      closure: "PHASE: CLOSURE. Your goal is to end the conversation gracefully. Do not introduce new topics."
+    };
+    
+    return guidanceMap[cluster] || 
+      `You are in the '${cluster}' phase. Your primary goal is to facilitate this stage of the conversation before moving on.`;
+  }
+  
+  /**
    * Diagnostic utility: Get all signal details for debugging
    */
   static getSignalBreakdown(userMessage: string): {

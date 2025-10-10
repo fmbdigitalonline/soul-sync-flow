@@ -1,3 +1,6 @@
+// Companion Oracle Conversation Edge Function
+// Built with SoulSync Protocol - NEVER BREAK FUNCTIONALITY
+// Fixed: Added getPhaseGuidance method to conversation-phase-tracker
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
