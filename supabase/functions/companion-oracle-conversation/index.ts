@@ -612,7 +612,7 @@ serve(async (req) => {
       }
     )
 
-    const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = false, conversationHistory = [], userProfile = {}, threadId } = await req.json()
+    const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = true, conversationHistory = [], userProfile = {}, threadId } = await req.json()
     
     // ✅ Layer 3: Request validation - fail fast with clear error messages
     if (!message || typeof message !== 'string') {
