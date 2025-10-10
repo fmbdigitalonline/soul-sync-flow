@@ -1572,20 +1572,27 @@ ${messagesToSend[0].content}`;
         oracleResponseDataKeys: Object.keys(oracleResponseData)
       });
 
+      const bgTasks = Promise.allSettled([
+        fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase),
+        generateConversationInsights(userId, sessionId, supabase)
+      ]);
+
       EdgeRuntime.waitUntil(
-        Promise.allSettled([
-          fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase),
-          generateConversationInsights(userId, sessionId, supabase)
-        ]).then(results => {
-          console.log('✅ BACKGROUND TASKS: Both tasks completed', {
-            fusionStatus: results[0].status,
-            fusionReason: results[0].status === 'rejected' ? (results[0] as PromiseRejectedResult).reason : 'success',
-            insightsStatus: results[1].status,
-            insightsReason: results[1].status === 'rejected' ? (results[1] as PromiseRejectedResult).reason : 'success'
-          });
-        }).catch(error => {
-          console.error('❌ BACKGROUND TASKS: Unexpected error in waitUntil', error);
-        })
+        bgTasks
+          .then((results) => {
+            const r0: any = results[0];
+            const r1: any = results[1];
+
+            console.log('✅ BACKGROUND TASKS: Both tasks completed', {
+              fusionStatus: r0?.status,
+              fusionReason: r0?.status === 'rejected' ? r0?.reason : 'success',
+              insightsStatus: r1?.status,
+              insightsReason: r1?.status === 'rejected' ? r1?.reason : 'success'
+            });
+          })
+          .catch((error) => {
+            console.error('❌ BACKGROUND TASKS: Unexpected error in waitUntil', error);
+          })
       );
     } else if (enableBackgroundIntelligence) {
       console.log('⚠️ EdgeRuntime.waitUntil not available, background tasks will not run');
