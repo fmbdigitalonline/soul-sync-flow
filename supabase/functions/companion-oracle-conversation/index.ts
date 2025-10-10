@@ -610,7 +610,7 @@ serve(async (req) => {
           headers: authHeader ? { Authorization: authHeader } : {}
         }
       }
-    )
+    );
 
     const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = true, conversationHistory = [], userProfile = {}, threadId } = await req.json()
     
