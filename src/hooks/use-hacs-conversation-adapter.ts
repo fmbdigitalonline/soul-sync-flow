@@ -75,10 +75,16 @@ export const useHACSConversationAdapter = (
   // FUSION FIX: Enhanced companion mode detection
   // Check multiple sources to determine if we should use companion/oracle mode
   const shouldUseCompanionMode = (): boolean => {
-    // Direct companion mode setting
+    // PRIORITY 1: If the page itself says it's for the companion, then it is
+    // This allows components to override global mode settings
+    if (pageContext === 'companion') {
+      return true;
+    }
+    
+    // PRIORITY 2: Direct companion mode setting from global context
     if (currentMode === 'companion') return true;
     
-    // Check if we're on index route with 'blend' agent type (default companion behavior)
+    // PRIORITY 3: Check if we're on index route with 'blend' agent type (default companion behavior)
     if (currentMode === 'neutral' && modeConfig.agentType === 'blend') {
       // Index route with blend agent = companion functionality
       return true;
