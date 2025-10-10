@@ -1530,65 +1530,6 @@ ${messagesToSend[0].content}`;
       personalityContext
     };
 
-    // FUSION STEP 3: Start background HACS intelligence processing (non-blocking)
-    console.log('🔍 FUSION CHECK: Background intelligence flag', {
-      enableBackgroundIntelligence,
-      hasEdgeRuntime: typeof EdgeRuntime !== 'undefined',
-      hasWaitUntil: typeof EdgeRuntime !== 'undefined' && !!EdgeRuntime.waitUntil,
-      timestamp: new Date().toISOString()
-    });
-
-    if (enableBackgroundIntelligence) {
-      console.log('🚀 FUSION TRIGGERED: Starting background HACS intelligence processing', {
-        userId,
-        sessionId,
-        oracleResponseDataKeys: Object.keys(oracleResponseData)
-      });
-
-      // PHASE 3: Run fusion and insight generation in parallel background tasks
-      try {
-        console.log('🚀 BACKGROUND TASKS: Starting fusion and insight generation');
-        
-        // Run both tasks in parallel using Promise.all
-        await Promise.all([
-          fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase)
-            .catch(error => {
-              console.error('❌ Fusion task failed:', error);
-              // Don't throw - let insight generation continue
-            }),
-          generateConversationInsights(userId, sessionId, supabase)
-            .catch(error => {
-              console.error('❌ Insight generation task failed:', error);
-              // Don't throw - let fusion continue
-            })
-        ]);
-        
-        console.log('✅ BACKGROUND TASKS: Both tasks completed');
-      } catch (error) {
-        console.error('❌ BACKGROUND TASKS: Unexpected error', {
-          error: error instanceof Error ? {
-            name: error.name,
-            message: error.message,
-            stack: error.stack
-          } : error
-        });
-      }
-
-      /* ORIGINAL BACKGROUND EXECUTION (temporarily disabled for diagnostics)
-      // Use EdgeRuntime.waitUntil to run background task without blocking response
-      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
-        console.log('📤 Using EdgeRuntime.waitUntil for background fusion');
-        EdgeRuntime.waitUntil(fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase));
-      } else {
-        console.log('📤 Using fallback fire-and-forget for background fusion');
-        // Fallback: Fire and forget background task
-        fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase).catch(error => {
-          console.error('❌ Background fusion task failed:', error);
-        });
-      }
-      */
-    
-
     // Log metrics for cost tracking
     const tokenUsage = aiResponse.usage || {};
     console.log('📊 FUSION: Oracle Response Metrics:', {
@@ -1601,8 +1542,8 @@ ${messagesToSend[0].content}`;
       responseLength: response.length
     });
 
-    // FUSION STEP 4: Return immediate response (fusion happens in background)
-    return new Response(JSON.stringify({
+    // FUSION STEP 3: Prepare immediate response (background tasks will run AFTER this is sent)
+    const immediateResponse = new Response(JSON.stringify({
       response,
       quality: 0.85,
       semanticChunks,
@@ -1612,6 +1553,43 @@ ${messagesToSend[0].content}`;
       oracleStatus,
       processingTime: Date.now() - startTime
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    // FUSION STEP 4: Queue background tasks to run AFTER response is sent
+    console.log('🔍 FUSION CHECK: Background intelligence flag', {
+      enableBackgroundIntelligence,
+      hasEdgeRuntime: typeof EdgeRuntime !== 'undefined',
+      hasWaitUntil: typeof EdgeRuntime !== 'undefined' && !!EdgeRuntime.waitUntil,
+      timestamp: new Date().toISOString()
+    });
+
+    if (enableBackgroundIntelligence && typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+      console.log('🚀 FUSION TRIGGERED: Queuing background tasks with EdgeRuntime.waitUntil', {
+        userId,
+        sessionId,
+        oracleResponseDataKeys: Object.keys(oracleResponseData)
+      });
+
+      EdgeRuntime.waitUntil(
+        Promise.allSettled([
+          fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase),
+          generateConversationInsights(userId, sessionId, supabase)
+        ]).then(results => {
+          console.log('✅ BACKGROUND TASKS: Both tasks completed', {
+            fusionStatus: results[0].status,
+            fusionReason: results[0].status === 'rejected' ? (results[0] as PromiseRejectedResult).reason : 'success',
+            insightsStatus: results[1].status,
+            insightsReason: results[1].status === 'rejected' ? (results[1] as PromiseRejectedResult).reason : 'success'
+          });
+        }).catch(error => {
+          console.error('❌ BACKGROUND TASKS: Unexpected error in waitUntil', error);
+        })
+      );
+    } else if (enableBackgroundIntelligence) {
+      console.log('⚠️ EdgeRuntime.waitUntil not available, background tasks will not run');
+    }
+
+    // FUSION STEP 5: Return immediate response (customer served, background tasks queued)
+    return immediateResponse;
   } catch (error) {
     console.error("❌ Oracle Conversation Error:", error);
     return new Response(JSON.stringify({
