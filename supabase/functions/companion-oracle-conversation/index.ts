@@ -1589,8 +1589,7 @@ ${messagesToSend[0].content}`;
     }
 
     // FUSION STEP 5: Return immediate response (customer served, background tasks queued)
-    return immediateResponse;
-  }  
+    return immediateResponse; 
   } catch (error) {
     console.error("❌ Oracle Conversation Error:", error);
     return new Response(JSON.stringify({
