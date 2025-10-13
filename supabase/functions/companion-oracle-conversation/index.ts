@@ -133,6 +133,43 @@ function detectConversationState(message: string, conversationHistory: any[] = [
   };
 }
 
+// PERSISTENCE HELPER: Store conversation state in database (SoulSync addon - never breaks existing flow)
+async function persistConversationState(
+  supabaseClient: any,
+  userId: string,
+  sessionId: string,
+  detection: any
+) {
+  try {
+    console.log('📊 PERSISTENCE: Storing conversation state to conversation_state_tracking...');
+    
+    const { data, error } = await supabaseClient
+      .from('conversation_state_tracking')
+      .insert({
+        user_id: userId,
+        session_id: sessionId,
+        cluster: detection.cluster,
+        sub_state: detection.subState,
+        confidence: detection.confidence,
+        signals: detection.signals,
+        paralinguistic_count: detection.signals.filter(s => s.type === 'paralinguistic').length,
+        sentence_form_count: detection.signals.filter(s => s.type === 'sentence_form').length,
+        discourse_marker_count: detection.signals.filter(s => s.type === 'discourse_marker').length,
+        cluster_pattern_count: detection.signals.filter(s => s.type === 'cluster_pattern').length,
+        opening_rule: detection.openingRule || null,
+        allowed_next_clusters: detection.allowedNextClusters || []
+      });
+
+    if (error) {
+      console.error('⚠️ PERSISTENCE: State storage failed (non-blocking):', error.message);
+    } else {
+      console.log('✅ PERSISTENCE: Conversation state stored successfully');
+    }
+  } catch (error) {
+    console.error('⚠️ PERSISTENCE: State storage error (non-blocking):', error);
+  }
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -795,6 +832,16 @@ serve(async (req) => {
     // PHASE 4: CONVERSATION STATE DETECTION
     const conversationState = detectConversationState(message, finalHistory);
     console.log('🎯 CONVERSATION STATE:', conversationState);
+
+    // PERSISTENCE ADDON: Store state in database (SoulSync - non-blocking)
+    if (conversationState.detectionResult) {
+      persistConversationState(
+        supabase,
+        userId,
+        sessionId,
+        conversationState.detectionResult
+      ).catch(err => console.error('⚠️ State persistence failed (non-blocking):', err));
+    }
 
     // ═══════════════════════════════════════════════════════════
     // EARLY CLOSURE GATE - Bypass AI for satisfaction/closure signals

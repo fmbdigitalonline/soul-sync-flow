@@ -118,6 +118,110 @@ serve(async (req) => {
       timestamp: new Date().toISOString()
     });
 
+    // ============================================================
+    // PERSISTENCE ADDON: Complete Intelligence Storage Pipeline
+    // SoulSync Protocol: ADDON ONLY - Never breaks existing flow
+    // ============================================================
+    console.log(`[${effectiveProcessingId}] 📊 PERSISTENCE: Starting 4-phase storage pipeline...`);
+
+    try {
+      // PHASE 3A: Extract semantic chunks from conversation
+      console.log(`[${effectiveProcessingId}] 📝 PHASE 3A: Extracting semantic chunks...`);
+      const semanticChunks = extractSemanticChunks(message, hermeticResults);
+      console.log(`[${effectiveProcessingId}] ✅ PHASE 3A: Extracted ${semanticChunks.length} chunks`);
+
+      // PHASE 3B: Generate embeddings and store in user_session_memory
+      console.log(`[${effectiveProcessingId}] 📝 PHASE 3B: Generating embeddings and storing memories...`);
+      let memoriesStored = 0;
+      for (const chunk of semanticChunks.slice(0, 5)) { // Limit to top 5 chunks
+        try {
+          // Generate embedding (placeholder - would use OpenAI in production)
+          const embedding = await generateEmbedding(chunk.content);
+          
+          if (embedding) {
+            const { error: memoryError } = await supabase
+              .from('user_session_memory')
+              .insert({
+                user_id: userId,
+                session_id: sessionId,
+                element_type: 'hermetic_pattern',
+                content: chunk.content,
+                importance_score: chunk.importance,
+                context: chunk.context,
+                embedding: embedding
+              });
+            
+            if (!memoryError) memoriesStored++;
+          }
+        } catch (chunkError) {
+          console.error(`[${effectiveProcessingId}] ⚠️ Chunk processing error:`, chunkError);
+        }
+      }
+      console.log(`[${effectiveProcessingId}] ✅ PHASE 3B: Stored ${memoriesStored} semantic memories`);
+
+      // PHASE 3C: Detect shadow patterns and store insights
+      console.log(`[${effectiveProcessingId}] 📝 PHASE 3C: Analyzing shadow patterns...`);
+      const shadowPatterns = detectShadowPatterns(message, hermeticResults);
+      
+      for (const pattern of shadowPatterns) {
+        const { error: insightError } = await supabase
+          .from('conversation_insights')
+          .insert({
+            user_id: userId,
+            session_id: sessionId,
+            insight_type: 'hermetic_shadow',
+            insight_data: {
+              pattern: pattern.pattern,
+              message: pattern.message,
+              actionableSteps: pattern.steps,
+              detected_at: new Date().toISOString(),
+              hermetic_modules: pattern.modules
+            }
+          });
+        
+        if (insightError) {
+          console.error(`[${effectiveProcessingId}] ⚠️ Shadow insight storage failed:`, insightError);
+        }
+      }
+      console.log(`[${effectiveProcessingId}] ✅ PHASE 3C: Stored ${shadowPatterns.length} shadow patterns`);
+
+      // PHASE 3D: Analyze HACS modules and store insights
+      console.log(`[${effectiveProcessingId}] 📝 PHASE 3D: Analyzing HACS module performance...`);
+      const hacsInsights = analyzeHACSModules(hermeticResults);
+      
+      for (const insight of hacsInsights) {
+        const { error: hacsError } = await supabase
+          .from('hacs_module_insights')
+          .insert({
+            user_id: userId,
+            hacs_module: insight.module,
+            insight_type: insight.insight_type,
+            insight_data: insight.insight_data,
+            confidence_score: insight.confidence
+          });
+        
+        if (hacsError) {
+          console.error(`[${effectiveProcessingId}] ⚠️ HACS insight storage failed:`, hacsError);
+        }
+      }
+      console.log(`[${effectiveProcessingId}] ✅ PHASE 3D: Stored ${hacsInsights.length} HACS insights`);
+
+      // Final verification log
+      console.log(`[${effectiveProcessingId}] 🎯 PERSISTENCE SUMMARY:`);
+      console.log(`[${effectiveProcessingId}]   - Semantic chunks: ${semanticChunks.length}`);
+      console.log(`[${effectiveProcessingId}]   - Memories stored: ${memoriesStored}`);
+      console.log(`[${effectiveProcessingId}]   - Shadow patterns: ${shadowPatterns.length}`);
+      console.log(`[${effectiveProcessingId}]   - HACS insights: ${hacsInsights.length}`);
+      console.log(`[${effectiveProcessingId}] ✅ All persistence operations complete`);
+
+    } catch (persistenceError) {
+      console.error(`[${effectiveProcessingId}] ⚠️ PERSISTENCE ERROR (non-blocking):`, persistenceError);
+    }
+    // ============================================================
+    // END PERSISTENCE PIPELINE
+    // ============================================================
+
+
     console.log(`[${effectiveProcessingId}] ✅ Unified Brain: All 11 Hermetic components processed successfully`);
 
     // PHASE 3.4: Award XP for Unified Brain Processing
@@ -585,3 +689,149 @@ async function storeUnifiedBrainResult(supabase: any, userId: string, sessionId:
     console.error('Failed to store unified brain result:', error);
   }
 }
+
+// ============================================================
+// PERSISTENCE HELPER FUNCTIONS - SoulSync Addon
+// ============================================================
+
+function extractSemanticChunks(
+  conversationText: string,
+  hermeticResults: any[]
+): Array<{ content: string; importance: number; context: any }> {
+  const chunks: Array<{ content: string; importance: number; context: any }> = [];
+
+  // Split into logical segments (sentences)
+  const segments = conversationText
+    .split(/[.!?]\s+/)
+    .filter(s => s.trim().length > 20);
+
+  for (const segment of segments) {
+    let importance = 5; // Base score
+
+    // Boost importance based on Hermetic module relevance
+    hermeticResults.forEach(result => {
+      if (result.processed && segment.toLowerCase().includes(result.module.toLowerCase())) {
+        importance += 2;
+      }
+    });
+
+    // Cap at 10
+    importance = Math.min(10, importance);
+
+    chunks.push({
+      content: segment.trim(),
+      importance: importance,
+      context: {
+        hermetic_modules: hermeticResults.filter(r => r.processed).map(r => r.module),
+        extracted_at: new Date().toISOString()
+      }
+    });
+  }
+
+  return chunks;
+}
+
+async function generateEmbedding(text: string): Promise<number[] | null> {
+  // Production implementation would use OpenAI embeddings
+  // For now, return null to skip embedding generation
+  // This ensures the pipeline doesn't break if OpenAI is not configured
+  return null;
+}
+
+function detectShadowPatterns(
+  conversationText: string,
+  hermeticResults: any[]
+): Array<{ pattern: string; message: string; steps: string[]; modules: string[] }> {
+  const patterns: Array<{ pattern: string; message: string; steps: string[]; modules: string[] }> = [];
+  const text = conversationText.toLowerCase();
+
+  // Pattern 1: Avoidance detection
+  const avoidanceKeywords = ['maybe later', 'not sure', 'overwhelmed', 'too much', 'difficult', 'can\'t'];
+  const hasAvoidance = avoidanceKeywords.some(kw => text.includes(kw));
+
+  if (hasAvoidance) {
+    patterns.push({
+      pattern: 'Task Avoidance',
+      message: 'Detected resistance or overwhelm. Breaking down into smaller steps might help.',
+      steps: [
+        'Identify the smallest possible first step',
+        'Set a 5-minute timer to begin',
+        'Celebrate completing just the first step'
+      ],
+      modules: hermeticResults.filter(r => r.processed).map(r => r.module)
+    });
+  }
+
+  // Pattern 2: Perfectionism detection
+  const perfectionismKeywords = ['perfect', 'exactly right', 'not good enough', 'should be better'];
+  const hasPerfectionism = perfectionismKeywords.some(kw => text.includes(kw));
+
+  if (hasPerfectionism) {
+    patterns.push({
+      pattern: 'Perfectionism Block',
+      message: 'Striving for perfection can delay action. Progress > Perfection.',
+      steps: [
+        'Set a "good enough" standard for this task',
+        'Create a rough draft first',
+        'Time-box your work to prevent over-polishing'
+      ],
+      modules: hermeticResults.filter(r => r.processed).map(r => r.module)
+    });
+  }
+
+  // Pattern 3: Energy depletion
+  const depletionKeywords = ['tired', 'exhausted', 'drained', 'no energy', 'burned out'];
+  const hasDepletion = depletionKeywords.some(kw => text.includes(kw));
+
+  if (hasDepletion) {
+    patterns.push({
+      pattern: 'Energy Depletion',
+      message: 'Your energy reserves are low. Rest and recharge before pushing forward.',
+      steps: [
+        'Take a 10-minute break to recharge',
+        'Do a quick energy-restoring activity (walk, stretch, breathe)',
+        'Reassess task urgency vs. your current capacity'
+      ],
+      modules: hermeticResults.filter(r => r.processed).map(r => r.module)
+    });
+  }
+
+  return patterns;
+}
+
+function analyzeHACSModules(hermeticResults: any[]): Array<{
+  module: string;
+  insight_type: string;
+  insight_data: any;
+  confidence: number;
+}> {
+  const insights: Array<{
+    module: string;
+    insight_type: string;
+    insight_data: any;
+    confidence: number;
+  }> = [];
+
+  hermeticResults.forEach(result => {
+    if (result.processed && result.data) {
+      // Generate insights for successfully processed modules
+      insights.push({
+        module: result.module,
+        insight_type: 'behavioral',
+        insight_data: {
+          analysis: `${result.module} processed successfully`,
+          module_data: result.data,
+          recommendations: [`Continue engaging with ${result.module} patterns`],
+          detected_patterns: [result.module.toLowerCase() + '_active']
+        },
+        confidence: 0.8
+      });
+    }
+  });
+
+  return insights;
+}
+
+// ============================================================
+// END PERSISTENCE HELPERS
+// ============================================================

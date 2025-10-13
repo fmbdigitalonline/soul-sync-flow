@@ -781,6 +781,60 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_state_tracking: {
+        Row: {
+          allowed_next_clusters: string[] | null
+          cluster: string
+          cluster_pattern_count: number | null
+          confidence: number
+          created_at: string | null
+          discourse_marker_count: number | null
+          id: string
+          message_id: string | null
+          opening_rule: string | null
+          paralinguistic_count: number | null
+          sentence_form_count: number | null
+          session_id: string
+          signals: Json
+          sub_state: string
+          user_id: string
+        }
+        Insert: {
+          allowed_next_clusters?: string[] | null
+          cluster: string
+          cluster_pattern_count?: number | null
+          confidence: number
+          created_at?: string | null
+          discourse_marker_count?: number | null
+          id?: string
+          message_id?: string | null
+          opening_rule?: string | null
+          paralinguistic_count?: number | null
+          sentence_form_count?: number | null
+          session_id: string
+          signals?: Json
+          sub_state: string
+          user_id: string
+        }
+        Update: {
+          allowed_next_clusters?: string[] | null
+          cluster?: string
+          cluster_pattern_count?: number | null
+          confidence?: number
+          created_at?: string | null
+          discourse_marker_count?: number | null
+          id?: string
+          message_id?: string | null
+          opening_rule?: string | null
+          paralinguistic_count?: number | null
+          sentence_form_count?: number | null
+          session_id?: string
+          signals?: Json
+          sub_state?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_summaries: {
         Row: {
           compression_ratio: number | null
@@ -4201,7 +4255,7 @@ export type Database = {
       }
       l2_normalize: {
         Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: string
+        Returns: unknown
       }
       log_admin_access: {
         Args: {
