@@ -271,14 +271,17 @@ const Dreams = () => {
     setCurrentView('journey');
   };
 
-  const handleMilestoneClick = (milestoneId: string) => {
-    // Find the milestone and focus on it
-    const milestone = { id: milestoneId }; // You can expand this to get full milestone data
+  const handleMilestoneClick = (milestone: any) => {
+    // Receive and use full milestone object (Principle #6: Respect Critical Data Pathways)
+    console.log('🎯 Dreams: Focusing on milestone with full data:', milestone);
     setFocusedMilestone(milestone);
   };
 
-  const handleTaskClick = (taskId: string) => {
-    // Focus on specific task - for now just switch to task view
+  const handleTaskClick = (task: any) => {
+    // Receive full task object and navigate to task coach (Principle #7: Build Transparently)
+    console.log('📋 Dreams: Navigating to task with full data:', task);
+    setSelectedTask(task);
+    setCurrentView('task-coach');
   };
 
   // Removed duplicate authentication check - component is wrapped in ProtectedRoute

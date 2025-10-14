@@ -12,8 +12,8 @@ import { TimelineDetailView } from "./TimelineDetailView";
 import { TaskViews } from "./TaskViews";
 
 interface JourneyMapProps {
-  onTaskClick?: (taskId: string) => void;
-  onMilestoneClick?: (milestoneId: string) => void;
+  onTaskClick?: (task: any) => void;
+  onMilestoneClick?: (milestone: any) => void;
 }
 
 export const JourneyMap: React.FC<JourneyMapProps> = ({
@@ -65,9 +65,10 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
 
   const handleMilestoneSelect = (milestone: any) => {
     // Log milestone to check for rendering issues
-    console.log('🏁 Selecting milestone:', milestone);
+    console.log('🏁 Selecting milestone (full object):', milestone);
     if (onMilestoneClick) {
-      onMilestoneClick(milestone.id);
+      // Pass full milestone object to maintain data integrity (Principle #6: Respect Critical Data Pathways)
+      onMilestoneClick(milestone);
     }
   };
 
@@ -91,7 +92,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
           <TaskViews
             focusedMilestone={null}
             onBackToJourney={handleBackToOverview}
-            onTaskSelect={(task) => onTaskClick?.(task.id)}
+            onTaskSelect={(task) => onTaskClick?.(task)}
           />
         </div>
       </div>
