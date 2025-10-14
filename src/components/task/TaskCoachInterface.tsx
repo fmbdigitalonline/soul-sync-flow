@@ -233,8 +233,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       if (result.success) {
         setTaskCompleted(true);
         setIsTimerRunning(false);
-        // Call original callback after unified completion
-        onTaskComplete(taskId);
+        // Pillar I: Removed duplicate toast trigger (Principle #8: Only Add, Never Mask)
+        // onTaskComplete(taskId) removed - unified service handles navigation and feedback
       }
     });
 

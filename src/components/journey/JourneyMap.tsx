@@ -1,5 +1,7 @@
 
 import React from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { useJourneyMapData } from "@/hooks/use-journey-map-data";
 import { JourneyEmptyState } from "./JourneyEmptyState";
 import { JourneyHeader } from "./JourneyHeader";
@@ -14,11 +16,15 @@ import { TaskViews } from "./TaskViews";
 interface JourneyMapProps {
   onTaskClick?: (task: any) => void;
   onMilestoneClick?: (milestone: any) => void;
+  onBackToSuccessOverview?: () => void; // Breadcrumb navigation (Pillar III: Intentional Craft)
+  showSuccessBackButton?: boolean;
 }
 
 export const JourneyMap: React.FC<JourneyMapProps> = ({
   onTaskClick,
   onMilestoneClick,
+  onBackToSuccessOverview,
+  showSuccessBackButton
 }) => {
   const {
     mainGoal,
@@ -126,6 +132,18 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
   // Regular Journey View with Interactive Overview
   return (
     <div className="space-y-6">
+      {showSuccessBackButton && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onBackToSuccessOverview}
+          className="flex items-center gap-2 bg-background/80 hover:bg-background border-soul-purple/30 mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Success Overview
+        </Button>
+      )}
+
       {/* Add Interactive Journey Overview at the top */}
       <InteractiveJourneyOverview
         milestonesCount={mainGoal.milestones?.length || 0}

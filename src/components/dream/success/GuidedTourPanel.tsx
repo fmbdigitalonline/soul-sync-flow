@@ -50,7 +50,7 @@ export const GuidedTourPanel: React.FC<GuidedTourPanelProps> = ({
               </Badge>
             </div>
             <p className={`text-gray-700 leading-relaxed mb-3 w-full max-w-full break-words ${getTextSize('text-xs')}`}>
-              {t('guidedTour.orientation')}
+              {currentStep?.message || t('guidedTour.orientation')}
             </p>
             <div className={`flex w-full max-w-full gap-2 ${isFoldDevice || isUltraNarrow ? 'flex-col' : 'justify-end'}`}>
               <Button 

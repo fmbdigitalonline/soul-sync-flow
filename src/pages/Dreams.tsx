@@ -75,6 +75,7 @@ const Dreams = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isCreatingDream, setIsCreatingDream] = useState(false);
   const [createdGoal, setCreatedGoal] = useState<any>(null);
+  const [navigationHistory, setNavigationHistory] = useState<string[]>([]); // Track breadcrumb navigation (Pillar I: Preserve Core Intelligence)
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -136,6 +137,9 @@ const Dreams = () => {
   }, []);
 
   const handleSuccessViewJourney = useCallback(() => {
+    // Track navigation from success page (Principle #7: Build Transparently)
+    console.log('📍 Dreams: Navigating from success to journey, tracking breadcrumb');
+    setNavigationHistory(prev => [...prev, 'success']);
     setCurrentView('journey');
   }, []);
 
@@ -258,18 +262,25 @@ const Dreams = () => {
   };
 
   const handleTaskComplete = async (taskId: string) => {
-    // Update task status to completed
-    // This will be handled by the task coach interface
-    toast({
-      title: "🎉 Task Completed!",
-      description: "Great work! The task has been marked as complete.",
-    });
+    // Pillar I: Removed duplicate toast - unified completion service handles this (Principle #8: Only Add, Never Mask)
+    console.log('🎯 Dreams: Task completion notification received from coach:', taskId);
+    // Toast is now shown once by use-task-completion hook
   };
 
   const handleBackFromTaskCoach = () => {
     setSelectedTask(null);
     setCurrentView('journey');
   };
+
+  const handleBackToSuccessOverview = useCallback(() => {
+    // Navigate back to success landing page (Pillar III: Intentional Craft)
+    if (navigationHistory.includes('success') && createdGoal) {
+      console.log('🔙 Dreams: Returning to success overview from journey');
+      setCurrentView('success');
+      setNavigationHistory([]);
+      setFocusedMilestone(null);
+    }
+  }, [navigationHistory, createdGoal]);
 
   const handleMilestoneClick = (milestone: any) => {
     // Receive and use full milestone object (Principle #6: Respect Critical Data Pathways)
@@ -508,6 +519,8 @@ const Dreams = () => {
                       <EnhancedJourneyMap 
                         onTaskClick={handleTaskClick}
                         onMilestoneClick={handleMilestoneClick}
+                        onBackToSuccessOverview={handleBackToSuccessOverview}
+                        showSuccessBackButton={navigationHistory.includes('success')}
                       />
                     </div>
                   </div>

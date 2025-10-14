@@ -7,7 +7,8 @@ import {
   Target, 
   Star, 
   CheckCircle2, 
-  ArrowRight, 
+  ArrowRight,
+  ArrowLeft,
   Sparkles,
   Clock,
   Calendar,
@@ -24,9 +25,16 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface EnhancedJourneyMapProps {
   onTaskClick?: (taskId: string) => void;
   onMilestoneClick?: (milestoneId: string) => void;
+  onBackToSuccessOverview?: () => void;
+  showSuccessBackButton?: boolean;
 }
 
-export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskClick, onMilestoneClick }) => {
+export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ 
+  onTaskClick, 
+  onMilestoneClick,
+  onBackToSuccessOverview,
+  showSuccessBackButton 
+}) => {
   const { productivityJourney } = useJourneyTracking();
   const { blueprintData } = useOptimizedBlueprintData();
   const [selectedView, setSelectedView] = useState<'overview' | 'detailed'>('overview');
@@ -201,6 +209,19 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
 
   return (
     <div className="w-full max-w-full overflow-hidden">
+      {/* Back to Success Overview Button */}
+      {showSuccessBackButton && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onBackToSuccessOverview}
+          className="flex items-center gap-2 bg-background/80 hover:bg-background border-soul-purple/30 mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Success Overview
+        </Button>
+      )}
+
       {/* Mobile-Optimized Journey Header */}
       <div className="p-3 bg-gradient-to-r from-soul-purple/10 to-blue-500/10 rounded-xl border border-white/20 mb-4 w-full">
         <div className="flex items-start justify-between mb-3">
