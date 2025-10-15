@@ -1541,9 +1541,8 @@ serve(async (req) => {
         });
         
         const openingRule = conversationState?.detectionResult?.openingRule || 'Vary your opening language.';
-        messagesToSend[0].content = `⚠️ CRITICAL: You just used similar opening language. ${openingRule}
-
-${messagesToSend[0].content}`;
+        const warningPrefix = '⚠️ CRITICAL: You just used similar opening language. ' + openingRule + '\n\n';
+        messagesToSend[0].content = warningPrefix + messagesToSend[0].content;
       }
     }
 
@@ -1557,7 +1556,6 @@ ${messagesToSend[0].content}`;
       model: completionParams.model,
       messageCount: messagesToSend.length,
       maxTokens: completionParams.max_completion_tokens,
-      temperature: completionParams.temperature,
       oracleStatus,
       hasOracleContext: structuredFacts.length > 0 || semanticChunks.length > 0
     });
