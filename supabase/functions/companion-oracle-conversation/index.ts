@@ -48,7 +48,6 @@ function getThinkingStyleDescription(mbtiType: string): string {
     'ENFP': 'creative and inspiring explorer',
     'INTJ': 'strategic and analytical architect', 
     'INFP': 'values-driven and empathetic idealist',
-    'ENTP': 'innovative and enthusiastic debater',
     'INFJ': 'insightful and visionary advocate',
     'ENTJ': 'confident and natural-born leader',
     'ISFP': 'gentle and harmonious artist',
@@ -133,6 +132,7 @@ function detectConversationState(message: string, conversationHistory: any[] = [
     console.warn('⚠️ CONVERSATION STATE: Returning null detectionResult', {
       messageValid: !!message,
       messageType: typeof message,
+      messageLength: message?.length || 0,
       timestamp: new Date().toISOString()
     });
   }
@@ -967,6 +967,16 @@ serve(async (req) => {
       if (semanticChunks.length === 0 && structuredFacts.length === 0) {
         console.log('🔮 STEP 2: Using legacy vector search pipeline');
         
+      // SURGICAL FIX: Normalize chunk shape immediately after all retrieval paths
+      if (semanticChunks.length > 0) {
+        semanticChunks = semanticChunks.map(c => ({
+          ...c,
+          content: c.content ?? c.chunk_content ?? '',
+          chunk_content: undefined
+        }));
+        console.log('🔧 NORMALIZED CHUNKS: All chunks now use .content key');
+      }
+        
         // STEP 1: Check for pre-computed embeddings first
       console.log('🔮 STEP 1: Checking for pre-computed embeddings...');
       const { data: embeddingCheck, error: embeddingError } = await supabase
@@ -1134,7 +1144,7 @@ serve(async (req) => {
               totalChunks: semanticChunks.length,
               similarities: semanticChunks.map(c => c.relevance.toFixed(3)),
               avgSimilarity: (semanticChunks.reduce((sum, c) => sum + c.relevance, 0) / semanticChunks.length).toFixed(3),
-              totalContentLength: semanticChunks.reduce((sum, c) => sum + c.content.length, 0),
+              totalContentLength: semanticChunks.reduce((sum, c) => sum + (c.content?.length || 0), 0),
               oracleStatus: oracleStatus
             });
           } else {
@@ -1288,7 +1298,7 @@ serve(async (req) => {
       const narrativeSection = semanticChunks.length > 0 ? `
 
 PERSONALITY INSIGHTS:
-${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')}
+${semanticChunks.map(chunk => chunk.content).join('\n\n')}
 ` : '';
 
       // FUSION: Generate intent-aware prompt based on sidecar results
@@ -1335,7 +1345,7 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
         
         // Phase guidance from conversation tracker
         const phaseGuidance = ConversationPhaseTracker.getPhaseGuidance(
-          conversationState.detectionResult.cluster
+          conversationState?.detectionResult?.cluster || 'exploration'
         );
         
         return `${hermeticPrimer}
@@ -1343,7 +1353,7 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
 ${phaseGuidance}
 
 CRITICAL OPENING INSTRUCTION:
-${conversationState.detectionResult.openingRule}
+${conversationState?.detectionResult?.openingRule || 'Respond thoughtfully based on context.'}
 
 YOUR ROLE IN THIS CONVERSATION:
 ${getRoleForIntent(intent, userName, hermeticEducationalSections)}
