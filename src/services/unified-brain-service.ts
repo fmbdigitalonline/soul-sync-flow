@@ -277,9 +277,15 @@ class UnifiedBrainService {
 
     // PIE: Enhance response with proactive insights if relevant
     let finalResponse = synthesizedResponse; // Use synthesized response from BPSC
+    
+    // Format enforcement for task coaching contexts (Pillar I: Preserve & Enhance)
+    if (agentMode === 'coach' && message.toLowerCase().includes('work')) {
+      finalResponse = this.enforceTaskCoachingFormat(synthesizedResponse, message);
+    }
+    
     if (pieInsights.length > 0) {
       finalResponse = await this.enhanceResponseWithPIEInsights(
-        synthesizedResponse,
+        finalResponse,
         pieInsights,
         agentMode
       );
@@ -1585,6 +1591,41 @@ class UnifiedBrainService {
     if (lowerMessage.includes('plan') || lowerMessage.includes('direction')) return 'finding direction';
     
     return themes[Math.floor(Math.random() * themes.length)];
+  }
+
+  // Format enforcement for task coaching contexts (Pillar I: Preserve & Enhance)
+  private enforceTaskCoachingFormat(response: string, context: string): string {
+    // If this is a task coaching context and response is conversational
+    const isTaskCoachingContext = context.toLowerCase().includes('work') || 
+                                    context.toLowerCase().includes('task') ||
+                                    context.toLowerCase().includes('break') ||
+                                    context.toLowerCase().includes('step');
+    
+    const isConversational = response.includes('Would you like') || 
+                             response.includes('Do you want') ||
+                             response.includes('Can I help') ||
+                             response.includes('Here are some suggestions');
+    
+    if (isTaskCoachingContext && isConversational) {
+      console.warn('⚠️ Conversational response detected in task coaching - reformatting');
+      
+      // Extract numbered items and reformat
+      const items = response.match(/\d+\.\s+([^\n]+)/g) || [];
+      if (items.length >= 2) {
+        const reformatted = items.map((item, i) => {
+          const cleanItem = item.replace(/^\d+\.\s+/, '');
+          const parts = cleanItem.split(/[.:]/);
+          const title = parts[0]?.trim() || `Step ${i + 1}`;
+          const description = parts.slice(1).join('.').trim() || 'Complete this step.';
+          return `${i + 1}. **${title}**:\n   ${description}`;
+        }).join('\n\n');
+        
+        console.log('✅ Reformatted task coaching response with structured format');
+        return reformatted;
+      }
+    }
+    
+    return response;
   }
 
   // Enhanced brain health metrics with cost awareness and Phase 3 status

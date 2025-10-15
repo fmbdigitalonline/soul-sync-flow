@@ -367,8 +367,28 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     const currentGoal = currentGoals.find(goal => goal.id === task.goal_id);
     const goalContext = currentGoal ? `\n\nThis task is part of your goal: "${currentGoal.title}" - ${currentGoal.description}` : '';
 
-    // Simple conversational message to prevent formal AI responses
-    const initialMessage = `Hi! I'm ready to work on "${task.title}". ${task.description ? `It's about: ${task.description}` : ''} Can you help me break this down into manageable steps so I can get started?${goalContext}`;
+    // CRITICAL FIX: Structured prompt to trigger WorkingInstructionsPanel
+    const initialMessage = `I'm working on: "${task.title}"
+${task.description ? `\nTask Description: ${task.description}` : ''}${goalContext}
+
+Provide detailed step-by-step work instructions in this exact format:
+
+1. **[Step Title]**:
+   [Clear, actionable description of what to do]
+   [Time estimate if relevant]
+   
+2. **[Step Title]**:
+   [Description]
+
+Format requirements:
+- Use numbered list (1., 2., 3., etc.)
+- Bold step titles with ** **
+- Add colon after each title
+- Provide substantial details for each step
+- DO NOT ask questions or say "Would you like..."
+- Give direct, executable instructions
+
+Provide 4-6 concrete steps I can start working on immediately.`;
     
     await dreamActivityLogger.logActivity('enhanced_coaching_message_sent', {
       task_id: task.id,
@@ -393,7 +413,17 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       interaction_type: 'clickable_card'
     });
     
-    const message = `I'm starting sub-task: "${subTask.title}". Can you provide detailed work instructions for this specific step?`;
+    const message = `I'm starting sub-task: "${subTask.title}".
+
+Provide detailed work instructions for this specific step in this format:
+
+1. **[Action Title]**:
+   [Detailed description]
+   
+2. **[Action Title]**:
+   [Description]
+
+Give me 3-5 specific actions I need to take to complete this sub-task. Use the format above with bold titles and numbered steps.`;
     sendMessage(message);
   }, [sendMessage, task.id]);
 

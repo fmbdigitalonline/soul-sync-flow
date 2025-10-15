@@ -107,7 +107,12 @@ export class CoachMessageParser {
       'provide detailed',
       'guide you through',
       'structured approach',
-      'here\'s how to'
+      'here\'s how to',
+      'break.*down.*steps',
+      'manageable steps',
+      'here are.*steps',
+      'follow these steps',
+      'let\'s break'
     ];
     
     const hasInstructionContext = instructionRequestKeywords.some(keyword => 
@@ -123,7 +128,9 @@ export class CoachMessageParser {
       // Format: numbered lists with bold titles
       /^\d+\.\s*\*\*[^*]+\*\*/gm,
       // Format: "Step 1:" or "1:"
-      /^(Step\s*\d+|1\.|2\.|3\.|4\.|5\.)[\s:]/gm
+      /^(Step\s*\d+|1\.|2\.|3\.|4\.|5\.)[\s:]/gm,
+      // Format: "1. Define criteria for selecting..." (more lenient)
+      /^\d+\.\s+[A-Z][^.\n]{10,}/gm
     ];
     
     // Check for instruction patterns
@@ -164,7 +171,15 @@ export class CoachMessageParser {
       hasInstructionIndicators,
       hasSubstantialContent,
       isNotSystemPrompt,
-      result: isWorkingInstructions
+      result: isWorkingInstructions,
+      // NEW: Show which patterns matched
+      matchedPatterns: instructionPatterns.map((p, i) => ({
+        pattern: i,
+        matches: content.match(p)?.length || 0
+      })),
+      matchedKeywords: instructionRequestKeywords.filter(k => 
+        content.toLowerCase().includes(k) || new RegExp(k, 'i').test(content)
+      )
     });
     
     return isWorkingInstructions;
