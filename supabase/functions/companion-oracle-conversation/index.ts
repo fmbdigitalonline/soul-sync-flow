@@ -188,6 +188,7 @@ async function persistConversationState(
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
 
 // Utility function for calculating cosine similarity between embeddings
@@ -1260,9 +1261,8 @@ serve(async (req) => {
     });
 
     // Build oracle-enhanced system prompt when in companion mode with hybrid retrieval
-    let systemPrompt = ''
+    let systemPrompt = '';
     if (useOracleMode && personalityContext) {
-      
       // Helper function to format facts by facet
       const formatFactsByFacet = (facts: any[]) => {
         const factsByFacet = facts.reduce((groups, fact) => {
@@ -1271,35 +1271,37 @@ serve(async (req) => {
           groups[facet].push(fact);
           return groups;
         }, {} as Record<string, any[]>);
-        
+
         const facetOrder = ['numerology', 'astrology', 'mbti', 'human_design', 'big_five'];
         const orderedFacets = facetOrder.filter(f => factsByFacet[f]).concat(
           Object.keys(factsByFacet).filter(f => !facetOrder.includes(f))
         );
-        
+
         return orderedFacets.map(facet => {
           const facetTitle = facet.replace(/_/g, ' ').toUpperCase();
           const facetFacts = factsByFacet[facet];
           const factsList = facetFacts.map(fact => {
-            const value = fact.value_json?.value || fact.value_json;
-            const label = fact.value_json?.label || fact.key.replace(/_/g, ' ');
-            return `  • **${label}**: ${typeof value === 'object' ? JSON.stringify(value) : value}`;
+            const value = fact.value_json?.value ?? fact.value_json;
+            const label = fact.value_json?.label ?? fact.key.replace(/_/g, ' ');
+            return '  • **' + label + '**: ' + (typeof value === 'object' ? JSON.stringify(value) : String(value));
           }).join('\n');
-          
-          return `**${facetTitle}** (${facetFacts.length} facts):\n${factsList}`;
+          return '**' + facetTitle + '** (' + facetFacts.length + ' facts):\n' + factsList;
         }).join('\n\n');
       };
 
-      // Generate sections based on available data
-      const factsSection = structuredFacts.length > 0 
-        ? `\n\nCOMPREHENSIVE BLUEPRINT FOR ${personalityContext.name.toUpperCase()} (${structuredFacts.length} Facts Available):\n${formatFactsByFacet(structuredFacts)}` 
-        : '';
+      const factsSection =
+        structuredFacts.length > 0
+          ? '\n\nCOMPREHENSIVE BLUEPRINT FOR ' +
+            String(personalityContext.name || '').toUpperCase() +
+            ' (' + structuredFacts.length + ' Facts Available):\n' +
+            formatFactsByFacet(structuredFacts)
+          : '';
 
-      const narrativeSection = semanticChunks.length > 0 ? `
-
-PERSONALITY INSIGHTS:
-${semanticChunks.map(chunk => chunk.content).join('\n\n')}
-` : '';
+      const narrativeSection =
+        (semanticChunks && semanticChunks.length > 0)
+          ? '\n\nPERSONALITY INSIGHTS:\n' +
+            semanticChunks.map(ch => ch.content || '').join('\n\n')
+          : '';
 
       // FUSION: Generate intent-aware prompt based on sidecar results
       const generateHybridPrompt = async () => {
@@ -1307,11 +1309,11 @@ ${semanticChunks.map(chunk => chunk.content).join('\n\n')}
         const mbtiType = personalityContext.mbti || 'Unknown';
         const hdType = personalityContext.hdType || 'Unknown';
         const sunSign = personalityContext.sunSign || 'Unknown';
-        
+
         // Get intent from sidecar or default to MIXED
         let intent = sidecarResult?.intent || 'MIXED';
-        
-        // NEW: Fallback educational detection if sidecar didn't classify properly
+
+        // Fallback educational detection
         if (intent === 'MIXED' || intent === 'unknown') {
           const educationalKeywords = /\b(why (do i|am i|can't i|does|is it)|how come|what makes me|i keep|i don't understand)\b/i;
           if (educationalKeywords.test(message.toLowerCase())) {
@@ -1319,88 +1321,92 @@ ${semanticChunks.map(chunk => chunk.content).join('\n\n')}
             intent = 'EDUCATIONAL';
           }
         }
-        
         console.log('🎯 FINAL INTENT:', intent);
-        
-        // NEW: Conditional Hermetic section fetching for educational intent
-        let hermeticEducationalSections = {};
+
+        // Conditional Hermetic section fetching
+        let hermeticEducationalSections: Record<string, any> = {};
         if (intent === 'EDUCATIONAL') {
           const hermeticContext = await getHermeticEducationalContext(userId, message, supabase);
           hermeticEducationalSections = hermeticContext.sections;
-          console.log(`📖 Educational mode activated with ${Object.keys(hermeticEducationalSections).length} Hermetic sections`);
+          console.log('📖 Educational mode activated with', Object.keys(hermeticEducationalSections).length, 'Hermetic sections');
         }
-        
-        // Generate voice characteristics based on personality
+
+        // Voice & depth
         const voiceStyle = generateVoiceStyle(mbtiType, hdType, sunSign);
         const humorStyle = generateHumorStyle(mbtiType, sunSign);
         const communicationDepth = generateCommunicationDepth(intelligenceLevel, mbtiType);
 
-        // Conversation history is provided via messages array - no need for duplicate context
-
-        // Check if user explicitly wants technical details
+        // Technical details preference
         const wantsTechnicalDetails = detectTechnicalDetailRequest(message);
-        
-        // Build Hermetic identity primer FIRST
+
+        // Hermetic identity primer
         const hermeticPrimer = buildHermeticIdentityPrimer(hermeticEducationalSections, userName);
-        
-        // Phase guidance from conversation tracker
-        const phaseGuidance = ConversationPhaseTracker.getPhaseGuidance(
-          conversationState?.detectionResult?.cluster || 'exploration'
-        );
-        
-        return `${hermeticPrimer}
 
-${phaseGuidance}
+        // Phase guidance & opening rule (defensive)
+        const phaseGuidance =
+          ConversationPhaseTracker.getPhaseGuidance(conversationState?.detectionResult?.cluster || 'exploration');
+        const openingRule =
+          conversationState?.detectionResult?.openingRule || 'Respond thoughtfully based on context.';
 
-CRITICAL OPENING INSTRUCTION:
-${conversationState?.detectionResult?.openingRule || 'Respond thoughtfully based on context.'}
+        const roleBlock = getRoleForIntent(intent, userName, hermeticEducationalSections);
 
-YOUR ROLE IN THIS CONVERSATION:
-${getRoleForIntent(intent, userName, hermeticEducationalSections)}
+        // Profile block
+        const profileLines = [
+          userName + "'S CURRENT PROFILE (Technical Details):",
+          '- Name: ' + userName,
+          '- Natural thinking style: ' + getThinkingStyleDescription(mbtiType) + (wantsTechnicalDetails ? ' (MBTI: ' + mbtiType + ')' : ''),
+          '- Energy approach: ' + getEnergyDescription(hdType) + (wantsTechnicalDetails ? ' (Human Design: ' + hdType + ')' : ''),
+          '- Archetypal influence: ' + getArchetypalDescription(sunSign) + (wantsTechnicalDetails ? ' (Sun Sign: ' + sunSign + ')' : ''),
+          '- Intelligence Level: ' + intelligenceLevel + '/100'
+        ];
 
-${userName}'S CURRENT PROFILE (Technical Details):
-- Name: ${userName}
-- Natural thinking style: ${getThinkingStyleDescription(mbtiType)}${wantsTechnicalDetails ? ' (MBTI: ' + mbtiType + ')' : ''}
-- Energy approach: ${getEnergyDescription(hdType)}${wantsTechnicalDetails ? ' (Human Design: ' + hdType + ')' : ''}
-- Archetypal influence: ${getArchetypalDescription(sunSign)}${wantsTechnicalDetails ? ' (Sun Sign: ' + sunSign + ')' : ''}
-- Intelligence Level: ${intelligenceLevel}/100${factsSection}${narrativeSection}
+        // Universal rules
+        const universalRules = [
+          "- DO NOT repeat or paraphrase the user's question back to them - jump directly into your response",
+          '- If this is a continuing conversation, NO greetings, NO welcomes, NO reintroductions',
+          "- Respond directly and naturally to what they asked - don't echo their words",
+          "- Use " + userName + "'s name naturally when it feels warm and personal—avoid overusing it, but don't be afraid to use it to make responses feel more connected",
+          '- Keep language warm, accessible, and conversational',
+          '- When you have specific facts, state them confidently and precisely',
+          '- Provide insights that feel personally relevant',
+          '- If they seem resistant, ask deeper questions to understand the root issue',
+          "- Never explain how you know things about them - you simply understand them well"
+        ].join('\n');
 
-COMMUNICATION GUIDELINES:
-${voiceStyle}
-${humorStyle}
-${communicationDepth}
+        const responseGuidelines = [
+          '1. Lead with recognition of their unique situation/question',
+          '2. For factual queries: Provide precise data first, then brief context',
+          '3. For interpretive queries: Focus on insights and guidance',
+          '4. For mixed queries: Balance facts with meaningful interpretation',
+          '5. CONVERSATION FLOW INTELLIGENCE: ' + getConversationFlowGuidance(conversationState)
+        ].join('\n');
 
-UNIVERSAL RULES:
-- DO NOT repeat or paraphrase the user's question back to them - jump directly into your response
-- If this is a continuing conversation, NO greetings, NO welcomes, NO reintroductions
-- Respond directly and naturally to what they asked - don't echo their words
-- Use ${userName}'s name naturally when it feels warm and personal—avoid overusing it, but don't be afraid to use it to make responses feel more connected
-- Keep language warm, accessible, and conversational
-- When you have specific facts, state them confidently and precisely
-- Provide insights that feel personally relevant
-- If they seem resistant, ask deeper questions to understand the root issue
-- Never explain how you know things about them - you simply understand them well
+        // Final prompt pieces
+        const blocks = [
+          hermeticPrimer,
+          phaseGuidance,
+          'CRITICAL OPENING INSTRUCTION:\n' + openingRule,
+          'YOUR ROLE IN THIS CONVERSATION:\n' + roleBlock,
+          profileLines.join('\n') + factsSection + narrativeSection,
+          'COMMUNICATION GUIDELINES:\n' + [voiceStyle, humorStyle, communicationDepth].filter(Boolean).join('\n'),
+          'UNIVERSAL RULES:\n' + universalRules,
+          'RESPONSE GUIDELINES:\n' + responseGuidelines,
+          "Remember: You're " + userName + "'s perceptive AI companion who has access to their detailed blueprint and can provide both specific facts and meaningful guidance through conversation."
+        ];
 
-RESPONSE GUIDELINES:
-1. Lead with recognition of their unique situation/question
-2. For factual queries: Provide precise data first, then brief context
-3. For interpretive queries: Focus on insights and guidance
-4. For mixed queries: Balance facts with meaningful interpretation
-5. CONVERSATION FLOW INTELLIGENCE: ${getConversationFlowGuidance(conversationState)}
-
-Remember: You're ${userName}'s perceptive AI companion who has access to their detailed blueprint and can provide both specific facts and meaningful guidance through conversation.`;
-      }
+        return blocks.filter(Boolean).join('\n\n');
+      };
 
       systemPrompt = await generateHybridPrompt();
     } else {
       // Standard HACS prompt for non-oracle mode
-      systemPrompt = `You are HACS (Holistic Autonomous Consciousness System), an AI companion designed to provide thoughtful, personalized guidance. 
-
-You have access to the user's personality blueprint and should provide responses that feel natural and supportive, adapting to their communication style and needs.
-
-${personalityContext ? `User Context: ${personalityContext.name} (${personalityContext.mbti}, ${personalityContext.hdType}, ${personalityContext.sunSign})` : 'Building understanding of user through conversation...'}
-
-Respond helpfully while building rapport and understanding.`
+      systemPrompt =
+        'You are HACS (Holistic Autonomous Consciousness System), an AI companion designed to provide thoughtful, personalized guidance.\n\n' +
+        "You have access to the user's personality blueprint and should provide responses that feel natural and supportive, adapting to their communication style and needs.\n\n" +
+        (personalityContext
+          ? ('User Context: ' + personalityContext.name + ' (' + personalityContext.mbti + ', ' + personalityContext.hdType + ', ' + personalityContext.sunSign + ')')
+          : 'Building understanding of user through conversation...') +
+        '\n\nRespond helpfully while building rapport and understanding.';
     }
 
     // FULL BLUEPRINT DETECTION: Check if user is requesting comprehensive blueprint
@@ -1474,7 +1480,6 @@ Respond helpfully while building rapport and understanding.`
     completionParams = {
       model: selectedModel,
       messages: messagesToSend,
-      temperature: useOracleMode ? 0.8 : 0.7,
       max_completion_tokens: maxTokens
     };
 
