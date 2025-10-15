@@ -15,8 +15,11 @@ import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { OracleInitializationBanner } from "@/components/coach/OracleInitializationBanner";
 
 const Coach = () => {
+  const [userId, setUserId] = useState<string | null>(null);
+  
   const {
     messages,
     isLoading,
@@ -38,7 +41,14 @@ const Coach = () => {
   
   const { isMobile } = useIsMobile();
   
-  // Removed duplicate authentication logic - trusting ProtectedRoute wrapper
+  // Get current user ID for Oracle initialization
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setUserId(user.id);
+    };
+    getUserId();
+  }, []);
 
   const handleSendMessage = async (message: string) => {
     await sendMessage(message);
@@ -110,6 +120,12 @@ const Coach = () => {
     <MainLayout>
       <div className="min-h-screen bg-background">
         <div className={cn("container mx-auto px-4 max-w-6xl", isMobile ? "py-0" : "py-2")}>
+          
+          {userId && (
+            <div className="mb-4">
+              <OracleInitializationBanner userId={userId} />
+            </div>
+          )}
           
           {messages.length === 0 && (
             <div className="text-center mb-6">
