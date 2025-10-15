@@ -1057,8 +1057,73 @@ serve(async (req) => {
             magnitude: Math.sqrt(messageEmbedding.reduce((sum, val) => sum + val * val, 0))
           });
           
-          // STEP 4: Perform vector similarity search
-          console.log('🔮 STEP 4: Starting vector similarity search with parameters:', {
+          // STEP 4: Analyze message for facet-aware retrieval
+          console.log('🔮 STEP 4A: Analyzing message for semantic facets and tags');
+          
+          const messageLower = message.toLowerCase();
+          const facetFilters: string[] = [];
+          const tagFilters: string[] = [];
+          
+          // Personality & identity queries
+          if (/who am i|personality|character|nature|essence|identity/.test(messageLower)) {
+            facetFilters.push('core_personality');
+          }
+          
+          // Decision making & cognition
+          if (/decide|choice|think|cognition|decision/.test(messageLower)) {
+            facetFilters.push('decision_making');
+          }
+          
+          // Relationships & social
+          if (/relationship|connect|social|interact|love|partner/.test(messageLower)) {
+            facetFilters.push('relationships');
+          }
+          
+          // Shadow work & challenges
+          if (/shadow|challenge|struggle|fear|overcome|growth|heal/.test(messageLower)) {
+            facetFilters.push('shadow_work', 'gate_analysis');
+            tagFilters.push('shadow', 'transformation');
+          }
+          
+          // Hermetic & spiritual
+          if (/hermetic|law|consciousness|spiritual|metaphys|principle/.test(messageLower)) {
+            facetFilters.push('seven_laws', 'hermetic_fractal', 'consciousness_map');
+            tagFilters.push('hermetic', 'consciousness');
+          }
+          
+          // Life path & purpose
+          if (/purpose|path|calling|mission|destiny|meaning/.test(messageLower)) {
+            facetFilters.push('life_path');
+            tagFilters.push('purpose');
+          }
+          
+          // Human Design gates
+          if (/gate|activation|channel|center/.test(messageLower)) {
+            facetFilters.push('gate_analysis');
+            tagFilters.push('human_design', 'gate');
+          }
+          
+          // Practical implementation
+          if (/how to|practice|implement|apply|action|step/.test(messageLower)) {
+            facetFilters.push('activation_framework');
+            tagFilters.push('practical', 'implementation');
+          }
+          
+          // Timing & cycles
+          if (/timing|when|cycle|transit|season/.test(messageLower)) {
+            facetFilters.push('energy_timing');
+            tagFilters.push('timing', 'cycles');
+          }
+          
+          console.log('🎯 FACET ANALYSIS COMPLETE:', {
+            facets: facetFilters.length > 0 ? facetFilters : ['none - using global search'],
+            tags: tagFilters.length > 0 ? tagFilters : ['none'],
+            messagePreview: message.substring(0, 50) + '...'
+          });
+          
+          // STEP 4B: Perform facet-aware vector similarity search
+          const matchCount = facetFilters.length > 0 ? 10 : 5; // More results when filtering
+          console.log('🔮 STEP 4B: Starting facet-aware vector similarity search:', {
             queryEmbedding: {
               dimensions: messageEmbedding.length,
               firstValues: messageEmbedding.slice(0, 3),
@@ -1067,33 +1132,40 @@ serve(async (req) => {
             searchParams: {
               userId: userId.substring(0, 8) + '...',
               matchThreshold: 0.3,
-              matchCount: 5
+              matchCount,
+              facetFilter: facetFilters.length > 0 ? facetFilters : null,
+              tagFilter: tagFilters.length > 0 ? tagFilters : null
             },
-            functionName: 'match_blueprint_chunks'
+            functionName: 'match_blueprint_chunks_with_facets'
           });
 
           const searchStartTime = Date.now();
           const { data: matchingChunks, error: searchError } = await supabase.rpc(
-            'match_blueprint_chunks',
+            'match_blueprint_chunks_with_facets',
             {
               query_embedding: messageEmbedding,
               query_user_id: userId,
+              facet_filter: facetFilters.length > 0 ? facetFilters : null,
+              tag_filter: tagFilters.length > 0 ? tagFilters : null,
               match_threshold: 0.3,
-              match_count: 5
+              match_count: matchCount
             }
           );
           const searchDuration = Date.now() - searchStartTime;
           
-          console.log('🔮 STEP 4 RESULT: Vector similarity search completed:', {
+          console.log('🔮 STEP 4B RESULT: Facet-aware vector search completed:', {
             processingTime: searchDuration + 'ms',
             chunksFound: matchingChunks?.length || 0,
             searchError: searchError?.message || null,
-            searchErrorCode: searchError?.code || null,
-            searchErrorDetails: searchError?.details || null,
-            searchErrorHint: searchError?.hint || null,
             rawResult: matchingChunks ? 'array' : 'null/undefined',
-            resultSample: matchingChunks?.slice(0, 2).map(c => ({
+            facetsInResults: matchingChunks ? [...new Set(matchingChunks.map((c: any) => c.facet))] : [],
+            avgSimilarity: matchingChunks?.length > 0 
+              ? (matchingChunks.reduce((sum: number, c: any) => sum + (c.similarity || 0), 0) / matchingChunks.length).toFixed(3)
+              : 'N/A',
+            resultSample: matchingChunks?.slice(0, 2).map((c: any) => ({
               id: c.id,
+              facet: c.facet,
+              heading: c.heading,
               similarity: c.similarity,
               contentLength: c.chunk_content?.length || 0,
               contentPreview: c.chunk_content?.substring(0, 50) + '...'

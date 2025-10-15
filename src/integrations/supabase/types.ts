@@ -4280,6 +4280,25 @@ export type Database = {
           similarity: number
         }[]
       }
+      match_blueprint_chunks_with_facets: {
+        Args: {
+          facet_filter?: string[]
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+          query_user_id: string
+          tag_filter?: string[]
+        }
+        Returns: {
+          chunk_content: string
+          facet: string
+          heading: string
+          id: string
+          paragraph_index: number
+          similarity: number
+          tags: string[]
+        }[]
+      }
       migrate_intelligence_to_xp: {
         Args: Record<PropertyKey, never>
         Returns: number

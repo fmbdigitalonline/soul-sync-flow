@@ -197,6 +197,21 @@ serve(async (req) => {
         updated_at: new Date().toISOString()
       })
       .eq('id', jobId);
+    
+    // PHASE 4: Trigger semantic embedding generation (non-blocking background task)
+    console.log('🔮 HERMETIC RECOVERY: Queuing semantic embedding generation...');
+    EdgeRuntime.waitUntil(
+      supabase.functions.invoke('process-blueprint-embeddings', {
+        body: { 
+          userId: job.user_id,
+          forceReprocess: true
+        }
+      }).then(result => {
+        console.log('✅ Semantic embeddings queued successfully:', result.data);
+      }).catch(err => {
+        console.warn('⚠️ Embedding generation failed (non-critical):', err.message);
+      })
+    );
       
     return new Response(JSON.stringify({ 
       success: true, 
