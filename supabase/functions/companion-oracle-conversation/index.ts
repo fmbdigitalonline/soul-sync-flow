@@ -15,7 +15,13 @@ function detectTechnicalDetailRequest(message: string): boolean {
 }
 
 function getConversationFlowGuidance(conversationState: any): string {
-  const detection = conversationState.detectionResult;
+  const detection = conversationState?.detectionResult;
+  
+  // Null guard: Return default guidance if detection failed
+  if (!detection || !detection.cluster) {
+    console.warn('⚠️ getConversationFlowGuidance: detectionResult is null, using default');
+    return 'Respond naturally and empathetically to the user\'s message.';
+  }
   
   // Priority 1: Closure cluster
   if (detection.cluster === 'closure') {
@@ -32,8 +38,8 @@ function getConversationFlowGuidance(conversationState: any): string {
     return `FRUSTRATION MODE: User is ${detection.subState}. Acknowledge in 1 line, then give friction-reducing step + quick win.`;
   }
   
-  // Priority 4: Use schema-defined opening rule
-  return detection.openingRule;
+  // Priority 4: Use schema-defined opening rule (with fallback)
+  return detection.openingRule || 'Respond thoughtfully based on conversation context.';
 }
 
 // Helper function to convert MBTI types to natural descriptions
@@ -122,14 +128,23 @@ function detectConversationState(message: string, conversationHistory: any[] = [
     topSignals: detection.signals.slice(0, 3).map(s => `${s.type}:${s.id}`)
   });
   
+  // Log when returning null detectionResult for debugging
+  if (!detection) {
+    console.warn('⚠️ CONVERSATION STATE: Returning null detectionResult', {
+      messageValid: !!message,
+      messageType: typeof message,
+      timestamp: new Date().toISOString()
+    });
+  }
+
   // Map to backward-compatible format for existing code
   return {
-    isActive: detection.cluster !== 'closure',
-    userSatisfied: detection.cluster === 'closure' && detection.subState === 'gratitude',
-    closureSignalDetected: detection.cluster === 'closure',
-    lastInteractionType: detection.cluster,
-    shouldAskQuestion: ['exploration', 'clarification', 'validation'].includes(detection.cluster),
-    detectionResult: detection
+    isActive: detection?.cluster !== 'closure',
+    userSatisfied: detection?.cluster === 'closure' && detection?.subState === 'gratitude',
+    closureSignalDetected: detection?.cluster === 'closure',
+    lastInteractionType: detection?.cluster || 'unknown',
+    shouldAskQuestion: ['exploration', 'clarification', 'validation'].includes(detection?.cluster || ''),
+    detectionResult: detection || null
   };
 }
 
@@ -1497,8 +1512,8 @@ Respond helpfully while building rapport and understanding.`
         reflection: ['what you\'ve discovered', 'the key insight', 'looking back']
       };
       
-      const currentCluster = conversationState.detectionResult.cluster;
-      const patternsToCheck = repetitivePatterns[currentCluster] || [];
+      const currentCluster = conversationState?.detectionResult?.cluster;
+      const patternsToCheck = currentCluster ? (repetitivePatterns[currentCluster] || []) : [];
       
       const hasRepetitiveOpening = patternsToCheck.some(pattern => 
         lastOpening.includes(pattern)
@@ -1510,7 +1525,8 @@ Respond helpfully while building rapport and understanding.`
           pattern: patternsToCheck.find(p => lastOpening.includes(p))
         });
         
-        messagesToSend[0].content = `⚠️ CRITICAL: You just used similar opening language. ${conversationState.detectionResult.openingRule}
+        const openingRule = conversationState?.detectionResult?.openingRule || 'Vary your opening language.';
+        messagesToSend[0].content = `⚠️ CRITICAL: You just used similar opening language. ${openingRule}
 
 ${messagesToSend[0].content}`;
       }
@@ -1619,9 +1635,21 @@ ${messagesToSend[0].content}`;
         oracleResponseDataKeys: Object.keys(oracleResponseData)
       });
 
+      // Create timeout promise (30 seconds)
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Background task timeout after 30s')), 30000)
+      );
+
+      // Wrap each task with timeout
       const bgTasks = Promise.allSettled([
-        fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase),
-        generateConversationInsights(userId, sessionId, supabase)
+        Promise.race([
+          fuseWithHACSIntelligence(message, userId, sessionId, oracleResponseData, supabase),
+          timeoutPromise
+        ]),
+        Promise.race([
+          generateConversationInsights(userId, sessionId, supabase),
+          timeoutPromise
+        ])
       ]);
 
       EdgeRuntime.waitUntil(
@@ -1632,13 +1660,17 @@ ${messagesToSend[0].content}`;
 
             console.log('✅ BACKGROUND TASKS: Both tasks completed', {
               fusionStatus: r0?.status,
-              fusionReason: r0?.status === 'rejected' ? r0?.reason : 'success',
+              fusionReason: r0?.status === 'rejected' ? r0?.reason?.message || r0?.reason : 'success',
               insightsStatus: r1?.status,
-              insightsReason: r1?.status === 'rejected' ? r1?.reason : 'success'
+              insightsReason: r1?.status === 'rejected' ? r1?.reason?.message || r1?.reason : 'success',
+              timestamp: new Date().toISOString()
             });
           })
           .catch((error) => {
-            console.error('❌ BACKGROUND TASKS: Unexpected error in waitUntil', error);
+            console.error('❌ BACKGROUND TASKS: Unexpected error in waitUntil', {
+              error: error instanceof Error ? error.message : error,
+              timestamp: new Date().toISOString()
+            });
           })
       );
     } else if (enableBackgroundIntelligence) {
@@ -1654,5 +1686,4 @@ ${messagesToSend[0].content}`;
       response: "The cosmic channels are temporarily disrupted. Please try again, seeker."
     }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
-}
-);
+});
