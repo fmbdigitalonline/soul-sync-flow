@@ -1477,26 +1477,26 @@ Respond helpfully while building rapport and understanding.`
 
     // ENHANCED DIAGNOSTICS: Full conversation state analysis
     console.log('📊 ENHANCED CONVERSATION DIAGNOSTICS:', {
-      cluster: conversationState.detectionResult.cluster,
-      subState: conversationState.detectionResult.subState,
-      confidence: conversationState.detectionResult.confidence,
+      cluster: conversationState?.detectionResult?.cluster || 'unknown',
+      subState: conversationState?.detectionResult?.subState || 'unknown',
+      confidence: conversationState?.detectionResult?.confidence || 0,
       signalBreakdown: {
-        paralinguistic: conversationState.detectionResult.signals.filter(s => s.type === 'paralinguistic').length,
-        sentenceForm: conversationState.detectionResult.signals.filter(s => s.type === 'sentence_form').length,
-        discourseMarker: conversationState.detectionResult.signals.filter(s => s.type === 'discourse_marker').length,
-        clusterPattern: conversationState.detectionResult.signals.filter(s => s.type === 'cluster_pattern').length
+        paralinguistic: conversationState?.detectionResult?.signals?.filter(s => s.type === 'paralinguistic').length || 0,
+        sentenceForm: conversationState?.detectionResult?.signals?.filter(s => s.type === 'sentence_form').length || 0,
+        discourseMarker: conversationState?.detectionResult?.signals?.filter(s => s.type === 'discourse_marker').length || 0,
+        clusterPattern: conversationState?.detectionResult?.signals?.filter(s => s.type === 'cluster_pattern').length || 0
       },
-      topSignals: conversationState.detectionResult.signals
-        .sort((a, b) => b.weight - a.weight)
+      topSignals: conversationState?.detectionResult?.signals
+        ?.sort((a, b) => b.weight - a.weight)
         .slice(0, 3)
-        .map(s => ({ type: s.type, id: s.id, weight: s.weight })),
-      openingRule: conversationState.detectionResult.openingRule,
-      allowedNext: conversationState.detectionResult.allowedNextClusters,
+        .map(s => ({ type: s.type, id: s.id, weight: s.weight })) || [],
+      openingRule: conversationState?.detectionResult?.openingRule || 'default',
+      allowedNext: conversationState?.detectionResult?.allowedNextClusters || [],
       turnCount: Math.floor((finalHistory?.length || 0 + 1) / 2)
     });
 
     // ANTI-REPETITION SENTINEL: Cluster-specific repetition detection
-    if (finalHistory && finalHistory.length >= 2 && conversationState.detectionResult.cluster !== 'engagement') {
+    if (finalHistory && finalHistory.length >= 2 && conversationState?.detectionResult?.cluster !== 'engagement') {
       const lastAssistantMessage = finalHistory
         .slice()
         .reverse()
@@ -1678,7 +1678,7 @@ ${messagesToSend[0].content}`;
     }
 
     // FUSION STEP 5: Return immediate response (customer served, background tasks queued)
-    return immediateResponse; 
+    return immediateResponse;
   } catch (error) {
     console.error("❌ Oracle Conversation Error:", error);
     return new Response(JSON.stringify({
