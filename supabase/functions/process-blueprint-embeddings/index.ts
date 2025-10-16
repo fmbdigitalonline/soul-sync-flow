@@ -408,6 +408,35 @@ function extractSemanticSections(reportContent: any, blueprintVersion: string): 
         ['integration', 'synthesis', 'systems', 'connections']
       );
     }
+
+    // Enhanced Intelligence Analysis (19 Dimensions)
+    if (reportContent.enhanced_intelligence_analysis) {
+      // If it's an object with dimension keys, extract each dimension
+      if (typeof reportContent.enhanced_intelligence_analysis === 'object' && 
+          !Array.isArray(reportContent.enhanced_intelligence_analysis)) {
+        Object.entries(reportContent.enhanced_intelligence_analysis).forEach(([dimKey, dimContent]) => {
+          if (typeof dimContent === 'string' || typeof dimContent === 'object') {
+            const heading = dimKey.split('_')
+              .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(' ');
+            addSection(
+              dimContent,
+              'intelligence_dimension',
+              `Intelligence Dimension: ${heading}`,
+              ['intelligence', 'analysis', 'dimension', dimKey, 'enhanced']
+            );
+          }
+        });
+      } else {
+        // If it's a single text block, add as one section
+        addSection(
+          reportContent.enhanced_intelligence_analysis,
+          'intelligence_analysis',
+          'Enhanced Intelligence Analysis',
+          ['intelligence', 'analysis', 'enhanced', 'multidimensional']
+        );
+      }
+    }
   }
 
   // Comprehensive overview and integrated summary (present in both versions)
