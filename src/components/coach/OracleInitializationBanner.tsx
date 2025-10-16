@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { useManualBlueprintProcessor } from '@/hooks/use-manual-blueprint-processor';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
@@ -13,7 +14,7 @@ export const OracleInitializationBanner = ({ userId }: OracleInitializationBanne
   const [embeddingCount, setEmbeddingCount] = useState<number | null>(null);
   const [hasLegacyEmbeddings, setHasLegacyEmbeddings] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
-  const { triggerProcessing, isProcessing, processingResult } = useManualBlueprintProcessor();
+  const { triggerProcessing, isProcessing, processingResult, currentJob } = useManualBlueprintProcessor();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -103,6 +104,33 @@ export const OracleInitializationBanner = ({ userId }: OracleInitializationBanne
       <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-lg border border-border/50">
         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Checking Oracle status...</span>
+      </div>
+    );
+  }
+
+  // Show progress during processing
+  if (isProcessing && currentJob) {
+    return (
+      <div className="flex flex-col gap-3 px-4 py-3 bg-primary/10 rounded-lg border border-primary/20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <div>
+              <p className="text-sm font-medium text-primary">
+                Upgrading Intelligence... {currentJob.progress_percentage}%
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {currentJob.current_step}
+              </p>
+            </div>
+          </div>
+          {currentJob.total_chunks > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {currentJob.processed_chunks}/{currentJob.total_chunks} chunks
+            </span>
+          )}
+        </div>
+        <Progress value={currentJob.progress_percentage} className="h-2" />
       </div>
     );
   }

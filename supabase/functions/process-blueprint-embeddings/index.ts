@@ -2,8 +2,8 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
-// Version: 2.1.0-semantic-facets-production-deploy-20251016
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+// Version: 3.0.0-async-background-processing-20251016
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -12,7 +12,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Define semantic extraction configuration for hermetic reports
+declare const EdgeRuntime: any;
+
 interface ChunkMetadata {
   text: string;
   facet: string;
@@ -22,124 +23,213 @@ interface ChunkMetadata {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
-
     const { userId, forceReprocess = false } = await req.json();
     
-    if (!userId) {
-      throw new Error('User ID is required');
-    }
-
-    console.log('🔄 SEMANTIC EXTRACTION: Starting intelligent blueprint embedding generation', { userId, forceReprocess });
-
-    // Initialize Supabase with service role for admin access
+    console.log('🔥 ASYNC BOOTSTRAP: Starting blueprint embeddings processing', { userId, forceReprocess });
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Check if embeddings already exist for this user
+    // Create job record
+    const { data: job, error: jobError } = await supabase
+      .from('embedding_processing_jobs')
+      .insert({
+        user_id: userId,
+        status: 'pending',
+        current_step: 'Initializing background processing'
+      })
+      .select()
+      .single();
+
+    if (jobError || !job) {
+      console.error('❌ ASYNC BOOTSTRAP: Failed to create job', jobError);
+      throw jobError || new Error('Failed to create job');
+    }
+
+    console.log(`✅ ASYNC BOOTSTRAP: Job created with ID ${job.id}`);
+
+    // Start background processing
+    const processingPromise = processEmbeddingsInBackground(userId, forceReprocess, job.id);
+    
+    // Use EdgeRuntime.waitUntil to keep function alive
+    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+      EdgeRuntime.waitUntil(processingPromise);
+    } else {
+      // Fallback: just start the promise without awaiting
+      processingPromise.catch(err => console.error('Background processing error:', err));
+    }
+    
+    // Return success immediately (within 1 second)
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        message: 'Background processing started',
+        jobId: job.id,
+        userId
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+    
+  } catch (error) {
+    console.error('❌ ASYNC BOOTSTRAP: Request handler error', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
+
+// Background processing function
+async function processEmbeddingsInBackground(userId: string, forceReprocess: boolean, jobId: string) {
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  
+  try {
+    console.log('🔄 BACKGROUND TASK: Starting semantic extraction for job', jobId);
+
+    // Update job status
+    await supabase
+      .from('embedding_processing_jobs')
+      .update({
+        status: 'processing',
+        started_at: new Date().toISOString(),
+        current_step: 'Checking existing embeddings'
+      })
+      .eq('id', jobId);
+
+    // Check if embeddings already exist
     if (!forceReprocess) {
-      const { data: existingEmbeddings, error: checkError } = await supabase
+      const { count, error: countError } = await supabase
         .from('blueprint_text_embeddings')
-        .select('id')
-        .eq('user_id', userId)
-        .limit(1);
-
-      if (checkError) {
-        console.error('❌ Error checking existing embeddings:', checkError);
-        throw checkError;
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+      
+      if (countError) {
+        console.error('❌ BACKGROUND TASK: Failed to check existing embeddings', countError);
+        throw countError;
       }
-
-      if (existingEmbeddings && existingEmbeddings.length > 0) {
-        console.log('✅ SEMANTIC EXTRACTION: Embeddings already exist for user', { userId });
-        return new Response(JSON.stringify({ 
-          success: true, 
-          message: 'Embeddings already exist',
-          embedded_chunks: existingEmbeddings.length
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+      
+      if (count && count > 0) {
+        console.log(`✅ BACKGROUND TASK: User already has ${count} embeddings, skipping processing`);
+        await supabase
+          .from('embedding_processing_jobs')
+          .update({
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            current_step: 'Embeddings already exist',
+            processed_chunks: count,
+            total_chunks: count,
+            progress_percentage: 100
+          })
+          .eq('id', jobId);
+        return;
       }
     }
 
-    // Get user's personality reports
-    const { data: reports, error: reportsError } = await supabase
-      .from('personality_reports')
-      .select('id, report_content, blueprint_version')
-      .eq('user_id', userId);
+    // Fetch personality reports for this user
+    await supabase
+      .from('embedding_processing_jobs')
+      .update({ current_step: 'Fetching personality reports', progress_percentage: 5 })
+      .eq('id', jobId);
 
+    const { data: reports, error: reportsError } = await supabase
+      .from('user_360_profiles')
+      .select('id, user_id, report_content, blueprint_version')
+      .eq('user_id', userId);
+    
     if (reportsError) {
-      console.error('❌ Error fetching personality reports:', reportsError);
+      console.error('❌ BACKGROUND TASK: Failed to fetch personality reports', reportsError);
       throw reportsError;
     }
-
+    
     if (!reports || reports.length === 0) {
-      console.log('⚠️ SEMANTIC EXTRACTION: No personality reports found for user', { userId });
-      return new Response(JSON.stringify({ 
-        success: false, 
-        message: 'No personality reports found for user'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      console.log('⚠️ BACKGROUND TASK: No personality reports found for user');
+      await supabase
+        .from('embedding_processing_jobs')
+        .update({
+          status: 'failed',
+          error_message: 'No personality reports found',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', jobId);
+      return;
     }
 
-    console.log('📊 SEMANTIC EXTRACTION: Found personality reports', { 
-      userId, 
-      reportCount: reports.length,
-      versions: reports.map(r => r.blueprint_version)
-    });
+    console.log(`📊 BACKGROUND TASK: Found ${reports.length} personality reports to process`);
 
-    // Clear existing embeddings if reprocessing
+    // If forceReprocess, delete existing embeddings first
     if (forceReprocess) {
+      console.log('🗑️ BACKGROUND TASK: Deleting existing embeddings for reprocessing...');
+      await supabase
+        .from('embedding_processing_jobs')
+        .update({ current_step: 'Deleting old embeddings', progress_percentage: 10 })
+        .eq('id', jobId);
+
       const { error: deleteError } = await supabase
         .from('blueprint_text_embeddings')
         .delete()
         .eq('user_id', userId);
-
+      
       if (deleteError) {
-        console.error('❌ Error clearing existing embeddings:', deleteError);
+        console.error('❌ BACKGROUND TASK: Failed to delete existing embeddings', deleteError);
         throw deleteError;
       }
-      console.log('🗑️ SEMANTIC EXTRACTION: Cleared existing embeddings for reprocessing');
+      console.log('✅ BACKGROUND TASK: Existing embeddings deleted successfully');
     }
 
-    let totalChunksProcessed = 0;
-    let totalEmbeddingsCreated = 0;
+    let totalEmbeddings = 0;
 
     // Process each report
     for (const report of reports) {
-      console.log('📖 SEMANTIC EXTRACTION: Processing report', { 
-        reportId: report.id, 
-        version: report.blueprint_version 
-      });
+      console.log(`📝 BACKGROUND TASK: Processing report ${report.id}`);
       
-      // Extract structured sections with semantic metadata
       const sections = extractSemanticSections(report.report_content, report.blueprint_version);
+      console.log(`📝 BACKGROUND TASK: Processing report ${report.id} with ${sections.length} sections`);
       
-      console.log('🧬 SEMANTIC EXTRACTION: Extracted semantic sections', { 
-        reportId: report.id,
-        sectionCount: sections.length,
-        facets: [...new Set(sections.map(s => s.facet))]
-      });
+      // Update total chunks count
+      await supabase
+        .from('embedding_processing_jobs')
+        .update({
+          total_chunks: sections.length,
+          current_step: `Processing ${sections.length} semantic sections`,
+          progress_percentage: 15
+        })
+        .eq('id', jobId);
 
-      // Process sections in batches to avoid API rate limits
-      const batchSize = 5;
-      for (let i = 0; i < sections.length; i += batchSize) {
-        const batch = sections.slice(i, i + batchSize);
-        console.log(`🔄 SEMANTIC EXTRACTION: Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(sections.length/batchSize)}`);
-
-        // Generate embeddings for this batch
+      // Process sections in batches of 5 for embedding generation
+      const BATCH_SIZE = 5;
+      for (let i = 0; i < sections.length; i += BATCH_SIZE) {
+        const batch = sections.slice(i, i + BATCH_SIZE);
+        const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+        const totalBatches = Math.ceil(sections.length / BATCH_SIZE);
+        const progress = 15 + Math.floor((i / sections.length) * 75); // 15% to 90%
+        
+        console.log(`🔄 BACKGROUND TASK: Processing batch ${batchNum}/${totalBatches}`);
+        
+        // Update progress with heartbeat
+        await supabase
+          .from('embedding_processing_jobs')
+          .update({
+            processed_chunks: i,
+            progress_percentage: progress,
+            current_step: `Processing batch ${batchNum}/${totalBatches}`
+          })
+          .eq('id', jobId);
+        
+        // Add 20 second delay between batches to avoid rate limits
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 20000));
+        }
+        
+        // Generate embeddings for batch
         const embeddingPromises = batch.map(async (section, batchIndex) => {
           const chunkIndex = i + batchIndex;
           
           try {
-            // Generate embedding for this section
             const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
               method: 'POST',
               headers: {
@@ -149,419 +239,304 @@ serve(async (req) => {
               body: JSON.stringify({
                 model: 'text-embedding-3-small',
                 input: section.text,
-                encoding_format: 'float'
               }),
             });
 
             if (!embeddingResponse.ok) {
               const errorText = await embeddingResponse.text();
-              console.error('❌ OpenAI API error:', embeddingResponse.status, errorText);
+              console.error('OpenAI API error:', errorText);
               throw new Error(`OpenAI API error: ${embeddingResponse.status}`);
             }
 
             const embeddingData = await embeddingResponse.json();
             const embedding = embeddingData.data[0].embedding;
-
-            // Create hash for deduplication
-            const chunkHash = await createHash(section.text);
-
+            
+            const contentHash = await createHash(section.text);
+            
             return {
               user_id: userId,
-              chunk_content: section.text,
-              embedding: embedding,
               source_report_id: report.id,
               chunk_index: chunkIndex,
-              chunk_hash: chunkHash,
+              chunk_content: section.text,
+              chunk_hash: contentHash,
+              embedding: embedding,
               facet: section.facet,
               heading: section.heading,
               tags: section.tags,
-              paragraph_index: section.paragraphIndex
+              paragraph_index: section.paragraphIndex,
             };
           } catch (error) {
-            console.error(`❌ Error processing section ${chunkIndex}:`, error);
+            console.error(`Error generating embedding for chunk ${chunkIndex}:`, error);
             throw error;
           }
         });
 
-        // Wait for batch to complete
-        const batchResults = await Promise.all(embeddingPromises);
+        const embeddings = await Promise.all(embeddingPromises);
         
-        // Insert batch into database
         const { error: insertError } = await supabase
           .from('blueprint_text_embeddings')
-          .insert(batchResults);
+          .insert(embeddings);
 
         if (insertError) {
-          console.error('❌ Error inserting embeddings batch:', insertError);
+          console.error('Error inserting embeddings:', insertError);
           throw insertError;
         }
 
-        totalEmbeddingsCreated += batchResults.length;
-        console.log(`✅ SEMANTIC EXTRACTION: Inserted batch ${Math.floor(i/batchSize) + 1}, total embeddings: ${totalEmbeddingsCreated}`);
-
-        // Small delay to respect rate limits
-        await new Promise(resolve => setTimeout(resolve, 100));
+        totalEmbeddings += embeddings.length;
+        console.log(`✅ BACKGROUND TASK: Inserted batch ${batchNum}, total embeddings: ${totalEmbeddings}`);
       }
-
-      totalChunksProcessed += sections.length;
     }
 
-    console.log('🎉 SEMANTIC EXTRACTION: Blueprint embedding generation complete', {
-      userId,
-      reportsProcessed: reports.length,
-      totalChunksProcessed,
-      totalEmbeddingsCreated
-    });
+    console.log(`🎉 BACKGROUND TASK: Successfully processed all reports. Total embeddings: ${totalEmbeddings}`);
+    
+    // Mark job as completed
+    await supabase
+      .from('embedding_processing_jobs')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        processed_chunks: totalEmbeddings,
+        progress_percentage: 100,
+        current_step: 'Processing complete'
+      })
+      .eq('id', jobId);
 
-    return new Response(JSON.stringify({ 
-      success: true,
-      message: 'Blueprint embeddings generated successfully with semantic structure',
-      reports_processed: reports.length,
-      chunks_processed: totalChunksProcessed,
-      embeddings_created: totalEmbeddingsCreated
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-
+    console.log(`✅ BACKGROUND TASK: Job ${jobId} completed successfully`);
+    
   } catch (error) {
-    console.error('❌ Error in process-blueprint-embeddings function:', error);
-    return new Response(JSON.stringify({ 
-      success: false,
-      error: error.message || 'Failed to process blueprint embeddings' 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('❌ BACKGROUND TASK: Processing failed', error);
+    
+    // Mark job as failed
+    await supabase
+      .from('embedding_processing_jobs')
+      .update({
+        status: 'failed',
+        error_message: error.message,
+        completed_at: new Date().toISOString()
+      })
+      .eq('id', jobId);
   }
-});
+}
 
-// Extract semantic sections from personality report with proper metadata
 function extractSemanticSections(reportContent: any, blueprintVersion: string): ChunkMetadata[] {
-  const sections: ChunkMetadata[] = [];
-  let paragraphCounter = 0;
-
-  // Helper to safely extract and chunk text content
-  const addSection = (
-    content: any,
-    facet: string,
-    heading: string,
-    tags: string[],
-    targetSize: number = 1000
-  ) => {
-    const text = extractTextContent(content);
-    if (!text || text.length < 50) return;
-
-    // Chunk long sections intelligently
-    const chunks = chunkTextIntelligently(text, targetSize);
-    chunks.forEach((chunk, idx) => {
-      sections.push({
-        text: chunk,
+  const chunks: ChunkMetadata[] = [];
+  
+  const addSection = (text: string, facet: string, heading: string, tags: string[], paragraphIndex: number = 0) => {
+    if (!text || text.trim().length < 10) return;
+    
+    const cleaned = text.trim();
+    const maxChunkSize = 1000;
+    
+    if (cleaned.length <= maxChunkSize) {
+      chunks.push({
+        text: cleaned,
         facet,
-        heading: chunks.length > 1 ? `${heading} (Part ${idx + 1})` : heading,
+        heading,
         tags,
-        paragraphIndex: paragraphCounter++
+        paragraphIndex
       });
-    });
+    } else {
+      const subChunks = chunkTextIntelligently(cleaned, maxChunkSize);
+      subChunks.forEach((subChunk, i) => {
+        chunks.push({
+          text: subChunk,
+          facet,
+          heading: i > 0 ? `${heading} (continued ${i+1})` : heading,
+          tags,
+          paragraphIndex: paragraphIndex + i
+        });
+      });
+    }
   };
 
-  // Core personality sections (present in both standard and hermetic reports)
-  if (reportContent.core_personality_pattern) {
+  // Core Personality Facet (MBTI/Cognition)
+  if (reportContent?.cognition_mbti) {
+    const mbti = reportContent.cognition_mbti;
     addSection(
-      reportContent.core_personality_pattern,
+      extractTextContent(mbti),
       'core_personality',
-      'Core Personality Pattern',
-      ['personality', 'identity', 'core_self']
+      `MBTI: ${mbti.type || 'Unknown'}`,
+      ['cognition', 'mbti', 'personality_type', mbti.type?.toLowerCase() || 'unknown'],
+      0
     );
   }
 
-  if (reportContent.decision_making_style) {
+  // Decision Making Facet (Human Design)
+  if (reportContent?.energy_strategy_human_design) {
+    const hd = reportContent.energy_strategy_human_design;
     addSection(
-      reportContent.decision_making_style,
+      extractTextContent(hd),
       'decision_making',
-      'Decision Making Style',
-      ['cognition', 'decision', 'strategy']
+      `Human Design: ${hd.type || 'Unknown'} - ${hd.authority || 'Unknown'}`,
+      ['human_design', 'energy_strategy', 'decision_making', hd.type?.toLowerCase() || 'unknown'],
+      0
     );
   }
 
-  if (reportContent.relationship_style) {
+  // Hermetic Laws
+  if (reportContent?.bashar_suite?.hermetic_laws) {
+    const laws = reportContent.bashar_suite.hermetic_laws;
+    Object.entries(laws).forEach(([lawKey, lawData]: [string, any], idx) => {
+      addSection(
+        extractTextContent(lawData),
+        'hermetic_laws',
+        `Hermetic Law: ${lawKey}`,
+        ['hermetic_laws', 'universal_principles', lawKey],
+        idx
+      );
+    });
+  }
+
+  // Western Astrology (Archetype)
+  if (reportContent?.archetype_western) {
+    const western = reportContent.archetype_western;
     addSection(
-      reportContent.relationship_style,
-      'relationships',
-      'Relationship Style',
-      ['relationships', 'social', 'interaction']
+      extractTextContent(western),
+      'archetype_western',
+      'Western Astrology',
+      ['astrology', 'western', 'archetype', 'zodiac'],
+      0
     );
   }
 
-  if (reportContent.life_path_purpose) {
+  // Chinese Astrology (Archetype)
+  if (reportContent?.archetype_chinese) {
+    const chinese = reportContent.archetype_chinese;
     addSection(
-      reportContent.life_path_purpose,
-      'life_path',
-      'Life Path & Purpose',
-      ['purpose', 'life_path', 'meaning']
+      extractTextContent(chinese),
+      'archetype_chinese',
+      'Chinese Astrology',
+      ['astrology', 'chinese', 'archetype', 'bazi'],
+      0
     );
   }
 
-  // Hermetic-specific sections (v2.0 reports)
-  if (blueprintVersion === '2.0') {
-    console.log('🔮 SEMANTIC EXTRACTION: Processing Hermetic v2.0 report sections');
-
-    // Hermetic fractal analysis
-    if (reportContent.hermetic_fractal_analysis) {
-      addSection(
-        reportContent.hermetic_fractal_analysis,
-        'hermetic_fractal',
-        'Hermetic Fractal Analysis',
-        ['hermetic', 'fractal', 'consciousness', 'multidimensional']
-      );
-    }
-
-    // Seven Hermetic Laws integration
-    if (reportContent.seven_laws_integration) {
-      const lawNames: Record<string, string> = {
-        mentalism: 'Law of Mentalism',
-        correspondence: 'Law of Correspondence',
-        vibration: 'Law of Vibration',
-        polarity: 'Law of Polarity',
-        rhythm: 'Law of Rhythm',
-        cause_and_effect: 'Law of Cause and Effect',
-        gender: 'Law of Gender'
-      };
-
-      Object.entries(reportContent.seven_laws_integration).forEach(([lawKey, lawContent]) => {
-        if (typeof lawContent === 'string' || typeof lawContent === 'object') {
-          addSection(
-            lawContent,
-            'seven_laws',
-            lawNames[lawKey] || `Law of ${lawKey}`,
-            ['hermetic', 'seven_laws', lawKey, 'universal_principles']
-          );
-        }
-      });
-    }
-
-    // Gate analyses (Human Design gates with shadow work)
-    if (reportContent.gate_analyses) {
-      Object.entries(reportContent.gate_analyses).forEach(([gateNum, gateContent]) => {
-        if (typeof gateContent === 'string' || typeof gateContent === 'object') {
-          addSection(
-            gateContent,
-            'gate_analysis',
-            `Gate ${gateNum} Analysis`,
-            ['human_design', 'gate', `gate_${gateNum}`, 'shadow_work', 'activation']
-          );
-        }
-      });
-    }
-
-    // Shadow work integration
-    if (reportContent.shadow_work_integration) {
-      Object.entries(reportContent.shadow_work_integration).forEach(([key, content]) => {
-        if (typeof content === 'string' || typeof content === 'object') {
-          const heading = key.split('_')
-            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(' ');
-          addSection(
-            content,
-            'shadow_work',
-            heading,
-            ['shadow', 'integration', 'transformation', 'self_awareness']
-          );
-        }
-      });
-    }
-
-    // Consciousness integration map
-    if (reportContent.consciousness_integration_map) {
-      addSection(
-        reportContent.consciousness_integration_map,
-        'consciousness_map',
-        'Consciousness Integration Map',
-        ['consciousness', 'integration', 'awareness', 'evolution']
-      );
-    }
-
-    // Practical activation framework
-    if (reportContent.practical_activation_framework) {
-      addSection(
-        reportContent.practical_activation_framework,
-        'activation_framework',
-        'Practical Activation Framework',
-        ['activation', 'practical', 'implementation', 'growth']
-      );
-    }
-
-    // Current energy timing
-    if (reportContent.current_energy_timing) {
-      addSection(
-        reportContent.current_energy_timing,
-        'energy_timing',
-        'Current Energy & Timing',
-        ['timing', 'energy', 'transits', 'cycles']
-      );
-    }
-
-    // System translations (MBTI-HD-Hermetic connections)
-    if (reportContent.system_translations) {
-      addSection(
-        reportContent.system_translations,
-        'system_translations',
-        'System Translations & Bridges',
-        ['integration', 'synthesis', 'systems', 'connections']
-      );
-    }
-
-    // Enhanced Intelligence Analysis (19 Dimensions)
-    if (reportContent.enhanced_intelligence_analysis) {
-      // If it's an object with dimension keys, extract each dimension
-      if (typeof reportContent.enhanced_intelligence_analysis === 'object' && 
-          !Array.isArray(reportContent.enhanced_intelligence_analysis)) {
-        Object.entries(reportContent.enhanced_intelligence_analysis).forEach(([dimKey, dimContent]) => {
-          if (typeof dimContent === 'string' || typeof dimContent === 'object') {
-            const heading = dimKey.split('_')
-              .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-              .join(' ');
-            addSection(
-              dimContent,
-              'intelligence_dimension',
-              `Intelligence Dimension: ${heading}`,
-              ['intelligence', 'analysis', 'dimension', dimKey, 'enhanced']
-            );
-          }
-        });
-      } else {
-        // If it's a single text block, add as one section
-        addSection(
-          reportContent.enhanced_intelligence_analysis,
-          'intelligence_analysis',
-          'Enhanced Intelligence Analysis',
-          ['intelligence', 'analysis', 'enhanced', 'multidimensional']
-        );
-      }
-    }
-  }
-
-  // Comprehensive overview and integrated summary (present in both versions)
-  if (reportContent.comprehensive_overview) {
+  // Life Path (Values)
+  if (reportContent?.values_life_path) {
+    const lifePath = reportContent.values_life_path;
     addSection(
-      reportContent.comprehensive_overview,
-      'overview',
-      'Comprehensive Overview',
-      ['overview', 'summary', 'synthesis']
+      extractTextContent(lifePath),
+      'values_life_path',
+      'Life Path',
+      ['numerology', 'life_path', 'values', 'purpose'],
+      0
     );
   }
 
-  if (reportContent.integrated_summary) {
+  // Timing Overlays
+  if (reportContent?.timing_overlays) {
+    const timing = reportContent.timing_overlays;
     addSection(
-      reportContent.integrated_summary,
-      'integrated_summary',
-      'Integrated Summary',
-      ['summary', 'integration', 'key_insights']
+      extractTextContent(timing),
+      'timing_overlays',
+      'Timing Overlays',
+      ['timing', 'transits', 'cycles'],
+      0
     );
   }
 
-  console.log(`✅ SEMANTIC EXTRACTION: Extracted ${sections.length} semantic sections from ${blueprintVersion} report`);
-  return sections;
+  // Gate Analyses (if present)
+  if (reportContent?.bashar_suite?.gate_analyses) {
+    const gates = reportContent.bashar_suite.gate_analyses;
+    Object.entries(gates).forEach(([gateKey, gateData]: [string, any], idx) => {
+      addSection(
+        extractTextContent(gateData),
+        'gate_analyses',
+        `Gate ${gateKey}`,
+        ['human_design', 'gates', gateKey, 'gate_analysis'],
+        idx
+      );
+    });
+  }
+
+  return chunks;
 }
 
-// Extract text content from various formats (string, object, array)
 function extractTextContent(content: any): string {
   if (typeof content === 'string') {
-    return content.trim();
+    return content;
   }
   
-  if (typeof content === 'object' && content !== null) {
-    // If it's an array, join elements
-    if (Array.isArray(content)) {
-      return content
-        .map(item => extractTextContent(item))
-        .filter(text => text.length > 0)
-        .join('\n\n');
-    }
-    
-    // If it's an object, extract text from all values
-    const texts: string[] = [];
-    for (const value of Object.values(content)) {
-      const text = extractTextContent(value);
-      if (text.length > 0) {
-        texts.push(text);
-      }
-    }
-    return texts.join('\n\n');
+  if (Array.isArray(content)) {
+    return content.map(item => extractTextContent(item)).join('\n');
   }
   
-  return '';
+  if (content && typeof content === 'object') {
+    return Object.entries(content)
+      .map(([key, value]) => {
+        if (key === 'keywords' || key === 'tags') {
+          return '';
+        }
+        const extracted = extractTextContent(value);
+        return extracted ? `${key}: ${extracted}` : '';
+      })
+      .filter(Boolean)
+      .join('\n');
+  }
+  
+  return String(content || '');
 }
 
-// Intelligently chunk text while preserving sentence and paragraph boundaries
 function chunkTextIntelligently(text: string, targetSize: number): string[] {
   const chunks: string[] = [];
-  
-  // Split on paragraph boundaries first
   const paragraphs = text.split(/\n\n+/);
+  
   let currentChunk = '';
   
-  for (const paragraph of paragraphs) {
-    const trimmedPara = paragraph.trim();
-    if (!trimmedPara) continue;
-    
-    // If adding this paragraph would exceed target size, save current chunk
-    if (currentChunk.length > 0 && currentChunk.length + trimmedPara.length > targetSize) {
-      chunks.push(currentChunk.trim());
-      currentChunk = trimmedPara;
+  for (const para of paragraphs) {
+    if (currentChunk.length + para.length + 2 <= targetSize) {
+      currentChunk += (currentChunk ? '\n\n' : '') + para;
     } else {
-      currentChunk += (currentChunk ? '\n\n' : '') + trimmedPara;
+      if (currentChunk) {
+        chunks.push(currentChunk);
+      }
+      
+      if (para.length > targetSize) {
+        const subChunks = chunkBySentences(para, targetSize);
+        chunks.push(...subChunks);
+        currentChunk = '';
+      } else {
+        currentChunk = para;
+      }
     }
-    
-    // If current chunk is already large, save it
-    if (currentChunk.length > targetSize * 1.5) {
-      chunks.push(currentChunk.trim());
-      currentChunk = '';
-    }
   }
   
-  // Save remaining content
-  if (currentChunk.trim()) {
-    chunks.push(currentChunk.trim());
+  if (currentChunk) {
+    chunks.push(currentChunk);
   }
   
-  // If no paragraph-based chunking worked, fall back to sentence-based
-  if (chunks.length === 0 && text.length > 0) {
-    return chunkBySentences(text, targetSize);
-  }
-  
-  return chunks.filter(chunk => chunk.length > 50);
+  return chunks;
 }
 
-// Fallback sentence-based chunking
 function chunkBySentences(text: string, targetSize: number): string[] {
   const chunks: string[] = [];
-  const sentences = text.split(/[.!?]+/);
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+  
   let currentChunk = '';
   
   for (const sentence of sentences) {
-    const trimmedSentence = sentence.trim();
-    if (!trimmedSentence) continue;
-    
-    if (currentChunk.length + trimmedSentence.length > targetSize && currentChunk.length > 0) {
-      chunks.push(currentChunk.trim() + '.');
-      currentChunk = trimmedSentence;
+    if (currentChunk.length + sentence.length <= targetSize) {
+      currentChunk += sentence;
     } else {
-      currentChunk += (currentChunk ? '. ' : '') + trimmedSentence;
+      if (currentChunk) {
+        chunks.push(currentChunk);
+      }
+      currentChunk = sentence;
     }
   }
   
-  if (currentChunk.trim()) {
-    chunks.push(currentChunk.trim() + '.');
+  if (currentChunk) {
+    chunks.push(currentChunk);
   }
   
-  return chunks.filter(chunk => chunk.length > 50);
+  return chunks;
 }
 
-// Helper function to create a hash for deduplication
 async function createHash(text: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
 }

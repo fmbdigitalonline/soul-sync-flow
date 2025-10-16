@@ -1,53 +1,126 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+
+interface ProcessingJob {
+  id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  progress_percentage: number;
+  current_step: string;
+  processed_chunks: number;
+  total_chunks: number;
+  error_message?: string;
+}
 
 export const useManualBlueprintProcessor = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingResult, setProcessingResult] = useState<any>(null);
+  const [currentJob, setCurrentJob] = useState<ProcessingJob | null>(null);
+  const pollingInterval = useRef<NodeJS.Timeout | null>(null);
+
+  // Poll for job status
+  const pollJobStatus = async (jobId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('embedding_processing_jobs')
+        .select('*')
+        .eq('id', jobId)
+        .single();
+
+      if (error) throw error;
+
+      setCurrentJob(data as ProcessingJob);
+
+      if (data.status === 'completed') {
+        console.log('✅ Job completed:', data);
+        setProcessingResult({ embeddingCount: data.processed_chunks });
+        setIsProcessing(false);
+        
+        if (pollingInterval.current) {
+          clearInterval(pollingInterval.current);
+          pollingInterval.current = null;
+        }
+
+        toast({
+          title: "Blueprint Processing Complete",
+          description: `Successfully processed ${data.processed_chunks} personality chunks`,
+          variant: "default"
+        });
+      } else if (data.status === 'failed') {
+        console.error('❌ Job failed:', data.error_message);
+        setIsProcessing(false);
+        
+        if (pollingInterval.current) {
+          clearInterval(pollingInterval.current);
+          pollingInterval.current = null;
+        }
+
+        toast({
+          title: "Processing Failed",
+          description: data.error_message || 'Failed to process blueprint embeddings',
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Failed to poll job status:', error);
+    }
+  };
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval.current) {
+        clearInterval(pollingInterval.current);
+      }
+    };
+  }, []);
 
   const triggerProcessing = async (userId: string) => {
     setIsProcessing(true);
     setProcessingResult(null);
+    setCurrentJob(null);
 
     try {
-      console.log('🔥 MANUAL BOOTSTRAP: Triggering blueprint processing for user:', userId);
+      console.log('🔥 ASYNC BOOTSTRAP: Triggering blueprint processing for user:', userId);
       
-      const { data, error } = await supabase.functions.invoke('trigger-blueprint-processing', {
+      const { data, error } = await supabase.functions.invoke('process-blueprint-embeddings', {
         body: { userId, forceReprocess: true }
       });
 
       if (error) {
-        console.error('❌ MANUAL BOOTSTRAP: Failed to trigger processing', error);
+        console.error('❌ ASYNC BOOTSTRAP: Failed to trigger processing', error);
         throw error;
       }
 
-      console.log('✅ MANUAL BOOTSTRAP: Processing completed successfully', data);
-      setProcessingResult(data);
-      
-      toast({
-        title: "Blueprint Processing Complete",
-        description: `Successfully processed ${data.embeddingCount} personality chunks`,
-        variant: "default"
-      });
+      console.log('✅ ASYNC BOOTSTRAP: Background processing started', data);
+
+      // Start polling for job status
+      if (data.jobId) {
+        pollingInterval.current = setInterval(() => {
+          pollJobStatus(data.jobId);
+        }, 2000); // Poll every 2 seconds
+
+        // Initial poll
+        pollJobStatus(data.jobId);
+      }
 
       return data;
     } catch (error) {
-      console.error('❌ MANUAL BOOTSTRAP: Processing failed', error);
+      console.error('❌ ASYNC BOOTSTRAP: Processing failed', error);
+      setIsProcessing(false);
       toast({
         title: "Processing Failed",
-        description: error.message || 'Failed to process blueprint embeddings',
+        description: error.message || 'Failed to start blueprint processing',
         variant: "destructive"
       });
       throw error;
-    } finally {
-      setIsProcessing(false);
     }
   };
 
   return {
     triggerProcessing,
     isProcessing,
-    processingResult
+    processingResult,
+    currentJob
   };
 };

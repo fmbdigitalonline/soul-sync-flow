@@ -1047,6 +1047,51 @@ export type Database = {
         }
         Relationships: []
       }
+      embedding_processing_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          current_step: string | null
+          error_message: string | null
+          id: string
+          processed_chunks: number | null
+          progress_percentage: number | null
+          started_at: string | null
+          status: string
+          total_chunks: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_step?: string | null
+          error_message?: string | null
+          id?: string
+          processed_chunks?: number | null
+          progress_percentage?: number | null
+          started_at?: string | null
+          status?: string
+          total_chunks?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_step?: string | null
+          error_message?: string | null
+          id?: string
+          processed_chunks?: number | null
+          progress_percentage?: number | null
+          started_at?: string | null
+          status?: string
+          total_chunks?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       encoder_versions: {
         Row: {
           calibration_params: Json
