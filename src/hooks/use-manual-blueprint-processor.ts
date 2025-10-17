@@ -75,16 +75,16 @@ export const useManualBlueprintProcessor = () => {
     };
   }, []);
 
-  const triggerProcessing = async (userId: string) => {
+  const triggerProcessing = async (userId: string, forceReprocess: boolean = false) => {
     setIsProcessing(true);
     setProcessingResult(null);
     setCurrentJob(null);
 
     try {
-      console.log('🔥 ASYNC BOOTSTRAP: Triggering blueprint processing for user:', userId);
+      console.log('🔥 ASYNC BOOTSTRAP: Triggering blueprint processing for user:', userId, 'forceReprocess:', forceReprocess);
       
       const { data, error } = await supabase.functions.invoke('process-blueprint-embeddings-v3', {
-        body: { userId, forceReprocess: true }
+        body: { userId, forceReprocess }
       });
 
       if (error) {

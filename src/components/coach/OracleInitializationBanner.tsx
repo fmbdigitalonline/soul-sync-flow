@@ -72,23 +72,15 @@ export const OracleInitializationBanner = ({ userId }: OracleInitializationBanne
 
   const handleUpgrade = async () => {
     try {
-      console.log('🔄 ORACLE UPGRADE: Deleting legacy embeddings...');
+      console.log('🔄 ORACLE UPGRADE: Triggering force reprocess...');
       
-      // Delete old embeddings without facet metadata
-      const { error: deleteError } = await supabase
-        .from('blueprint_text_embeddings')
-        .delete()
-        .eq('user_id', userId);
-
-      if (deleteError) throw deleteError;
-
       toast({
         title: "Upgrading Oracle Intelligence",
         description: "Clearing legacy embeddings and regenerating with semantic facets...",
       });
 
-      // Trigger reprocessing with new extraction logic
-      await triggerProcessing(userId);
+      // Trigger reprocessing with forceReprocess=true (edge function will handle deletion)
+      await triggerProcessing(userId, true);
     } catch (error) {
       console.error('Failed to upgrade Oracle:', error);
       toast({
