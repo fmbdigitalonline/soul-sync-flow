@@ -554,11 +554,17 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
       }
       
       if (textContent.length > 50) {
-        sections.push({
-          facet: section,
-          heading: topLevelTitles[section] || section,
-          content: textContent,
-          tags: ['hermetic_2.0', 'report_content', section, ...extractKeywords(content)]
+        // ✅ Smart chunking for large string sections
+        const chunks = chunkTextIntelligently(textContent, 15000);
+        
+        chunks.forEach((chunk, index) => {
+          sections.push({
+            facet: section,
+            heading: topLevelTitles[section] || section,
+            content: chunk,
+            tags: ['hermetic_2.0', 'report_content', section, ...extractKeywords(content)],
+            paragraph_index: chunks.length > 1 ? index : undefined
+          });
         });
       }
     }
@@ -606,6 +612,38 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
 
   console.log(`✅ Extracted ${sections.length} sections from ${sourceType}`);
   return sections;
+}
+
+function chunkTextIntelligently(text: string, targetSize: number = 15000): string[] {
+  // If text is under threshold, return as-is
+  if (text.length <= targetSize) {
+    return [text];
+  }
+
+  console.log(`⚠️ Text exceeds ${targetSize} chars (${text.length}), chunking intelligently`);
+  
+  // Split by double newlines (paragraphs)
+  const paragraphs = text.split(/\n\n+/);
+  const chunks: string[] = [];
+  let currentChunk = '';
+
+  for (const para of paragraphs) {
+    // If adding this paragraph would exceed target, save current chunk
+    if (currentChunk.length + para.length > targetSize && currentChunk.length > 0) {
+      chunks.push(currentChunk.trim());
+      currentChunk = para;
+    } else {
+      currentChunk += (currentChunk ? '\n\n' : '') + para;
+    }
+  }
+
+  // Add final chunk
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+
+  console.log(`✅ Chunked into ${chunks.length} pieces`);
+  return chunks;
 }
 
 function extractTextContent(content: any): string {
