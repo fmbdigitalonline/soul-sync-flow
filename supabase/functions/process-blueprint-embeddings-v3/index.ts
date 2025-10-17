@@ -144,11 +144,12 @@ async function processEmbeddingsInBackground(
       console.log(`✅ BACKGROUND TASK: Fetched ${hermeticReports?.length || 0} Hermetic 2.0 reports`);
     }
 
-    // Source 2: Standard 1.0 reports (report_content)
+    // Source 2: Standard 1.0 reports (report_content) - EXCLUDE 2.0 reports
     const { data: standardReports, error: standardError } = await supabase
       .from('personality_reports')
       .select('id, report_content, blueprint_version')
       .eq('user_id', userId)
+      .neq('blueprint_version', '2.0')
       .not('report_content', 'is', null);
 
     if (standardError) {
