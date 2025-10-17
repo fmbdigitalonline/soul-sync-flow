@@ -445,21 +445,28 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
           section === 'word_count' || 
           section === 'blueprint_signature' || 
           section === 'generation_metadata') {
+        console.log(`⏭️ Skipping ${section} (processed elsewhere or metadata)`);
         continue;
       }
 
       // ✅ SPECIAL HANDLING: gate_analyses contains multiple gates, process each separately
+      console.log(`🔍 Checking section: ${section}, type: ${typeof content}, is_object: ${content && typeof content === 'object'}`);
       if (section === 'gate_analyses' && content && typeof content === 'object') {
-        console.log('🔍 Processing gate_analyses: Breaking into individual gates');
+        console.log('✅ MATCHED: Processing gate_analyses with special handler');
         
         for (const [gateKey, gateContent] of Object.entries(content)) {
           const gateText = extractTextContent(gateContent);
           if (gateText.length > 50) {
-            sections.push({
-              facet: 'gate_analysis',
-              heading: `Human Design Gate ${gateKey}`,
-              content: gateText,
-              tags: ['hermetic_2.0', 'gate_analysis', `gate_${gateKey}`]
+            // ✅ Apply smart chunking to each gate
+            const chunks = chunkTextIntelligently(gateText, 15000);
+            chunks.forEach((chunk, index) => {
+              sections.push({
+                facet: 'gate_analysis',
+                heading: `Human Design Gate ${gateKey}`,
+                content: chunk,
+                tags: ['hermetic_2.0', 'gate_analysis', `gate_${gateKey}`],
+                paragraph_index: chunks.length > 1 ? index : undefined
+              });
             });
           }
         }
@@ -468,7 +475,7 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
 
       // ✅ SPECIAL HANDLING: shadow_work_integration has 3 sub-sections
       if (section === 'shadow_work_integration' && content && typeof content === 'object') {
-        console.log('🔍 Processing shadow_work_integration: Breaking into sub-sections');
+        console.log('✅ MATCHED: Processing shadow_work_integration with special handler');
         
         const shadowTitles: Record<string, string> = {
           shadow_patterns: 'Shadow Patterns Analysis',
@@ -479,11 +486,16 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
         for (const [subKey, subContent] of Object.entries(content)) {
           const subText = extractTextContent(subContent);
           if (subText.length > 50) {
-            sections.push({
-              facet: 'shadow_work',
-              heading: shadowTitles[subKey] || `Shadow Work: ${subKey}`,
-              content: subText,
-              tags: ['hermetic_2.0', 'shadow_work', subKey]
+            // ✅ Apply smart chunking to each sub-section
+            const chunks = chunkTextIntelligently(subText, 15000);
+            chunks.forEach((chunk, index) => {
+              sections.push({
+                facet: 'shadow_work',
+                heading: shadowTitles[subKey] || `Shadow Work: ${subKey}`,
+                content: chunk,
+                tags: ['hermetic_2.0', 'shadow_work', subKey],
+                paragraph_index: chunks.length > 1 ? index : undefined
+              });
             });
           }
         }
@@ -492,7 +504,7 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
 
       // ✅ SPECIAL HANDLING: seven_laws_integration has 7 Hermetic Laws
       if (section === 'seven_laws_integration' && content && typeof content === 'object') {
-        console.log('🔍 Processing seven_laws_integration: Breaking into individual laws');
+        console.log('✅ MATCHED: Processing seven_laws_integration with special handler');
         
         const lawTitles: Record<string, string> = {
           mentalism: 'Law of Mentalism',
@@ -507,11 +519,16 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
         for (const [lawKey, lawContent] of Object.entries(content)) {
           const lawText = extractTextContent(lawContent);
           if (lawText.length > 50) {
-            sections.push({
-              facet: 'hermetic_law',
-              heading: lawTitles[lawKey] || `Hermetic Law: ${lawKey}`,
-              content: lawText,
-              tags: ['hermetic_2.0', 'hermetic_laws', lawKey]
+            // ✅ Apply smart chunking to each law
+            const chunks = chunkTextIntelligently(lawText, 15000);
+            chunks.forEach((chunk, index) => {
+              sections.push({
+                facet: 'hermetic_law',
+                heading: lawTitles[lawKey] || `Hermetic Law: ${lawKey}`,
+                content: chunk,
+                tags: ['hermetic_2.0', 'hermetic_laws', lawKey],
+                paragraph_index: chunks.length > 1 ? index : undefined
+              });
             });
           }
         }
@@ -520,7 +537,7 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
 
       // ✅ SPECIAL HANDLING: system_translations has 5 translation mappings
       if (section === 'system_translations' && content && typeof content === 'object') {
-        console.log('🔍 Processing system_translations: Breaking into individual translations');
+        console.log('✅ MATCHED: Processing system_translations with special handler');
         
         const translationTitles: Record<string, string> = {
           mbti_hermetic: 'MBTI to Hermetic Translation',
@@ -533,11 +550,16 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
         for (const [transKey, transContent] of Object.entries(content)) {
           const transText = extractTextContent(transContent);
           if (transText.length > 50) {
-            sections.push({
-              facet: 'system_translation',
-              heading: translationTitles[transKey] || `Translation: ${transKey}`,
-              content: transText,
-              tags: ['hermetic_2.0', 'translations', transKey]
+            // ✅ Apply smart chunking to each translation
+            const chunks = chunkTextIntelligently(transText, 15000);
+            chunks.forEach((chunk, index) => {
+              sections.push({
+                facet: 'system_translation',
+                heading: translationTitles[transKey] || `Translation: ${transKey}`,
+                content: chunk,
+                tags: ['hermetic_2.0', 'translations', transKey],
+                paragraph_index: chunks.length > 1 ? index : undefined
+              });
             });
           }
         }
