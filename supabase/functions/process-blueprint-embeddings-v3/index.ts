@@ -252,6 +252,13 @@ async function processEmbeddingsInBackground(
 
       // Generate embeddings for batch
       const embeddingPromises = batch.map(async (chunk) => {
+        // ✅ Validate content before sending to OpenAI
+        const content = chunk.metadata.content?.trim();
+        if (!content || content.length === 0) {
+          console.warn(`⚠️ Skipping empty content for facet: ${chunk.metadata.facet}`);
+          return null;
+        }
+
         const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
           method: 'POST',
           headers: {
@@ -260,11 +267,13 @@ async function processEmbeddingsInBackground(
           },
           body: JSON.stringify({
             model: 'text-embedding-3-small',
-            input: chunk.metadata.content,
+            input: content,
           }),
         });
 
         if (!embeddingResponse.ok) {
+          const errorBody = await embeddingResponse.text();
+          console.error(`❌ OpenAI API error for facet ${chunk.metadata.facet}: ${embeddingResponse.statusText}`, errorBody);
           throw new Error(`OpenAI API error: ${embeddingResponse.statusText}`);
         }
 
@@ -280,9 +289,12 @@ async function processEmbeddingsInBackground(
       });
 
       const embeddingResults = await Promise.all(embeddingPromises);
+      
+      // ✅ Filter out null results (skipped chunks with empty content)
+      const validResults = embeddingResults.filter(r => r !== null);
 
       // Insert embeddings into database
-      const embeddingRecords = embeddingResults.map((result, index) => {
+      const embeddingRecords = validResults.map((result, index) => {
         const hash = `${result.reportId}-${result.metadata.facet}-${result.metadata.heading}-${index}`;
         
         return {
@@ -388,8 +400,9 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
 
       for (const [dimension, content] of Object.entries(reportContent.structured_intelligence)) {
         if (content && typeof content === 'object') {
-          const textContent = extractTextContent(content);
-          if (textContent.length > 50) {
+          // ✅ Direct access to .analysis field for Hermetic 2.0 SI dimensions
+          const textContent = (content as any).analysis || extractTextContent(content);
+          if (textContent && textContent.length > 50) {
             sections.push({
               facet: `si_${dimension}`,
               heading: siDimensionTitles[dimension] || dimension,
@@ -429,16 +442,22 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
         continue;
       }
 
-      if (content && typeof content === 'object') {
-        const textContent = extractTextContent(content);
-        if (textContent.length > 50) {
-          sections.push({
-            facet: section,
-            heading: topLevelTitles[section] || section,
-            content: textContent,
-            tags: ['hermetic_2.0', 'report_content', section, ...extractKeywords(content)]
-          });
-        }
+      let textContent = '';
+      
+      // ✅ Handle both strings and objects for top-level sections
+      if (typeof content === 'string') {
+        textContent = content.trim();
+      } else if (content && typeof content === 'object') {
+        textContent = extractTextContent(content);
+      }
+      
+      if (textContent.length > 50) {
+        sections.push({
+          facet: section,
+          heading: topLevelTitles[section] || section,
+          content: textContent,
+          tags: ['hermetic_2.0', 'report_content', section, ...extractKeywords(content)]
+        });
       }
     }
 
