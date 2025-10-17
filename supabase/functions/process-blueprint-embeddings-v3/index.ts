@@ -458,7 +458,7 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
           const gateText = extractTextContent(gateContent);
           if (gateText.length > 50) {
             // ✅ Apply smart chunking to each gate
-            const chunks = chunkTextIntelligently(gateText, 15000);
+            const chunks = chunkTextIntelligently(gateText, 5000);
             chunks.forEach((chunk, index) => {
               sections.push({
                 facet: 'gate_analysis',
@@ -487,7 +487,7 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
           const subText = extractTextContent(subContent);
           if (subText.length > 50) {
             // ✅ Apply smart chunking to each sub-section
-            const chunks = chunkTextIntelligently(subText, 15000);
+            const chunks = chunkTextIntelligently(subText, 5000);
             chunks.forEach((chunk, index) => {
               sections.push({
                 facet: 'shadow_work',
@@ -520,7 +520,7 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
           const lawText = extractTextContent(lawContent);
           if (lawText.length > 50) {
             // ✅ Apply smart chunking to each law
-            const chunks = chunkTextIntelligently(lawText, 15000);
+            const chunks = chunkTextIntelligently(lawText, 5000);
             chunks.forEach((chunk, index) => {
               sections.push({
                 facet: 'hermetic_law',
@@ -551,7 +551,7 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
           const transText = extractTextContent(transContent);
           if (transText.length > 50) {
             // ✅ Apply smart chunking to each translation
-            const chunks = chunkTextIntelligently(transText, 15000);
+            const chunks = chunkTextIntelligently(transText, 5000);
             chunks.forEach((chunk, index) => {
               sections.push({
                 facet: 'system_translation',
@@ -577,7 +577,7 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
       
       if (textContent.length > 50) {
         // ✅ Smart chunking for large string sections
-        const chunks = chunkTextIntelligently(textContent, 15000);
+        const chunks = chunkTextIntelligently(textContent, 5000);
         
         chunks.forEach((chunk, index) => {
           sections.push({
@@ -636,13 +636,13 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
   return sections;
 }
 
-function chunkTextIntelligently(text: string, targetSize: number = 15000): string[] {
+function chunkTextIntelligently(text: string, targetSize: number = 5000): string[] {
   // If text is under threshold, return as-is
   if (text.length <= targetSize) {
     return [text];
   }
 
-  console.log(`⚠️ Text exceeds ${targetSize} chars (${text.length}), chunking intelligently`);
+  console.log(`⚠️ Text exceeds ${targetSize} chars (${text.length}), chunking to stay under 8K token limit`);
   
   // Split by double newlines (paragraphs)
   const paragraphs = text.split(/\n\n+/);
