@@ -442,6 +442,24 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
         continue;
       }
 
+      // ✅ SPECIAL HANDLING: gate_analyses contains multiple gates, process each separately
+      if (section === 'gate_analyses' && content && typeof content === 'object') {
+        console.log('🔍 Processing gate_analyses: Breaking into individual gates');
+        
+        for (const [gateKey, gateContent] of Object.entries(content)) {
+          const gateText = extractTextContent(gateContent);
+          if (gateText.length > 50) {
+            sections.push({
+              facet: 'gate_analysis',
+              heading: `Human Design Gate ${gateKey}`,
+              content: gateText,
+              tags: ['hermetic_2.0', 'gate_analysis', `gate_${gateKey}`]
+            });
+          }
+        }
+        continue; // Skip to next section
+      }
+
       let textContent = '';
       
       // ✅ Handle both strings and objects for top-level sections
