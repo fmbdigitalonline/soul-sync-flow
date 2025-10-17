@@ -362,42 +362,86 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
   console.log(`🔍 Extracting semantic sections from ${sourceType}`);
 
   if (sourceType === 'hermetic_2.0') {
-    // Hermetic 2.0: Extract from 19 dimensions in structured_intelligence
-    const dimensionTitles: Record<string, string> = {
-      identity_constructs: 'Core Identity Patterns',
-      behavioral_triggers: 'Behavioral Activation Points',
-      relational_patterns: 'Relationship Dynamics',
-      decision_making: 'Decision-Making Framework',
-      communication_style: 'Communication Patterns',
-      stress_responses: 'Stress Response Mechanisms',
-      growth_edges: 'Development Opportunities',
-      shadow_aspects: 'Shadow Integration Points',
-      energy_management: 'Energy Flow Patterns',
-      value_alignment: 'Core Value System',
-      purpose_threads: 'Purpose and Meaning',
-      creativity_expression: 'Creative Expression',
-      learning_style: 'Information Processing',
-      conflict_resolution: 'Conflict Navigation',
-      emotional_landscape: 'Emotional Dynamics',
-      temporal_orientation: 'Time Relationship',
-      resource_allocation: 'Resource Management',
-      boundary_dynamics: 'Boundary Setting',
-      transformation_capacity: 'Change Adaptability'
+    // PHASE 1: Extract 19 dimensions from structured_intelligence
+    if (reportContent.structured_intelligence) {
+      const siDimensionTitles: Record<string, string> = {
+        adaptive_feedback: 'Adaptive Learning & Feedback Integration',
+        attachment_style: 'Attachment & Relationship Patterns',
+        behavioral_triggers: 'Behavioral Activation Points',
+        career_vocational: 'Career & Vocational Alignment',
+        cognitive_functions: 'Cognitive Processing Style',
+        compatibility: 'Relational Compatibility Patterns',
+        crisis_handling: 'Crisis Response Mechanisms',
+        execution_bias: 'Action & Execution Orientation',
+        financial_archetype: 'Financial Behavior Patterns',
+        goal_archetypes: 'Goal Formation & Achievement',
+        health_wellness: 'Health & Wellness Integration',
+        identity_constructs: 'Core Identity Framework',
+        identity_flexibility: 'Adaptive Identity Capacity',
+        internal_conflicts: 'Internal Tension & Conflict Points',
+        karmic_patterns: 'Karmic Themes & Life Cycles',
+        linguistic_fingerprint: 'Communication & Language Signature',
+        metacognitive_biases: 'Meta-Cognitive Patterns',
+        spiritual_dimension: 'Spiritual Philosophy & Practice',
+        temporal_biology: 'Time Perception & Biological Rhythm'
+      };
+
+      for (const [dimension, content] of Object.entries(reportContent.structured_intelligence)) {
+        if (content && typeof content === 'object') {
+          const textContent = extractTextContent(content);
+          if (textContent.length > 50) {
+            sections.push({
+              facet: `si_${dimension}`,
+              heading: siDimensionTitles[dimension] || dimension,
+              content: textContent,
+              tags: ['hermetic_2.0', 'structured_intelligence', dimension, ...extractKeywords(content)]
+            });
+          }
+        }
+      }
+    }
+
+    // PHASE 2: Extract 18 top-level sections from report_content
+    const topLevelTitles: Record<string, string> = {
+      life_path_purpose: 'Life Path & Purpose Analysis',
+      integrated_summary: 'Integrated Blueprint Summary',
+      relationship_style: 'Relationship Dynamics',
+      current_energy_timing: 'Current Energy & Timing',
+      decision_making_style: 'Decision-Making Framework',
+      comprehensive_overview: 'Comprehensive Overview',
+      seven_laws_integration: 'Seven Hermetic Laws Integration',
+      shadow_work_integration: 'Shadow Work & Integration',
+      core_personality_pattern: 'Core Personality Pattern',
+      hermetic_fractal_analysis: 'Hermetic Fractal Analysis',
+      consciousness_integration_map: 'Consciousness Integration Map',
+      practical_activation_framework: 'Practical Activation Framework',
+      gate_analyses: 'Human Design Gate Analyses'
     };
 
-    for (const [dimension, content] of Object.entries(reportContent)) {
+    for (const [section, content] of Object.entries(reportContent)) {
+      // Skip structured_intelligence (already processed above)
+      // Skip metadata sections
+      if (section === 'structured_intelligence' || 
+          section === 'word_count' || 
+          section === 'blueprint_signature' || 
+          section === 'generation_metadata' || 
+          section === 'system_translations') {
+        continue;
+      }
+
       if (content && typeof content === 'object') {
         const textContent = extractTextContent(content);
         if (textContent.length > 50) {
           sections.push({
-            facet: dimension,
-            heading: dimensionTitles[dimension] || dimension,
+            facet: section,
+            heading: topLevelTitles[section] || section,
             content: textContent,
-            tags: extractKeywords(content)
+            tags: ['hermetic_2.0', 'report_content', section, ...extractKeywords(content)]
           });
         }
       }
     }
+
 
   } else if (sourceType === 'standard_1.0') {
     // Standard 1.0: Extract from traditional facets in report_content
