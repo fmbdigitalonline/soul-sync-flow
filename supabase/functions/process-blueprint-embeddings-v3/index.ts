@@ -438,7 +438,15 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
       gate_analyses: 'Human Design Gate Analyses'
     };
 
+    let sectionIndex = 0;
     for (const [section, content] of Object.entries(reportContent)) {
+      sectionIndex++;
+      console.log(`\n📍 [${sectionIndex}] Processing section: ${section}`);
+      console.log(`   ├─ Type: ${content === null ? 'null' : content === undefined ? 'undefined' : Array.isArray(content) ? 'array' : typeof content}`);
+      console.log(`   ├─ Is Object: ${content && typeof content === 'object' && !Array.isArray(content)}`);
+      console.log(`   ├─ Keys: ${content && typeof content === 'object' && !Array.isArray(content) ? Object.keys(content).length : 'N/A'}`);
+      console.log(`   └─ Content Length: ${typeof content === 'string' ? content.length : 'N/A'}`);
+
       // Skip structured_intelligence (already processed above)
       // Skip metadata sections
       if (section === 'structured_intelligence' || 
@@ -450,9 +458,16 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
       }
 
       // ✅ SPECIAL HANDLING: gate_analyses contains multiple gates, process each separately
-      console.log(`🔍 Checking section: ${section}, type: ${typeof content}, is_object: ${content && typeof content === 'object'}`);
-      if (section === 'gate_analyses' && content && typeof content === 'object') {
+      if (
+        section === 'gate_analyses' && 
+        content !== null && 
+        content !== undefined && 
+        typeof content === 'object' && 
+        !Array.isArray(content) &&
+        Object.keys(content).length > 0
+      ) {
         console.log('✅ MATCHED: Processing gate_analyses with special handler');
+        console.log(`   └─ Gate count: ${Object.keys(content).length}`);
         
         for (const [gateKey, gateContent] of Object.entries(content)) {
           const gateText = extractTextContent(gateContent);
@@ -474,8 +489,16 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
       }
 
       // ✅ SPECIAL HANDLING: shadow_work_integration has 3 sub-sections
-      if (section === 'shadow_work_integration' && content && typeof content === 'object') {
+      if (
+        section === 'shadow_work_integration' && 
+        content !== null && 
+        content !== undefined && 
+        typeof content === 'object' && 
+        !Array.isArray(content) &&
+        Object.keys(content).length > 0
+      ) {
         console.log('✅ MATCHED: Processing shadow_work_integration with special handler');
+        console.log(`   └─ Sub-section count: ${Object.keys(content).length}`);
         
         const shadowTitles: Record<string, string> = {
           shadow_patterns: 'Shadow Patterns Analysis',
@@ -503,8 +526,16 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
       }
 
       // ✅ SPECIAL HANDLING: seven_laws_integration has 7 Hermetic Laws
-      if (section === 'seven_laws_integration' && content && typeof content === 'object') {
+      if (
+        section === 'seven_laws_integration' && 
+        content !== null && 
+        content !== undefined && 
+        typeof content === 'object' && 
+        !Array.isArray(content) &&
+        Object.keys(content).length > 0
+      ) {
         console.log('✅ MATCHED: Processing seven_laws_integration with special handler');
+        console.log(`   └─ Law count: ${Object.keys(content).length}`);
         
         const lawTitles: Record<string, string> = {
           mentalism: 'Law of Mentalism',
@@ -536,8 +567,16 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
       }
 
       // ✅ SPECIAL HANDLING: system_translations has 5 translation mappings
-      if (section === 'system_translations' && content && typeof content === 'object') {
+      if (
+        section === 'system_translations' && 
+        content !== null && 
+        content !== undefined && 
+        typeof content === 'object' && 
+        !Array.isArray(content) &&
+        Object.keys(content).length > 0
+      ) {
         console.log('✅ MATCHED: Processing system_translations with special handler');
+        console.log(`   └─ Translation count: ${Object.keys(content).length}`);
         
         const translationTitles: Record<string, string> = {
           mbti_hermetic: 'MBTI to Hermetic Translation',
