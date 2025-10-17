@@ -131,12 +131,12 @@ async function processEmbeddingsInBackground(
     // ✅ MULTI-SOURCE EXTRACTION: Fetch from all three sources
     console.log('📊 BACKGROUND TASK: Fetching data from multiple sources');
 
-    // Source 1: Hermetic 2.0 reports (structured_intelligence)
+    // Source 1: Hermetic 2.0 reports (structured_intelligence + report_content)
     const { data: hermeticReports, error: hermeticError } = await supabase
       .from('personality_reports')
-      .select('id, structured_intelligence, blueprint_version')
+      .select('id, structured_intelligence, report_content, blueprint_version')
       .eq('user_id', userId)
-      .not('structured_intelligence', 'is', null);
+      .eq('blueprint_version', '2.0');
 
     if (hermeticError) {
       console.error('❌ BACKGROUND TASK: Failed to fetch Hermetic 2.0 reports', hermeticError);
@@ -171,7 +171,14 @@ async function processEmbeddingsInBackground(
     }
 
     const allReports = [
-      ...(hermeticReports || []).map(r => ({ ...r, source_type: 'hermetic_2.0', data: r.structured_intelligence })),
+      ...(hermeticReports || []).map(r => ({ 
+        ...r, 
+        source_type: 'hermetic_2.0', 
+        data: {
+          structured_intelligence: r.structured_intelligence,
+          ...r.report_content
+        }
+      })),
       ...(standardReports || []).map(r => ({ ...r, source_type: 'standard_1.0', data: r.report_content })),
       ...(user360 ? [{ id: user360.id, source_type: 'user_360', data: user360.profile_data }] : [])
     ];
