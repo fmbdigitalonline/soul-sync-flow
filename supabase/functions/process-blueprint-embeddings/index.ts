@@ -23,6 +23,9 @@ interface ChunkMetadata {
 }
 
 serve(async (req) => {
+  // DEPLOYMENT_FINGERPRINT: 2025-10-17T12:06:00Z
+  console.log('🚀 DEPLOYMENT_FINGERPRINT: v3.0.0-async-20251017-1206Z');
+  
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
