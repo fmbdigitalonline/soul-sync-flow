@@ -237,6 +237,10 @@ methods = ["POST", "OPTIONS"]
 verify_jwt = false
 cors = ["*"]
 methods = ["POST", "OPTIONS"]
+[functions.process-blueprint-embeddings]
+verify_jwt = false
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
 
 [analytics]
 enabled = false
