@@ -29,7 +29,7 @@ export const ManualBlueprintProcessor = () => {
           disabled={isProcessing}
           className="w-full"
         >
-          {isProcessing ? 'Processing Blueprint...' : 'Execute process-blueprint-embeddings'}
+          {isProcessing ? 'Processing Blueprint...' : 'Execute process-blueprint-embeddings-v3'}
         </Button>
 
         {processingResult && (
