@@ -444,8 +444,7 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
       if (section === 'structured_intelligence' || 
           section === 'word_count' || 
           section === 'blueprint_signature' || 
-          section === 'generation_metadata' || 
-          section === 'system_translations') {
+          section === 'generation_metadata') {
         continue;
       }
 
@@ -465,6 +464,84 @@ function extractSemanticSections(reportContent: any, sourceType: string): ChunkM
           }
         }
         continue; // Skip to next section
+      }
+
+      // ✅ SPECIAL HANDLING: shadow_work_integration has 3 sub-sections
+      if (section === 'shadow_work_integration' && content && typeof content === 'object') {
+        console.log('🔍 Processing shadow_work_integration: Breaking into sub-sections');
+        
+        const shadowTitles: Record<string, string> = {
+          shadow_patterns: 'Shadow Patterns Analysis',
+          integration_practices: 'Integration Practices',
+          transformation_roadmap: 'Transformation Roadmap'
+        };
+        
+        for (const [subKey, subContent] of Object.entries(content)) {
+          const subText = extractTextContent(subContent);
+          if (subText.length > 50) {
+            sections.push({
+              facet: 'shadow_work',
+              heading: shadowTitles[subKey] || `Shadow Work: ${subKey}`,
+              content: subText,
+              tags: ['hermetic_2.0', 'shadow_work', subKey]
+            });
+          }
+        }
+        continue;
+      }
+
+      // ✅ SPECIAL HANDLING: seven_laws_integration has 7 Hermetic Laws
+      if (section === 'seven_laws_integration' && content && typeof content === 'object') {
+        console.log('🔍 Processing seven_laws_integration: Breaking into individual laws');
+        
+        const lawTitles: Record<string, string> = {
+          mentalism: 'Law of Mentalism',
+          correspondence: 'Law of Correspondence',
+          vibration: 'Law of Vibration',
+          polarity: 'Law of Polarity',
+          rhythm: 'Law of Rhythm',
+          gender: 'Law of Gender',
+          causation: 'Law of Cause & Effect'
+        };
+        
+        for (const [lawKey, lawContent] of Object.entries(content)) {
+          const lawText = extractTextContent(lawContent);
+          if (lawText.length > 50) {
+            sections.push({
+              facet: 'hermetic_law',
+              heading: lawTitles[lawKey] || `Hermetic Law: ${lawKey}`,
+              content: lawText,
+              tags: ['hermetic_2.0', 'hermetic_laws', lawKey]
+            });
+          }
+        }
+        continue;
+      }
+
+      // ✅ SPECIAL HANDLING: system_translations has 5 translation mappings
+      if (section === 'system_translations' && content && typeof content === 'object') {
+        console.log('🔍 Processing system_translations: Breaking into individual translations');
+        
+        const translationTitles: Record<string, string> = {
+          mbti_hermetic: 'MBTI to Hermetic Translation',
+          astrology_hermetic: 'Astrology to Hermetic Translation',
+          numerology_hermetic: 'Numerology to Hermetic Translation',
+          human_design_hermetic: 'Human Design to Hermetic Translation',
+          chinese_astrology_hermetic: 'Chinese Astrology to Hermetic Translation'
+        };
+        
+        for (const [transKey, transContent] of Object.entries(content)) {
+          const transText = extractTextContent(transContent);
+          if (transText.length > 50) {
+            sections.push({
+              facet: 'system_translation',
+              heading: translationTitles[transKey] || `Translation: ${transKey}`,
+              content: transText,
+              tags: ['hermetic_2.0', 'translations', transKey]
+            });
+          }
+        }
+        continue;
       }
 
       let textContent = '';
