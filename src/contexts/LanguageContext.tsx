@@ -4420,7 +4420,7 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string) => any;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -4441,7 +4441,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     localStorage.setItem('soulsync-language', language);
   }, [language]);
 
-  const t = (key: string): string => {
+  const t = (key: string): any => {
     const value = getNestedValue(translations[language], key);
     
     if (value !== undefined) {
@@ -4449,7 +4449,11 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (Array.isArray(value)) {
         return value[0] || key;
       }
-      return typeof value === 'string' ? value : key;
+      // Return value as-is if it's a string OR object (for personality descriptions)
+      if (typeof value === 'string' || typeof value === 'object') {
+        return value;
+      }
+      return key;
     }
     
     // Fallback to English if current language doesn't have the key
@@ -4459,7 +4463,11 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (Array.isArray(fallbackValue)) {
         return fallbackValue[0] || key;
       }
-      return typeof fallbackValue === 'string' ? fallbackValue : key;
+      // Return fallback value as-is if it's a string OR object
+      if (typeof fallbackValue === 'string' || typeof fallbackValue === 'object') {
+        return fallbackValue;
+      }
+      return key;
     }
     
     // Final fallback: return the key itself but log it
