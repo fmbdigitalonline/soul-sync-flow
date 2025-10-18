@@ -113,7 +113,9 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
   const hdType = translateKeyword(blueprint?.energyDecisionStrategy?.humanDesignType || 'Projector');
   const authority = translateKeyword(blueprint?.energyDecisionStrategy?.authority || 'Splenic');
   const strategy = translateKeyword(blueprint?.energyDecisionStrategy?.strategy || 'Wait for the invitation');
-  const profile = blueprint?.energyDecisionStrategy?.profile || '4/4 (Opportunist/Opportunist)';
+  // Extract just the profile numbers (e.g., "4/4" from "4/4 (Opportunist/Opportunist)")
+  const profileRaw = blueprint?.energyDecisionStrategy?.profile || '4/4';
+  const profile = profileRaw.split(' ')[0]; // Keep only "4/4" part
   const pacing = translateKeyword(blueprint?.energyDecisionStrategy?.pacing || 'steady');
   const energyType = translateKeyword(blueprint?.energyDecisionStrategy?.energyType || 'sustainable');
 
