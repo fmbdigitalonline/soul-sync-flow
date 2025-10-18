@@ -5336,6 +5336,112 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt te naïef of zelfgenoegzaam worden, worstelen met grenzen of te veel geven zonder ontvangen",
           insight: "Je excelleert in genereuze overvloed, maar ontwikkel discernement en balans geven met zelfzorg"
         }
+      },
+
+      // Cognitive Function Descriptions (Dutch)
+      cognitiveFunctionDescriptions: {
+        fe: {
+          fullTitle: "Fe - Extraverte Feeling",
+          light: "Je creëert natuurlijk harmonie door emoties en sociale dynamiek van anderen te lezen en erop te reageren met empathie",
+          shadow: "Je kunt je eigen gevoelens verliezen terwijl je de emotionele toestand van iedereen beheert of te afhankelijk worden van externe validatie",
+          insight: "Je hebt een gave voor het creëren van emotionele verbinding en groepsharmonie, maar eer je eigen gevoelens evenveel als die van anderen"
+        },
+        fi: {
+          fullTitle: "Fi - Introverte Feeling",
+          light: "Je kent je eigen waarden diep en maakt authentieke keuzes in lijn met je innerlijke kompas van wat juist aanvoelt",
+          shadow: "Je kunt worstelen om je diepste waarden te communiceren of anderen te begrijpen die anders voelen dan jij",
+          insight: "Je hebt een gave voor authentieke waardengedreven keuzes, maar deel je innerlijke waarheid om anderen te helpen je te begrijpen"
+        },
+        te: {
+          fullTitle: "Te - Extraverte Thinking",
+          light: "Je organiseert efficiënt de externe wereld door logische systemen en objectieve criteria met praktische resultaten",
+          shadow: "Je kunt ongeduldig worden met inefficiëntie of emotionele overwegingen negeren in beslissingen voor resultaten",
+          insight: "Je excelleert in logische organisatie en systemen, maar onthoud dat menselijke factoren belangrijk zijn naast efficiëntie"
+        },
+        ti: {
+          fullTitle: "Ti - Introverte Thinking",
+          light: "Je analyseert systemen met precieze interne logica en bouwt elegante conceptuele kaders met diep begrip",
+          shadow: "Je kunt verloren raken in analyse zonder actie of worstelen om je logica aan anderen te communiceren",
+          insight: "Je hebt een gave voor logische analyse en interne consistentie, maar balans diep denken met praktische toepassing"
+        },
+        ne: {
+          fullTitle: "Ne - Extraverte Intuition",
+          light: "Je ziet eindeloze mogelijkheden en verbindingen in de externe wereld, genereert innovatieve ideeën met verbeeldingskracht",
+          shadow: "Je kunt verspreid raken door te veel opties of moeite hebben met focus en voltooiing van projecten",
+          insight: "Je excelleert in het zien van mogelijkheden en verbindingen, maar richt je gaven op wat echt belangrijk is voor impact"
+        },
+        ni: {
+          fullTitle: "Ni - Introverte Intuition",
+          light: "Je ziet diep toekomstige patronen en inzichten met innerlijke visie, begrijpt de onderliggende betekenis en richting",
+          shadow: "Je kunt gefrustreerd raken wanneer anderen je visie niet zien of te abstract worden zonder praktische grond",
+          insight: "Je hebt diepe visionair inzichten over toekomstige patronen, maar communiceer je innerlijke kennis op praktische manieren"
+        },
+        se: {
+          fullTitle: "Se - Extraverte Sensing",
+          light: "Je bent volledig aanwezig in het moment, reageert snel op je omgeving met directe actie en zintuiglijke ervaring",
+          shadow: "Je kunt riskant of impulsief gedrag vertonen of worstelen met langetermijnplanning en geduld",
+          insight: "Je excelleert in de actie van het moment en directe zintuiglijke ervaring, maar balans spontaniteit met strategisch vooruitzicht"
+        },
+        si: {
+          fullTitle: "Si - Introverte Sensing",
+          light: "Je onthoudt gedetailleerde persoonlijke ervaringen en gebruikt bewezen methoden en tradities met nauwkeurige herinnering",
+          shadow: "Je kunt te veel op het verleden vertrouwen of nieuw veranderen weerstaan omdat het onbekend is",
+          insight: "Je hebt een gave voor het eren van wat werkt uit ervaring, maar blijf open voor nieuwe benaderingen wanneer nodig"
+        }
+      },
+
+      // Task Approach Descriptions (Dutch)
+      taskApproachDescriptions: {
+        systematic: {
+          fullTitle: "Systematische Aanpak",
+          light: "Je pakt taken aan met methodische planning en georganiseerde uitvoering, volgt bewezen stap-voor-stap processen",
+          shadow: "Je kunt te rigide worden met systemen of worstelen met aanpassing wanneer plannen veranderen onverwacht",
+          insight: "Je excelleert in gestructureerde aanpak en planning, maar blijf flexibel wanneer situaties aanpassing vereisen"
+        },
+        adaptable: {
+          fullTitle: "Aanpasbare Aanpak",
+          light: "Je past je aanpak aan op basis van de situatie, blijft flexibel en open voor nieuwe informatie en verandering",
+          shadow: "Je kunt worstelen met consistentie of moeite hebben om gestructureerde plannen en routines te volgen",
+          insight: "Je excelleert in flexibiliteit en aanpassing aan verandering, maar structuur kan je aanpassingsvermogen verbeteren"
+        }
+      },
+
+      // Communication Descriptions (Dutch)
+      communicationDescriptions: {
+        direct: {
+          fullTitle: "Directe Communicatie",
+          light: "Je communiceert duidelijk en eerlijk, komt direct ter zake zonder omwegen en waardeert transparantie",
+          shadow: "Je kunt als bot of ongevoelig overkomen wanneer directheid empathie en tact mist",
+          insight: "Je excelleert in heldere communicatie en transparantie, maar balans eerlijkheid met tactvolle levering"
+        },
+        diplomatic: {
+          fullTitle: "Diplomatieke Communicatie",
+          light: "Je communiceert met tact en overwegingen, bouwt bruggen tussen perspectieven en behoudt harmonie",
+          shadow: "Je kunt te indirect worden of belangrijke waarheden vermijden om harmonie en relaties te behouden",
+          insight: "Je excelleert in tactvolle communicatie en diplomatie, maar vergeet niet dat eerlijke directheid soms relaties versterkt"
+        }
+      },
+
+      // Decision Making Descriptions (Dutch)
+      decisionMakingDescriptions: {
+        logical: {
+          fullTitle: "Logische Besluitvorming",
+          light: "Je neemt beslissingen gebaseerd op objectieve analyse en rationele criteria, weegt feiten en efficiëntie",
+          shadow: "Je kunt worstelen met emotionele overwegingen of belangrijke menselijke factoren negeren in logica",
+          insight: "Je excelleert in logische beslissingen en analyse, maar onthoud dat emoties geldige gegevens bieden"
+        },
+        valuesbased: {
+          fullTitle: "Waardegebaseerde Besluitvorming",
+          light: "Je neemt beslissingen gebaseerd op persoonlijke waarden en emotionele overwegingen, wat juist aanvoelt",
+          shadow: "Je kunt worstelen met objectieve analyse of te persoonlijk worden in beslissingen zonder logica",
+          insight: "Je excelleert in waardegedreven beslissingen en authenticiteit, maar balans waarden met praktische realiteit"
+        },
+        collaborative: {
+          fullTitle: "Collaboratieve Besluitvorming",
+          light: "Je neemt beslissingen door meerdere perspectieven te overwegen en input van anderen te zoeken met openheid",
+          shadow: "Je kunt worstelen met tijdige beslissingen of je eigen stem verliezen in consensuszoeken met groep",
+          insight: "Je excelleert in inclusieve besluitvorming en samenwerking, maar vertrouw je eigen oordeel wanneer consensus niet mogelijk is"
+        }
       }
     },
     dreamCategories: {
