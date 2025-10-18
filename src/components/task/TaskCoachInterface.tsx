@@ -243,11 +243,34 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     };
   }, [completeTaskFromCoach, focusTime, sessionStats]);
 
+  // Sanitize content to remove system prompts and internal markers
+  const sanitizeContent = (content: string): string => {
+    if (!content) return '';
+    
+    // Remove common system prompt patterns
+    let sanitized = content
+      // Remove XML-style tags like <thinking>, <system>, <instructions>, etc.
+      .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
+      .replace(/<system>[\s\S]*?<\/system>/gi, '')
+      .replace(/<instructions>[\s\S]*?<\/instructions>/gi, '')
+      .replace(/<prompt>[\s\S]*?<\/prompt>/gi, '')
+      .replace(/<internal>[\s\S]*?<\/internal>/gi, '')
+      // Remove prompt engineering markers
+      .replace(/\[SYSTEM\][\s\S]*?\[\/SYSTEM\]/gi, '')
+      .replace(/\[INTERNAL\][\s\S]*?\[\/INTERNAL\]/gi, '')
+      .replace(/\[PROMPT\][\s\S]*?\[\/PROMPT\]/gi, '')
+      // Clean up excessive whitespace
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+    
+    return sanitized;
+  };
+
   // Convert task-aware messages to coach messages format
   useEffect(() => {
     const convertedMessages: CoachMessage[] = messages.map(msg => ({
       id: msg.id,
-      content: msg.content,
+      content: sanitizeContent(msg.content),
       isUser: msg.sender === 'user',
       timestamp: msg.timestamp,
       agentMode: 'guide' as AgentMode
