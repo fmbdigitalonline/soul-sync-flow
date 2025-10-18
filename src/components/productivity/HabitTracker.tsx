@@ -1,87 +1,89 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Plus, CheckCircle, Calendar, TrendingUp, Flame } from "lucide-react";
+import { Plus, CheckCircle, Calendar, TrendingUp, Flame, Loader2, AlertCircle } from "lucide-react";
 import { HabitCard } from "./HabitCard";
 import { HabitDetailPopup } from "./HabitDetailPopup";
-
-interface Habit {
-  id: string;
-  title: string;
-  description?: string;
-  frequency: 'daily' | 'weekly';
-  streak: number;
-  completedToday: boolean;
-  target: number;
-  category: string;
-}
+import { useHabits } from "@/hooks/use-habits";
 
 export const HabitTracker: React.FC = () => {
-  const [habits, setHabits] = useState<Habit[]>([
-    {
-      id: '1',
-      title: 'Morning Meditation',
-      description: '10 minutes of mindfulness practice',
-      frequency: 'daily',
-      streak: 7,
-      completedToday: true,
-      target: 30,
-      category: 'wellness'
-    },
-    {
-      id: '2',
-      title: 'Read for 30 minutes',
-      description: 'Personal development or fiction',
-      frequency: 'daily',
-      streak: 3,
-      completedToday: false,
-      target: 21,
-      category: 'learning'
-    },
-    {
-      id: '3',
-      title: 'Exercise',
-      description: 'Any form of physical activity',
-      frequency: 'daily',
-      streak: 12,
-      completedToday: true,
-      target: 30,
-      category: 'health'
-    }
-  ]);
-
-  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+  // Use database-backed habits (Principle #2: No Hardcoded Data)
+  const { habits, isLoading, error, markHabitComplete } = useHabits();
+  
+  const [selectedHabit, setSelectedHabit] = useState<any | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  const handleHabitDoubleTap = (habit: Habit) => {
+  const handleHabitDoubleTap = (habit: any) => {
     setSelectedHabit(habit);
     setIsPopupOpen(true);
   };
 
-  const handleHabitSingleTap = (habit: Habit) => {
-    // Optional: Add visual feedback for single tap
+  const handleHabitSingleTap = (habit: any) => {
     console.log('Single tap on habit:', habit.title);
   };
 
-  const handleMarkComplete = (habitId: string) => {
-    setHabits(prev => prev.map(habit => 
-      habit.id === habitId 
-        ? { 
-            ...habit, 
-            completedToday: true, 
-            streak: habit.completedToday ? habit.streak : habit.streak + 1 
-          }
-        : habit
-    ));
+  const handleMarkComplete = async (habitId: string) => {
+    await markHabitComplete(habitId);
     setIsPopupOpen(false);
   };
 
   const completedToday = habits.filter(h => h.completedToday).length;
   const totalHabits = habits.length;
   const completionRate = totalHabits > 0 ? Math.round((completedToday / totalHabits) * 100) : 0;
-  const longestStreak = Math.max(...habits.map(h => h.streak));
+  const longestStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak)) : 0;
+
+  // Principle #7: Build Transparently - show loading states
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 p-8 rounded-xl border border-orange-200 text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-orange-600" />
+          <p className="text-sm text-gray-600">Loading your habits...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Principle #3: No Fallbacks That Mask Errors - surface issues
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <div className="bg-red-50 p-6 rounded-xl border border-red-200">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-red-900 mb-1">Failed to load habits</h4>
+              <p className="text-sm text-red-700">{error}</p>
+              <p className="text-xs text-red-600 mt-2">Please refresh or sign in to view your habits.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no habits
+  if (habits.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 p-8 rounded-xl border border-orange-200 text-center">
+          <Flame className="h-12 w-12 text-orange-500 mx-auto mb-3" />
+          <h3 className="text-lg font-bold text-gray-800 mb-2">No Habits Yet</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Start tracking your daily habits to build positive routines
+          </p>
+          <Button
+            variant="outline"
+            className="border-dashed border-2 border-orange-500 hover:bg-orange-50"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Create Your First Habit
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

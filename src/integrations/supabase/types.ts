@@ -1173,6 +1173,50 @@ export type Database = {
         }
         Relationships: []
       }
+      goal_milestones: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          goal_id: string
+          id: string
+          is_completed: boolean
+          order_index: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          goal_id: string
+          id?: string
+          is_completed?: boolean
+          order_index: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          goal_id?: string
+          id?: string
+          is_completed?: boolean
+          order_index?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_milestones_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "user_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       growth_journey: {
         Row: {
           created_at: string | null
@@ -1318,6 +1362,89 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      habit_completions: {
+        Row: {
+          completed_at: string
+          completed_date: string
+          created_at: string
+          habit_id: string
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          completed_date?: string
+          created_at?: string
+          habit_id: string
+          id?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          completed_date?: string
+          created_at?: string
+          habit_id?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_completions_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          category: string
+          color: string | null
+          created_at: string
+          description: string | null
+          frequency: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          target_days: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          target_days?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          target_days?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       hacs_blend_conversations: {
         Row: {
@@ -3665,6 +3792,45 @@ export type Database = {
         }
         Relationships: []
       }
+      task_instruction_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          instruction_id: string
+          is_completed: boolean
+          session_id: string | null
+          task_id: string
+          uncompleted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          instruction_id: string
+          is_completed?: boolean
+          session_id?: string | null
+          task_id: string
+          uncompleted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          instruction_id?: string
+          is_completed?: boolean
+          session_id?: string | null
+          task_id?: string
+          uncompleted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_360_profiles: {
         Row: {
           created_at: string
@@ -4171,6 +4337,10 @@ export type Database = {
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
+      }
+      calculate_habit_streak: {
+        Args: { p_habit_id: string; p_user_id: string }
+        Returns: number
       }
       check_admin_status: {
         Args: Record<PropertyKey, never>

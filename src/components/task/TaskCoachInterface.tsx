@@ -804,6 +804,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
                     key={message.id}
                     content={message.content}
                     isUser={message.isUser}
+                    taskId={task.id}
                     onSubTaskStart={handleSubTaskStart}
                     onSubTaskComplete={handleSubTaskComplete}
                     onStartTaskPlan={handleStartTaskPlan}

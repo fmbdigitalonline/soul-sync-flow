@@ -20,6 +20,7 @@ import { WorkingInstructionsPanel } from './WorkingInstructionsPanel';
 
 interface StructuredMessageRendererProps {
   parsedMessage: ParsedCoachMessage;
+  taskId: string; // Add taskId for instruction progress tracking
   onSubTaskStart: (subTask: ParsedSubTask) => void;
   onSubTaskComplete: (subTask: ParsedSubTask) => void;
   onStartTaskPlan: () => void;
@@ -29,6 +30,7 @@ interface StructuredMessageRendererProps {
 
 export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps> = ({
   parsedMessage,
+  taskId,
   onSubTaskStart,
   onSubTaskComplete,
   onStartTaskPlan,
@@ -40,6 +42,7 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
     return (
       <WorkingInstructionsPanel
         instructions={parsedMessage.workingInstructions}
+        taskId={taskId}
         onInstructionComplete={onInstructionComplete || (() => {})}
         onAllInstructionsComplete={onAllInstructionsComplete || (() => {})}
         originalText={parsedMessage.originalText}

@@ -10,15 +10,19 @@ import {
   Wrench, 
   ArrowRight, 
   Trophy,
-  Target
+  Target,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { WorkingInstruction } from '@/services/coach-message-parser';
 import { AssistanceButton } from '@/components/ui/assistance-button';
 import { HelpPanel } from '@/components/ui/help-panel';
 import { interactiveAssistanceService, AssistanceResponse } from '@/services/interactive-assistance-service';
+import { useInstructionProgress } from '@/hooks/use-instruction-progress';
 
 interface WorkingInstructionsPanelProps {
   instructions: WorkingInstruction[];
+  taskId: string;
   onInstructionComplete: (instructionId: string) => void;
   onAllInstructionsComplete: () => void;
   originalText: string;
@@ -26,26 +30,30 @@ interface WorkingInstructionsPanelProps {
 
 export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> = ({
   instructions,
+  taskId,
   onInstructionComplete,
   onAllInstructionsComplete,
   originalText
 }) => {
-  const [completedInstructions, setCompletedInstructions] = useState<Set<string>>(new Set());
+  // Use database-backed instruction progress (Principle #2: No Hardcoded Data)
+  const { 
+    completedInstructions, 
+    isLoading: isLoadingProgress, 
+    error: progressError,
+    toggleInstruction 
+  } = useInstructionProgress(taskId);
+  
   const [assistanceResponses, setAssistanceResponses] = useState<Map<string, AssistanceResponse>>(new Map());
   const [isRequestingHelp, setIsRequestingHelp] = useState<Map<string, boolean>>(new Map());
 
-  const handleInstructionToggle = useCallback((instructionId: string) => {
-    const newCompleted = new Set(completedInstructions);
+  const handleInstructionToggle = useCallback(async (instructionId: string) => {
+    await toggleInstruction(instructionId);
     
-    if (newCompleted.has(instructionId)) {
-      newCompleted.delete(instructionId);
-    } else {
-      newCompleted.add(instructionId);
+    // Trigger parent callback for legacy compatibility
+    if (!completedInstructions.has(instructionId)) {
       onInstructionComplete(instructionId);
     }
-    
-    setCompletedInstructions(newCompleted);
-  }, [completedInstructions, onInstructionComplete]);
+  }, [toggleInstruction, completedInstructions, onInstructionComplete]);
 
   const handleAssistanceRequest = useCallback(async (
     instructionId: string,
@@ -90,6 +98,32 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
   // Extract introduction text from original message
   const introText = originalText.split(/^\d+\.\s*\*\*/m)[0].trim() || 
     "Here are your detailed working instructions:";
+
+  // Principle #7: Build Transparently - show loading states
+  if (isLoadingProgress) {
+    return (
+      <Card className="p-8 text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
+        <p className="text-sm text-gray-600">Loading your progress...</p>
+      </Card>
+    );
+  }
+
+  // Principle #3: No Fallbacks That Mask Errors - surface issues
+  if (progressError) {
+    return (
+      <Card className="p-6 border-red-200 bg-red-50">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <h4 className="font-medium text-red-900 mb-1">Failed to load progress</h4>
+            <p className="text-sm text-red-700">{progressError}</p>
+            <p className="text-xs text-red-600 mt-2">Your progress will not be saved. Please refresh or sign in.</p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">

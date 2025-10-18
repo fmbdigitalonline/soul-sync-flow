@@ -12,24 +12,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Target, Calendar, Trash2, Star, CheckCircle2, CheckSquare } from "lucide-react";
+import { Plus, Target, Calendar, Trash2, Star, CheckCircle2, CheckSquare, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-type Goal = {
-  id: string;
-  title: string;
-  description: string;
-  deadline?: string;
-  category: string;
-  progress: number;
-  alignedWith: string[];
-  milestones: {
-    id: string;
-    title: string;
-    completed: boolean;
-  }[];
-};
+import { useGoals } from "@/hooks/use-goals";
 
 interface GoalSettingProps {
   blueprintTraits?: string[];
@@ -39,50 +25,26 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
   blueprintTraits = ["INFJ", "Projector", "Life Path 7", "Pisces Moon"],
 }) => {
   const { t } = useLanguage();
-  const [goals, setGoals] = useState<Goal[]>([
-    {
-      id: "1",
-      title: "Develop meditation practice",
-      description: "Build a consistent daily meditation practice to improve mindfulness",
-      deadline: "2025-06-15",
-      category: "personal",
-      progress: 30,
-      alignedWith: ["Pisces Moon", "Life Path 7"],
-      milestones: [
-        {
-          id: "1-1",
-          title: "Research meditation techniques",
-          completed: true,
-        },
-        {
-          id: "1-2",
-          title: "Establish morning routine",
-          completed: true,
-        },
-        {
-          id: "1-3",
-          title: "Practice 10 consecutive days",
-          completed: false,
-        },
-        {
-          id: "1-4",
-          title: "Increase sessions to 15 minutes",
-          completed: false,
-        },
-      ],
-    },
-  ]);
-
+  const { toast } = useToast();
+  
+  // Use database-backed goals (Principle #2: No Hardcoded Data)
+  const { goals, isLoading, error, addGoal, toggleMilestone, deleteGoal } = useGoals();
+  
   const [showNewGoalForm, setShowNewGoalForm] = useState(false);
-  const [newGoal, setNewGoal] = useState<Omit<Goal, "id" | "progress" | "milestones">>({
+  const [newGoal, setNewGoal] = useState<{
+    title: string;
+    description: string;
+    category: string;
+    deadline?: string;
+    alignedWith: string[];
+  }>({
     title: "",
     description: "",
     category: "personal",
     alignedWith: [],
   });
   const [newMilestone, setNewMilestone] = useState("");
-  const [tempMilestones, setTempMilestones] = useState<{ id: string; title: string; completed: boolean }[]>([]);
-  const { toast } = useToast();
+  const [tempMilestones, setTempMilestones] = useState<{ title: string }[]>([]);
 
   // Get goal category suggestions based on blueprint
   const getCategorySuggestions = () => {
@@ -307,10 +269,10 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
             {tempMilestones.length > 0 && (
               <div className="mt-2 space-y-2">
                 {tempMilestones.map((milestone) => (
-                  <div key={milestone.id} className="flex items-center justify-between p-2 bg-background rounded-md">
+                  <div key={index} className="flex items-center justify-between p-2 bg-background rounded-md">
                     <span className="text-sm">{milestone.title}</span>
                     <Button
-                      onClick={() => handleRemoveMilestone(milestone.id)}
+                      onClick={() => handleRemoveMilestone(index)}
                       size="icon"
                       variant="ghost"
                       className="h-8 w-8"
@@ -343,7 +305,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
                   <p className="text-sm text-muted-foreground mt-1">{goal.description}</p>
                 </div>
                 <Button
-                  onClick={() => deleteGoal(goal.id)}
+                  onClick={() => handleDeleteGoal(goal.id)}
                   size="icon"
                   variant="ghost"
                   className="h-8 w-8 text-red-500"
@@ -392,7 +354,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
                         className="flex items-center space-x-2 p-2 bg-secondary/20 rounded-md"
                       >
                         <Button
-                          onClick={() => toggleMilestoneCompletion(goal.id, milestone.id)}
+                          onClick={() => handleToggleMilestone(goal.id, milestone.id)}
                           size="icon"
                           variant="ghost"
                           className="h-8 w-8"
