@@ -5032,6 +5032,310 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt jezelf overwerken door je capaciteit te overschatten of je lichaamssignalen voor rust negeren",
           insight: "Je hebt duurzame energie wanneer je reageert op wat resoneert, maar luister naar je lichaamssignalen om burn-out te voorkomen"
         }
+      },
+
+      // Sun Sign Descriptions (Dutch)
+      sunSignDescriptions: {
+        aries: {
+          fullTitle: "Ram Zon - De Pionier",
+          light: "Je brengt moedige pionierenergie, initieert nieuwe beginningen met vertrouwen en inspireert anderen actie te nemen",
+          shadow: "Je kunt te impulsief of agressief worden, anderen overrijden of worstelen met geduld en follow-through",
+          insight: "Je bent een natuurlijke leider en starter, maar balans je vuurkracht met geduld en overwegen van anderen"
+        },
+        taurus: {
+          fullTitle: "Stier Zon - De Bouwer",
+          light: "Je brengt gestaag duurzame energie, bouwt met geduld en creëert schoonheid en materiële stabiliteit",
+          shadow: "Je kunt te koppig of weerstand tegen verandering worden, vast zitten in comfort of te materialistisch",
+          insight: "Je excelleert in het bouwen van duurzame waarde, maar blijf open voor noodzakelijke verandering en groei"
+        },
+        gemini: {
+          fullTitle: "Tweelingen Zon - De Communicator",
+          light: "Je brengt nieuwsgierige communicatieve energie, verbindt ideeën en mensen met veelzijdige intelligentie",
+          shadow: "Je kunt verspreid raken, oppervlakkig worden of worstelen met focus en diepgaand commitment",
+          insight: "Je hebt een gave voor verbinding en communicatie, maar balans verscheidenheid met diepte en follow-through"
+        },
+        cancer: {
+          fullTitle: "Kreeft Zon - De Verzorger",
+          light: "Je brengt verzorgende emotionele intelligentie, creëert veilige ruimtes en voedt anderen met empathische zorg",
+          shadow: "Je kunt te emotioneel defensief worden, vastzitten in het verleden of te beschermend over geliefden",
+          insight: "Je excelleert in emotionele verzorging en het creëren van thuis, maar bescherm je eigen grenzen terwijl je zorg geeft"
+        },
+        leo: {
+          fullTitle: "Leeuw Zon - De Performer",
+          light: "Je brengt stralende creatieve expressie, inspireert anderen met generositeit en leidt met warm vertrouwen",
+          shadow: "Je kunt te ego-gedreven worden, aandacht zoeken of gefrustreerd wanneer niet gewaardeerd",
+          insight: "Je bent hier om te stralen en creëren, maar onthoud dat echte leiderschap anderen verheft niet overschaduwt"
+        },
+        virgo: {
+          fullTitle: "Maagd Zon - De Analist",
+          light: "Je brengt praktische analytische precisie, verbetert systemen met detail en dient door nuttige expertise",
+          shadow: "Je kunt te kritisch of perfectionistisch worden, worstelen met 'goed genoeg' of over-analyseren",
+          insight: "Je excelleert in verbetering en dienst, maar balans excellentie met zelfcompassie en acceptatie van imperfectie"
+        },
+        libra: {
+          fullTitle: "Weegschaal Zon - De Diplomaat",
+          light: "Je brengt harmonieuze balans, ziet alle kanten met rechtvaardigheid en creëert schoonheid en partnerschap",
+          shadow: "Je kunt te compromisserend worden, je eigen waarheid verliezen of besluiteloos zijn uit angst voor disharmonie",
+          insight: "Je hebt een gave voor balans en schoonheid, maar onthoud dat ware harmonie authentieke expressie vereist"
+        },
+        scorpio: {
+          fullTitle: "Schorpioen Zon - De Transformer",
+          light: "Je brengt intense transformerende kracht, ziet door oppervlakten en faciliteert diepe psychologische regeneratie",
+          shadow: "Je kunt te intens of controlerender worden, worstelen met vertrouwen of vastzitten in macht dynamieken",
+          insight: "Je excelleert in diepe transformatie en waarheid, maar gebruik je kracht voor healing niet manipulatie"
+        },
+        sagittarius: {
+          fullTitle: "Boogschutter Zon - De Zoeker",
+          light: "Je brengt optimistische expanderende energie, zoekt waarheid en betekenis en inspireert avontuur en groei",
+          shadow: "Je kunt te roekeloos of dogmatisch worden, worstelen met grenzen of ongevoelig zijn voor details",
+          insight: "Je bent hier om te verkennen en onderwijzen, maar grond je wijsheid in praktische toepassing en gevoeligheid"
+        },
+        capricorn: {
+          fullTitle: "Steenbok Zon - De Bereiker",
+          light: "Je brengt ambitieuze strategische discipline, bouwt blijvende structuren en bereikt door toegewijde inspanning",
+          shadow: "Je kunt te werkverslaafde of emotioneel koud worden, succes boven relaties stellen of te controlerender",
+          insight: "Je excelleert in manifesteren van succes, maar balans succes met emotionele verbinding en zelfzorg"
+        },
+        aquarius: {
+          fullTitle: "Waterman Zon - De Visionair",
+          light: "Je brengt vernieuwend denken en vooruitstrevende ideeën die de status quo uitdagen met humanitaire visie",
+          shadow: "Je kunt emotioneel losgekoppeld raken, te vastzitten in intellectualiteit of rebels zonder reden worden",
+          insight: "Je bent een revolutionair denker die een betere wereld envisioneert, maar grond je idealen in huidige verbinding"
+        },
+        pisces: {
+          fullTitle: "Vissen Zon - De Mysticus",
+          light: "Je brengt compassievol spiritueel bewustzijn, verbindt met universele liefde en heelt door empathische aanwezigheid",
+          shadow: "Je kunt te ontsnappend worden, grenzen verliezen of overweldigd door anderen' emoties en wereld pijn",
+          insight: "Je excelleert in spirituele compassie en healing, maar grond je gaven en bescherm je energetische grenzen"
+        }
+      },
+
+      // Moon Sign Descriptions (Dutch)
+      moonSignDescriptions: {
+        aries: {
+          fullTitle: "Ram Maan - Vurige Emoties",
+          light: "Je voelt emoties intens en onmiddellijk, reageert met spontane passie en heeft directe emotionele eerlijkheid",
+          shadow: "Je kunt impulsief emotioneel reageren, ongeduldig met gevoelens of te snel bewegen door emotionele verwerking",
+          insight: "Je hebt vurige emotionele natuur, maar leer te pauzeren voordat je reageert en geef emoties tijd te rijpen"
+        },
+        taurus: {
+          fullTitle: "Stier Maan - Gestage Emoties",
+          light: "Je voelt emoties diep en gestaag, vindt emotionele zekerheid in stabiliteit en fysiek comfort",
+          shadow: "Je kunt emotioneel koppig worden, worstelen met verandering of vasthouden aan gevoel te lang",
+          insight: "Je hebt stabiele emotionele natuur, maar leer emotionele flexibiliteit en dat loslaten soms nodig is"
+        },
+        gemini: {
+          fullTitle: "Tweelingen Maan - Cerebrale Emoties",
+          light: "Je verwerkt emoties door praten en denken, hebt veelzijdige gevoelens en emotionele nieuwsgierigheid",
+          shadow: "Je kunt te veel in je hoofd zitten over gevoelens, emotioneel oppervlakkig of inconsistent worden",
+          insight: "Je verwerkt emoties mentaal, maar onthoud dat sommige gevoelens gevoeld moeten worden niet alleen begrepen"
+        },
+        cancer: {
+          fullTitle: "Kreeft Maan - Verzorgende Emoties",
+          light: "Je voelt emoties diep en intuïtief, hebt natuurlijke emotionele intelligentie en verzorgt door gevoelens",
+          shadow: "Je kunt te emotioneel defensief worden, vastzitten in gevoelens of te absorberen van anderen' emoties",
+          insight: "Je hebt diepe emotionele gave, maar bescherm je emotionele grenzen en laat gezonde verwerking toe"
+        },
+        leo: {
+          fullTitle: "Leeuw Maan - Dramatische Emoties",
+          light: "Je voelt emoties warm en genereus, hebt emotioneel vertrouwen en deelt gevoelens met open hart",
+          shadow: "Je kunt emotioneel dramatisch worden, aandacht zoeken door gevoelens of ego koppelen aan emoties",
+          insight: "Je hebt warm emotioneel hart, maar leer dat kwetsbaarheid niet zwakte is en niet alle emoties performance zijn"
+        },
+        virgo: {
+          fullTitle: "Maagd Maan - Analytische Emoties",
+          light: "Je verwerkt emoties door analyse en dienen, vindt emotioneel comfort in nuttig zijn en ordenen",
+          shadow: "Je kunt te kritisch over je gevoelens worden, worstelen met emotionele chaos of over-analyseren",
+          insight: "Je hebt praktische emotionele natuur, maar leer dat emoties niet altijd logisch hoeven te zijn"
+        },
+        libra: {
+          fullTitle: "Weegschaal Maan - Harmonieuze Emoties",
+          light: "Je zoekt emotionele balans en harmonie, hebt natuurlijke emotionele diplomatie en relatie gevoeligheid",
+          shadow: "Je kunt je eigen emoties onderdrukken voor harmonie, te afhankelijk van relaties voor emotionele stabiliteit",
+          insight: "Je zoekt emotionele harmonie, maar onthoud dat authentieke gevoelens soms disharmonie creëren en dat is oké"
+        },
+        scorpio: {
+          fullTitle: "Schorpioen Maan - Intense Emoties",
+          light: "Je voelt emoties diepgaand en transformerend, hebt emotionele moed om in duisternis te gaan voor healing",
+          shadow: "Je kunt overweldigd door emotionele intensiteit worden, worstelen met vertrouwen of controlerend met gevoelens",
+          insight: "Je hebt krachtige emotionele diepte, maar leer te vertrouwen en los te laten in plaats van alle emoties controleren"
+        },
+        sagittarius: {
+          fullTitle: "Boogschutter Maan - Optimistische Emoties",
+          light: "Je voelt emoties met optimisme en filosofie, zoekt betekenis in gevoelens en emotionele vrijheid",
+          shadow: "Je kunt ontsnappen van moeilijke emoties door filosofie, te snel bewegen door verwerking of ongevoelig zijn",
+          insight: "Je hebt avontuurlijke emotionele natuur, maar leer soms te blijven bij moeilijke gevoelens in plaats van ontsnappen"
+        },
+        capricorn: {
+          fullTitle: "Steenbok Maan - Gedisciplineerde Emoties",
+          light: "Je beheert emoties met maturiteit en verantwoordelijkheid, hebt emotionele zelfcontrole en betrouwbaarheid",
+          shadow: "Je kunt emotioneel afgesloten worden, worstelen met kwetsbaarheid of te veel controle over gevoelens",
+          insight: "Je hebt rijpe emotionele natuur, maar onthoud dat emotionele kwetsbaarheid kracht is niet zwakte"
+        },
+        aquarius: {
+          fullTitle: "Waterman Maan - Afstandelijke Emoties",
+          light: "Je verwerkt emoties objectief en intellectueel, hebt emotionele onafhankelijkheid en unieke gevoelsbenadering",
+          shadow: "Je kunt te emotioneel losgekoppeld worden, worstelen met intimiteit of rationaliseren van gevoelens weg",
+          insight: "Je hebt unieke emotionele verwerking, maar leer dat emotionele verbinding vereist aanwezig zijn niet alleen begrijpen"
+        },
+        pisces: {
+          fullTitle: "Vissen Maan - Empathische Emoties",
+          light: "Je voelt emoties universeel en compassievol, hebt natuurlijke empathie en emotionele spirituele verbinding",
+          shadow: "Je kunt overweldigd door gevoelens worden, grenzen verliezen of ontsnappen in fantasie of substanties",
+          insight: "Je hebt diepe emotionele compassie, maar grond je gevoelens en bescherm je emotionele grenzen van absorptie"
+        }
+      },
+
+      // Rising Sign Descriptions (Dutch)
+      risingSignDescriptions: {
+        aries: {
+          fullTitle: "Ram Ascendant - Moedige Masker",
+          light: "Je presenteert jezelf met vertrouwen en directe actie, komt over als moedig en enthousiast",
+          shadow: "Je kunt als te agressief of impulsief overkomen, anderen intimideren met je directheid",
+          insight: "Je projecteert natuurlijke leiderschap, maar balans assertiviteit met geduld voor sterkere verbindingen"
+        },
+        taurus: {
+          fullTitle: "Stier Ascendant - Stabiel Masker",
+          light: "Je presenteert jezelf met kalme stabiliteit en betrouwbaarheid, komt over als geaard en vredevol",
+          shadow: "Je kunt als koppig of traag overkomen, weerstand tegen verandering of te materieel gefocust",
+          insight: "Je projecteert natuurlijke stabiliteit, maar sta flexibiliteit toe om te voorkomen als rigide gezien te worden"
+        },
+        gemini: {
+          fullTitle: "Tweelingen Ascendant - Nieuwsgierig Masker",
+          light: "Je presenteert jezelf met levendige nieuwsgierigheid en communicatie, komt over als vriendelijk en intelligent",
+          shadow: "Je kunt als oppervlakkig of onbetrouwbaar overkomen, te veel praten of inconsistent lijken",
+          insight: "Je projecteert natuurlijke nieuwsgierigheid, maar balans sociale aantrekkelijkheid met diepte en consistentie"
+        },
+        cancer: {
+          fullTitle: "Kreeft Ascendant - Verzorgend Masker",
+          light: "Je presenteert jezelf met zachte verzorging en empathie, komt over als warm en beschermend",
+          shadow: "Je kunt als te emotioneel of defensief overkomen, te beschermend of afhankelijk lijken",
+          insight: "Je projecteert natuurlijke warmte, maar balans verzorging met het tonen van je eigen sterkte"
+        },
+        leo: {
+          fullTitle: "Leeuw Ascendant - Stralend Masker",
+          light: "Je presenteert jezelf met warm vertrouwen en charisma, komt over als genereus en inspirerend",
+          shadow: "Je kunt als arrogant of aandachtszoekend overkomen, te dramatisch of ego-gedreven lijken",
+          insight: "Je projecteert natuurlijk charisma, maar balans stralen met luisteren en anderen ruimte geven"
+        },
+        virgo: {
+          fullTitle: "Maagd Ascendant - Verfijnd Masker",
+          light: "Je presenteert jezelf met georganiseerde precisie en behulpzaamheid, komt over als competent en attent",
+          shadow: "Je kunt als te kritisch of perfectionistisch overkomen, koud of oordellend lijken",
+          insight: "Je projecteert natuurlijke competentie, maar balans nuttig zijn met warmte en acceptatie van imperfectie"
+        },
+        libra: {
+          fullTitle: "Weegschaal Ascendant - Charmant Masker",
+          light: "Je presenteert jezelf met diplomatieke charme en esthetische gratie, komt over als eerlijk en aangenaam",
+          shadow: "Je kunt als te compromisserend of oppervlakkig overkomen, besluiteloos of people-pleasing lijken",
+          insight: "Je projecteert natuurlijke charme, maar vergeet niet je eigen waarheid te tonen naast harmonie"
+        },
+        scorpio: {
+          fullTitle: "Schorpioen Ascendant - Intens Masker",
+          light: "Je presenteert jezelf met magnetische intensiteit en diepte, komt over als krachtig en transformerend",
+          shadow: "Je kunt als intimiderend of te privé overkomen, controlerend of misvertrouwend lijken",
+          insight: "Je projecteert natuurlijke intensiteit, maar balans mysterie met kwetsbaarheid om verbinding uit te nodigen"
+        },
+        sagittarius: {
+          fullTitle: "Boogschutter Ascendant - Avontuurlijk Masker",
+          light: "Je presenteert jezelf met optimistisch avontuur en filosofie, komt over als enthousiast en wijdenkend",
+          shadow: "Je kunt als roekeloos of ongevoelig overkomen, te blunt of commitment-schuw lijken",
+          insight: "Je projecteert natuurlijk avontuur, maar balans enthousiasme met tact en follow-through"
+        },
+        capricorn: {
+          fullTitle: "Steenbok Ascendant - Autoritair Masker",
+          light: "Je presenteert jezelf met mature verantwoordelijkheid en ambition, komt over als betrouwbaar en capabel",
+          shadow: "Je kunt als te serieus of koud overkomen, werkverslaafde of emotioneel afgesloten lijken",
+          insight: "Je projecteert natuurlijke autoriteit, maar balans professionaliteit met warmte en speelsheid"
+        },
+        aquarius: {
+          fullTitle: "Waterman Ascendant - Uniek Masker",
+          light: "Je presenteert jezelf met origineel unieke individualiteit, komt over als vernieuwend en vriendelijk",
+          shadow: "Je kunt als te afstandelijk of rebels overkomen, emotioneel koud of anders voor anders lijken",
+          insight: "Je projecteert natuurlijke uniciteit, maar balans individualiteit met emotionele toegankelijkheid"
+        },
+        pisces: {
+          fullTitle: "Vissen Ascendant - Mystiek Masker",
+          light: "Je presenteert jezelf met zachte spirituele compassie, komt over als empathisch en artistiek",
+          shadow: "Je kunt als te zwevend of onbetrouwbaar overkomen, grenzeloos of slachtofferachtig lijken",
+          insight: "Je projecteert natuurlijke compassie, maar grond je aanwezigheid en toon je sterkte naast zachtheid"
+        }
+      },
+
+      // Chinese Zodiac Descriptions (Dutch)
+      chineseZodiacDescriptions: {
+        rat: {
+          fullTitle: "Rat - Intelligente Opportunist",
+          light: "Je hebt scherpe intelligentie en vindingrijkheid, ziet kansen anderen missen en navigeert slim door uitdagingen",
+          shadow: "Je kunt te opportunistisch of gierig worden, worstelen met vertrouwen of te veel strategieën bedenken",
+          insight: "Je excelleert in slimme vindingrijkheid, maar balans opportunisme met integriteit en vertrouwen"
+        },
+        ox: {
+          fullTitle: "Os - Betrouwbare Werker",
+          light: "Je hebt betrouwbare duurzame kracht, werkt geduldig met toegewijde inspanning en bouwt door volharding",
+          shadow: "Je kunt te koppig of inflexibel worden, worstelen met verandering of te veel werken zonder rust",
+          insight: "Je excelleert in gestage betrouwbare inspanning, maar balans doorzettingsvermogen met flexibiliteit en rust"
+        },
+        tiger: {
+          fullTitle: "Tijger - Moedige Leider",
+          light: "Je hebt moedige leiderschap energie, neemt risico's met vertrouwen en inspireert anderen met je passie",
+          shadow: "Je kunt te impulsief of competitief worden, worstelen met autoriteit of roekeloos in actie",
+          insight: "Je excelleert in moedige leiding, maar balans actie met strategie en samenwerking met competitie"
+        },
+        rabbit: {
+          fullTitle: "Konijn - Zachte Diplomaat",
+          light: "Je hebt zachte diplomatieke gratie, navigeert conflicten met tact en creëert harmonie door vriendelijkheid",
+          shadow: "Je kunt te voorzichtig of ontwijkend worden, worstelen met directe confrontatie of te afhankelijk van comfort",
+          insight: "Je excelleert in diplomatie en gratie, maar leer assertiviteit wanneer nodig en neem berekende risico's"
+        },
+        dragon: {
+          fullTitle: "Draak - Charismatische Visionair",
+          light: "Je hebt charismatische visionair kracht, inspireert grootse dromen en manifesteert met natuurlijke magie",
+          shadow: "Je kunt te arrogant of ongeduldig worden, worstelen met details of verwachtingen van grandeur",
+          insight: "Je excelleert in visionair leiderschap, maar grond je dromen in praktische stappen en eer details"
+        },
+        snake: {
+          fullTitle: "Slang - Wijze Mysticus",
+          light: "Je hebt wijze intuïtieve diepte, ziet onder oppervlakten met filosofische intelligentie en transformeert door inzicht",
+          shadow: "Je kunt te afstandelijk of manipulerend worden, worstelen met vertrouwen of te veel in mysterie",
+          insight: "Je excelleert in intuïtieve wijsheid, maar balans mysterie met transparantie en gebruik inzicht ethisch"
+        },
+        horse: {
+          fullTitle: "Paard - Vrije Geest",
+          light: "Je hebt onafhankelijke vrijheidsenergie en een liefde voor avontuur, beweegt door het leven met enthousiasme",
+          shadow: "Je kunt rusteloze worden of moeite hebben met commitment, worstelen met routine of te onafhankelijk",
+          insight: "Je excelleert in onafhankelijk avontuur, maar vertrouw dat commitment die vrijheid eert je reis verrijkt"
+        },
+        goat: {
+          fullTitle: "Geit - Creatieve Ziel",
+          light: "Je hebt artistieke creatieve sensibiliteit, brengt schoonheid en compassie met zachte artistieke expressie",
+          shadow: "Je kunt te afhankelijk of pessimistisch worden, worstelen met praktische realiteit of te gevoelig zijn",
+          insight: "Je excelleert in creatieve compassie, maar ontwikkel praktische vaardigheden en emotionele veerkracht"
+        },
+        monkey: {
+          fullTitle: "Aap - Speelse Innovator",
+          light: "Je hebt slimme speelse innovatie, lost problemen op met creativiteit en brengt humor en intelligentie",
+          shadow: "Je kunt te speels of onbetrouwbaar worden, worstelen met serieus commitment of trucs gebruiken",
+          insight: "Je excelleert in innovatieve probleemoplossing, maar balans speelsheid met betrouwbaarheid en integriteit"
+        },
+        rooster: {
+          fullTitle: "Haan - Zelfverzekerde Perfectionist",
+          light: "Je hebt zelfverzekerde georganiseerde precisie, let op details met trots en spreekt waarheid direct",
+          shadow: "Je kunt te kritisch of perfectionistisch worden, worstelen met nederigheid of te direct in communicatie",
+          insight: "Je excelleert in georganiseerde excellentie, maar balans standaarden met compassie en tact"
+        },
+        dog: {
+          fullTitle: "Hond - Loyale Beschermer",
+          light: "Je hebt loyale beschermende integriteit, staat voor rechtvaardigheid en beschermt geliefden met toegewijde trouw",
+          shadow: "Je kunt te bezorgd of cynisch worden, worstelen met vertrouwen of te beschermend over je kring",
+          insight: "Je excelleert in loyale bescherming, maar balans waakzaamheid met vertrouwen en sta nieuwe verbindingen toe"
+        },
+        pig: {
+          fullTitle: "Varken - Genereuze Optimist",
+          light: "Je hebt genereuze optimistische goedheid, geniet van overvloed met oprecht hart en deelt vrijgevig",
+          shadow: "Je kunt te naïef of zelfgenoegzaam worden, worstelen met grenzen of te veel geven zonder ontvangen",
+          insight: "Je excelleert in genereuze overvloed, maar ontwikkel discernement en balans geven met zelfzorg"
+        }
       }
     },
     dreamCategories: {
