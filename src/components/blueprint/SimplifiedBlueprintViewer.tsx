@@ -325,15 +325,77 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
+                <div 
+                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.humanDesign'),
+                      mainValue: hdType,
+                      ...desc,
+                      category: 'Human Design'
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.humanDesign'),
+                        mainValue: hdType,
+                        ...desc,
+                        category: 'Human Design'
+                      });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View detailed information about your Human Design type: ${hdType}`}
+                >
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.humanDesign')}</h4>
                   <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{hdType}</p>
-                  <p className={`${getTextSize('text-xs')} font-inter text-soul-purple break-words`}>{authority} {t('blueprint.descriptions.authority')}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
-                <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
+                <div 
+                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.chineseZodiac'),
+                      mainValue: `${chineseZodiac} ${element}`,
+                      ...desc,
+                      category: 'Chinese Zodiac'
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.chineseZodiac'),
+                        mainValue: `${chineseZodiac} ${element}`,
+                        ...desc,
+                        category: 'Chinese Zodiac'
+                      });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View detailed information about your Chinese Zodiac: ${chineseZodiac}`}
+                >
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.chineseZodiac')}</h4>
                   <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac} {element}</p>
-                  <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{getChineseElementDescription(element)}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
               </div>
             </div>
@@ -354,9 +416,41 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
           <CardContent className={`${spacing.card} pt-0`}>
             <div className="space-y-4 w-full max-w-full">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'mbtiDescriptions', mbtiType);
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.personalityType'),
+                      mainValue: mbtiType,
+                      ...desc,
+                      category: 'MBTI'
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const desc = getPersonalityDescription(t, 'mbtiDescriptions', mbtiType);
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.personalityType'),
+                        mainValue: mbtiType,
+                        ...desc,
+                        category: 'MBTI'
+                      });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View detailed information about your MBTI personality type`}
+                >
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.personalityType')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{mbtiType}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'mbtiDescriptions', mbtiType);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.cognitiveFunctions')}</h4>
@@ -397,15 +491,77 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
           <CardContent className={`${spacing.card} pt-0`}>
             <div className="space-y-4 w-full max-w-full">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.energyType'),
+                      mainValue: hdType,
+                      ...desc,
+                      category: 'Human Design'
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.energyType'),
+                        mainValue: hdType,
+                        ...desc,
+                        category: 'Human Design'
+                      });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View detailed information about your Human Design energy type`}
+                >
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.energyType')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{hdType}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{t('blueprint.descriptions.sustainableEnergy')}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'authorityDescriptions', authority);
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.decisionAuthority'),
+                      mainValue: authority,
+                      ...desc,
+                      category: 'Human Design Authority'
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const desc = getPersonalityDescription(t, 'authorityDescriptions', authority);
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.decisionAuthority'),
+                        mainValue: authority,
+                        ...desc,
+                        category: 'Human Design Authority'
+                      });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View detailed information about your decision authority`}
+                >
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.decisionAuthority')}</h4>
                   <p className={`${getTextSize('text-xl')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{authority}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{t('blueprint.descriptions.innerAuthority')}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'authorityDescriptions', authority);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
               </div>
               
@@ -441,18 +597,78 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
           <div className={`${spacing.card} pt-0`}>
             <div className="grid grid-cols-1 gap-6 w-full max-w-full">
               <div className="space-y-4">
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.lifePathNumber'),
+                      mainValue: String(lifePath),
+                      ...desc,
+                      category: 'Numerology'
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.lifePathNumber'),
+                        mainValue: String(lifePath),
+                        ...desc,
+                        category: 'Numerology'
+                      });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View detailed information about your Life Path number`}
+                >
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.lifePathNumber')}</h4>
                   <p className={`${getTextSize('text-4xl')} font-cormorant font-bold text-soul-purple`}>{lifePath}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{lifePathKeyword}</p>
-                  <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>{t('blueprint.descriptions.coreLifePurpose')}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                  <div 
+                    className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                    onClick={() => {
+                      const desc = getPersonalityDescription(t, 'expressionNumberDescriptions', expressionNumber);
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.expressionNumber'),
+                        mainValue: String(expressionNumber),
+                        ...desc,
+                        category: 'Numerology'
+                      });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        const desc = getPersonalityDescription(t, 'expressionNumberDescriptions', expressionNumber);
+                        openDetailModal({
+                          title: desc.fullTitle,
+                          subtitle: t('blueprint.labels.expressionNumber'),
+                          mainValue: String(expressionNumber),
+                          ...desc,
+                          category: 'Numerology'
+                        });
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`View detailed information about your Expression number`}
+                  >
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.expressionNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{expressionNumber}</p>
-                    <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{expressionKeyword}</p>
-                    <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>{t('blueprint.descriptions.naturalTalents')}</p>
+                    {(() => {
+                      const desc = getPersonalityDescription(t, 'expressionNumberDescriptions', expressionNumber);
+                      return <PersonalityDescription {...desc} compact={true} />;
+                    })()}
                   </div>
                   <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.soulUrgeNumber')}</h4>
@@ -499,20 +715,113 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
           <CardContent className={`${spacing.card} pt-0`}>
             <div className="space-y-4 w-full max-w-full">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
+                <div 
+                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'sunSignDescriptions', sunSign);
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.sunSign'),
+                      mainValue: sunSign,
+                      ...desc,
+                      category: 'Astrology'
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const desc = getPersonalityDescription(t, 'sunSignDescriptions', sunSign);
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.sunSign'),
+                        mainValue: sunSign,
+                        ...desc,
+                        category: 'Astrology'
+                      });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View detailed information about your Sun sign`}
+                >
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.sunSign')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{sunSign}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{t('blueprint.descriptions.coreIdentityEgo')}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'sunSignDescriptions', sunSign);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
-                <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
+                <div 
+                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'moonSignDescriptions', moonSign);
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.moonSign'),
+                      mainValue: moonSign,
+                      ...desc,
+                      category: 'Astrology'
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const desc = getPersonalityDescription(t, 'moonSignDescriptions', moonSign);
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.moonSign'),
+                        mainValue: moonSign,
+                        ...desc,
+                        category: 'Astrology'
+                      });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View detailed information about your Moon sign`}
+                >
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.moonSign')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{moonSign}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{t('blueprint.descriptions.emotionalNature')}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'moonSignDescriptions', moonSign);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
-                <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
+                <div 
+                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'risingSignDescriptions', risingSign);
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.risingSign'),
+                      mainValue: risingSign,
+                      ...desc,
+                      category: 'Astrology'
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const desc = getPersonalityDescription(t, 'risingSignDescriptions', risingSign);
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.risingSign'),
+                        mainValue: risingSign,
+                        ...desc,
+                        category: 'Astrology'
+                      });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View detailed information about your Rising sign`}
+                >
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.risingSign')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{risingSign}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{t('blueprint.descriptions.firstImpression')}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'risingSignDescriptions', risingSign);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
               </div>
               
@@ -531,10 +840,41 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 </div>
               </div>
 
-              <div className="mt-4 p-3 bg-soul-purple/5 rounded-3xl text-center">
+              <div 
+                className="mt-4 p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                onClick={() => {
+                  const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                  openDetailModal({
+                    title: desc.fullTitle,
+                    subtitle: t('blueprint.labels.generationalInfluence'),
+                    mainValue: `${chineseZodiac} ${element}`,
+                    ...desc,
+                    category: 'Chinese Zodiac'
+                  });
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.generationalInfluence'),
+                      mainValue: `${chineseZodiac} ${element}`,
+                      ...desc,
+                      category: 'Chinese Zodiac'
+                    });
+                  }
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label={`View detailed information about your Chinese Zodiac sign`}
+              >
                 <h5 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.generationalInfluence')}</h5>
                 <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac} {element}</p>
-                <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{getChineseZodiacTrait(chineseZodiac)}</p>
+                {(() => {
+                  const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                  return <PersonalityDescription {...desc} compact={true} />;
+                })()}
               </div>
             </div>
           </CardContent>

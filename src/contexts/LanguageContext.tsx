@@ -1093,14 +1093,462 @@ const translations: Record<Language, Translations> = {
           shadow: "You may become controlling or measure your worth solely by external achievements and material success",
           insight: "You are a natural leader in the material world, but remember that true power comes from integrity and using your gifts to uplift others"
         },
+        4: {
+          fullTitle: "Life Path 4 - The Builder",
+          light: "You create solid foundations and lasting structures through dedication, organization, and practical wisdom",
+          shadow: "You may become rigid or overly focused on rules, resisting change even when it serves growth",
+          insight: "You are a master builder who creates stability and order, but stay flexible and trust that strong foundations can support evolution"
+        },
+        6: {
+          fullTitle: "Life Path 6 - The Nurturer",
+          light: "You create harmony and beauty while caring for others with unconditional love and responsibility",
+          shadow: "You may become controlling or sacrificial, believing you must fix everything and everyone",
+          insight: "You are a natural caregiver and healer who creates beauty in the world, but remember that true service includes caring for yourself"
+        },
+        9: {
+          fullTitle: "Life Path 9 - The Humanitarian",
+          light: "You serve the greater good with wisdom and compassion, naturally understanding and accepting all of humanity",
+          shadow: "You may become a martyr or struggle to receive, always giving but never allowing yourself to be supported",
+          insight: "You are an old soul with universal compassion, but remember that you can serve more powerfully when you also receive and honor your own needs"
+        },
         11: {
           fullTitle: "Life Path 11 - The Spiritual Messenger",
           light: "You naturally inspire others with your vision, intuition, and spiritual insights that illuminate higher truths",
           shadow: "You may feel overwhelmed by your sensitivity or doubt your intuitive gifts under pressure",
           insight: "You are an inspirational visionary and spiritual messenger, but ground your visions in practical action and trust your inner knowing"
+        },
+        22: {
+          fullTitle: "Life Path 22 - The Master Builder",
+          light: "You have the vision to dream big and the practical skills to manifest those dreams into lasting reality",
+          shadow: "You may feel overwhelmed by the magnitude of your potential or doubt your ability to achieve such ambitious goals",
+          insight: "You are a master builder who can manifest visionary dreams into reality, but trust the process and take one practical step at a time"
+        },
+        33: {
+          fullTitle: "Life Path 33 - The Master Teacher",
+          light: "You uplift humanity through selfless service, healing, and teaching with unconditional love and compassion",
+          shadow: "You may become a martyr or burn out from taking on everyone's pain and problems",
+          insight: "You are a master healer and teacher who serves humanity, but remember that you can't pour from an empty cup—your wellbeing matters too"
         }
       },
       
+      // Human Design Type Descriptions
+      humanDesignDescriptions: {
+        generator: {
+          fullTitle: "Generator - The Life Force",
+          light: "You have sustainable energy when doing work that lights you up, building and creating with powerful life-force energy",
+          shadow: "You may feel frustrated when stuck in unfulfilling routines or when you say yes without listening to your gut response",
+          insight: "You are a powerful builder with enduring energy, but only commit to what truly excites you and wait for your gut to respond before deciding"
+        },
+        'manifesting generator': {
+          fullTitle: "Manifesting Generator - The Multi-Passionate Powerhouse",
+          light: "You have powerful energy to do multiple things at once, moving quickly when excited and manifesting through response",
+          shadow: "You may skip important steps in your rush to move forward or feel frustrated when forced to slow down",
+          insight: "You are a dynamic multi-tasker who works fast, but honor your gut response and remember that taking shortcuts can create more work later"
+        },
+        manifestor: {
+          fullTitle: "Manifestor - The Initiator",
+          light: "You have the power to initiate and make things happen, creating impact through your independent, pioneering energy",
+          shadow: "You may face resistance or feel angry when others don't understand your vision or try to control you",
+          insight: "You are a powerful initiator who creates new realities, but inform others of your plans to reduce resistance and gain support"
+        },
+        projector: {
+          fullTitle: "Projector - The Guide",
+          light: "You have a natural gift for seeing others' potential and guiding them wisely with your penetrating insight",
+          shadow: "You may feel bitter or overlooked when your insights aren't recognized or when you offer guidance without being invited",
+          insight: "You are a natural guide and systems-thinker, but wait for recognition before offering advice to avoid burnout and find true appreciation"
+        },
+        reflector: {
+          fullTitle: "Reflector - The Mirror",
+          light: "You reflect the health of your environment and communities with profound wisdom about collective energy",
+          shadow: "You may feel invisible or overwhelmed by absorbing everyone else's energy without protection",
+          insight: "You are a rare and wise mirror who reflects collective wellbeing, but honor your need for time to process decisions and choose healthy environments"
+        }
+      },
+
+      // Human Design Authority Descriptions
+      authorityDescriptions: {
+        emotional: {
+          fullTitle: "Emotional Authority - The Wave",
+          light: "You make wise decisions by riding your emotional wave and waiting for clarity over time",
+          shadow: "You may make impulsive choices during emotional highs or lows without waiting for the wave to settle",
+          insight: "You are emotionally intelligent and nuanced, but wait through your emotional wave before making major decisions to access true clarity"
+        },
+        sacral: {
+          fullTitle: "Sacral Authority - The Gut Response",
+          light: "You access truth through your gut's immediate yes/no response in the moment",
+          shadow: "You may override your gut response with mental reasoning or say yes when your body says no",
+          insight: "You have direct access to body wisdom through gut responses, but trust those immediate sounds and sensations over your mind's explanations"
+        },
+        splenic: {
+          fullTitle: "Splenic Authority - The Intuitive Hit",
+          light: "You receive intuitive hits in the moment that guide you toward what's healthy and safe",
+          shadow: "You may miss your intuitive whispers or second-guess them because they come so quickly",
+          insight: "You have powerful intuitive awareness that speaks once, but trust those immediate hits even when your mind wants more time to decide"
+        },
+        ego: {
+          fullTitle: "Ego Authority - The Willpower",
+          light: "You make correct decisions based on what you have willpower for and what truly matters to your heart",
+          shadow: "You may make promises you can't keep or push through without checking if you truly have energy for it",
+          insight: "You are designed to decide based on your heart's willpower, but only commit to what you genuinely have energy and desire to complete"
+        },
+        'self-projected': {
+          fullTitle: "Self-Projected Authority - The Voice",
+          light: "You gain clarity by hearing yourself talk through decisions in conversation with trusted others",
+          shadow: "You may stay stuck in your head or struggle to know what's true without speaking it out loud",
+          insight: "You find your truth through your own voice, but process important decisions by speaking them aloud with people who listen without advising"
+        },
+        environmental: {
+          fullTitle: "Environmental Authority - The Space",
+          light: "You make best decisions when you're in the right environment and have taken time to sense into the space",
+          shadow: "You may rush decisions without considering whether your environment supports clear knowing",
+          insight: "You are deeply affected by your environment, but take time to be in different spaces and notice which environments bring you clarity"
+        },
+        lunar: {
+          fullTitle: "Lunar Authority - The Cycle",
+          light: "You gain wisdom by waiting through a full lunar cycle to see how you feel about important decisions",
+          shadow: "You may feel pressured to decide quickly or disappointed when you experience all sides of every situation",
+          insight: "You are designed to experience all perspectives over time, but honor your need to wait 28+ days for major decisions to find true clarity"
+        }
+      },
+
+      // Expression Number Descriptions
+      expressionNumberDescriptions: {
+        1: {
+          fullTitle: "Expression 1 - The Leader",
+          light: "You naturally express yourself through leadership, innovation, and pioneering new paths with confidence",
+          shadow: "You may come across as domineering or overly independent, struggling to collaborate or accept input",
+          insight: "You are a natural leader and trailblazer who initiates action, but remember that true leadership empowers others to shine too"
+        },
+        2: {
+          fullTitle: "Expression 2 - The Diplomat",
+          light: "You express yourself through cooperation, harmony, and bringing people together with sensitivity and grace",
+          shadow: "You may suppress your own voice to keep peace or become passive-aggressive when your needs aren't met",
+          insight: "You are a natural peacemaker who creates harmony, but remember that your voice and needs matter just as much as others'"
+        },
+        3: {
+          fullTitle: "Expression 3 - The Communicator",
+          light: "You express yourself through creative communication, bringing joy, inspiration, and optimism to everything you share",
+          shadow: "You may scatter your energy or perform for approval rather than expressing authentic truth",
+          insight: "You are a gifted communicator and creative force, but focus your talents and express from authentic joy rather than seeking validation"
+        },
+        4: {
+          fullTitle: "Expression 4 - The Builder",
+          light: "You express yourself through practical work, creating stable foundations and organized systems with dedication",
+          shadow: "You may become rigid or overly focused on how things 'should' be done, resisting creative solutions",
+          insight: "You are a master builder who creates lasting structures, but stay flexible and remember that strong foundations can evolve"
+        },
+        5: {
+          fullTitle: "Expression 5 - The Freedom Seeker",
+          light: "You express yourself through adventure, variety, and helping others embrace change and new experiences",
+          shadow: "You may avoid commitment or become scattered, seeking stimulation without depth or follow-through",
+          insight: "You are a dynamic catalyst for change and freedom, but balance your love of variety with meaningful focus and chosen commitments"
+        },
+        6: {
+          fullTitle: "Expression 6 - The Nurturer",
+          light: "You express yourself through caring for others, creating beauty, and taking responsibility in your communities",
+          shadow: "You may become controlling or martyred, believing you must fix and care for everyone",
+          insight: "You are a natural caregiver who creates harmony and beauty, but remember that healthy service includes boundaries and self-care"
+        },
+        7: {
+          fullTitle: "Expression 7 - The Mystic",
+          light: "You express yourself through spiritual wisdom, analytical depth, and contemplative insight into life's mysteries",
+          shadow: "You may become isolated or overly analytical, disconnecting from practical realities and human connection",
+          insight: "You are a deep thinker and spiritual seeker, but balance your inner world with grounded action and authentic connection"
+        },
+        8: {
+          fullTitle: "Expression 8 - The Powerhouse",
+          light: "You express yourself through material mastery, ambitious achievement, and wielding power with authority",
+          shadow: "You may become controlling or define your worth solely through external success and material accumulation",
+          insight: "You are a natural leader in material realms with powerful manifestation abilities, but use your power with integrity to uplift others"
+        },
+        9: {
+          fullTitle: "Expression 9 - The Humanitarian",
+          light: "You express yourself through compassionate service, universal love, and wisdom that embraces all of humanity",
+          shadow: "You may become martyred or struggle to complete things as you're always moving toward the next cause",
+          insight: "You are a wise humanitarian with universal compassion, but remember to receive support and complete what you start before moving on"
+        },
+        11: {
+          fullTitle: "Expression 11 - The Inspirational Visionary",
+          light: "You naturally inspire others with your vision, intuition, and spiritual insights that illuminate higher truths",
+          shadow: "You may feel overwhelmed by your sensitivity or doubt your intuitive gifts when challenged",
+          insight: "You are an inspirational visionary and spiritual messenger, but ground your visions in practical action and trust your inner knowing"
+        },
+        22: {
+          fullTitle: "Expression 22 - The Master Builder",
+          light: "You express yourself by manifesting visionary dreams into practical reality that serves humanity",
+          shadow: "You may feel overwhelmed by the magnitude of your potential or get lost in details without acting on the vision",
+          insight: "You are a master builder who can manifest ambitious visions, but trust the process and take one grounded step at a time"
+        },
+        33: {
+          fullTitle: "Expression 33 - The Master Teacher",
+          light: "You express yourself through selfless service, spiritual healing, and teaching with unconditional love",
+          shadow: "You may burn out from taking on everyone's pain or struggle with martyrdom and self-sacrifice",
+          insight: "You are a master healer and teacher who uplifts humanity, but remember that sustainable service requires caring for yourself first"
+        }
+      },
+
+      // Moon Sign Descriptions
+      moonSignDescriptions: {
+        aries: {
+          fullTitle: "Aries Moon - The Passionate Warrior",
+          light: "You feel emotions intensely and respond with courage, taking immediate action to meet your emotional needs",
+          shadow: "You may become impulsive or aggressive when emotionally triggered, reacting without processing feelings",
+          insight: "You have fiery emotional energy that drives you forward, but pause to understand your feelings before acting on them"
+        },
+        taurus: {
+          fullTitle: "Taurus Moon - The Steady Comfort Seeker",
+          light: "You find emotional security through stability, comfort, and the simple pleasures that ground and nourish you",
+          shadow: "You may resist emotional change or seek comfort through material security and routine when feelings become uncomfortable",
+          insight: "You need stability and comfort to feel emotionally safe, but remember that growth sometimes requires letting go of what feels secure"
+        },
+        gemini: {
+          fullTitle: "Gemini Moon - The Mental Processor",
+          light: "You process emotions through talking and thinking, finding comfort in communication and mental understanding",
+          shadow: "You may intellectualize emotions or become scattered and anxious when feelings become too intense",
+          insight: "You need to talk through your feelings to understand them, but remember that emotions don't always need to be analyzed or explained"
+        },
+        cancer: {
+          fullTitle: "Cancer Moon - The Emotional Nurturer",
+          light: "You nurture others with deep emotional intelligence and create safe spaces where feelings can be fully expressed",
+          shadow: "You may become overly protective, moody, or retreat when hurt rather than communicating your needs",
+          insight: "You feel emotions deeply and care profoundly, but remember to nurture yourself and communicate your needs clearly"
+        },
+        leo: {
+          fullTitle: "Leo Moon - The Radiant Heart",
+          light: "You feel emotionally fulfilled when expressing your creativity and receiving appreciation for your authentic self",
+          shadow: "You may need constant attention or take emotional feedback as a personal attack on your identity",
+          insight: "You have a generous, warm heart that needs to be seen and celebrated, but your worth isn't dependent on others' recognition"
+        },
+        virgo: {
+          fullTitle: "Virgo Moon - The Healing Helper",
+          light: "You find emotional security through being useful, solving problems, and creating order from chaos",
+          shadow: "You may become overly critical of yourself and others or try to fix emotions rather than feeling them",
+          insight: "You feel best when being of service and creating improvement, but practice self-compassion and allow yourself to simply feel without fixing"
+        },
+        libra: {
+          fullTitle: "Libra Moon - The Harmony Seeker",
+          light: "You find emotional peace through beauty, balance, and harmonious relationships where all voices are heard",
+          shadow: "You may avoid necessary conflict or lose yourself in relationships to maintain peace at any cost",
+          insight: "You need harmony and partnership to feel emotionally balanced, but remember that healthy conflict can deepen true connection"
+        },
+        scorpio: {
+          fullTitle: "Scorpio Moon - The Emotional Depths",
+          light: "You feel everything intensely and have the courage to face emotional depths that others avoid",
+          shadow: "You may become possessive, jealous, or hold onto emotional pain rather than releasing and transforming it",
+          insight: "You have profound emotional depth and transformative power, but practice vulnerability and release what you no longer need to carry"
+        },
+        sagittarius: {
+          fullTitle: "Sagittarius Moon - The Optimistic Explorer",
+          light: "You find emotional fulfillment through adventure, learning, and maintaining an optimistic perspective on life",
+          shadow: "You may avoid deep emotions through constant activity or preach positivity when you need to acknowledge pain",
+          insight: "You need freedom and meaning to feel emotionally alive, but remember that it's okay to slow down and feel the full range of emotions"
+        },
+        capricorn: {
+          fullTitle: "Capricorn Moon - The Controlled Achiever",
+          light: "You find emotional security through achievement, responsibility, and maintaining control over your inner world",
+          shadow: "You may suppress emotions as weakness or become overly serious, struggling to access vulnerability",
+          insight: "You need structure and achievement to feel secure, but remember that showing emotions is strength, not weakness"
+        },
+        aquarius: {
+          fullTitle: "Aquarius Moon - The Detached Observer",
+          light: "You process emotions objectively and find comfort in intellectual understanding and humanitarian ideals",
+          shadow: "You may intellectualize emotions or feel disconnected from your own feelings and others' emotional needs",
+          insight: "You need mental space to process emotions, but remember that feelings are meant to be felt, not just understood"
+        },
+        pisces: {
+          fullTitle: "Pisces Moon - The Empathic Dreamer",
+          light: "You feel deeply and intuitively, naturally absorbing and understanding others' emotions with compassion",
+          shadow: "You may lose boundaries or escape into fantasy when emotions become overwhelming",
+          insight: "You have profound emotional sensitivity and compassion, but protect your energy and ground your feelings in reality"
+        }
+      },
+
+      // Rising Sign Descriptions
+      risingSignDescriptions: {
+        aries: {
+          fullTitle: "Aries Rising - The Bold Initiator",
+          light: "You approach life with courage and enthusiasm, making dynamic first impressions with your direct, action-oriented energy",
+          shadow: "You may come across as impulsive or aggressive, rushing into situations without considering others' pace",
+          insight: "You project confidence and pioneering spirit, but remember that slowing down doesn't diminish your power"
+        },
+        taurus: {
+          fullTitle: "Taurus Rising - The Grounded Presence",
+          light: "You approach life with calm stability and sensual awareness, making others feel safe and grounded in your presence",
+          shadow: "You may appear stubborn or resistant to change, prioritizing comfort over growth",
+          insight: "You project steady reliability and natural beauty, but stay open to evolution and trust that change can feel good too"
+        },
+        gemini: {
+          fullTitle: "Gemini Rising - The Curious Communicator",
+          light: "You approach life with curiosity and adaptability, making engaging first impressions through your wit and versatility",
+          shadow: "You may appear scattered or superficial, flitting between interests without going deep",
+          insight: "You project intellectual curiosity and social charm, but remember that depth and consistency also create connection"
+        },
+        cancer: {
+          fullTitle: "Cancer Rising - The Caring Protector",
+          light: "You approach life with emotional sensitivity and nurturing care, making others feel safe and understood",
+          shadow: "You may appear overly protective or moody, retreating when feeling vulnerable instead of expressing needs",
+          insight: "You project warmth and emotional intelligence, but remember that protecting yourself can include clear boundaries, not just retreat"
+        },
+        leo: {
+          fullTitle: "Leo Rising - The Radiant Performer",
+          light: "You approach life with confidence and warmth, making memorable first impressions with your natural charisma",
+          shadow: "You may appear attention-seeking or dramatic, needing to be the center of attention to feel valued",
+          insight: "You project creative confidence and generous warmth, but remember that your light shines brightest when you celebrate others too"
+        },
+        virgo: {
+          fullTitle: "Virgo Rising - The Helpful Perfectionist",
+          light: "You approach life with practical wisdom and attention to detail, making others feel supported through your helpful nature",
+          shadow: "You may appear overly critical or perfectionistic, focusing on flaws instead of appreciating what works",
+          insight: "You project competence and service, but practice self-compassion and remember that you don't have to be perfect to be valuable"
+        },
+        libra: {
+          fullTitle: "Libra Rising - The Diplomatic Charmer",
+          light: "You approach life with grace and diplomacy, making harmonious first impressions through your natural charm",
+          shadow: "You may appear indecisive or people-pleasing, adjusting yourself to maintain harmony at the cost of authenticity",
+          insight: "You project beauty and social grace, but remember that your authentic voice matters as much as keeping the peace"
+        },
+        scorpio: {
+          fullTitle: "Scorpio Rising - The Intense Transformer",
+          light: "You approach life with intensity and depth, making powerful first impressions with your magnetic, perceptive presence",
+          shadow: "You may appear secretive or controlling, using intensity to keep others at a distance or maintain power",
+          insight: "You project depth and transformative power, but practice vulnerability and remember that true intimacy requires letting others in"
+        },
+        sagittarius: {
+          fullTitle: "Sagittarius Rising - The Optimistic Adventurer",
+          light: "You approach life with enthusiasm and optimism, making inspiring first impressions with your adventurous spirit",
+          shadow: "You may appear restless or preachy, seeking the next adventure without fully landing in the present",
+          insight: "You project enthusiasm and philosophical wisdom, but balance your love of expansion with presence and follow-through"
+        },
+        capricorn: {
+          fullTitle: "Capricorn Rising - The Ambitious Authority",
+          light: "You approach life with maturity and determination, making professional first impressions with your composed authority",
+          shadow: "You may appear cold or overly serious, prioritizing achievement over connection and joy",
+          insight: "You project competence and maturity, but remember that showing warmth and vulnerability deepens your natural authority"
+        },
+        aquarius: {
+          fullTitle: "Aquarius Rising - The Unique Innovator",
+          light: "You approach life with originality and vision, making memorable first impressions with your unique, progressive perspective",
+          shadow: "You may appear detached or eccentric, prioritizing ideals over human connection",
+          insight: "You project innovation and individuality, but ground your vision in present-moment connection and emotional warmth"
+        },
+        pisces: {
+          fullTitle: "Pisces Rising - The Mystical Dreamer",
+          light: "You approach life with compassion and intuition, making gentle first impressions with your empathic, spiritual presence",
+          shadow: "You may appear spacy or boundary-less, losing yourself in others' energy or escaping into fantasy",
+          insight: "You project compassion and creativity, but establish clear boundaries and ground your dreams in practical reality"
+        }
+      },
+
+      // Chinese Zodiac Descriptions
+      chineseZodiacDescriptions: {
+        rat: {
+          fullTitle: "Rat - The Clever Opportunist",
+          light: "You are intelligent, adaptable, and resourceful, naturally spotting opportunities and navigating challenges with wit",
+          shadow: "You may become overly opportunistic or hoard resources out of fear of scarcity",
+          insight: "You are a clever problem-solver who thrives on resourcefulness, but trust in abundance and use your gifts to create value for all"
+        },
+        ox: {
+          fullTitle: "Ox - The Steadfast Worker",
+          light: "You are dependable, patient, and strong-willed, building lasting success through dedicated effort and persistence",
+          shadow: "You may become stubborn or overwork yourself, resisting change and prioritizing duty over self-care",
+          insight: "You are a pillar of reliability who creates through steady effort, but remember to rest and stay open to new approaches"
+        },
+        tiger: {
+          fullTitle: "Tiger - The Courageous Leader",
+          light: "You are courageous, confident, and competitive, leading with bold energy and inspiring others to take risks",
+          shadow: "You may become aggressive or reckless, acting impulsively without considering consequences",
+          insight: "You are a brave leader with powerful energy, but balance your courage with wisdom and consider the impact of your actions"
+        },
+        rabbit: {
+          fullTitle: "Rabbit - The Gentle Diplomat",
+          light: "You are gentle, compassionate, and artistic, creating harmony and beauty with your refined sensitivity",
+          shadow: "You may become conflict-avoidant or overly cautious, missing opportunities due to fear of disruption",
+          insight: "You are a peaceful artist who creates beauty and harmony, but trust your resilience and know that you can handle necessary change"
+        },
+        dragon: {
+          fullTitle: "Dragon - The Charismatic Visionary",
+          light: "You are charismatic, ambitious, and visionary, inspiring others with your confidence and magnetic presence",
+          shadow: "You may become arrogant or domineering, expecting others to follow without question",
+          insight: "You are a natural leader with powerful vision, but remember that true charisma empowers others rather than demanding submission"
+        },
+        snake: {
+          fullTitle: "Snake - The Wise Strategist",
+          light: "You are wise, intuitive, and mysterious, seeing beneath surfaces with strategic insight and profound understanding",
+          shadow: "You may become secretive or manipulative, using your insight to control rather than guide",
+          insight: "You are a perceptive strategist with deep wisdom, but practice transparency and use your insight to serve rather than control"
+        },
+        horse: {
+          fullTitle: "Horse - The Independent Adventurer",
+          light: "You are independent, energetic, and freedom-loving, thriving when pursuing new adventures and experiences",
+          shadow: "You may become restless or uncommitted, avoiding depth when freedom feels threatened",
+          insight: "You are a free spirit with natural enthusiasm, but balance your need for freedom with meaningful connections and commitments"
+        },
+        goat: {
+          fullTitle: "Goat - The Creative Empath",
+          light: "You are creative, gentle, and empathetic, bringing artistic beauty and emotional sensitivity to everything you touch",
+          shadow: "You may become dependent or overly sensitive, struggling with practical realities and self-sufficiency",
+          insight: "You are a sensitive artist with profound empathy, but cultivate inner strength and practical skills to support your creative gifts"
+        },
+        monkey: {
+          fullTitle: "Monkey - The Playful Innovator",
+          light: "You are clever, curious, and playful, bringing innovative solutions and joyful energy to every challenge",
+          shadow: "You may become mischievous or irresponsible, using your cleverness to avoid commitment or deeper work",
+          insight: "You are a brilliant innovator with infectious playfulness, but channel your gifts toward meaningful goals that challenge you to grow"
+        },
+        rooster: {
+          fullTitle: "Rooster - The Confident Observer",
+          light: "You are confident, organized, and observant, bringing precision and proud dedication to everything you commit to",
+          shadow: "You may become overly critical or boastful, needing recognition and perfection from yourself and others",
+          insight: "You are a meticulous organizer with natural confidence, but practice humility and remember that imperfection is part of being human"
+        },
+        dog: {
+          fullTitle: "Dog - The Loyal Guardian",
+          light: "You are loyal, honest, and protective, naturally championing justice and caring deeply for those you love",
+          shadow: "You may become anxious or overly cynical, seeing danger everywhere and struggling to trust",
+          insight: "You are a devoted guardian with strong values, but balance your protective instincts with trust and remember that not all risks are threats"
+        },
+        pig: {
+          fullTitle: "Pig - The Generous Heart",
+          light: "You are generous, optimistic, and sincere, bringing warmth and abundance through your big heart and honest nature",
+          shadow: "You may become indulgent or naive, trusting too easily or seeking comfort through excess",
+          insight: "You are a warm-hearted soul who sees the good in others, but balance your generosity with discernment and healthy boundaries"
+        }
+      },
+
+      // Chinese Element Descriptions
+      chineseElementDescriptions: {
+        wood: {
+          fullTitle: "Wood Element - The Growing Creator",
+          light: "You are creative, expansive, and growth-oriented, naturally bringing new ideas and possibilities into being",
+          shadow: "You may become scattered or overly idealistic, starting many things without grounding them in reality",
+          insight: "You are a creative force who initiates growth, but balance your expansive nature with practical follow-through"
+        },
+        fire: {
+          fullTitle: "Fire Element - The Passionate Transformer",
+          light: "You are passionate, dynamic, and transformative, bringing intense energy and inspiring change wherever you go",
+          shadow: "You may burn out or become aggressive, consuming yourself and others with uncontrolled intensity",
+          insight: "You are a transformative force with powerful energy, but channel your passion sustainably and remember to tend your own flame"
+        },
+        earth: {
+          fullTitle: "Earth Element - The Stable Nurturer",
+          light: "You are grounded, reliable, and nurturing, creating stable foundations and caring for others with practical wisdom",
+          shadow: "You may become stubborn or resistant to change, prioritizing security over necessary growth",
+          insight: "You are a stabilizing force with practical wisdom, but stay open to new possibilities and trust the process of change"
+        },
+        metal: {
+          fullTitle: "Metal Element - The Refined Achiever",
+          light: "You are structured, resilient, and refined, bringing precision and high standards to everything you create",
+          shadow: "You may become rigid or overly critical, cutting away what doesn't meet your exacting standards",
+          insight: "You are a master of refinement with strong principles, but balance your standards with flexibility and compassion"
+        },
+        water: {
+          fullTitle: "Water Element - The Intuitive Flow",
+          light: "You are adaptive, intuitive, and flowing, naturally navigating life's changes with emotional wisdom and depth",
+          shadow: "You may lose boundaries or become overwhelmed, absorbing too much without maintaining your own shape",
+          insight: "You are an intuitive force who flows with life, but maintain your boundaries and remember that water also has its own direction"
+        }
+      },
+
       // Sun Sign Descriptions
       sunSignDescriptions: {
         aries: {
