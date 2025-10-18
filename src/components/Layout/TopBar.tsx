@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Search, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SoulOrbAvatar } from "@/components/ui/avatar";
+
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -25,7 +25,6 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Left: Brand */}
         <div className="flex items-center gap-3">
           <Link to="/" className="flex items-center gap-3">
-            <SoulOrbAvatar size="xs" />
             <span className="font-semibold text-sm sm:text-base">Soul Sync</span>
           </Link>
         </div>
