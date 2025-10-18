@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PureHACSInterface } from "@/components/hacs/PureHACSInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -76,8 +75,6 @@ const CoachPure = () => {
 
   const remindersContent = (
     <div className="space-y-4 h-full">
-      <ActiveReminders />
-      
       <CosmicCard className="p-4">
         <h3 className="font-semibold mb-3 flex items-center">
           <RotateCcw className="h-4 w-4 mr-2" />
@@ -92,7 +89,6 @@ const CoachPure = () => {
           Show Status
         </Button>
       </CosmicCard>
-
     </div>
   );
 
