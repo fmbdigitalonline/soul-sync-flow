@@ -11,7 +11,23 @@ export const getPersonalityDescription = (
   shadow: string;
   insight: string;
 } => {
-  const normalizedKey = String(key).toLowerCase().replace(/\s+/g, '');
+  // Clean the key based on category type
+  let cleanedKey = String(key);
+  
+  // For zodiac signs (Sun/Moon/Rising), extract just the sign name (remove degrees)
+  if (category.toLowerCase().includes('sign')) {
+    // "Aquarius 24.0°" → "Aquarius"
+    cleanedKey = cleanedKey.split(' ')[0];
+  }
+  
+  // For Chinese Zodiac, extract just the animal (remove element)
+  if (category.toLowerCase().includes('chinese') || category.toLowerCase().includes('zodiac')) {
+    // "Horse Earth" → "Horse"
+    cleanedKey = cleanedKey.split(' ')[0];
+  }
+  
+  // Normalize: lowercase, remove spaces and special chars
+  const normalizedKey = cleanedKey.toLowerCase().replace(/[^\w]/g, '');
   const descKey = `blueprint.${category}.${normalizedKey}`;
   
   try {
@@ -19,6 +35,7 @@ export const getPersonalityDescription = (
     
     // Check if translation exists and has required structure
     if (desc === descKey || typeof desc !== 'object' || !desc.light) {
+      console.warn(`Missing translation for: ${descKey} (original key: "${key}")`);
       return getFallbackDescription(category, key);
     }
     
@@ -29,6 +46,7 @@ export const getPersonalityDescription = (
       insight: desc.insight || "You have unique gifts that contribute to your journey of self-discovery"
     };
   } catch (error) {
+    console.error(`Error retrieving translation for ${descKey}:`, error);
     return getFallbackDescription(category, key);
   }
 };
