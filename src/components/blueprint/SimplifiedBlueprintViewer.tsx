@@ -265,7 +265,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{hdType}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{t('blueprint.descriptions.sustainableEnergy')}</p>
                 </div>
-                <div className="p-3 bg-soul-purple/5 rounded-3xl">
+                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.decisionAuthority')}</h4>
                   <p className={`${getTextSize('text-xl')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{authority}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{t('blueprint.descriptions.innerAuthority')}</p>
