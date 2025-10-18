@@ -95,7 +95,7 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
               </p>
             )}
             
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
               {subTask.estimatedTime && (
                 <Badge variant="outline" className="text-xs">
                   <Clock className="h-3 w-3 mr-1" />
@@ -108,6 +108,39 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
                   <Zap className="h-3 w-3 mr-1" />
                   {subTask.energyLevel}
                 </Badge>
+              )}
+              
+              {!subTask.completed && (
+                <>
+                  <AssistanceButton
+                    type="stuck"
+                    onRequest={handleAssistanceRequest}
+                    isLoading={isRequestingHelp}
+                    hasResponse={!!assistanceResponse}
+                    compact={true}
+                  />
+                  <AssistanceButton
+                    type="need_details"
+                    onRequest={handleAssistanceRequest}
+                    isLoading={isRequestingHelp}
+                    hasResponse={!!assistanceResponse}
+                    compact={true}
+                  />
+                  <AssistanceButton
+                    type="how_to"
+                    onRequest={handleAssistanceRequest}
+                    isLoading={isRequestingHelp}
+                    hasResponse={!!assistanceResponse}
+                    compact={true}
+                  />
+                  <AssistanceButton
+                    type="examples"
+                    onRequest={handleAssistanceRequest}
+                    isLoading={isRequestingHelp}
+                    hasResponse={!!assistanceResponse}
+                    compact={true}
+                  />
+                </>
               )}
             </div>
           </div>
@@ -124,41 +157,6 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
           )}
         </div>
 
-        {/* Interactive Assistance Buttons */}
-        {!subTask.completed && !compact && (
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            <div className="flex flex-wrap gap-2">
-              <AssistanceButton
-                type="stuck"
-                onRequest={handleAssistanceRequest}
-                isLoading={isRequestingHelp}
-                hasResponse={!!assistanceResponse}
-                compact={true}
-              />
-              <AssistanceButton
-                type="need_details"
-                onRequest={handleAssistanceRequest}
-                isLoading={isRequestingHelp}
-                hasResponse={!!assistanceResponse}
-                compact={true}
-              />
-              <AssistanceButton
-                type="how_to"
-                onRequest={handleAssistanceRequest}
-                isLoading={isRequestingHelp}
-                hasResponse={!!assistanceResponse}
-                compact={true}
-              />
-              <AssistanceButton
-                type="examples"
-                onRequest={handleAssistanceRequest}
-                isLoading={isRequestingHelp}
-                hasResponse={!!assistanceResponse}
-                compact={true}
-              />
-            </div>
-          </div>
-        )}
       </Card>
 
       {/* Help Panel */}

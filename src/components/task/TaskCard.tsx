@@ -10,9 +10,6 @@ import { TaskStatusSelector } from "./TaskStatusSelector";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useTaskCompletion } from "@/hooks/use-task-completion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { AssistanceButton } from "@/components/ui/assistance-button";
-import { HelpPanel } from "@/components/ui/help-panel";
-import { interactiveAssistanceService } from "@/services/interactive-assistance-service";
 
 interface TaskCardProps {
   task: any;
@@ -34,8 +31,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const [showModal, setShowModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [localStatus, setLocalStatus] = useState(task.status || 'todo');
-  const [assistanceResponse, setAssistanceResponse] = useState<any>(null);
-  const [isRequestingHelp, setIsRequestingHelp] = useState(false);
   const { spacing, getTextSize, touchTargetSize, isFoldDevice, isUltraNarrow } = useResponsiveLayout();
   const { t } = useLanguage();
   
@@ -102,32 +97,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       } finally {
         setIsProcessing(false);
       }
-    }
-  };
-
-  const handleAssistanceRequest = async (
-    type: 'stuck' | 'need_details' | 'how_to' | 'examples',
-    message?: string
-  ) => {
-    setIsRequestingHelp(true);
-    try {
-      const response = await interactiveAssistanceService.requestAssistance(
-        task.id,
-        task.title,
-        type,
-        {
-          description: task.short_description,
-          status: task.status,
-          estimatedDuration: task.estimated_duration,
-          energyLevel: task.energy_level_required
-        },
-        message
-      );
-      setAssistanceResponse(response);
-    } catch (error) {
-      console.error('Error requesting assistance:', error);
-    } finally {
-      setIsRequestingHelp(false);
     }
   };
 
@@ -243,52 +212,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               <span>{t('tasks.actions.getCoach')}</span>
             </button>
           </div>
-
-          {/* Interactive Assistance Buttons */}
-          {!isCompleted && currentStatus !== 'completed' && (
-            <div className="mt-3 pt-3 border-t border-border/50">
-              <div className="flex flex-wrap gap-2">
-                <AssistanceButton
-                  type="stuck"
-                  onRequest={handleAssistanceRequest}
-                  isLoading={isRequestingHelp}
-                  hasResponse={!!assistanceResponse}
-                  compact={true}
-                />
-                <AssistanceButton
-                  type="need_details"
-                  onRequest={handleAssistanceRequest}
-                  isLoading={isRequestingHelp}
-                  hasResponse={!!assistanceResponse}
-                  compact={true}
-                />
-                <AssistanceButton
-                  type="how_to"
-                  onRequest={handleAssistanceRequest}
-                  isLoading={isRequestingHelp}
-                  hasResponse={!!assistanceResponse}
-                  compact={true}
-                />
-                <AssistanceButton
-                  type="examples"
-                  onRequest={handleAssistanceRequest}
-                  isLoading={isRequestingHelp}
-                  hasResponse={!!assistanceResponse}
-                  compact={true}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Help Panel */}
-          {assistanceResponse && (
-            <div className="mt-3">
-              <HelpPanel
-                response={assistanceResponse}
-                compact={true}
-              />
-            </div>
-          )}
         </CardContent>
       </Card>
       <ReadyToBeginModal
