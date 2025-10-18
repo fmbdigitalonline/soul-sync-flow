@@ -43,11 +43,27 @@ export const getPersonalityDescription = (
   try {
     const desc = t(descKey);
     
+    // Debug logging
+    console.log(`🔍 Translation lookup:`, {
+      category,
+      originalKey: key,
+      normalizedKey,
+      descKey,
+      descType: typeof desc,
+      descValue: desc,
+      isObject: typeof desc === 'object',
+      hasLight: desc && typeof desc === 'object' && 'light' in desc,
+      hasShadow: desc && typeof desc === 'object' && 'shadow' in desc,
+      hasInsight: desc && typeof desc === 'object' && 'insight' in desc
+    });
+    
     // Check if translation exists and has required structure
     if (desc === descKey || typeof desc !== 'object' || !desc.light) {
-      console.warn(`Missing translation for: ${descKey} (original key: "${key}")`);
+      console.warn(`❌ Missing translation for: ${descKey} (original key: "${key}")`);
       return getFallbackDescription(category, key);
     }
+    
+    console.log(`✅ Translation found for: ${descKey}`);
     
     return {
       fullTitle: desc.fullTitle || `${category} ${key}`,
