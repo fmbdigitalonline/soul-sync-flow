@@ -24,25 +24,25 @@ const assistanceConfig = {
   stuck: {
     icon: HelpCircle,
     label: "I'm stuck",
-    color: 'bg-orange-500 hover:bg-orange-600',
+    iconColor: 'text-orange-500',
     description: 'Get step-by-step help to move forward'
   },
   need_details: {
     icon: MessageCircle,
     label: 'Need more details',
-    color: 'bg-blue-500 hover:bg-blue-600',
+    iconColor: 'text-blue-500',
     description: 'Get specific instructions and examples'
   },
   how_to: {
     icon: BookOpen,
     label: 'How do I...?',
-    color: 'bg-purple-500 hover:bg-purple-600',
+    iconColor: 'text-purple-500',
     description: 'Learn the exact process and tools needed'
   },
   examples: {
     icon: Lightbulb,
     label: 'Show examples',
-    color: 'bg-green-500 hover:bg-green-600',
+    iconColor: 'text-green-500',
     description: 'See concrete examples and templates'
   }
 };
@@ -73,16 +73,16 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
 
   if (compact) {
     return (
-      <Button
+      <Badge
+        variant="outline"
         onClick={handleRequest}
-        disabled={isLoading}
-        size="sm"
-        className={`${config.color} text-white text-xs px-2 py-1 h-7`}
+        className="text-xs cursor-pointer hover:bg-gray-50 transition-colors inline-flex items-center gap-1 px-2 py-1 h-7"
       >
-        <Icon className="h-3 w-3 mr-1" />
-        {config.label}
-        {hasResponse && <CheckCircle2 className="h-3 w-3 ml-1" />}
-      </Button>
+        <Icon className={`h-3 w-3 ${config.iconColor}`} />
+        <span className="text-foreground">{config.label}</span>
+        {isLoading && <Clock className="h-3 w-3 animate-spin text-muted-foreground" />}
+        {hasResponse && <CheckCircle2 className="h-3 w-3 text-green-600" />}
+      </Badge>
     );
   }
 
@@ -92,12 +92,13 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
         <Button
           onClick={handleRequest}
           disabled={isLoading}
-          className={`${config.color} text-white text-sm px-3 py-2 h-8 flex-1`}
+          variant="outline"
+          className="text-sm px-3 py-2 h-8 flex-1 hover:bg-gray-50"
         >
-          <Icon className="h-4 w-4 mr-2" />
+          <Icon className={`h-4 w-4 mr-2 ${config.iconColor}`} />
           {config.label}
           {isLoading && <Clock className="h-4 w-4 ml-2 animate-spin" />}
-          {hasResponse && <CheckCircle2 className="h-4 w-4 ml-2" />}
+          {hasResponse && <CheckCircle2 className="h-4 w-4 ml-2 text-green-600" />}
         </Button>
         
         <Button
@@ -139,7 +140,8 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
             <Button
               onClick={handleRequest}
               disabled={isLoading}
-              className={`${config.color} text-white text-xs px-3 py-1`}
+              variant="default"
+              className="text-xs px-3 py-1"
             >
               Get Help
             </Button>
