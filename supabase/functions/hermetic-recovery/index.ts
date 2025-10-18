@@ -199,17 +199,22 @@ serve(async (req) => {
       .eq('id', jobId);
     
     // PHASE 4: Trigger semantic embedding generation (non-blocking background task)
-    console.log('🔮 HERMETIC RECOVERY: Queuing semantic embedding generation...');
+    console.log('🔮 HERMETIC RECOVERY: Triggering semantic embedding generation...');
+    console.log('   └─ User ID:', job.user_id);
+    console.log('   └─ Function: process-blueprint-embeddings-v3');
+    console.log('   └─ Force Reprocess: true');
+    
     EdgeRuntime.waitUntil(
-      supabase.functions.invoke('process-blueprint-embeddings', {
+      supabase.functions.invoke('process-blueprint-embeddings-v3', {
         body: { 
           userId: job.user_id,
           forceReprocess: true
         }
       }).then(result => {
-        console.log('✅ Semantic embeddings queued successfully:', result.data);
+        console.log('✅ HERMETIC RECOVERY: Semantic embeddings queued successfully');
+        console.log('   └─ Result:', result.data);
       }).catch(err => {
-        console.warn('⚠️ Embedding generation failed (non-critical):', err.message);
+        console.warn('⚠️ HERMETIC RECOVERY: Embedding generation failed (non-critical):', err.message);
       })
     );
       

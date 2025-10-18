@@ -14,11 +14,13 @@ export const OracleInitializationBanner = ({ userId }: OracleInitializationBanne
   const [embeddingCount, setEmbeddingCount] = useState<number | null>(null);
   const [hasLegacyEmbeddings, setHasLegacyEmbeddings] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const [hasActiveEmbeddingJob, setHasActiveEmbeddingJob] = useState(false);
   const { triggerProcessing, isProcessing, processingResult, currentJob } = useManualBlueprintProcessor();
   const { toast } = useToast();
 
   useEffect(() => {
     checkEmbeddingStatus();
+    checkActiveEmbeddingJob();
   }, [userId]);
 
   useEffect(() => {
@@ -59,6 +61,28 @@ export const OracleInitializationBanner = ({ userId }: OracleInitializationBanne
       console.error('Failed to check embedding status:', error);
     } finally {
       setIsChecking(false);
+    }
+  };
+
+  const checkActiveEmbeddingJob = async () => {
+    try {
+      const { data: activeJobs, error } = await supabase
+        .from('embedding_processing_jobs')
+        .select('id, status, progress_percentage, current_step')
+        .eq('user_id', userId)
+        .in('status', ['pending', 'processing'])
+        .limit(1);
+
+      if (error) throw error;
+      
+      const hasActive = activeJobs && activeJobs.length > 0;
+      setHasActiveEmbeddingJob(hasActive);
+      
+      if (hasActive) {
+        console.log('🔄 ORACLE: Active embedding job detected:', activeJobs[0]);
+      }
+    } catch (error) {
+      console.error('Failed to check active embedding jobs:', error);
     }
   };
 
@@ -196,33 +220,55 @@ export const OracleInitializationBanner = ({ userId }: OracleInitializationBanne
     );
   }
 
-  return (
-    <div className="flex items-center justify-between gap-4 px-4 py-3 bg-accent/50 rounded-lg border border-accent">
-      <div className="flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-accent-foreground" />
+  // Show processing state if active embedding job exists
+  if (hasActiveEmbeddingJob && !embeddingCount) {
+    return (
+      <div className="flex items-center gap-2 px-4 py-3 bg-primary/10 rounded-lg border border-primary/20">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
         <div>
-          <p className="text-sm font-medium text-accent-foreground">Oracle Initialization Required</p>
-          <p className="text-xs text-muted-foreground">Process your blueprint for personalized insights</p>
+          <p className="text-sm font-medium text-primary">
+            Oracle Intelligence Initializing...
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Semantic memories are being generated automatically
+          </p>
         </div>
       </div>
-      <Button
-        onClick={handleInitialize}
-        disabled={isProcessing}
-        variant="default"
-        size="sm"
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing...
-          </>
-        ) : (
-          <>
-            <Sparkles className="mr-2 h-4 w-4" />
-            Initialize Oracle
-          </>
-        )}
-      </Button>
-    </div>
-  );
+    );
+  }
+
+  // Original "Initialize Oracle" button only if no active job
+  if (!embeddingCount && !hasActiveEmbeddingJob) {
+    return (
+      <div className="flex items-center justify-between gap-4 px-4 py-3 bg-accent/50 rounded-lg border border-accent">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-accent-foreground" />
+          <div>
+            <p className="text-sm font-medium text-accent-foreground">Oracle Initialization Required</p>
+            <p className="text-xs text-muted-foreground">Process your blueprint for personalized insights</p>
+          </div>
+        </div>
+        <Button
+          onClick={handleInitialize}
+          disabled={isProcessing}
+          variant="default"
+          size="sm"
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Initialize Oracle
+            </>
+          )}
+        </Button>
+      </div>
+    );
+  }
+
+  return null;
 };

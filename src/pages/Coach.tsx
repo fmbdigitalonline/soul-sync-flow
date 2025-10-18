@@ -19,7 +19,6 @@ import { OracleInitializationBanner } from "@/components/coach/OracleInitializat
 
 const Coach = () => {
   const [userId, setUserId] = useState<string | null>(null);
-  const [hermeticExtractionTriggered, setHermeticExtractionTriggered] = useState(false);
   
   const {
     messages,
@@ -42,80 +41,30 @@ const Coach = () => {
   
   const { isMobile } = useIsMobile();
   
-  // Get current user ID and trigger Hermetic 2.0 extraction if needed
+  // Get current user ID - Hermetic extraction now happens automatically via hermetic-recovery
   useEffect(() => {
-    const initializeHermeticExtraction = async () => {
+    const checkHermeticStatus = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       
       setUserId(user.id);
       
-      // Check if hermetic intelligence already exists
+      // Just check if intelligence exists, don't trigger anything
       const { data: existingIntelligence } = await supabase
         .from('hermetic_structured_intelligence')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
       
-      if (existingIntelligence || hermeticExtractionTriggered) {
-        console.log('✅ Hermetic intelligence already exists or extraction already triggered');
-        return;
-      }
-      
-      // Find completed hermetic jobs
-      const { data: completedJobs, error: jobError } = await supabase
-        .from('hermetic_processing_jobs')
-        .select('id, status, progress_percentage')
-        .eq('user_id', user.id)
-        .eq('status', 'completed')
-        .eq('progress_percentage', 100)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      
-      if (jobError || !completedJobs || completedJobs.length === 0) {
-        console.log('⚠️ No completed hermetic jobs found for extraction');
-        return;
-      }
-      
-      const jobToRecover = completedJobs[0];
-      console.log('🔧 Triggering Hermetic 2.0 extraction for job:', jobToRecover.id);
-      
-      setHermeticExtractionTriggered(true);
-      
-      toast({
-        title: "🧬 Extracting Hermetic Intelligence",
-        description: "Analyzing 13 dimensions of your consciousness...",
-      });
-      
-      try {
-        const { data: recoveryResult, error: recoveryError } = await supabase.functions.invoke('hermetic-recovery', {
-          body: { job_id: jobToRecover.id }
-        });
-        
-        if (recoveryError) throw recoveryError;
-        
-        if (recoveryResult?.success) {
-          toast({
-            title: "✅ Hermetic Intelligence Activated",
-            description: "All 13 consciousness dimensions are now integrated into Oracle.",
-          });
-          console.log('✅ Hermetic 2.0 extraction completed:', recoveryResult);
-        } else {
-          throw new Error(recoveryResult?.error || 'Extraction failed');
-        }
-      } catch (error) {
-        console.error('❌ Hermetic extraction failed:', error);
-        toast({
-          title: "❌ Extraction Failed",
-          description: error instanceof Error ? error.message : 'Unknown error occurred',
-          variant: "destructive"
-        });
-        setHermeticExtractionTriggered(false);
+      if (existingIntelligence) {
+        console.log('✅ Hermetic intelligence already exists');
+      } else {
+        console.log('⏳ Hermetic intelligence not yet generated (will auto-generate via hermetic-recovery)');
       }
     };
     
-    initializeHermeticExtraction();
-  }, [hermeticExtractionTriggered, toast]);
+    checkHermeticStatus();
+  }, []);
 
   const handleSendMessage = async (message: string) => {
     await sendMessage(message);
