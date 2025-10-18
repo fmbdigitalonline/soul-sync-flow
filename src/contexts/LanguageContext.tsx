@@ -4844,9 +4844,15 @@ Help them transform their dream interest into a specific, actionable goal. Use t
         }
       },
 
-      // Authority Descriptions (Dutch)
+      // Authority Descriptions (Dutch) - Include both English and Dutch keys
       authorityDescriptions: {
         sacral: {
+          fullTitle: "Sacrale Autoriteit",
+          light: "Je hebt directe buikresponsen die je de weg wijzen met onmiddellijke ja/nee antwoorden in het moment",
+          shadow: "Je kunt je mentale geest vertrouwen in plaats van je buikrespons of negeren wat je lichaam je vertelt",
+          insight: "Vertrouw je onmiddellijke buikrespons, niet je gedachten - je lichaam weet voordat je geest begrijpt"
+        },
+        sacrale: {
           fullTitle: "Sacrale Autoriteit",
           light: "Je hebt directe buikresponsen die je de weg wijzen met onmiddellijke ja/nee antwoorden in het moment",
           shadow: "Je kunt je mentale geest vertrouwen in plaats van je buikrespons of negeren wat je lichaam je vertelt",
@@ -4858,7 +4864,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt impulsieve beslissingen nemen in emotionele hoogte- of laagtepunten zonder te wachten op helderheid",
           insight: "Wacht op emotionele helderheid - er is geen waarheid in het moment, alleen in de tijd door je golf heen"
         },
+        emotionele: {
+          fullTitle: "Emotionele Autoriteit",
+          light: "Je vindt helderheid door tijd te nemen en door je emotionele golf te rijden, ziet alle kanten in de tijd",
+          shadow: "Je kunt impulsieve beslissingen nemen in emotionele hoogte- of laagtepunten zonder te wachten op helderheid",
+          insight: "Wacht op emotionele helderheid - er is geen waarheid in het moment, alleen in de tijd door je golf heen"
+        },
         splenic: {
+          fullTitle: "Splenische Autoriteit",
+          light: "Je hebt onmiddellijke intuïtieve flitsen die je in het moment begeleiden met subtiele lichaamssignalen",
+          shadow: "Je kunt je splenische signalen missen door te veel na te denken of je eerste instinct negeren",
+          insight: "Vertrouw je eerste instinct - het spreekt zachtjes en slechts één keer in het nu moment"
+        },
+        splenische: {
           fullTitle: "Splenische Autoriteit",
           light: "Je hebt onmiddellijke intuïtieve flitsen die je in het moment begeleiden met subtiele lichaamssignalen",
           shadow: "Je kunt je splenische signalen missen door te veel na te denken of je eerste instinct negeren",
@@ -4876,7 +4894,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt verward raken wanneer je alleen bent zonder om te praten of te veel beïnvloed worden door anderen' stemmen",
           insight: "Praat door je beslissingen met vertrouwde anderen - je stem draagt je waarheid wanneer je jezelf hoort"
         },
+        zelfgeprojecteerde: {
+          fullTitle: "Zelf-Geprojecteerde Autoriteit",
+          light: "Je vindt helderheid door hardop te praten en je eigen waarheid te horen resoneren in je stem",
+          shadow: "Je kunt verward raken wanneer je alleen bent zonder om te praten of te veel beïnvloed worden door anderen' stemmen",
+          insight: "Praat door je beslissingen met vertrouwde anderen - je stem draagt je waarheid wanneer je jezelf hoort"
+        },
         environmental: {
+          fullTitle: "Omgevings Autoriteit",
+          light: "Je vindt helderheid door in de juiste omgevingen te zijn en te voelen wat waar aanvoelt in verschillende ruimtes",
+          shadow: "Je kunt overweldigd raken door verkeerde omgevingen of worstelen met beslissingen in onstabiele ruimtes",
+          insight: "Neem tijd in verschillende omgevingen voordat je beslist - je omgeving vertelt je wat juist is"
+        },
+        omgevings: {
           fullTitle: "Omgevings Autoriteit",
           light: "Je vindt helderheid door in de juiste omgevingen te zijn en te voelen wat waar aanvoelt in verschillende ruimtes",
           shadow: "Je kunt overweldigd raken door verkeerde omgevingen of worstelen met beslissingen in onstabiele ruimtes",
@@ -4887,12 +4917,24 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           light: "Je vindt helderheid door een volledige maancyclus te wachten, ziet alle perspectieven met objectieve helderheid",
           shadow: "Je kunt gedrukt voelen om snel te beslissen of teleurgesteld door alle kanten te ervaren",
           insight: "Wacht een volledige maancyclus voor grote beslissingen - je hebt tijd nodig om alle perspectieven te verwerken"
+        },
+        maancyclus: {
+          fullTitle: "Maancyclus Autoriteit",
+          light: "Je vindt helderheid door een volledige maancyclus te wachten, ziet alle perspectieven met objectieve helderheid",
+          shadow: "Je kunt gedrukt voelen om snel te beslissen of teleurgesteld door alle kanten te ervaren",
+          insight: "Wacht een volledige maancyclus voor grote beslissingen - je hebt tijd nodig om alle perspectieven te verwerken"
         }
       },
 
-      // Strategy Descriptions (Dutch) - Include both original and normalized keys
+      // Strategy Descriptions (Dutch) - Include both English and Dutch keys
       strategyDescriptions: {
         respond: {
+          fullTitle: "Strategie: Reageren",
+          light: "Je bent ontworpen om te wachten tot het leven naar je toekomt, dan reageren met je sacrale ja of nee",
+          shadow: "Je kunt gefrustreerd voelen wanneer je initieert in plaats van te reageren op wat het leven brengt",
+          insight: "Je hebt duurzame energie wanneer je reageert op kansen die resoneren, maar vertrouw dat de juiste dingen naar je toe zullen komen"
+        },
+        reageren: {
           fullTitle: "Strategie: Reageren",
           light: "Je bent ontworpen om te wachten tot het leven naar je toekomt, dan reageren met je sacrale ja of nee",
           shadow: "Je kunt gefrustreerd voelen wanneer je initieert in plaats van te reageren op wat het leven brengt",
@@ -4910,7 +4952,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt bitter voelen wanneer je begeleiding wordt genegeerd of wanneer je onuitgenodigd advies geeft",
           insight: "Je bent hier om te begeleiden wanneer uitgenodigd, maar vertrouw dat de juiste mensen je wijsheid zullen erkennen en zoeken"
         },
+        wachtopdeuitnodiging: {
+          fullTitle: "Strategie: Wacht Op De Uitnodiging",
+          light: "Je bent ontworpen om te wachten op erkenning en uitnodiging voordat je je inzichten en begeleiding deelt",
+          shadow: "Je kunt bitter voelen wanneer je begeleiding wordt genegeerd of wanneer je onuitgenodigd advies geeft",
+          insight: "Je bent hier om te begeleiden wanneer uitgenodigd, maar vertrouw dat de juiste mensen je wijsheid zullen erkennen en zoeken"
+        },
         inform: {
+          fullTitle: "Strategie: Informeren",
+          light: "Je bent ontworpen om anderen te informeren over je plannen voordat je actie onderneemt om weerstand te verminderen",
+          shadow: "Je kunt woedend voelen wanneer anderen weerstand bieden of proberen je onafhankelijke acties te controleren",
+          insight: "Je bent hier om te initiëren, maar anderen informeren over je plannen creëert ondersteuning in plaats van weerstand"
+        },
+        informeren: {
           fullTitle: "Strategie: Informeren",
           light: "Je bent ontworpen om anderen te informeren over je plannen voordat je actie onderneemt om weerstand te verminderen",
           shadow: "Je kunt woedend voelen wanneer anderen weerstand bieden of proberen je onafhankelijke acties te controleren",
@@ -4923,6 +4977,12 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           insight: "Je bent hier om alle kanten duidelijk te zien, maar eer je behoefte aan tijd om te verwerken voordat je commit"
         },
         waitalunarcycle: {
+          fullTitle: "Strategie: Wacht Een Maancyclus",
+          light: "Je bent ontworpen om te wachten door een volledige maancyclus om helderheid te krijgen over belangrijke beslissingen",
+          shadow: "Je kunt teleurgesteld voelen door alle perspectieven te ervaren of gedrukt te voelen om snel te beslissen",
+          insight: "Je bent hier om alle kanten duidelijk te zien, maar eer je behoefte aan tijd om te verwerken voordat je commit"
+        },
+        wachteenmaancyclus: {
           fullTitle: "Strategie: Wacht Een Maancyclus",
           light: "Je bent ontworpen om te wachten door een volledige maancyclus om helderheid te krijgen over belangrijke beslissingen",
           shadow: "Je kunt teleurgesteld voelen door alle perspectieven te ervaren of gedrukt te voelen om snel te beslissen",
@@ -5012,9 +5072,15 @@ Help them transform their dream interest into a specific, actionable goal. Use t
         }
       },
 
-      // Pacing Descriptions (Dutch)
+      // Pacing Descriptions (Dutch) - Include both English and Dutch keys
       pacingDescriptions: {
         steady: {
+          fullTitle: "Gestaag Tempo",
+          light: "Je hebt consistente energie die het beste werkt met regelmatige, duurzame ritmes zonder extreme pieken",
+          shadow: "Je kunt worstelen met intense bursts of gedrukt voelen om sneller te gaan dan natuurlijk aanvoelt",
+          insight: "Je excelleert in duurzaam gestaag tempo, maar eer je natuurlijke ritme in plaats van anderen' snelheid"
+        },
+        gestaag: {
           fullTitle: "Gestaag Tempo",
           light: "Je hebt consistente energie die het beste werkt met regelmatige, duurzame ritmes zonder extreme pieken",
           shadow: "Je kunt worstelen met intense bursts of gedrukt voelen om sneller te gaan dan natuurlijk aanvoelt",
@@ -5031,12 +5097,24 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           light: "Je hebt betrouwbare energie die langdurige inspanning kan ondersteunen zonder uit te branden wanneer je reageert",
           shadow: "Je kunt jezelf overwerken door je capaciteit te overschatten of je lichaamssignalen voor rust negeren",
           insight: "Je hebt duurzame energie wanneer je reageert op wat resoneert, maar luister naar je lichaamssignalen om burn-out te voorkomen"
+        },
+        duurzaam: {
+          fullTitle: "Duurzaam Tempo",
+          light: "Je hebt betrouwbare energie die langdurige inspanning kan ondersteunen zonder uit te branden wanneer je reageert",
+          shadow: "Je kunt jezelf overwerken door je capaciteit te overschatten of je lichaamssignalen voor rust negeren",
+          insight: "Je hebt duurzame energie wanneer je reageert op wat resoneert, maar luister naar je lichaamssignalen om burn-out te voorkomen"
         }
       },
 
-      // Sun Sign Descriptions (Dutch)
+      // Sun Sign Descriptions (Dutch) - Include both English and Dutch keys
       sunSignDescriptions: {
         aries: {
+          fullTitle: "Ram Zon - De Pionier",
+          light: "Je brengt moedige pionierenergie, initieert nieuwe beginningen met vertrouwen en inspireert anderen actie te nemen",
+          shadow: "Je kunt te impulsief of agressief worden, anderen overrijden of worstelen met geduld en follow-through",
+          insight: "Je bent een natuurlijke leider en starter, maar balans je vuurkracht met geduld en overwegen van anderen"
+        },
+        ram: {
           fullTitle: "Ram Zon - De Pionier",
           light: "Je brengt moedige pionierenergie, initieert nieuwe beginningen met vertrouwen en inspireert anderen actie te nemen",
           shadow: "Je kunt te impulsief of agressief worden, anderen overrijden of worstelen met geduld en follow-through",
@@ -5048,7 +5126,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt te koppig of weerstand tegen verandering worden, vast zitten in comfort of te materialistisch",
           insight: "Je excelleert in het bouwen van duurzame waarde, maar blijf open voor noodzakelijke verandering en groei"
         },
+        stier: {
+          fullTitle: "Stier Zon - De Bouwer",
+          light: "Je brengt gestaag duurzame energie, bouwt met geduld en creëert schoonheid en materiële stabiliteit",
+          shadow: "Je kunt te koppig of weerstand tegen verandering worden, vast zitten in comfort of te materialistisch",
+          insight: "Je excelleert in het bouwen van duurzame waarde, maar blijf open voor noodzakelijke verandering en groei"
+        },
         gemini: {
+          fullTitle: "Tweelingen Zon - De Communicator",
+          light: "Je brengt nieuwsgierige communicatieve energie, verbindt ideeën en mensen met veelzijdige intelligentie",
+          shadow: "Je kunt verspreid raken, oppervlakkig worden of worstelen met focus en diepgaand commitment",
+          insight: "Je hebt een gave voor verbinding en communicatie, maar balans verscheidenheid met diepte en follow-through"
+        },
+        tweelingen: {
           fullTitle: "Tweelingen Zon - De Communicator",
           light: "Je brengt nieuwsgierige communicatieve energie, verbindt ideeën en mensen met veelzijdige intelligentie",
           shadow: "Je kunt verspreid raken, oppervlakkig worden of worstelen met focus en diepgaand commitment",
@@ -5060,7 +5150,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt te emotioneel defensief worden, vastzitten in het verleden of te beschermend over geliefden",
           insight: "Je excelleert in emotionele verzorging en het creëren van thuis, maar bescherm je eigen grenzen terwijl je zorg geeft"
         },
+        kreeft: {
+          fullTitle: "Kreeft Zon - De Verzorger",
+          light: "Je brengt verzorgende emotionele intelligentie, creëert veilige ruimtes en voedt anderen met empathische zorg",
+          shadow: "Je kunt te emotioneel defensief worden, vastzitten in het verleden of te beschermend over geliefden",
+          insight: "Je excelleert in emotionele verzorging en het creëren van thuis, maar bescherm je eigen grenzen terwijl je zorg geeft"
+        },
         leo: {
+          fullTitle: "Leeuw Zon - De Performer",
+          light: "Je brengt stralende creatieve expressie, inspireert anderen met generositeit en leidt met warm vertrouwen",
+          shadow: "Je kunt te ego-gedreven worden, aandacht zoeken of gefrustreerd wanneer niet gewaardeerd",
+          insight: "Je bent hier om te stralen en creëren, maar onthoud dat echte leiderschap anderen verheft niet overschaduwt"
+        },
+        leeuw: {
           fullTitle: "Leeuw Zon - De Performer",
           light: "Je brengt stralende creatieve expressie, inspireert anderen met generositeit en leidt met warm vertrouwen",
           shadow: "Je kunt te ego-gedreven worden, aandacht zoeken of gefrustreerd wanneer niet gewaardeerd",
@@ -5072,7 +5174,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt te kritisch of perfectionistisch worden, worstelen met 'goed genoeg' of over-analyseren",
           insight: "Je excelleert in verbetering en dienst, maar balans excellentie met zelfcompassie en acceptatie van imperfectie"
         },
+        maagd: {
+          fullTitle: "Maagd Zon - De Analist",
+          light: "Je brengt praktische analytische precisie, verbetert systemen met detail en dient door nuttige expertise",
+          shadow: "Je kunt te kritisch of perfectionistisch worden, worstelen met 'goed genoeg' of over-analyseren",
+          insight: "Je excelleert in verbetering en dienst, maar balans excellentie met zelfcompassie en acceptatie van imperfectie"
+        },
         libra: {
+          fullTitle: "Weegschaal Zon - De Diplomaat",
+          light: "Je brengt harmonieuze balans, ziet alle kanten met rechtvaardigheid en creëert schoonheid en partnerschap",
+          shadow: "Je kunt te compromisserend worden, je eigen waarheid verliezen of besluiteloos zijn uit angst voor disharmonie",
+          insight: "Je hebt een gave voor balans en schoonheid, maar onthoud dat ware harmonie authentieke expressie vereist"
+        },
+        weegschaal: {
           fullTitle: "Weegschaal Zon - De Diplomaat",
           light: "Je brengt harmonieuze balans, ziet alle kanten met rechtvaardigheid en creëert schoonheid en partnerschap",
           shadow: "Je kunt te compromisserend worden, je eigen waarheid verliezen of besluiteloos zijn uit angst voor disharmonie",
@@ -5084,7 +5198,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt te intens of controlerender worden, worstelen met vertrouwen of vastzitten in macht dynamieken",
           insight: "Je excelleert in diepe transformatie en waarheid, maar gebruik je kracht voor healing niet manipulatie"
         },
+        schorpioen: {
+          fullTitle: "Schorpioen Zon - De Transformer",
+          light: "Je brengt intense transformerende kracht, ziet door oppervlakten en faciliteert diepe psychologische regeneratie",
+          shadow: "Je kunt te intens of controlerender worden, worstelen met vertrouwen of vastzitten in macht dynamieken",
+          insight: "Je excelleert in diepe transformatie en waarheid, maar gebruik je kracht voor healing niet manipulatie"
+        },
         sagittarius: {
+          fullTitle: "Boogschutter Zon - De Zoeker",
+          light: "Je brengt optimistische expanderende energie, zoekt waarheid en betekenis en inspireert avontuur en groei",
+          shadow: "Je kunt te roekeloos of dogmatisch worden, worstelen met grenzen of ongevoelig zijn voor details",
+          insight: "Je bent hier om te verkennen en onderwijzen, maar grond je wijsheid in praktische toepassing en gevoeligheid"
+        },
+        boogschutter: {
           fullTitle: "Boogschutter Zon - De Zoeker",
           light: "Je brengt optimistische expanderende energie, zoekt waarheid en betekenis en inspireert avontuur en groei",
           shadow: "Je kunt te roekeloos of dogmatisch worden, worstelen met grenzen of ongevoelig zijn voor details",
@@ -5096,7 +5222,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt te werkverslaafde of emotioneel koud worden, succes boven relaties stellen of te controlerender",
           insight: "Je excelleert in manifesteren van succes, maar balans succes met emotionele verbinding en zelfzorg"
         },
+        steenbok: {
+          fullTitle: "Steenbok Zon - De Bereiker",
+          light: "Je brengt ambitieuze strategische discipline, bouwt blijvende structuren en bereikt door toegewijde inspanning",
+          shadow: "Je kunt te werkverslaafde of emotioneel koud worden, succes boven relaties stellen of te controlerender",
+          insight: "Je excelleert in manifesteren van succes, maar balans succes met emotionele verbinding en zelfzorg"
+        },
         aquarius: {
+          fullTitle: "Waterman Zon - De Visionair",
+          light: "Je brengt vernieuwend denken en vooruitstrevende ideeën die de status quo uitdagen met humanitaire visie",
+          shadow: "Je kunt emotioneel losgekoppeld raken, te vastzitten in intellectualiteit of rebels zonder reden worden",
+          insight: "Je bent een revolutionair denker die een betere wereld envisioneert, maar grond je idealen in huidige verbinding"
+        },
+        waterman: {
           fullTitle: "Waterman Zon - De Visionair",
           light: "Je brengt vernieuwend denken en vooruitstrevende ideeën die de status quo uitdagen met humanitaire visie",
           shadow: "Je kunt emotioneel losgekoppeld raken, te vastzitten in intellectualiteit of rebels zonder reden worden",
@@ -5107,12 +5245,24 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           light: "Je brengt compassievol spiritueel bewustzijn, verbindt met universele liefde en heelt door empathische aanwezigheid",
           shadow: "Je kunt te ontsnappend worden, grenzen verliezen of overweldigd door anderen' emoties en wereld pijn",
           insight: "Je excelleert in spirituele compassie en healing, maar grond je gaven en bescherm je energetische grenzen"
+        },
+        vissen: {
+          fullTitle: "Vissen Zon - De Mysticus",
+          light: "Je brengt compassievol spiritueel bewustzijn, verbindt met universele liefde en heelt door empathische aanwezigheid",
+          shadow: "Je kunt te ontsnappend worden, grenzen verliezen of overweldigd door anderen' emoties en wereld pijn",
+          insight: "Je excelleert in spirituele compassie en healing, maar grond je gaven en bescherm je energetische grenzen"
         }
       },
 
-      // Moon Sign Descriptions (Dutch)
+      // Moon Sign Descriptions (Dutch) - Include both English and Dutch keys
       moonSignDescriptions: {
         aries: {
+          fullTitle: "Ram Maan - Vurige Emoties",
+          light: "Je voelt emoties intens en onmiddellijk, reageert met spontane passie en heeft directe emotionele eerlijkheid",
+          shadow: "Je kunt impulsief emotioneel reageren, ongeduldig met gevoelens of te snel bewegen door emotionele verwerking",
+          insight: "Je hebt vurige emotionele natuur, maar leer te pauzeren voordat je reageert en geef emoties tijd te rijpen"
+        },
+        ram: {
           fullTitle: "Ram Maan - Vurige Emoties",
           light: "Je voelt emoties intens en onmiddellijk, reageert met spontane passie en heeft directe emotionele eerlijkheid",
           shadow: "Je kunt impulsief emotioneel reageren, ongeduldig met gevoelens of te snel bewegen door emotionele verwerking",
@@ -5124,7 +5274,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt emotioneel koppig worden, worstelen met verandering of vasthouden aan gevoel te lang",
           insight: "Je hebt stabiele emotionele natuur, maar leer emotionele flexibiliteit en dat loslaten soms nodig is"
         },
+        stier: {
+          fullTitle: "Stier Maan - Gestage Emoties",
+          light: "Je voelt emoties diep en gestaag, vindt emotionele zekerheid in stabiliteit en fysiek comfort",
+          shadow: "Je kunt emotioneel koppig worden, worstelen met verandering of vasthouden aan gevoel te lang",
+          insight: "Je hebt stabiele emotionele natuur, maar leer emotionele flexibiliteit en dat loslaten soms nodig is"
+        },
         gemini: {
+          fullTitle: "Tweelingen Maan - Cerebrale Emoties",
+          light: "Je verwerkt emoties door praten en denken, hebt veelzijdige gevoelens en emotionele nieuwsgierigheid",
+          shadow: "Je kunt te veel in je hoofd zitten over gevoelens, emotioneel oppervlakkig of inconsistent worden",
+          insight: "Je verwerkt emoties mentaal, maar onthoud dat sommige gevoelens gevoeld moeten worden niet alleen begrepen"
+        },
+        tweelingen: {
           fullTitle: "Tweelingen Maan - Cerebrale Emoties",
           light: "Je verwerkt emoties door praten en denken, hebt veelzijdige gevoelens en emotionele nieuwsgierigheid",
           shadow: "Je kunt te veel in je hoofd zitten over gevoelens, emotioneel oppervlakkig of inconsistent worden",
@@ -5136,7 +5298,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt te emotioneel defensief worden, vastzitten in gevoelens of te absorberen van anderen' emoties",
           insight: "Je hebt diepe emotionele gave, maar bescherm je emotionele grenzen en laat gezonde verwerking toe"
         },
+        kreeft: {
+          fullTitle: "Kreeft Maan - Verzorgende Emoties",
+          light: "Je voelt emoties diep en intuïtief, hebt natuurlijke emotionele intelligentie en verzorgt door gevoelens",
+          shadow: "Je kunt te emotioneel defensief worden, vastzitten in gevoelens of te absorberen van anderen' emoties",
+          insight: "Je hebt diepe emotionele gave, maar bescherm je emotionele grenzen en laat gezonde verwerking toe"
+        },
         leo: {
+          fullTitle: "Leeuw Maan - Dramatische Emoties",
+          light: "Je voelt emoties warm en genereus, hebt emotioneel vertrouwen en deelt gevoelens met open hart",
+          shadow: "Je kunt emotioneel dramatisch worden, aandacht zoeken door gevoelens of ego koppelen aan emoties",
+          insight: "Je hebt warm emotioneel hart, maar leer dat kwetsbaarheid niet zwakte is en niet alle emoties performance zijn"
+        },
+        leeuw: {
           fullTitle: "Leeuw Maan - Dramatische Emoties",
           light: "Je voelt emoties warm en genereus, hebt emotioneel vertrouwen en deelt gevoelens met open hart",
           shadow: "Je kunt emotioneel dramatisch worden, aandacht zoeken door gevoelens of ego koppelen aan emoties",
@@ -5148,7 +5322,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt te kritisch over je gevoelens worden, worstelen met emotionele chaos of over-analyseren",
           insight: "Je hebt praktische emotionele natuur, maar leer dat emoties niet altijd logisch hoeven te zijn"
         },
+        maagd: {
+          fullTitle: "Maagd Maan - Analytische Emoties",
+          light: "Je verwerkt emoties door analyse en dienen, vindt emotioneel comfort in nuttig zijn en ordenen",
+          shadow: "Je kunt te kritisch over je gevoelens worden, worstelen met emotionele chaos of over-analyseren",
+          insight: "Je hebt praktische emotionele natuur, maar leer dat emoties niet altijd logisch hoeven te zijn"
+        },
         libra: {
+          fullTitle: "Weegschaal Maan - Harmonieuze Emoties",
+          light: "Je zoekt emotionele balans en harmonie, hebt natuurlijke emotionele diplomatie en relatie gevoeligheid",
+          shadow: "Je kunt je eigen emoties onderdrukken voor harmonie, te afhankelijk van relaties voor emotionele stabiliteit",
+          insight: "Je zoekt emotionele harmonie, maar onthoud dat authentieke gevoelens soms disharmonie creëren en dat is oké"
+        },
+        weegschaal: {
           fullTitle: "Weegschaal Maan - Harmonieuze Emoties",
           light: "Je zoekt emotionele balans en harmonie, hebt natuurlijke emotionele diplomatie en relatie gevoeligheid",
           shadow: "Je kunt je eigen emoties onderdrukken voor harmonie, te afhankelijk van relaties voor emotionele stabiliteit",
@@ -5160,7 +5346,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt overweldigd door emotionele intensiteit worden, worstelen met vertrouwen of controlerend met gevoelens",
           insight: "Je hebt krachtige emotionele diepte, maar leer te vertrouwen en los te laten in plaats van alle emoties controleren"
         },
+        schorpioen: {
+          fullTitle: "Schorpioen Maan - Intense Emoties",
+          light: "Je voelt emoties diepgaand en transformerend, hebt emotionele moed om in duisternis te gaan voor healing",
+          shadow: "Je kunt overweldigd door emotionele intensiteit worden, worstelen met vertrouwen of controlerend met gevoelens",
+          insight: "Je hebt krachtige emotionele diepte, maar leer te vertrouwen en los te laten in plaats van alle emoties controleren"
+        },
         sagittarius: {
+          fullTitle: "Boogschutter Maan - Optimistische Emoties",
+          light: "Je voelt emoties met optimisme en filosofie, zoekt betekenis in gevoelens en emotionele vrijheid",
+          shadow: "Je kunt ontsnappen van moeilijke emoties door filosofie, te snel bewegen door verwerking of ongevoelig zijn",
+          insight: "Je hebt avontuurlijke emotionele natuur, maar leer soms te blijven bij moeilijke gevoelens in plaats van ontsnappen"
+        },
+        boogschutter: {
           fullTitle: "Boogschutter Maan - Optimistische Emoties",
           light: "Je voelt emoties met optimisme en filosofie, zoekt betekenis in gevoelens en emotionele vrijheid",
           shadow: "Je kunt ontsnappen van moeilijke emoties door filosofie, te snel bewegen door verwerking of ongevoelig zijn",
@@ -5172,7 +5370,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt emotioneel afgesloten worden, worstelen met kwetsbaarheid of te veel controle over gevoelens",
           insight: "Je hebt rijpe emotionele natuur, maar onthoud dat emotionele kwetsbaarheid kracht is niet zwakte"
         },
+        steenbok: {
+          fullTitle: "Steenbok Maan - Gedisciplineerde Emoties",
+          light: "Je beheert emoties met maturiteit en verantwoordelijkheid, hebt emotionele zelfcontrole en betrouwbaarheid",
+          shadow: "Je kunt emotioneel afgesloten worden, worstelen met kwetsbaarheid of te veel controle over gevoelens",
+          insight: "Je hebt rijpe emotionele natuur, maar onthoud dat emotionele kwetsbaarheid kracht is niet zwakte"
+        },
         aquarius: {
+          fullTitle: "Waterman Maan - Afstandelijke Emoties",
+          light: "Je verwerkt emoties objectief en intellectueel, hebt emotionele onafhankelijkheid en unieke gevoelsbenadering",
+          shadow: "Je kunt te emotioneel losgekoppeld worden, worstelen met intimiteit of rationaliseren van gevoelens weg",
+          insight: "Je hebt unieke emotionele verwerking, maar leer dat emotionele verbinding vereist aanwezig zijn niet alleen begrijpen"
+        },
+        waterman: {
           fullTitle: "Waterman Maan - Afstandelijke Emoties",
           light: "Je verwerkt emoties objectief en intellectueel, hebt emotionele onafhankelijkheid en unieke gevoelsbenadering",
           shadow: "Je kunt te emotioneel losgekoppeld worden, worstelen met intimiteit of rationaliseren van gevoelens weg",
@@ -5183,12 +5393,24 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           light: "Je voelt emoties universeel en compassievol, hebt natuurlijke empathie en emotionele spirituele verbinding",
           shadow: "Je kunt overweldigd door gevoelens worden, grenzen verliezen of ontsnappen in fantasie of substanties",
           insight: "Je hebt diepe emotionele compassie, maar grond je gevoelens en bescherm je emotionele grenzen van absorptie"
+        },
+        vissen: {
+          fullTitle: "Vissen Maan - Empathische Emoties",
+          light: "Je voelt emoties universeel en compassievol, hebt natuurlijke empathie en emotionele spirituele verbinding",
+          shadow: "Je kunt overweldigd door gevoelens worden, grenzen verliezen of ontsnappen in fantasie of substanties",
+          insight: "Je hebt diepe emotionele compassie, maar grond je gevoelens en bescherm je emotionele grenzen van absorptie"
         }
       },
 
-      // Rising Sign Descriptions (Dutch)
+      // Rising Sign Descriptions (Dutch) - Include both English and Dutch keys
       risingSignDescriptions: {
         aries: {
+          fullTitle: "Ram Ascendant - Moedige Masker",
+          light: "Je presenteert jezelf met vertrouwen en directe actie, komt over als moedig en enthousiast",
+          shadow: "Je kunt als te agressief of impulsief overkomen, anderen intimideren met je directheid",
+          insight: "Je projecteert natuurlijke leiderschap, maar balans assertiviteit met geduld voor sterkere verbindingen"
+        },
+        ram: {
           fullTitle: "Ram Ascendant - Moedige Masker",
           light: "Je presenteert jezelf met vertrouwen en directe actie, komt over als moedig en enthousiast",
           shadow: "Je kunt als te agressief of impulsief overkomen, anderen intimideren met je directheid",
@@ -5200,7 +5422,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt als koppig of traag overkomen, weerstand tegen verandering of te materieel gefocust",
           insight: "Je projecteert natuurlijke stabiliteit, maar sta flexibiliteit toe om te voorkomen als rigide gezien te worden"
         },
+        stier: {
+          fullTitle: "Stier Ascendant - Stabiel Masker",
+          light: "Je presenteert jezelf met kalme stabiliteit en betrouwbaarheid, komt over als geaard en vredevol",
+          shadow: "Je kunt als koppig of traag overkomen, weerstand tegen verandering of te materieel gefocust",
+          insight: "Je projecteert natuurlijke stabiliteit, maar sta flexibiliteit toe om te voorkomen als rigide gezien te worden"
+        },
         gemini: {
+          fullTitle: "Tweelingen Ascendant - Nieuwsgierig Masker",
+          light: "Je presenteert jezelf met levendige nieuwsgierigheid en communicatie, komt over als vriendelijk en intelligent",
+          shadow: "Je kunt als oppervlakkig of onbetrouwbaar overkomen, te veel praten of inconsistent lijken",
+          insight: "Je projecteert natuurlijke nieuwsgierigheid, maar balans sociale aantrekkelijkheid met diepte en consistentie"
+        },
+        tweelingen: {
           fullTitle: "Tweelingen Ascendant - Nieuwsgierig Masker",
           light: "Je presenteert jezelf met levendige nieuwsgierigheid en communicatie, komt over als vriendelijk en intelligent",
           shadow: "Je kunt als oppervlakkig of onbetrouwbaar overkomen, te veel praten of inconsistent lijken",
@@ -5212,7 +5446,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt als te emotioneel of defensief overkomen, te beschermend of afhankelijk lijken",
           insight: "Je projecteert natuurlijke warmte, maar balans verzorging met het tonen van je eigen sterkte"
         },
+        kreeft: {
+          fullTitle: "Kreeft Ascendant - Verzorgend Masker",
+          light: "Je presenteert jezelf met zachte verzorging en empathie, komt over als warm en beschermend",
+          shadow: "Je kunt als te emotioneel of defensief overkomen, te beschermend of afhankelijk lijken",
+          insight: "Je projecteert natuurlijke warmte, maar balans verzorging met het tonen van je eigen sterkte"
+        },
         leo: {
+          fullTitle: "Leeuw Ascendant - Stralend Masker",
+          light: "Je presenteert jezelf met warm vertrouwen en charisma, komt over als genereus en inspirerend",
+          shadow: "Je kunt als arrogant of aandachtszoekend overkomen, te dramatisch of ego-gedreven lijken",
+          insight: "Je projecteert natuurlijk charisma, maar balans stralen met luisteren en anderen ruimte geven"
+        },
+        leeuw: {
           fullTitle: "Leeuw Ascendant - Stralend Masker",
           light: "Je presenteert jezelf met warm vertrouwen en charisma, komt over als genereus en inspirerend",
           shadow: "Je kunt als arrogant of aandachtszoekend overkomen, te dramatisch of ego-gedreven lijken",
@@ -5224,7 +5470,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt als te kritisch of perfectionistisch overkomen, koud of oordellend lijken",
           insight: "Je projecteert natuurlijke competentie, maar balans nuttig zijn met warmte en acceptatie van imperfectie"
         },
+        maagd: {
+          fullTitle: "Maagd Ascendant - Verfijnd Masker",
+          light: "Je presenteert jezelf met georganiseerde precisie en behulpzaamheid, komt over als competent en attent",
+          shadow: "Je kunt als te kritisch of perfectionistisch overkomen, koud of oordellend lijken",
+          insight: "Je projecteert natuurlijke competentie, maar balans nuttig zijn met warmte en acceptatie van imperfectie"
+        },
         libra: {
+          fullTitle: "Weegschaal Ascendant - Charmant Masker",
+          light: "Je presenteert jezelf met diplomatieke charme en esthetische gratie, komt over als eerlijk en aangenaam",
+          shadow: "Je kunt als te compromisserend of oppervlakkig overkomen, besluiteloos of people-pleasing lijken",
+          insight: "Je projecteert natuurlijke charme, maar vergeet niet je eigen waarheid te tonen naast harmonie"
+        },
+        weegschaal: {
           fullTitle: "Weegschaal Ascendant - Charmant Masker",
           light: "Je presenteert jezelf met diplomatieke charme en esthetische gratie, komt over als eerlijk en aangenaam",
           shadow: "Je kunt als te compromisserend of oppervlakkig overkomen, besluiteloos of people-pleasing lijken",
@@ -5236,7 +5494,19 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt als intimiderend of te privé overkomen, controlerend of misvertrouwend lijken",
           insight: "Je projecteert natuurlijke intensiteit, maar balans mysterie met kwetsbaarheid om verbinding uit te nodigen"
         },
+        schorpioen: {
+          fullTitle: "Schorpioen Ascendant - Intens Masker",
+          light: "Je presenteert jezelf met magnetische intensiteit en diepte, komt over als krachtig en transformerend",
+          shadow: "Je kunt als intimiderend of te privé overkomen, controlerend of misvertrouwend lijken",
+          insight: "Je projecteert natuurlijke intensiteit, maar balans mysterie met kwetsbaarheid om verbinding uit te nodigen"
+        },
         sagittarius: {
+          fullTitle: "Boogschutter Ascendant - Avontuurlijk Masker",
+          light: "Je presenteert jezelf met optimistisch avontuur en filosofie, komt over als enthousiast en wijdenkend",
+          shadow: "Je kunt als roekeloos of ongevoelig overkomen, te blunt of commitment-schuw lijken",
+          insight: "Je projecteert natuurlijk avontuur, maar balans enthousiasme met tact en follow-through"
+        },
+        boogschutter: {
           fullTitle: "Boogschutter Ascendant - Avontuurlijk Masker",
           light: "Je presenteert jezelf met optimistisch avontuur en filosofie, komt over als enthousiast en wijdenkend",
           shadow: "Je kunt als roekeloos of ongevoelig overkomen, te blunt of commitment-schuw lijken",
@@ -5248,13 +5518,31 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt als te serieus of koud overkomen, werkverslaafde of emotioneel afgesloten lijken",
           insight: "Je projecteert natuurlijke autoriteit, maar balans professionaliteit met warmte en speelsheid"
         },
+        steenbok: {
+          fullTitle: "Steenbok Ascendant - Autoritair Masker",
+          light: "Je presenteert jezelf met mature verantwoordelijkheid en ambition, komt over als betrouwbaar en capabel",
+          shadow: "Je kunt als te serieus of koud overkomen, werkverslaafde of emotioneel afgesloten lijken",
+          insight: "Je projecteert natuurlijke autoriteit, maar balans professionaliteit met warmte en speelsheid"
+        },
         aquarius: {
           fullTitle: "Waterman Ascendant - Uniek Masker",
           light: "Je presenteert jezelf met origineel unieke individualiteit, komt over als vernieuwend en vriendelijk",
           shadow: "Je kunt als te afstandelijk of rebels overkomen, emotioneel koud of anders voor anders lijken",
           insight: "Je projecteert natuurlijke uniciteit, maar balans individualiteit met emotionele toegankelijkheid"
         },
+        waterman: {
+          fullTitle: "Waterman Ascendant - Uniek Masker",
+          light: "Je presenteert jezelf met origineel unieke individualiteit, komt over als vernieuwend en vriendelijk",
+          shadow: "Je kunt als te afstandelijk of rebels overkomen, emotioneel koud of anders voor anders lijken",
+          insight: "Je projecteert natuurlijke uniciteit, maar balans individualiteit met emotionele toegankelijkheid"
+        },
         pisces: {
+          fullTitle: "Vissen Ascendant - Mystiek Masker",
+          light: "Je presenteert jezelf met zachte spirituele compassie, komt over als empathisch en artistiek",
+          shadow: "Je kunt als te zwevend of onbetrouwbaar overkomen, grenzeloos of slachtofferachtig lijken",
+          insight: "Je projecteert natuurlijke compassie, maar grond je aanwezigheid en toon je sterkte naast zachtheid"
+        },
+        vissen: {
           fullTitle: "Vissen Ascendant - Mystiek Masker",
           light: "Je presenteert jezelf met zachte spirituele compassie, komt over als empathisch en artistiek",
           shadow: "Je kunt als te zwevend of onbetrouwbaar overkomen, grenzeloos of slachtofferachtig lijken",
