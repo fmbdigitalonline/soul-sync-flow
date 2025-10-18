@@ -217,7 +217,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
           <CardContent className={`${spacing.card} pt-0`}>
             <div className="space-y-4 w-full max-w-full">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-3 bg-soul-purple/5 rounded-3xl">
+                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.personalityType')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{mbtiType}</p>
                 </div>
