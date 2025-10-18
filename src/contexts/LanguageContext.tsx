@@ -1623,6 +1623,754 @@ const translations: Record<Language, Translations> = {
           shadow: "You may escape into fantasy or lose boundaries, absorbing others' emotions without protecting your own energy",
           insight: "You are a compassionate mystic with profound sensitivity, but establish clear boundaries and ground your dreams in reality"
         }
+      },
+
+      // Soul Urge Number Descriptions
+      soulUrgeDescriptions: {
+        1: {
+          fullTitle: "Soul Urge 1 - The Independent Pioneer",
+          light: "Your deepest desire is to lead, innovate, and express your unique individuality with confidence",
+          shadow: "You may struggle with needing constant independence or dominating others to feel worthy",
+          insight: "You long to lead and stand on your own two feet, but true strength includes allowing others to support you"
+        },
+        2: {
+          fullTitle: "Soul Urge 2 - The Peaceful Connector",
+          light: "Your soul craves harmony, partnership, and creating environments where everyone feels heard",
+          shadow: "You may lose yourself in others' needs or avoid conflict even when it serves growth",
+          insight: "You deeply desire peace and connection, but remember that your needs and voice matter just as much"
+        },
+        3: {
+          fullTitle: "Soul Urge 3 - The Creative Expresser",
+          light: "Your heart yearns to express yourself creatively and bring joy to others through your natural talents",
+          shadow: "You may scatter your energy seeking applause or struggle with discipline when creativity feels like work",
+          insight: "You crave creative expression and recognition, but create from joy rather than seeking external validation"
+        },
+        4: {
+          fullTitle: "Soul Urge 4 - The Stable Builder",
+          light: "You deeply desire to create lasting foundations, order, and security for yourself and those you love",
+          shadow: "You may become rigid or controlling when life doesn't follow your carefully laid plans",
+          insight: "You long for stability and structure, but remember that flexibility strengthens rather than weakens your foundations"
+        },
+        5: {
+          fullTitle: "Soul Urge 5 - The Freedom Lover",
+          light: "Your soul craves freedom, adventure, and the thrill of experiencing all that life has to offer",
+          shadow: "You may run from commitment or struggle when routines are necessary for growth",
+          insight: "You deeply desire freedom and variety, but true liberation includes choosing meaningful commitments"
+        },
+        6: {
+          fullTitle: "Soul Urge 6 - The Loving Caretaker",
+          light: "Your heart yearns to nurture, create beauty, and take responsibility for those you love",
+          shadow: "You may become controlling or martyred, believing you must fix and save everyone",
+          insight: "You crave harmony and the ability to care for others, but remember that healthy love includes boundaries"
+        },
+        7: {
+          fullTitle: "Soul Urge 7 - The Truth Seeker",
+          light: "Your soul deeply desires wisdom, spiritual understanding, and time for quiet contemplation",
+          shadow: "You may become isolated or dismissive of practical realities in your quest for truth",
+          insight: "You long for deeper understanding and spiritual connection, but balance your inner world with outer engagement"
+        },
+        8: {
+          fullTitle: "Soul Urge 8 - The Ambitious Manifester",
+          light: "Your heart craves material success, power, and the ability to create abundance and impact",
+          shadow: "You may define your worth solely through achievement or become controlling in pursuit of success",
+          insight: "You deeply desire power and material mastery, but use your gifts with integrity to uplift others"
+        },
+        9: {
+          fullTitle: "Soul Urge 9 - The Compassionate Humanitarian",
+          light: "Your soul yearns to serve humanity with unconditional love and universal compassion",
+          shadow: "You may become martyred or struggle to receive, always giving without allowing support",
+          insight: "You crave the ability to serve and heal the world, but remember that you must receive in order to give sustainably"
+        },
+        11: {
+          fullTitle: "Soul Urge 11 - The Inspired Visionary",
+          light: "Your heart desires to inspire others with spiritual insight and illuminating vision",
+          shadow: "You may feel overwhelmed by your sensitivity or doubt your intuitive knowing",
+          insight: "You long to inspire and illuminate, but ground your visions in practical action and trust your inner guidance"
+        },
+        22: {
+          fullTitle: "Soul Urge 22 - The Master Manifester",
+          light: "Your soul craves the ability to turn grand visions into tangible reality that serves many",
+          shadow: "You may feel overwhelmed by the magnitude of your dreams or doubt your ability to achieve them",
+          insight: "You deeply desire to build something extraordinary and lasting, but trust the journey one step at a time"
+        },
+        33: {
+          fullTitle: "Soul Urge 33 - The Universal Healer",
+          light: "Your heart yearns to heal and teach humanity with unconditional love and selfless service",
+          shadow: "You may burn out from taking on everyone's pain or struggle with martyrdom",
+          insight: "You crave the ability to heal and uplift all beings, but sustainable service requires honoring your own needs"
+        }
+      },
+
+      // Personality Number Descriptions
+      personalityNumberDescriptions: {
+        1: {
+          fullTitle: "Personality 1 - The Confident Leader",
+          light: "You project confidence, independence, and natural leadership that inspires others to follow",
+          shadow: "You may come across as domineering or overly self-reliant, appearing unable to accept help",
+          insight: "You radiate leadership and strength, but showing vulnerability actually enhances rather than diminishes your presence"
+        },
+        2: {
+          fullTitle: "Personality 2 - The Gentle Diplomat",
+          light: "You present as approachable, cooperative, and considerate, putting others at ease",
+          shadow: "You may appear passive or overly accommodating, hiding your true strength",
+          insight: "You project gentleness and harmony, but remember that your strength is visible when you state your needs clearly"
+        },
+        3: {
+          fullTitle: "Personality 3 - The Charismatic Communicator",
+          light: "You come across as creative, expressive, and charming, naturally drawing people to you",
+          shadow: "You may appear superficial or overly focused on image and entertainment",
+          insight: "You radiate creativity and charm, but authentic depth creates more meaningful connections than performance"
+        },
+        4: {
+          fullTitle: "Personality 4 - The Reliable Organizer",
+          light: "You project stability, reliability, and practical competence that others depend on",
+          shadow: "You may come across as rigid, overly serious, or resistant to spontaneity",
+          insight: "You radiate dependability and order, but showing your playful side makes you more approachable"
+        },
+        5: {
+          fullTitle: "Personality 5 - The Dynamic Adventurer",
+          light: "You present as exciting, adaptable, and full of life, inspiring others to embrace change",
+          shadow: "You may appear unreliable or commitment-phobic, always seeking the next thrill",
+          insight: "You project energy and freedom, but demonstrating follow-through shows the depth behind your dynamism"
+        },
+        6: {
+          fullTitle: "Personality 6 - The Warm Nurturer",
+          light: "You come across as caring, responsible, and trustworthy, naturally attracting those who need support",
+          shadow: "You may appear controlling or judgmental when your help isn't wanted",
+          insight: "You radiate warmth and care, but respecting others' choices (even when you see better solutions) honors their journey"
+        },
+        7: {
+          fullTitle: "Personality 7 - The Mysterious Thinker",
+          light: "You project depth, wisdom, and intriguing mystery that draws others to seek your insights",
+          shadow: "You may appear aloof, critical, or unapproachable due to your reserved nature",
+          insight: "You radiate intelligence and depth, but opening up emotionally helps others connect with your wisdom"
+        },
+        8: {
+          fullTitle: "Personality 8 - The Powerful Authority",
+          light: "You present as confident, successful, and authoritative, commanding respect naturally",
+          shadow: "You may appear intimidating, materialistic, or overly concerned with status",
+          insight: "You project power and competence, but vulnerability and humility make your strength even more magnetic"
+        },
+        9: {
+          fullTitle: "Personality 9 - The Compassionate Sage",
+          light: "You come across as wise, accepting, and universally compassionate toward all people",
+          shadow: "You may appear detached or superior, seeming to be above the struggles of ordinary life",
+          insight: "You radiate wisdom and acceptance, but sharing your own struggles creates deeper human connection"
+        },
+        11: {
+          fullTitle: "Personality 11 - The Inspiring Visionary",
+          light: "You project inspiration, spiritual depth, and visionary insight that uplifts others",
+          shadow: "You may appear overly idealistic or impractical, disconnected from everyday realities",
+          insight: "You radiate inspiration and higher vision, but grounding your insights in practical terms helps others apply them"
+        },
+        22: {
+          fullTitle: "Personality 22 - The Master Builder",
+          light: "You present as capable of achieving grand visions through practical mastery",
+          shadow: "You may appear overwhelmed or burdened by the weight of your potential",
+          insight: "You project extraordinary capability, but showing your process (not just results) inspires others more deeply"
+        },
+        33: {
+          fullTitle: "Personality 33 - The Master Healer",
+          light: "You come across as unconditionally loving, healing, and devoted to serving others",
+          shadow: "You may appear martyred or struggle to say no, taking on more than you can carry",
+          insight: "You radiate healing love, but setting boundaries actually strengthens your ability to serve"
+        }
+      },
+
+      // Birthday Number Descriptions
+      birthdayNumberDescriptions: {
+        1: {
+          fullTitle: "Birthday 1 - Natural Leader",
+          light: "You have an innate gift for leadership, independence, and pioneering new directions",
+          shadow: "You may struggle with being too dominant or resistant to collaboration",
+          insight: "You have natural leadership abilities, but the strongest leaders empower others to lead too"
+        },
+        2: {
+          fullTitle: "Birthday 2 - Intuitive Mediator",
+          light: "You possess a natural talent for diplomacy, cooperation, and bringing people together",
+          shadow: "You may struggle with over-accommodation or avoiding necessary confrontation",
+          insight: "You have a gift for creating harmony, but your voice deserves to be heard as clearly as others'"
+        },
+        3: {
+          fullTitle: "Birthday 3 - Creative Communicator",
+          light: "You have a special gift for creative expression, communication, and bringing joy to others",
+          shadow: "You may scatter your talents or seek validation through constant entertainment",
+          insight: "You have natural creative abilities, but focused expression creates more impact than scattered enthusiasm"
+        },
+        4: {
+          fullTitle: "Birthday 4 - Practical Builder",
+          light: "You possess a special talent for organization, structure, and building lasting foundations",
+          shadow: "You may become rigid or resistant to change that could improve your systems",
+          insight: "You have a gift for creating stability, but flexibility ensures your structures can evolve"
+        },
+        5: {
+          fullTitle: "Birthday 5 - Dynamic Catalyst",
+          light: "You have a natural gift for adaptability, communication, and inspiring positive change",
+          shadow: "You may struggle with commitment or restlessness when routine is necessary",
+          insight: "You have a talent for bringing fresh energy, but meaningful growth includes some consistency"
+        },
+        6: {
+          fullTitle: "Birthday 6 - Responsible Nurturer",
+          light: "You possess a special gift for creating harmony, beauty, and caring for your community",
+          shadow: "You may become controlling or sacrificial in your desire to help everyone",
+          insight: "You have natural nurturing abilities, but healthy service includes honoring your own needs"
+        },
+        7: {
+          fullTitle: "Birthday 7 - Spiritual Seeker",
+          light: "You have an innate gift for spiritual insight, analysis, and understanding life's deeper mysteries",
+          shadow: "You may become isolated or disconnected from practical realities",
+          insight: "You have a talent for deep understanding, but wisdom is most powerful when shared and applied"
+        },
+        8: {
+          fullTitle: "Birthday 8 - Powerful Manifester",
+          light: "You possess a natural gift for material success, leadership, and manifesting abundance",
+          shadow: "You may focus too heavily on material achievement or control",
+          insight: "You have powerful manifestation abilities, but true success includes integrity and uplifting others"
+        },
+        9: {
+          fullTitle: "Birthday 9 - Compassionate Humanitarian",
+          light: "You have a special gift for universal love, wisdom, and serving the greater good",
+          shadow: "You may struggle to complete things or become martyred in service",
+          insight: "You have natural humanitarian gifts, but you serve more powerfully when you also receive"
+        },
+        10: {
+          fullTitle: "Birthday 10 - Independent Achiever",
+          light: "You have a gift for independent achievement and innovative leadership",
+          shadow: "You may struggle with stubbornness or difficulty accepting support",
+          insight: "You have strong independent abilities, but collaboration amplifies your impact"
+        },
+        11: {
+          fullTitle: "Birthday 11 - Intuitive Inspirer",
+          light: "You possess a special gift for spiritual insight and inspiring others with your vision",
+          shadow: "You may feel overwhelmed by your sensitivity or doubt your intuition",
+          insight: "You have powerful intuitive abilities, but trust your inner knowing even when others question it"
+        },
+        12: {
+          fullTitle: "Birthday 12 - Creative Expresser",
+          light: "You have a natural gift for self-expression, creativity, and uplifting communication",
+          shadow: "You may scatter your energy or seek too much external validation",
+          insight: "You have natural creative talents, but focused discipline amplifies your expressive power"
+        },
+        13: {
+          fullTitle: "Birthday 13 - Practical Creative",
+          light: "You possess a gift for combining creativity with practical organization and hard work",
+          shadow: "You may struggle with overwork or rigid thinking that limits your creativity",
+          insight: "You blend creativity with discipline, but remember that flexibility enhances your foundations"
+        },
+        14: {
+          fullTitle: "Birthday 14 - Freedom-Loving Builder",
+          light: "You have a special gift for bringing change and freedom through constructive means",
+          shadow: "You may struggle with restlessness or impulsive decisions",
+          insight: "You have talents for both freedom and building, but balance exploration with commitment"
+        },
+        15: {
+          fullTitle: "Birthday 15 - Harmonious Leader",
+          light: "You possess a gift for creating harmony while taking responsibility and leading others",
+          shadow: "You may become controlling in your desire to help or fix situations",
+          insight: "You have natural leadership and nurturing gifts, but trust others to solve their own challenges"
+        },
+        16: {
+          fullTitle: "Birthday 16 - Spiritual Analyst",
+          light: "You have an innate gift for spiritual depth, analytical thinking, and inner wisdom",
+          shadow: "You may become isolated or overly introspective, disconnecting from others",
+          insight: "You have powerful analytical and spiritual abilities, but share your insights to multiply their impact"
+        },
+        17: {
+          fullTitle: "Birthday 17 - Ambitious Seeker",
+          light: "You possess a special gift for combining material success with spiritual understanding",
+          shadow: "You may struggle to balance worldly achievement with inner growth",
+          insight: "You can excel in both material and spiritual realms, but integrate them rather than choosing one"
+        },
+        18: {
+          fullTitle: "Birthday 18 - Humanitarian Leader",
+          light: "You have a natural gift for leadership in service of humanitarian causes",
+          shadow: "You may become martyred or struggle with completion due to taking on too much",
+          insight: "You have powerful service-oriented leadership, but sustainable impact requires boundaries"
+        },
+        19: {
+          fullTitle: "Birthday 19 - Independent Achiever",
+          light: "You possess a gift for independent achievement and self-reliant success",
+          shadow: "You may struggle with needing to do everything yourself or difficulty receiving help",
+          insight: "You have strong self-sufficiency, but allowing support creates even greater success"
+        },
+        20: {
+          fullTitle: "Birthday 20 - Sensitive Cooperator",
+          light: "You have a special gift for intuitive cooperation and bringing people together",
+          shadow: "You may become overly sensitive or lose yourself in others' needs",
+          insight: "You have natural diplomatic abilities, but your sensitivity is strength when you honor your own needs too"
+        },
+        21: {
+          fullTitle: "Birthday 21 - Joyful Creator",
+          light: "You possess a gift for creative expression that brings joy and inspiration to others",
+          shadow: "You may scatter your energy or rely too heavily on others' approval",
+          insight: "You have powerful creative gifts, but focused direction amplifies your impact"
+        },
+        22: {
+          fullTitle: "Birthday 22 - Master Builder",
+          light: "You have an innate gift for manifesting grand visions into practical reality",
+          shadow: "You may feel overwhelmed by your potential or doubt your ability to achieve it",
+          insight: "You have extraordinary building abilities, but trust the process one step at a time"
+        },
+        23: {
+          fullTitle: "Birthday 23 - Dynamic Communicator",
+          light: "You possess a special gift for communication, adaptability, and inspiring change",
+          shadow: "You may struggle with restlessness or scattered focus",
+          insight: "You have natural communication talents, but depth creates more lasting impact than breadth"
+        },
+        24: {
+          fullTitle: "Birthday 24 - Devoted Nurturer",
+          light: "You have a natural gift for creating harmony and caring for family and community",
+          shadow: "You may become controlling or sacrificial in your devotion to others",
+          insight: "You have powerful nurturing abilities, but sustainable care includes caring for yourself"
+        },
+        25: {
+          fullTitle: "Birthday 25 - Intuitive Seeker",
+          light: "You possess a gift for spiritual insight combined with analytical understanding",
+          shadow: "You may struggle with isolation or disconnection from practical realities",
+          insight: "You have deep intuitive wisdom, but grounding your insights makes them accessible to others"
+        },
+        26: {
+          fullTitle: "Birthday 26 - Powerful Nurturer",
+          light: "You have a special gift for combining material success with caring service",
+          shadow: "You may struggle with control or define worth through provision for others",
+          insight: "You can both succeed and nurture, but remember that presence matters as much as provision"
+        },
+        27: {
+          fullTitle: "Birthday 27 - Compassionate Analyst",
+          light: "You possess a gift for combining deep wisdom with universal compassion",
+          shadow: "You may become detached or struggle to apply your insights practically",
+          insight: "You have profound wisdom and compassion, but practical application multiplies your impact"
+        },
+        28: {
+          fullTitle: "Birthday 28 - Independent Leader",
+          light: "You have a natural gift for independent leadership and innovative achievement",
+          shadow: "You may struggle with dominance or difficulty accepting others' contributions",
+          insight: "You have strong leadership abilities, but collaborative leadership creates more sustainable success"
+        },
+        29: {
+          fullTitle: "Birthday 29 - Intuitive Humanitarian",
+          light: "You possess a special gift for intuitive service and compassionate leadership",
+          shadow: "You may feel overwhelmed by your sensitivity or struggle with boundaries",
+          insight: "You have powerful intuitive and humanitarian gifts, but honor your sensitivity by protecting your energy"
+        },
+        30: {
+          fullTitle: "Birthday 30 - Expressive Communicator",
+          light: "You have an innate gift for joyful expression and uplifting communication",
+          shadow: "You may scatter your talents or perform rather than expressing authentically",
+          insight: "You have natural expressive abilities, but authentic depth creates more meaningful connections"
+        },
+        31: {
+          fullTitle: "Birthday 31 - Practical Creator",
+          light: "You possess a gift for combining creative expression with practical discipline",
+          shadow: "You may struggle with rigidity or overwork that stifles your creativity",
+          insight: "You blend creativity with structure, but remember that play fuels sustainable productivity"
+        },
+        33: {
+          fullTitle: "Birthday 33 - Master Teacher",
+          light: "You have a special gift for healing, teaching, and uplifting humanity with love",
+          shadow: "You may burn out from taking on everyone's pain or struggle with martyrdom",
+          insight: "You have extraordinary healing and teaching abilities, but sustainable service requires self-care"
+        }
+      },
+
+      // Cognitive Function Descriptions
+      cognitiveFunctionDescriptions: {
+        fe: {
+          fullTitle: "Fe - Extraverted Feeling",
+          light: "You naturally create harmony by reading and responding to others' emotions and social dynamics",
+          shadow: "You may lose your own feelings while managing everyone else's emotional state",
+          insight: "You have a gift for creating emotional connection, but honor your own feelings as much as others'"
+        },
+        fi: {
+          fullTitle: "Fi - Introverted Feeling",
+          light: "You deeply know your own values and make authentic choices aligned with your internal compass",
+          shadow: "You may become rigid about your values or dismiss others' perspectives as less authentic",
+          insight: "You have strong internal values, but remember that others' values can be equally authentic"
+        },
+        te: {
+          fullTitle: "Te - Extraverted Thinking",
+          light: "You naturally organize external systems and processes for maximum efficiency and results",
+          shadow: "You may become controlling or dismiss emotional considerations in pursuit of efficiency",
+          insight: "You excel at creating effective systems, but the human element often determines lasting success"
+        },
+        ti: {
+          fullTitle: "Ti - Introverted Thinking",
+          light: "You build precise internal frameworks of logic and understand complex systems deeply",
+          shadow: "You may get lost in analysis paralysis or dismiss ideas that don't fit your logical model",
+          insight: "You have powerful analytical abilities, but pragmatic action creates impact alongside understanding"
+        },
+        ne: {
+          fullTitle: "Ne - Extraverted Intuition",
+          light: "You naturally see countless possibilities and connections, generating innovative ideas",
+          shadow: "You may start many projects without finishing or become scattered across too many options",
+          insight: "You have a gift for seeing potential, but focused follow-through turns possibilities into reality"
+        },
+        ni: {
+          fullTitle: "Ni - Introverted Intuition",
+          light: "You see the future pattern and understand where things are heading with penetrating insight",
+          shadow: "You may become attached to your vision or struggle to explain your knowing to others",
+          insight: "You have powerful predictive insight, but stay flexible as reality unfolds differently than expected"
+        },
+        se: {
+          fullTitle: "Se - Extraverted Sensing",
+          light: "You fully engage with present-moment reality, responding quickly to what's happening now",
+          shadow: "You may become impulsive or struggle with long-term planning and consequences",
+          insight: "You excel at being present and responsive, but balance immediacy with strategic thinking"
+        },
+        si: {
+          fullTitle: "Si - Introverted Sensing",
+          light: "You draw on past experience and internal impressions to create stability and maintain traditions",
+          shadow: "You may resist change or become stuck in 'the way things have always been'",
+          insight: "You have a gift for learning from experience, but stay open to new approaches that serve growth"
+        }
+      },
+
+      // Task Approach Descriptions
+      taskApproachDescriptions: {
+        systematic: {
+          fullTitle: "Systematic Task Approach",
+          light: "You approach tasks with organization, planning, and structured methodology",
+          shadow: "You may resist spontaneity or struggle when plans need to change quickly",
+          insight: "You excel at systematic execution, but flexibility enhances your ability to adapt to the unexpected"
+        },
+        adaptable: {
+          fullTitle: "Adaptable Task Approach",
+          light: "You approach tasks with flexibility, keeping options open and adjusting as you go",
+          shadow: "You may struggle with follow-through or decisive action when structure would serve you",
+          insight: "You excel at adapting to change, but some structure actually increases your freedom and effectiveness"
+        },
+        methodical: {
+          fullTitle: "Methodical Task Approach",
+          light: "You approach tasks step-by-step with careful attention to detail and thorough completion",
+          shadow: "You may get lost in details or resist moving forward before everything is perfect",
+          insight: "You excel at thorough execution, but remember that done is often better than perfect"
+        },
+        spontaneous: {
+          fullTitle: "Spontaneous Task Approach",
+          light: "You approach tasks with energy and enthusiasm, responding to inspiration in the moment",
+          shadow: "You may struggle with consistency or completing tasks when the initial excitement fades",
+          insight: "You excel at energized action, but sustainable progress includes working even when uninspired"
+        }
+      },
+
+      // Communication Descriptions
+      communicationDescriptions: {
+        clear: {
+          fullTitle: "Clear Direct Communication",
+          light: "You communicate with clarity, directness, and logical precision",
+          shadow: "You may come across as blunt or insensitive to emotional nuances",
+          insight: "You excel at clear communication, but consider the emotional impact alongside the logical content"
+        },
+        empathic: {
+          fullTitle: "Empathic Communication",
+          light: "You communicate with warmth, emotional attunement, and consideration for feelings",
+          shadow: "You may struggle with direct feedback or avoid necessary difficult conversations",
+          insight: "You excel at empathic connection, but sometimes kindness includes speaking uncomfortable truths"
+        },
+        analytical: {
+          fullTitle: "Analytical Communication",
+          light: "You communicate with logical precision, exploring ideas thoroughly and systematically",
+          shadow: "You may over-explain or get lost in details that obscure your main point",
+          insight: "You excel at thorough analysis, but concise clarity often communicates more effectively than exhaustive detail"
+        },
+        expressive: {
+          fullTitle: "Expressive Communication",
+          light: "You communicate with enthusiasm, creativity, and engaging storytelling",
+          shadow: "You may embellish or lose your audience in tangents and entertaining details",
+          insight: "You excel at engaging expression, but focused messaging creates more memorable impact"
+        },
+        concise: {
+          fullTitle: "Concise Communication",
+          light: "You communicate efficiently, getting to the point with minimal unnecessary detail",
+          shadow: "You may leave out important context or come across as curt or dismissive",
+          insight: "You excel at efficient communication, but some context helps others understand your meaning"
+        },
+        thoughtful: {
+          fullTitle: "Thoughtful Communication",
+          light: "You communicate with careful consideration, taking time to process before responding",
+          shadow: "You may take too long to respond or struggle with real-time conversation demands",
+          insight: "You excel at thoughtful response, but trust that your immediate reactions also have value"
+        }
+      },
+
+      // Decision Making Descriptions
+      decisionMakingDescriptions: {
+        logical: {
+          fullTitle: "Logical Decision Making",
+          light: "You make decisions based on objective analysis, consistency, and rational principles",
+          shadow: "You may dismiss emotional factors or human needs in pursuit of logical consistency",
+          insight: "You excel at rational analysis, but the best decisions often integrate both logic and human impact"
+        },
+        valuesbased: {
+          fullTitle: "Values-Based Decision Making",
+          light: "You make decisions based on personal values, what feels right, and alignment with principles",
+          shadow: "You may struggle with decisions that require compromising between deeply held values",
+          insight: "You excel at values-aligned choices, but sometimes growth requires re-examining what you value"
+        },
+        intuitive: {
+          fullTitle: "Intuitive Decision Making",
+          light: "You make decisions based on gut feelings, pattern recognition, and future implications",
+          shadow: "You may struggle to explain your decisions or miss important present-moment details",
+          insight: "You excel at intuitive knowing, but grounding your insights in evidence helps others trust your vision"
+        },
+        practical: {
+          fullTitle: "Practical Decision Making",
+          light: "You make decisions based on what works, past experience, and proven methods",
+          shadow: "You may resist innovative approaches or miss opportunities due to over-reliance on precedent",
+          insight: "You excel at practical wisdom, but stay open to new approaches when old methods no longer serve"
+        },
+        collaborative: {
+          fullTitle: "Collaborative Decision Making",
+          light: "You make decisions by considering multiple perspectives and seeking input from others",
+          shadow: "You may struggle with timely decisions or lose your own voice in consensus-seeking",
+          insight: "You excel at inclusive decision-making, but trust your own judgment when collaboration isn't possible"
+        }
+      },
+
+      // Human Design Strategy Descriptions
+      strategyDescriptions: {
+        respond: {
+          fullTitle: "Strategy: To Respond",
+          light: "You're designed to wait for life to come to you, then respond with your gut yes or no",
+          shadow: "You may feel frustrated when you initiate rather than respond to what life brings",
+          insight: "You have sustainable energy when you respond to opportunities, but trust that the right things will come to you"
+        },
+        'wait for the invitation': {
+          fullTitle: "Strategy: Wait for the Invitation",
+          light: "You're designed to wait for recognition and invitation before sharing your insights and guidance",
+          shadow: "You may feel bitter when your guidance is ignored or when you offer advice uninvited",
+          insight: "You're here to guide when invited, but trust that the right people will recognize and seek your wisdom"
+        },
+        waitfortheinvitation: {
+          fullTitle: "Strategy: Wait for the Invitation",
+          light: "You're designed to wait for recognition and invitation before sharing your insights and guidance",
+          shadow: "You may feel bitter when your guidance is ignored or when you offer advice uninvited",
+          insight: "You're here to guide when invited, but trust that the right people will recognize and seek your wisdom"
+        },
+        inform: {
+          fullTitle: "Strategy: To Inform",
+          light: "You're designed to inform others of your plans before taking action to reduce resistance",
+          shadow: "You may feel angry when others resist or try to control your independent actions",
+          insight: "You're here to initiate, but informing others of your plans creates support rather than resistance"
+        },
+        'wait a lunar cycle': {
+          fullTitle: "Strategy: Wait a Lunar Cycle",
+          light: "You're designed to wait through a full moon cycle to gain clarity on major decisions",
+          shadow: "You may feel disappointed by experiencing all perspectives or pressured to decide quickly",
+          insight: "You're here to see all sides clearly, but honor your need for time to process before committing"
+        },
+        waitalunarcycle: {
+          fullTitle: "Strategy: Wait a Lunar Cycle",
+          light: "You're designed to wait through a full moon cycle to gain clarity on major decisions",
+          shadow: "You may feel disappointed by experiencing all perspectives or pressured to decide quickly",
+          insight: "You're here to see all sides clearly, but honor your need for time to process before committing"
+        }
+      },
+
+      // Human Design Profile Descriptions
+      profileDescriptions: {
+        '1/3': {
+          fullTitle: "Profile 1/3 - Investigator/Martyr",
+          light: "You build solid foundations through research and learn wisdom through trial and error",
+          shadow: "You may fear making mistakes or get stuck investigating without taking action",
+          insight: "You're here to build expertise through experimentation, but mistakes are required research, not failures"
+        },
+        '1/4': {
+          fullTitle: "Profile 1/4 - Investigator/Opportunist",
+          light: "You master knowledge and share it through your trusted network and community",
+          shadow: "You may isolate in study or feel torn between depth and social connection",
+          insight: "You're here to master subjects and share through relationship, but balance solo study with community engagement"
+        },
+        '2/4': {
+          fullTitle: "Profile 2/4 - Hermit/Opportunist",
+          light: "You have natural gifts that others recognize, and you share them through your community",
+          shadow: "You may resist being called out or prefer isolation over the networking you need",
+          insight: "You're here to develop natural talents and share through connection, but balance alone time with community"
+        },
+        '2/5': {
+          fullTitle: "Profile 2/5 - Hermit/Heretic",
+          light: "You have natural gifts that others project onto, expecting you to solve their problems",
+          shadow: "You may resent projections or retreat from expectations that don't match your reality",
+          insight: "You're here to share natural gifts when called, but set clear boundaries around others' projections"
+        },
+        '3/5': {
+          fullTitle: "Profile 3/5 - Martyr/Heretic",
+          light: "You learn through experimentation and provide practical solutions when others have expectations",
+          shadow: "You may be seen as unreliable or feel burdened by others' projections",
+          insight: "You're here to discover through trial and error, but communicate that your process includes mistakes"
+        },
+        '3/6': {
+          fullTitle: "Profile 3/6 - Martyr/Role Model",
+          light: "You experiment in youth and eventually become a wise role model through lived experience",
+          shadow: "You may fear mistakes or feel pressure to have answers before you've lived enough",
+          insight: "You're here to learn through experience then model wisdom, but trust your experimental phase as necessary"
+        },
+        '4/6': {
+          fullTitle: "Profile 4/6 - Opportunist/Role Model",
+          light: "You build strong networks and eventually become a trusted role model for your community",
+          shadow: "You may stay in your comfort zone or feel pressure to model before you're ready",
+          insight: "You're here to influence through relationship and model wisdom, but honor your process of becoming"
+        },
+        '4/4': {
+          fullTitle: "Profile 4/4 - Opportunist/Opportunist",
+          light: "You create impact through your network and community connections, influencing through relationship",
+          shadow: "You may fear rejection or limit yourself to only familiar connections",
+          insight: "You're here to influence through your network, but expanding your circle multiplies your impact"
+        },
+        '4/1': {
+          fullTitle: "Profile 4/1 - Opportunist/Investigator",
+          light: "You build networks while having a deep need for solid foundations of knowledge",
+          shadow: "You may feel torn between social connection and the solitary study you crave",
+          insight: "You're here to network and build expertise, but balance social time with foundational learning"
+        },
+        '5/1': {
+          fullTitle: "Profile 5/1 - Heretic/Investigator",
+          light: "Others project solutions onto you, and you have the deep knowledge to deliver practical answers",
+          shadow: "You may resent expectations or isolate in study to avoid others' projections",
+          insight: "You're here to provide solutions based on solid research, but set boundaries around unrealistic expectations"
+        },
+        '5/2': {
+          fullTitle: "Profile 5/2 - Heretic/Hermit",
+          light: "You're called to solve problems with natural gifts that others recognize even when you don't",
+          shadow: "You may resist being called out or feel burdened by projections of savior energy",
+          insight: "You're here to provide solutions from natural ability, but only engage when it genuinely calls to you"
+        },
+        '6/2': {
+          fullTitle: "Profile 6/2 - Role Model/Hermit",
+          light: "You eventually become a wise role model with natural talents others recognize and seek",
+          shadow: "You may retreat from visibility or feel pressure to model before gaining enough life experience",
+          insight: "You're here to model wisdom from natural gifts, but honor your need for alone time to integrate"
+        },
+        '6/3': {
+          fullTitle: "Profile 6/3 - Role Model/Martyr",
+          light: "You experiment in youth and eventually model wisdom gained through trial and error",
+          shadow: "You may judge your experimental phase or feel pressure to have all answers now",
+          insight: "You're here to discover through experience then model hard-won wisdom, but mistakes are your research"
+        },
+        44: {
+          fullTitle: "Profile 4/4 - Opportunist/Opportunist",
+          light: "You create impact through your network and community connections, influencing through relationship",
+          shadow: "You may fear rejection or limit yourself to only familiar connections",
+          insight: "You're here to influence through your network, but expanding your circle multiplies your impact"
+        }
+      },
+
+      // Human Design Pacing Descriptions
+      pacingDescriptions: {
+        steady: {
+          fullTitle: "Steady Pacing",
+          light: "You work best with consistent, sustainable rhythm and reliable routines",
+          shadow: "You may resist bursts of energy or feel threatened by changing pace",
+          insight: "You excel at steady sustainable progress, but occasional sprints can actually enhance your consistency"
+        },
+        burst: {
+          fullTitle: "Burst Pacing",
+          light: "You work best in intense focused bursts followed by rest and integration",
+          shadow: "You may burn out pushing too hard or feel guilty during necessary rest periods",
+          insight: "You excel at powerful bursts of energy, but honor your need for rest as part of your productive cycle"
+        },
+        sustainable: {
+          fullTitle: "Sustainable Pacing",
+          light: "You work best with balanced energy, maintaining consistent effort over time",
+          shadow: "You may push too hard too long or ignore signs you need to adjust your pace",
+          insight: "You excel at sustained effort, but tuning into your energy level prevents burnout and maintains longevity"
+        },
+        variable: {
+          fullTitle: "Variable Pacing",
+          light: "You work best when you can vary your intensity based on what feels right in the moment",
+          shadow: "You may struggle with external expectations for consistent pace or productivity",
+          insight: "You excel at following your natural rhythms, but communicate your variable pace so others understand your process"
+        }
+      },
+
+      // Astrology Social Style Descriptions  
+      socialStyleDescriptions: {
+        warm: {
+          fullTitle: "Warm Social Style",
+          light: "You naturally create warmth and make others feel welcomed and valued in social situations",
+          shadow: "You may over-extend yourself socially or struggle to maintain boundaries",
+          insight: "You excel at creating warm connection, but protect your energy and say no when you're depleted"
+        },
+        reserved: {
+          fullTitle: "Reserved Social Style",
+          light: "You engage socially with thoughtful selectivity, offering depth to those you connect with",
+          shadow: "You may appear aloof or miss opportunities by being too cautious socially",
+          insight: "You excel at meaningful one-on-one connection, but occasional social stretching expands your world"
+        },
+        dynamic: {
+          fullTitle: "Dynamic Social Style",
+          light: "You bring energy and enthusiasm to social situations, naturally engaging and entertaining others",
+          shadow: "You may exhaust yourself performing or struggle with quieter social contexts",
+          insight: "You excel at bringing energy to social spaces, but balance your dynamism with authentic vulnerability"
+        },
+        balanced: {
+          fullTitle: "Balanced Social Style",
+          light: "You adapt your social engagement based on the situation and your energy levels",
+          shadow: "You may struggle to define your authentic social preferences or please everyone",
+          insight: "You excel at social adaptability, but tune into what feels genuinely right for you rather than others' expectations"
+        }
+      },
+
+      // Astrology Public Vibe Descriptions
+      publicVibeDescriptions: {
+        approachable: {
+          fullTitle: "Approachable Public Vibe",
+          light: "You project warmth and accessibility, making others feel comfortable approaching you",
+          shadow: "You may attract energy vampires or struggle to maintain professional boundaries",
+          insight: "You excel at approachability, but selective availability protects your energy for meaningful connections"
+        },
+        mysterious: {
+          fullTitle: "Mysterious Public Vibe",
+          light: "You project intriguing depth that draws others to want to know you better",
+          shadow: "You may be misunderstood or isolated by appearing too reserved or distant",
+          insight: "You excel at selective revelation, but strategic vulnerability helps others connect with your depth"
+        },
+        authoritative: {
+          fullTitle: "Authoritative Public Vibe",
+          light: "You project confidence and competence that naturally commands respect and attention",
+          shadow: "You may intimidate others or create distance through your powerful presence",
+          insight: "You excel at commanding presence, but strategic warmth makes your authority more accessible"
+        },
+        magnetic: {
+          fullTitle: "Magnetic Public Vibe",
+          light: "You naturally attract attention and interest with your compelling presence",
+          shadow: "You may feel overwhelmed by attention or struggle with unwanted projections",
+          insight: "You excel at attracting interest, but clear boundaries help you channel attention toward what serves you"
+        }
+      },
+
+      // Astrology Leadership Style Descriptions
+      leadershipStyleDescriptions: {
+        collaborative: {
+          fullTitle: "Collaborative Leadership",
+          light: "You lead by bringing people together, honoring all voices, and building consensus",
+          shadow: "You may struggle with timely decisions or lose your own voice seeking everyone's input",
+          insight: "You excel at inclusive leadership, but trust your own judgment when consensus isn't possible"
+        },
+        visionary: {
+          fullTitle: "Visionary Leadership",
+          light: "You lead by seeing the future clearly and inspiring others to work toward that vision",
+          shadow: "You may become disconnected from present realities or frustrated when others don't see your vision",
+          insight: "You excel at visionary leadership, but ground your vision in practical steps others can take"
+        },
+        decisive: {
+          fullTitle: "Decisive Leadership",
+          light: "You lead by making clear decisions quickly and taking confident action",
+          shadow: "You may become authoritarian or miss important input by deciding too quickly",
+          insight: "You excel at decisive action, but strategic pauses for input strengthen your decisions"
+        },
+        inspirational: {
+          fullTitle: "Inspirational Leadership",
+          light: "You lead by motivating others through enthusiasm, encouragement, and positive energy",
+          shadow: "You may avoid difficult feedback or struggle with the harder aspects of leadership",
+          insight: "You excel at inspiring others, but complete leadership includes difficult conversations alongside encouragement"
+        },
+        strategic: {
+          fullTitle: "Strategic Leadership",
+          light: "You lead by seeing the big picture, planning carefully, and positioning for long-term success",
+          shadow: "You may get lost in planning without action or appear cold and calculating",
+          insight: "You excel at strategic thinking, but balance planning with decisive action and human connection"
+        }
       }
     },
     dreamCategories: {

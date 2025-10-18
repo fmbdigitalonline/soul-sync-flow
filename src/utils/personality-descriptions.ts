@@ -26,7 +26,17 @@ export const getPersonalityDescription = (
     cleanedKey = cleanedKey.split(' ')[0];
   }
   
-  // Normalize: lowercase, remove spaces and special chars
+  // For Human Design profiles, remove slash: "4/4" → "44"
+  if (category.toLowerCase().includes('profile')) {
+    cleanedKey = cleanedKey.replace('/', '');
+  }
+  
+  // For strategies with spaces, remove spaces: "Wait for the Invitation" → "waitfortheinvitation"
+  if (category.toLowerCase().includes('strategy') || category.toLowerCase().includes('pacing')) {
+    cleanedKey = cleanedKey.replace(/\s+/g, '').toLowerCase();
+  }
+  
+  // Normalize: lowercase, remove spaces and special chars (except for already processed keys)
   const normalizedKey = cleanedKey.toLowerCase().replace(/[^\w]/g, '');
   const descKey = `blueprint.${category}.${normalizedKey}`;
   

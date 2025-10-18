@@ -452,25 +452,93 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'cognitiveFunctionDescriptions', dominantFunction.toLowerCase());
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.cognitiveFunctions'),
+                      mainValue: `${dominantFunction} / ${auxiliaryFunction}`,
+                      ...desc,
+                      category: 'MBTI'
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const desc = getPersonalityDescription(t, 'cognitiveFunctionDescriptions', dominantFunction.toLowerCase());
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.cognitiveFunctions'),
+                        mainValue: `${dominantFunction} / ${auxiliaryFunction}`,
+                        ...desc,
+                        category: 'MBTI'
+                      });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label="View cognitive functions details"
+                >
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.cognitiveFunctions')}</h4>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}><strong>{t('blueprint.descriptions.dominant')}</strong> {dominantFunction}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}><strong>{t('blueprint.descriptions.auxiliary')}</strong> {auxiliaryFunction}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'cognitiveFunctionDescriptions', dominantFunction.toLowerCase());
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'taskApproachDescriptions', taskApproach);
+                    openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.taskApproach'), mainValue: taskApproach, ...desc, category: 'MBTI' });
+                  }}
+                  tabIndex={0}
+                  role="button"
+                >
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.taskApproach')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{taskApproach}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'taskApproachDescriptions', taskApproach);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'communicationDescriptions', communicationStyle);
+                    openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.communication'), mainValue: communicationStyle, ...desc, category: 'MBTI' });
+                  }}
+                  tabIndex={0}
+                  role="button"
+                >
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.communication')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{communicationStyle}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'communicationDescriptions', communicationStyle);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'decisionMakingDescriptions', decisionMaking);
+                    openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.decisionMaking'), mainValue: decisionMaking, ...desc, category: 'MBTI' });
+                  }}
+                  tabIndex={0}
+                  role="button"
+                >
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.decisionMaking')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{decisionMaking}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'decisionMakingDescriptions', decisionMaking);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
               </div>
             </div>
@@ -566,17 +634,53 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'strategyDescriptions', strategy);
+                    openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.strategy'), mainValue: strategy, ...desc, category: 'Human Design' });
+                  }}
+                  tabIndex={0}
+                  role="button"
+                >
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.strategy')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold capitalize text-soul-purple break-words`}>{strategy}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'strategyDescriptions', strategy);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'profileDescriptions', profile);
+                    openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.profile'), mainValue: profile, ...desc, category: 'Human Design' });
+                  }}
+                  tabIndex={0}
+                  role="button"
+                >
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.profile')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple break-words`}>{profile}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'profileDescriptions', profile);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'pacingDescriptions', pacing);
+                    openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.pacing'), mainValue: pacing, ...desc, category: 'Human Design' });
+                  }}
+                  tabIndex={0}
+                  role="button"
+                >
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.pacing')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold capitalize text-soul-purple break-words`}>{pacing}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'pacingDescriptions', pacing);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
               </div>
             </div>
@@ -670,25 +774,55 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                       return <PersonalityDescription {...desc} compact={true} />;
                     })()}
                   </div>
-                  <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                  <div 
+                    className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                    onClick={() => {
+                      const desc = getPersonalityDescription(t, 'soulUrgeDescriptions', soulUrgeNumber);
+                      openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.soulUrgeNumber'), mainValue: String(soulUrgeNumber), ...desc, category: 'Numerology' });
+                    }}
+                    tabIndex={0}
+                    role="button"
+                  >
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.soulUrgeNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{soulUrgeNumber}</p>
-                    <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{soulUrgeKeyword}</p>
-                    <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>{t('blueprint.descriptions.heartDesires')}</p>
+                    {(() => {
+                      const desc = getPersonalityDescription(t, 'soulUrgeDescriptions', soulUrgeNumber);
+                      return <PersonalityDescription {...desc} compact={true} />;
+                    })()}
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                  <div 
+                    className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                    onClick={() => {
+                      const desc = getPersonalityDescription(t, 'personalityNumberDescriptions', personalityNumber);
+                      openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.personalityNumber'), mainValue: String(personalityNumber), ...desc, category: 'Numerology' });
+                    }}
+                    tabIndex={0}
+                    role="button"
+                  >
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.personalityNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{personalityNumber}</p>
-                    <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{personalityKeyword}</p>
-                    <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>{t('blueprint.descriptions.howOthersPerceive')}</p>
+                    {(() => {
+                      const desc = getPersonalityDescription(t, 'personalityNumberDescriptions', personalityNumber);
+                      return <PersonalityDescription {...desc} compact={true} />;
+                    })()}
                   </div>
-                  <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                  <div 
+                    className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                    onClick={() => {
+                      const desc = getPersonalityDescription(t, 'birthdayNumberDescriptions', birthdayNumber);
+                      openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.birthdayNumber'), mainValue: String(birthdayNumber), ...desc, category: 'Numerology' });
+                    }}
+                    tabIndex={0}
+                    role="button"
+                  >
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.birthdayNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{birthdayNumber}</p>
-                    <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{birthdayKeyword}</p>
-                    <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>{t('blueprint.descriptions.specialTalents')}</p>
+                    {(() => {
+                      const desc = getPersonalityDescription(t, 'birthdayNumberDescriptions', birthdayNumber);
+                      return <PersonalityDescription {...desc} compact={true} />;
+                    })()}
                   </div>
                 </div>
               </div>
@@ -826,17 +960,53 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'socialStyleDescriptions', 'warm');
+                    openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.socialStyle'), mainValue: t('blueprint.values.warm'), ...desc, category: 'Astrology' });
+                  }}
+                  tabIndex={0}
+                  role="button"
+                >
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.socialStyle')}</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.values.warm')}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'socialStyleDescriptions', 'warm');
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'publicVibeDescriptions', 'approachable');
+                    openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.publicVibe'), mainValue: t('blueprint.values.approachable'), ...desc, category: 'Astrology' });
+                  }}
+                  tabIndex={0}
+                  role="button"
+                >
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.publicVibe')}</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.values.approachable')}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'publicVibeDescriptions', 'approachable');
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
-                <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
+                <div 
+                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'leadershipStyleDescriptions', 'collaborative');
+                    openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.leadershipStyle'), mainValue: t('blueprint.values.collaborative'), ...desc, category: 'Astrology' });
+                  }}
+                  tabIndex={0}
+                  role="button"
+                >
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.leadershipStyle')}</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.values.collaborative')}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'leadershipStyleDescriptions', 'collaborative');
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
               </div>
 
