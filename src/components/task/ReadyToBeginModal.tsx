@@ -30,9 +30,9 @@ export const ReadyToBeginModal: React.FC<ReadyToBeginModalProps> = ({
           {t('modal.coachGuide')}<br />
           {t('modal.readyToFocus')}
         </div>
-        <div className="flex gap-2 justify-center">
-          <Button variant="outline" onClick={onCancel}>{t('cancel')}</Button>
-          <Button className="bg-soul-purple text-white" onClick={onConfirm}>{t('modal.letsGo')}</Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
+          <Button variant="outline" onClick={onCancel} className="w-full sm:w-auto sm:flex-1">{t('cancel')}</Button>
+          <Button className="bg-soul-purple text-white w-full sm:w-auto sm:flex-1" onClick={onConfirm}>{t('modal.letsGo')}</Button>
         </div>
       </div>
     </div>
