@@ -5442,6 +5442,96 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt worstelen met tijdige beslissingen of je eigen stem verliezen in consensuszoeken met groep",
           insight: "Je excelleert in inclusieve besluitvorming en samenwerking, maar vertrouw je eigen oordeel wanneer consensus niet mogelijk is"
         }
+      },
+
+      // Social Style Descriptions (Dutch)
+      socialStyleDescriptions: {
+        warm: {
+          fullTitle: "Warme Sociale Stijl",
+          light: "Je creëert natuurlijk warmte en zorgt dat anderen zich welkom en gewaardeerd voelen in sociale situaties",
+          shadow: "Je kunt jezelf sociaal overbelasten of moeite hebben met het handhaven van grenzen en energiebescherming",
+          insight: "Je excelleert in het creëren van warme verbinding en gastvrije ruimte, maar bescherm je energie en zeg nee wanneer je uitgeput bent"
+        },
+        reserved: {
+          fullTitle: "Gereserveerde Sociale Stijl",
+          light: "Je engageert sociaal met doordachte selectiviteit en biedt diepte aan degenen met wie je verbindt",
+          shadow: "Je kunt afstandelijk overkomen of kansen missen door te voorzichtig te zijn in sociale omgevingen",
+          insight: "Je excelleert in betekenisvolle een-op-een verbinding en diepte, maar af en toe sociale uitbreiding vergroot je wereld"
+        },
+        dynamic: {
+          fullTitle: "Dynamische Sociale Stijl",
+          light: "Je brengt energie en enthousiasme naar sociale situaties en betrekt en vermaakt anderen op natuurlijke wijze",
+          shadow: "Je kunt jezelf uitputten door te presteren of moeite hebben met stillere sociale contexten en rust",
+          insight: "Je excelleert in het brengen van energie naar sociale ruimtes en verbinding, maar balanceer dynamisme met authentieke kwetsbaarheid"
+        },
+        balanced: {
+          fullTitle: "Gebalanceerde Sociale Stijl",
+          light: "Je past je sociale betrokkenheid aan op basis van de situatie en je energieniveaus met flexibiliteit",
+          shadow: "Je kunt moeite hebben met het definiëren van je authentieke sociale voorkeuren of iedereen tevreden stellen",
+          insight: "Je excelleert in sociale aanpassingsvermogen en flexibiliteit, maar stem af op wat zich echt goed voelt voor jou in plaats van verwachtingen van anderen"
+        }
+      },
+
+      // Public Vibe Descriptions (Dutch)
+      publicVibeDescriptions: {
+        approachable: {
+          fullTitle: "Benaderbare Publieke Uitstraling",
+          light: "Je straalt warmte en toegankelijkheid uit en zorgt dat anderen zich comfortabel voelen om je te benaderen",
+          shadow: "Je kunt energievampiers aantrekken of moeite hebben met het handhaven van professionele grenzen en bescherming",
+          insight: "Je excelleert in toegankelijkheid en openheid, maar selectieve beschikbaarheid beschermt je energie voor betekenisvolle verbindingen"
+        },
+        mysterious: {
+          fullTitle: "Mysterieuze Publieke Uitstraling",
+          light: "Je straalt intrigerende diepte uit die anderen aantrekt om je beter te willen leren kennen en begrijpen",
+          shadow: "Je kunt verkeerd begrepen worden of geïsoleerd raken door te gereserveerd of afstandelijk over te komen",
+          insight: "Je excelleert in selectieve onthulling en mysterie, maar strategische kwetsbaarheid helpt anderen verbinden met je diepte"
+        },
+        authoritative: {
+          fullTitle: "Gezaghebbende Publieke Uitstraling",
+          light: "Je straalt vertrouwen en competentie uit die op natuurlijke wijze respect en aandacht afdwingt",
+          shadow: "Je kunt anderen intimideren of afstand creëren door je krachtige aanwezigheid en sterke uitstraling",
+          insight: "Je excelleert in gezaghebbende aanwezigheid en kracht, maar strategische warmte maakt je autoriteit toegankelijker"
+        },
+        magnetic: {
+          fullTitle: "Magnetische Publieke Uitstraling",
+          light: "Je trekt van nature aandacht en interesse met je meeslepende aanwezigheid en charismatische energie",
+          shadow: "Je kunt je overweldigd voelen door aandacht of worstelen met ongewenste projecties en verwachtingen",
+          insight: "Je excelleert in het aantrekken van interesse en aandacht, maar duidelijke grenzen helpen je aandacht te kanaliseren naar wat je dient"
+        }
+      },
+
+      // Leadership Style Descriptions (Dutch)
+      leadershipStyleDescriptions: {
+        collaborative: {
+          fullTitle: "Collaboratief Leiderschap",
+          light: "Je leidt door mensen samen te brengen, alle stemmen te eren en consensus te bouwen met inclusiviteit",
+          shadow: "Je kunt worstelen met tijdige beslissingen of je eigen stem verliezen door input van iedereen te zoeken",
+          insight: "Je excelleert in inclusief leiderschap en samenwerking, maar vertrouw je eigen oordeel wanneer consensus niet mogelijk is"
+        },
+        visionary: {
+          fullTitle: "Visionair Leiderschap",
+          light: "Je leidt door de toekomst helder te zien en anderen te inspireren om naar die visie toe te werken",
+          shadow: "Je kunt losgekoppeld raken van huidige realiteiten of gefrustreerd worden wanneer anderen je visie niet zien",
+          insight: "Je excelleert in visionair leiderschap en toekomstdenken, maar grond je visie in praktische stappen die anderen kunnen nemen"
+        },
+        decisive: {
+          fullTitle: "Besluitvaardig Leiderschap",
+          light: "Je leidt door duidelijke beslissingen snel te nemen en met zelfvertrouwen actie te ondernemen",
+          shadow: "Je kunt autoritair worden of belangrijke input missen door te snel te beslissen zonder overleg",
+          insight: "Je excelleert in besluitvaardige actie en snelheid, maar strategische pauzes voor input versterken je beslissingen"
+        },
+        inspirational: {
+          fullTitle: "Inspirerend Leiderschap",
+          light: "Je leidt door anderen te motiveren met enthousiasme, aanmoediging en positieve energie en opgewektheid",
+          shadow: "Je kunt moeilijke feedback vermijden of worstelen met de hardere aspecten van leiderschap en verantwoordelijkheid",
+          insight: "Je excelleert in het inspireren van anderen en positieve energie, maar compleet leiderschap omvat moeilijke gesprekken naast aanmoediging"
+        },
+        strategic: {
+          fullTitle: "Strategisch Leiderschap",
+          light: "Je leidt door het grote plaatje te zien, zorgvuldig te plannen en te positioneren voor langetermijnsucces",
+          shadow: "Je kunt verdwalen in planning zonder actie of koud en berekenend overkomen zonder menselijkheid",
+          insight: "Je excelleert in strategisch denken en planning, maar balanceer planning met besluitvaardige actie en menselijke verbinding"
+        }
       }
     },
     dreamCategories: {
