@@ -4208,6 +4208,106 @@ Help them transform their dream interest into a specific, actionable goal. Use t
         rooster: "Zelfverzekerd, georganiseerd, observerende natuur",
         dog: "Loyaal, eerlijk, beschermende hoeder",
         pig: "Genereus, optimistisch, oprecht hart"
+      },
+
+      // MBTI Descriptions (Dutch)
+      mbtiDescriptions: {
+        enfj: {
+          fullTitle: "ENFJ - De Protagonist",
+          light: "Je inspireert en verenigt mensen natuurlijk rond een gedeelde visie, leidt met empathie en ziet het potentieel in iedereen",
+          shadow: "Je kunt jezelf overbelasten door aan ieders behoeften te voldoen, uitgeput of beledigd raken wanneer je inspanningen niet worden beantwoord",
+          insight: "Je bent een natuurlijke leider en empaat die anderen verheft, maar vergeet niet grenzen te stellen en je eigen welzijn voorrang te geven voordat je in anderen investeert"
+        },
+        enfp: {
+          fullTitle: "ENFP - De Kampvechter",
+          light: "Je brengt aanstekelijk enthousiasme en creativiteit, ziet mogelijkheden overal en inspireert anderen om hun dromen te volgen",
+          shadow: "Je kunt worstelen met focus en voltooiing, verspreid raken door te veel projecten of moeite hebben met routine",
+          insight: "Je hebt een gave voor het zien van potentieel en het inspireren van verandering, maar kanaliseer je energie op wat echt belangrijk is om blijvende impact te maken"
+        },
+        entj: {
+          fullTitle: "ENTJ - De Commandant",
+          light: "Je organiseert natuurlijk systemen en mensen efficiënt, ziet de grote strategie en leidt met vertrouwen naar resultaten",
+          shadow: "Je kunt te intens of veeleisend worden, emotionele overwegingen negeren in de jacht op efficiëntie",
+          insight: "Je excelleert in strategisch leiderschap en het realiseren van visies, maar onthoud dat mensen niet alleen middelen zijn - compassie versterkt je invloed"
+        },
+        entp: {
+          fullTitle: "ENTP - De Debater",
+          light: "Je daagt aannames uit met scherpe logica en creativiteit, genereert innovatieve oplossingen en geniet van intellectuele verkenning",
+          shadow: "Je kunt argumentatief worden om het argument zelf, anderen vervreemden of worstelen met het implementeren van je ideeën",
+          insight: "Je hebt een gave voor het zien van alle kanten en innoveren, maar kies je debatten verstandig en breng je visies tot voltooiing"
+        },
+        infj: {
+          fullTitle: "INFJ - De Advocaat",
+          light: "Je hebt diepe intuïtieve inzichten over mensen en betekenis, begeleidt anderen naar hun potentieel met stille wijsheid",
+          shadow: "Je kunt overweldigd raken door anderen' emoties, perfectionistisch worden of worstelen met praktische realiteit",
+          insight: "Je bent een visionair en genezer die diepgaande transformatie faciliteert, maar bescherm je energie en grond je idealen in haalbare stappen"
+        },
+        infp: {
+          fullTitle: "INFP - De Bemiddelaar",
+          light: "Je leeft volgens diep gehouden waarden met authentieke expressie, ziet schoonheid en betekenis en inspireert anderen door je integriteit",
+          shadow: "Je kunt te idealistisch worden, persoonlijke kritiek te hard nemen of worstelen met praktische uitvoering",
+          insight: "Je hebt een gave voor authentieke waardengedreven creativiteit, maar balans je idealen met zelfcompassie en praktische actie"
+        },
+        intj: {
+          fullTitle: "INTJ - De Architect",
+          light: "Je bouwt elegante systemen en strategieën met visionair inzicht, ziet patronen die anderen missen en executeert met precisie",
+          shadow: "Je kunt overmatig kritisch worden op jezelf en anderen, emotionele verbinding negeren of te rigide vasthouden aan je visie",
+          insight: "Je excelleert in strategische visie en systematisch denken, maar open jezelf voor input van anderen en eer emotionele dimensies"
+        },
+        intp: {
+          fullTitle: "INTP - De Logicus",
+          light: "Je analyseert complexe systemen met precieze logica, bouwt elegante conceptuele kaders en lost problemen op door diep begrip",
+          shadow: "Je kunt verloren raken in analyse zonder actie, sociaal teruggetrokken worden of worstelen om je inzichten te communiceren",
+          insight: "Je hebt een gave voor logische analyse en innovatief probleemoplossen, maar deel je inzichten en breng je ideeën naar toepassing"
+        },
+        esfj: {
+          fullTitle: "ESFJ - De Consul",
+          light: "Je creëert natuurlijk warmte en harmonie in groepen, zorgt praktisch voor anderen en bouwt sterke gemeenschap",
+          shadow: "Je kunt te afhankelijk worden van anderen' goedkeuring, jezelf overbelasten door zorgen of worstelen met verandering",
+          insight: "Je excelleert in het creëren van verbinding en zorg voor anderen, maar vergeet niet je eigen behoeften te eren en grenzen te stellen"
+        },
+        esfp: {
+          fullTitle: "ESFP - De Entertainer",
+          light: "Je brengt vreugde en energie naar elk moment, volledig aanwezig en spontaan, moedigt anderen aan om het leven te omarmen",
+          shadow: "Je kunt impulsief worden, worstelen met langetermijnplanning of te afhankelijk worden van externe stimulatie",
+          insight: "Je hebt een gave voor het leven volledig ervaren en anderen inspireren om aanwezig te zijn, maar balans spontaniteit met toekomstdenken"
+        },
+        estj: {
+          fullTitle: "ESTJ - De Directeur",
+          light: "Je organiseert en beheert efficiënt met duidelijke systemen, neemt verantwoordelijkheid en zorgt dat dingen gedaan worden",
+          shadow: "Je kunt te rigide of controlerend worden, emotionele overwegingen negeren of worstelen met flexibiliteit",
+          insight: "Je excelleert in organisatie en betrouwbare executie, maar balans structuur met menselijke flexibiliteit en emotionele awareness"
+        },
+        estp: {
+          fullTitle: "ESTP - De Ondernemer",
+          light: "Je reageert snel met praktische actie, gedijt in snelle omgevingen en lost problemen op met directe aanpak",
+          shadow: "Je kunt te riskant of impulsief worden, worstelen met langetermijnplanning of ongevoelig lijken voor emoties",
+          insight: "Je hebt een gave voor actie in het moment en praktisch probleemoplossen, maar balans directe actie met strategisch vooruitzicht"
+        },
+        isfj: {
+          fullTitle: "ISFJ - De Verdediger",
+          light: "Je zorgt toegewijd voor anderen met praktische ondersteuning, onthoudt details en creëert warme, stabiele omgevingen",
+          shadow: "Je kunt jezelf overbelasten door zorgen, worstelen om nee te zeggen of te veel vasthouden aan traditie",
+          insight: "Je excelleert in trouwe zorg en het creëren van stabiliteit voor anderen, maar vergeet niet je eigen behoeften te eren en grenzen te stellen"
+        },
+        isfp: {
+          fullTitle: "ISFP - De Avonturier",
+          light: "Je leeft authentiek in het moment met artistieke gevoeligheid, waardeert schoonheid en vrijheid met zachte kracht",
+          shadow: "Je kunt te gevoelig worden voor kritiek, worstelen met confrontatie of moeite hebben met langetermijnplanning",
+          insight: "Je hebt een gave voor authentieke expressie en esthetische creatie, maar deel je gaven wijder en sta jezelf toe grenzen te stellen"
+        },
+        istj: {
+          fullTitle: "ISTJ - De Logisticus",
+          light: "Je werkt betrouwbaar met nauwgezette aandacht voor detail, volgt bewezen methoden en levert consequent kwaliteit",
+          shadow: "Je kunt te rigide worden met regels, worstelen met verandering of emotionele expressie negeren",
+          insight: "Je excelleert in betrouwbare executie en systematische aanpak, maar blijf open voor nieuwe methoden en emotionele dimensies"
+        },
+        istp: {
+          fullTitle: "ISTP - De Virtuoos",
+          light: "Je begrijpt mechanische systemen intuïtief, lost problemen op met praktische vaardigheid en blijft kalm in crises",
+          shadow: "Je kunt te teruggetrokken worden, worstelen met emotionele expressie of riskant gedrag zoeken voor stimulatie",
+          insight: "Je hebt een gave voor praktische probleemoplossing en kalm blijven onder druk, maar deel je expertise en blijf verbonden met anderen"
+        }
       }
     },
     dreamCategories: {
