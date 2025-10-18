@@ -3148,6 +3148,14 @@ Help them transform their dream interest into a specific, actionable goal. Use t
       },
       badges: {
         blueprint: '🧩 Blueprint'
+      },
+      assistance: {
+        stuck: "I'm stuck",
+        needDetails: 'Need more details',
+        howTo: 'How do I...?',
+        showExamples: 'Show examples',
+        getHelp: 'Get Help',
+        cancel: 'Cancel'
       }
     },
     // User 360
@@ -5033,6 +5041,14 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
       },
       badges: {
         blueprint: '🧩 Blauwdruk'
+      },
+      assistance: {
+        stuck: 'Ik zit vast',
+        needDetails: 'Meer details nodig',
+        howTo: 'Hoe doe ik...?',
+        showExamples: 'Toon voorbeelden',
+        getHelp: 'Hulp krijgen',
+        cancel: 'Annuleren'
       }
     },
 

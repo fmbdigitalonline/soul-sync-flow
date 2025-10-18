@@ -708,7 +708,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
         </div>
         
         {/* Debug Info (only in development) */}
-        {process.env.NODE_ENV === 'development' && (
+        {import.meta.env.DEV && (
           <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
             <strong>Debug:</strong> Session {sessionStats.sessionId.substring(0, 8)}, 
             Messages: {sessionStats.messageCount}, Actions: {sessionStats.actionCount}
