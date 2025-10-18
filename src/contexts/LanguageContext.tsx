@@ -928,6 +928,31 @@ const translations: Record<Language, Translations> = {
         approachable: "Approachable",
         collaborative: "Collaborative",
         chineseAstrologyAdds: "Chinese astrology adds generational wisdom to your profile"
+      },
+      
+      // Chinese Elements
+      chineseElements: {
+        earth: "Grounded, stable, nurturing energy",
+        fire: "Passionate, dynamic, transformative energy",
+        metal: "Structured, resilient, refined energy",
+        water: "Adaptive, intuitive, flowing energy",
+        wood: "Growing, creative, expansive energy"
+      },
+      
+      // Chinese Zodiac Traits
+      chineseZodiacTraits: {
+        rat: "Intelligent, adaptable, resourceful spirit",
+        ox: "Dependable, patient, strong-willed nature",
+        tiger: "Courageous, confident, competitive energy",
+        rabbit: "Gentle, compassionate, artistic soul",
+        dragon: "Charismatic, ambitious, visionary leader",
+        snake: "Wise, intuitive, mysterious nature",
+        horse: "Independent, energetic, freedom-loving spirit",
+        goat: "Creative, gentle, empathetic soul",
+        monkey: "Clever, curious, playful innovator",
+        rooster: "Confident, organized, observant nature",
+        dog: "Loyal, honest, protective guardian",
+        pig: "Generous, optimistic, sincere heart"
       }
     },
     dreamCategories: {
@@ -2732,6 +2757,31 @@ Help them transform their dream interest into a specific, actionable goal. Use t
         approachable: "Benaderbaar",
         collaborative: "Samenwerkend",
         chineseAstrologyAdds: "Chinese astrologie voegt generationele wijsheid toe aan je profiel"
+      },
+      
+      // Chinese Elements
+      chineseElements: {
+        earth: "Geaard, stabiel, koesterende energie",
+        fire: "Gepassioneerd, dynamisch, transformerende energie",
+        metal: "Gestructureerd, veerkrachtig, verfijnde energie",
+        water: "Aanpassend, intuïtief, stromende energie",
+        wood: "Groeiend, creatief, expansieve energie"
+      },
+      
+      // Chinese Zodiac Traits
+      chineseZodiacTraits: {
+        rat: "Intelligent, aanpasbaar, vindingrijke geest",
+        ox: "Betrouwbaar, geduldig, wilskrachtige natuur",
+        tiger: "Moedig, zelfverzekerd, competitieve energie",
+        rabbit: "Zachtaardig, medelevend, artistieke ziel",
+        dragon: "Charismatisch, ambitieus, visionair leider",
+        snake: "Wijs, intuïtief, mysterieuze natuur",
+        horse: "Onafhankelijk, energiek, vrijheidslievende geest",
+        goat: "Creatief, zachtaardig, empathische ziel",
+        monkey: "Slim, nieuwsgierig, speelse innovator",
+        rooster: "Zelfverzekerd, georganiseerd, observerende natuur",
+        dog: "Loyaal, eerlijk, beschermende hoeder",
+        pig: "Genereus, optimistisch, oprecht hart"
       }
     },
     dreamCategories: {

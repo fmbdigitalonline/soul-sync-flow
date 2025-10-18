@@ -8,6 +8,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { interpolateTranslation } from "@/utils/translation-utils";
+import { getCognitiveFunctions } from "@/utils/mbti-cognitive-functions";
 
 interface SimplifiedBlueprintViewerProps {
   blueprint: LayeredBlueprint;
@@ -76,8 +77,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
   
   // Extract MBTI/Cognitive data with proper fallbacks
   const mbtiType = blueprint?.cognitiveTemperamental?.mbtiType || t('blueprint.values.unknown');
-  const dominantFunction = blueprint?.cognitiveTemperamental?.dominantFunction || t('blueprint.values.unknown');
-  const auxiliaryFunction = blueprint?.cognitiveTemperamental?.auxiliaryFunction || t('blueprint.values.unknown');
+  
+  // Derive cognitive functions from MBTI type
+  const cognitiveFunctions = mbtiType !== t('blueprint.values.unknown') ? getCognitiveFunctions(mbtiType) : null;
+  const dominantFunction = cognitiveFunctions?.dominant || blueprint?.cognitiveTemperamental?.dominantFunction || t('blueprint.values.unknown');
+  const auxiliaryFunction = cognitiveFunctions?.auxiliary || blueprint?.cognitiveTemperamental?.auxiliaryFunction || t('blueprint.values.unknown');
+  
   const taskApproach = blueprint?.cognitiveTemperamental?.taskApproach || 'systematic';
   const communicationStyle = blueprint?.cognitiveTemperamental?.communicationStyle || 'clear';
   const decisionMaking = blueprint?.cognitiveTemperamental?.decisionMaking || 'logical';
@@ -114,6 +119,22 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
 
   const chineseZodiac = blueprint?.generationalCode?.chineseZodiac || t('blueprint.values.unknown');
   const element = blueprint?.generationalCode?.element || t('blueprint.values.unknown');
+  
+  // Get Chinese element description
+  const getChineseElementDescription = (elem: string): string => {
+    const elemLower = elem.toLowerCase();
+    const key = `blueprint.chineseElements.${elemLower}`;
+    const translated = t(key);
+    return translated !== key ? translated : elem;
+  };
+  
+  // Get Chinese zodiac trait description
+  const getChineseZodiacTrait = (zodiac: string): string => {
+    const zodiacLower = zodiac.toLowerCase();
+    const key = `blueprint.chineseZodiacTraits.${zodiacLower}`;
+    const translated = t(key);
+    return translated !== key ? translated : t('blueprint.descriptions.chineseAstrologyAdds');
+  };
 
   const hasRealData = mbtiType !== t('blueprint.values.unknown') || sunSign !== t('blueprint.values.unknown') || lifePath > 1;
 
@@ -195,8 +216,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 </div>
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.chineseZodiac')}</h4>
-                  <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac}</p>
-                  <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{element} {t('blueprint.descriptions.element')}</p>
+                  <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac} {element}</p>
+                  <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{getChineseElementDescription(element)}</p>
                 </div>
               </div>
             </div>
@@ -397,7 +418,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               <div className="mt-4 p-3 bg-soul-purple/5 rounded-3xl text-center">
                 <h5 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.generationalInfluence')}</h5>
                 <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac} {element}</p>
-                <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{t('blueprint.descriptions.chineseAstrologyAdds')}</p>
+                <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{getChineseZodiacTrait(chineseZodiac)}</p>
               </div>
             </div>
           </CardContent>
