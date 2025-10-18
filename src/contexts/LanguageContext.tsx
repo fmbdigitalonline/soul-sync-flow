@@ -4808,6 +4808,230 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt jezelf overbelasten door te veel verzorgen of te veel verantwoordelijkheid nemen",
           insight: "Je hebt meester leergaven vanaf geboorte, maar onthoud dat empoweren krachtiger is dan redden"
         }
+      },
+
+      // Human Design Type Descriptions (Dutch)
+      humanDesignDescriptions: {
+        generator: {
+          fullTitle: "Generator - Duurzame Energie",
+          light: "Je hebt consistente, duurzame energie wanneer je reageert op wat het leven brengt met je sacrale autoriteit",
+          shadow: "Je kunt gefrustreerd raken wanneer je initieert in plaats van te reageren of je energie verspilt op wat niet het jouwe is",
+          insight: "Je bent ontworpen om te reageren op kansen die resoneren, maar vertrouw dat het juiste werk naar je toe komt wanneer je wacht"
+        },
+        "manifesting generator": {
+          fullTitle: "Manifesterende Generator - Snelle Multi-Tasker",
+          light: "Je hebt snelle, multi-gepassioneerde energie en kunt meerdere dingen tegelijk doen wanneer je reageert op wat resoneert",
+          shadow: "Je kunt ongeduldig worden, dingen overslaan in je haast of gefrustreerd raken door langzamere tempo's",
+          insight: "Je bent ontworpen voor snelle respons en multi-passie, maar informeer anderen over je shifts en visualiseer voordat je springt"
+        },
+        projector: {
+          fullTitle: "Projector - Gids & Manager",
+          light: "Je hebt natuurlijke wijsheid in het begeleiden en beheren van anderen' energie, ziet systemen helder wanneer uitgenodigd",
+          shadow: "Je kunt bitter worden wanneer je onuitgenodigde raad geeft, niet wordt erkend of jezelf pusht zoals generators",
+          insight: "Je bent ontworpen om te begeleiden wanneer uitgenodigd, maar vertrouw dat de juiste mensen je wijsheid zullen erkennen en zoeken"
+        },
+        manifestor: {
+          fullTitle: "Manifestor - Initiator",
+          light: "Je hebt de kracht om te initiëren en manifesteren zonder te wachten op anderen, brengt nieuwe cycli met onafhankelijke actie",
+          shadow: "Je kunt woede ervaren wanneer anderen weerstand bieden aan je acties of proberen je vrijheid te controleren",
+          insight: "Je bent ontworpen om te initiëren en informeren, maar informeren van anderen creëert ondersteuning in plaats van weerstand"
+        },
+        reflector: {
+          fullTitle: "Reflector - Maanspiegel",
+          light: "Je weerspiegelt de gezondheid van je omgeving en ziet met unieke objectieve helderheid wat anderen missen",
+          shadow: "Je kunt teleurgesteld worden door alle perspectieven te ervaren zonder helder te zijn of gedrukt voelen om snel te beslissen",
+          insight: "Je bent ontworpen om alle kanten duidelijk te zien door tijd, maar eer je behoefte aan een volledige maancyclus voor grote beslissingen"
+        }
+      },
+
+      // Authority Descriptions (Dutch)
+      authorityDescriptions: {
+        sacral: {
+          fullTitle: "Sacrale Autoriteit",
+          light: "Je hebt directe buikresponsen die je de weg wijzen met onmiddellijke ja/nee antwoorden in het moment",
+          shadow: "Je kunt je mentale geest vertrouwen in plaats van je buikrespons of negeren wat je lichaam je vertelt",
+          insight: "Vertrouw je onmiddellijke buikrespons, niet je gedachten - je lichaam weet voordat je geest begrijpt"
+        },
+        emotional: {
+          fullTitle: "Emotionele Autoriteit",
+          light: "Je vindt helderheid door tijd te nemen en door je emotionele golf te rijden, ziet alle kanten in de tijd",
+          shadow: "Je kunt impulsieve beslissingen nemen in emotionele hoogte- of laagtepunten zonder te wachten op helderheid",
+          insight: "Wacht op emotionele helderheid - er is geen waarheid in het moment, alleen in de tijd door je golf heen"
+        },
+        splenic: {
+          fullTitle: "Splenische Autoriteit",
+          light: "Je hebt onmiddellijke intuïtieve flitsen die je in het moment begeleiden met subtiele lichaamssignalen",
+          shadow: "Je kunt je splenische signalen missen door te veel na te denken of je eerste instinct negeren",
+          insight: "Vertrouw je eerste instinct - het spreekt zachtjes en slechts één keer in het nu moment"
+        },
+        ego: {
+          fullTitle: "Ego Autoriteit",
+          light: "Je weet wat je wilt en hebt wilskracht om het te manifesteren door je hart te volgen",
+          shadow: "Je kunt te gedreven worden door alleen wilskracht, je lichaamssignalen negeren of uitbranden door te veel pushen",
+          insight: "Vertrouw wat je hart wil, maar eer je lichaam' signalen over wat duurzaam is voor lange termijn"
+        },
+        selfprojected: {
+          fullTitle: "Zelf-Geprojecteerde Autoriteit",
+          light: "Je vindt helderheid door hardop te praten en je eigen waarheid te horen resoneren in je stem",
+          shadow: "Je kunt verward raken wanneer je alleen bent zonder om te praten of te veel beïnvloed worden door anderen' stemmen",
+          insight: "Praat door je beslissingen met vertrouwde anderen - je stem draagt je waarheid wanneer je jezelf hoort"
+        },
+        environmental: {
+          fullTitle: "Omgevings Autoriteit",
+          light: "Je vindt helderheid door in de juiste omgevingen te zijn en te voelen wat waar aanvoelt in verschillende ruimtes",
+          shadow: "Je kunt overweldigd raken door verkeerde omgevingen of worstelen met beslissingen in onstabiele ruimtes",
+          insight: "Neem tijd in verschillende omgevingen voordat je beslist - je omgeving vertelt je wat juist is"
+        },
+        lunar: {
+          fullTitle: "Maancyclus Autoriteit",
+          light: "Je vindt helderheid door een volledige maancyclus te wachten, ziet alle perspectieven met objectieve helderheid",
+          shadow: "Je kunt gedrukt voelen om snel te beslissen of teleurgesteld door alle kanten te ervaren",
+          insight: "Wacht een volledige maancyclus voor grote beslissingen - je hebt tijd nodig om alle perspectieven te verwerken"
+        }
+      },
+
+      // Strategy Descriptions (Dutch) - Include both original and normalized keys
+      strategyDescriptions: {
+        respond: {
+          fullTitle: "Strategie: Reageren",
+          light: "Je bent ontworpen om te wachten tot het leven naar je toekomt, dan reageren met je sacrale ja of nee",
+          shadow: "Je kunt gefrustreerd voelen wanneer je initieert in plaats van te reageren op wat het leven brengt",
+          insight: "Je hebt duurzame energie wanneer je reageert op kansen die resoneren, maar vertrouw dat de juiste dingen naar je toe zullen komen"
+        },
+        'wait for the invitation': {
+          fullTitle: "Strategie: Wacht Op De Uitnodiging",
+          light: "Je bent ontworpen om te wachten op erkenning en uitnodiging voordat je je inzichten en begeleiding deelt",
+          shadow: "Je kunt bitter voelen wanneer je begeleiding wordt genegeerd of wanneer je onuitgenodigd advies geeft",
+          insight: "Je bent hier om te begeleiden wanneer uitgenodigd, maar vertrouw dat de juiste mensen je wijsheid zullen erkennen en zoeken"
+        },
+        waitfortheinvitation: {
+          fullTitle: "Strategie: Wacht Op De Uitnodiging",
+          light: "Je bent ontworpen om te wachten op erkenning en uitnodiging voordat je je inzichten en begeleiding deelt",
+          shadow: "Je kunt bitter voelen wanneer je begeleiding wordt genegeerd of wanneer je onuitgenodigd advies geeft",
+          insight: "Je bent hier om te begeleiden wanneer uitgenodigd, maar vertrouw dat de juiste mensen je wijsheid zullen erkennen en zoeken"
+        },
+        inform: {
+          fullTitle: "Strategie: Informeren",
+          light: "Je bent ontworpen om anderen te informeren over je plannen voordat je actie onderneemt om weerstand te verminderen",
+          shadow: "Je kunt woedend voelen wanneer anderen weerstand bieden of proberen je onafhankelijke acties te controleren",
+          insight: "Je bent hier om te initiëren, maar anderen informeren over je plannen creëert ondersteuning in plaats van weerstand"
+        },
+        'wait a lunar cycle': {
+          fullTitle: "Strategie: Wacht Een Maancyclus",
+          light: "Je bent ontworpen om te wachten door een volledige maancyclus om helderheid te krijgen over belangrijke beslissingen",
+          shadow: "Je kunt teleurgesteld voelen door alle perspectieven te ervaren of gedrukt te voelen om snel te beslissen",
+          insight: "Je bent hier om alle kanten duidelijk te zien, maar eer je behoefte aan tijd om te verwerken voordat je commit"
+        },
+        waitalunarcycle: {
+          fullTitle: "Strategie: Wacht Een Maancyclus",
+          light: "Je bent ontworpen om te wachten door een volledige maancyclus om helderheid te krijgen over belangrijke beslissingen",
+          shadow: "Je kunt teleurgesteld voelen door alle perspectieven te ervaren of gedrukt te voelen om snel te beslissen",
+          insight: "Je bent hier om alle kanten duidelijk te zien, maar eer je behoefte aan tijd om te verwerken voordat je commit"
+        }
+      },
+
+      // Profile Descriptions (Dutch) - Include both slash and normalized keys
+      profileDescriptions: {
+        '1/3': {
+          fullTitle: "Profiel 1/3 - Onderzoeker/Martelaar",
+          light: "Je onderzoekt grondig fundamenten en leert door directe ervaring en experimentatie",
+          shadow: "Je kunt pessimistisch worden door te veel 'mislukkingen' of te veel blijven onderzoeken zonder actie",
+          insight: "Je bent hier om te onderzoeken en ervaren, maar onthoud dat elke 'mislukking' waardevolle data is"
+        },
+        '1/4': {
+          fullTitle: "Profiel 1/4 - Onderzoeker/Opportunist",
+          light: "Je bouwt sterke fundamenten door onderzoek en deelt kennis door je vertrouwde netwerk",
+          shadow: "Je kunt te gefocust worden op studie of te afhankelijk van je netwerk voor kansen",
+          insight: "Je bent hier om diepte te bouwen en netwerken, maar balans onderzoek met netwerk onderhoud"
+        },
+        '2/4': {
+          fullTitle: "Profiel 2/4 - Kluizenaar/Opportunist",
+          light: "Je hebt natuurlijke talenten die anderen zien en deelt je gaven door vertrouwde verbindingen",
+          shadow: "Je kunt weerstand bieden aan uitnodigingen of te veel terugtrekken van je netwerk",
+          insight: "Je bent hier om geroepen te worden voor je natuurlijke talenten, maar onderhoud je netwerk"
+        },
+        '2/5': {
+          fullTitle: "Profiel 2/5 - Kluizenaar/Ketters",
+          light: "Je hebt natuurlijke gaven en wordt gezien als probleemoplosser wanneer uitgenodigd",
+          shadow: "Je kunt projecties voelen van anderen die verwachten dat je redt of te veel terugtrekken",
+          insight: "Je bent hier om praktische oplossingen te bieden wanneer geroepen, maar stel verwachtingen helder"
+        },
+        '3/5': {
+          fullTitle: "Profiel 3/5 - Martelaar/Ketters",
+          light: "Je leert door directe ervaring en brengt praktische oplossingen gebaseerd op wat werkt",
+          shadow: "Je kunt chaotisch lijken of gefrustreerd door anderen' projecties en verwachtingen",
+          insight: "Je bent hier om door ervaring te leren en praktische wijsheid te delen, maar stel grenzen aan verwachtingen"
+        },
+        '3/6': {
+          fullTitle: "Profiel 3/6 - Martelaar/Rolmodel",
+          light: "Je leert door ervaring in de eerste levensfase en wordt objectieve wijze na 50",
+          shadow: "Je kunt pessimistisch worden in experimentele fase of te snel proberen rolmodel te zijn",
+          insight: "Je bent hier om door ervaring te leren en uiteindelijk objectieve wijsheid te modelleren"
+        },
+        '4/6': {
+          fullTitle: "Profiel 4/6 - Opportunist/Rolmodel",
+          light: "Je bouwt vertrouwde netwerken en wordt objectieve gids voor je gemeenschap na levenservaring",
+          shadow: "Je kunt te afhankelijk worden van je netwerk of gefrustreerd in transitie fases",
+          insight: "Je bent hier om netwerk en modelleren te combineren, maar eer elke fase van je leven"
+        },
+        '4/4': {
+          fullTitle: "Profiel 4/4 - Opportunist/Opportunist",
+          light: "Je bouwt netwerken en deelt kennis door vertrouwde verbindingen met natuurlijke externaliseringsenergie",
+          shadow: "Je kunt te afhankelijk worden van je netwerk of worstelen met buitenstaanders die je cirkel betreden",
+          insight: "Je bent hier om te begeleiden door verbinding, maar eer zowel je gemeenschap als nieuwe mogelijkheden"
+        },
+        '44': {
+          fullTitle: "Profiel 4/4 - Opportunist/Opportunist",
+          light: "Je bouwt netwerken en deelt kennis door vertrouwde verbindingen met natuurlijke externaliseringsenergie",
+          shadow: "Je kunt te afhankelijk worden van je netwerk of worstelen met buitenstaanders die je cirkel betreden",
+          insight: "Je bent hier om te begeleiden door verbinding, maar eer zowel je gemeenschap als nieuwe mogelijkheden"
+        },
+        '5/1': {
+          fullTitle: "Profiel 5/1 - Ketters/Onderzoeker",
+          light: "Je brengt praktische oplossingen ondersteund door solide fundamenteel onderzoek",
+          shadow: "Je kunt gefrustreerd raken door projecties of te veel blijven onderzoeken voor actie",
+          insight: "Je bent hier om universele oplossingen te bieden, maar grond ze in grondig onderzoek"
+        },
+        '5/2': {
+          fullTitle: "Profiel 5/2 - Ketters/Kluizenaar",
+          light: "Je brengt natuurlijke oplossingen wanneer geroepen en hebt behoefte aan privé tijd om te herladen",
+          shadow: "Je kunt overweldigd door projecties of te veel terugtrekken van roepingen",
+          insight: "Je bent hier om praktische oplossingen te bieden wanneer geroepen, maar eer je terugtrek tijd"
+        },
+        '6/2': {
+          fullTitle: "Profiel 6/2 - Rolmodel/Kluizenaar",
+          light: "Je ontwikkelt objectieve wijsheid door levensfases en deelt door natuurlijke talenten",
+          shadow: "Je kunt ongeduldig worden met je groeiproces of te veel terugtrekken in kluizenaar tijd",
+          insight: "Je bent hier om wijsheid te modelleren met natuurlijke gaven, maar eer elke fase en terugtrek behoeften"
+        },
+        '6/3': {
+          fullTitle: "Profiel 6/3 - Rolmodel/Martelaar",
+          light: "Je ontwikkelt wijsheid door levenservaring en modellen authentieke trial-and-error groei",
+          shadow: "Je kunt pessimistisch worden door experimentatie of te snel proberen perfectie te modelleren",
+          insight: "Je bent hier om wijsheid door ervaring te modelleren, maar eer je experimentele leerproces"
+        }
+      },
+
+      // Pacing Descriptions (Dutch)
+      pacingDescriptions: {
+        steady: {
+          fullTitle: "Gestaag Tempo",
+          light: "Je hebt consistente energie die het beste werkt met regelmatige, duurzame ritmes zonder extreme pieken",
+          shadow: "Je kunt worstelen met intense bursts of gedrukt voelen om sneller te gaan dan natuurlijk aanvoelt",
+          insight: "Je excelleert in duurzaam gestaag tempo, maar eer je natuurlijke ritme in plaats van anderen' snelheid"
+        },
+        burst: {
+          fullTitle: "Burst Tempo",
+          light: "Je hebt intensieve energie bursts gevolgd door rust, werkt het beste in cycli van actie en herstel",
+          shadow: "Je kunt jezelf pushen tijdens rustfasen of schuldig voelen over inconsistent tempo vergeleken met anderen",
+          insight: "Je excelleert in intense focus bursts, maar eer je neerwaartse cycli als essentieel voor je ritme niet zwakte"
+        },
+        sustainable: {
+          fullTitle: "Duurzaam Tempo",
+          light: "Je hebt betrouwbare energie die langdurige inspanning kan ondersteunen zonder uit te branden wanneer je reageert",
+          shadow: "Je kunt jezelf overwerken door je capaciteit te overschatten of je lichaamssignalen voor rust negeren",
+          insight: "Je hebt duurzame energie wanneer je reageert op wat resoneert, maar luister naar je lichaamssignalen om burn-out te voorkomen"
+        }
       }
     },
     dreamCategories: {
