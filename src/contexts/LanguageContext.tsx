@@ -4308,6 +4308,506 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt te teruggetrokken worden, worstelen met emotionele expressie of riskant gedrag zoeken voor stimulatie",
           insight: "Je hebt een gave voor praktische probleemoplossing en kalm blijven onder druk, maar deel je expertise en blijf verbonden met anderen"
         }
+      },
+
+      // Life Path Descriptions (Dutch)
+      lifePathDescriptions: {
+        1: {
+          fullTitle: "Levenspad 1 - De Leider",
+          light: "Je bent een natuurlijke pionier met de moed om nieuwe paden te banen en anderen te inspireren hun eigen visie te volgen",
+          shadow: "Je kunt worstelen met te onafhankelijk, koppig of onvermogend zijn om hulp van anderen te accepteren",
+          insight: "Je bent geboren om te leiden en te innoveren, maar onthoud dat samenwerking en kwetsbaarheid je kracht versterken in plaats van verzwakken"
+        },
+        2: {
+          fullTitle: "Levenspad 2 - De Bemiddelaar",
+          light: "Je brengt harmonie en samenwerking met natuurlijke diplomatie, voelt anderen' behoeften en bouwt bruggen tussen perspectieven",
+          shadow: "Je kunt te inschikkelijk worden, je eigen behoeften negeren of worstelen met besluitvorming uit angst voor conflict",
+          insight: "Je bent hier om te verbinden en te verzoenen, maar eer je eigen stem en grenzen als even belangrijk als het behouden van vrede"
+        },
+        3: {
+          fullTitle: "Levenspad 3 - De Creatieve Communicator",
+          light: "Je drukt je uit met aanstekelijk enthousiasme en creativiteit, inspireert vreugde en helpt anderen hun stem te vinden",
+          shadow: "Je kunt verspreid raken door te veel projecten, oppervlakkig worden of worstelen met discipline en focus",
+          insight: "Je bent geboren om te creëren en communiceren, maar kanaliseer je gaven op diepgaande expressie in plaats van alleen entertainment"
+        },
+        4: {
+          fullTitle: "Levenspad 4 - De Bouwer",
+          light: "Je creëert solide fundamenten met geduld en toegewijde inspanning, bouwt duurzame structuren die de tijd doorstaan",
+          shadow: "Je kunt te rigide of werkverslaafde worden, worstelen met spontaniteit of bang zijn voor verandering",
+          insight: "Je bent hier om duurzame systemen te bouwen, maar balans structuur met flexibiliteit en eer rust als even belangrijk als werk"
+        },
+        5: {
+          fullTitle: "Levenspad 5 - De Vrijheidszoeker",
+          light: "Je omarmt verandering en avontuur met aanpassingsvermogen, brengt vernieuwende energie en helpt anderen hun routine te doorbreken",
+          shadow: "Je kunt rusteloze worden, worstelen met commitment of te veel verandering zoeken in plaats van stabiliteit te bouwen",
+          insight: "Je bent geboren om vrijheid en verandering te verkennen, maar leer dat echte vrijheid discipline vereist en niet alle stabiliteit vervelend is"
+        },
+        6: {
+          fullTitle: "Levenspad 6 - De Verzorger",
+          light: "Je verzorgt en ondersteunt natuurlijk met liefde, creëert schoonheid en harmonie en helpt anderen helen en groeien",
+          shadow: "Je kunt te verantwoordelijk worden voor anderen, perfectionistisch of beledigd wanneer je zorg niet wordt gewaardeerd",
+          insight: "Je bent hier om lief te hebben en te verzorgen, maar vergeet niet dat gezonde liefde grenzen vereist en jezelf verzorgen geen egoïsme is"
+        },
+        7: {
+          fullTitle: "Levenspad 7 - De Zoeker",
+          light: "Je zoekt dieper begrip met analytische wijsheid, ziet onder oppervlakten en helpt anderen waarheid te ontdekken",
+          shadow: "Je kunt te teruggetrokken of kritisch worden, worstelen met vertrouwen of je te veel isoleren in je zoektocht naar kennis",
+          insight: "Je bent geboren om te zoeken en te begrijpen, maar deel je wijsheid en onthoud dat verbinding even belangrijk is als begrip"
+        },
+        8: {
+          fullTitle: "Levenspad 8 - De Machtscoach",
+          light: "Je manifesteert materiële succes met strategische visie, bouwt overvloed en empowert anderen hun eigen kracht te claimen",
+          shadow: "Je kunt te gedreven worden door succes, moeite hebben met machtsbalans of materiële resultaten boven relaties stellen",
+          insight: "Je bent hier om macht en overvloed te beheersen, maar onthoud dat ware kracht dienst is en succes zonder integriteit leeg is"
+        },
+        9: {
+          fullTitle: "Levenspad 9 - De Humanitaire",
+          light: "Je dient de grotere goed met universele compassie, ziet de verbondenheid van alles en inspireert transformatie",
+          shadow: "Je kunt te idealistisch of martelaarachtig worden, worstelen met loslaten of je eigen behoeften verwaarlozen voor de missie",
+          insight: "Je bent geboren om te dienen en te transformeren, maar onthoud dat zelfzorg je vermogen te geven vergroot in plaats van vermindert"
+        },
+        11: {
+          fullTitle: "Levenspad 11 - De Geïnspireerde Genezer",
+          light: "Je brengt spirituele inzichten en intuïtieve wijsheid met verheven visie, inspireert anderen hun hogere doel te vinden",
+          shadow: "Je kunt overweldigd worden door gevoeligheid, worstelen met praktische uitvoering of te idealistisch worden",
+          insight: "Je bent een meester nummer met verhoogde gaven, maar grond je spirituele inzichten in praktische actie en bescherm je energie"
+        },
+        22: {
+          fullTitle: "Levenspad 22 - De Meester Bouwer",
+          light: "Je manifesteert grote visies in concrete vorm, bouwt systemen die generaties dienen met spirituele wijsheid en praktische vaardigheid",
+          shadow: "Je kunt overweldigd worden door de omvang van je potentieel, perfectionistisch of angstig zijn om je gaven volledig te claimen",
+          insight: "Je bent een meester bouwer met buitengewoon potentieel, maar begin klein en vertrouw dat elke stap je grote visie dient"
+        },
+        33: {
+          fullTitle: "Levenspad 33 - De Meester Leraar",
+          light: "Je verheft en heelt door liefde en wijsheid, dient als levend voorbeeld van compassie en transformeert door aanwezigheid",
+          shadow: "Je kunt jezelf overbelasten door te veel te verzorgen, martelaar worden of worstelen met je enorme gevoeligheid",
+          insight: "Je bent een meester nummer van dienst en compassie, maar onthoud dat je anderen niet kunt redden - alleen verlichten en empoweren"
+        }
+      },
+
+      // Expression Number Descriptions (Dutch)
+      expressionNumberDescriptions: {
+        1: {
+          fullTitle: "Expressienummer 1 - Leiderschapstalenten",
+          light: "Je drukt je natuurlijke leiderschapsgaven uit door initiatief, moed en onafhankelijke visie",
+          shadow: "Je kunt als te dominant of koppig overkomen wanneer je te veel in je onafhankelijkheid zit",
+          insight: "Je bent geboren om leiderschap uit te drukken, maar balans sterkte met samenwerking voor grootste impact"
+        },
+        2: {
+          fullTitle: "Expressienummer 2 - Diplomatieke Gaven",
+          light: "Je drukt je uit door partnerschap, diplomatie en het vermogen bruggen te bouwen tussen mensen",
+          shadow: "Je kunt te indirect worden of je eigen waarheid verliezen in het zoeken naar harmonie",
+          insight: "Je excelleert in het faciliteren van verbinding, maar vergeet niet je eigen perspectief te eren en uit te drukken"
+        },
+        3: {
+          fullTitle: "Expressienummer 3 - Creatieve Expressie",
+          light: "Je drukt je uit door creativiteit, communicatie en het vermogen vreugde en inspiratie te brengen",
+          shadow: "Je kunt verspreid raken of oppervlakkig worden door te veel interessegebieden na te jagen",
+          insight: "Je hebt creatieve gaven die verlangen gedeeld te worden, maar focus op diepte naast verscheidenheid"
+        },
+        4: {
+          fullTitle: "Expressienummer 4 - Praktische Vaardigheden",
+          light: "Je drukt je uit door betrouwbare structuur, praktische vaardigheden en toegewijde opbouw",
+          shadow: "Je kunt te rigide worden of worstelen met het uiten van emotionele of creatieve kanten",
+          insight: "Je excelleert in het bouwen van solide fundamenten, maar sta jezelf toe flexibiliteit en spontaniteit uit te drukken"
+        },
+        5: {
+          fullTitle: "Expressienummer 5 - Aanpassingsvermogen",
+          light: "Je drukt je uit door aanpassingsvermogen, avontuur en het vermogen verandering met gemak te navigeren",
+          shadow: "Je kunt rusteloze worden of worstelen om je energie op één ding te focussen",
+          insight: "Je hebt een gave voor vrijheid en verandering, maar kanaliseer je aanpassingsvermogen op betekenisvolle doelen"
+        },
+        6: {
+          fullTitle: "Expressienummer 6 - Verzorgende Dienst",
+          light: "Je drukt je uit door verzorgen, schoonheid creëren en het harmonieuze ondersteunen van anderen",
+          shadow: "Je kunt te verantwoordelijk worden voor anderen' welzijn of perfectionistisch over zorgstandaarden",
+          insight: "Je excelleert in liefhebbende dienst, maar onthoud dat gezonde zorg grenzen respecteert inclusief je eigen"
+        },
+        7: {
+          fullTitle: "Expressienummer 7 - Analytische Wijsheid",
+          light: "Je drukt je uit door diep analyse, spiritueel zoeken en het delen van inzichten onder oppervlakten",
+          shadow: "Je kunt te analytisch of teruggetrokken worden, worstelen om je wijsheid toegankelijk te maken",
+          insight: "Je hebt diepgaande analytische gaven, maar deel je inzichten op manieren die anderen kunnen begrijpen en gebruiken"
+        },
+        8: {
+          fullTitle: "Expressienummer 8 - Manifestatiekracht",
+          light: "Je drukt je uit door strategische manifestatie, leiderschapskracht en het vermogen materiële succes te creëren",
+          shadow: "Je kunt te gedreven worden door resultaten of worstelen met machtsbalans in relaties",
+          insight: "Je excelleert in het manifesteren van succes, maar gebruik je macht ethisch en balans succes met betekenis"
+        },
+        9: {
+          fullTitle: "Expressienummer 9 - Humanitaire Dienst",
+          light: "Je drukt je uit door universele compassie, humanitaire dienst en transformatieve wijsheid",
+          shadow: "Je kunt te idealistisch worden of worstelen met loslaten en voltooien van cycli",
+          insight: "Je hebt gaven voor dienst aan het grotere goed, maar balans idealisme met praktische zelflimiet"
+        },
+        11: {
+          fullTitle: "Expressienummer 11 - Intuïtieve Wijsheid",
+          light: "Je drukt verhoogde intuïtieve wijsheid en spirituele inzichten uit die anderen inspireren en verlichten",
+          shadow: "Je kunt overweldigd worden door intensiteit of worstelen om spirituele inzichten te gronden",
+          insight: "Je bent hier om spirituele wijsheid uit te drukken, maar grond je inzichten in praktische vormen die anderen kunnen gebruiken"
+        },
+        22: {
+          fullTitle: "Expressienummer 22 - Meester Manifestatie",
+          light: "Je drukt het vermogen uit om grote visies te manifesteren die generaties dienen met praktische wijsheid",
+          shadow: "Je kunt overweldigd worden door je potentieel of perfectionistisch over je creaties",
+          insight: "Je hebt meester bouwgaven, maar vertrouw het proces en begin waar je bent - elke stap telt"
+        },
+        33: {
+          fullTitle: "Expressienummer 33 - Meester Leraar",
+          light: "Je drukt verhoogde compassie en leergaven uit, dient als levend voorbeeld van liefdevolle wijsheid",
+          shadow: "Je kunt jezelf overbelasten met zorg of te veel verantwoordelijkheid nemen voor anderen' groei",
+          insight: "Je hebt meester leergaven, maar onthoud dat empoweren vaak krachtiger is dan redden"
+        }
+      },
+
+      // Soul Urge Descriptions (Dutch)
+      soulUrgeDescriptions: {
+        1: {
+          fullTitle: "Zielsverlangen 1 - Onafhankelijke Pionier",
+          light: "Je diepste verlangen is leiden, innoveren en je unieke individualiteit met vertrouwen uiten",
+          shadow: "Je kunt worstelen met de behoefte aan constante onafhankelijkheid of anderen domineren om je waardig te voelen",
+          insight: "Je verlangt ernaar te leiden en op eigen benen te staan, maar echte kracht omvat anderen toestaan je te ondersteunen"
+        },
+        2: {
+          fullTitle: "Zielsverlangen 2 - Harmonie & Partnerschap",
+          light: "Je diepste verlangen is verbinding, harmonie en betekenisvolle partnerschappen creëren",
+          shadow: "Je kunt jezelf verliezen in relaties of te afhankelijk worden van anderen' goedkeuring",
+          insight: "Je verlangt naar diepe verbinding, maar onthoud dat gezonde relaties twee hele individuen vereisen"
+        },
+        3: {
+          fullTitle: "Zielsverlangen 3 - Creatieve Expressie",
+          light: "Je diepste verlangen is jezelf creatief uiten, vreugde brengen en gehoord worden",
+          shadow: "Je kunt zoeken naar validatie door prestatie of oppervlakkig worden in je expressie",
+          insight: "Je verlangt naar creatieve expressie, maar onthoud dat authentieke stem belangrijker is dan populariteit"
+        },
+        4: {
+          fullTitle: "Zielsverlangen 4 - Veiligheid & Stabiliteit",
+          light: "Je diepste verlangen is veiligheid, orde en duurzame fundamenten creëren die stand houden",
+          shadow: "Je kunt te rigide worden in je behoefte aan controle of worstelen met onzekerheid",
+          insight: "Je verlangt naar stabiliteit, maar leer dat echte zekerheid van binnen komt niet van externe structuren"
+        },
+        5: {
+          fullTitle: "Zielsverlangen 5 - Vrijheid & Avontuur",
+          light: "Je diepste verlangen is vrijheid, avontuur en onbeperkte mogelijkheden verkennen",
+          shadow: "Je kunt rusteloze worden of commitment vermijden uit angst gevangen te worden",
+          insight: "Je verlangt naar vrijheid, maar leer dat discipline de gateway is naar echte vrijheid niet de vijand"
+        },
+        6: {
+          fullTitle: "Zielsverlangen 6 - Liefde & Harmonie",
+          light: "Je diepste verlangen is liefhebben, verzorgen en harmonieuze schoonheid creëren in je omgeving",
+          shadow: "Je kunt te verantwoordelijk voelen voor anderen' geluk of perfectionistisch in zorg",
+          insight: "Je verlangt naar het geven van liefde, maar onthoud dat je ook waardig bent te ontvangen zonder verdienen"
+        },
+        7: {
+          fullTitle: "Zielsverlangen 7 - Waarheid & Begrip",
+          light: "Je diepste verlangen is diep begrijpen, waarheid ontdekken en betekenis vinden onder oppervlakten",
+          shadow: "Je kunt te teruggetrokken worden in je zoektocht of worstelen met het accepteren van mysterie",
+          insight: "Je verlangt naar diepe wijsheid, maar onthoud dat sommige waarheden ervaren moeten worden niet begrepen"
+        },
+        8: {
+          fullTitle: "Zielsverlangen 8 - Macht & Succes",
+          light: "Je diepste verlangen is manifesteren, succes bereiken en je macht in de wereld claimen",
+          shadow: "Je kunt te gedreven worden door externe maatstaven van succes of macht verkeerd gebruiken",
+          insight: "Je verlangt naar macht en succes, maar onthoud dat ware macht dienst is en succes betekenis vereist"
+        },
+        9: {
+          fullTitle: "Zielsverlangen 9 - Universele Liefde",
+          light: "Je diepste verlangen is dienen, transformeren en bijdragen aan het grotere goed van allen",
+          shadow: "Je kunt jezelf verliezen in idealen of worstelen met praktische persoonlijke behoeften",
+          insight: "Je verlangt naar universele dienst, maar onthoud dat zelfzorg je vermogen te geven vergroot"
+        },
+        11: {
+          fullTitle: "Zielsverlangen 11 - Spirituele Verlichting",
+          light: "Je diepste verlangen is spirituele verbinding, verlichten van anderen en leven in verhoogd bewustzijn",
+          shadow: "Je kunt overweldigd worden door intensiteit of worstelen met praktische aarding",
+          insight: "Je verlangt naar spirituele expressie, maar grond je gaven in aardse actie voor maximale impact"
+        },
+        22: {
+          fullTitle: "Zielsverlangen 22 - Meester Visie",
+          light: "Je diepste verlangen is grote visies manifesteren die blijvende impact hebben op de wereld",
+          shadow: "Je kunt overweldigd raken door de omvang van je verlangens of perfectionistisch",
+          insight: "Je verlangt naar grootse manifestatie, maar vertrouw dat kleine stappen leiden naar meester creaties"
+        },
+        33: {
+          fullTitle: "Zielsverlangen 33 - Universele Healer",
+          light: "Je diepste verlangen is helen, onderwijzen en verheven door onvoorwaardelijke liefde en dienst",
+          shadow: "Je kunt jezelf verliezen in het redden van anderen of overbelasten door universele zorg",
+          insight: "Je verlangt naar meester dienst, maar onthoud dat je anderen niet kunt redden - alleen verlichten"
+        }
+      },
+
+      // Personality Number Descriptions (Dutch)
+      personalityNumberDescriptions: {
+        1: {
+          fullTitle: "Persoonlijkheidsnummer 1 - De Leider",
+          light: "Je straalt leiderschap, vertrouwen en onafhankelijke geest uit naar de wereld",
+          shadow: "Je kunt als agressief of afstandelijk overkomen wanneer je te veel in je onafhankelijkheid zit",
+          insight: "Je projecteert natuurlijke leiderschap, maar balans sterkte met warmte om anderen uit te nodigen"
+        },
+        2: {
+          fullTitle: "Persoonlijkheidsnummer 2 - De Bemiddelaar",
+          light: "Je straalt zachtheid, diplomatie en benaderbaarheid uit die anderen zich veilig laat voelen",
+          shadow: "Je kunt als te passief of onbesloten overkomen wanneer je conflict te veel vermijdt",
+          insight: "Je projecteert natuurlijke vriendelijkheid, maar sta jezelf toe sterkte te tonen wanneer nodig"
+        },
+        3: {
+          fullTitle: "Persoonlijkheidsnummer 3 - De Communicator",
+          light: "Je straalt charme, creativiteit en uitbundige energie uit die kamers verlicht",
+          shadow: "Je kunt als oppervlakkig of aandachtszoekend overkomen wanneer je te veel in entertainment bent",
+          insight: "Je projecteert natuurlijke charme, maar balans aantrekkelijkheid met authenticiteit voor echte verbinding"
+        },
+        4: {
+          fullTitle: "Persoonlijkheidsnummer 4 - De Bouwer",
+          light: "Je straalt betrouwbaarheid, stabiliteit en praktische competentie uit die vertrouwen schept",
+          shadow: "Je kunt als rigide of saai overkomen wanneer je te serieus of inflexibel bent",
+          insight: "Je projecteert natuurlijke betrouwbaarheid, maar sta jezelf toe speelsheid te tonen naast stabiliteit"
+        },
+        5: {
+          fullTitle: "Persoonlijkheidsnummer 5 - De Avonturier",
+          light: "Je straalt dynamische energie, aanpassingsvermogen en opwindende mogelijkheden uit",
+          shadow: "Je kunt als rusteloze of onbetrouwbaar overkomen wanneer je te veel verandert",
+          insight: "Je projecteert natuurlijke dynamiek, maar balans avontuur met consistentie voor vertrouwen"
+        },
+        6: {
+          fullTitle: "Persoonlijkheidsnummer 6 - De Verzorger",
+          light: "Je straalt warmte, verzorging en esthetische harmonie uit die anderen zich thuis laat voelen",
+          shadow: "Je kunt als bemoeierig of perfectionistisch overkomen wanneer je te veel verzorgt",
+          insight: "Je projecteert natuurlijke warmte, maar respecteer anderen' autonomie terwijl je zorg toont"
+        },
+        7: {
+          fullTitle: "Persoonlijkheidsnummer 7 - De Wijze",
+          light: "Je straalt mysterie, intellectuele diepte en rustgevende aanwezigheid uit",
+          shadow: "Je kunt als afstandelijk of oordelend overkomen wanneer je te teruggetrokken of analytisch bent",
+          insight: "Je projecteert natuurlijke wijsheid, maar balans diepte met toegankelijkheid om verbinding uit te nodigen"
+        },
+        8: {
+          fullTitle: "Persoonlijkheidsnummer 8 - De Machtsdrager",
+          light: "Je straalt autoriteit, vertrouwen en competente sterkte uit die respect oproept",
+          shadow: "Je kunt als intimiderend of materialistisch overkomen wanneer je te veel in macht bent",
+          insight: "Je projecteert natuurlijke autoriteit, maar temper kracht met vriendelijkheid voor ware invloed"
+        },
+        9: {
+          fullTitle: "Persoonlijkheidsnummer 9 - De Humanitaire",
+          light: "Je straalt compassie, wijsheid en universele liefde uit die anderen verheft",
+          shadow: "Je kunt als afwezig of te idealistisch overkomen wanneer je te abstract wordt",
+          insight: "Je projecteert natuurlijke compassie, maar grond je idealisme om praktisch verbindend te zijn"
+        },
+        11: {
+          fullTitle: "Persoonlijkheidsnummer 11 - De Inspirator",
+          light: "Je straalt verhoogde gevoeligheid, intuïtie en inspirerende aanwezigheid uit",
+          shadow: "Je kunt als te intensief of kwetsbaar overkomen wanneer je overweldigd bent door gevoeligheid",
+          insight: "Je projecteert natuurlijke inspiratie, maar bescherm je energie om je gave te onderhouden"
+        },
+        22: {
+          fullTitle: "Persoonlijkheidsnummer 22 - De Meester Bouwer",
+          light: "Je straalt visionaire competentie en het vermogen grote dromen te manifesteren uit",
+          shadow: "Je kunt als overweldigend of te serieus overkomen wanneer je gefocust bent op grote visie",
+          insight: "Je projecteert meester potentieel, maar blijf benaderd en aardig terwijl je groot bouwt"
+        },
+        33: {
+          fullTitle: "Persoonlijkheidsnummer 33 - De Meester Leraar",
+          light: "Je straalt verhoogde compassie, leergaven en helende aanwezigheid uit",
+          shadow: "Je kunt als te verantwoordelijk of belastend overkomen wanneer je te veel verzorgt",
+          insight: "Je projecteert meester compassie, maar onthoud dat empoweren vaak krachtiger is dan redden"
+        }
+      },
+
+      // Birthday Number Descriptions (Dutch)
+      birthdayNumberDescriptions: {
+        1: {
+          fullTitle: "Verjaardagsnummer 1 - Leiderstalent",
+          light: "Je hebt een speciaal talent voor het nemen van initiatief en leiden door voorbeeld",
+          shadow: "Je kunt worstelen met geduld of samenwerking wanneer anderen je tempo niet bijhouden",
+          insight: "Je hebt leiderschapstalenten vanaf geboorte, maar onthoud dat ware invloed anderen meeneemt"
+        },
+        2: {
+          fullTitle: "Verjaardagsnummer 2 - Diplomatiek Talent",
+          light: "Je hebt een speciaal talent voor bemiddeling, partnerschap en het creëren van harmonie",
+          shadow: "Je kunt te voorzichtig worden met je eigen mening of overdreven zorgen over wat anderen denken",
+          insight: "Je hebt natuurlijke diplomatieke gaven, maar vergeet niet je eigen waarheid te spreken"
+        },
+        3: {
+          fullTitle: "Verjaardagsnummer 3 - Communicatief Talent",
+          light: "Je hebt een speciaal talent voor expressie, creativiteit en het verlichten van elk gesprek",
+          shadow: "Je kunt worstelen met focus of te veel projecten tegelijk oppakken",
+          insight: "Je hebt creatieve communicatiegaven, maar kanaliseer ze op diepte naast varieteit"
+        },
+        4: {
+          fullTitle: "Verjaardagsnummer 4 - Bouwtalent",
+          light: "Je hebt een speciaal talent voor organisatie, praktische vaardigheden en het creëren van structuur",
+          shadow: "Je kunt te rigide worden met systemen of worstelen met spontaniteit",
+          insight: "Je hebt natuurlijke bouwersgaven, maar sta flexibiliteit toe binnen je structuren"
+        },
+        5: {
+          fullTitle: "Verjaardagsnummer 5 - Aanpassingstalent",
+          light: "Je hebt een speciaal talent voor aanpassing, communicatie en het navigeren van verandering",
+          shadow: "Je kunt rusteloze worden of te veel verschillende richtingen tegelijk zoeken",
+          insight: "Je hebt natuurlijk aanpassingsvermogen, maar focus je vrijheid op betekenisvolle doelen"
+        },
+        6: {
+          fullTitle: "Verjaardagsnummer 6 - Verzorgend Talent",
+          light: "Je hebt een speciaal talent voor verzorgen, schoonheid creëren en harmonie brengen",
+          shadow: "Je kunt te verantwoordelijk worden voor anderen of perfectionistisch in zorg",
+          insight: "Je hebt natuurlijke verzorgingsgaven, maar onthoud dat gezonde zorg grenzen respecteert"
+        },
+        7: {
+          fullTitle: "Verjaardagsnummer 7 - Analytisch Talent",
+          light: "Je hebt een speciaal talent voor analyse, spiritueel inzicht en het zien onder oppervlakten",
+          shadow: "Je kunt te teruggetrokken of kritisch worden of worstelen met praktische details",
+          insight: "Je hebt natuurlijke wijsheidsgaven, maar deel je inzichten op toegankelijke manieren"
+        },
+        8: {
+          fullTitle: "Verjaardagsnummer 8 - Manifestatietalent",
+          light: "Je hebt een speciaal talent voor manifestatie, leiderschap en het creëren van materieel succes",
+          shadow: "Je kunt te gedreven worden door resultaten of worstelen met machtsbalans",
+          insight: "Je hebt natuurlijke manifestatiegaven, maar gebruik je macht ethisch en balanceerd"
+        },
+        9: {
+          fullTitle: "Verjaardagsnummer 9 - Humanitair Talent",
+          light: "Je hebt een speciaal talent voor compassie, humanitaire dienst en het zien van het grote plaatje",
+          shadow: "Je kunt te idealistisch worden of worstelen met praktische persoonlijke behoeften",
+          insight: "Je hebt natuurlijke gaven voor dienst, maar balans idealisme met zelfzorg"
+        },
+        10: {
+          fullTitle: "Verjaardagsnummer 10 - Innovatief Leiderstalent",
+          light: "Je combineert leiderschap (1) met voltooiing (0), hebt talent voor nieuwe cycli starten",
+          shadow: "Je kunt worstelen met follow-through of te snel naar het volgende project bewegen",
+          insight: "Je hebt gaven voor innovatief leiderschap, maar eer voltooiing voor je verder gaat"
+        },
+        11: {
+          fullTitle: "Verjaardagsnummer 11 - Intuïtief Talent",
+          light: "Je hebt verhoogd intuïtief talent en het vermogen anderen te inspireren met spirituele inzichten",
+          shadow: "Je kunt overweldigd worden door gevoeligheid of worstelen met praktische aarding",
+          insight: "Je hebt meester intuïtieve gaven, maar grond je inzichten in praktische actie"
+        },
+        12: {
+          fullTitle: "Verjaardagsnummer 12 - Creatief Expressie Talent",
+          light: "Je combineert leiderschap (1) met diplomatie (2), hebt talent voor creatieve expressie",
+          shadow: "Je kunt verspreid raken tussen leiding en samenwerking of te veel hooi op je vork nemen",
+          insight: "Je hebt gaven voor creatieve leiding, maar focus je energie voor maximale impact"
+        },
+        13: {
+          fullTitle: "Verjaardagsnummer 13 - Transformatief Bouwtalent",
+          light: "Je combineert creativiteit (3) met structuur (4 via 1+3), hebt talent voor praktische transformatie",
+          shadow: "Je kunt worstelen met balans tussen vrijheid en discipline of te veel verandering zoeken",
+          insight: "Je hebt gaven voor het bouwen door verandering, maar balans innovatie met stabiliteit"
+        },
+        14: {
+          fullTitle: "Verjaardagsnummer 14 - Vrijheidstalent",
+          light: "Je combineert structuur (4) met vrijheid (5 via 1+4), hebt talent voor geordende avontuur",
+          shadow: "Je kunt worstelen tussen behoefte aan stabiliteit en verlangen naar verandering",
+          insight: "Je hebt gaven voor avontuurlijk bouwen, maar balans vrijheid met verantwoordelijkheid"
+        },
+        15: {
+          fullTitle: "Verjaardagsnummer 15 - Creatief Verzorgend Talent",
+          light: "Je combineert leiderschap (1) met vrijheid (5) en zorg (6 via 1+5), hebt veelzijdige gaven",
+          shadow: "Je kunt worstelen met balans tussen persoonlijke vrijheid en verantwoordelijkheid voor anderen",
+          insight: "Je hebt gaven voor creatieve zorg, maar eer je eigen behoeften naast anderen"
+        },
+        16: {
+          fullTitle: "Verjaardagsnummer 16 - Spiritueel Inzicht Talent",
+          light: "Je combineert leiderschap (1) met zorg (6) en wijsheid (7 via 1+6), hebt spirituele gaven",
+          shadow: "Je kunt worstelen met perfectionisme of te kritisch zijn naar jezelf en anderen",
+          insight: "Je hebt gaven voor spirituele leiding, maar balans idealisme met zelfcompassie"
+        },
+        17: {
+          fullTitle: "Verjaardagsnummer 17 - Manifestatie Wijsheid Talent",
+          light: "Je combineert leiderschap (1) met wijsheid (7) en macht (8 via 1+7), hebt sterke manifestatiegaven",
+          shadow: "Je kunt worstelen met balans tussen innerlijke wijsheid en uiterlijk succes",
+          insight: "Je hebt gaven voor wijze manifestatie, maar gebruik je macht voor dienst"
+        },
+        18: {
+          fullTitle: "Verjaardagsnummer 18 - Humanitair Leiderstalent",
+          light: "Je combineert leiderschap (1) met macht (8) en dienst (9 via 1+8), hebt humanitaire gaven",
+          shadow: "Je kunt worstelen met balans tussen persoonlijk succes en service aan anderen",
+          insight: "Je hebt gaven voor humanitair leiderschap, maar balans geven met ontvangen"
+        },
+        19: {
+          fullTitle: "Verjaardagsnummer 19 - Onafhankelijk Diensttalent",
+          light: "Je combineert twee keer leiderschap (1+9=10=1), hebt sterke onafhankelijke gaven voor dienst",
+          shadow: "Je kunt worstelen met hulp accepteren of te onafhankelijk worden in je missie",
+          insight: "Je hebt krachtige onafhankelijke gaven, maar onthoud dat samenwerking kracht vergroot"
+        },
+        20: {
+          fullTitle: "Verjaardagsnummer 20 - Gevoelig Bemiddelaarstalent",
+          light: "Je combineert diplomatie (2) met potentieel (0), hebt verhoogde gaven voor partnerschap",
+          shadow: "Je kunt te gevoelig worden voor anderen' behoeften of je eigen stem verliezen",
+          insight: "Je hebt gaven voor diepe partnerschap, maar eer je eigen behoeften evenzeer"
+        },
+        21: {
+          fullTitle: "Verjaardagsnummer 21 - Creatief Samenwerkingstalent",
+          light: "Je combineert diplomatie (2) met leiderschap (1) en expressie (3 via 2+1), hebt veelzijdige sociale gaven",
+          shadow: "Je kunt verspreid raken tussen samenwerking en individuele expressie",
+          insight: "Je hebt gaven voor collaboratieve creativiteit, maar vind je unieke stem"
+        },
+        22: {
+          fullTitle: "Verjaardagsnummer 22 - Meester Bouwerstalent",
+          light: "Je hebt meester nummer gaven voor manifestatie van grote visies in concrete vorm",
+          shadow: "Je kunt overweldigd worden door je potentieel of perfectionistisch over je creaties",
+          insight: "Je hebt meester bouwgaven vanaf geboorte, maar begin klein en vertrouw het proces"
+        },
+        23: {
+          fullTitle: "Verjaardagsnummer 23 - Communicatief Bemiddelaarstalent",
+          light: "Je combineert diplomatie (2) met expressie (3) en vrijheid (5 via 2+3), hebt communicatiegaven",
+          shadow: "Je kunt verspreid raken door te veel sociale projecten of oppervlakkig worden",
+          insight: "Je hebt gaven voor sociale communicatie, maar focus op diepte naast populariteit"
+        },
+        24: {
+          fullTitle: "Verjaardagsnummer 24 - Verzorgend Bouwtalent",
+          light: "Je combineert diplomatie (2) met structuur (4) en zorg (6 via 2+4), hebt praktische verzorgingsgaven",
+          shadow: "Je kunt te verantwoordelijk worden voor het bouwen van stabiliteit voor anderen",
+          insight: "Je hebt gaven voor stabiele zorg, maar balans geven met je eigen behoeften"
+        },
+        25: {
+          fullTitle: "Verjaardagsnummer 25 - Aanpassend Diplomatietalent",
+          light: "Je combineert diplomatie (2) met vrijheid (5) en wijsheid (7 via 2+5), hebt flexibele sociale gaven",
+          shadow: "Je kunt worstelen tussen behoefte aan verbinding en verlangen naar vrijheid",
+          insight: "Je hebt gaven voor aanpassende relaties, maar eer commitment die vrijheid respecteert"
+        },
+        26: {
+          fullTitle: "Verjaardagsnummer 26 - Harmonieus Verzorgingstalent",
+          light: "Je combineert diplomatie (2) met dubbele zorg (6 en 8 via 2+6), hebt diepe verzorgingsgaven",
+          shadow: "Je kunt jezelf overbelasten door te veel verantwoordelijkheid voor harmonie en zorg",
+          insight: "Je hebt sterke verzorgingsgaven, maar onthoud dat gezonde relaties wederkerigheid zijn"
+        },
+        27: {
+          fullTitle: "Verjaardagsnummer 27 - Spiritueel Bemiddelaarstalent",
+          light: "Je combineert diplomatie (2) met wijsheid (7) en dienst (9 via 2+7), hebt spirituele relationele gaven",
+          shadow: "Je kunt te idealistisch worden over relaties of worstelen met praktische grenzen",
+          insight: "Je hebt gaven voor spirituele verbinding, maar grond relaties in praktische realiteit"
+        },
+        28: {
+          fullTitle: "Verjaardagsnummer 28 - Machtig Bemiddelaarstalent",
+          light: "Je combineert diplomatie (2) met macht (8) en voltooiing (10=1 via 2+8), hebt sterke leiderschapsgaven",
+          shadow: "Je kunt worstelen met balans tussen samenwerking en persoonlijke macht",
+          insight: "Je hebt gaven voor machtig partnerschap, maar balans geven en ontvangen van kracht"
+        },
+        29: {
+          fullTitle: "Verjaardagsnummer 29 - Intuïtief Humanitair Talent",
+          light: "Je combineert diplomatie (2) met dienst (9) en intuïtie (11 via 2+9), hebt verhoogde dienstgaven",
+          shadow: "Je kunt jezelf verliezen in dienst aan anderen of te gevoelig worden",
+          insight: "Je hebt meester gaven voor intuïtieve dienst, maar bescherm je energie en grenzen"
+        },
+        30: {
+          fullTitle: "Verjaardagsnummer 30 - Creatief Expressie Talent",
+          light: "Je combineert expressie (3) met potentieel (0) en expressie (3 via 3+0), hebt sterke creatieve gaven",
+          shadow: "Je kunt verspreid raken door te veel creatieve projecten of oppervlakkig worden",
+          insight: "Je hebt krachtige creatieve gaven, maar focus op diepgaande expressie"
+        },
+        31: {
+          fullTitle: "Verjaardagsnummer 31 - Praktisch Creatief Talent",
+          light: "Je combineert expressie (3) met leiderschap (1) en structuur (4 via 3+1), bouwt creatieve systemen",
+          shadow: "Je kunt worstelen tussen verlangen naar vrijheid en behoefte aan structuur",
+          insight: "Je hebt gaven voor gestructureerde creativiteit, maar balans discipline met spontaniteit"
+        },
+        33: {
+          fullTitle: "Verjaardagsnummer 33 - Meester Leraarstalent",
+          light: "Je hebt meester nummer gaven voor onderwijzen, helen en dienen door verhoogde compassie",
+          shadow: "Je kunt jezelf overbelasten door te veel verzorgen of te veel verantwoordelijkheid nemen",
+          insight: "Je hebt meester leergaven vanaf geboorte, maar onthoud dat empoweren krachtiger is dan redden"
+        }
       }
     },
     dreamCategories: {
