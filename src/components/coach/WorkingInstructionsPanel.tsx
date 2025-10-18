@@ -13,6 +13,9 @@ import {
   Target
 } from 'lucide-react';
 import { WorkingInstruction } from '@/services/coach-message-parser';
+import { AssistanceButton } from '@/components/ui/assistance-button';
+import { HelpPanel } from '@/components/ui/help-panel';
+import { interactiveAssistanceService, AssistanceResponse } from '@/services/interactive-assistance-service';
 
 interface WorkingInstructionsPanelProps {
   instructions: WorkingInstruction[];
@@ -28,6 +31,8 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
   originalText
 }) => {
   const [completedInstructions, setCompletedInstructions] = useState<Set<string>>(new Set());
+  const [assistanceResponses, setAssistanceResponses] = useState<Map<string, AssistanceResponse>>(new Map());
+  const [isRequestingHelp, setIsRequestingHelp] = useState<Map<string, boolean>>(new Map());
 
   const handleInstructionToggle = useCallback((instructionId: string) => {
     const newCompleted = new Set(completedInstructions);
@@ -41,6 +46,41 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     
     setCompletedInstructions(newCompleted);
   }, [completedInstructions, onInstructionComplete]);
+
+  const handleAssistanceRequest = useCallback(async (
+    instructionId: string,
+    instructionTitle: string,
+    type: 'stuck' | 'need_details' | 'how_to' | 'examples',
+    message?: string
+  ) => {
+    setIsRequestingHelp(prev => new Map(prev).set(instructionId, true));
+    
+    try {
+      const instruction = instructions.find(i => i.id === instructionId);
+      const response = await interactiveAssistanceService.requestAssistance(
+        instructionId,
+        instructionTitle,
+        type,
+        { 
+          instruction,
+          description: instruction?.description,
+          timeEstimate: instruction?.timeEstimate,
+          toolsNeeded: instruction?.toolsNeeded
+        },
+        message
+      );
+      
+      setAssistanceResponses(prev => new Map(prev).set(instructionId, response));
+    } catch (error) {
+      console.error('Failed to get assistance:', error);
+    } finally {
+      setIsRequestingHelp(prev => {
+        const updated = new Map(prev);
+        updated.delete(instructionId);
+        return updated;
+      });
+    }
+  }, [instructions]);
 
   const completedCount = completedInstructions.size;
   const totalCount = instructions.length;
@@ -121,7 +161,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
                     {instruction.description}
                   </p>
                   
-                  {/* Meta information */}
+                  {/* Meta information and assistance buttons */}
                   <div className="flex items-center gap-2 flex-wrap">
                     {instruction.timeEstimate && (
                       <Badge variant="outline" className="text-xs">
@@ -136,7 +176,61 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
                         {instruction.toolsNeeded.join(', ')}
                       </Badge>
                     )}
+                    
+                    {/* Assistance Buttons - only show for incomplete instructions */}
+                    {!isCompleted && (
+                      <>
+                        <AssistanceButton
+                          type="stuck"
+                          onRequest={(type, msg) => handleAssistanceRequest(instruction.id, instruction.title, type, msg)}
+                          isLoading={isRequestingHelp.get(instruction.id) || false}
+                          hasResponse={assistanceResponses.has(instruction.id)}
+                          compact={true}
+                        />
+                        <AssistanceButton
+                          type="need_details"
+                          onRequest={(type, msg) => handleAssistanceRequest(instruction.id, instruction.title, type, msg)}
+                          isLoading={isRequestingHelp.get(instruction.id) || false}
+                          hasResponse={assistanceResponses.has(instruction.id)}
+                          compact={true}
+                        />
+                        <AssistanceButton
+                          type="how_to"
+                          onRequest={(type, msg) => handleAssistanceRequest(instruction.id, instruction.title, type, msg)}
+                          isLoading={isRequestingHelp.get(instruction.id) || false}
+                          hasResponse={assistanceResponses.has(instruction.id)}
+                          compact={true}
+                        />
+                        <AssistanceButton
+                          type="examples"
+                          onRequest={(type, msg) => handleAssistanceRequest(instruction.id, instruction.title, type, msg)}
+                          isLoading={isRequestingHelp.get(instruction.id) || false}
+                          hasResponse={assistanceResponses.has(instruction.id)}
+                          compact={true}
+                        />
+                      </>
+                    )}
                   </div>
+                  
+                  {/* Help Panel for this instruction */}
+                  {assistanceResponses.has(instruction.id) && (
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <HelpPanel
+                        response={assistanceResponses.get(instruction.id)!}
+                        onActionClick={(action) => {
+                          if (action === 'need_more_help') {
+                            handleAssistanceRequest(
+                              instruction.id, 
+                              instruction.title, 
+                              'stuck', 
+                              'I need more specific help with this step'
+                            );
+                          }
+                        }}
+                        compact={true}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>
