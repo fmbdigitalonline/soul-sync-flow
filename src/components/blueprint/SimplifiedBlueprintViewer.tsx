@@ -9,6 +9,9 @@ import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { interpolateTranslation } from "@/utils/translation-utils";
 import { getCognitiveFunctions } from "@/utils/mbti-cognitive-functions";
+import { getPersonalityDescription } from "@/utils/personality-descriptions";
+import PersonalityDetailModal from "./PersonalityDetailModal";
+import { PersonalityDescription } from "./PersonalityDescription";
 
 interface SimplifiedBlueprintViewerProps {
   blueprint: LayeredBlueprint;
@@ -28,11 +31,31 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
     astrology: false
   });
 
+  // State for personality detail modal
+  const [modalData, setModalData] = useState<{
+    isOpen: boolean;
+    title: string;
+    subtitle?: string;
+    mainValue: string;
+    light: string;
+    shadow: string;
+    insight: string;
+    category: string;
+  } | null>(null);
+
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({
       ...prev,
       [section]: !prev[section]
     }));
+  };
+
+  const openDetailModal = (data: Omit<typeof modalData, 'isOpen'>) => {
+    setModalData({ ...data, isOpen: true });
+  };
+
+  const closeModal = () => {
+    setModalData(prev => prev ? { ...prev, isOpen: false } : null);
   };
 
   // Helper function to translate keywords
@@ -191,20 +214,113 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
           <CardContent className={`${spacing.card} pt-0`}>
             <div className="grid grid-cols-1 gap-4 w-full max-w-full">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
+                <div 
+                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'mbtiDescriptions', mbtiType);
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.mbtiType'),
+                      mainValue: mbtiType,
+                      ...desc,
+                      category: 'MBTI'
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const desc = getPersonalityDescription(t, 'mbtiDescriptions', mbtiType);
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.mbtiType'),
+                        mainValue: mbtiType,
+                        ...desc,
+                        category: 'MBTI'
+                      });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View detailed information about your MBTI type: ${mbtiType}`}
+                >
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.mbtiType')}</h4>
                   <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple break-words`}>{mbtiType}</p>
-                  <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{dominantFunction}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'mbtiDescriptions', mbtiType);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
-                <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
+                <div 
+                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.lifePath'),
+                      mainValue: String(lifePath),
+                      ...desc,
+                      category: 'Numerology'
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.lifePath'),
+                        mainValue: String(lifePath),
+                        ...desc,
+                        category: 'Numerology'
+                      });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View detailed information about your Life Path number: ${lifePath}`}
+                >
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.lifePath')}</h4>
                   <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple`}>{lifePath}</p>
-                  <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{lifePathKeyword}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
-                <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
+                <div 
+                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const desc = getPersonalityDescription(t, 'sunSignDescriptions', sunSign);
+                    openDetailModal({
+                      title: desc.fullTitle,
+                      subtitle: t('blueprint.labels.sunSign'),
+                      mainValue: sunSign,
+                      ...desc,
+                      category: 'Astrology'
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const desc = getPersonalityDescription(t, 'sunSignDescriptions', sunSign);
+                      openDetailModal({
+                        title: desc.fullTitle,
+                        subtitle: t('blueprint.labels.sunSign'),
+                        mainValue: sunSign,
+                        ...desc,
+                        category: 'Astrology'
+                      });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View detailed information about your Sun sign: ${sunSign}`}
+                >
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.sunSign')}</h4>
                   <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple break-words`}>{sunSign}</p>
-                  <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{t('blueprint.descriptions.coreIdentity')}</p>
+                  {(() => {
+                    const desc = getPersonalityDescription(t, 'sunSignDescriptions', sunSign);
+                    return <PersonalityDescription {...desc} compact={true} />;
+                  })()}
                 </div>
               </div>
               
@@ -424,6 +540,21 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
           </CardContent>
         )}
       </Card>
+      
+      {/* Personality Detail Modal */}
+      {modalData && (
+        <PersonalityDetailModal
+          isOpen={modalData.isOpen}
+          onClose={closeModal}
+          title={modalData.title}
+          subtitle={modalData.subtitle}
+          mainValue={modalData.mainValue}
+          light={modalData.light}
+          shadow={modalData.shadow}
+          insight={modalData.insight}
+          category={modalData.category}
+        />
+      )}
     </div>
   );
 };

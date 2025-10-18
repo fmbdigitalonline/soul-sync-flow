@@ -953,6 +953,228 @@ const translations: Record<Language, Translations> = {
         rooster: "Confident, organized, observant nature",
         dog: "Loyal, honest, protective guardian",
         pig: "Generous, optimistic, sincere heart"
+      },
+      
+      // MBTI Personality Descriptions (Light & Shadow format)
+      mbtiDescriptions: {
+        enfj: {
+          fullTitle: "ENFJ - The Protagonist",
+          light: "You naturally inspire and unite people around a shared vision, leading with empathy and seeing the potential in everyone",
+          shadow: "You may overextend yourself trying to meet everyone's needs, becoming depleted or resentful when your efforts aren't reciprocated",
+          insight: "You are a natural leader and empath who uplifts others, but remember to set boundaries and prioritize your own well-being before pouring into others"
+        },
+        enfp: {
+          fullTitle: "ENFP - The Campaigner",
+          light: "You see endless possibilities and inspire others with your enthusiasm, creativity, and genuine interest in people",
+          shadow: "You may struggle to follow through on commitments or become scattered when too many exciting options pull your attention",
+          insight: "You are a creative visionary who brings energy to everything you touch, but focus your gifts on what truly matters to avoid burnout"
+        },
+        entj: {
+          fullTitle: "ENTJ - The Commander",
+          light: "You excel at organizing people and resources to achieve ambitious goals, seeing the big picture with strategic clarity",
+          shadow: "You may become domineering or impatient with those who don't match your pace or vision",
+          insight: "You are a natural leader and strategist who gets things done, but remember that influence comes from respecting others' processes and timelines"
+        },
+        entp: {
+          fullTitle: "ENTP - The Debater",
+          light: "You thrive on intellectual challenges and bring innovative solutions by connecting ideas others never considered",
+          shadow: "You may argue for argument's sake or lose interest once the initial challenge fades",
+          insight: "You are a brilliant innovator who sees what's possible, but balance your love of ideas with follow-through to create lasting impact"
+        },
+        infj: {
+          fullTitle: "INFJ - The Advocate",
+          light: "You understand people deeply and work tirelessly toward a vision of a better world guided by your strong values",
+          shadow: "You may become perfectionistic or withdraw when the world doesn't align with your ideals",
+          insight: "You are a visionary with profound insight into human nature, but remember that progress happens in small steps and self-compassion fuels your mission"
+        },
+        infp: {
+          fullTitle: "INFP - The Mediator",
+          light: "You bring authenticity, depth, and creative expression to everything you care about, honoring your unique values",
+          shadow: "You may struggle with practical details or become overwhelmed by the gap between your ideals and reality",
+          insight: "You are a creative idealist with a rich inner world, but ground your visions in small, consistent actions to bring them to life"
+        },
+        intj: {
+          fullTitle: "INTJ - The Architect",
+          light: "You see patterns and strategies others miss, building innovative systems and solutions with focused determination",
+          shadow: "You may struggle with emotional expression or seem distant, dismissing input that doesn't fit your vision",
+          insight: "You are a visionary strategist with exceptional analytical gifts, but remember to communicate warmly and value others' perspectives"
+        },
+        intp: {
+          fullTitle: "INTP - The Logician",
+          light: "You analyze complex systems with precision and create elegant solutions through pure logical reasoning",
+          shadow: "You may get lost in theoretical rabbit holes or struggle to apply your insights to practical realities",
+          insight: "You are a brilliant analytical thinker who solves complex problems, but balance your love of theory with actionable applications"
+        },
+        esfj: {
+          fullTitle: "ESFJ - The Consul",
+          light: "You create harmony and bring people together, naturally caring for others' needs and building strong communities",
+          shadow: "You may become overly focused on others' approval or take criticism of your efforts personally",
+          insight: "You are a natural caregiver who creates connection and warmth, but remember that your worth isn't defined by others' responses"
+        },
+        esfp: {
+          fullTitle: "ESFP - The Entertainer",
+          light: "You bring joy, spontaneity, and vibrant energy to every moment, helping others embrace life's pleasures",
+          shadow: "You may avoid difficult emotions or struggle with long-term planning and delayed gratification",
+          insight: "You are a vibrant presence who helps others live fully, but balance present-moment joy with planning for your future self"
+        },
+        estj: {
+          fullTitle: "ESTJ - The Executive",
+          light: "You excel at organizing, managing, and executing plans with practical efficiency and strong leadership",
+          shadow: "You may become rigid or dismissive of approaches that don't align with proven methods",
+          insight: "You are a natural organizer who gets results, but stay open to new methods and honor the human element in systems"
+        },
+        estp: {
+          fullTitle: "ESTP - The Entrepreneur",
+          light: "You thrive in action, quickly adapting to challenges and finding practical solutions in the moment",
+          shadow: "You may take unnecessary risks or struggle with patience when situations require careful planning",
+          insight: "You are a dynamic problem-solver who excels under pressure, but balance your love of action with strategic foresight"
+        },
+        isfj: {
+          fullTitle: "ISFJ - The Defender",
+          light: "You provide steady, reliable support to those you care about, remembering details that make people feel valued",
+          shadow: "You may overwork yourself in service to others or resist change that disrupts familiar routines",
+          insight: "You are a devoted caregiver with exceptional attention to detail, but remember that change can honor what matters while opening new possibilities"
+        },
+        isfp: {
+          fullTitle: "ISFP - The Adventurer",
+          light: "You experience life deeply through your senses and express your authentic self through creative, artistic means",
+          shadow: "You may avoid conflict or struggle to assert your needs when they clash with maintaining harmony",
+          insight: "You are a sensitive artist who brings beauty and authenticity, but honor your boundaries and communicate your needs clearly"
+        },
+        istj: {
+          fullTitle: "ISTJ - The Logistician",
+          light: "You bring reliability, thoroughness, and practical wisdom to everything you commit to with unwavering integrity",
+          shadow: "You may resist new approaches or become frustrated when others don't share your sense of responsibility",
+          insight: "You are a pillar of dependability who honors commitments, but stay flexible when circumstances call for adaptation"
+        },
+        istp: {
+          fullTitle: "ISTP - The Virtuoso",
+          light: "You master tools and systems with hands-on skill, solving practical problems with calm, analytical precision",
+          shadow: "You may become detached or struggle to connect with emotional needs in yourself and others",
+          insight: "You are a skilled craftsperson who solves problems elegantly, but remember that human connection matters as much as technical mastery"
+        }
+      },
+      
+      // Life Path Descriptions
+      lifePathDescriptions: {
+        1: {
+          fullTitle: "Life Path 1 - The Leader",
+          light: "You are a natural pioneer with the courage to forge new paths and inspire others to follow their own vision",
+          shadow: "You may struggle with being overly independent, stubborn, or unable to accept help from others",
+          insight: "You are born to lead and innovate, but remember that collaboration and vulnerability strengthen rather than diminish your power"
+        },
+        2: {
+          fullTitle: "Life Path 2 - The Peacemaker",
+          light: "You bring harmony, diplomacy, and cooperation wherever you go, naturally sensing what brings people together",
+          shadow: "You may become overly accommodating, losing yourself in others' needs or avoiding necessary conflict",
+          insight: "You are a natural diplomat who creates connection, but honor your own voice and remember that healthy boundaries support true harmony"
+        },
+        3: {
+          fullTitle: "Life Path 3 - The Creative Communicator",
+          light: "You express yourself creatively and bring joy and inspiration to others through your natural charisma",
+          shadow: "You may scatter your energy across too many projects or seek constant validation through others' approval",
+          insight: "You are a creative communicator with natural magnetism, but focus your energy and create from inner fulfillment, not external approval"
+        },
+        5: {
+          fullTitle: "Life Path 5 - The Freedom Seeker",
+          light: "You embrace change and adventure, bringing fresh perspectives and helping others break free from limitation",
+          shadow: "You may become restless or struggle with commitment when freedom feels threatened",
+          insight: "You are a freedom-loving adventurer who brings vitality to life, but true freedom comes from choosing commitments that honor your values"
+        },
+        7: {
+          fullTitle: "Life Path 7 - The Seeker",
+          light: "You dive deep into life's mysteries, seeking truth and wisdom through contemplation and spiritual inquiry",
+          shadow: "You may become isolated or dismissive of practical realities in your quest for deeper understanding",
+          insight: "You are a spiritual seeker with profound insight, but balance your inner world with meaningful connection and grounded action"
+        },
+        8: {
+          fullTitle: "Life Path 8 - The Powerhouse",
+          light: "You build material success and wield power with authority, naturally understanding how to manifest abundance",
+          shadow: "You may become controlling or measure your worth solely by external achievements and material success",
+          insight: "You are a natural leader in the material world, but remember that true power comes from integrity and using your gifts to uplift others"
+        },
+        11: {
+          fullTitle: "Life Path 11 - The Spiritual Messenger",
+          light: "You naturally inspire others with your vision, intuition, and spiritual insights that illuminate higher truths",
+          shadow: "You may feel overwhelmed by your sensitivity or doubt your intuitive gifts under pressure",
+          insight: "You are an inspirational visionary and spiritual messenger, but ground your visions in practical action and trust your inner knowing"
+        }
+      },
+      
+      // Sun Sign Descriptions
+      sunSignDescriptions: {
+        aries: {
+          fullTitle: "Aries Sun - The Pioneer",
+          light: "You initiate action with courage and enthusiasm, blazing trails and inspiring others to embrace their own power",
+          shadow: "You may become impulsive or impatient, starting things you don't finish or steamrolling others in your enthusiasm",
+          insight: "You are a natural initiator with warrior energy, but channel your fire into sustained action and consider the impact on others"
+        },
+        taurus: {
+          fullTitle: "Taurus Sun - The Builder",
+          light: "You create lasting beauty and stability, savoring life's pleasures while building something enduring",
+          shadow: "You may become stubborn or resistant to necessary change, prioritizing comfort over growth",
+          insight: "You are a patient builder who creates lasting value, but remember that security comes from inner steadiness, not external control"
+        },
+        gemini: {
+          fullTitle: "Gemini Sun - The Communicator",
+          light: "You connect ideas and people with wit and curiosity, bringing fresh perspectives and versatile thinking",
+          shadow: "You may scatter your energy or struggle with consistency, skimming surfaces without going deep",
+          insight: "You are a brilliant communicator who bridges worlds, but balance your love of variety with depth and follow-through"
+        },
+        cancer: {
+          fullTitle: "Cancer Sun - The Nurturer",
+          light: "You care deeply and create emotional safety, intuitively understanding and meeting others' needs",
+          shadow: "You may become overly protective or moody, retreating into your shell when feeling vulnerable",
+          insight: "You feel emotions deeply and care profoundly, but remember to nurture yourself and communicate your needs clearly"
+        },
+        leo: {
+          fullTitle: "Leo Sun - The Performer",
+          light: "You shine with creative self-expression and generous warmth, inspiring others to embrace their own uniqueness",
+          shadow: "You may become overly focused on recognition or take criticism as a personal attack on your identity",
+          insight: "You are a natural performer with radiant confidence, but remember your light shines brightest when you celebrate others too"
+        },
+        virgo: {
+          fullTitle: "Virgo Sun - The Healer",
+          light: "You serve with practical wisdom and attention to detail, continuously improving yourself and your environment",
+          shadow: "You may become overly critical or perfectionistic, seeing flaws instead of appreciating what works",
+          insight: "You are a dedicated healer who seeks excellence, but practice self-compassion and remember that perfect is the enemy of good"
+        },
+        libra: {
+          fullTitle: "Libra Sun - The Diplomat",
+          light: "You create harmony and beauty, seeing all sides of every situation with grace and fairness",
+          shadow: "You may struggle with decisions or lose yourself trying to please everyone and avoid conflict",
+          insight: "You are a natural peacemaker who brings balance, but remember that your voice matters and healthy boundaries support true harmony"
+        },
+        scorpio: {
+          fullTitle: "Scorpio Sun - The Transformer",
+          light: "You dive deep, transform challenges into growth, and see the truth that others hide from",
+          shadow: "You may become controlling, secretive, or hold onto grudges, using emotional intensity as a weapon",
+          insight: "You are intensely perceptive and transformative, but practice vulnerability and release what no longer serves you"
+        },
+        sagittarius: {
+          fullTitle: "Sagittarius Sun - The Philosopher",
+          light: "You seek truth and meaning with optimistic enthusiasm, sharing wisdom and expanding others' horizons",
+          shadow: "You may become preachy or restless, avoiding commitment in your quest for the next adventure",
+          insight: "You are a truth-seeker who inspires growth, but balance your love of freedom with presence and follow through on your commitments"
+        },
+        capricorn: {
+          fullTitle: "Capricorn Sun - The Achiever",
+          light: "You build lasting success through discipline and strategic planning, achieving mastery through patient effort",
+          shadow: "You may become overly serious or workaholic, sacrificing joy and connection for achievement",
+          insight: "You are a natural master-builder who creates lasting impact, but remember that rest and connection fuel sustainable success"
+        },
+        aquarius: {
+          fullTitle: "Aquarius Sun - The Visionary",
+          light: "You see the future and champion progress for all, bringing innovative thinking and humanitarian vision",
+          shadow: "You may become detached or so focused on ideals that you miss the human needs in front of you",
+          insight: "You are a revolutionary thinker who envisions a better world, but ground your ideals in present-moment connection and compassion"
+        },
+        pisces: {
+          fullTitle: "Pisces Sun - The Mystic",
+          light: "You flow with intuition and compassion, creating art and healing from your deep connection to the divine",
+          shadow: "You may escape into fantasy or lose boundaries, absorbing others' emotions without protecting your own energy",
+          insight: "You are a compassionate mystic with profound sensitivity, but establish clear boundaries and ground your dreams in reality"
+        }
       }
     },
     dreamCategories: {
