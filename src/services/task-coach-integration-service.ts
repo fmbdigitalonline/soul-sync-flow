@@ -19,6 +19,14 @@ export interface SubTask {
   title: string;
   completed: boolean;
   order: number;
+  metadata?: {
+    estimatedTime?: string;
+    energyRequired?: 'low' | 'medium' | 'high';
+    source?: 'user' | 'ai' | 'ai_assistant' | 'decomposition';
+    motivationalFraming?: string;
+    timeOptimization?: string;
+    createdAt?: string;
+  };
 }
 
 export interface TaskAction {
@@ -226,16 +234,25 @@ class TaskCoachIntegrationService {
     };
   }
 
-  private async addSubTask(title: string): Promise<{ success: boolean; message: string }> {
+  private async addSubTask(
+    title: string | { id?: string; title: string; metadata?: SubTask['metadata'] }
+  ): Promise<{ success: boolean; message: string }> {
     if (!this.currentTask) {
       return { success: false, message: 'No active task' };
     }
 
+    // Support both string and object payload for backward compatibility
+    const payload = typeof title === 'string' ? { title } : title;
+    
     const newSubTask: SubTask = {
-      id: `subtask_${Date.now()}`,
-      title,
+      id: payload.id || `subtask_${Date.now()}`,
+      title: payload.title,
       completed: false,
-      order: (this.currentTask.sub_tasks?.length || 0) + 1
+      order: (this.currentTask.sub_tasks?.length || 0) + 1,
+      metadata: payload.metadata || { 
+        source: 'user',
+        createdAt: new Date().toISOString()
+      }
     };
 
     this.currentTask = {
@@ -250,9 +267,15 @@ class TaskCoachIntegrationService {
       this.onTaskUpdateCallback(this.currentTask);
     }
 
+    console.log('✅ TaskCoach: Subtask added:', {
+      id: newSubTask.id,
+      title: newSubTask.title,
+      source: newSubTask.metadata?.source
+    });
+
     return { 
       success: true, 
-      message: `Sub-task "${title}" added successfully` 
+      message: `Sub-task "${payload.title}" added successfully` 
     };
   }
 

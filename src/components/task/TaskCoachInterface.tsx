@@ -594,6 +594,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
           
           <SubTaskManager
             taskTitle={task.title}
+            subTasks={currentTask?.sub_tasks || []}
             onSubTaskComplete={handleSubTaskCompleteById}
             onAllComplete={handleAllSubTasksComplete}
           />
@@ -753,6 +754,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
           
           <SubTaskManager
             taskTitle={task.title}
+            subTasks={currentTask?.sub_tasks || []}
             onSubTaskComplete={handleSubTaskCompleteById}
             onAllComplete={handleAllSubTasksComplete}
           />

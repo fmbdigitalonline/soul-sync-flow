@@ -16,60 +16,64 @@ interface SubTask {
   id: string;
   title: string;
   completed: boolean;
-  estimatedTime: string;
-  energyRequired: 'low' | 'medium' | 'high';
+  order: number;
+  metadata?: {
+    estimatedTime?: string;
+    energyRequired?: 'low' | 'medium' | 'high';
+    source?: string;
+  };
 }
 
 interface SubTaskManagerProps {
   taskTitle: string;
+  subTasks: SubTask[]; // Now controlled - data comes from parent
   onSubTaskComplete: (subTaskId: string) => void;
+  onSubTaskAdd?: (title: string, metadata?: SubTask['metadata']) => void;
   onAllComplete: () => void;
 }
 
 export const SubTaskManager: React.FC<SubTaskManagerProps> = ({
   taskTitle,
+  subTasks, // Use prop instead of state
   onSubTaskComplete,
+  onSubTaskAdd,
   onAllComplete
 }) => {
-  const [subTasks, setSubTasks] = useState<SubTask[]>([]);
 
   const toggleSubTask = (id: string) => {
-    setSubTasks(prev => {
-      const updated = prev.map(task => 
-        task.id === id ? { ...task, completed: !task.completed } : task
-      );
-      
-      const completedCount = updated.filter(t => t.completed).length;
-      const progress = (completedCount / updated.length) * 100;
+    // Just call the parent callback - state is managed there
+    onSubTaskComplete(id);
+    
+    // Check if all will be completed after this toggle
+    const subTask = subTasks.find(st => st.id === id);
+    if (subTask && !subTask.completed) {
+      const completedCount = subTasks.filter(t => t.completed).length + 1;
+      const progress = (completedCount / subTasks.length) * 100;
       
       if (progress === 100) {
         onAllComplete();
       }
-      
-      onSubTaskComplete(id);
-      return updated;
-    });
-  };
-
-  const addSubTask = (task: Omit<SubTask, 'id' | 'completed'>) => {
-    const newTask: SubTask = {
-      ...task,
-      id: Date.now().toString(),
-      completed: false
-    };
-    setSubTasks(prev => [...prev, newTask]);
+    }
   };
 
   const completedCount = subTasks.filter(t => t.completed).length;
   const progress = subTasks.length > 0 ? (completedCount / subTasks.length) * 100 : 0;
 
-  const getEnergyColor = (energy: string) => {
+  const getEnergyColor = (energy?: string) => {
     switch (energy) {
       case 'low': return 'bg-green-100 text-green-700';
       case 'medium': return 'bg-yellow-100 text-yellow-700';
       case 'high': return 'bg-red-100 text-red-700';
       default: return 'bg-gray-100 text-gray-700';
     }
+  };
+
+  const getEnergyFromMetadata = (subTask: SubTask): string => {
+    return subTask.metadata?.energyRequired || 'medium';
+  };
+
+  const getTimeFromMetadata = (subTask: SubTask): string => {
+    return subTask.metadata?.estimatedTime || '15min';
   };
 
   return (
@@ -114,16 +118,18 @@ export const SubTaskManager: React.FC<SubTaskManagerProps> = ({
               <p className={`text-sm ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
                 {task.title}
               </p>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className={getEnergyColor(task.energyRequired)}>
-                  <Zap className="h-3 w-3 mr-1" />
-                  {task.energyRequired}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {task.estimatedTime}
-                </Badge>
-              </div>
+              {task.metadata && (
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className={getEnergyColor(getEnergyFromMetadata(task))}>
+                    <Zap className="h-3 w-3 mr-1" />
+                    {getEnergyFromMetadata(task)}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {getTimeFromMetadata(task)}
+                  </Badge>
+                </div>
+              )}
             </div>
           </div>
         ))}
