@@ -9,6 +9,7 @@ import { ActionButtons } from './ActionButtons';
 import { MilestoneDetailView } from '@/components/journey/MilestoneDetailView';
 import { TimelineDetailView } from '@/components/journey/TimelineDetailView';
 import { TaskViews } from '@/components/journey/TaskViews';
+import { JourneyFocusMode } from '@/components/journey/JourneyFocusMode';
 import { MobileTabs } from './MobileTabs';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 
@@ -29,6 +30,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   const [showTour, setShowTour] = useState(true);
   const [celebrationComplete, setCelebrationComplete] = useState(false);
   const [currentView, setCurrentView] = useState<'overview' | 'milestones' | 'tasks' | 'timeline'>('overview');
+  const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('overview');
 
   const tourSteps = [
@@ -104,7 +106,15 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   };
 
   const handleMilestoneSelect = (milestone: any) => {
-    console.log('🎯 Selected milestone:', milestone.title);
+    console.log('🎯 Entering Focus Mode for milestone:', milestone.title);
+    setFocusedMilestone(milestone);
+    setCurrentView('milestones');
+  };
+
+  const handleExitFocus = () => {
+    console.log('🎯 Exiting Focus Mode');
+    setFocusedMilestone(null);
+    setCurrentView('overview');
   };
 
   const getRecommendedTask = () => {
@@ -115,6 +125,26 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
 
   // Render different views based on currentView
   if (currentView === 'milestones') {
+    // Check if we're in focus mode
+    if (focusedMilestone) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 w-full max-w-full overflow-x-hidden">
+          <div className="w-full max-w-full mx-auto p-3 sm:p-4 overflow-x-hidden">
+            <JourneyFocusMode
+              focusedMilestone={focusedMilestone}
+              mainGoal={goal}
+              onTaskClick={(taskId) => {
+                const task = goal.tasks?.find((t: any) => t.id === taskId);
+                if (task) onStartTask(task);
+              }}
+              onExitFocus={handleExitFocus}
+            />
+          </div>
+        </div>
+      );
+    }
+    
+    // Regular milestone list view (no focus)
     return (
       <div className="min-h-screen w-full max-w-full overflow-x-hidden">
         <MilestoneDetailView
@@ -198,6 +228,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
               <MilestonesRoadmap
                 milestones={goal.milestones || []}
                 isHighlighted={currentStep?.highlight === 'milestones'}
+                onMilestoneClick={handleMilestoneSelect}
               />
             )}
 
