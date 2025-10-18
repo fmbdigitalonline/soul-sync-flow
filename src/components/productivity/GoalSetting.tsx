@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Plus, Target, Calendar, Trash2, Star, CheckCircle2, CheckSquare, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useGoals } from "@/hooks/use-goals";
+import { useGoals, Goal } from "@/hooks/use-goals";
 
 interface GoalSettingProps {
   blueprintTraits?: string[];
@@ -83,16 +83,16 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
 
     setTempMilestones([
       ...tempMilestones,
-      { id: Date.now().toString(), title: newMilestone, completed: false },
+      { title: newMilestone },
     ]);
     setNewMilestone("");
   };
 
-  const handleRemoveMilestone = (id: string) => {
-    setTempMilestones(tempMilestones.filter(milestone => milestone.id !== id));
+  const handleRemoveMilestone = (index: number) => {
+    setTempMilestones(tempMilestones.filter((_, i) => i !== index));
   };
 
-  const handleAddGoal = () => {
+  const handleAddGoal = async () => {
     if (newGoal.title.trim() === "") return;
 
     // Determine alignment based on title, description, and category
@@ -121,64 +121,34 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
       return false;
     });
 
-    const goal: Goal = {
-      id: Date.now().toString(),
-      title: newGoal.title,
-      description: newGoal.description,
-      deadline: newGoal.deadline,
-      category: newGoal.category,
-      progress: 0,
-      alignedWith: alignedTraits,
-      milestones: tempMilestones,
-    };
+    const result = await addGoal(
+      {
+        title: newGoal.title,
+        description: newGoal.description,
+        deadline: newGoal.deadline,
+        category: newGoal.category,
+        alignedWith: alignedTraits,
+        milestones: []
+      },
+      tempMilestones
+    );
 
-    setGoals([...goals, goal]);
-    
-    // Reset form
-    setNewGoal({
-      title: "",
-      description: "",
-      category: "personal",
-      alignedWith: [],
-    });
-    setTempMilestones([]);
-    setShowNewGoalForm(false);
-    
-    toast({
-      title: t('goals.created'),
-      description: t('goals.createdDescription'),
-    });
-  };
-
-  const toggleMilestoneCompletion = (goalId: string, milestoneId: string) => {
-    setGoals(goals.map(goal => {
-      if (goal.id === goalId) {
-        const updatedMilestones = goal.milestones.map(milestone => {
-          if (milestone.id === milestoneId) {
-            return { ...milestone, completed: !milestone.completed };
-          }
-          return milestone;
-        });
-        
-        // Calculate new progress based on completed milestones
-        const completedCount = updatedMilestones.filter(m => m.completed).length;
-        const progress = updatedMilestones.length > 0 
-          ? Math.round((completedCount / updatedMilestones.length) * 100) 
-          : 0;
-        
-        return { ...goal, milestones: updatedMilestones, progress };
-      }
-      return goal;
-    }));
-  };
-
-  const deleteGoal = (goalId: string) => {
-    setGoals(goals.filter(goal => goal.id !== goalId));
-    
-    toast({
-      title: t('goals.deleted'),
-      description: t('goals.deletedDescription'),
-    });
+    if (result) {
+      // Reset form
+      setNewGoal({
+        title: "",
+        description: "",
+        category: "personal",
+        alignedWith: [],
+      });
+      setTempMilestones([]);
+      setShowNewGoalForm(false);
+      
+      toast({
+        title: t('goals.created'),
+        description: t('goals.createdDescription'),
+      });
+    }
   };
 
   const getCategoryLabel = (value: string) => {
@@ -268,7 +238,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
             
             {tempMilestones.length > 0 && (
               <div className="mt-2 space-y-2">
-                {tempMilestones.map((milestone) => (
+                {tempMilestones.map((milestone, index) => (
                   <div key={index} className="flex items-center justify-between p-2 bg-background rounded-md">
                     <span className="text-sm">{milestone.title}</span>
                     <Button
@@ -305,7 +275,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
                   <p className="text-sm text-muted-foreground mt-1">{goal.description}</p>
                 </div>
                 <Button
-                  onClick={() => handleDeleteGoal(goal.id)}
+                  onClick={() => deleteGoal(goal.id)}
                   size="icon"
                   variant="ghost"
                   className="h-8 w-8 text-red-500"
@@ -354,7 +324,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
                         className="flex items-center space-x-2 p-2 bg-secondary/20 rounded-md"
                       >
                         <Button
-                          onClick={() => handleToggleMilestone(goal.id, milestone.id)}
+                          onClick={() => toggleMilestone(goal.id, milestone.id)}
                           size="icon"
                           variant="ghost"
                           className="h-8 w-8"
