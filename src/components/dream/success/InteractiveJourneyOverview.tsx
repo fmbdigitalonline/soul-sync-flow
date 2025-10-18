@@ -23,15 +23,15 @@ export const InteractiveJourneyOverview: React.FC<InteractiveJourneyOverviewProp
   const { t } = useLanguage();
 
   return (
-    <div className={`bg-card/80 backdrop-blur-lg rounded-2xl shadow-lg transition-all duration-500 w-full max-w-full ${spacing.card} ${
+    <div className={`bg-card/95 backdrop-blur-lg rounded-2xl shadow-lg transition-all duration-500 w-full max-w-full ${spacing.card} ${
       isHighlighted ? 'ring-2 ring-soul-purple shadow-soul-purple/20 transform scale-[1.02]' : ''
     }`}>
       <div className={`text-center mb-4 w-full max-w-full ${isFoldDevice ? 'mb-2' : ''}`}>
-        <h2 className={`font-bold text-gray-800 mb-2 leading-tight break-words ${getTextSize('text-lg')} ${isFoldDevice ? 'mb-1' : ''}`}>
+        <h2 className={`font-bold text-foreground mb-2 leading-tight break-words ${getTextSize('text-lg')} ${isFoldDevice ? 'mb-1' : ''}`}>
           {isFoldDevice ? t('journeyOverview.titleShort') : t('journeyOverview.title')}
         </h2>
         {!isFoldDevice && (
-          <p className={`text-gray-600 leading-relaxed break-words ${getTextSize('text-sm')}`}>
+          <p className={`text-muted-foreground leading-relaxed break-words ${getTextSize('text-sm')}`}>
             {t('journeyOverview.subtitle')}
           </p>
         )}
@@ -47,14 +47,14 @@ export const InteractiveJourneyOverview: React.FC<InteractiveJourneyOverviewProp
               <Target className={`text-white ${isFoldDevice ? 'h-3 w-3' : 'h-6 w-6'}`} />
             </div>
             <div className="flex-1 text-left min-w-0 w-full max-w-full">
-            <h3 className={`font-semibold mb-1 text-gray-800 group-hover:text-soul-purple transition-colors w-full truncate ${getTextSize('text-base')}`}>
+            <h3 className={`font-semibold mb-1 text-foreground group-hover:text-soul-purple transition-colors w-full truncate ${getTextSize('text-base')}`}>
                 {t('journeyOverview.milestones')}
               </h3>
               <p className={`font-bold text-soul-purple mb-1 group-hover:scale-110 transition-transform ${getTextSize('text-2xl')} ${isFoldDevice ? getTextSize('text-xl') : ''}`}>
                 {milestonesCount}
               </p>
               {!isFoldDevice && !isUltraNarrow && (
-                <p className={`text-gray-500 w-full truncate ${getTextSize('text-xs')}`}>
+                <p className={`text-muted-foreground w-full truncate ${getTextSize('text-xs')}`}>
                   {t('journeyOverview.milestonesDesc')}
                 </p>
               )}
@@ -74,14 +74,14 @@ export const InteractiveJourneyOverview: React.FC<InteractiveJourneyOverviewProp
               <CheckCircle className={`text-white ${isFoldDevice ? 'h-3 w-3' : 'h-6 w-6'}`} />
             </div>
             <div className="flex-1 text-left min-w-0 w-full max-w-full">
-            <h3 className={`font-semibold mb-1 text-gray-800 group-hover:text-soul-teal transition-colors w-full truncate ${getTextSize('text-base')}`}>
+            <h3 className={`font-semibold mb-1 text-foreground group-hover:text-soul-teal transition-colors w-full truncate ${getTextSize('text-base')}`}>
                 {isFoldDevice ? t('journeyOverview.tasks') : t('journeyOverview.actionTasks')}
               </h3>
               <p className={`font-bold text-soul-teal mb-1 group-hover:scale-110 transition-transform ${getTextSize('text-2xl')} ${isFoldDevice ? getTextSize('text-xl') : ''}`}>
                 {tasksCount}
               </p>
               {!isFoldDevice && !isUltraNarrow && (
-                <p className={`text-gray-500 w-full truncate ${getTextSize('text-xs')}`}>
+                <p className={`text-muted-foreground w-full truncate ${getTextSize('text-xs')}`}>
                   {t('journeyOverview.tasksDesc')}
                 </p>
               )}
@@ -101,14 +101,14 @@ export const InteractiveJourneyOverview: React.FC<InteractiveJourneyOverviewProp
               <Calendar className={`text-white ${isFoldDevice ? 'h-3 w-3' : 'h-6 w-6'}`} />
             </div>
             <div className="flex-1 text-left min-w-0 w-full max-w-full">
-            <h3 className={`font-semibold mb-1 text-gray-800 group-hover:text-soul-blue transition-colors w-full truncate ${getTextSize('text-base')}`}>
+            <h3 className={`font-semibold mb-1 text-foreground group-hover:text-soul-blue transition-colors w-full truncate ${getTextSize('text-base')}`}>
                 {t('journeyOverview.timeline')}
               </h3>
               <p className={`font-bold text-soul-blue mb-1 group-hover:scale-110 transition-transform ${getTextSize('text-2xl')} ${isFoldDevice ? getTextSize('text-xl') : ''}`}>
                 {timeframe}
               </p>
               {!isFoldDevice && !isUltraNarrow && (
-                <p className={`text-gray-500 w-full truncate ${getTextSize('text-xs')}`}>
+                <p className={`text-muted-foreground w-full truncate ${getTextSize('text-xs')}`}>
                   {t('journeyOverview.timelineDesc')}
                 </p>
               )}
