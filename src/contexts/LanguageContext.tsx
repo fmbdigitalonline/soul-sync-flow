@@ -5046,6 +5046,12 @@ Help them transform their dream interest into a specific, actionable goal. Use t
           shadow: "Je kunt te afhankelijk worden van je netwerk of worstelen met buitenstaanders die je cirkel betreden",
           insight: "Je bent hier om te begeleiden door verbinding, maar eer zowel je gemeenschap als nieuwe mogelijkheden"
         },
+        '44opportunistopportunist': {
+          fullTitle: "Profiel 4/4 - Opportunist/Opportunist",
+          light: "Je bouwt netwerken en deelt kennis door vertrouwde verbindingen met natuurlijke externaliseringsenergie",
+          shadow: "Je kunt te afhankelijk worden van je netwerk of worstelen met buitenstaanders die je cirkel betreden",
+          insight: "Je bent hier om te begeleiden door verbinding, maar eer zowel je gemeenschap als nieuwe mogelijkheden"
+        },
         '5/1': {
           fullTitle: "Profiel 5/1 - Ketters/Onderzoeker",
           light: "Je brengt praktische oplossingen ondersteund door solide fundamenteel onderzoek",
