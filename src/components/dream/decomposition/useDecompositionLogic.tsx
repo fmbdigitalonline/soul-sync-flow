@@ -97,7 +97,7 @@ export const useDecompositionLogic = ({
       console.log('🔄 Setting decomposedGoal state with data:', soulGoal);
       setDecomposedGoal(soulGoal);
       
-      // Save to database with error handling
+      // Save to user_goals and goal_milestones tables (unified storage)
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -105,54 +105,55 @@ export const useDecompositionLogic = ({
           return; // Continue without database save
         }
 
-        const goalAsJson = {
-          id: soulGoal.id,
-          title: soulGoal.title,
-          description: soulGoal.description,
-          category: soulGoal.category,
-          timeframe: soulGoal.timeframe,
-          target_completion: soulGoal.target_completion,
-          created_at: soulGoal.created_at,
-          milestones: (soulGoal.milestones || []).map(milestone => ({
-            id: milestone.id,
-            title: milestone.title,
-            description: milestone.description,
-            target_date: milestone.target_date,
-            completed: milestone.completed || false,
-            completion_criteria: milestone.completion_criteria || [],
-            blueprint_alignment: milestone.blueprint_alignment
-          })),
-          tasks: (soulGoal.tasks || []).map(task => ({
-            id: task.id,
-            title: task.title,
-            description: task.description,
-            completed: task.completed || false,
-            estimated_duration: task.estimated_duration,
-            energy_level_required: task.energy_level_required,
-            category: task.category,
-            optimal_timing: task.optimal_timing,
-            blueprint_reasoning: task.blueprint_reasoning
-          })),
-          blueprint_insights: soulGoal.blueprint_insights || [],
-          personalization_notes: soulGoal.personalization_notes
-        };
-        
-        const { error: dbError } = await supabase
-          .from('productivity_journey')
-          .upsert({
+        // Save goal to user_goals table
+        const { data: newGoalRecord, error: goalError } = await supabase
+          .from('user_goals')
+          .insert({
             user_id: user.id,
-            current_goals: [goalAsJson],
-            updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'user_id'
-          });
+            title: soulGoal.title,
+            description: soulGoal.description,
+            category: soulGoal.category,
+            target_date: soulGoal.target_completion,
+            progress: 0,
+            aligned_traits: soulGoal.blueprint_insights || [],
+            status: 'active'
+          })
+          .select()
+          .single();
 
-        if (dbError) {
-          console.error('Database save error:', dbError);
+        if (goalError) {
+          console.error('Goal save error:', goalError);
           console.warn('Goal created but database save failed - continuing with success flow');
-        } else {
-          console.log('💾 Goal saved to database successfully');
+          return;
         }
+
+        console.log('💾 Goal saved to user_goals successfully:', newGoalRecord.id);
+
+        // Save milestones to goal_milestones table
+        if (soulGoal.milestones && soulGoal.milestones.length > 0) {
+          const milestonesData = soulGoal.milestones.map((m: any, index: number) => ({
+            goal_id: newGoalRecord.id,
+            user_id: user.id,
+            title: m.title,
+            description: m.description || '',
+            order_index: index,
+            is_completed: m.completed || false,
+            target_date: m.target_date || null
+          }));
+
+          const { error: milestonesError } = await supabase
+            .from('goal_milestones')
+            .insert(milestonesData);
+
+          if (milestonesError) {
+            console.error('Milestones save error:', milestonesError);
+          } else {
+            console.log('💾 Milestones saved successfully:', milestonesData.length);
+          }
+        }
+
+        // Update the soulGoal object with the real database ID
+        soulGoal.id = newGoalRecord.id;
         
       } catch (dbError) {
         console.error('❌ Database save error (continuing anyway):', dbError);
