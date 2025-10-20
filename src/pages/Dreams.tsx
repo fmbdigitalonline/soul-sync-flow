@@ -42,6 +42,7 @@ import { DreamDiscoveryChat } from "@/components/dream/DreamDiscoveryChat";
 import { DreamMenuGrid } from "@/components/dream/DreamMenuGrid";
 import { HomeMenuGrid } from "@/components/home/HomeMenuGrid";
 import { DreamsOverview } from "@/components/dream/DreamsOverview";
+import { AllDreamsList } from "@/components/dream/AllDreamsList";
 import { useGoals } from "@/hooks/use-goals";
 
 interface Task {
@@ -71,7 +72,7 @@ const Dreams = () => {
     isReadyForDecomposition
   } = useBlueprintAwareDreamDiscoveryCoach();
   // Removed duplicate authentication state - trusting ProtectedRoute
-  const [currentView, setCurrentView] = useState<'hub' | 'create' | 'chat' | 'journey' | 'task-coach' | 'decomposing' | 'success' | 'details'>('hub');
+  const [currentView, setCurrentView] = useState<'hub' | 'create' | 'chat' | 'journey' | 'task-coach' | 'decomposing' | 'success' | 'details' | 'all-goals'>('hub');
   const [activeTab, setActiveTab] = useState<'journey' | 'tasks' | 'focus' | 'habits'>('journey');
   const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -80,6 +81,8 @@ const Dreams = () => {
   const [selectedGoalForDetails, setSelectedGoalForDetails] = useState<any>(null);
   const [focusedMilestoneInDetails, setFocusedMilestoneInDetails] = useState<any>(null);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]); // Track breadcrumb navigation (Pillar I: Preserve Core Intelligence)
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  const [previousView, setPreviousView] = useState<'hub' | 'all-goals'>('hub');
   
   // Principle #2: No Hardcoded Data - Load all goals from database
   const { goals, isLoading: goalsLoading } = useGoals();
@@ -199,25 +202,17 @@ const Dreams = () => {
   // Principle #2: No Hardcoded Data - Load real goal from database
   const handleViewGoalDetails = useCallback((goalId: string) => {
     console.log('🔍 Viewing goal details:', goalId);
-    
-    // Find the goal from loaded goals (Principle #6: Respect Critical Data Pathways)
-    const goalToView = goals.find(g => g.id === goalId);
-    
-    if (!goalToView) {
-      toast({
-        title: "Goal not found",
-        description: "Could not load goal details",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Set the selected goal for details view (Principle #7: Build Transparently)
-    setSelectedGoalForDetails(goalToView);
-    setCurrentView('details');
-    
-    console.log('✅ Goal details view activated:', goalToView.title);
-  }, [goals, toast]);
+    setPreviousView(currentView as 'hub' | 'all-goals');
+    setSelectedGoalId(goalId);
+    setCurrentView('success');
+    navigate('/dreams/success');
+  }, [currentView, navigate]);
+
+  const handleViewAllGoals = useCallback(() => {
+    console.log('📋 Navigating to all goals view');
+    setCurrentView('all-goals');
+    navigate('/dreams/all');
+  }, [navigate]);
 
   const handleBackFromDetails = useCallback(() => {
     console.log('⬅️ Navigating back from details to overview');
@@ -655,11 +650,45 @@ const Dreams = () => {
     );
   }
 
-  if (currentView === 'success' && createdGoal) {
+  if (currentView === 'success') {
+    // Determine which goal to show - selected from list or newly created
+    const goalToShow = selectedGoalId 
+      ? goals.find(g => g.id === selectedGoalId) 
+      : createdGoal;
+
+    if (!goalToShow) {
+      return (
+        <MainLayout>
+          <div className="text-center p-8">
+            <p>Goal not found</p>
+            <Button onClick={() => navigate('/dreams')} className="mt-4">
+              Back to Dreams
+            </Button>
+          </div>
+        </MainLayout>
+      );
+    }
+
     return (
       <MainLayout>
+        <div className="absolute top-4 left-4 z-10">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setCurrentView(previousView === 'all-goals' ? 'all-goals' : 'hub');
+              navigate(previousView === 'all-goals' ? '/dreams/all' : '/dreams');
+              setSelectedGoalId(null);
+            }}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
+          </Button>
+        </div>
+        
         <DreamSuccessPage
-          goal={createdGoal}
+          goal={goalToShow}
           onStartTask={handleSuccessTaskStart}
           onViewJourney={handleSuccessViewJourney}
         />
@@ -880,6 +909,36 @@ const Dreams = () => {
     );
   }
 
+  // All Goals View
+  if (currentView === 'all-goals') {
+    return (
+      <MainLayout>
+        <div className="absolute top-4 left-4 z-10">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setCurrentView('hub');
+              navigate('/dreams');
+            }}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Dreams</span>
+          </Button>
+        </div>
+        
+        <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''} pt-16`}>
+          <AllDreamsList
+            onSelectGoal={handleSelectGoal}
+            onViewDetails={handleViewGoalDetails}
+            onCreateNew={() => navigate('/dreams/create')}
+          />
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <ErrorBoundary>
@@ -890,6 +949,7 @@ const Dreams = () => {
               onSelectGoal={handleSelectGoal}
               onCreateNew={() => navigate('/dreams/create')}
               onViewDetails={handleViewGoalDetails}
+              onViewAllGoals={handleViewAllGoals}
             />
           </div>
 
@@ -998,7 +1058,10 @@ const Dreams = () => {
                     description: t('dreams.cards.successView.description'),
                     Icon: Sparkles,
                     image: '/assets/home/dreams.jpg',
-                    onClick: () => { createdGoal ? navigate("/dreams/success") : toast({ title: t('toast.info.comingSoon'), description: t('dreams.notAvailableDesc') }); }
+                    onClick: () => {
+                      setCurrentView('all-goals');
+                      navigate('/dreams/all');
+                    }
                   }
                 ]}
                 className="mb-6"

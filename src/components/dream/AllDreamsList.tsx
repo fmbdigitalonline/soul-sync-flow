@@ -1,36 +1,32 @@
 /**
- * DreamsOverview Component
- * Displays all active user goals in a grid layout
+ * AllDreamsList Component
+ * Displays all user goals in a scrollable list
  * Following SoulSync Principles:
  * - Principle #1: Never Break Functionality - additive only
  * - Principle #2: No Hardcoded Data - uses useGoals() hook
  * - Principle #3: No Fallbacks That Mask Errors - shows real loading/error states
  * - Principle #5: Mobile-Responsive by Default
- * - Principle #7: Build Transparently - clear loading indicators
  */
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Plus, Target, Loader2, AlertCircle, Sparkles, Heart, ArrowLeft } from 'lucide-react';
+import { Plus, Loader2, AlertCircle } from 'lucide-react';
 import { useGoals } from '@/hooks/use-goals';
 import { GoalCard } from './GoalCard';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 
-interface DreamsOverviewProps {
+interface AllDreamsListProps {
   onSelectGoal: (goalId: string) => void;
-  onCreateNew: () => void;
   onViewDetails: (goalId: string) => void;
-  onViewAllGoals: () => void;
+  onCreateNew: () => void;
 }
 
-export const DreamsOverview: React.FC<DreamsOverviewProps> = ({
+export const AllDreamsList: React.FC<AllDreamsListProps> = ({
   onSelectGoal,
-  onCreateNew,
   onViewDetails,
-  onViewAllGoals
+  onCreateNew
 }) => {
   const { goals, isLoading, error, deleteGoal } = useGoals();
   const { isMobile, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
@@ -82,13 +78,13 @@ export const DreamsOverview: React.FC<DreamsOverviewProps> = ({
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center p-8">
         <div className="bg-gradient-to-br from-soul-purple/10 to-soul-teal/10 rounded-full p-6 mb-6">
-          <Heart className="h-16 w-16 text-soul-purple" />
+          <Plus className="h-16 w-16 text-soul-purple" />
         </div>
         <h3 className={`font-heading font-bold text-foreground mb-2 ${getTextSize('text-lg')}`}>
           No Dreams Yet
         </h3>
         <p className={`text-muted-foreground text-center mb-6 max-w-md ${getTextSize('text-sm')}`}>
-          Your journey begins with a single dream. Let's discover what truly lights up your soul and create a path to make it real.
+          Your journey begins with a single dream. Let's discover what truly lights up your soul.
         </p>
         <Button 
           onClick={onCreateNew}
@@ -102,18 +98,17 @@ export const DreamsOverview: React.FC<DreamsOverviewProps> = ({
     );
   }
 
-  // Display compact overview with stats and most recent goal
+  // Display all goals in a responsive grid
   return (
-    <div className={`w-full ${spacing.container}`}>
+    <div className={`w-full max-w-5xl mx-auto ${spacing.container}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className={`font-heading font-bold text-foreground flex items-center gap-2 mb-1 ${getTextSize('text-xl')}`}>
-            <Target className="h-6 w-6 text-soul-purple" />
-            My Dreams
+          <h2 className={`font-heading font-bold text-foreground ${getTextSize('text-xl')}`}>
+            All Dreams ({goals.length})
           </h2>
           <p className={`text-muted-foreground ${getTextSize('text-sm')}`}>
-            {goals.length} {goals.length === 1 ? 'active dream' : 'active dreams'}
+            Your complete journey overview
           </p>
         </div>
         
@@ -127,73 +122,20 @@ export const DreamsOverview: React.FC<DreamsOverviewProps> = ({
         </Button>
       </div>
 
-      {/* Quick Stats */}
-      {goals.length > 0 && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-soul-purple">{goals.length}</p>
-            <p className="text-xs text-muted-foreground">Active</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-soul-teal">
-              {goals.reduce((sum, g) => sum + (g.milestones?.length || 0), 0)}
-            </p>
-            <p className="text-xs text-muted-foreground">Milestones</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">
-              {goals.reduce((sum, g) => sum + (g.milestones?.filter(m => m.completed).length || 0), 0)}
-            </p>
-            <p className="text-xs text-muted-foreground">Completed</p>
-          </div>
-        </div>
-      )}
-
-      {/* Most Recent Goal Only */}
-      {goals.length > 0 && (
-        <>
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3">
-            Most Recent Dream
-          </h3>
+      {/* All Goals Grid - Mobile Responsive */}
+      <div className={`grid gap-4 ${
+        isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+      }`}>
+        {goals.map((goal) => (
           <GoalCard
-            key={goals[0].id}
-            goal={goals[0]}
+            key={goal.id}
+            goal={goal}
             onSelect={onSelectGoal}
             onViewDetails={onViewDetails}
             onDelete={handleDeleteGoal}
           />
-        </>
-      )}
-
-      {/* View All Dreams Button */}
-      {goals.length > 1 && (
-        <Button
-          variant="ghost"
-          onClick={onViewAllGoals}
-          className="w-full mt-4 mb-6 text-soul-purple hover:text-soul-purple/80"
-        >
-          View All Dreams ({goals.length})
-          <ArrowLeft className="ml-2 h-4 w-4 rotate-180" />
-        </Button>
-      )}
-
-      {/* Blueprint Insight */}
-      <Card className={`mt-6 bg-gradient-to-r from-soul-purple/5 to-soul-teal/5 border-soul-purple/20 ${spacing.container}`}>
-        <div className="flex items-start gap-3">
-          <div className="bg-soul-purple/10 rounded-full p-2">
-            <Sparkles className="h-5 w-5 text-soul-purple" />
-          </div>
-          <div className="flex-1">
-            <h4 className={`font-semibold text-foreground mb-1 ${getTextSize('text-sm')}`}>
-              Blueprint-Aligned Progress
-            </h4>
-            <p className={`text-muted-foreground ${getTextSize('text-xs')}`}>
-              Each dream is personalized to your unique cognitive patterns, energy strategy, and life path. 
-              Your progress is optimized for how you naturally work best.
-            </p>
-          </div>
-        </div>
-      </Card>
+        ))}
+      </div>
     </div>
   );
 };
