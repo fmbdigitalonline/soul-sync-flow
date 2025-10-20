@@ -640,6 +640,22 @@ const Dreams = () => {
         <ErrorBoundary>
           <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
             <div className={`w-full max-w-lg mx-auto py-4 px-3 ${isMobile ? 'pb-24' : 'pb-20'}`}>
+              {/* Back Navigation Header */}
+              <div className={`flex items-center gap-3 mb-4 px-2`}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setCurrentView('hub');
+                    navigate('/dreams');
+                  }}
+                  className={`flex items-center gap-2 ${touchTargetSize} text-muted-foreground hover:text-foreground transition-colors`}
+                >
+                  <ArrowLeft className={`${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                  {!isFoldDevice && <span className={getTextSize('text-sm')}>Back to Dreams</span>}
+                </Button>
+              </div>
+
               {/* Enhanced Mobile Optimized Hero Section with Better Title Visibility */}
               <div className={`text-center mb-6 px-2`}>
                 <div className={`mx-auto cosmic-bg rounded-full flex items-center justify-center mb-4 ${isFoldDevice ? 'w-12 h-12' : 'w-16 h-16'}`}>
