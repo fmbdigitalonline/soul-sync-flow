@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import { useSoulOrb } from '@/contexts/SoulOrbContext';
 import { CelebrationHeader } from './CelebrationHeader';
 import { GuidedTourPanel } from './GuidedTourPanel';
@@ -17,12 +19,14 @@ interface DreamSuccessPageProps {
   goal: any;
   onStartTask: (task: any) => void;
   onViewJourney: () => void;
+  onCreateAnother?: () => void; // NEW: Allow creating another dream (Principle #8: Only Add)
 }
 
 export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   goal,
   onStartTask,
-  onViewJourney
+  onViewJourney,
+  onCreateAnother
 }) => {
   const { speak, speaking } = useSoulOrb();
   const { isMobile } = useResponsiveLayout();
@@ -248,6 +252,20 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
             onViewJourney={onViewJourney}
             onRestartTour={handleRestartTour}
           />
+          
+          {/* NEW: Option to create another dream (Principle #8: Only Add) */}
+          {onCreateAnother && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <Button
+                onClick={onCreateAnother}
+                variant="outline"
+                className="w-full py-4 rounded-xl font-medium transition-all duration-300"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Another Dream
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

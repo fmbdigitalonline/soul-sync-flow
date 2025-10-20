@@ -27,13 +27,15 @@ interface EnhancedJourneyMapProps {
   onMilestoneClick?: (milestoneId: string) => void;
   onBackToSuccessOverview?: () => void;
   showSuccessBackButton?: boolean;
+  activeGoal?: any; // NEW: Accept active goal from parent (Principle #6: Respect Critical Data Pathways)
 }
 
 export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ 
   onTaskClick, 
   onMilestoneClick,
   onBackToSuccessOverview,
-  showSuccessBackButton 
+  showSuccessBackButton,
+  activeGoal // NEW: Use activeGoal if provided (Principle #6: Respect Critical Data Pathways)
 }) => {
   const { productivityJourney } = useJourneyTracking();
   const { blueprintData } = useOptimizedBlueprintData();
@@ -42,16 +44,22 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const { t } = useLanguage();
   
+  // Principle #6: Use activeGoal if provided, otherwise fall back to journey data
   const currentGoals = (productivityJourney?.current_goals || []) as any[];
-  const mainGoal = currentGoals[0];
+  const mainGoal = activeGoal || currentGoals[0];
   
+  // Principle #3: No Fallbacks That Mask Errors - Show clear "no goal selected" state
   if (!mainGoal) {
     return (
       <div className="p-6 text-center w-full">
         <Target className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-        <h3 className="text-lg font-semibold mb-2">{t('journey.empty.title')}</h3>
+        <h3 className="text-lg font-semibold mb-2">
+          {activeGoal === null ? 'No Dream Selected' : t('journey.empty.title')}
+        </h3>
         <p className="text-muted-foreground text-sm">
-          {t('journey.empty.description')}
+          {activeGoal === null 
+            ? 'Please select a dream from your overview to view your journey map.' 
+            : t('journey.empty.description')}
         </p>
       </div>
     );

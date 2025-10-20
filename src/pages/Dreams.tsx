@@ -41,6 +41,8 @@ import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { DreamDiscoveryChat } from "@/components/dream/DreamDiscoveryChat";
 import { DreamMenuGrid } from "@/components/dream/DreamMenuGrid";
 import { HomeMenuGrid } from "@/components/home/HomeMenuGrid";
+import { DreamsOverview } from "@/components/dream/DreamsOverview";
+import { useGoals } from "@/hooks/use-goals";
 
 interface Task {
   id: string;
@@ -76,6 +78,18 @@ const Dreams = () => {
   const [isCreatingDream, setIsCreatingDream] = useState(false);
   const [createdGoal, setCreatedGoal] = useState<any>(null);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]); // Track breadcrumb navigation (Pillar I: Preserve Core Intelligence)
+  
+  // Principle #2: No Hardcoded Data - Load all goals from database
+  const { goals, isLoading: goalsLoading } = useGoals();
+  
+  // Principle #6: Respect Critical Data Pathways - Track active goal
+  const [activeGoalId, setActiveGoalId] = useState<string | null>(() => {
+    // Restore from localStorage (Principle #7: Build Transparently)
+    return localStorage.getItem('activeGoalId');
+  });
+  
+  // Get active goal from loaded goals
+  const activeGoal = goals.find(g => g.id === activeGoalId) || null;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -136,16 +150,38 @@ const Dreams = () => {
     setCurrentView('task-coach');
   }, []);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const handleSuccessViewJourney = useCallback(() => {
-    // Track navigation from success page (Principle #7: Build Transparently)
     console.log('📍 Dreams: Navigating from success to journey, tracking breadcrumb');
     setNavigationHistory(prev => [...prev, 'success']);
+    
+    if (createdGoal?.id) {
+      setActiveGoalId(createdGoal.id);
+      localStorage.setItem('activeGoalId', createdGoal.id);
+      console.log('✅ Dreams: Set active goal:', createdGoal.id);
+    }
+    
     setCurrentView('journey');
-  }, []);
+  }, [createdGoal]);
+  
+  const handleSelectGoal = useCallback((goalId: string) => {
+    console.log('🎯 Dreams: User selected goal:', goalId);
+    setActiveGoalId(goalId);
+    localStorage.setItem('activeGoalId', goalId);
+    setCurrentView('journey');
+    navigate('/dreams/journey');
+  }, [navigate]);
+  
+  const handleCreateAnotherDream = useCallback(() => {
+    console.log('➕ Dreams: User wants to create another dream');
+    setCurrentView('create');
+    navigate('/dreams/create');
+  }, [navigate]);
 
   const handleDiscoveryComplete = useCallback(() => {
     if (isReadyForDecomposition && intakeData) {
-      // Set the form data from the discovery conversation
       setDreamForm({
         title: intakeData.title,
         description: intakeData.description || '',
@@ -153,7 +189,6 @@ const Dreams = () => {
         timeframe: intakeData.timeframe
       });
       
-      // Trigger decomposition
       setCurrentView('decomposing');
       setIsCreatingDream(true);
     }
@@ -176,9 +211,6 @@ const Dreams = () => {
       }
     }
   }, [currentView, scrollToForm]);
-
-  const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     const path = location.pathname;
@@ -754,8 +786,22 @@ const Dreams = () => {
     <MainLayout>
       <ErrorBoundary>
         <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
+          {/* NEW: My Dreams Overview Section - Principle #8: Only Add */}
+          <div className="w-full max-w-5xl mx-auto px-3 pt-4 pb-6">
+            <DreamsOverview
+              onSelectGoal={handleSelectGoal}
+              onCreateNew={() => navigate('/dreams/create')}
+              onViewDetails={(goalId) => {
+                // Navigate to journey with this goal selected
+                setActiveGoalId(goalId);
+                localStorage.setItem('activeGoalId', goalId);
+                navigate('/dreams/journey');
+              }}
+            />
+          </div>
+
           {/* Dream mode starting hub */}
-          <div className="w-full max-w-5xl mx-auto px-3 pt-4 pb-2">
+          <div className="w-full max-w-5xl mx-auto px-3 pt-4 pb-2 border-t border-border">
             {isMobile ? (
               <HomeMenuGrid
                 items={[
