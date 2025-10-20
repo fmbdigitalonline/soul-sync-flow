@@ -71,12 +71,13 @@ const Dreams = () => {
     isReadyForDecomposition
   } = useBlueprintAwareDreamDiscoveryCoach();
   // Removed duplicate authentication state - trusting ProtectedRoute
-  const [currentView, setCurrentView] = useState<'hub' | 'create' | 'chat' | 'journey' | 'task-coach' | 'decomposing' | 'success'>('hub');
+  const [currentView, setCurrentView] = useState<'hub' | 'create' | 'chat' | 'journey' | 'task-coach' | 'decomposing' | 'success' | 'details'>('hub');
   const [activeTab, setActiveTab] = useState<'journey' | 'tasks' | 'focus' | 'habits'>('journey');
   const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isCreatingDream, setIsCreatingDream] = useState(false);
   const [createdGoal, setCreatedGoal] = useState<any>(null);
+  const [selectedGoalForDetails, setSelectedGoalForDetails] = useState<any>(null);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]); // Track breadcrumb navigation (Pillar I: Preserve Core Intelligence)
   
   // Principle #2: No Hardcoded Data - Load all goals from database
@@ -193,6 +194,36 @@ const Dreams = () => {
       setIsCreatingDream(true);
     }
   }, [isReadyForDecomposition, intakeData]);
+
+  // Principle #2: No Hardcoded Data - Load real goal from database
+  const handleViewGoalDetails = useCallback((goalId: string) => {
+    console.log('🔍 Viewing goal details:', goalId);
+    
+    // Find the goal from loaded goals (Principle #6: Respect Critical Data Pathways)
+    const goalToView = goals.find(g => g.id === goalId);
+    
+    if (!goalToView) {
+      toast({
+        title: "Goal not found",
+        description: "Could not load goal details",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Set the selected goal for details view (Principle #7: Build Transparently)
+    setSelectedGoalForDetails(goalToView);
+    setCurrentView('details');
+    
+    console.log('✅ Goal details view activated:', goalToView.title);
+  }, [goals, toast]);
+
+  const handleBackFromDetails = useCallback(() => {
+    console.log('⬅️ Navigating back from details to overview');
+    setSelectedGoalForDetails(null);
+    setCurrentView('hub');
+    navigate('/dreams');
+  }, [navigate]);
 
   // NEW: Handle pre-filled form data from steward completion screen (Principle #8: Only Add)
   useEffect(() => {
@@ -634,6 +665,44 @@ const Dreams = () => {
     );
   }
 
+  // Principle #1: Never Break Functionality - Additive only
+  // Principle #2: No Hardcoded Data - Uses real goal from database
+  if (currentView === 'details' && selectedGoalForDetails) {
+    return (
+      <MainLayout>
+        {/* Back Navigation - Principle #5: Mobile-Responsive */}
+        <div className="absolute top-4 left-4 z-10">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBackFromDetails}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Dreams</span>
+          </Button>
+        </div>
+        
+        {/* Principle #6: Respect Critical Data Pathways - Render DreamSuccessPage with real data */}
+        <DreamSuccessPage
+          goal={selectedGoalForDetails}
+          onStartTask={(task) => {
+            console.log('🎯 Starting task from details view:', task);
+            handleSuccessTaskStart(task);
+          }}
+          onViewJourney={() => {
+            console.log('🗺️ Viewing journey from details view');
+            // Set this goal as active and navigate to journey (Principle #6)
+            setActiveGoalId(selectedGoalForDetails.id);
+            localStorage.setItem('activeGoalId', selectedGoalForDetails.id);
+            setCurrentView('journey');
+            navigate('/dreams');
+          }}
+        />
+      </MainLayout>
+    );
+  }
+
   if (currentView === 'create') {
     return (
       <MainLayout>
@@ -807,12 +876,7 @@ const Dreams = () => {
             <DreamsOverview
               onSelectGoal={handleSelectGoal}
               onCreateNew={() => navigate('/dreams/create')}
-              onViewDetails={(goalId) => {
-                // Navigate to journey with this goal selected
-                setActiveGoalId(goalId);
-                localStorage.setItem('activeGoalId', goalId);
-                navigate('/dreams/journey');
-              }}
+              onViewDetails={handleViewGoalDetails}
             />
           </div>
 
