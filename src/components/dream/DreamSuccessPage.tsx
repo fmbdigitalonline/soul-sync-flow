@@ -10,23 +10,36 @@ import { ActionButtons } from './success/ActionButtons';
 import { MilestoneDetailView } from '@/components/journey/MilestoneDetailView';
 import { TimelineDetailView } from '@/components/journey/TimelineDetailView';
 import { TaskViews } from '@/components/journey/TaskViews';
+import { JourneyFocusMode } from '@/components/journey/JourneyFocusMode';
 
 interface DreamSuccessPageProps {
   goal: any;
   onStartTask: (task: any) => void;
   onViewJourney: () => void;
+  focusedMilestone?: any | null;
+  onMilestoneSelect?: (milestone: any) => void;
+  onExitFocus?: () => void;
 }
 
 export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   goal,
   onStartTask,
-  onViewJourney
+  onViewJourney,
+  focusedMilestone: externalFocusedMilestone,
+  onMilestoneSelect: externalOnMilestoneSelect,
+  onExitFocus: externalOnExitFocus
 }) => {
   const { speak, speaking } = useSoulOrb();
   const [tourStep, setTourStep] = useState(0);
   const [showTour, setShowTour] = useState(true);
   const [celebrationComplete, setCelebrationComplete] = useState(false);
+  const [localFocusedMilestone, setLocalFocusedMilestone] = useState<any>(null);
   const [currentView, setCurrentView] = useState<'overview' | 'milestones' | 'tasks' | 'timeline'>('overview');
+
+  // Derive the actual focused milestone - use external if provided, otherwise local
+  const focusedMilestone = externalFocusedMilestone !== undefined 
+    ? externalFocusedMilestone 
+    : localFocusedMilestone;
 
   const tourSteps = [
     {
@@ -101,8 +114,29 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   };
 
   const handleMilestoneSelect = (milestone: any) => {
-    console.log('🎯 Selected milestone:', milestone.title);
-    // You can add milestone focus logic here
+    console.log('🎯 Milestone selected:', milestone.title);
+    
+    // If parent provides handler, use it (for details view)
+    if (externalOnMilestoneSelect) {
+      externalOnMilestoneSelect(milestone);
+    } else {
+      // Otherwise use local state (for success view after creation)
+      setLocalFocusedMilestone(milestone);
+      setCurrentView('milestones');
+    }
+  };
+
+  const handleExitFocus = () => {
+    console.log('🎯 Exiting Focus Mode');
+    
+    // If parent provides handler, use it
+    if (externalOnExitFocus) {
+      externalOnExitFocus();
+    } else {
+      // Otherwise use local state
+      setLocalFocusedMilestone(null);
+      setCurrentView('overview');
+    }
   };
 
   const getRecommendedTask = () => {
@@ -110,6 +144,19 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   };
 
   const currentStep = tourSteps[tourStep];
+
+  // Render focus mode if milestone is focused (from parent or local state)
+  if (focusedMilestone) {
+    return (
+      <div className="min-h-screen">
+        <JourneyFocusMode
+          focusedMilestone={focusedMilestone}
+          mainGoal={goal}
+          onExitFocus={handleExitFocus}
+        />
+      </div>
+    );
+  }
 
   // Render different views based on currentView
   if (currentView === 'milestones') {

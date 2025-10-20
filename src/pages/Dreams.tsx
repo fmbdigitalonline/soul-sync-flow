@@ -78,6 +78,7 @@ const Dreams = () => {
   const [isCreatingDream, setIsCreatingDream] = useState(false);
   const [createdGoal, setCreatedGoal] = useState<any>(null);
   const [selectedGoalForDetails, setSelectedGoalForDetails] = useState<any>(null);
+  const [focusedMilestoneInDetails, setFocusedMilestoneInDetails] = useState<any>(null);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]); // Track breadcrumb navigation (Pillar I: Preserve Core Intelligence)
   
   // Principle #2: No Hardcoded Data - Load all goals from database
@@ -221,6 +222,7 @@ const Dreams = () => {
   const handleBackFromDetails = useCallback(() => {
     console.log('⬅️ Navigating back from details to overview');
     setSelectedGoalForDetails(null);
+    setFocusedMilestoneInDetails(null);
     setCurrentView('hub');
     navigate('/dreams');
   }, [navigate]);
@@ -670,22 +672,33 @@ const Dreams = () => {
   if (currentView === 'details' && selectedGoalForDetails) {
     return (
       <MainLayout>
-        {/* Back Navigation - Principle #5: Mobile-Responsive */}
-        <div className="absolute top-4 left-4 z-10">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBackFromDetails}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to Dreams</span>
-          </Button>
-        </div>
+        {/* Show back button ONLY when not in focus mode - Principle #5: Mobile-Responsive */}
+        {!focusedMilestoneInDetails && (
+          <div className="absolute top-4 left-4 z-10">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBackFromDetails}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Dreams</span>
+            </Button>
+          </div>
+        )}
         
         {/* Principle #6: Respect Critical Data Pathways - Render DreamSuccessPage with real data */}
         <DreamSuccessPage
           goal={selectedGoalForDetails}
+          focusedMilestone={focusedMilestoneInDetails}
+          onMilestoneSelect={(milestone) => {
+            console.log('🎯 Setting focused milestone from details:', milestone.title);
+            setFocusedMilestoneInDetails(milestone);
+          }}
+          onExitFocus={() => {
+            console.log('🎯 Exiting focus mode in details view');
+            setFocusedMilestoneInDetails(null);
+          }}
           onStartTask={(task) => {
             console.log('🎯 Starting task from details view:', task);
             handleSuccessTaskStart(task);
