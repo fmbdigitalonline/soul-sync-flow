@@ -16,6 +16,9 @@ interface PersonalityDetailModalProps {
   light: string;
   shadow: string;
   insight: string;
+  think?: string;
+  act?: string;
+  react?: string;
   category: string;
 }
 
@@ -28,6 +31,9 @@ const PersonalityDetailModal: React.FC<PersonalityDetailModalProps> = ({
   light,
   shadow,
   insight,
+  think,
+  act,
+  react,
   category
 }) => {
   const { spacing, getTextSize, isMobile } = useResponsiveLayout();
@@ -81,6 +87,9 @@ const PersonalityDetailModal: React.FC<PersonalityDetailModalProps> = ({
                     light={light}
                     shadow={shadow}
                     insight={insight}
+                    think={think}
+                    act={act}
+                    react={react}
                     compact={false}
                   />
                 </div>

@@ -1,3 +1,5 @@
+import { mbtiAlignmentGuidance, sunSignAlignmentGuidance } from '@/data/alignment-guidance';
+
 /**
  * Helper function to safely retrieve personality descriptions with fallback
  */
@@ -10,6 +12,9 @@ export const getPersonalityDescription = (
   light: string;
   shadow: string;
   insight: string;
+  think?: string;
+  act?: string;
+  react?: string;
 } => {
   // Clean the key based on category type
   let cleanedKey = String(key);
@@ -65,11 +70,25 @@ export const getPersonalityDescription = (
     
     console.log(`✅ Translation found for: ${descKey}`);
     
+    // Get alignment guidance based on category
+    let alignmentGuidance = { think: desc.think, act: desc.act, react: desc.react };
+    
+    if (category.toLowerCase().includes('mbti') && !desc.think) {
+      const mbtiKey = normalizedKey.toLowerCase();
+      alignmentGuidance = mbtiAlignmentGuidance[mbtiKey] || alignmentGuidance;
+    } else if (category.toLowerCase().includes('sun') && !desc.think) {
+      const signKey = normalizedKey.toLowerCase();
+      alignmentGuidance = sunSignAlignmentGuidance[signKey] || alignmentGuidance;
+    }
+    
     return {
       fullTitle: desc.fullTitle || `${category} ${key}`,
       light: desc.light || "Your unique strengths shape how you move through the world",
       shadow: desc.shadow || "Every strength has a growth edge to explore",
-      insight: desc.insight || "You have unique gifts that contribute to your journey of self-discovery"
+      insight: desc.insight || "You have unique gifts that contribute to your journey of self-discovery",
+      think: alignmentGuidance.think || undefined,
+      act: alignmentGuidance.act || undefined,
+      react: alignmentGuidance.react || undefined
     };
   } catch (error) {
     console.error(`Error retrieving translation for ${descKey}:`, error);
@@ -82,6 +101,9 @@ const getFallbackDescription = (category: string, key: string | number) => {
     fullTitle: `${category} ${key}`,
     light: "Your unique strengths shape how you move through the world",
     shadow: "Every strength has a growth edge to explore",
-    insight: "You have unique gifts that contribute to your journey of self-discovery"
+    insight: "You have unique gifts that contribute to your journey of self-discovery",
+    think: undefined,
+    act: undefined,
+    react: undefined
   };
 };
