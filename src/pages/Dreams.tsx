@@ -274,16 +274,28 @@ const Dreams = () => {
       setActiveTab("habits");
       return;
     }
+    if (path.startsWith("/dreams/all")) {
+      console.log('📋 Route handler: /dreams/all → setting view to all-goals');
+      setCurrentView("all-goals");
+      return;
+    }
     if (path.startsWith("/dreams/success")) {
-      if (createdGoal) {
+      console.log('🎯 Route handler: /dreams/success', { createdGoal: !!createdGoal, selectedGoalId });
+      if (createdGoal || selectedGoalId) {
         setCurrentView("success");
       } else {
+        console.warn('⚠️ Attempted to access /dreams/success without goal data');
         toast({ title: t('toast.info.notAvailable'), description: t('dreams.notAvailableDesc') });
         navigate("/dreams", { replace: true });
       }
       return;
     }
-  }, [location.pathname, createdGoal, navigate, toast]);
+    
+    // Defensive logging for unhandled routes
+    if (path.startsWith("/dreams/") && path !== "/dreams") {
+      console.warn('⚠️ Unhandled Dreams route:', path);
+    }
+  }, [location.pathname, createdGoal, selectedGoalId, navigate, toast]);
 
   const getBlueprintInsight = useCallback(() => {
     if (!blueprintData) return t('dreams.blueprintInsight');
@@ -305,6 +317,11 @@ const Dreams = () => {
     
     return `This journey will be optimized for your ${traits.slice(0, 2).join(' & ')} nature`;
   }, [blueprintData, t]);
+
+  // Debug logging for view changes
+  useEffect(() => {
+    console.log('🔄 Current view changed:', currentView, { selectedGoalId, createdGoal: !!createdGoal });
+  }, [currentView, selectedGoalId, createdGoal]);
 
   // Removed duplicate authentication logic - trusting ProtectedRoute wrapper
 
