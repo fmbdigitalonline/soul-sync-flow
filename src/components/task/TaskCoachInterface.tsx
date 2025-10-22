@@ -246,7 +246,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   // Sanitize content to remove system prompts and internal markers
   const sanitizeContent = (content: string): string => {
     if (!content) return '';
-    
+
     // Remove common system prompt patterns
     let sanitized = content
       // Remove XML-style tags like <thinking>, <system>, <instructions>, etc.
@@ -262,19 +262,28 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       // Clean up excessive whitespace
       .replace(/\n{3,}/g, '\n\n')
       .trim();
-    
+
+    // Strip trailing structured instructions that shouldn't surface in the UI
+    sanitized = sanitized
+      .replace(/(?:\n\s*)?Provide detailed[\s\S]*$/i, '')
+      .replace(/(?:\n\s*)?Give me [\s\S]*$/i, '')
+      .replace(/(?:\n\s*)?Format requirements:[\s\S]*$/i, '')
+      .trim();
+
     return sanitized;
   };
 
   // Convert task-aware messages to coach messages format
   useEffect(() => {
-    const convertedMessages: CoachMessage[] = messages.map(msg => ({
-      id: msg.id,
-      content: sanitizeContent(msg.content),
-      isUser: msg.sender === 'user',
-      timestamp: msg.timestamp,
-      agentMode: 'guide' as AgentMode
-    }));
+    const convertedMessages: CoachMessage[] = messages
+      .map(msg => ({
+        id: msg.id,
+        content: sanitizeContent(msg.content),
+        isUser: msg.sender === 'user',
+        timestamp: msg.timestamp,
+        agentMode: 'guide' as AgentMode
+      }))
+      .filter(msg => msg.content.trim().length > 0);
     setCoachMessages(convertedMessages);
   }, [messages]);
 

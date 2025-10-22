@@ -24,7 +24,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 interface EnhancedJourneyMapProps {
   onTaskClick?: (taskId: string) => void;
-  onMilestoneClick?: (milestoneId: string) => void;
+  onMilestoneClick?: (milestone: any) => void;
   onBackToSuccessOverview?: () => void;
   showSuccessBackButton?: boolean;
   activeGoal?: any; // NEW: Accept active goal from parent (Principle #6: Respect Critical Data Pathways)
@@ -195,7 +195,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onMilestoneClick?.(milestone.id);
+                    onMilestoneClick?.(milestone);
                   }}
                   className="bg-blue-500 hover:bg-blue-600 text-xs h-7 px-2"
                 >
