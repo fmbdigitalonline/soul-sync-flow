@@ -20,7 +20,7 @@ interface SimplifiedBlueprintViewerProps {
 const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ blueprint }) => {
   console.log('🎯 SimplifiedBlueprintViewer received LayeredBlueprint:', blueprint);
   const { spacing, getTextSize } = useResponsiveLayout();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   // State for expandable sections
   const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({
@@ -60,6 +60,9 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
   const closeModal = () => {
     setModalData(prev => prev ? { ...prev, isOpen: false } : null);
   };
+
+  const getDescription = (category: string, value: string | number) =>
+    getPersonalityDescription(t, category, value, language);
 
   // Helper function to translate keywords
   const translateKeyword = (keyword: string): string => {
@@ -220,7 +223,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 <div 
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'mbtiDescriptions', mbtiType);
+                    const desc = getDescription('mbtiDescriptions', mbtiType);
                     console.log('🔍 Opening MBTI modal with alignment data:', {
                       mbtiType,
                       hasThink: !!desc.think,
@@ -238,7 +241,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const desc = getPersonalityDescription(t, 'mbtiDescriptions', mbtiType);
+                      const desc = getDescription('mbtiDescriptions', mbtiType);
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.mbtiType'),
@@ -255,14 +258,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.mbtiType')}</h4>
                   <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple break-words`}>{mbtiType}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'mbtiDescriptions', mbtiType);
+                    const desc = getDescription('mbtiDescriptions', mbtiType);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
                 <div 
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                    const desc = getDescription('lifePathDescriptions', lifePath);
                     console.log('🔍 Opening Life Path modal with alignment data:', {
                       lifePath,
                       hasThink: !!desc.think,
@@ -280,7 +283,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                      const desc = getDescription('lifePathDescriptions', lifePath);
                       console.log('🔍 Opening Life Path modal with alignment data:', {
                         lifePath,
                         hasThink: !!desc.think,
@@ -303,14 +306,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.lifePath')}</h4>
                   <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple`}>{lifePath}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                    const desc = getDescription('lifePathDescriptions', lifePath);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
                 <div 
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'sunSignDescriptions', sunSign);
+                    const desc = getDescription('sunSignDescriptions', sunSign);
                     console.log('🔍 Opening Sun Sign modal with alignment data:', {
                       sunSign,
                       hasThink: !!desc.think,
@@ -328,7 +331,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const desc = getPersonalityDescription(t, 'sunSignDescriptions', sunSign);
+                      const desc = getDescription('sunSignDescriptions', sunSign);
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.sunSign'),
@@ -345,7 +348,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.sunSign')}</h4>
                   <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple break-words`}>{sunSign}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'sunSignDescriptions', sunSign);
+                    const desc = getDescription('sunSignDescriptions', sunSign);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
@@ -355,7 +358,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 <div 
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                    const desc = getDescription('humanDesignDescriptions', hdType);
                     console.log('🔍 Opening Human Design Type modal with alignment data:', {
                       hdType,
                       hasThink: !!desc.think,
@@ -373,7 +376,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                      const desc = getDescription('humanDesignDescriptions', hdType);
                       console.log('🔍 Opening Human Design Type modal with alignment data:', {
                         hdType,
                         hasThink: !!desc.think,
@@ -396,14 +399,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.humanDesign')}</h4>
                   <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{hdType}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                    const desc = getDescription('humanDesignDescriptions', hdType);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
                 <div 
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                    const desc = getDescription('chineseZodiacDescriptions', chineseZodiac);
                     console.log('🔍 Opening Chinese Zodiac modal with alignment data:', {
                       chineseZodiac,
                       hasThink: !!desc.think,
@@ -421,7 +424,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                      const desc = getDescription('chineseZodiacDescriptions', chineseZodiac);
                       console.log('🔍 Opening Chinese Zodiac modal with alignment data:', {
                         chineseZodiac,
                         hasThink: !!desc.think,
@@ -444,7 +447,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.chineseZodiac')}</h4>
                   <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac} {element}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                    const desc = getDescription('chineseZodiacDescriptions', chineseZodiac);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
@@ -470,7 +473,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'mbtiDescriptions', mbtiType);
+                    const desc = getDescription('mbtiDescriptions', mbtiType);
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.personalityType'),
@@ -482,7 +485,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const desc = getPersonalityDescription(t, 'mbtiDescriptions', mbtiType);
+                      const desc = getDescription('mbtiDescriptions', mbtiType);
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.personalityType'),
@@ -499,14 +502,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.personalityType')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{mbtiType}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'mbtiDescriptions', mbtiType);
+                    const desc = getDescription('mbtiDescriptions', mbtiType);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'cognitiveFunctionDescriptions', dominantFunction.toLowerCase());
+                    const desc = getDescription('cognitiveFunctionDescriptions', dominantFunction.toLowerCase());
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.cognitiveFunctions'),
@@ -518,7 +521,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const desc = getPersonalityDescription(t, 'cognitiveFunctionDescriptions', dominantFunction.toLowerCase());
+                      const desc = getDescription('cognitiveFunctionDescriptions', dominantFunction.toLowerCase());
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.cognitiveFunctions'),
@@ -536,7 +539,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}><strong>{t('blueprint.descriptions.dominant')}</strong> {dominantFunction}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}><strong>{t('blueprint.descriptions.auxiliary')}</strong> {auxiliaryFunction}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'cognitiveFunctionDescriptions', dominantFunction.toLowerCase());
+                    const desc = getDescription('cognitiveFunctionDescriptions', dominantFunction.toLowerCase());
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
@@ -546,7 +549,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'taskApproachDescriptions', taskApproach);
+                    const desc = getDescription('taskApproachDescriptions', taskApproach);
                     console.log('🔍 Opening Task Approach modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.taskApproach'), mainValue: taskApproach, ...desc, category: 'MBTI' });
                   }}
@@ -556,14 +559,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.taskApproach')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{taskApproach}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'taskApproachDescriptions', taskApproach);
+                    const desc = getDescription('taskApproachDescriptions', taskApproach);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'communicationDescriptions', communicationStyle);
+                    const desc = getDescription('communicationDescriptions', communicationStyle);
                     console.log('🔍 Opening Communication modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.communication'), mainValue: communicationStyle, ...desc, category: 'MBTI' });
                   }}
@@ -573,14 +576,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.communication')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{communicationStyle}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'communicationDescriptions', communicationStyle);
+                    const desc = getDescription('communicationDescriptions', communicationStyle);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'decisionMakingDescriptions', decisionMaking);
+                    const desc = getDescription('decisionMakingDescriptions', decisionMaking);
                     console.log('🔍 Opening Decision Making modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.decisionMaking'), mainValue: decisionMaking, ...desc, category: 'MBTI' });
                   }}
@@ -590,7 +593,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.decisionMaking')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{decisionMaking}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'decisionMakingDescriptions', decisionMaking);
+                    const desc = getDescription('decisionMakingDescriptions', decisionMaking);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
@@ -616,7 +619,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                    const desc = getDescription('humanDesignDescriptions', hdType);
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.energyType'),
@@ -628,7 +631,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                      const desc = getDescription('humanDesignDescriptions', hdType);
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.energyType'),
@@ -645,14 +648,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.energyType')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{hdType}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                    const desc = getDescription('humanDesignDescriptions', hdType);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'authorityDescriptions', authority);
+                    const desc = getDescription('authorityDescriptions', authority);
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.decisionAuthority'),
@@ -664,7 +667,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const desc = getPersonalityDescription(t, 'authorityDescriptions', authority);
+                      const desc = getDescription('authorityDescriptions', authority);
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.decisionAuthority'),
@@ -681,7 +684,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.decisionAuthority')}</h4>
                   <p className={`${getTextSize('text-xl')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{authority}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'authorityDescriptions', authority);
+                    const desc = getDescription('authorityDescriptions', authority);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
@@ -691,7 +694,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'strategyDescriptions', strategy);
+                    const desc = getDescription('strategyDescriptions', strategy);
                     console.log('🔍 Opening Strategy modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.strategy'), mainValue: strategy, ...desc, category: 'Human Design' });
                   }}
@@ -701,14 +704,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.strategy')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold capitalize text-soul-purple break-words`}>{strategy}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'strategyDescriptions', strategy);
+                    const desc = getDescription('strategyDescriptions', strategy);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'profileDescriptions', profile);
+                    const desc = getDescription('profileDescriptions', profile);
                     console.log('🔍 Opening Profile modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.profile'), mainValue: profile, ...desc, category: 'Human Design' });
                   }}
@@ -718,14 +721,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.profile')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple break-words`}>{profile}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'profileDescriptions', profile);
+                    const desc = getDescription('profileDescriptions', profile);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'pacingDescriptions', pacing);
+                    const desc = getDescription('pacingDescriptions', pacing);
                     console.log('🔍 Opening Pacing modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.pacing'), mainValue: pacing, ...desc, category: 'Human Design' });
                   }}
@@ -735,7 +738,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.pacing')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold capitalize text-soul-purple break-words`}>{pacing}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'pacingDescriptions', pacing);
+                    const desc = getDescription('pacingDescriptions', pacing);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
@@ -761,7 +764,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                    const desc = getDescription('lifePathDescriptions', lifePath);
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.lifePathNumber'),
@@ -773,7 +776,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                      const desc = getDescription('lifePathDescriptions', lifePath);
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.lifePathNumber'),
@@ -790,7 +793,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.lifePathNumber')}</h4>
                   <p className={`${getTextSize('text-4xl')} font-cormorant font-bold text-soul-purple`}>{lifePath}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                    const desc = getDescription('lifePathDescriptions', lifePath);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
@@ -798,7 +801,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <div 
                     className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                     onClick={() => {
-                      const desc = getPersonalityDescription(t, 'expressionNumberDescriptions', expressionNumber);
+                      const desc = getDescription('expressionNumberDescriptions', expressionNumber);
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.expressionNumber'),
@@ -810,7 +813,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        const desc = getPersonalityDescription(t, 'expressionNumberDescriptions', expressionNumber);
+                        const desc = getDescription('expressionNumberDescriptions', expressionNumber);
                         openDetailModal({
                           title: desc.fullTitle,
                           subtitle: t('blueprint.labels.expressionNumber'),
@@ -827,14 +830,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.expressionNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{expressionNumber}</p>
                     {(() => {
-                      const desc = getPersonalityDescription(t, 'expressionNumberDescriptions', expressionNumber);
+                      const desc = getDescription('expressionNumberDescriptions', expressionNumber);
                       return <PersonalityDescription {...desc} compact={true} />;
                     })()}
                   </div>
                   <div 
                     className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                     onClick={() => {
-                      const desc = getPersonalityDescription(t, 'soulUrgeDescriptions', soulUrgeNumber);
+                      const desc = getDescription('soulUrgeDescriptions', soulUrgeNumber);
                       console.log('🔍 Opening Soul Urge modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                       openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.soulUrgeNumber'), mainValue: String(soulUrgeNumber), ...desc, category: 'Numerology' });
                     }}
@@ -844,7 +847,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.soulUrgeNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{soulUrgeNumber}</p>
                     {(() => {
-                      const desc = getPersonalityDescription(t, 'soulUrgeDescriptions', soulUrgeNumber);
+                      const desc = getDescription('soulUrgeDescriptions', soulUrgeNumber);
                       return <PersonalityDescription {...desc} compact={true} />;
                     })()}
                   </div>
@@ -853,7 +856,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <div 
                     className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                     onClick={() => {
-                      const desc = getPersonalityDescription(t, 'personalityNumberDescriptions', personalityNumber);
+                      const desc = getDescription('personalityNumberDescriptions', personalityNumber);
                       console.log('🔍 Opening Personality Number modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                       openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.personalityNumber'), mainValue: String(personalityNumber), ...desc, category: 'Numerology' });
                     }}
@@ -863,14 +866,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.personalityNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{personalityNumber}</p>
                     {(() => {
-                      const desc = getPersonalityDescription(t, 'personalityNumberDescriptions', personalityNumber);
+                      const desc = getDescription('personalityNumberDescriptions', personalityNumber);
                       return <PersonalityDescription {...desc} compact={true} />;
                     })()}
                   </div>
                   <div 
                     className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                     onClick={() => {
-                      const desc = getPersonalityDescription(t, 'birthdayNumberDescriptions', birthdayNumber);
+                      const desc = getDescription('birthdayNumberDescriptions', birthdayNumber);
                       console.log('🔍 Opening Birthday Number modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                       openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.birthdayNumber'), mainValue: String(birthdayNumber), ...desc, category: 'Numerology' });
                     }}
@@ -880,7 +883,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.birthdayNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{birthdayNumber}</p>
                     {(() => {
-                      const desc = getPersonalityDescription(t, 'birthdayNumberDescriptions', birthdayNumber);
+                      const desc = getDescription('birthdayNumberDescriptions', birthdayNumber);
                       return <PersonalityDescription {...desc} compact={true} />;
                     })()}
                   </div>
@@ -912,7 +915,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 <div 
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'sunSignDescriptions', sunSign);
+                    const desc = getDescription('sunSignDescriptions', sunSign);
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.sunSign'),
@@ -924,7 +927,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const desc = getPersonalityDescription(t, 'sunSignDescriptions', sunSign);
+                      const desc = getDescription('sunSignDescriptions', sunSign);
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.sunSign'),
@@ -941,14 +944,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.sunSign')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{sunSign}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'sunSignDescriptions', sunSign);
+                    const desc = getDescription('sunSignDescriptions', sunSign);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
                 <div 
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'moonSignDescriptions', moonSign);
+                    const desc = getDescription('moonSignDescriptions', moonSign);
                     console.log('🔍 Opening Moon Sign modal with alignment data:', {
                       moonSign,
                       hasThink: !!desc.think,
@@ -966,7 +969,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const desc = getPersonalityDescription(t, 'moonSignDescriptions', moonSign);
+                      const desc = getDescription('moonSignDescriptions', moonSign);
                       console.log('🔍 Opening Moon Sign modal with alignment data:', {
                         moonSign,
                         hasThink: !!desc.think,
@@ -989,14 +992,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.moonSign')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{moonSign}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'moonSignDescriptions', moonSign);
+                    const desc = getDescription('moonSignDescriptions', moonSign);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
                 <div 
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'risingSignDescriptions', risingSign);
+                    const desc = getDescription('risingSignDescriptions', risingSign);
                     console.log('🔍 Opening Rising Sign modal with alignment data:', {
                       risingSign,
                       hasThink: !!desc.think,
@@ -1014,7 +1017,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const desc = getPersonalityDescription(t, 'risingSignDescriptions', risingSign);
+                      const desc = getDescription('risingSignDescriptions', risingSign);
                       console.log('🔍 Opening Rising Sign modal with alignment data:', {
                         risingSign,
                         hasThink: !!desc.think,
@@ -1037,7 +1040,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.risingSign')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{risingSign}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'risingSignDescriptions', risingSign);
+                    const desc = getDescription('risingSignDescriptions', risingSign);
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
@@ -1047,7 +1050,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'socialStyleDescriptions', 'warm');
+                    const desc = getDescription('socialStyleDescriptions', 'warm');
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.socialStyle'), mainValue: t('blueprint.values.warm'), ...desc, category: 'Astrology' });
                   }}
                   tabIndex={0}
@@ -1056,14 +1059,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.socialStyle')}</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.values.warm')}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'socialStyleDescriptions', 'warm');
+                    const desc = getDescription('socialStyleDescriptions', 'warm');
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'publicVibeDescriptions', 'approachable');
+                    const desc = getDescription('publicVibeDescriptions', 'approachable');
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.publicVibe'), mainValue: t('blueprint.values.approachable'), ...desc, category: 'Astrology' });
                   }}
                   tabIndex={0}
@@ -1072,14 +1075,14 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.publicVibe')}</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.values.approachable')}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'publicVibeDescriptions', 'approachable');
+                    const desc = getDescription('publicVibeDescriptions', 'approachable');
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
                 <div 
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
-                    const desc = getPersonalityDescription(t, 'leadershipStyleDescriptions', 'collaborative');
+                    const desc = getDescription('leadershipStyleDescriptions', 'collaborative');
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.leadershipStyle'), mainValue: t('blueprint.values.collaborative'), ...desc, category: 'Astrology' });
                   }}
                   tabIndex={0}
@@ -1088,7 +1091,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.leadershipStyle')}</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.values.collaborative')}</p>
                   {(() => {
-                    const desc = getPersonalityDescription(t, 'leadershipStyleDescriptions', 'collaborative');
+                    const desc = getDescription('leadershipStyleDescriptions', 'collaborative');
                     return <PersonalityDescription {...desc} compact={true} />;
                   })()}
                 </div>
@@ -1097,7 +1100,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               <div 
                 className="mt-4 p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                 onClick={() => {
-                  const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                  const desc = getDescription('chineseZodiacDescriptions', chineseZodiac);
                   openDetailModal({
                     title: desc.fullTitle,
                     subtitle: t('blueprint.labels.generationalInfluence'),
@@ -1109,7 +1112,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                    const desc = getDescription('chineseZodiacDescriptions', chineseZodiac);
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.generationalInfluence'),
@@ -1126,7 +1129,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 <h5 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.generationalInfluence')}</h5>
                 <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac} {element}</p>
                 {(() => {
-                  const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                  const desc = getDescription('chineseZodiacDescriptions', chineseZodiac);
                   return <PersonalityDescription {...desc} compact={true} />;
                 })()}
               </div>

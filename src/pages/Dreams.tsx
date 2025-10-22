@@ -363,6 +363,7 @@ const Dreams = () => {
     // Receive and use full milestone object (Principle #6: Respect Critical Data Pathways)
     console.log('🎯 Dreams: Focusing on milestone with full data:', milestone);
     setFocusedMilestone(milestone);
+    setActiveTab('tasks');
   };
 
   const handleTaskClick = (task: any) => {
