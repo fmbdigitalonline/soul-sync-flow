@@ -86,8 +86,8 @@ export const mbtiAlignmentGuidance: Record<string, { think: string; act: string;
   }
 };
 
-// Zodiac Sign Alignment (Sun Sign)
-export const zodiacAlignmentGuidance: Record<string, { think: string; act: string; react: string }> = {
+// Sun Sign Alignment
+export const sunSignAlignmentGuidance: Record<string, { think: string; act: string; react: string }> = {
   aries: {
     think: "Eer je vurige instincten als leidraad. Je spontane acties kunnen richting geven zolang je met intentie handelt.",
     act: "Zet snel stappen op wat je in vuur en vlam zet. Jouw energie opent deuren wanneer je hem bewust inzet.",
