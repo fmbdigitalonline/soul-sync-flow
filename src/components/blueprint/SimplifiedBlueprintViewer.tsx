@@ -263,6 +263,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                    console.log('🔍 Opening Life Path modal with alignment data:', {
+                      lifePath,
+                      hasThink: !!desc.think,
+                      hasAct: !!desc.act,
+                      hasReact: !!desc.react
+                    });
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.lifePath'),
@@ -275,6 +281,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       const desc = getPersonalityDescription(t, 'lifePathDescriptions', lifePath);
+                      console.log('🔍 Opening Life Path modal with alignment data:', {
+                        lifePath,
+                        hasThink: !!desc.think,
+                        hasAct: !!desc.act,
+                        hasReact: !!desc.react
+                      });
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.lifePath'),
@@ -344,6 +356,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                    console.log('🔍 Opening Human Design Type modal with alignment data:', {
+                      hdType,
+                      hasThink: !!desc.think,
+                      hasAct: !!desc.act,
+                      hasReact: !!desc.react
+                    });
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.humanDesign'),
@@ -356,6 +374,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       const desc = getPersonalityDescription(t, 'humanDesignDescriptions', hdType);
+                      console.log('🔍 Opening Human Design Type modal with alignment data:', {
+                        hdType,
+                        hasThink: !!desc.think,
+                        hasAct: !!desc.act,
+                        hasReact: !!desc.react
+                      });
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.humanDesign'),
@@ -380,6 +404,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                    console.log('🔍 Opening Chinese Zodiac modal with alignment data:', {
+                      chineseZodiac,
+                      hasThink: !!desc.think,
+                      hasAct: !!desc.act,
+                      hasReact: !!desc.react
+                    });
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.chineseZodiac'),
@@ -392,6 +422,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       const desc = getPersonalityDescription(t, 'chineseZodiacDescriptions', chineseZodiac);
+                      console.log('🔍 Opening Chinese Zodiac modal with alignment data:', {
+                        chineseZodiac,
+                        hasThink: !!desc.think,
+                        hasAct: !!desc.act,
+                        hasReact: !!desc.react
+                      });
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.chineseZodiac'),
@@ -511,6 +547,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getPersonalityDescription(t, 'taskApproachDescriptions', taskApproach);
+                    console.log('🔍 Opening Task Approach modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.taskApproach'), mainValue: taskApproach, ...desc, category: 'MBTI' });
                   }}
                   tabIndex={0}
@@ -527,6 +564,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getPersonalityDescription(t, 'communicationDescriptions', communicationStyle);
+                    console.log('🔍 Opening Communication modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.communication'), mainValue: communicationStyle, ...desc, category: 'MBTI' });
                   }}
                   tabIndex={0}
@@ -543,6 +581,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getPersonalityDescription(t, 'decisionMakingDescriptions', decisionMaking);
+                    console.log('🔍 Opening Decision Making modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.decisionMaking'), mainValue: decisionMaking, ...desc, category: 'MBTI' });
                   }}
                   tabIndex={0}
@@ -653,6 +692,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getPersonalityDescription(t, 'strategyDescriptions', strategy);
+                    console.log('🔍 Opening Strategy modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.strategy'), mainValue: strategy, ...desc, category: 'Human Design' });
                   }}
                   tabIndex={0}
@@ -669,6 +709,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getPersonalityDescription(t, 'profileDescriptions', profile);
+                    console.log('🔍 Opening Profile modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.profile'), mainValue: profile, ...desc, category: 'Human Design' });
                   }}
                   tabIndex={0}
@@ -685,6 +726,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getPersonalityDescription(t, 'pacingDescriptions', pacing);
+                    console.log('🔍 Opening Pacing modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.pacing'), mainValue: pacing, ...desc, category: 'Human Design' });
                   }}
                   tabIndex={0}
@@ -793,6 +835,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                     onClick={() => {
                       const desc = getPersonalityDescription(t, 'soulUrgeDescriptions', soulUrgeNumber);
+                      console.log('🔍 Opening Soul Urge modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                       openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.soulUrgeNumber'), mainValue: String(soulUrgeNumber), ...desc, category: 'Numerology' });
                     }}
                     tabIndex={0}
@@ -811,6 +854,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                     onClick={() => {
                       const desc = getPersonalityDescription(t, 'personalityNumberDescriptions', personalityNumber);
+                      console.log('🔍 Opening Personality Number modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                       openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.personalityNumber'), mainValue: String(personalityNumber), ...desc, category: 'Numerology' });
                     }}
                     tabIndex={0}
@@ -827,6 +871,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                     onClick={() => {
                       const desc = getPersonalityDescription(t, 'birthdayNumberDescriptions', birthdayNumber);
+                      console.log('🔍 Opening Birthday Number modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
                       openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.birthdayNumber'), mainValue: String(birthdayNumber), ...desc, category: 'Numerology' });
                     }}
                     tabIndex={0}
@@ -904,6 +949,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getPersonalityDescription(t, 'moonSignDescriptions', moonSign);
+                    console.log('🔍 Opening Moon Sign modal with alignment data:', {
+                      moonSign,
+                      hasThink: !!desc.think,
+                      hasAct: !!desc.act,
+                      hasReact: !!desc.react
+                    });
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.moonSign'),
@@ -916,6 +967,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       const desc = getPersonalityDescription(t, 'moonSignDescriptions', moonSign);
+                      console.log('🔍 Opening Moon Sign modal with alignment data:', {
+                        moonSign,
+                        hasThink: !!desc.think,
+                        hasAct: !!desc.act,
+                        hasReact: !!desc.react
+                      });
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.moonSign'),
@@ -940,6 +997,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getPersonalityDescription(t, 'risingSignDescriptions', risingSign);
+                    console.log('🔍 Opening Rising Sign modal with alignment data:', {
+                      risingSign,
+                      hasThink: !!desc.think,
+                      hasAct: !!desc.act,
+                      hasReact: !!desc.react
+                    });
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.risingSign'),
@@ -952,6 +1015,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       const desc = getPersonalityDescription(t, 'risingSignDescriptions', risingSign);
+                      console.log('🔍 Opening Rising Sign modal with alignment data:', {
+                        risingSign,
+                        hasThink: !!desc.think,
+                        hasAct: !!desc.act,
+                        hasReact: !!desc.react
+                      });
                       openDetailModal({
                         title: desc.fullTitle,
                         subtitle: t('blueprint.labels.risingSign'),

@@ -1,4 +1,12 @@
-import { mbtiAlignmentGuidance, sunSignAlignmentGuidance } from '@/data/alignment-guidance';
+import { 
+  mbtiAlignmentGuidance, 
+  sunSignAlignmentGuidance,
+  moonSignAlignmentGuidance,
+  risingSignAlignmentGuidance,
+  lifePathAlignmentGuidance,
+  humanDesignTypeAlignmentGuidance,
+  chineseZodiacAlignmentGuidance
+} from '@/data/alignment-guidance';
 
 /**
  * Helper function to safely retrieve personality descriptions with fallback
@@ -73,12 +81,25 @@ export const getPersonalityDescription = (
     // Get alignment guidance based on category
     let alignmentGuidance = { think: desc.think, act: desc.act, react: desc.react };
     
-    if (category.toLowerCase().includes('mbti') && !desc.think) {
-      const mbtiKey = normalizedKey.toLowerCase();
-      alignmentGuidance = mbtiAlignmentGuidance[mbtiKey] || alignmentGuidance;
-    } else if (category.toLowerCase().includes('sun') && !desc.think) {
-      const signKey = normalizedKey.toLowerCase();
-      alignmentGuidance = sunSignAlignmentGuidance[signKey] || alignmentGuidance;
+    // Only apply alignment guidance if translation doesn't have it
+    if (!desc.think || !desc.act || !desc.react) {
+      const lookupKey = normalizedKey.toLowerCase();
+      
+      if (category.toLowerCase().includes('mbti')) {
+        alignmentGuidance = mbtiAlignmentGuidance[lookupKey] || alignmentGuidance;
+      } else if (category.toLowerCase().includes('sun')) {
+        alignmentGuidance = sunSignAlignmentGuidance[lookupKey] || alignmentGuidance;
+      } else if (category.toLowerCase().includes('moon')) {
+        alignmentGuidance = moonSignAlignmentGuidance[lookupKey] || alignmentGuidance;
+      } else if (category.toLowerCase().includes('rising') || category.toLowerCase().includes('ascendant')) {
+        alignmentGuidance = risingSignAlignmentGuidance[lookupKey] || alignmentGuidance;
+      } else if (category.toLowerCase().includes('lifepath') || category.toLowerCase().includes('life path')) {
+        alignmentGuidance = lifePathAlignmentGuidance[lookupKey] || alignmentGuidance;
+      } else if (category.toLowerCase().includes('humandesign') || category.toLowerCase().includes('human design') || category.toLowerCase().includes('energy')) {
+        alignmentGuidance = humanDesignTypeAlignmentGuidance[lookupKey] || alignmentGuidance;
+      } else if (category.toLowerCase().includes('chinese') || category.toLowerCase().includes('zodiac')) {
+        alignmentGuidance = chineseZodiacAlignmentGuidance[lookupKey] || alignmentGuidance;
+      }
     }
     
     return {
