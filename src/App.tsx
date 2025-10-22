@@ -61,14 +61,16 @@ function App() {
                       <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/get-started" element={<LifeClarityFunnel />} />
-                        <Route path="/dreams" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
-                        <Route path="/dreams/all" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
-                        <Route path="/dreams/create" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
-                        <Route path="/dreams/success" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
-                        <Route path="/dreams/journey" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
-                        <Route path="/dreams/milestones" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
-                        <Route path="/dreams/details" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
-                        <Route path="/dreams/discover" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
+                        <Route
+                          path="/dreams/*"
+                          element={(
+                            <ProtectedRoute>
+                              <MainLayout>
+                                <Dreams />
+                              </MainLayout>
+                            </ProtectedRoute>
+                          )}
+                        />
                         <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
                         <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
                         {/* Legacy redirect from /coach to /companion */}
