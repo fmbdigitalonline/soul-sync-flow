@@ -40,6 +40,9 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
     light: string;
     shadow: string;
     insight: string;
+    think?: string;
+    act?: string;
+    react?: string;
     category: string;
   } | null>(null);
 
@@ -218,6 +221,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getPersonalityDescription(t, 'mbtiDescriptions', mbtiType);
+                    console.log('🔍 Opening MBTI modal with alignment data:', {
+                      mbtiType,
+                      hasThink: !!desc.think,
+                      hasAct: !!desc.act,
+                      hasReact: !!desc.react
+                    });
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.mbtiType'),
@@ -290,6 +299,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getPersonalityDescription(t, 'sunSignDescriptions', sunSign);
+                    console.log('🔍 Opening Sun Sign modal with alignment data:', {
+                      sunSign,
+                      hasThink: !!desc.think,
+                      hasAct: !!desc.act,
+                      hasReact: !!desc.react
+                    });
                     openDetailModal({
                       title: desc.fullTitle,
                       subtitle: t('blueprint.labels.sunSign'),
@@ -1062,6 +1077,9 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
           light={modalData.light}
           shadow={modalData.shadow}
           insight={modalData.insight}
+          think={modalData.think}
+          act={modalData.act}
+          react={modalData.react}
           category={modalData.category}
         />
       )}
