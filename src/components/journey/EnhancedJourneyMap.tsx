@@ -451,7 +451,11 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
           setSelectedMilestone(null);
         }}
         onTaskClick={onTaskClick}
-        onMilestoneAction={onMilestoneClick}
+        onMilestoneAction={(milestone) => {
+          onMilestoneClick?.(milestone);
+          setIsPopupOpen(false);
+          setSelectedMilestone(null);
+        }}
       />
     </div>
   );
