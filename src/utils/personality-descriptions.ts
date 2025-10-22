@@ -1,12 +1,113 @@
-import { 
-  mbtiAlignmentGuidance, 
-  sunSignAlignmentGuidance,
-  moonSignAlignmentGuidance,
-  risingSignAlignmentGuidance,
-  lifePathAlignmentGuidance,
-  humanDesignTypeAlignmentGuidance,
-  chineseZodiacAlignmentGuidance
+import {
+  mbtiAlignmentGuidance as enMbtiAlignmentGuidance,
+  sunSignAlignmentGuidance as enSunSignAlignmentGuidance,
+  moonSignAlignmentGuidance as enMoonSignAlignmentGuidance,
+  risingSignAlignmentGuidance as enRisingSignAlignmentGuidance,
+  lifePathAlignmentGuidance as enLifePathAlignmentGuidance,
+  humanDesignTypeAlignmentGuidance as enHumanDesignTypeAlignmentGuidance,
+  chineseZodiacAlignmentGuidance as enChineseZodiacAlignmentGuidance
 } from '@/data/alignment-guidance';
+import {
+  mbtiAlignmentGuidance as nlMbtiAlignmentGuidance,
+  sunSignAlignmentGuidance as nlSunSignAlignmentGuidance,
+  moonSignAlignmentGuidance as nlMoonSignAlignmentGuidance,
+  risingSignAlignmentGuidance as nlRisingSignAlignmentGuidance,
+  lifePathAlignmentGuidance as nlLifePathAlignmentGuidance,
+  humanDesignTypeAlignmentGuidance as nlHumanDesignTypeAlignmentGuidance,
+  chineseZodiacAlignmentGuidance as nlChineseZodiacAlignmentGuidance
+} from '@/data/alignment-guidance-nl';
+
+type SupportedLanguage = 'en' | 'nl';
+
+type AlignmentCategory =
+  | 'mbti'
+  | 'sun'
+  | 'moon'
+  | 'rising'
+  | 'lifepath'
+  | 'humandesign'
+  | 'chinese';
+
+type AlignmentLookup = Record<string, { think: string; act: string; react: string }>;
+
+const alignmentGuidanceByLanguage: Record<SupportedLanguage, Record<AlignmentCategory, AlignmentLookup>> = {
+  en: {
+    mbti: enMbtiAlignmentGuidance,
+    sun: enSunSignAlignmentGuidance,
+    moon: enMoonSignAlignmentGuidance,
+    rising: enRisingSignAlignmentGuidance,
+    lifepath: enLifePathAlignmentGuidance,
+    humandesign: enHumanDesignTypeAlignmentGuidance,
+    chinese: enChineseZodiacAlignmentGuidance
+  },
+  nl: {
+    mbti: nlMbtiAlignmentGuidance,
+    sun: nlSunSignAlignmentGuidance,
+    moon: nlMoonSignAlignmentGuidance,
+    rising: nlRisingSignAlignmentGuidance,
+    lifepath: nlLifePathAlignmentGuidance,
+    humandesign: nlHumanDesignTypeAlignmentGuidance,
+    chinese: nlChineseZodiacAlignmentGuidance
+  }
+};
+
+const resolveLanguage = (language: SupportedLanguage | string): SupportedLanguage => {
+  return language === 'nl' ? 'nl' : 'en';
+};
+
+const getGuidanceCategory = (category: string): AlignmentCategory | null => {
+  const normalizedCategory = category.toLowerCase();
+
+  if (normalizedCategory.includes('mbti')) {
+    return 'mbti';
+  }
+  if (normalizedCategory.includes('sun')) {
+    return 'sun';
+  }
+  if (normalizedCategory.includes('moon')) {
+    return 'moon';
+  }
+  if (normalizedCategory.includes('rising') || normalizedCategory.includes('ascendant')) {
+    return 'rising';
+  }
+  if (normalizedCategory.includes('lifepath') || normalizedCategory.includes('life path')) {
+    return 'lifepath';
+  }
+  if (
+    normalizedCategory.includes('humandesign') ||
+    normalizedCategory.includes('human design') ||
+    normalizedCategory.includes('energy')
+  ) {
+    return 'humandesign';
+  }
+  if (normalizedCategory.includes('chinese') || normalizedCategory.includes('zodiac')) {
+    return 'chinese';
+  }
+
+  return null;
+};
+
+const findAlignmentGuidance = (
+  category: string,
+  lookupKey: string,
+  language: SupportedLanguage | string
+): { think?: string; act?: string; react?: string } => {
+  const guidanceCategory = getGuidanceCategory(category);
+
+  if (!guidanceCategory) {
+    return {};
+  }
+
+  const preferredLanguage = resolveLanguage(language);
+  const preferredGuidance = alignmentGuidanceByLanguage[preferredLanguage][guidanceCategory][lookupKey];
+
+  if (preferredGuidance) {
+    return preferredGuidance;
+  }
+
+  const fallbackGuidance = alignmentGuidanceByLanguage.en[guidanceCategory][lookupKey];
+  return fallbackGuidance || {};
+};
 
 /**
  * Helper function to safely retrieve personality descriptions with fallback
@@ -14,7 +115,8 @@ import {
 export const getPersonalityDescription = (
   t: any,
   category: string,
-  key: string | number
+  key: string | number,
+  language: SupportedLanguage | string = 'en'
 ): {
   fullTitle: string;
   light: string;
@@ -80,26 +182,17 @@ export const getPersonalityDescription = (
     
     // Get alignment guidance based on category
     let alignmentGuidance = { think: desc.think, act: desc.act, react: desc.react };
-    
+
     // Only apply alignment guidance if translation doesn't have it
     if (!desc.think || !desc.act || !desc.react) {
       const lookupKey = normalizedKey.toLowerCase();
-      
-      if (category.toLowerCase().includes('mbti')) {
-        alignmentGuidance = mbtiAlignmentGuidance[lookupKey] || alignmentGuidance;
-      } else if (category.toLowerCase().includes('sun')) {
-        alignmentGuidance = sunSignAlignmentGuidance[lookupKey] || alignmentGuidance;
-      } else if (category.toLowerCase().includes('moon')) {
-        alignmentGuidance = moonSignAlignmentGuidance[lookupKey] || alignmentGuidance;
-      } else if (category.toLowerCase().includes('rising') || category.toLowerCase().includes('ascendant')) {
-        alignmentGuidance = risingSignAlignmentGuidance[lookupKey] || alignmentGuidance;
-      } else if (category.toLowerCase().includes('lifepath') || category.toLowerCase().includes('life path')) {
-        alignmentGuidance = lifePathAlignmentGuidance[lookupKey] || alignmentGuidance;
-      } else if (category.toLowerCase().includes('humandesign') || category.toLowerCase().includes('human design') || category.toLowerCase().includes('energy')) {
-        alignmentGuidance = humanDesignTypeAlignmentGuidance[lookupKey] || alignmentGuidance;
-      } else if (category.toLowerCase().includes('chinese') || category.toLowerCase().includes('zodiac')) {
-        alignmentGuidance = chineseZodiacAlignmentGuidance[lookupKey] || alignmentGuidance;
-      }
+      const fallbackGuidance = findAlignmentGuidance(category, lookupKey, language);
+
+      alignmentGuidance = {
+        think: desc.think || fallbackGuidance.think,
+        act: desc.act || fallbackGuidance.act,
+        react: desc.react || fallbackGuidance.react
+      };
     }
     
     return {
