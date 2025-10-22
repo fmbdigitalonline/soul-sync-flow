@@ -20,7 +20,7 @@ interface MilestoneDetailPopupProps {
   isOpen: boolean;
   onClose: () => void;
   onTaskClick?: (taskId: string) => void;
-  onMilestoneAction?: (milestoneId: string) => void;
+  onMilestoneAction?: (milestone: any) => void;
 }
 
 export const MilestoneDetailPopup: React.FC<MilestoneDetailPopupProps> = ({
@@ -201,7 +201,7 @@ export const MilestoneDetailPopup: React.FC<MilestoneDetailPopupProps> = ({
           {!milestone.completed && (
             <div className="pt-4">
               <Button
-                onClick={() => onMilestoneAction?.(milestone.id)}
+                onClick={() => onMilestoneAction?.(milestone)}
                 className="w-full bg-gradient-to-r from-soul-purple to-soul-teal text-white py-3 rounded-xl font-semibold"
               >
                 <Focus className="h-4 w-4 mr-2" />
