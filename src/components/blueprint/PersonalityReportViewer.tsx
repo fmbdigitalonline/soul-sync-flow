@@ -378,11 +378,15 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   };
 
   // Helper function to safely render content with smart extraction
+  const contentCardPadding = isMobile ? 'px-5 py-4' : 'p-4';
+  const contentCardClass = `w-full max-w-full ${contentCardPadding} bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg`;
+  const contentTextClass = getTextSize(isMobile ? 'text-lg' : 'text-base');
+
   const renderSafeContent = (content: any, contentType: string = 'Unknown') => {
     if (typeof content === 'string') {
       return (
-        <div className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
-          <p className={`leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
+        <div className={contentCardClass}>
+          <p className={`leading-relaxed whitespace-pre-wrap break-words ${contentTextClass}`}>
             {content}
           </p>
         </div>
@@ -418,8 +422,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       // If we have meaningful text, display it
       if (extractedText && typeof extractedText === 'string' && extractedText.trim().length > 0) {
         return (
-          <div className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
-            <p className={`leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
+          <div className={contentCardClass}>
+            <p className={`leading-relaxed whitespace-pre-wrap break-words ${contentTextClass}`}>
               {extractedText.trim()}
             </p>
           </div>
@@ -437,8 +441,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       );
     } else {
       return (
-        <div className="p-3 bg-muted/50 rounded-lg">
-          <p className={`text-muted-foreground italic ${getTextSize('text-sm')}`}>
+        <div className={`w-full max-w-full ${contentCardPadding} bg-muted/50 rounded-lg`}>
+          <p className={`text-muted-foreground italic ${contentTextClass}`}>
             {language === 'nl' ? 'Inhoud wordt binnenkort beschikbaar' : 'Content will be available soon'}
           </p>
         </div>
@@ -952,7 +956,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   }
 
                   return (
-                    <CosmicCard key={itemKey} className={`border-${config.color}-200`}>
+                    <CosmicCard key={itemKey} className={`w-full max-w-full border-${config.color}-200`}>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <IconComponent className={`h-5 w-5 text-${config.color}-600`} />
@@ -995,7 +999,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                     const isExpanded = expandedSections[expandedKey];
 
                     return (
-                      <Card key={sectionKey} className={getColorClasses(sectionConfig.color)}>
+                      <Card key={sectionKey} className={`w-full max-w-full ${getColorClasses(sectionConfig.color)}`}>
                         <div className={spacing.card}>
                           <SectionHeader
                             title={sectionConfig.title}
@@ -1016,7 +1020,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                     const title = intelligenceTitles[dimensionKey as keyof typeof intelligenceTitles] || dimensionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                                     
                                     return (
-                                      <CosmicCard key={dimensionKey} className="border-primary/10 hover:border-primary/20 transition-colors">
+                                      <CosmicCard key={dimensionKey} className="w-full max-w-full border-primary/10 hover:border-primary/20 transition-colors">
                                         <CardHeader>
                                           <CardTitle className="flex items-center gap-2">
                                             <IconComponent className="h-5 w-5 text-primary" />
@@ -1033,8 +1037,11 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                             {Array.isArray(dimensionContent) ? (
                                               <div className="space-y-2">
                                                 {dimensionContent.map((item, index) => (
-                                                  <div key={index} className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
-                                                    <p className="leading-relaxed whitespace-pre-wrap break-words">
+                                                  <div
+                                                    key={index}
+                                                    className={`w-full max-w-full ${contentCardPadding} bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg`}
+                                                  >
+                                                    <p className={`leading-relaxed whitespace-pre-wrap break-words ${contentTextClass}`}>
                                                       {typeof item === 'string' ? item : JSON.stringify(item, null, 2)}
                                                     </p>
                                                   </div>
@@ -1054,7 +1061,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                               ) : sectionKey === 'practical_activation_framework' ? (
                                 /* Handle practical framework section with both main content and consciousness map */
                                 <>
-                                  <CosmicCard className="border-emerald-200">
+                                  <CosmicCard className="w-full max-w-full border-emerald-200">
                                     <CardHeader>
                                       <CardTitle className="flex items-center gap-2">
                                         <Zap className="h-5 w-5 text-emerald-600" />
@@ -1069,7 +1076,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                   </CosmicCard>
                                   
                                   {hermeticContent.consciousness_integration_map && (
-                                    <CosmicCard className="border-emerald-200">
+                                    <CosmicCard className="w-full max-w-full border-emerald-200">
                                       <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
                                           <Brain className="h-5 w-5 text-emerald-600" />
@@ -1086,7 +1093,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                 </>
                               ) : (
                                 /* Handle simple single-content sections */
-                                <CosmicCard className={`border-${sectionConfig.color}-200`}>
+                                <CosmicCard className={`w-full max-w-full border-${sectionConfig.color}-200`}>
                                   <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
                                       <sectionConfig.icon className={`h-5 w-5 text-${sectionConfig.color}-600`} />
