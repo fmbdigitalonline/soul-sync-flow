@@ -379,7 +379,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   // Helper function to safely render content with smart extraction
   const contentCardPadding = isMobile ? 'px-4 py-3' : 'p-3';
-  const contentCardClass = `w-full ${contentCardPadding} bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg`;
+  const contentCardClass = `w-full max-w-full ${contentCardPadding} bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg`;
   const contentTextClass = getTextSize(isMobile ? 'text-base' : 'text-sm');
 
   const renderSafeContent = (content: any, contentType: string = 'Unknown') => {
