@@ -956,7 +956,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   }
 
                   return (
-                    <CosmicCard key={itemKey} className={`border-${config.color}-200`}>
+                    <CosmicCard key={itemKey} className={`w-full max-w-full border-${config.color}-200`}>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <IconComponent className={`h-5 w-5 text-${config.color}-600`} />
@@ -999,7 +999,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                     const isExpanded = expandedSections[expandedKey];
 
                     return (
-                      <Card key={sectionKey} className={getColorClasses(sectionConfig.color)}>
+                      <Card key={sectionKey} className={`w-full max-w-full ${getColorClasses(sectionConfig.color)}`}>
                         <div className={spacing.card}>
                           <SectionHeader
                             title={sectionConfig.title}
@@ -1020,7 +1020,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                     const title = intelligenceTitles[dimensionKey as keyof typeof intelligenceTitles] || dimensionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                                     
                                     return (
-                                      <CosmicCard key={dimensionKey} className="border-primary/10 hover:border-primary/20 transition-colors">
+                                      <CosmicCard key={dimensionKey} className="w-full max-w-full border-primary/10 hover:border-primary/20 transition-colors">
                                         <CardHeader>
                                           <CardTitle className="flex items-center gap-2">
                                             <IconComponent className="h-5 w-5 text-primary" />
@@ -1061,7 +1061,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                               ) : sectionKey === 'practical_activation_framework' ? (
                                 /* Handle practical framework section with both main content and consciousness map */
                                 <>
-                                  <CosmicCard className="border-emerald-200">
+                                  <CosmicCard className="w-full max-w-full border-emerald-200">
                                     <CardHeader>
                                       <CardTitle className="flex items-center gap-2">
                                         <Zap className="h-5 w-5 text-emerald-600" />
@@ -1076,7 +1076,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                   </CosmicCard>
                                   
                                   {hermeticContent.consciousness_integration_map && (
-                                    <CosmicCard className="border-emerald-200">
+                                    <CosmicCard className="w-full max-w-full border-emerald-200">
                                       <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
                                           <Brain className="h-5 w-5 text-emerald-600" />
@@ -1093,7 +1093,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                 </>
                               ) : (
                                 /* Handle simple single-content sections */
-                                <CosmicCard className={`border-${sectionConfig.color}-200`}>
+                                <CosmicCard className={`w-full max-w-full border-${sectionConfig.color}-200`}>
                                   <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
                                       <sectionConfig.icon className={`h-5 w-5 text-${sectionConfig.color}-600`} />
