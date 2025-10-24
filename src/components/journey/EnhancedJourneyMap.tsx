@@ -23,7 +23,7 @@ import { useDoubleTap } from "@/hooks/use-double-tap";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface EnhancedJourneyMapProps {
-  onTaskClick?: (taskId: string) => void;
+  onTaskClick?: (task: any) => void;
   onMilestoneClick?: (milestone: any) => void;
   onBackToSuccessOverview?: () => void;
   showSuccessBackButton?: boolean;
@@ -389,7 +389,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
                   <div
                     key={task.id}
                     className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-secondary/20 cursor-pointer transition-all duration-200 hover:shadow-md w-full min-h-[60px]"
-                    onClick={() => onTaskClick?.(task.id)}
+                    onClick={() => onTaskClick?.(task)}
                   >
                     <div className="w-6 h-6 bg-soul-purple/20 rounded-full flex items-center justify-center text-soul-purple font-medium text-xs flex-shrink-0">
                       {index + 1}

@@ -19,7 +19,7 @@ interface MilestoneDetailPopupProps {
   tasks: any[];
   isOpen: boolean;
   onClose: () => void;
-  onTaskClick?: (taskId: string) => void;
+  onTaskClick?: (task: any) => void;
   onMilestoneAction?: (milestone: any) => void;
 }
 
@@ -166,7 +166,7 @@ export const MilestoneDetailPopup: React.FC<MilestoneDetailPopupProps> = ({
                   <div
                     key={task.id}
                     className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:border-gray-200 cursor-pointer transition-colors"
-                    onClick={() => onTaskClick?.(task.id)}
+                    onClick={() => onTaskClick?.(task)}
                   >
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
                       task.completed ? 'bg-green-500 text-white' : 'bg-gray-200'
