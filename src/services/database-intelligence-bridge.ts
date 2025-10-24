@@ -50,7 +50,7 @@ export class DatabaseIntelligenceBridge {
       console.log('🔍 DATABASE BRIDGE: Fetching intelligence context', { userId, sessionId });
 
       // Get 11-module analysis from hot_memory_cache
-      const { data: hotMemoryData, error: hotMemoryError } = await supabase
+      let { data: hotMemoryData, error: hotMemoryError } = await supabase
         .from('hot_memory_cache')
         .select('raw_content, cache_key')
         .eq('user_id', userId)
@@ -65,8 +65,27 @@ export class DatabaseIntelligenceBridge {
         console.error('🚨 DATABASE BRIDGE: Hot memory error:', hotMemoryError);
       }
 
-      // Get conversation patterns from user_session_memory  
-      const { data: sessionMemoryData, error: sessionMemoryError } = await supabase
+      // Fallback to most recent cached intelligence for the user when the current session has no cache entry.
+      if (!hotMemoryData) {
+        const fallbackHotMemory = await supabase
+          .from('hot_memory_cache')
+          .select('raw_content, cache_key')
+          .eq('user_id', userId)
+          .like('cache_key', '%accumulated_intelligence%')
+          .gt('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (fallbackHotMemory.error) {
+          console.error('🚨 DATABASE BRIDGE: Fallback hot memory error:', fallbackHotMemory.error);
+        } else {
+          hotMemoryData = fallbackHotMemory.data;
+        }
+      }
+
+      // Get conversation patterns from user_session_memory
+      let { data: sessionMemoryData, error: sessionMemoryError } = await supabase
         .from('user_session_memory')
         .select('memory_data, context_summary, memory_type, importance_score')
         .eq('user_id', userId)
@@ -78,8 +97,23 @@ export class DatabaseIntelligenceBridge {
         console.error('🚨 DATABASE BRIDGE: Session memory error:', sessionMemoryError);
       }
 
+      if (!sessionMemoryData?.length) {
+        const fallbackSessionMemory = await supabase
+          .from('user_session_memory')
+          .select('memory_data, context_summary, memory_type, importance_score')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (fallbackSessionMemory.error) {
+          console.error('🚨 DATABASE BRIDGE: Fallback session memory error:', fallbackSessionMemory.error);
+        } else {
+          sessionMemoryData = fallbackSessionMemory.data || [];
+        }
+      }
+
       // Get memory deltas for intent analysis
-      const { data: memoryDeltasData, error: memoryDeltasError } = await supabase
+      let { data: memoryDeltasData, error: memoryDeltasError } = await supabase
         .from('memory_deltas')
         .select('delta_data, delta_type, importance_score')
         .eq('user_id', userId)
@@ -91,9 +125,24 @@ export class DatabaseIntelligenceBridge {
         console.error('🚨 DATABASE BRIDGE: Memory deltas error:', memoryDeltasError);
       }
 
+      if (!memoryDeltasData?.length) {
+        const fallbackMemoryDeltas = await supabase
+          .from('memory_deltas')
+          .select('delta_data, delta_type, importance_score')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (fallbackMemoryDeltas.error) {
+          console.error('🚨 DATABASE BRIDGE: Fallback memory deltas error:', fallbackMemoryDeltas.error);
+        } else {
+          memoryDeltasData = fallbackMemoryDeltas.data || [];
+        }
+      }
+
       // Principle #3: Surface gaps clearly if data missing
       if (!hotMemoryData && !sessionMemoryData?.length && !memoryDeltasData?.length) {
-        console.warn('⚠️ DATABASE BRIDGE: No intelligence data found');
+        console.warn('⚠️ DATABASE BRIDGE: No intelligence data found for user', { userId, sessionId });
         return null;
       }
 
