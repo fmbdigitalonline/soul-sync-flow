@@ -378,11 +378,15 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   };
 
   // Helper function to safely render content with smart extraction
+  const contentCardPadding = isMobile ? 'px-4 py-3' : 'p-3';
+  const contentCardClass = `w-full ${contentCardPadding} bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg`;
+  const contentTextClass = getTextSize(isMobile ? 'text-base' : 'text-sm');
+
   const renderSafeContent = (content: any, contentType: string = 'Unknown') => {
     if (typeof content === 'string') {
       return (
-        <div className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
-          <p className={`leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
+        <div className={contentCardClass}>
+          <p className={`leading-relaxed whitespace-pre-wrap break-words ${contentTextClass}`}>
             {content}
           </p>
         </div>
@@ -418,8 +422,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       // If we have meaningful text, display it
       if (extractedText && typeof extractedText === 'string' && extractedText.trim().length > 0) {
         return (
-          <div className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
-            <p className={`leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
+          <div className={contentCardClass}>
+            <p className={`leading-relaxed whitespace-pre-wrap break-words ${contentTextClass}`}>
               {extractedText.trim()}
             </p>
           </div>
@@ -437,8 +441,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       );
     } else {
       return (
-        <div className="p-3 bg-muted/50 rounded-lg">
-          <p className={`text-muted-foreground italic ${getTextSize('text-sm')}`}>
+        <div className={`w-full ${contentCardPadding} bg-muted/50 rounded-lg`}>
+          <p className={`text-muted-foreground italic ${contentTextClass}`}>
             {language === 'nl' ? 'Inhoud wordt binnenkort beschikbaar' : 'Content will be available soon'}
           </p>
         </div>
@@ -1033,8 +1037,11 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                             {Array.isArray(dimensionContent) ? (
                                               <div className="space-y-2">
                                                 {dimensionContent.map((item, index) => (
-                                                  <div key={index} className="p-3 bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg">
-                                                    <p className="leading-relaxed whitespace-pre-wrap break-words">
+                                                  <div
+                                                    key={index}
+                                                    className={`w-full ${contentCardPadding} bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg`}
+                                                  >
+                                                    <p className={`leading-relaxed whitespace-pre-wrap break-words ${contentTextClass}`}>
                                                       {typeof item === 'string' ? item : JSON.stringify(item, null, 2)}
                                                     </p>
                                                   </div>
