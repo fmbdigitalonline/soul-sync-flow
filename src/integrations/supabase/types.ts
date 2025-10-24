@@ -369,7 +369,7 @@ export type Database = {
           admin_user_id: string
           created_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           target_resource: string | null
           user_agent: string | null
         }
@@ -379,7 +379,7 @@ export type Database = {
           admin_user_id: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           target_resource?: string | null
           user_agent?: string | null
         }
@@ -389,7 +389,7 @@ export type Database = {
           admin_user_id?: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           target_resource?: string | null
           user_agent?: string | null
         }
@@ -3686,7 +3686,7 @@ export type Database = {
           action: string
           error_message: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           resource: string
           success: boolean
           timestamp: string
@@ -3697,7 +3697,7 @@ export type Database = {
           action: string
           error_message?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource: string
           success?: boolean
           timestamp?: string
@@ -3708,7 +3708,7 @@ export type Database = {
           action?: string
           error_message?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource?: string
           success?: boolean
           timestamp?: string
@@ -4334,34 +4334,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      binary_quantize: {
-        Args: { "": string } | { "": unknown }
-        Returns: unknown
-      }
       calculate_habit_streak: {
         Args: { p_habit_id: string; p_user_id: string }
         Returns: number
       }
-      check_admin_status: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      cleanup_expired_generation_jobs: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_hot_memory: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_old_memories: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_stuck_hermetic_jobs: {
-        Args: Record<PropertyKey, never> | { p_user_id?: string }
-        Returns: number
-      }
+      check_admin_status: { Args: never; Returns: boolean }
+      cleanup_expired_generation_jobs: { Args: never; Returns: undefined }
+      cleanup_expired_hot_memory: { Args: never; Returns: undefined }
+      cleanup_old_memories: { Args: never; Returns: undefined }
+      cleanup_stuck_hermetic_jobs:
+        | { Args: never; Returns: number }
+        | { Args: { p_user_id?: string }; Returns: number }
       create_generation_job: {
         Args: {
           p_job_data?: Json
@@ -4392,14 +4375,8 @@ export type Database = {
         Args: { blueprint_data: Json }
         Returns: string
       }
-      get_active_user_blueprint: {
-        Args: { user_uuid: string }
-        Returns: Json
-      }
-      get_hermetic_job_status: {
-        Args: { job_id: string }
-        Returns: Json
-      }
+      get_active_user_blueprint: { Args: { user_uuid: string }; Returns: Json }
+      get_hermetic_job_status: { Args: { job_id: string }; Returns: Json }
       get_or_create_conversation_thread: {
         Args: { p_mode?: string; p_user_id: string }
         Returns: Json
@@ -4408,70 +4385,9 @@ export type Database = {
         Args: { p_user_id?: string }
         Returns: Json
       }
-      halfvec_avg: {
-        Args: { "": number[] }
-        Returns: unknown
-      }
-      halfvec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      halfvec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      halfvec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
-      handle_admin_check: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      has_any_admin_users: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      hnsw_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_sparsevec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnswhandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      ivfflat_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflat_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflathandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      l2_norm: {
-        Args: { "": unknown } | { "": unknown }
-        Returns: number
-      }
-      l2_normalize: {
-        Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: unknown
-      }
+      handle_admin_check: { Args: never; Returns: boolean }
+      has_any_admin_users: { Args: never; Returns: boolean }
+      is_admin: { Args: never; Returns: boolean }
       log_admin_access: {
         Args: {
           p_action: string
@@ -4514,14 +4430,8 @@ export type Database = {
           tags: string[]
         }[]
       }
-      migrate_intelligence_to_xp: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      restart_hermetic_job: {
-        Args: { job_id_param: string }
-        Returns: boolean
-      }
+      migrate_intelligence_to_xp: { Args: never; Returns: number }
+      restart_hermetic_job: { Args: { job_id_param: string }; Returns: boolean }
       search_similar_messages: {
         Args: {
           max_results?: number
@@ -4538,22 +4448,7 @@ export type Database = {
           similarity: number
         }[]
       }
-      sparsevec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      sparsevec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      sparsevec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
-      update_job_heartbeat: {
-        Args: { job_id_param: string }
-        Returns: boolean
-      }
+      update_job_heartbeat: { Args: { job_id_param: string }; Returns: boolean }
       update_job_status: {
         Args: {
           p_error_message?: string
@@ -4564,7 +4459,7 @@ export type Database = {
         Returns: boolean
       }
       validate_job_heartbeat_with_content: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           is_zombie: boolean
           job_id: string
@@ -4573,30 +4468,6 @@ export type Database = {
           sub_job_count: number
           total_content_length: number
         }[]
-      }
-      vector_avg: {
-        Args: { "": number[] }
-        Returns: string
-      }
-      vector_dims: {
-        Args: { "": string } | { "": unknown }
-        Returns: number
-      }
-      vector_norm: {
-        Args: { "": string }
-        Returns: number
-      }
-      vector_out: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      vector_send: {
-        Args: { "": string }
-        Returns: string
-      }
-      vector_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
       }
     }
     Enums: {
