@@ -244,5 +244,10 @@ cors = ["*"]
 methods = ["POST", "OPTIONS"]
 # DEPLOYMENT VERSION: 3.0.0 - Semantic metadata extraction (2025-10-17)
 
+[functions.generate-hermetic-task-assistance]
+verify_jwt = false
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
 [analytics]
 enabled = false

@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { dreamActivityLogger } from "./dream-activity-logger";
+import { hermeticAssistanceContextBuilder } from './hermetic-assistance-context-builder';
+import type { HermeticStructuredIntelligence } from '@/types/hermetic-intelligence';
 
 export interface AssistanceRequest {
   id: string;
@@ -9,6 +11,11 @@ export interface AssistanceRequest {
   userMessage?: string;
   context: any;
   timestamp: Date;
+}
+
+export interface HermeticAssistanceResponse extends AssistanceResponse {
+  shadowWarning?: string;
+  recoveryTip?: string;
 }
 
 export interface AssistanceResponse {
@@ -216,17 +223,34 @@ class InteractiveAssistanceService {
   }
 
   private async generateContextualAssistance(request: AssistanceRequest): Promise<AssistanceResponse> {
+    console.log('🔍 ASSISTANCE: Starting contextual assistance generation', {
+      subTaskTitle: request.subTaskTitle,
+      helpType: request.helpType,
+      hasHermeticIntelligence: !!request.context.hermeticIntelligence
+    });
+
     const responseId = `resp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    // Determine task type from sub-task title
-    const taskType = this.classifyTaskType(request.subTaskTitle);
+    // Check if we have Hermetic Intelligence for deep personalization
+    const hermeticIntelligence = request.context.hermeticIntelligence as HermeticStructuredIntelligence | undefined;
     
-    // Get appropriate template
+    if (hermeticIntelligence) {
+      console.log('🧠 ASSISTANCE: Using Hermetic Intelligence for personalized guidance', {
+        confidence: hermeticIntelligence.extraction_confidence,
+        version: hermeticIntelligence.extraction_version
+      });
+      return await this.generateHermeticAIAssistance(request, responseId, hermeticIntelligence);
+    }
+
+    console.log('⚠️ ASSISTANCE: No Hermetic Intelligence, falling back to templates');
+    
+    // Fallback to template-based assistance
+    const taskType = this.classifyTaskType(request.subTaskTitle);
     const templateKey = `${taskType}_${request.helpType}`;
     const template = this.helpTemplates.get(templateKey);
     
     if (template && this.shouldUseTemplate(request)) {
-      // Use template-based response for immediate help
+      console.log('📋 ASSISTANCE: Using template:', templateKey);
       return {
         ...template.exampleResponse,
         id: responseId,
@@ -237,8 +261,79 @@ class InteractiveAssistanceService {
       };
     }
 
-    // Generate AI-powered assistance (this would integrate with the AI coach)
+    // Final fallback to generic AI assistance
+    console.log('🤖 ASSISTANCE: Using generic AI assistance');
     return await this.generateAIAssistance(request, responseId);
+  }
+
+  /**
+   * Generate Hermetic Intelligence-powered personalized assistance
+   */
+  private async generateHermeticAIAssistance(
+    request: AssistanceRequest,
+    responseId: string,
+    intelligence: HermeticStructuredIntelligence
+  ): Promise<AssistanceResponse> {
+    try {
+      // Build Hermetic context
+      const context = hermeticAssistanceContextBuilder.buildPersonalizedContext(intelligence, new Date());
+      
+      console.log('🎯 ASSISTANCE: Hermetic context built', {
+        strengthsCount: context.strengths.cognitiveEdge.length,
+        shadowPatternsCount: context.shadowSide.avoidancePatterns.length,
+        currentEnergy: context.timing.currentEnergyWindow
+      });
+
+      // Build comprehensive system prompt
+      const systemPrompt = hermeticAssistanceContextBuilder.buildSystemPrompt(
+        context,
+        request.subTaskTitle,
+        request.helpType
+      );
+
+      console.log('🤖 ASSISTANCE: Calling Lovable AI with Hermetic context...');
+
+      // Call edge function with Hermetic context
+      const { data, error } = await supabase.functions.invoke('generate-hermetic-task-assistance', {
+        body: {
+          systemPrompt,
+          taskTitle: request.subTaskTitle,
+          helpType: request.helpType,
+          hermeticContext: context,
+          taskContext: request.context
+        }
+      });
+
+      if (error) {
+        console.error('❌ ASSISTANCE: Edge function error:', error);
+        throw error;
+      }
+
+      console.log('✅ ASSISTANCE: Hermetic AI response generated', {
+        steps: data.actionableSteps?.length,
+        hasShadowWarning: !!data.shadowWarning,
+        hasRecoveryTip: !!data.recoveryTip
+      });
+
+      return {
+        id: responseId,
+        requestId: request.id,
+        helpType: 'concrete_steps',
+        content: data.content,
+        actionableSteps: data.actionableSteps || [],
+        toolsNeeded: data.toolsNeeded || [],
+        timeEstimate: data.timeEstimate,
+        successCriteria: data.successCriteria || [],
+        timestamp: new Date(),
+        ...(data.shadowWarning && { shadowWarning: data.shadowWarning }),
+        ...(data.recoveryTip && { recoveryTip: data.recoveryTip })
+      };
+
+    } catch (error) {
+      console.error('❌ ASSISTANCE: Hermetic AI generation failed:', error);
+      // Fallback to generic assistance
+      return await this.generateAIAssistance(request, responseId);
+    }
   }
 
   private classifyTaskType(title: string): string {

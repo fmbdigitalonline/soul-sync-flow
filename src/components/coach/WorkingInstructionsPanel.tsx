@@ -19,6 +19,9 @@ import { AssistanceButton } from '@/components/ui/assistance-button';
 import { HelpPanel } from '@/components/ui/help-panel';
 import { interactiveAssistanceService, AssistanceResponse } from '@/services/interactive-assistance-service';
 import { useInstructionProgress } from '@/hooks/use-instruction-progress';
+import { hermeticIntelligenceService } from '@/services/hermetic-intelligence-service';
+import type { HermeticStructuredIntelligence } from '@/types/hermetic-intelligence';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WorkingInstructionsPanelProps {
   instructions: WorkingInstruction[];
@@ -45,6 +48,30 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
   
   const [assistanceResponses, setAssistanceResponses] = useState<Map<string, AssistanceResponse>>(new Map());
   const [isRequestingHelp, setIsRequestingHelp] = useState<Map<string, boolean>>(new Map());
+  const [hermeticIntelligence, setHermeticIntelligence] = useState<HermeticStructuredIntelligence | null>(null);
+
+  // Fetch Hermetic Intelligence on mount
+  React.useEffect(() => {
+    const fetchHermeticIntelligence = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      console.log('🧠 WORKING INSTRUCTIONS: Fetching Hermetic Intelligence...');
+      const result = await hermeticIntelligenceService.getStructuredIntelligence(user.id);
+      
+      if (result.success && result.intelligence) {
+        console.log('✅ WORKING INSTRUCTIONS: Hermetic Intelligence loaded', {
+          dimensions: Object.keys(result.intelligence).length,
+          confidence: result.intelligence.extraction_confidence
+        });
+        setHermeticIntelligence(result.intelligence);
+      } else {
+        console.log('⚠️ WORKING INSTRUCTIONS: No Hermetic Intelligence found');
+      }
+    };
+
+    fetchHermeticIntelligence();
+  }, []);
 
   const handleInstructionToggle = useCallback(async (instructionId: string) => {
     await toggleInstruction(instructionId);
@@ -65,6 +92,14 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     
     try {
       const instruction = instructions.find(i => i.id === instructionId);
+      
+      console.log('🔍 WORKING INSTRUCTIONS: Requesting assistance', {
+        instructionId,
+        instructionTitle,
+        type,
+        hasHermeticIntelligence: !!hermeticIntelligence
+      });
+
       const response = await interactiveAssistanceService.requestAssistance(
         instructionId,
         instructionTitle,
@@ -73,7 +108,8 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
           instruction,
           description: instruction?.description,
           timeEstimate: instruction?.timeEstimate,
-          toolsNeeded: instruction?.toolsNeeded
+          toolsNeeded: instruction?.toolsNeeded,
+          hermeticIntelligence // Pass Hermetic Intelligence for personalization
         },
         message
       );
