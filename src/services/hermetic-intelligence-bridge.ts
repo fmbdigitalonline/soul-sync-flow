@@ -170,10 +170,11 @@ class HermeticIntelligenceBridge {
   private async loadStructuredIntelligence(userId: string): Promise<HermeticStructuredIntelligence | null> {
     try {
       const { data, error } = await supabase
-        .from('hermetic_structured_intelligence')
-        .select('*')
+        .from('personality_reports')
+        .select('id, structured_intelligence, blueprint_version, generated_at, updated_at')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+        .not('structured_intelligence', 'is', null)
+        .order('generated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
@@ -182,41 +183,43 @@ class HermeticIntelligenceBridge {
         return null;
       }
 
-      if (!data) {
+      if (!data || !data.structured_intelligence) {
         console.log('⚠️ HERMETIC BRIDGE: No structured intelligence found for user');
         return null;
       }
 
+      const intelligence = data.structured_intelligence as any;
+
       console.log('✅ HERMETIC BRIDGE: Structured intelligence loaded', {
-        id: data.id,
-        confidence: data.extraction_confidence,
-        version: data.extraction_version,
-        dimensions: Object.keys(data).filter(key => !['id', 'user_id', 'created_at', 'updated_at'].includes(key)).length
+        reportId: data.id,
+        confidence: 1.0,
+        version: data.blueprint_version,
+        dimensions: Object.keys(intelligence).length
       });
 
-      // Convert database Json types to proper TypeScript types
+      // Convert to HermeticStructuredIntelligence format
       return {
         id: data.id,
-        user_id: data.user_id,
-        personality_report_id: data.personality_report_id,
-        identity_constructs: data.identity_constructs as any,
-        behavioral_triggers: data.behavioral_triggers as any,
-        execution_bias: data.execution_bias as any,
-        internal_conflicts: data.internal_conflicts as any,
-        spiritual_dimension: data.spiritual_dimension as any,
-        adaptive_feedback: data.adaptive_feedback as any,
-        temporal_biology: data.temporal_biology as any,
-        metacognitive_biases: data.metacognitive_biases as any,
-        attachment_style: data.attachment_style as any,
-        goal_archetypes: data.goal_archetypes as any,
-        crisis_handling: data.crisis_handling as any,
-        identity_flexibility: data.identity_flexibility as any,
-        linguistic_fingerprint: data.linguistic_fingerprint as any,
-        extraction_confidence: data.extraction_confidence,
-        extraction_version: data.extraction_version,
-        processing_notes: data.processing_notes as any,
-        created_at: data.created_at,
-        updated_at: data.updated_at
+        user_id: userId,
+        personality_report_id: data.id,
+        identity_constructs: intelligence.identity_constructs as any,
+        behavioral_triggers: intelligence.behavioral_triggers as any,
+        execution_bias: intelligence.execution_bias as any,
+        internal_conflicts: intelligence.internal_conflicts as any,
+        spiritual_dimension: intelligence.spiritual_dimension as any,
+        adaptive_feedback: intelligence.adaptive_feedback as any,
+        temporal_biology: intelligence.temporal_biology as any,
+        metacognitive_biases: intelligence.metacognitive_biases as any,
+        attachment_style: intelligence.attachment_style as any,
+        goal_archetypes: intelligence.goal_archetypes as any,
+        crisis_handling: intelligence.crisis_handling as any,
+        identity_flexibility: intelligence.identity_flexibility as any,
+        linguistic_fingerprint: intelligence.linguistic_fingerprint as any,
+        extraction_confidence: 1.0, // Hermetic 2.0 is full report
+        extraction_version: data.blueprint_version,
+        processing_notes: { source: 'personality_reports' } as any,
+        created_at: data.generated_at,
+        updated_at: data.updated_at || data.generated_at
       } as HermeticStructuredIntelligence;
     } catch (error) {
       console.error('❌ HERMETIC BRIDGE: Error loading structured intelligence:', error);
