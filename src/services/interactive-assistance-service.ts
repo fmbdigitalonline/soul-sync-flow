@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { dreamActivityLogger } from "./dream-activity-logger";
 import { hermeticAssistanceContextBuilder } from './hermetic-assistance-context-builder';
+import { hermeticIntelligenceService } from './hermetic-intelligence-service';
 import type { HermeticStructuredIntelligence } from '@/types/hermetic-intelligence';
 
 export interface AssistanceRequest {
@@ -43,6 +44,7 @@ class InteractiveAssistanceService {
   private assistanceResponses = new Map<string, AssistanceResponse>();
   private helpTemplates = new Map<string, HelpTemplate>();
   private onAssistanceCallback?: (response: AssistanceResponse) => void;
+  private cachedHermeticIntelligence: { userId: string; data: HermeticStructuredIntelligence } | null = null;
 
   constructor() {
     this.initializeHelpTemplates();
@@ -230,10 +232,17 @@ class InteractiveAssistanceService {
     });
 
     const responseId = `resp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Check if we have Hermetic Intelligence for deep personalization
-    const hermeticIntelligence = request.context.hermeticIntelligence as HermeticStructuredIntelligence | undefined;
-    
+    const hermeticIntelligence = await this.resolveHermeticIntelligence(
+      request.context.hermeticIntelligence as HermeticStructuredIntelligence | undefined
+    );
+
+    if (hermeticIntelligence && !request.context.hermeticIntelligence) {
+      console.log('✅ ASSISTANCE: Hermetic Intelligence resolved via service cache');
+      request.context.hermeticIntelligence = hermeticIntelligence;
+    }
+
     if (hermeticIntelligence) {
       console.log('🧠 ASSISTANCE: Using Hermetic Intelligence for personalized guidance', {
         confidence: hermeticIntelligence.extraction_confidence,
@@ -264,6 +273,50 @@ class InteractiveAssistanceService {
     // Final fallback to generic AI assistance
     console.log('🤖 ASSISTANCE: Using generic AI assistance');
     return await this.generateAIAssistance(request, responseId);
+  }
+
+  private async resolveHermeticIntelligence(
+    existing?: HermeticStructuredIntelligence
+  ): Promise<HermeticStructuredIntelligence | undefined> {
+    if (existing) {
+      return existing;
+    }
+
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error) {
+      console.error('❌ ASSISTANCE: Failed to get authenticated user for Hermetic lookup', error);
+      return undefined;
+    }
+
+    const userId = data?.user?.id;
+
+    if (!userId) {
+      console.log('⚠️ ASSISTANCE: No authenticated user, skipping Hermetic Intelligence lookup');
+      return undefined;
+    }
+
+    if (this.cachedHermeticIntelligence?.userId === userId) {
+      return this.cachedHermeticIntelligence.data;
+    }
+
+    console.log('🧠 ASSISTANCE: Fetching Hermetic Intelligence within service');
+    const result = await hermeticIntelligenceService.getStructuredIntelligence(userId);
+
+    if (result.success && result.intelligence) {
+      this.cachedHermeticIntelligence = {
+        userId,
+        data: result.intelligence
+      };
+      return result.intelligence;
+    }
+
+    console.log('⚠️ ASSISTANCE: Hermetic Intelligence unavailable', {
+      error: result.error
+    });
+
+    this.cachedHermeticIntelligence = null;
+    return undefined;
   }
 
   /**
