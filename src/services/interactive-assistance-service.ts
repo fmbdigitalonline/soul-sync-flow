@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { dreamActivityLogger } from "./dream-activity-logger";
 import { hermeticAssistanceContextBuilder } from './hermetic-assistance-context-builder';
+import { hermeticIntelligenceService } from './hermetic-intelligence-service';
 import type { HermeticStructuredIntelligence } from '@/types/hermetic-intelligence';
 
 export interface AssistanceRequest {
@@ -43,6 +44,7 @@ class InteractiveAssistanceService {
   private assistanceResponses = new Map<string, AssistanceResponse>();
   private helpTemplates = new Map<string, HelpTemplate>();
   private onAssistanceCallback?: (response: AssistanceResponse) => void;
+  private cachedHermeticIntelligence: { userId: string; data: HermeticStructuredIntelligence } | null = null;
 
   constructor() {
     this.initializeHelpTemplates();
@@ -230,10 +232,17 @@ class InteractiveAssistanceService {
     });
 
     const responseId = `resp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Check if we have Hermetic Intelligence for deep personalization
-    const hermeticIntelligence = request.context.hermeticIntelligence as HermeticStructuredIntelligence | undefined;
-    
+    const hermeticIntelligence = await this.resolveHermeticIntelligence(
+      request.context.hermeticIntelligence as HermeticStructuredIntelligence | undefined
+    );
+
+    if (hermeticIntelligence && !request.context.hermeticIntelligence) {
+      console.log('✅ ASSISTANCE: Hermetic Intelligence resolved via service cache');
+      request.context.hermeticIntelligence = hermeticIntelligence;
+    }
+
     if (hermeticIntelligence) {
       console.log('🧠 ASSISTANCE: Using Hermetic Intelligence for personalized guidance', {
         confidence: hermeticIntelligence.extraction_confidence,
@@ -264,6 +273,50 @@ class InteractiveAssistanceService {
     // Final fallback to generic AI assistance
     console.log('🤖 ASSISTANCE: Using generic AI assistance');
     return await this.generateAIAssistance(request, responseId);
+  }
+
+  private async resolveHermeticIntelligence(
+    existing?: HermeticStructuredIntelligence
+  ): Promise<HermeticStructuredIntelligence | undefined> {
+    if (existing) {
+      return existing;
+    }
+
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error) {
+      console.error('❌ ASSISTANCE: Failed to get authenticated user for Hermetic lookup', error);
+      return undefined;
+    }
+
+    const userId = data?.user?.id;
+
+    if (!userId) {
+      console.log('⚠️ ASSISTANCE: No authenticated user, skipping Hermetic Intelligence lookup');
+      return undefined;
+    }
+
+    if (this.cachedHermeticIntelligence?.userId === userId) {
+      return this.cachedHermeticIntelligence.data;
+    }
+
+    console.log('🧠 ASSISTANCE: Fetching Hermetic Intelligence within service');
+    const result = await hermeticIntelligenceService.getStructuredIntelligence(userId);
+
+    if (result.success && result.intelligence) {
+      this.cachedHermeticIntelligence = {
+        userId,
+        data: result.intelligence
+      };
+      return result.intelligence;
+    }
+
+    console.log('⚠️ ASSISTANCE: Hermetic Intelligence unavailable', {
+      error: result.error
+    });
+
+    this.cachedHermeticIntelligence = null;
+    return undefined;
   }
 
   /**
@@ -307,6 +360,14 @@ class InteractiveAssistanceService {
       if (error) {
         console.error('❌ ASSISTANCE: Edge function error:', error);
         throw error;
+      }
+
+      if (data?.fallback) {
+        console.warn('⚠️ ASSISTANCE: Hermetic edge function returned deterministic fallback', {
+          reason: data.fallbackReason,
+          helpType: request.helpType,
+          taskTitle: request.subTaskTitle
+        });
       }
 
       console.log('✅ ASSISTANCE: Hermetic AI response generated', {
@@ -375,9 +436,131 @@ class InteractiveAssistanceService {
   }
 
   private async generateAIAssistance(request: AssistanceRequest, responseId: string): Promise<AssistanceResponse> {
-    // This would integrate with the AI coach service to generate custom assistance
-    // For now, providing a structured fallback
-    
+    const sanitizedContext = this.sanitizeTaskContext(request.context);
+    const systemPrompt = this.buildGenericSystemPrompt(request, sanitizedContext);
+
+    try {
+      console.log('🤖 ASSISTANCE: Calling Lovable AI for generic assistance');
+
+      const { data, error } = await supabase.functions.invoke('generate-hermetic-task-assistance', {
+        body: {
+          systemPrompt,
+          taskTitle: request.subTaskTitle,
+          helpType: request.helpType,
+          hermeticContext: null,
+          taskContext: sanitizedContext
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.fallback) {
+        console.warn('⚠️ ASSISTANCE: Generic edge function returned deterministic fallback', {
+          reason: data.fallbackReason,
+          helpType: request.helpType,
+          taskTitle: request.subTaskTitle
+        });
+      }
+
+      console.log('✅ ASSISTANCE: Generic AI response generated', {
+        steps: data?.actionableSteps?.length,
+        tools: data?.toolsNeeded?.length,
+        timeEstimate: data?.timeEstimate
+      });
+
+      return {
+        id: responseId,
+        requestId: request.id,
+        helpType: data?.helpType || 'concrete_steps',
+        content: data?.content || `Here are structured steps for "${request.subTaskTitle}"`,
+        actionableSteps: data?.actionableSteps || [],
+        toolsNeeded: data?.toolsNeeded || [],
+        timeEstimate: data?.timeEstimate,
+        successCriteria: data?.successCriteria || [],
+        timestamp: new Date()
+      };
+    } catch (error) {
+      console.error('❌ ASSISTANCE: Generic AI generation failed, using static fallback', error);
+      return this.buildStaticFallbackResponse(request, responseId);
+    }
+  }
+
+  private sanitizeTaskContext(context: AssistanceRequest['context']): Record<string, any> {
+    if (!context) {
+      return {};
+    }
+
+    const { hermeticIntelligence, ...rest } = context;
+
+    try {
+      return JSON.parse(JSON.stringify(rest));
+    } catch (error) {
+      console.warn('⚠️ ASSISTANCE: Failed to sanitize task context, using shallow copy', error);
+      return { ...rest };
+    }
+  }
+
+  private buildGenericSystemPrompt(request: AssistanceRequest, context: Record<string, any>): string {
+    const focusArea = this.getFocusAreaInstructions(request.helpType);
+    const contextSummary = JSON.stringify(context || {});
+
+    return `You are SoulSync's structured task assistant. Your job is to provide short, concrete support that keeps people moving.
+
+TASK TITLE: ${request.subTaskTitle}
+HELP TYPE: ${request.helpType}
+USER CONTEXT: ${contextSummary}
+
+RESPONSE RULES:
+1. Always respond by calling the tool \"provide_hermetic_task_assistance\" with valid JSON.
+2. Produce 3-5 micro-steps that take 2-5 minutes each.
+3. Each step must start with a clear action verb and mention the exact tool or artifact they should use.
+4. Provide a short motivational opening line in the \"content\" field.
+5. Include specific tools in \"toolsNeeded\" and success checks in \"successCriteria\".
+6. Keep language practical and grounded—no fluff or generic advice.
+7. If you reference timing, give realistic minute estimates.
+
+FOCUS:
+${focusArea}
+
+If the user context is empty, infer sensible defaults from the task title.`;
+  }
+
+  private getFocusAreaInstructions(helpType: AssistanceRequest['helpType']): string {
+    const joiner = (lines: string[]) => lines.join('\n');
+
+    switch (helpType) {
+      case 'stuck':
+        return joiner([
+          '- Diagnose why they might be stuck.',
+          '- Offer the smallest possible first move.',
+          '- Highlight momentum-building actions.'
+        ]);
+      case 'need_details':
+        return joiner([
+          '- Break the work into ultra-specific sub-steps.',
+          '- Spell out quantities, timeboxes, or templates they should fill in.',
+          '- Assume they need clarity more than motivation.'
+        ]);
+      case 'how_to':
+        return joiner([
+          '- Outline an exact procedure with no ambiguity.',
+          '- Mention any required resources or references.',
+          '- Show what the finished state should look like.'
+        ]);
+      case 'examples':
+        return joiner([
+          '- Provide concrete examples they can mirror.',
+          '- Contrast at least two different approaches when possible.',
+          '- Explain what makes each example effective.'
+        ]);
+      default:
+        return '- Provide grounded, practical support tailored to the task.';
+    }
+  }
+
+  private buildStaticFallbackResponse(request: AssistanceRequest, responseId: string): AssistanceResponse {
     const baseResponse: AssistanceResponse = {
       id: responseId,
       requestId: request.id,
@@ -400,7 +583,6 @@ class InteractiveAssistanceService {
       timestamp: new Date()
     };
 
-    // Customize based on help type
     if (request.helpType === 'examples') {
       baseResponse.helpType = 'examples';
       baseResponse.content = `Here are concrete examples for "${request.subTaskTitle}":`;
