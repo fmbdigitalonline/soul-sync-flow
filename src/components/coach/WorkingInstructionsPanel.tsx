@@ -124,7 +124,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
         return updated;
       });
     }
-  }, [instructions]);
+  }, [instructions, hermeticIntelligence]);
 
   const completedCount = completedInstructions.size;
   const totalCount = instructions.length;

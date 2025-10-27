@@ -2,6 +2,7 @@ import { RealTimeShadowDetector, LivePatternResult } from './real-time-shadow-de
 import { HermeticPatternCache } from './hermetic-pattern-cache';
 import { PatternBuffer } from './pattern-buffer';
 import { ShadowPattern } from './conversation-shadow-detector';
+import { DatabaseIntelligenceBridge } from './database-intelligence-bridge';
 
 export interface SubconsciousOrbState {
   mode: 'dormant' | 'detecting' | 'pattern_found' | 'thinking' | 'advice_ready';
@@ -428,10 +429,8 @@ export class SubconsciousOrbController {
     if (userId && sessionId) {
       try {
         console.log('🔍 SUBCONSCIOUS ORB: Fetching database intelligence for whispers', { userId, sessionId });
-        
-        // Import dynamically to respect critical data pathways (Principle #6)
-        const { DatabaseIntelligenceBridge } = await import('./database-intelligence-bridge');
-        
+
+        // Use the statically bundled bridge to avoid dynamic import failures in preview builds
         const intelligenceData = await DatabaseIntelligenceBridge.getIntelligenceContext(userId, sessionId);
         
         if (intelligenceData) {
