@@ -14,7 +14,7 @@ import {
   Clock,
   Zap
 } from 'lucide-react';
-import { ParsedCoachMessage, ParsedSubTask } from '@/services/coach-message-parser';
+import { ParsedCoachMessage, ParsedSubTask, deriveCoachIntroText } from '@/services/coach-message-parser';
 import { TaskBreakdownDisplay } from './TaskBreakdownDisplay';
 import { WorkingInstructionsPanel } from './WorkingInstructionsPanel';
 
@@ -52,6 +52,11 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
 
   // Render task breakdown with enhanced interactive cards
   if (parsedMessage.type === 'breakdown' && parsedMessage.subTasks && parsedMessage.subTasks.length > 0) {
+    const introText = deriveCoachIntroText(
+      parsedMessage.originalText,
+      "Here's your task breakdown with clickable micro-tasks:"
+    );
+
     return (
       <div className="space-y-4">
         {/* Coach's explanation text */}
@@ -61,9 +66,7 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
             <span className="text-xs font-medium text-gray-700">Task Coach</span>
           </div>
           <div className="text-sm leading-relaxed text-gray-800">
-            {/* Extract the introduction text before the task breakdown */}
-            {parsedMessage.originalText.split(/(?:step\s*\d+|^\d+\.)/i)[0].trim() || 
-             "Here's your task breakdown with clickable micro-tasks:"}
+            {introText}
           </div>
         </Card>
         
@@ -107,15 +110,20 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
 
   // Render guidance with enhanced action items
   if (parsedMessage.type === 'guidance' && parsedMessage.actionItems && parsedMessage.actionItems.length > 0) {
+    const introText = deriveCoachIntroText(
+      parsedMessage.originalText,
+      "Here's what I recommend next:"
+    );
+
     return (
       <Card className="p-4 bg-blue-50 border-blue-200">
         <div className="flex items-center gap-2 mb-3">
           <Lightbulb className="h-4 w-4 text-blue-600" />
           <span className="text-xs font-medium text-blue-700">Guidance & Recommendations</span>
         </div>
-        
+
         <div className="text-sm leading-relaxed text-gray-800 mb-3">
-          {parsedMessage.originalText.split(/[-•*]|\d+\./)[0].trim()}
+          {introText}
         </div>
         
         <div className="space-y-2">

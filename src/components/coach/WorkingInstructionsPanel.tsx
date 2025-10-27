@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { WorkingInstruction } from '@/services/coach-message-parser';
+import { WorkingInstruction, deriveCoachIntroText } from '@/services/coach-message-parser';
 import { AssistanceButton } from '@/components/ui/assistance-button';
 import { HelpPanel } from '@/components/ui/help-panel';
 import { interactiveAssistanceService, AssistanceResponse } from '@/services/interactive-assistance-service';
@@ -124,7 +124,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
         return updated;
       });
     }
-  }, [instructions]);
+  }, [instructions, hermeticIntelligence]);
 
   const completedCount = completedInstructions.size;
   const totalCount = instructions.length;
@@ -132,8 +132,12 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
   const isAllComplete = completedCount === totalCount && totalCount > 0;
 
   // Extract introduction text from original message
-  const introText = originalText.split(/^\d+\.\s*\*\*/m)[0].trim() || 
-    "Here are your detailed working instructions:";
+  const introText = useMemo(() => (
+    deriveCoachIntroText(
+      originalText,
+      "Here's the plan I put together to keep you moving."
+    )
+  ), [originalText]);
 
   // Principle #7: Build Transparently - show loading states
   if (isLoadingProgress) {

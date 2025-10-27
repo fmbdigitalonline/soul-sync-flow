@@ -28,6 +28,63 @@ export interface ParsedCoachMessage {
   };
 }
 
+const INTRO_SKIP_PATTERNS: RegExp[] = [
+  /^provide\b/i,
+  /^format requirements?/i,
+  /^remember\b/i,
+  /^use numbered list/i,
+  /^do not\b/i,
+  /^action[s]?:/i,
+  /^task:?/i,
+  /^context:?/i,
+  /^goal:?/i,
+  /^as my task coaching assistant/i,
+  /^you can execute task actions/i,
+  /^please provide guidance/i,
+  /^when you respond/i,
+  /^here'?s exactly/i,
+  /^step \d+/i,
+  /^\d+\./,
+  /^[-•*]\s/i
+];
+
+function cleanIntroCandidate(candidate: string): string | null {
+  if (!candidate) return null;
+
+  const stripped = candidate
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (stripped.length < 6) return null;
+  if (INTRO_SKIP_PATTERNS.some(pattern => pattern.test(stripped))) {
+    return null;
+  }
+
+  return stripped.replace(/[：:]$/, '').trim();
+}
+
+export function deriveCoachIntroText(content: string, fallback: string): string {
+  if (!content) {
+    return fallback;
+  }
+
+  const segments = content
+    .replace(/\r\n?/g, '\n')
+    .split(/\n{1,}/)
+    .map(segment => segment.trim())
+    .filter(Boolean);
+
+  for (const segment of segments) {
+    const cleaned = cleanIntroCandidate(segment);
+    if (cleaned) {
+      return cleaned;
+    }
+  }
+
+  return fallback;
+}
+
 export class CoachMessageParser {
   private static parsedCache = new Map<string, ParsedCoachMessage>();
   
