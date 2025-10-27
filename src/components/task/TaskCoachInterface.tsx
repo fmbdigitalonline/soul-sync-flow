@@ -431,11 +431,7 @@ Provide 4-6 concrete steps I can start working on immediately.`;
     });
     
     console.log('📤 Sending enhanced coaching message with breakdown instructions');
-    sendMessage(
-      initialMessage,
-      true,
-      `Can you create a step-by-step plan for "${task.title}"?`
-    );
+    sendMessage(initialMessage);
   }, [task, productivityJourney, sendMessage]);
 
   // Sub-task interaction handlers
@@ -460,11 +456,7 @@ Provide detailed work instructions for this specific step in this format:
    [Description]
 
 Give me 3-5 specific actions I need to take to complete this sub-task. Use the format above with bold titles and numbered steps.`;
-    sendMessage(
-      message,
-      true,
-      `Help me work through the step "${subTask.title}".`
-    );
+    sendMessage(message);
   }, [sendMessage, task.id]);
 
   const handleSubTaskComplete = useCallback(async (subTask: ParsedSubTask) => {
@@ -832,20 +824,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
                   />
                 ))}
                 
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-slate-50 border border-green-200/20 max-w-[80%] rounded-2xl p-4">
-                      <div className="flex items-center space-x-2">
-                        <ArrowRight className="h-4 w-4 text-green-400" />
-                        <p className="text-xs font-medium">Task Coach</p>
-                      </div>
-                      <div className="flex items-center space-x-2 mt-2">
-                        <ArrowRight className="h-4 w-4 animate-spin" />
-                        <p className="text-sm">Creating your task breakdown...</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Loading state hidden - users only see final results */}
                 
                 <div ref={messagesEndRef} />
               </div>
