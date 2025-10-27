@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
+const BASE_CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -276,6 +276,8 @@ function determinePrimaryTool(tools: string[]): string {
 }
 
 serve(async (req) => {
+  const corsHeaders = deriveCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       status: 200,
