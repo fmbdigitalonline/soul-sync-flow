@@ -26,9 +26,9 @@ export class HermeticIntelligenceService {
 
       const { data, error } = await supabase
         .from('personality_reports')
-        .select('structured_intelligence, blueprint_version, generated_at, id')
+        .select('report_content, blueprint_version, generated_at, id')
         .eq('user_id', userId)
-        .not('structured_intelligence', 'is', null)
+        .not('report_content', 'is', null)
         .order('generated_at', { ascending: false })
         .limit(1)
         .single();
@@ -44,12 +44,22 @@ export class HermeticIntelligenceService {
         throw error;
       }
 
+      const reportContent = data.report_content as any;
+      const structuredIntelligence = reportContent?.structured_intelligence;
+
+      if (!structuredIntelligence) {
+        return { 
+          success: false, 
+          error: 'No structured intelligence found in report content' 
+        };
+      }
+
       console.log('✅ HERMETIC INTELLIGENCE SERVICE: Successfully retrieved structured intelligence', {
         version: data.blueprint_version,
         reportId: data.id
       });
       
-      return { success: true, intelligence: data.structured_intelligence as unknown as HermeticStructuredIntelligence };
+      return { success: true, intelligence: structuredIntelligence as HermeticStructuredIntelligence };
 
     } catch (error) {
       console.error('❌ HERMETIC INTELLIGENCE SERVICE: Failed to fetch intelligence:', error);
@@ -74,9 +84,9 @@ export class HermeticIntelligenceService {
 
       const { data, error } = await supabase
         .from('personality_reports')
-        .select('structured_intelligence, blueprint_version')
+        .select('report_content, blueprint_version')
         .eq('user_id', userId)
-        .not('structured_intelligence', 'is', null)
+        .not('report_content', 'is', null)
         .order('generated_at', { ascending: false })
         .limit(1)
         .single();
@@ -91,7 +101,8 @@ export class HermeticIntelligenceService {
         throw error;
       }
 
-      const structuredIntelligence = data.structured_intelligence as any;
+      const reportContent = data.report_content as any;
+      const structuredIntelligence = reportContent?.structured_intelligence;
       const dimensionData = structuredIntelligence?.[dimension];
 
       console.log(`✅ HERMETIC INTELLIGENCE SERVICE: Successfully retrieved dimension '${dimension}'`);
@@ -124,9 +135,9 @@ export class HermeticIntelligenceService {
       
       const { data, error } = await supabase
         .from('personality_reports')
-        .select('structured_intelligence')
+        .select('report_content')
         .eq('user_id', userId)
-        .not('structured_intelligence', 'is', null)
+        .not('report_content', 'is', null)
         .order('generated_at', { ascending: false })
         .limit(1)
         .single();
@@ -141,7 +152,8 @@ export class HermeticIntelligenceService {
         throw error;
       }
 
-      const structuredIntelligence = data.structured_intelligence as any;
+      const reportContent = data.report_content as any;
+      const structuredIntelligence = reportContent?.structured_intelligence;
       
       // Extract requested dimensions
       const dimensionsData: Record<string, any> = {};
@@ -255,20 +267,21 @@ export class HermeticIntelligenceService {
    */
   async hasStructuredIntelligence(userId: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase
-        .from('personality_reports')
-        .select('id')
-        .eq('user_id', userId)
-        .not('structured_intelligence', 'is', null)
-        .gte('blueprint_version', '2.0')
-        .limit(1);
+    const { data, error } = await supabase
+      .from('personality_reports')
+      .select('report_content')
+      .eq('user_id', userId)
+      .not('report_content', 'is', null)
+      .gte('blueprint_version', '2.0')
+      .limit(1)
+      .maybeSingle();
 
       if (error) {
         console.error('❌ HERMETIC INTELLIGENCE SERVICE: Failed to check intelligence existence:', error);
         return false;
       }
 
-      return data && data.length > 0;
+      return !!data && !!(data.report_content as any)?.structured_intelligence;
 
     } catch (error) {
       console.error('❌ HERMETIC INTELLIGENCE SERVICE: Error checking intelligence existence:', error);
@@ -327,9 +340,9 @@ export class HermeticIntelligenceService {
     try {
       const { data, error } = await supabase
         .from('personality_reports')
-        .select('blueprint_version, generated_at, updated_at, id')
+        .select('report_content, blueprint_version, generated_at, updated_at, id')
         .eq('user_id', userId)
-        .not('structured_intelligence', 'is', null)
+        .not('report_content', 'is', null)
         .order('generated_at', { ascending: false })
         .limit(1)
         .single();
@@ -344,12 +357,20 @@ export class HermeticIntelligenceService {
         throw error;
       }
 
+      const reportContent = data.report_content as any;
+      if (!reportContent?.structured_intelligence) {
+        return { 
+          success: false, 
+          error: 'No structured intelligence found in report content' 
+        };
+      }
+
       return { 
         success: true, 
         metadata: {
           extraction_confidence: 1.0, // Hermetic 2.0 is full report
           extraction_version: data.blueprint_version,
-          processing_notes: { source: 'personality_reports' },
+          processing_notes: { source: 'personality_reports', report_id: data.id },
           created_at: data.generated_at,
           updated_at: data.updated_at || data.generated_at
         }

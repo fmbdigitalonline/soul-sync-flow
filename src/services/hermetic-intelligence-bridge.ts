@@ -169,26 +169,27 @@ class HermeticIntelligenceBridge {
    */
   private async loadStructuredIntelligence(userId: string): Promise<HermeticStructuredIntelligence | null> {
     try {
-      const { data, error } = await supabase
-        .from('personality_reports')
-        .select('id, structured_intelligence, blueprint_version, generated_at, updated_at')
-        .eq('user_id', userId)
-        .not('structured_intelligence', 'is', null)
-        .order('generated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+    const { data, error } = await supabase
+      .from('personality_reports')
+      .select('id, report_content, blueprint_version, generated_at, updated_at')
+      .eq('user_id', userId)
+      .not('report_content', 'is', null)
+      .order('generated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
       if (error) {
         console.error('❌ HERMETIC BRIDGE: Database query failed:', error);
         return null;
       }
 
-      if (!data || !data.structured_intelligence) {
+      const reportContent = data.report_content as any;
+      if (!data || !reportContent?.structured_intelligence) {
         console.log('⚠️ HERMETIC BRIDGE: No structured intelligence found for user');
         return null;
       }
 
-      const intelligence = data.structured_intelligence as any;
+      const intelligence = reportContent.structured_intelligence;
 
       console.log('✅ HERMETIC BRIDGE: Structured intelligence loaded', {
         reportId: data.id,
