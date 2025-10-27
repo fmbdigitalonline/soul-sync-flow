@@ -2,25 +2,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const BASE_CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-api-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Credentials": "true",
-  "Access-Control-Max-Age": "86400",
-  Vary: "Origin",
 };
-
-function deriveCorsHeaders(req?: Request): Record<string, string> {
-  const origin = req?.headers.get("Origin");
-  const requestedHeaders = req?.headers.get("Access-Control-Request-Headers");
-
-  return {
-    ...BASE_CORS_HEADERS,
-    ...(origin ? { "Access-Control-Allow-Origin": origin } : {}),
-    ...(requestedHeaders
-      ? { "Access-Control-Allow-Headers": requestedHeaders }
-      : {}),
-  };
-}
 
 type AssistanceHelpType = 'stuck' | 'need_details' | 'how_to' | 'examples';
 type AssistanceResponseHelpType = 'concrete_steps' | 'examples' | 'tools_needed' | 'time_breakdown';
@@ -54,20 +38,14 @@ function isResponseHelpType(value: unknown): value is AssistanceResponseHelpType
   return typeof value === 'string' && RESPONSE_HELP_TYPES.has(value as AssistanceResponseHelpType);
 }
 
-function respondWithAssistance(
-  payload: AssistancePayload,
-  options?: { fallbackReason?: string; headers?: Record<string, string> }
-) {
+function respondWithAssistance(payload: AssistancePayload, options?: { fallbackReason?: string }) {
   const body = options?.fallbackReason
     ? { ...payload, fallback: true, fallbackReason: options.fallbackReason }
     : payload;
 
   return new Response(JSON.stringify(body), {
     status: 200,
-    headers: {
-      ...(options?.headers ?? BASE_CORS_HEADERS),
-      "Content-Type": "application/json",
-    },
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
 
@@ -351,10 +329,7 @@ serve(async (req) => {
         toolsNeeded: [...fallbackPayload!.toolsNeeded],
         successCriteria: [...fallbackPayload!.successCriteria],
       };
-      return respondWithAssistance(clone, {
-        fallbackReason: reason,
-        headers: corsHeaders,
-      });
+      return respondWithAssistance(clone, { fallbackReason: reason });
     };
 
     console.log('🎯 HERMETIC ASSISTANCE: Request received', {
@@ -528,9 +503,7 @@ serve(async (req) => {
       ...(assistanceData.recoveryTip || fallbackPayload?.recoveryTip ? { recoveryTip: assistanceData.recoveryTip || fallbackPayload?.recoveryTip } : {})
     };
 
-    return respondWithAssistance(normalizedAssistance, {
-      headers: corsHeaders,
-    });
+    return respondWithAssistance(normalizedAssistance);
   } catch (error) {
     console.error('❌ HERMETIC ASSISTANCE: Unexpected error handling request', error);
     const safeFallback = fallbackPayload ?? buildFallbackAssistance({
@@ -545,9 +518,6 @@ serve(async (req) => {
       toolsNeeded: [...safeFallback.toolsNeeded],
       successCriteria: [...safeFallback.successCriteria],
     };
-    return respondWithAssistance(clone, {
-      fallbackReason: 'unhandled_exception',
-      headers: corsHeaders,
-    });
+    return respondWithAssistance(clone, { fallbackReason: 'unhandled_exception' });
   }
 });

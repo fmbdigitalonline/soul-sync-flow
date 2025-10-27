@@ -456,14 +456,6 @@ class InteractiveAssistanceService {
         throw error;
       }
 
-      if (data?.fallback) {
-        console.warn('⚠️ ASSISTANCE: Generic edge function returned deterministic fallback', {
-          reason: data.fallbackReason,
-          helpType: request.helpType,
-          taskTitle: request.subTaskTitle
-        });
-      }
-
       console.log('✅ ASSISTANCE: Generic AI response generated', {
         steps: data?.actionableSteps?.length,
         tools: data?.toolsNeeded?.length,
