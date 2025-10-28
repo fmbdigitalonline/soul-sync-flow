@@ -10,6 +10,7 @@ import { ThinkingDots } from "./ThinkingDots";
 import { useGlobalChatState } from "@/hooks/use-global-chat-state";
 import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
 import { VFPGraphFeedback } from "@/components/coach/VFPGraphFeedback";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
@@ -36,6 +37,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   const [initialMessageCount, setInitialMessageCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { updateChatLoading } = useGlobalChatState();
+  const { isMobile } = useIsMobile();
 
   // Track initial message count to avoid animating historical messages
   useEffect(() => {
@@ -96,7 +98,12 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     <div className="flex flex-col h-full relative">
 
       {/* Messages */}
-      <ScrollArea className="flex-1 h-[calc(100%-5rem)]">
+      <ScrollArea className={cn(
+        "flex-1",
+        isMobile 
+          ? "h-[calc(100%-10rem)]"
+          : "h-[calc(100%-5rem)]"
+      )}>
         <div className="px-3 py-2 pb-20 space-y-3">
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-4">
@@ -167,7 +174,12 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       </ScrollArea>
 
       {/* Input - Sticky to bottom */}
-      <div className="absolute bottom-0 left-0 right-0 bg-background px-2 py-1">
+      <div className={cn(
+        "absolute left-0 right-0 bg-background px-2 py-1 z-[10000]",
+        isMobile 
+          ? "bottom-[64px]"
+          : "bottom-0"
+      )}>
         <div className="flex space-x-2">
           <Input
             value={inputValue}
