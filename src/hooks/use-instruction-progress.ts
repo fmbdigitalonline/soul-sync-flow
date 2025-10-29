@@ -5,7 +5,7 @@
  * - Principle #7: Build Transparently - loading states and error handling
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -23,6 +23,11 @@ export function useInstructionProgress(taskId: string, initialCompletedIds: stri
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const latestInitialCompletedIdsRef = useRef(initialCompletedIds);
+
+  useEffect(() => {
+    latestInitialCompletedIdsRef.current = initialCompletedIds;
+  }, [initialCompletedIds]);
 
   // Keep track of the initial completion ids to merge with database state
   useEffect(() => {
@@ -38,7 +43,7 @@ export function useInstructionProgress(taskId: string, initialCompletedIds: stri
   // Load instruction progress from database
   useEffect(() => {
     if (!taskId) return;
-    
+
     const loadProgress = async () => {
       try {
         setIsLoading(true);
@@ -62,7 +67,7 @@ export function useInstructionProgress(taskId: string, initialCompletedIds: stri
 
         const completed = new Set(data?.map(item => item.instruction_id) || []);
         const merged = new Set<string>();
-        initialCompletedIds.forEach(id => merged.add(id));
+        latestInitialCompletedIdsRef.current.forEach(id => merged.add(id));
         completed.forEach(id => merged.add(id));
         setCompletedInstructions(merged);
 
@@ -77,7 +82,7 @@ export function useInstructionProgress(taskId: string, initialCompletedIds: stri
     };
 
     loadProgress();
-  }, [taskId, initialCompletedIds]);
+  }, [taskId]);
 
   // Toggle instruction completion
   const toggleInstruction = useCallback(async (instructionId: string) => {
