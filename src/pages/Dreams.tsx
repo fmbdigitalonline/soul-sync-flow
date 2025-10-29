@@ -44,19 +44,10 @@ import { HomeMenuGrid } from "@/components/home/HomeMenuGrid";
 import { DreamsOverview } from "@/components/dream/DreamsOverview";
 import { AllDreamsList } from "@/components/dream/AllDreamsList";
 import { useGoals } from "@/hooks/use-goals";
+import { getTaskSessionType } from "@/utils/task-session";
+import type { ResumableTask } from "@/hooks/use-resumable-tasks";
 
-interface Task {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'todo' | 'in_progress' | 'stuck' | 'completed';
-  due_date?: string;
-  estimated_duration: string;
-  energy_level_required: string;
-  category: string;
-  optimal_time_of_day: string[];
-  goal_id?: string;
-}
+type Task = ResumableTask;
 
 const Dreams = () => {
   const { 
@@ -83,6 +74,7 @@ const Dreams = () => {
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]); // Track breadcrumb navigation (Pillar I: Preserve Core Intelligence)
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [previousView, setPreviousView] = useState<'hub' | 'all-goals'>('hub');
+  const [sessionRefreshKey, setSessionRefreshKey] = useState(0);
   
   // Principle #2: No Hardcoded Data - Load all goals from database
   const { goals, isLoading: goalsLoading } = useGoals();
@@ -347,6 +339,7 @@ const Dreams = () => {
   const handleBackFromTaskCoach = () => {
     setSelectedTask(null);
     setCurrentView('journey');
+    setSessionRefreshKey(prev => prev + 1);
   };
 
   const handleBackToSuccessOverview = useCallback(() => {
@@ -366,12 +359,31 @@ const Dreams = () => {
     setActiveTab('tasks');
   };
 
-  const handleTaskClick = (task: any) => {
+  const handleTaskClick = (task: Task) => {
     // Receive full task object and navigate to task coach (Principle #7: Build Transparently)
     console.log('📋 Dreams: Navigating to task with full data:', task);
     setSelectedTask(task);
     setCurrentView('task-coach');
   };
+
+  function handleResumeTaskPlan(task: Task) {
+    if (!task) {
+      console.warn('⚠️ Dreams: Attempted to resume a plan without a task payload');
+      return;
+    }
+
+    console.log('🔁 Dreams: Resuming plan for task', task.title, '(', task.id, ')');
+
+    if (task.goal_id) {
+      setActiveGoalId(task.goal_id);
+      localStorage.setItem('activeGoalId', task.goal_id);
+    }
+
+    setSelectedTask(task);
+    setCurrentView('task-coach');
+  }
+
+  const resolveTaskSessionType = useCallback((taskId: string) => getTaskSessionType(taskId), []);
 
   // Removed duplicate authentication check - component is wrapped in ProtectedRoute
 
@@ -613,10 +625,12 @@ const Dreams = () => {
                       </h3>
                     </div>
                     <div className="w-full">
-                      <TaskViews 
+                      <TaskViews
                         focusedMilestone={focusedMilestone}
                         onBackToJourney={() => setActiveTab('journey')}
                         onTaskSelect={handleTaskSelect}
+                        getSessionType={resolveTaskSessionType}
+                        sessionRefreshKey={sessionRefreshKey}
                       />
                     </div>
                   </div>
@@ -951,6 +965,8 @@ const Dreams = () => {
             onSelectGoal={handleSelectGoal}
             onViewDetails={handleViewGoalDetails}
             onCreateNew={() => navigate('/dreams/create')}
+            onResumeTaskPlan={handleResumeTaskPlan}
+            sessionRefreshKey={sessionRefreshKey}
           />
         </div>
       </MainLayout>
@@ -968,6 +984,8 @@ const Dreams = () => {
               onCreateNew={() => navigate('/dreams/create')}
               onViewDetails={handleViewGoalDetails}
               onViewAllGoals={handleViewAllGoals}
+              onResumeTaskPlan={handleResumeTaskPlan}
+              sessionRefreshKey={sessionRefreshKey}
             />
           </div>
 

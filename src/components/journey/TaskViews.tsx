@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -22,6 +22,7 @@ import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { TaskCard } from "../task/TaskCard";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { TaskSessionType } from "@/utils/task-session";
 
 interface Task {
   id: string;
@@ -52,12 +53,16 @@ interface TaskViewsProps {
   focusedMilestone?: any;
   onBackToJourney: () => void;
   onTaskSelect: (task: Task) => void;
+  getSessionType?: (taskId: string) => TaskSessionType;
+  sessionRefreshKey?: number;
 }
 
-export const TaskViews: React.FC<TaskViewsProps> = ({ 
-  focusedMilestone, 
-  onBackToJourney, 
-  onTaskSelect 
+export const TaskViews: React.FC<TaskViewsProps> = ({
+  focusedMilestone,
+  onBackToJourney,
+  onTaskSelect,
+  getSessionType,
+  sessionRefreshKey = 0
 }) => {
   const { productivityJourney, updateProductivityJourney } = useJourneyTracking();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -188,18 +193,36 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
     console.log('Single tap on task:', task.title);
   };
 
-  const KanbanColumn = ({ 
-    title, 
-    status, 
-    tasks, 
+  const sessionTypeMap = useMemo(() => {
+    const map = new Map<string, TaskSessionType>();
+    const resolver = getSessionType ?? (() => TaskSessionType.NO_SESSION);
+
+    filteredTasks.forEach(task => {
+      try {
+        map.set(task.id, resolver(task.id));
+      } catch (error) {
+        console.error('Failed to resolve task session type', error);
+        map.set(task.id, TaskSessionType.NO_SESSION);
+      }
+    });
+
+    return map;
+  }, [filteredTasks, getSessionType, sessionRefreshKey]);
+
+  const KanbanColumn = ({
+    title,
+    status,
+    tasks,
     icon,
-    accentColor
-  }: { 
-    title: string; 
+    accentColor,
+    sessionTypeMap
+  }: {
+    title: string;
     status: 'todo' | 'in_progress' | 'stuck' | 'completed';
-    tasks: Task[]; 
+    tasks: Task[];
     icon: React.ReactNode;
     accentColor: string;
+    sessionTypeMap: Map<string, TaskSessionType>;
   }) => (
     <div className={`flex-1 ${isMobile ? 'w-full' : 'min-w-64'}`}>
       <div className={`flex items-center justify-between mb-3 p-3 rounded-lg ${accentColor}`}>
@@ -221,13 +244,14 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
       >
         {tasks.map(task => (
           <div key={task.id} draggable onDragStart={() => handleDragStart(task)}>
-            <TaskCard 
-              task={task} 
+            <TaskCard
+              task={task}
               onDoubleTap={handleTaskDoubleTap}
               onSingleTap={handleTaskSingleTap}
               onStatusChange={handleTaskStatusChange}
               onMarkDone={handleTaskMarkDone}
-              showGoal 
+              showGoal
+              sessionType={sessionTypeMap.get(task.id) ?? TaskSessionType.NO_SESSION}
             />
           </div>
         ))}
@@ -398,6 +422,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
                 tasks={currentColumn.tasks}
                 icon={currentColumn.icon}
                 accentColor={currentColumn.accentColor}
+                sessionTypeMap={sessionTypeMap}
               />
             </div>
           ) : (
@@ -411,6 +436,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
                   tasks={column.tasks}
                   icon={column.icon}
                   accentColor={column.accentColor}
+                  sessionTypeMap={sessionTypeMap}
                 />
               ))}
             </div>
@@ -427,14 +453,15 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
             </Badge>
           </div>
           {filteredTasks.map(task => (
-            <TaskCard 
-              key={task.id} 
-              task={task} 
+            <TaskCard
+              key={task.id}
+              task={task}
               onDoubleTap={handleTaskDoubleTap}
               onSingleTap={handleTaskSingleTap}
               onStatusChange={handleTaskStatusChange}
               onMarkDone={handleTaskMarkDone}
-              showGoal 
+              showGoal
+              sessionType={sessionTypeMap.get(task.id) ?? TaskSessionType.NO_SESSION}
             />
           ))}
           {filteredTasks.length === 0 && (
@@ -470,14 +497,15 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
                 </div>
               ) : (
                 tasksForSelectedDate.map(task => (
-                  <TaskCard 
-                    key={task.id} 
-                    task={task} 
+                  <TaskCard
+                    key={task.id}
+                    task={task}
                     onDoubleTap={handleTaskDoubleTap}
                     onSingleTap={handleTaskSingleTap}
                     onStatusChange={handleTaskStatusChange}
                     onMarkDone={handleTaskMarkDone}
-                    showGoal 
+                    showGoal
+                    sessionType={sessionTypeMap.get(task.id) ?? TaskSessionType.NO_SESSION}
                   />
                 ))
               )}
