@@ -45,6 +45,7 @@ import { DreamsOverview } from "@/components/dream/DreamsOverview";
 import { AllDreamsList } from "@/components/dream/AllDreamsList";
 import { useGoals } from "@/hooks/use-goals";
 import { getTaskSessionType } from "@/utils/task-session";
+import type { ResumableTask } from "@/hooks/use-resumable-tasks";
 
 type Task = ResumableTask;
 
@@ -364,6 +365,17 @@ const Dreams = () => {
     setSelectedTask(task);
     setCurrentView('task-coach');
   };
+
+  const handleResumeTaskPlan = useCallback((task: Task) => {
+    console.log('🔁 Dreams: Resuming plan for task', task.title, '(', task.id, ')');
+    if (task.goal_id) {
+      setActiveGoalId(task.goal_id);
+      localStorage.setItem('activeGoalId', task.goal_id);
+    }
+
+    setSelectedTask(task);
+    setCurrentView('task-coach');
+  }, []);
 
   const resolveTaskSessionType = useCallback((taskId: string) => getTaskSessionType(taskId), []);
 
