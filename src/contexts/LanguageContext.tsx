@@ -6634,7 +6634,7 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
       // Task Management
       actions: {
         markDone: 'Markeer als Klaar',
-        getCoach: 'Krijg Coach',
+        getCoach: 'Taak Starten',
         continueJourney: 'Reis Voortzetten'
       },
       status: {
