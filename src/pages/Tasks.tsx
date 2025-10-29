@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Target, TrendingUp, CheckCircle, Plus, MessageCircle, Brain, Clock, ArrowLeft } from "lucide-react";
+import { Target, TrendingUp, CheckCircle, Plus, MessageCircle, Brain, Clock, ArrowLeft, ListChecks } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAICoach } from "@/hooks/use-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { HabitTracker } from "@/components/productivity/HabitTracker";
 import { GoalSetting } from "@/components/productivity/GoalSetting";
 import { GoalAchievement } from "@/components/productivity/GoalAchievement";
 import { PlanningInterface } from "@/components/productivity/PlanningInterface";
+import { WorkingInstructionsDashboard } from "@/components/coach/WorkingInstructionsDashboard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const Tasks = () => {
   const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useAICoach();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'achievement' | 'planning' | 'timer' | 'habits' | 'goals' | 'chat'>('achievement');
+  const [activeTab, setActiveTab] = useState<'instructions' | 'achievement' | 'planning' | 'timer' | 'habits' | 'goals' | 'chat'>('instructions');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -140,6 +141,19 @@ const Tasks = () => {
             <div className="border-b border-gray-100 p-3 bg-white/50">
               <div className="flex gap-1 overflow-x-auto scrollbar-hide">
                 <Button
+                  variant={activeTab === 'instructions' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setActiveTab('instructions')}
+                  className={`flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
+                    activeTab === 'instructions'
+                      ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-md'
+                      : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <ListChecks className="h-3 w-3" />
+                  Work Instructions
+                </Button>
+                <Button
                   variant={activeTab === 'achievement' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('achievement')}
@@ -222,6 +236,23 @@ const Tasks = () => {
 
             {/* Single Tab Content Area */}
             <div className="p-4 w-full overflow-hidden">
+              {activeTab === 'instructions' && (
+                <div className="w-full">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-500 rounded-xl flex items-center justify-center">
+                      <ListChecks className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-semibold text-gray-800">Saved Work Instructions</h2>
+                      <p className="text-xs text-gray-500">Jump back into the steps you were following.</p>
+                    </div>
+                  </div>
+                  <div className="w-full overflow-hidden">
+                    <WorkingInstructionsDashboard />
+                  </div>
+                </div>
+              )}
+
               {activeTab === 'achievement' && (
                 <div className="w-full">
                   <div className="flex items-center gap-3 mb-4">
