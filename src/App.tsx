@@ -14,7 +14,6 @@ import Coach from './pages/Coach';
 import Auth from './pages/Auth';
 import Blueprint from './pages/Blueprint';
 import Profile from './pages/Profile';
-import Tasks from './pages/Tasks';
 import TestEnvironmentPage from './pages/TestEnvironmentPage';
 import { TestFunctionsPage } from './pages/TestFunctionsPage';
 import DesignAnalysisPage from './pages/DesignAnalysisPage';
@@ -78,7 +77,6 @@ function App() {
                         <Route path="/coach" element={<Navigate to="/companion" replace />} />
                         <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
                         <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
-                        <Route path="/tasks" element={<ProtectedRoute><MainLayout><Tasks /></MainLayout></ProtectedRoute>} />
                         <Route path="/user-360" element={<ProtectedRoute><MainLayout><User360Page /></MainLayout></ProtectedRoute>} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/test-environment" element={<ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute>} />

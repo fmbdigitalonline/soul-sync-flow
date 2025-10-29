@@ -1,14 +1,13 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import {
-  Home,
-  Heart,
-  MessageCircle,
-  Sparkles,
+import { 
+  Home, 
+  Heart, 
+  MessageCircle, 
+  Sparkles, 
   Star,
-  User,
-  ListTodo
+  User
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
@@ -20,7 +19,6 @@ const MobileNavigation: React.FC = () => {
   const navItems = [
     { to: "/", icon: Home, label: t('nav.home') },
     { to: "/blueprint", icon: Star, label: t('nav.blueprint') },
-    { to: "/tasks", icon: ListTodo, label: t('nav.tasks') },
     { to: "/dreams", icon: Heart, label: t('nav.dreams') },
     { to: "/spiritual-growth", icon: Sparkles, label: t('nav.growth') },
     { to: "/companion", icon: MessageCircle, label: t('nav.companion') },

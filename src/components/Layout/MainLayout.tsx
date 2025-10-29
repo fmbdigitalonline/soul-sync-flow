@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
-import { Home, Heart, MessageCircle, Sparkles, Settings, LogOut, Menu, X, Star, TestTube, User, ListTodo } from "lucide-react";
+import { Home, Heart, MessageCircle, Sparkles, Settings, LogOut, Menu, X, Star, TestTube, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -62,10 +62,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     to: "/blueprint",
     icon: Star,
     label: t('nav.blueprint')
-  }, {
-    to: "/tasks",
-    icon: ListTodo,
-    label: t('nav.tasks')
   }, {
     to: "/dreams",
     icon: Heart,
