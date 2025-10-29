@@ -26,6 +26,8 @@ interface StructuredMessageRendererProps {
   onStartTaskPlan: () => void;
   onInstructionComplete?: (instructionId: string) => void;
   onAllInstructionsComplete?: () => void;
+  initialCompletedInstructionIds?: string[];
+  onInstructionProgressChange?: (completedInstructionIds: string[]) => void;
 }
 
 export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps> = ({
@@ -35,7 +37,9 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
   onSubTaskComplete,
   onStartTaskPlan,
   onInstructionComplete,
-  onAllInstructionsComplete
+  onAllInstructionsComplete,
+  initialCompletedInstructionIds,
+  onInstructionProgressChange
 }) => {
   // Render working instructions with interactive checkable cards
   if (parsedMessage.type === 'working_instructions' && parsedMessage.workingInstructions && parsedMessage.workingInstructions.length > 0) {
@@ -46,6 +50,8 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
         onInstructionComplete={onInstructionComplete || (() => {})}
         onAllInstructionsComplete={onAllInstructionsComplete || (() => {})}
         originalText={parsedMessage.originalText}
+        initialCompletedIds={initialCompletedInstructionIds}
+        onProgressChange={onInstructionProgressChange}
       />
     );
   }

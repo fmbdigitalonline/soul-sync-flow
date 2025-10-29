@@ -30,6 +30,8 @@ interface WorkingInstructionsPanelProps {
   onInstructionComplete: (instructionId: string) => void;
   onAllInstructionsComplete: () => void;
   originalText: string;
+  initialCompletedIds?: string[];
+  onProgressChange?: (completedInstructionIds: string[]) => void;
 }
 
 export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> = ({
@@ -37,15 +39,17 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
   taskId,
   onInstructionComplete,
   onAllInstructionsComplete,
-  originalText
+  originalText,
+  initialCompletedIds = [],
+  onProgressChange
 }) => {
   // Use database-backed instruction progress (Principle #2: No Hardcoded Data)
-  const { 
-    completedInstructions, 
-    isLoading: isLoadingProgress, 
+  const {
+    completedInstructions,
+    isLoading: isLoadingProgress,
     error: progressError,
-    toggleInstruction 
-  } = useInstructionProgress(taskId);
+    toggleInstruction
+  } = useInstructionProgress(taskId, initialCompletedIds);
   
   const [assistanceResponses, setAssistanceResponses] = useState<Map<string, AssistanceResponse>>(new Map());
   const [isRequestingHelp, setIsRequestingHelp] = useState<Map<string, boolean>>(new Map());
@@ -140,6 +144,12 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
       });
     }
   }, [instructions, hermeticIntelligence]);
+
+  React.useEffect(() => {
+    if (onProgressChange) {
+      onProgressChange(Array.from(completedInstructions));
+    }
+  }, [completedInstructions, onProgressChange]);
 
   const completedCount = completedInstructions.size;
   const totalCount = instructions.length;
