@@ -16,11 +16,24 @@ interface InstructionProgress {
   completed_at?: string;
 }
 
-export function useInstructionProgress(taskId: string) {
-  const [completedInstructions, setCompletedInstructions] = useState<Set<string>>(new Set());
+export function useInstructionProgress(taskId: string, initialCompletedIds: string[] = []) {
+  const [completedInstructions, setCompletedInstructions] = useState<Set<string>>(
+    () => new Set(initialCompletedIds)
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Keep track of the initial completion ids to merge with database state
+  useEffect(() => {
+    if (initialCompletedIds.length === 0) return;
+
+    setCompletedInstructions(prev => {
+      const merged = new Set(prev);
+      initialCompletedIds.forEach(id => merged.add(id));
+      return merged;
+    });
+  }, [initialCompletedIds]);
 
   // Load instruction progress from database
   useEffect(() => {
@@ -48,8 +61,11 @@ export function useInstructionProgress(taskId: string) {
         if (fetchError) throw fetchError;
 
         const completed = new Set(data?.map(item => item.instruction_id) || []);
-        setCompletedInstructions(completed);
-        
+        const merged = new Set<string>();
+        initialCompletedIds.forEach(id => merged.add(id));
+        completed.forEach(id => merged.add(id));
+        setCompletedInstructions(merged);
+
         console.log(`✅ Loaded ${completed.size} completed instructions for task ${taskId}`);
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Failed to load instruction progress';
@@ -61,7 +77,7 @@ export function useInstructionProgress(taskId: string) {
     };
 
     loadProgress();
-  }, [taskId]);
+  }, [taskId, initialCompletedIds]);
 
   // Toggle instruction completion
   const toggleInstruction = useCallback(async (instructionId: string) => {

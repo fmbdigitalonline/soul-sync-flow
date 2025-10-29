@@ -34,6 +34,7 @@ import { TaskContext } from "@/services/task-coach-integration-service";
 import { AgentMode } from "@/types/personality-modules";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useTaskCompletion } from "@/hooks/use-task-completion";
+import { loadStoredTaskSession, saveTaskSession, StoredCoachMessage } from "@/utils/task-session";
 
 interface Task {
   id: string;
@@ -112,6 +113,14 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   const [taskProgress, setTaskProgress] = useState(0);
   const [taskCompleted, setTaskCompleted] = useState(false);
   const [coachMessages, setCoachMessages] = useState<CoachMessage[]>([]);
+  const [instructionProgress, setInstructionProgress] = useState<Record<string, boolean>>({});
+
+  const completedInstructionIds = useMemo(
+    () => Object.entries(instructionProgress)
+      .filter(([, isCompleted]) => isCompleted)
+      .map(([instructionId]) => instructionId),
+    [instructionProgress]
+  );
 
   // Calculate total days for progress tracking
   const totalDays = useMemo(() => {
@@ -273,8 +282,39 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     return sanitized;
   };
 
+  // Load any stored session data from localStorage
+  useEffect(() => {
+    const storedSession = loadStoredTaskSession(task.id);
+    if (!storedSession) {
+      setInstructionProgress({});
+      return;
+    }
+
+    if (storedSession.coachMessages.length > 0) {
+      setCoachMessages(prev => {
+        if (prev.length > 0) {
+          return prev;
+        }
+
+        return storedSession.coachMessages.map(storedMessage => ({
+          id: storedMessage.id,
+          content: storedMessage.content,
+          isUser: storedMessage.isUser,
+          timestamp: storedMessage.timestamp ? new Date(storedMessage.timestamp) : new Date(),
+          agentMode: (storedMessage.agentMode as AgentMode) || 'guide'
+        }));
+      });
+    }
+
+    setInstructionProgress(storedSession.instructionProgress || {});
+  }, [task.id]);
+
   // Convert task-aware messages to coach messages format
   useEffect(() => {
+    if (!messages || messages.length === 0) {
+      return;
+    }
+
     const convertedMessages: CoachMessage[] = messages
       .map(msg => ({
         id: msg.id,
@@ -286,6 +326,26 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       .filter(msg => msg.content.trim().length > 0);
     setCoachMessages(convertedMessages);
   }, [messages]);
+
+  // Persist session data to localStorage for resume detection
+  useEffect(() => {
+    if (coachMessages.length === 0 && Object.keys(instructionProgress).length === 0) {
+      return;
+    }
+
+    const storedMessages: StoredCoachMessage[] = coachMessages.map(message => ({
+      id: message.id,
+      content: message.content,
+      isUser: message.isUser,
+      timestamp: message.timestamp instanceof Date ? message.timestamp.toISOString() : undefined,
+      agentMode: message.agentMode
+    }));
+
+    saveTaskSession(task.id, {
+      coachMessages: storedMessages,
+      instructionProgress
+    });
+  }, [coachMessages, instructionProgress, task.id]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -491,13 +551,28 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
   // Working instructions handlers
   const handleInstructionComplete = useCallback(async (instructionId: string) => {
     console.log('✅ Instruction completed:', instructionId);
-    
+
     await dreamActivityLogger.logActivity('working_instruction_completed', {
       task_id: task.id,
       instruction_id: instructionId,
       completion_method: 'interactive_checkbox'
     });
+
+    setInstructionProgress(prev => ({
+      ...prev,
+      [instructionId]: true
+    }));
   }, [task.id]);
+
+  const handleInstructionProgressChange = useCallback((completedIds: string[]) => {
+    setInstructionProgress(() => {
+      const next: Record<string, boolean> = {};
+      completedIds.forEach(id => {
+        next[id] = true;
+      });
+      return next;
+    });
+  }, []);
 
   const handleAllInstructionsComplete = useCallback(async () => {
     console.log('🎉 All working instructions completed');
@@ -810,7 +885,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
           ) : (
             <>
               <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4 space-y-4 min-h-0">
-                {coachMessages.map((message, idx) => (
+                {coachMessages.map((message) => (
                   <TaskCoachMessageRenderer
                     key={message.id}
                     content={message.content}
@@ -821,6 +896,8 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
                     onStartTaskPlan={handleStartTaskPlan}
                     onInstructionComplete={handleInstructionComplete}
                     onAllInstructionsComplete={handleAllInstructionsComplete}
+                    initialCompletedInstructionIds={completedInstructionIds}
+                    onInstructionProgressChange={handleInstructionProgressChange}
                   />
                 ))}
                 

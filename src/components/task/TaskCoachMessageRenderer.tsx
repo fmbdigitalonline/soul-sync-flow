@@ -14,6 +14,8 @@ interface TaskCoachMessageRendererProps {
   onStartTaskPlan: () => void;
   onInstructionComplete?: (instructionId: string) => void;
   onAllInstructionsComplete?: () => void;
+  initialCompletedInstructionIds?: string[];
+  onInstructionProgressChange?: (completedInstructionIds: string[]) => void;
 }
 
 export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> = ({
@@ -24,7 +26,9 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
   onSubTaskComplete,
   onStartTaskPlan,
   onInstructionComplete,
-  onAllInstructionsComplete
+  onAllInstructionsComplete,
+  initialCompletedInstructionIds,
+  onInstructionProgressChange
 }) => {
   // User messages - render as simple cards
   if (isUser) {
@@ -73,6 +77,8 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
           onStartTaskPlan={onStartTaskPlan}
           onInstructionComplete={onInstructionComplete}
           onAllInstructionsComplete={onAllInstructionsComplete}
+          initialCompletedInstructionIds={initialCompletedInstructionIds}
+          onInstructionProgressChange={onInstructionProgressChange}
         />
       </div>
     );
@@ -89,6 +95,8 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
           onStartTaskPlan={onStartTaskPlan}
           onInstructionComplete={onInstructionComplete}
           onAllInstructionsComplete={onAllInstructionsComplete}
+          initialCompletedInstructionIds={initialCompletedInstructionIds}
+          onInstructionProgressChange={onInstructionProgressChange}
         />
       </div>
     );
@@ -105,6 +113,8 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
           onStartTaskPlan={onStartTaskPlan}
           onInstructionComplete={onInstructionComplete}
           onAllInstructionsComplete={onAllInstructionsComplete}
+          initialCompletedInstructionIds={initialCompletedInstructionIds}
+          onInstructionProgressChange={onInstructionProgressChange}
         />
       </div>
     );

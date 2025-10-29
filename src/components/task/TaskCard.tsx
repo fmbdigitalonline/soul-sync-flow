@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Circle, Clock, Zap, Info } from "lucide-react";
+import { CheckCircle2, Circle, Clock, Zap, Info, ListChecks } from "lucide-react";
 import { useDoubleTap } from "@/hooks/use-double-tap";
 import { TaskPreview } from "./TaskPreview";
 import { ReadyToBeginModal } from "./ReadyToBeginModal";
@@ -10,6 +10,7 @@ import { TaskStatusSelector } from "./TaskStatusSelector";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useTaskCompletion } from "@/hooks/use-task-completion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { TaskSessionType } from "@/utils/task-session";
 
 interface TaskCardProps {
   task: any;
@@ -18,6 +19,7 @@ interface TaskCardProps {
   showGoal?: boolean;
   onMarkDone?: (task: any) => void;
   onStatusChange?: (task: any, status: 'todo' | 'in_progress' | 'stuck' | 'completed') => void;
+  sessionType?: TaskSessionType;
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({
@@ -26,7 +28,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onSingleTap,
   showGoal = false,
   onMarkDone,
-  onStatusChange
+  onStatusChange,
+  sessionType = TaskSessionType.NO_SESSION
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -43,6 +46,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const handleStartCoach = () => {
     if (!isProcessing) {
       setShowModal(true);
+    }
+  };
+
+  const handleResumePlan = () => {
+    if (!isProcessing) {
+      onDoubleTap(task);
     }
   };
 
@@ -122,12 +131,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
+  const isWorkInstructionSession = sessionType === TaskSessionType.WORK_INSTRUCTION_SESSION;
+  const isBasicSession = sessionType === TaskSessionType.BASIC_SESSION;
+
+  const cardHighlight = isWorkInstructionSession ? 'border-blue-200 ring-2 ring-blue-200/60' : '';
+
   return (
     <>
       <Card
         className={`cursor-pointer transition-all duration-200 hover:shadow-md transform active:scale-[0.98] w-full max-w-full ${getStatusColor(
           currentStatus
-        )}`}
+        )} ${cardHighlight}`}
       >
         <CardContent className={`w-full max-w-full ${isFoldDevice ? 'p-2' : isUltraNarrow ? 'p-3' : 'p-4'}`}>
           {/* Header with title and icon */}
@@ -151,6 +165,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 <p className={`text-muted-foreground mt-1 leading-tight ${getTextSize('text-xs')} break-words overflow-hidden`}>
                   {task.short_description}
                 </p>
+              )}
+              {isWorkInstructionSession && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 text-blue-700 text-[11px] font-semibold px-2 py-0.5">
+                    <ListChecks className="h-3 w-3" />
+                    Plan Ready
+                  </span>
+                  <span className="text-[11px] text-blue-600 font-medium">
+                    Resume your working instructions
+                  </span>
+                </div>
               )}
             </div>
             <Info className={`text-gray-400 flex-shrink-0 mt-0.5 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
@@ -187,8 +212,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
           {/* Action Buttons - Properly responsive with full text */}
           <div className={`w-full max-w-full ${
-            isFoldDevice || isUltraNarrow 
-              ? 'flex flex-col gap-1.5' 
+            isFoldDevice || isUltraNarrow
+              ? 'flex flex-col gap-1.5'
               : 'flex gap-2'
           }`}>
             <button
@@ -204,22 +229,30 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <button
               className={`${
                 isFoldDevice || isUltraNarrow ? 'w-full' : 'flex-1'
-              } ${isFoldDevice ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} bg-soul-purple hover:bg-soul-purple/90 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${touchTargetSize} flex items-center justify-center gap-1`}
-              onClick={handleStartCoach}
+              } ${isFoldDevice ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} ${
+                isWorkInstructionSession ? 'bg-blue-600 hover:bg-blue-700' : 'bg-soul-purple hover:bg-soul-purple/90'
+              } text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${touchTargetSize} flex items-center justify-center gap-1`}
+              onClick={isWorkInstructionSession ? handleResumePlan : handleStartCoach}
               disabled={isCompleted || isProcessing}
             >
-              <span>🔮</span>
-              <span>{t('tasks.actions.getCoach')}</span>
+              {isWorkInstructionSession ? (
+                <ListChecks className={`${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+              ) : (
+                <span>🔮</span>
+              )}
+              <span>{isWorkInstructionSession ? 'Resume Plan' : isBasicSession ? 'Resume Session' : t('tasks.actions.getCoach')}</span>
             </button>
           </div>
         </CardContent>
       </Card>
-      <ReadyToBeginModal
-        open={showModal}
-        onConfirm={handleReadyGo}
-        onCancel={handleReadyCancel}
-        estimatedDuration={task.estimated_duration}
-      />
+      {!isWorkInstructionSession && (
+        <ReadyToBeginModal
+          open={showModal}
+          onConfirm={handleReadyGo}
+          onCancel={handleReadyCancel}
+          estimatedDuration={task.estimated_duration}
+        />
+      )}
     </>
   );
 };
