@@ -46,18 +46,7 @@ import { AllDreamsList } from "@/components/dream/AllDreamsList";
 import { useGoals } from "@/hooks/use-goals";
 import { getTaskSessionType } from "@/utils/task-session";
 
-interface Task {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'todo' | 'in_progress' | 'stuck' | 'completed';
-  due_date?: string;
-  estimated_duration: string;
-  energy_level_required: string;
-  category: string;
-  optimal_time_of_day: string[];
-  goal_id?: string;
-}
+type Task = ResumableTask;
 
 const Dreams = () => {
   const { 
@@ -369,7 +358,7 @@ const Dreams = () => {
     setActiveTab('tasks');
   };
 
-  const handleTaskClick = (task: any) => {
+  const handleTaskClick = (task: Task) => {
     // Receive full task object and navigate to task coach (Principle #7: Build Transparently)
     console.log('📋 Dreams: Navigating to task with full data:', task);
     setSelectedTask(task);
@@ -958,6 +947,8 @@ const Dreams = () => {
             onSelectGoal={handleSelectGoal}
             onViewDetails={handleViewGoalDetails}
             onCreateNew={() => navigate('/dreams/create')}
+            onResumeTaskPlan={handleResumeTaskPlan}
+            sessionRefreshKey={sessionRefreshKey}
           />
         </div>
       </MainLayout>
@@ -975,6 +966,8 @@ const Dreams = () => {
               onCreateNew={() => navigate('/dreams/create')}
               onViewDetails={handleViewGoalDetails}
               onViewAllGoals={handleViewAllGoals}
+              onResumeTaskPlan={handleResumeTaskPlan}
+              sessionRefreshKey={sessionRefreshKey}
             />
           </div>
 
