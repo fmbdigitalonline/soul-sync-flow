@@ -12,34 +12,40 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Target, 
-  Calendar, 
-  CheckCircle2, 
+import {
+  Target,
+  Calendar,
+  CheckCircle2,
   Clock,
   Trash2,
   Eye,
-  Sparkles
+  Sparkles,
+  ListChecks
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Goal } from '@/hooks/use-goals';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import type { ResumableTask } from '@/hooks/use-resumable-tasks';
 
 interface GoalCardProps {
   goal: Goal;
   onSelect: (goalId: string) => void;
   onViewDetails: (goalId: string) => void;
   onDelete?: (goalId: string) => void;
+  resumableTasks?: ResumableTask[];
+  onResumeTaskPlan?: (task: ResumableTask) => void;
 }
 
 export const GoalCard: React.FC<GoalCardProps> = ({
   goal,
   onSelect,
   onViewDetails,
-  onDelete
+  onDelete,
+  resumableTasks = [],
+  onResumeTaskPlan
 }) => {
   const { isMobile, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
-  
+
   const completedMilestones = goal.milestones.filter(m => m.completed).length;
   const totalMilestones = goal.milestones.length;
   
@@ -60,6 +66,11 @@ export const GoalCard: React.FC<GoalCardProps> = ({
   const getCategoryIcon = (category: string) => {
     return '🎯'; // Default icon, can be expanded
   };
+
+  const hasResumableTasks = resumableTasks.length > 0;
+  const resumeDisplayTasks = resumableTasks.slice(0, 3);
+  const remainingResumeCount = resumableTasks.length - resumeDisplayTasks.length;
+  const primaryResumeTask = resumableTasks[0];
 
   return (
     <Card className={`w-full overflow-hidden hover:shadow-lg transition-all duration-300 border border-border bg-card ${spacing.container}`}>
@@ -129,17 +140,61 @@ export const GoalCard: React.FC<GoalCardProps> = ({
           </div>
         )}
 
+        {hasResumableTasks && (
+          <div className="rounded-lg border border-blue-200 bg-blue-50/70 p-3">
+            <div className="flex items-center gap-2 text-blue-700 font-semibold text-sm">
+              <ListChecks className="h-4 w-4" />
+              Plans ready to resume
+            </div>
+            <p className="text-xs text-blue-600 mt-1">
+              {resumableTasks.length === 1
+                ? `Pick up where you left off with "${resumableTasks[0].title}".`
+                : `You have ${resumableTasks.length} task plans waiting for you.`}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {resumeDisplayTasks.map(task => (
+                <button
+                  key={task.id}
+                  type="button"
+                  onClick={() => onResumeTaskPlan?.(task)}
+                  className="px-2 py-1 rounded-full text-xs font-medium border border-blue-200 bg-white text-blue-700 transition-colors hover:bg-blue-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+                  disabled={!onResumeTaskPlan}
+                >
+                  {task.title}
+                </button>
+              ))}
+              {remainingResumeCount > 0 && (
+                <span className="text-xs text-blue-600 font-medium">
+                  +{remainingResumeCount} more
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2">
+          {hasResumableTasks && primaryResumeTask && (
+            <Button
+              onClick={() => onResumeTaskPlan?.(primaryResumeTask)}
+              className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white ${touchTargetSize}`}
+              size="sm"
+              disabled={!onResumeTaskPlan}
+            >
+              <ListChecks className="h-4 w-4 mr-2" />
+              Resume Plan
+            </Button>
+          )}
+
           <Button
             onClick={() => onSelect(goal.id)}
-            className={`flex-1 bg-primary hover:bg-primary/90 text-primary-foreground ${touchTargetSize}`}
+            className={`flex-1 ${hasResumableTasks ? 'bg-slate-200 text-slate-900 hover:bg-slate-300' : 'bg-primary hover:bg-primary/90 text-primary-foreground'} ${touchTargetSize}`}
             size="sm"
           >
             <Target className="h-4 w-4 mr-2" />
-            Work on This
+            {hasResumableTasks ? 'View All Tasks' : 'Work on This'}
           </Button>
-          
+
           <Button
             onClick={() => onViewDetails(goal.id)}
             variant="outline"

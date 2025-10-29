@@ -18,24 +18,30 @@ import { GoalCard } from './GoalCard';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { useResumableTasks, type ResumableTask } from '@/hooks/use-resumable-tasks';
 
 interface DreamsOverviewProps {
   onSelectGoal: (goalId: string) => void;
   onCreateNew: () => void;
   onViewDetails: (goalId: string) => void;
   onViewAllGoals: () => void;
+  onResumeTaskPlan?: (task: ResumableTask) => void;
+  sessionRefreshKey?: number;
 }
 
 export const DreamsOverview: React.FC<DreamsOverviewProps> = ({
   onSelectGoal,
   onCreateNew,
   onViewDetails,
-  onViewAllGoals
+  onViewAllGoals,
+  onResumeTaskPlan,
+  sessionRefreshKey = 0
 }) => {
   const { goals, isLoading, error, deleteGoal } = useGoals();
   const { isMobile, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { resumableTasksByGoal } = useResumableTasks(sessionRefreshKey);
 
   const handleDeleteGoal = async (goalId: string) => {
     if (confirm('Are you sure you want to delete this dream? This action cannot be undone.')) {
@@ -161,6 +167,8 @@ export const DreamsOverview: React.FC<DreamsOverviewProps> = ({
             onSelect={onSelectGoal}
             onViewDetails={onViewDetails}
             onDelete={handleDeleteGoal}
+            resumableTasks={resumableTasksByGoal.get(goals[0].id) ?? []}
+            onResumeTaskPlan={onResumeTaskPlan}
           />
         </>
       )}
