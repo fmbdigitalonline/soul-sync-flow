@@ -1,0 +1,195 @@
+/**
+ * Working Instructions Persistence Service
+ * 
+ * Manages storage and retrieval of task working instructions in the database.
+ * Ensures instructions are accessible even after task completion or navigation away.
+ * 
+ * Protocol Compliance:
+ * - Principle #2: No hardcoded data - all instructions from real database
+ * - Principle #3: No silent fallbacks - errors surface explicitly
+ * - Principle #6: Respects data pathways - integrates with existing task system
+ */
+
+import { supabase } from "@/integrations/supabase/client";
+
+export interface WorkingInstruction {
+  id: string;
+  title: string;
+  description: string;
+  timeEstimate?: string;
+  toolsNeeded?: string[];
+}
+
+export interface StoredWorkingInstruction {
+  id: string;
+  user_id: string;
+  task_id: string;
+  instruction_id: string;
+  title: string;
+  description: string;
+  time_estimate: string | null;
+  tools_needed: any; // Json type from Supabase
+  order_index: number;
+  created_at: string;
+  updated_at: string;
+}
+
+class WorkingInstructionsPersistenceService {
+  /**
+   * Save working instructions to database
+   * @throws Error if save fails - no silent fallbacks
+   */
+  async saveWorkingInstructions(
+    taskId: string,
+    instructions: WorkingInstruction[]
+  ): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error("User must be authenticated to save working instructions");
+    }
+
+    // Convert to database format
+    const instructionsToSave = instructions.map((instruction, index) => ({
+      user_id: user.id,
+      task_id: taskId,
+      instruction_id: instruction.id,
+      title: instruction.title,
+      description: instruction.description,
+      time_estimate: instruction.timeEstimate,
+      tools_needed: instruction.toolsNeeded || [],
+      order_index: index,
+    }));
+
+    const { error } = await supabase
+      .from('task_working_instructions')
+      .upsert(instructionsToSave, {
+        onConflict: 'user_id,task_id,instruction_id',
+      });
+
+    if (error) {
+      console.error("❌ Failed to save working instructions:", error);
+      throw new Error(`Failed to save working instructions: ${error.message}`);
+    }
+
+    console.log(`✅ Saved ${instructions.length} working instructions for task ${taskId}`);
+  }
+
+  /**
+   * Load working instructions from database
+   * @returns Array of instructions or empty array if none found
+   * @throws Error if database query fails
+   */
+  async loadWorkingInstructions(taskId: string): Promise<WorkingInstruction[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error("User must be authenticated to load working instructions");
+    }
+
+    const { data, error } = await supabase
+      .from('task_working_instructions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('task_id', taskId)
+      .order('order_index', { ascending: true });
+
+    if (error) {
+      console.error("❌ Failed to load working instructions:", error);
+      throw new Error(`Failed to load working instructions: ${error.message}`);
+    }
+
+    if (!data || data.length === 0) {
+      console.log(`ℹ️ No stored instructions found for task ${taskId}`);
+      return [];
+    }
+
+    // Convert from database format
+    const instructions: WorkingInstruction[] = data.map((stored: any) => ({
+      id: stored.instruction_id,
+      title: stored.title,
+      description: stored.description,
+      timeEstimate: stored.time_estimate || undefined,
+      toolsNeeded: Array.isArray(stored.tools_needed) ? stored.tools_needed : [],
+    }));
+
+    console.log(`✅ Loaded ${instructions.length} working instructions for task ${taskId}`);
+    return instructions;
+  }
+
+  /**
+   * Check if instructions exist for a task
+   */
+  async hasStoredInstructions(taskId: string): Promise<boolean> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return false;
+
+    const { data, error } = await supabase
+      .from('task_working_instructions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('task_id', taskId)
+      .limit(1);
+
+    if (error) {
+      console.error("❌ Failed to check for stored instructions:", error);
+      return false;
+    }
+
+    return data !== null;
+  }
+
+  /**
+   * Delete all instructions for a task
+   * Useful for cleanup when task is deleted
+   */
+  async deleteInstructions(taskId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error("User must be authenticated to delete working instructions");
+    }
+
+    const { error } = await supabase
+      .from('task_working_instructions')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('task_id', taskId);
+
+    if (error) {
+      console.error("❌ Failed to delete working instructions:", error);
+      throw new Error(`Failed to delete working instructions: ${error.message}`);
+    }
+
+    console.log(`✅ Deleted working instructions for task ${taskId}`);
+  }
+
+  /**
+   * Get all tasks that have stored instructions
+   * Useful for building history views
+   */
+  async getTasksWithInstructions(): Promise<string[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error("User must be authenticated to get tasks with instructions");
+    }
+
+    const { data, error } = await supabase
+      .from('task_working_instructions')
+      .select('task_id')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error("❌ Failed to get tasks with instructions:", error);
+      throw new Error(`Failed to get tasks with instructions: ${error.message}`);
+    }
+
+    // Get unique task IDs
+    const taskIds = [...new Set(data?.map(row => row.task_id) || [])];
+    return taskIds;
+  }
+}
+
+export const workingInstructionsPersistenceService = new WorkingInstructionsPersistenceService();

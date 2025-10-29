@@ -3831,6 +3831,48 @@ export type Database = {
         }
         Relationships: []
       }
+      task_working_instructions: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          instruction_id: string
+          order_index: number
+          task_id: string
+          time_estimate: string | null
+          title: string
+          tools_needed: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          instruction_id: string
+          order_index?: number
+          task_id: string
+          time_estimate?: string | null
+          title: string
+          tools_needed?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          instruction_id?: string
+          order_index?: number
+          task_id?: string
+          time_estimate?: string | null
+          title?: string
+          tools_needed?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_360_profiles: {
         Row: {
           created_at: string

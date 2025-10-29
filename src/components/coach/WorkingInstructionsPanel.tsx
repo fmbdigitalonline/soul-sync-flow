@@ -22,6 +22,7 @@ import { useInstructionProgress } from '@/hooks/use-instruction-progress';
 import { hermeticIntelligenceService } from '@/services/hermetic-intelligence-service';
 import type { HermeticStructuredIntelligence } from '@/types/hermetic-intelligence';
 import { supabase } from '@/integrations/supabase/client';
+import { workingInstructionsPersistenceService } from '@/services/working-instructions-persistence-service';
 
 interface WorkingInstructionsPanelProps {
   instructions: WorkingInstruction[];
@@ -50,12 +51,13 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
   const [isRequestingHelp, setIsRequestingHelp] = useState<Map<string, boolean>>(new Map());
   const [hermeticIntelligence, setHermeticIntelligence] = useState<HermeticStructuredIntelligence | null>(null);
 
-  // Fetch Hermetic Intelligence on mount
+  // Fetch Hermetic Intelligence and persist instructions on mount
   React.useEffect(() => {
-    const fetchHermeticIntelligence = async () => {
+    const initialize = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Fetch Hermetic Intelligence
       console.log('🧠 WORKING INSTRUCTIONS: Fetching Hermetic Intelligence...');
       const result = await hermeticIntelligenceService.getStructuredIntelligence(user.id);
       
@@ -68,10 +70,23 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
       } else {
         console.log('⚠️ WORKING INSTRUCTIONS: No Hermetic Intelligence found');
       }
+
+      // Persist instructions to database if they don't exist
+      try {
+        const hasStored = await workingInstructionsPersistenceService.hasStoredInstructions(taskId);
+        if (!hasStored && instructions.length > 0) {
+          console.log('💾 WORKING INSTRUCTIONS: Persisting instructions to database...');
+          await workingInstructionsPersistenceService.saveWorkingInstructions(taskId, instructions);
+          console.log('✅ WORKING INSTRUCTIONS: Instructions saved');
+        }
+      } catch (error) {
+        console.error('❌ WORKING INSTRUCTIONS: Failed to persist instructions', error);
+        // Don't block UI on persistence errors - Principle #7: Transparent errors
+      }
     };
 
-    fetchHermeticIntelligence();
-  }, []);
+    initialize();
+  }, [taskId, instructions]);
 
   const handleInstructionToggle = useCallback(async (instructionId: string) => {
     await toggleInstruction(instructionId);

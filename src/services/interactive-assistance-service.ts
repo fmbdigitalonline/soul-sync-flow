@@ -417,12 +417,8 @@ class InteractiveAssistanceService {
   }
 
   private shouldUseTemplate(request: AssistanceRequest): boolean {
-    // Use templates for immediate help, but not for complex or specific requests
-    if (request.userMessage && request.userMessage.length > 50) {
-      return false; // User provided detailed context, needs custom response
-    }
-    
-    return true; // Use template for quick, standard help
+    // REMOVED: Always use AI, never templates (Principle #2: No Hardcoded Data)
+    return false;
   }
 
   private personalizeTemplateContent(content: string, request: AssistanceRequest): string {
@@ -474,8 +470,9 @@ class InteractiveAssistanceService {
         timestamp: new Date()
       };
     } catch (error) {
-      console.error('❌ ASSISTANCE: Generic AI generation failed, using static fallback', error);
-      return this.buildStaticFallbackResponse(request, responseId);
+      // Principle #3: No Fallbacks That Mask Errors - surface the failure
+      console.error('❌ ASSISTANCE: AI generation failed', error);
+      throw new Error(`Failed to generate assistance: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
