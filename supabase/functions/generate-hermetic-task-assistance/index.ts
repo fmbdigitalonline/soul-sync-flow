@@ -6,6 +6,14 @@ const BASE_CORS_HEADERS = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+function deriveCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin");
+  return {
+    ...BASE_CORS_HEADERS,
+    ...(origin ? { "Access-Control-Allow-Origin": origin } : {}),
+  };
+}
+
 type AssistanceHelpType = 'stuck' | 'need_details' | 'how_to' | 'examples';
 type AssistanceResponseHelpType = 'concrete_steps' | 'examples' | 'tools_needed' | 'time_breakdown';
 
@@ -38,7 +46,11 @@ function isResponseHelpType(value: unknown): value is AssistanceResponseHelpType
   return typeof value === 'string' && RESPONSE_HELP_TYPES.has(value as AssistanceResponseHelpType);
 }
 
-function respondWithAssistance(payload: AssistancePayload, options?: { fallbackReason?: string }) {
+function respondWithAssistance(
+  payload: AssistancePayload,
+  options?: { fallbackReason?: string },
+  corsHeaders: Record<string, string> = BASE_CORS_HEADERS,
+) {
   const body = options?.fallbackReason
     ? { ...payload, fallback: true, fallbackReason: options.fallbackReason }
     : payload;
@@ -329,7 +341,7 @@ serve(async (req) => {
         toolsNeeded: [...fallbackPayload!.toolsNeeded],
         successCriteria: [...fallbackPayload!.successCriteria],
       };
-      return respondWithAssistance(clone, { fallbackReason: reason });
+      return respondWithAssistance(clone, { fallbackReason: reason }, corsHeaders);
     };
 
     console.log('🎯 HERMETIC ASSISTANCE: Request received', {
@@ -503,7 +515,7 @@ serve(async (req) => {
       ...(assistanceData.recoveryTip || fallbackPayload?.recoveryTip ? { recoveryTip: assistanceData.recoveryTip || fallbackPayload?.recoveryTip } : {})
     };
 
-    return respondWithAssistance(normalizedAssistance);
+    return respondWithAssistance(normalizedAssistance, undefined, corsHeaders);
   } catch (error) {
     console.error('❌ HERMETIC ASSISTANCE: Unexpected error handling request', error);
     const safeFallback = fallbackPayload ?? buildFallbackAssistance({
@@ -518,6 +530,6 @@ serve(async (req) => {
       toolsNeeded: [...safeFallback.toolsNeeded],
       successCriteria: [...safeFallback.successCriteria],
     };
-    return respondWithAssistance(clone, { fallbackReason: 'unhandled_exception' });
+    return respondWithAssistance(clone, { fallbackReason: 'unhandled_exception' }, corsHeaders);
   }
 });
