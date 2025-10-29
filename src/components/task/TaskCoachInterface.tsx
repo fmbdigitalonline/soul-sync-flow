@@ -287,10 +287,13 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     const storedSession = loadStoredTaskSession(task.id);
     if (!storedSession) {
       setInstructionProgress({});
+      setSessionStarted(false);
       return;
     }
 
-    if (storedSession.coachMessages.length > 0) {
+    const hasStoredMessages = storedSession.coachMessages.length > 0;
+
+    if (hasStoredMessages) {
       setCoachMessages(prev => {
         if (prev.length > 0) {
           return prev;
@@ -304,6 +307,11 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
           agentMode: (storedMessage.agentMode as AgentMode) || 'guide'
         }));
       });
+
+      setSessionStarted(true);
+      setIsTimerRunning(false);
+    } else {
+      setSessionStarted(false);
     }
 
     setInstructionProgress(storedSession.instructionProgress || {});
