@@ -31,7 +31,6 @@ interface WorkingInstructionsPanelProps {
   onInstructionComplete: (instructionId: string) => void;
   onAllInstructionsComplete: () => void;
   originalText: string;
-  initialSource?: 'live' | 'stored';
 }
 
 export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> = ({
@@ -39,8 +38,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
   taskId,
   onInstructionComplete,
   onAllInstructionsComplete,
-  originalText,
-  initialSource = 'live'
+  originalText
 }) => {
   const [displayInstructions, setDisplayInstructions] = useState<WorkingInstruction[]>(instructions);
   const [isLoadingStoredInstructions, setIsLoadingStoredInstructions] = useState(false);
@@ -105,10 +103,6 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
 
   // Fetch Hermetic Intelligence and persist instructions on mount
   React.useEffect(() => {
-    if (isStoredSource) {
-      return;
-    }
-
     const initialize = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -142,7 +136,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     };
 
     initialize();
-  }, [taskId, instructions, isStoredSource]);
+  }, [taskId, instructions]);
 
   const handleInstructionToggle = useCallback(async (instructionId: string) => {
     await toggleInstruction(instructionId);
