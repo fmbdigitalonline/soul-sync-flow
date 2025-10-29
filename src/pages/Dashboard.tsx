@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageCircle, Map, Database } from "lucide-react";
+import { Loader2, MessageCircle, Map, Database, ListTodo } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -123,20 +123,28 @@ const Dashboard = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button 
+            <Button
               className="bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center text-sm h-9"
               onClick={() => navigate('/coach')}
             >
               <MessageCircle className="mr-2 h-4 w-4" />
               Chat with Coach
             </Button>
-            <Button 
+            <Button
               variant="outline"
               className="flex items-center justify-center text-sm h-9"
               onClick={() => navigate('/journey')}
             >
               <Map className="mr-2 h-4 w-4" />
               View Journey
+            </Button>
+            <Button
+              variant="outline"
+              className="flex items-center justify-center text-sm h-9"
+              onClick={() => navigate('/tasks')}
+            >
+              <ListTodo className="mr-2 h-4 w-4" />
+              Work Instructions
             </Button>
           </div>
         </div>
