@@ -7,10 +7,11 @@ import {
   CheckCircle2, 
   Circle, 
   Clock, 
-  Wrench, 
-  ArrowRight, 
+  Wrench,
+  ArrowRight,
   Trophy,
   Target,
+  History,
   Loader2,
   AlertCircle
 } from 'lucide-react';
@@ -39,10 +40,13 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
   onAllInstructionsComplete,
   originalText
 }) => {
+  const [displayInstructions, setDisplayInstructions] = useState<WorkingInstruction[]>(instructions);
+  const [isLoadingStoredInstructions, setIsLoadingStoredInstructions] = useState(false);
+  const [storedInstructionsError, setStoredInstructionsError] = useState<string | null>(null);
   // Use database-backed instruction progress (Principle #2: No Hardcoded Data)
-  const { 
-    completedInstructions, 
-    isLoading: isLoadingProgress, 
+  const {
+    completedInstructions,
+    isLoading: isLoadingProgress,
     error: progressError,
     toggleInstruction 
   } = useInstructionProgress(taskId);
@@ -50,6 +54,52 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
   const [assistanceResponses, setAssistanceResponses] = useState<Map<string, AssistanceResponse>>(new Map());
   const [isRequestingHelp, setIsRequestingHelp] = useState<Map<string, boolean>>(new Map());
   const [hermeticIntelligence, setHermeticIntelligence] = useState<HermeticStructuredIntelligence | null>(null);
+
+  React.useEffect(() => {
+    if (instructions.length > 0) {
+      setDisplayInstructions(instructions);
+    }
+  }, [instructions]);
+
+  React.useEffect(() => {
+    if (instructions.length > 0) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadStoredInstructions = async () => {
+      setIsLoadingStoredInstructions(true);
+      setStoredInstructionsError(null);
+
+      try {
+        const stored = await workingInstructionsPersistenceService.loadWorkingInstructions(taskId);
+
+        if (!isMounted) return;
+
+        if (stored.length > 0) {
+          setDisplayInstructions(stored);
+        }
+      } catch (error) {
+        console.error('❌ WORKING INSTRUCTIONS: Failed to load stored instructions', error);
+        if (!isMounted) return;
+
+        setStoredInstructionsError(
+          'We couldn\'t load your saved instructions. Ask your coach for a new set to keep working.'
+        );
+      } finally {
+        if (isMounted) {
+          setIsLoadingStoredInstructions(false);
+        }
+      }
+    };
+
+    loadStoredInstructions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [taskId, instructions.length]);
 
   // Fetch Hermetic Intelligence and persist instructions on mount
   React.useEffect(() => {
@@ -104,9 +154,9 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     message?: string
   ) => {
     setIsRequestingHelp(prev => new Map(prev).set(instructionId, true));
-    
+
     try {
-      const instruction = instructions.find(i => i.id === instructionId);
+      const instruction = displayInstructions.find(i => i.id === instructionId);
       
       console.log('🔍 WORKING INSTRUCTIONS: Requesting assistance', {
         instructionId,
@@ -139,23 +189,30 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
         return updated;
       });
     }
-  }, [instructions, hermeticIntelligence]);
+  }, [displayInstructions, hermeticIntelligence]);
 
   const completedCount = completedInstructions.size;
-  const totalCount = instructions.length;
+  const totalCount = displayInstructions.length;
   const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const isAllComplete = completedCount === totalCount && totalCount > 0;
+  const isUsingStoredInstructions = instructions.length === 0 && displayInstructions.length > 0;
 
   // Extract introduction text from original message
   const introText = useMemo(() => (
-    deriveCoachIntroText(
-      originalText,
-      "Here's the plan I put together to keep you moving."
-    )
-  ), [originalText]);
+    originalText && originalText.trim().length > 0
+      ? deriveCoachIntroText(
+          originalText,
+          "Here's the plan I put together to keep you moving."
+        )
+      : isUsingStoredInstructions
+        ? 'Welcome back! Here are the working instructions you were following last time.'
+        : "Here's the plan I put together to keep you moving."
+  ), [originalText, isUsingStoredInstructions]);
+
+  const showLoadingState = isLoadingProgress || (isLoadingStoredInstructions && displayInstructions.length === 0);
 
   // Principle #7: Build Transparently - show loading states
-  if (isLoadingProgress) {
+  if (showLoadingState) {
     return (
       <Card className="p-8 text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
@@ -180,6 +237,22 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     );
   }
 
+  if (displayInstructions.length === 0) {
+    return (
+      <Card className="p-6 text-center border-dashed border-blue-200 bg-blue-50/60">
+        <AlertCircle className="h-8 w-8 text-blue-500 mx-auto mb-3" />
+        <h4 className="font-semibold text-gray-800 mb-1">
+          {storedInstructionsError ? 'Unable to load saved instructions' : 'No working instructions yet'}
+        </h4>
+        <p className="text-sm text-gray-600">
+          {storedInstructionsError
+            ? storedInstructionsError
+            : 'Ask your coach for a step-by-step plan and the instructions will appear here for you to check off.'}
+        </p>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Header with introduction */}
@@ -191,7 +264,14 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
         <p className="text-sm text-gray-700 leading-relaxed mb-3">
           {introText}
         </p>
-        
+
+        {isUsingStoredInstructions && (
+          <div className="flex items-center gap-2 text-xs text-blue-800 bg-blue-100 border border-blue-200 rounded-md px-3 py-2 mb-3">
+            <History className="h-4 w-4 text-blue-600" />
+            <span>These steps were restored from your last session. Continue checking them off to keep your progress up to date.</span>
+          </div>
+        )}
+
         {/* Progress tracking */}
         <div className="space-y-2">
           <div className="flex justify-between items-center text-xs">
@@ -204,7 +284,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
 
       {/* Instruction cards */}
       <div className="space-y-3">
-        {instructions.map((instruction, index) => {
+        {displayInstructions.map((instruction, index) => {
           const isCompleted = completedInstructions.has(instruction.id);
           
           return (
