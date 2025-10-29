@@ -103,8 +103,6 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     };
   }, [taskId, instructions.length]);
 
-  const isStoredSource = initialSource === 'stored';
-
   // Fetch Hermetic Intelligence and persist instructions on mount
   React.useEffect(() => {
     if (isStoredSource) {
@@ -203,7 +201,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
   const totalCount = displayInstructions.length;
   const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const isAllComplete = completedCount === totalCount && totalCount > 0;
-  const isUsingStoredInstructions = isStoredSource || (instructions.length === 0 && displayInstructions.length > 0);
+  const isUsingStoredInstructions = instructions.length === 0 && displayInstructions.length > 0;
 
   // Extract introduction text from original message
   const introText = useMemo(() => (
