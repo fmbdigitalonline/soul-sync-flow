@@ -520,7 +520,7 @@ Provide 4-6 concrete steps I can start working on immediately.`;
     });
     
     console.log('📤 Sending enhanced coaching message with breakdown instructions');
-    sendMessage(initialMessage);
+    sendMessage(initialMessage, { suppressDisplay: true });
   }, [task, productivityJourney, sendMessage]);
 
   // Sub-task interaction handlers
