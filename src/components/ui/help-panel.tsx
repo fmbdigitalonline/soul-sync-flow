@@ -11,8 +11,8 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
-  ExternalLink,
-  Lightbulb
+  Lightbulb,
+  MessageCircle
 } from 'lucide-react';
 import { AssistanceResponse } from '@/services/interactive-assistance-service';
 
@@ -81,7 +81,10 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
   };
 
   const HelpTypeIcon = getHelpTypeIcon(response.helpType);
-  const progressPercentage = Math.round((completedSteps.size / response.actionableSteps.length) * 100);
+  const totalSteps = response.actionableSteps.length;
+  const progressPercentage = totalSteps > 0
+    ? Math.round((completedSteps.size / totalSteps) * 100)
+    : 0;
 
   return (
     <Card className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
@@ -93,9 +96,20 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
           </div>
           <div>
             <h3 className="font-semibold text-gray-800 text-sm">Interactive Help</h3>
-            <Badge variant="outline" className={`text-xs ${getHelpTypeColor(response.helpType)}`}>
-              {response.helpType.replace('_', ' ')}
-            </Badge>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <Badge variant="outline" className={`text-xs ${getHelpTypeColor(response.helpType)}`}>
+                {response.helpType.replace('_', ' ')}
+              </Badge>
+              {response.isFollowUp && (
+                <Badge variant="outline" className="text-xs bg-yellow-50 border-yellow-200 text-yellow-700">
+                  <MessageCircle className="h-3 w-3 mr-1" />
+                  Follow-up help
+                  {typeof response.followUpDepth === 'number' && response.followUpDepth > 0 && (
+                    <span className="ml-1">#{response.followUpDepth}</span>
+                  )}
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
         

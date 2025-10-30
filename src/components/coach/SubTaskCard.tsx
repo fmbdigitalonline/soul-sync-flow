@@ -82,7 +82,20 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
         message,
         previousHelp
       );
-      setAssistanceResponse(response);
+      const previousContext = previousHelp;
+      const currentSummary = summarizeAssistanceResponse(response);
+      const aggregatedContext = previousContext
+        ? `${previousContext}\n\n---\n\n${currentSummary}`
+        : currentSummary;
+
+      const enrichedResponse: AssistanceResponse = {
+        ...response,
+        isFollowUp: !!assistanceResponse,
+        followUpDepth: assistanceResponse ? (assistanceResponse.followUpDepth ?? 0) + 1 : 0,
+        previousHelpContext: aggregatedContext
+      };
+
+      setAssistanceResponse(enrichedResponse);
     } catch (error) {
       console.error('Failed to get assistance:', error);
     } finally {

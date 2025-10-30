@@ -30,6 +30,9 @@ export interface AssistanceResponse {
   timeEstimate?: string;
   successCriteria: string[];
   timestamp: Date;
+  isFollowUp?: boolean;
+  followUpDepth?: number;
+  previousHelpContext?: string;
 }
 
 export interface HelpTemplate {
