@@ -11,6 +11,7 @@ export interface AssistanceRequest {
   helpType: 'stuck' | 'need_details' | 'how_to' | 'examples';
   userMessage?: string;
   context: any;
+  previousHelp?: string;
   timestamp: Date;
 }
 
@@ -175,17 +176,24 @@ class InteractiveAssistanceService {
     subTaskTitle: string,
     helpType: 'stuck' | 'need_details' | 'how_to' | 'examples',
     context: any,
-    userMessage?: string
+    userMessage?: string,
+    previousHelp?: string
   ): Promise<AssistanceResponse> {
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
+    const requestContext = {
+      ...context,
+      ...(previousHelp ? { previousHelp } : {})
+    };
+
     const request: AssistanceRequest = {
       id: requestId,
       subTaskId,
       subTaskTitle,
       helpType,
       userMessage,
-      context,
+      context: requestContext,
+      previousHelp,
       timestamp: new Date()
     };
 
@@ -198,7 +206,8 @@ class InteractiveAssistanceService {
       subtask_title: subTaskTitle,
       help_type: helpType,
       user_message: userMessage?.substring(0, 100),
-      context: context
+      context: requestContext,
+      has_previous_help: !!previousHelp
     });
 
     // Generate contextual assistance
@@ -494,12 +503,16 @@ class InteractiveAssistanceService {
   private buildGenericSystemPrompt(request: AssistanceRequest, context: Record<string, any>): string {
     const focusArea = this.getFocusAreaInstructions(request.helpType);
     const contextSummary = JSON.stringify(context || {});
+    const previousHelpSection = request.previousHelp
+      ? `\nPREVIOUS HELP PROVIDED:\n${request.previousHelp}\n\nThe user is asking for clarification or additional help about the above guidance.`
+      : '';
 
     return `You are SoulSync's structured task assistant. Your job is to provide short, concrete support that keeps people moving.
 
 TASK TITLE: ${request.subTaskTitle}
 HELP TYPE: ${request.helpType}
 USER CONTEXT: ${contextSummary}
+${previousHelpSection}
 
 RESPONSE RULES:
 1. Always respond by calling the tool \"provide_hermetic_task_assistance\" with valid JSON.
@@ -515,7 +528,6 @@ ${focusArea}
 
 If the user context is empty, infer sensible defaults from the task title.`;
   }
-
   private getFocusAreaInstructions(helpType: AssistanceRequest['helpType']): string {
     const joiner = (lines: string[]) => lines.join('\n');
 
