@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useJourneyTracking } from '@/hooks/use-journey-tracking';
-import { getTaskSessionType, TaskSessionType } from '@/utils/task-session';
+import { getTaskSessionType, getTaskSessionTypeAsync, TaskSessionType } from '@/utils/task-session';
 
 export type TaskStatus = 'todo' | 'in_progress' | 'stuck' | 'completed';
 
@@ -55,42 +55,104 @@ function normalizeTask(goalId: string, rawTask: any): ResumableTask | null {
 
 export function useResumableTasks(sessionRefreshKey = 0) {
   const { productivityJourney } = useJourneyTracking();
+  const [resumableTasksByGoal, setResumableTasksByGoal] = useState<Map<string, ResumableTask[]>>(new Map());
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const resumableTasksByGoal = useMemo(() => {
-    const map = new Map<string, ResumableTask[]>();
+  useEffect(() => {
+    let isMounted = true;
 
-    const goals = Array.isArray(productivityJourney?.current_goals)
-      ? productivityJourney?.current_goals
-      : [];
+    const determineResumableTasks = async () => {
+      setIsLoading(true);
+      setError(null);
 
-    goals.forEach((goal: any) => {
-      const goalId = goal?.id ? String(goal.id) : undefined;
-      if (!goalId) {
-        return;
-      }
+      try {
+        const goals = Array.isArray(productivityJourney?.current_goals)
+          ? productivityJourney.current_goals
+          : [];
 
-      const rawTasks = Array.isArray(goal?.tasks) ? goal.tasks : [];
+        const sessionChecks: Promise<{ goalId: string; task: ResumableTask } | null>[] = [];
 
-      rawTasks.forEach((rawTask: any) => {
-        const task = normalizeTask(goalId, rawTask);
-        if (!task) {
+        goals.forEach((goal: any) => {
+          const goalId = goal?.id ? String(goal.id) : undefined;
+          if (!goalId) {
+            return;
+          }
+
+          const rawTasks = Array.isArray(goal?.tasks) ? goal.tasks : [];
+
+          rawTasks.forEach((rawTask: any) => {
+            const task = normalizeTask(goalId, rawTask);
+            if (!task) {
+              return;
+            }
+
+            const immediateType = getTaskSessionType(task.id);
+            if (immediateType === TaskSessionType.WORK_INSTRUCTION_SESSION) {
+              sessionChecks.push(Promise.resolve({ goalId, task }));
+              return;
+            }
+
+            sessionChecks.push(
+              getTaskSessionTypeAsync(task.id)
+                .then(sessionType => {
+                  if (sessionType === TaskSessionType.WORK_INSTRUCTION_SESSION) {
+                    return { goalId, task };
+                  }
+                  return null;
+                })
+                .catch(error => {
+                  console.error('Failed to evaluate task session type', error);
+                  return null;
+                })
+            );
+          });
+        });
+
+        const results = await Promise.all(sessionChecks);
+        if (!isMounted) {
           return;
         }
 
-        const sessionType = getTaskSessionType(task.id);
-        if (sessionType === TaskSessionType.WORK_INSTRUCTION_SESSION) {
-          if (!map.has(goalId)) {
-            map.set(goalId, []);
+        const map = new Map<string, ResumableTask[]>();
+        results.forEach(result => {
+          if (!result) {
+            return;
           }
 
-          map.get(goalId)!.push(task);
-        }
-      });
-    });
+          if (!map.has(result.goalId)) {
+            map.set(result.goalId, []);
+          }
 
-    return map;
+          map.get(result.goalId)!.push(result.task);
+        });
+
+        setResumableTasksByGoal(map);
+      } catch (err) {
+        if (!isMounted) {
+          return;
+        }
+
+        const message = err instanceof Error ? err.message : 'Failed to load resumable tasks';
+        setError(message);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    determineResumableTasks();
+
+    return () => {
+      isMounted = false;
+    };
   }, [productivityJourney?.current_goals, sessionRefreshKey]);
 
-  return { resumableTasksByGoal };
+  return useMemo(() => ({
+    resumableTasksByGoal,
+    isLoading,
+    error
+  }), [resumableTasksByGoal, isLoading, error]);
 }
 

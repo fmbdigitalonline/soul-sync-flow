@@ -37,7 +37,22 @@ export const AllDreamsList: React.FC<AllDreamsListProps> = ({
   const { isMobile, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
   const { t } = useLanguage();
   const { toast } = useToast();
-  const { resumableTasksByGoal } = useResumableTasks(sessionRefreshKey);
+  const {
+    resumableTasksByGoal,
+    isLoading: isLoadingResumable,
+    error: resumableError
+  } = useResumableTasks(sessionRefreshKey);
+
+  React.useEffect(() => {
+    if (!resumableError) return;
+
+    console.error('Failed to load resumable tasks for dreams list', resumableError);
+    toast({
+      title: 'Unable to check resumable plans',
+      description: resumableError,
+      variant: 'destructive'
+    });
+  }, [resumableError, toast]);
 
   const handleDeleteGoal = async (goalId: string) => {
     if (confirm('Are you sure you want to delete this dream? This action cannot be undone.')) {
@@ -117,8 +132,8 @@ export const AllDreamsList: React.FC<AllDreamsListProps> = ({
             Your complete journey overview
           </p>
         </div>
-        
-        <Button 
+
+        <Button
           onClick={onCreateNew}
           className={`bg-primary hover:bg-primary/90 ${touchTargetSize}`}
           size="sm"
@@ -127,6 +142,13 @@ export const AllDreamsList: React.FC<AllDreamsListProps> = ({
           {!isMobile && 'New Dream'}
         </Button>
       </div>
+
+      {isLoadingResumable && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          <span>Checking resumable plans...</span>
+        </div>
+      )}
 
       {/* All Goals Grid - Mobile Responsive */}
       <div className={`grid gap-4 ${

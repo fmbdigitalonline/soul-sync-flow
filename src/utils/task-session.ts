@@ -1,3 +1,6 @@
+import { supabase } from '@/integrations/supabase/client';
+import { workingInstructionsPersistenceService, type WorkingInstruction } from '@/services/working-instructions-persistence-service';
+
 export enum TaskSessionType {
   NO_SESSION = 'NO_SESSION',
   BASIC_SESSION = 'BASIC_SESSION',
@@ -28,6 +31,129 @@ type TaskSessionPayload = {
 };
 
 const isBrowser = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+
+export interface LoadTaskSessionOptions {
+  taskTitle?: string;
+}
+
+export interface TaskSessionLoadResult {
+  session: StoredTaskSession | null;
+  source: 'localStorage' | 'database' | 'none';
+}
+
+function formatWorkingInstructionsMessage(instructions: WorkingInstruction[], options: LoadTaskSessionOptions = {}): string {
+  const introSegments = [
+    `Let's resume your task${options.taskTitle ? ` "${options.taskTitle}"` : ''}.`,
+    'Here are the working instructions we saved to keep you moving forward.',
+    'Follow these working instructions carefully and mark each one complete as you finish it.'
+  ];
+
+  const formattedSteps = instructions.map((instruction, index) => {
+    const stepNumber = index + 1;
+    const lines: string[] = [`${stepNumber}. **${instruction.title}**:`];
+
+    if (instruction.description?.trim()) {
+      lines.push(`   ${instruction.description.trim()}`);
+    }
+
+    if (instruction.timeEstimate?.trim()) {
+      lines.push(`   Time estimate: ${instruction.timeEstimate.trim()}`);
+    }
+
+    if (instruction.toolsNeeded && instruction.toolsNeeded.length > 0) {
+      const toolList = instruction.toolsNeeded
+        .map(tool => {
+          if (typeof tool === 'string') return tool;
+          if (tool && typeof tool === 'object' && 'name' in tool) {
+            return String((tool as { name: string }).name);
+          }
+          try {
+            return JSON.stringify(tool);
+          } catch {
+            return String(tool);
+          }
+        })
+        .filter(Boolean)
+        .join(', ');
+
+      if (toolList.trim().length > 0) {
+        lines.push(`   Tools needed: ${toolList}`);
+      }
+    }
+
+    return lines.join('\n');
+  });
+
+  const outro = 'Once you have completed every step, check in so we can wrap this task together.';
+
+  return `${introSegments.join(' ')}\n\n${formattedSteps.join('\n\n')}\n\n${outro}`;
+}
+
+async function loadTaskSessionFromDatabase(taskId: string, options: LoadTaskSessionOptions = {}): Promise<StoredTaskSession | null> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return null;
+    }
+
+    const instructions = await workingInstructionsPersistenceService.loadWorkingInstructions(taskId);
+    if (!instructions || instructions.length === 0) {
+      return null;
+    }
+
+    const { data: progressData, error: progressError } = await supabase
+      .from('task_instruction_progress')
+      .select('instruction_id, is_completed')
+      .eq('user_id', user.id)
+      .eq('task_id', taskId);
+
+    if (progressError) {
+      throw progressError;
+    }
+
+    const instructionProgress: Record<string, boolean> = {};
+    progressData?.forEach(entry => {
+      if (entry?.instruction_id && entry.is_completed) {
+        instructionProgress[entry.instruction_id] = true;
+      }
+    });
+
+    const messageContent = formatWorkingInstructionsMessage(instructions, options);
+    const now = new Date().toISOString();
+
+    const coachMessages: StoredCoachMessage[] = [{
+      id: `db-seeded-${taskId}-${Date.now()}`,
+      content: messageContent,
+      isUser: false,
+      timestamp: now,
+      agentMode: 'guide'
+    }];
+
+    return {
+      taskId,
+      updatedAt: now,
+      coachMessages,
+      instructionProgress: Object.keys(instructionProgress).length > 0 ? instructionProgress : undefined
+    };
+  } catch (error) {
+    console.error('Failed to hydrate task session from database', error);
+    return null;
+  }
+}
+
+export async function loadTaskSessionWithDbFallback(taskId: string, options: LoadTaskSessionOptions = {}): Promise<TaskSessionLoadResult> {
+  const localSession = loadStoredTaskSession(taskId);
+  if (localSession) {
+    return { session: localSession, source: 'localStorage' };
+  }
+
+  const dbSession = await loadTaskSessionFromDatabase(taskId, options);
+  if (dbSession) {
+    return { session: dbSession, source: 'database' };
+  }
+
+  return { session: null, source: 'none' };
+}
 
 export function loadStoredTaskSession(taskId: string): StoredTaskSession | null {
   if (!isBrowser) return null;
@@ -113,4 +239,22 @@ export function getTaskSessionType(taskId: string): TaskSessionType {
 
 export function hasWorkingInstructionMessage(content: string): boolean {
   return WORKING_INSTRUCTION_REGEX.test(content);
+}
+
+export async function getTaskSessionTypeAsync(taskId: string): Promise<TaskSessionType> {
+  const localType = getTaskSessionType(taskId);
+  if (localType !== TaskSessionType.NO_SESSION) {
+    return localType;
+  }
+
+  try {
+    const hasStored = await workingInstructionsPersistenceService.hasStoredInstructions(taskId);
+    if (hasStored) {
+      return TaskSessionType.WORK_INSTRUCTION_SESSION;
+    }
+  } catch (error) {
+    console.error('Failed to determine task session type from database', error);
+  }
+
+  return TaskSessionType.NO_SESSION;
 }
