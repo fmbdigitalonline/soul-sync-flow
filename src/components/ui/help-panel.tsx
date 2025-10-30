@@ -3,16 +3,17 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AssistanceButton } from '@/components/ui/assistance-button';
-import { 
-  CheckCircle2, 
-  Clock, 
-  Wrench, 
+import {
+  CheckCircle2,
+  Clock,
+  Wrench,
   Target,
   ChevronDown,
   ChevronUp,
   Copy,
   Lightbulb,
-  MessageCircle
+  MessageCircle,
+  Loader2
 } from 'lucide-react';
 import { AssistanceResponse } from '@/services/interactive-assistance-service';
 
@@ -24,13 +25,15 @@ interface HelpPanelProps {
     customMessage?: string
   ) => void;
   compact?: boolean;
+  isLoading?: boolean;
 }
 
 export const HelpPanel: React.FC<HelpPanelProps> = ({
   response,
   onCopyStep,
   onAssistanceRequest,
-  compact = false
+  compact = false,
+  isLoading = false
 }) => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['steps']));
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
@@ -122,10 +125,16 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
       </div>
 
       {/* Content */}
-      <div className="mb-4">
+      <div className="mb-4 space-y-2">
         <p className="text-sm text-gray-700 leading-relaxed">
           {response.content}
         </p>
+        {isLoading && (
+          <div className="flex items-center text-xs text-blue-600">
+            <Loader2 className="h-3 w-3 animate-spin mr-2" />
+            Loading follow-up help...
+          </div>
+        )}
       </div>
 
       {/* Progress Bar */}
@@ -285,21 +294,29 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
             <AssistanceButton
               type="stuck"
               onRequest={(type, msg) => onAssistanceRequest(type, msg)}
+              isLoading={isLoading}
+              hasResponse={true}
               compact={true}
             />
             <AssistanceButton
               type="need_details"
               onRequest={(type, msg) => onAssistanceRequest(type, msg)}
+              isLoading={isLoading}
+              hasResponse={true}
               compact={true}
             />
             <AssistanceButton
               type="how_to"
               onRequest={(type, msg) => onAssistanceRequest(type, msg)}
+              isLoading={isLoading}
+              hasResponse={true}
               compact={true}
             />
             <AssistanceButton
               type="examples"
               onRequest={(type, msg) => onAssistanceRequest(type, msg)}
+              isLoading={isLoading}
+              hasResponse={true}
               compact={true}
             />
           </div>
