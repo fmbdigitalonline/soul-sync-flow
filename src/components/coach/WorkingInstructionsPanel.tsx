@@ -34,6 +34,46 @@ interface WorkingInstructionsPanelProps {
   onProgressChange?: (completedInstructionIds: string[]) => void;
 }
 
+const summarizeAssistanceResponse = (response: AssistanceResponse): string => {
+  const sections: string[] = [];
+
+  if (response.content) {
+    sections.push(response.content);
+  }
+
+  if (response.actionableSteps?.length) {
+    const steps = response.actionableSteps
+      .map((step, index) => `${index + 1}. ${step}`)
+      .join('\n');
+    sections.push(`Actionable steps:\n${steps}`);
+  }
+
+  if (response.toolsNeeded?.length) {
+    sections.push(`Tools suggested: ${response.toolsNeeded.join(', ')}`);
+  }
+
+  if (response.successCriteria?.length) {
+    const criteria = response.successCriteria
+      .map((item, index) => `${index + 1}. ${item}`)
+      .join('\n');
+    sections.push(`Success criteria:\n${criteria}`);
+  }
+
+  if (response.timeEstimate) {
+    sections.push(`Estimated time: ${response.timeEstimate}`);
+  }
+
+  return sections.join('\n\n');
+};
+
+const buildPreviousHelpContext = (response?: AssistanceResponse): string | undefined => {
+  if (!response) {
+    return undefined;
+  }
+
+  return response.previousHelpContext ?? summarizeAssistanceResponse(response);
+};
+
 export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> = ({
   instructions,
   taskId,
@@ -108,32 +148,48 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     message?: string
   ) => {
     setIsRequestingHelp(prev => new Map(prev).set(instructionId, true));
-    
+
     try {
       const instruction = instructions.find(i => i.id === instructionId);
-      
+      const previousResponse = assistanceResponses.get(instructionId);
+      const previousHelp = buildPreviousHelpContext(previousResponse);
+
       console.log('🔍 WORKING INSTRUCTIONS: Requesting assistance', {
         instructionId,
         instructionTitle,
         type,
-        hasHermeticIntelligence: !!hermeticIntelligence
+        hasHermeticIntelligence: !!hermeticIntelligence,
+        hasPreviousHelp: !!previousHelp
       });
 
       const response = await interactiveAssistanceService.requestAssistance(
         instructionId,
         instructionTitle,
         type,
-        { 
+        {
           instruction,
           description: instruction?.description,
           timeEstimate: instruction?.timeEstimate,
           toolsNeeded: instruction?.toolsNeeded,
           hermeticIntelligence // Pass Hermetic Intelligence for personalization
         },
-        message
+        message,
+        previousHelp
       );
-      
-      setAssistanceResponses(prev => new Map(prev).set(instructionId, response));
+      const previousContext = previousHelp;
+      const currentSummary = summarizeAssistanceResponse(response);
+      const aggregatedContext = previousContext
+        ? `${previousContext}\n\n---\n\n${currentSummary}`
+        : currentSummary;
+
+      const enrichedResponse: AssistanceResponse = {
+        ...response,
+        isFollowUp: !!previousResponse,
+        followUpDepth: previousResponse ? (previousResponse.followUpDepth ?? 0) + 1 : 0,
+        previousHelpContext: aggregatedContext
+      };
+
+      setAssistanceResponses(prev => new Map(prev).set(instructionId, enrichedResponse));
     } catch (error) {
       console.error('Failed to get assistance:', error);
     } finally {
@@ -143,7 +199,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
         return updated;
       });
     }
-  }, [instructions, hermeticIntelligence]);
+  }, [instructions, hermeticIntelligence, assistanceResponses]);
 
   React.useEffect(() => {
     if (onProgressChange) {
@@ -316,15 +372,19 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
                     <div className="mt-3 pt-3 border-t border-gray-100">
                       <HelpPanel
                         response={assistanceResponses.get(instruction.id)!}
-                        onActionClick={(action) => {
-                          if (action === 'need_more_help') {
-                            handleAssistanceRequest(
-                              instruction.id, 
-                              instruction.title, 
-                              'stuck', 
-                              'I need more specific help with this step'
-                            );
-                          }
+                        onAssistanceRequest={(type, customMessage) => {
+                          const previousResponse = assistanceResponses.get(instruction.id);
+                          const contextMessage = customMessage ||
+                            (previousResponse?.content
+                              ? `I need more help understanding: "${previousResponse.content}"`
+                              : undefined);
+
+                          handleAssistanceRequest(
+                            instruction.id,
+                            instruction.title,
+                            type,
+                            contextMessage
+                          );
                         }}
                         compact={true}
                       />
