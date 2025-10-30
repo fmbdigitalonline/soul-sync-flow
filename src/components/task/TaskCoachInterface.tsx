@@ -27,7 +27,7 @@ import { SubTaskManager } from "./SubTaskManager";
 import { SmartQuickActions } from "./SmartQuickActions";
 import { QuickActions } from "./QuickActions";
 import { TaskCoachMessageRenderer } from "./TaskCoachMessageRenderer";
-import { ParsedSubTask } from "@/services/coach-message-parser";
+import { CoachMessageParser, ParsedSubTask } from "@/services/coach-message-parser";
 import { enhancedTaskCoachIntegrationService } from "@/services/enhanced-task-coach-integration-service";
 import { dreamActivityLogger } from "@/services/dream-activity-logger";
 import { TaskContext } from "@/services/task-coach-integration-service";
@@ -64,6 +64,7 @@ interface CoachMessage {
   agentMode: AgentMode;
   interventionApplied?: boolean;
   fallbackUsed?: boolean;
+  suppressDisplay?: boolean;
 }
 
 export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
@@ -120,6 +121,25 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       .filter(([, isCompleted]) => isCompleted)
       .map(([instructionId]) => instructionId),
     [instructionProgress]
+  );
+
+  const visibleMessages = useMemo(
+    () =>
+      coachMessages.filter(msg => {
+        // Hide system-generated prompts
+        if (msg.suppressDisplay) return false;
+
+        // Hide AI "thinking" responses that precede working instructions
+        // (AI responses that don't parse as structured content)
+        if (!msg.isUser) {
+          const parsedMessage = CoachMessageParser.parseMessage(msg.content);
+          // Only show if it's structured (working_instructions, breakdown, guidance)
+          return parsedMessage.type !== 'text';
+        }
+
+        return true;
+      }),
+    [coachMessages]
   );
 
   // Calculate total days for progress tracking
@@ -318,7 +338,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
             content: sanitizeContent(storedMessage.content),
             isUser: storedMessage.isUser,
             timestamp: storedMessage.timestamp ? new Date(storedMessage.timestamp) : new Date(),
-            agentMode: (storedMessage.agentMode as AgentMode) || 'guide'
+            agentMode: (storedMessage.agentMode as AgentMode) || 'guide',
+            suppressDisplay: storedMessage.suppressDisplay
           }));
         });
 
@@ -350,7 +371,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
         content: sanitizeContent(msg.content),
         isUser: msg.sender === 'user',
         timestamp: msg.timestamp,
-        agentMode: 'guide' as AgentMode
+        agentMode: 'guide' as AgentMode,
+        suppressDisplay: msg.suppressDisplay
       }))
       .filter(msg => msg.content.trim().length > 0);
     setCoachMessages(convertedMessages);
@@ -367,7 +389,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       content: message.content,
       isUser: message.isUser,
       timestamp: message.timestamp instanceof Date ? message.timestamp.toISOString() : undefined,
-      agentMode: message.agentMode
+      agentMode: message.agentMode,
+      suppressDisplay: message.suppressDisplay
     }));
 
     saveTaskSession(task.id, {
@@ -914,7 +937,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
           ) : (
             <>
               <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4 space-y-4 min-h-0">
-                {coachMessages.map((message) => (
+                {visibleMessages.map((message) => (
                   <TaskCoachMessageRenderer
                     key={message.id}
                     content={message.content}

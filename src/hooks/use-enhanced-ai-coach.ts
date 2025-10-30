@@ -11,6 +11,7 @@ export interface Message {
   sender: 'user' | 'assistant';
   timestamp: Date;
   agent_mode?: string;
+  suppressDisplay?: boolean;
 }
 
 export type AgentType = "coach" | "guide" | "blend" | "dream";
