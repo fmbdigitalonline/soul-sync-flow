@@ -29,7 +29,7 @@ import { useUserProfile } from '@/hooks/use-user-profile';
 // Phase 3: Advanced Intelligence Integration
 import { useConversationRecovery } from '@/hooks/use-conversation-recovery';
 import { useTieredMemory } from '@/hooks/use-tiered-memory';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { usePIEEnhancedCoach } from '@/hooks/use-pie-enhanced-coach';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEnhancedFeedbackSystem } from '@/hooks/use-enhanced-feedback-system';
@@ -449,13 +449,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       if (shadowAdvice) {
         console.log('🎯 FloatingHACSOrb: Showing shadow advice');
         // Use toast to show shadow advice
-        import('@/hooks/use-toast').then(({ useToast }) => {
-          const { toast } = useToast();
-          toast({
-            title: "Shadow Insight",
-            description: shadowAdvice,
-            duration: 8000,
-          });
+        toast({
+          title: "Shadow Insight",
+          description: shadowAdvice,
+          duration: 8000,
         });
         return;
       }
