@@ -115,26 +115,28 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
   }, []);
 
   const sendMessage = useCallback(async (
-    message: string, 
-    usePersonalization: boolean = true, 
-    originalMessage?: string
+    message: string,
+    isEnhanced: boolean = true,
+    displayMessage?: string,
+    options?: { suppressDisplay?: boolean }
   ): Promise<void> => {
     if (!message.trim()) return;
-    
+
     const userMessage: Message = {
       id: `user-${Date.now()}`,
-      content: originalMessage || message,
+      content: displayMessage || message,
       sender: 'user',
       timestamp: new Date(),
-      agent_mode: currentAgent
+      agent_mode: currentAgent,
+      suppressDisplay: options?.suppressDisplay ?? false
     };
-    
+
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
-    
+
     // Process message with subconscious orb (non-blocking)
     if (subconsciousEnabled) {
-      processSubconsciousMessage(originalMessage || message, userMessage.id).catch(error => {
+      processSubconsciousMessage(displayMessage || message, userMessage.id).catch(error => {
         console.error('🚨 Subconscious orb processing error:', error);
       });
     }
@@ -175,7 +177,7 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
       await aiCoachService.sendStreamingMessage(
         message,
         sessionIdRef.current,
-        usePersonalization,
+        isEnhanced,
         currentAgent,
         'en',
         {
@@ -239,7 +241,7 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
         const response = await aiCoachService.sendMessage(
           message,
           sessionIdRef.current,
-          usePersonalization,
+          isEnhanced,
           currentAgent,
           'en',
           userName
