@@ -276,7 +276,7 @@ Please provide guidance focused on task completion and productivity, avoiding ge
       console.log('📤 Sending task-aware message to coach');
       
       // Send only the original user message to be displayed in chat
-      await sendMessage(enhancedMessage, true, message);
+      await sendMessage(enhancedMessage, true, message, { suppressDisplay: true });
       
       const messageTime = Date.now() - messageStartTime;
       setMessageCount(prev => prev + 1);
