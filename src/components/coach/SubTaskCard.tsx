@@ -5,13 +5,12 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AssistanceButton } from '@/components/ui/assistance-button';
 import { HelpPanel } from '@/components/ui/help-panel';
-import { 
-  CheckCircle2, 
-  Circle, 
-  Play, 
-  Clock, 
-  Zap,
-  ArrowRight 
+import {
+  CheckCircle2,
+  Circle,
+  Play,
+  Clock,
+  Zap
 } from 'lucide-react';
 import { ParsedSubTask } from '@/services/coach-message-parser';
 import { interactiveAssistanceService, AssistanceResponse } from '@/services/interactive-assistance-service';
@@ -22,6 +21,42 @@ interface SubTaskCardProps {
   onToggleComplete: (subTask: ParsedSubTask) => void;
   compact?: boolean;
 }
+
+const formatPreviousHelpContext = (response?: AssistanceResponse): string | undefined => {
+  if (!response) {
+    return undefined;
+  }
+
+  const sections: string[] = [];
+
+  if (response.content) {
+    sections.push(response.content);
+  }
+
+  if (response.actionableSteps?.length) {
+    const steps = response.actionableSteps
+      .map((step, index) => `${index + 1}. ${step}`)
+      .join('\n');
+    sections.push(`Actionable steps:\n${steps}`);
+  }
+
+  if (response.toolsNeeded?.length) {
+    sections.push(`Tools suggested: ${response.toolsNeeded.join(', ')}`);
+  }
+
+  if (response.successCriteria?.length) {
+    const criteria = response.successCriteria
+      .map((item, index) => `${index + 1}. ${item}`)
+      .join('\n');
+    sections.push(`Success criteria:\n${criteria}`);
+  }
+
+  if (response.timeEstimate) {
+    sections.push(`Estimated time: ${response.timeEstimate}`);
+  }
+
+  return sections.join('\n\n');
+};
 
 export const SubTaskCard: React.FC<SubTaskCardProps> = ({
   subTask,
@@ -37,12 +72,15 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
   ) => {
     setIsRequestingHelp(true);
     try {
+      const previousHelp = formatPreviousHelpContext(assistanceResponse || undefined);
+
       const response = await interactiveAssistanceService.requestAssistance(
         subTask.id,
         subTask.title,
         type,
         { subTask, compact },
-        message
+        message,
+        previousHelp
       );
       setAssistanceResponse(response);
     } catch (error) {
@@ -163,10 +201,13 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
       {assistanceResponse && (
         <HelpPanel
           response={assistanceResponse}
-          onActionClick={(action) => {
-            if (action === 'need_more_help') {
-              handleAssistanceRequest('stuck', 'I need more specific help with this step');
-            }
+          onAssistanceRequest={(type, customMessage) => {
+            const contextMessage = customMessage ||
+              (assistanceResponse.content
+                ? `I need more help understanding: "${assistanceResponse.content}"`
+                : undefined);
+
+            handleAssistanceRequest(type, contextMessage);
           }}
           compact={compact}
         />

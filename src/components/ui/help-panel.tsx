@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AssistanceButton } from '@/components/ui/assistance-button';
 import { 
   CheckCircle2, 
   Clock, 
@@ -17,15 +18,18 @@ import { AssistanceResponse } from '@/services/interactive-assistance-service';
 
 interface HelpPanelProps {
   response: AssistanceResponse;
-  onActionClick?: (action: string) => void;
   onCopyStep?: (step: string) => void;
+  onAssistanceRequest?: (
+    type: 'stuck' | 'need_details' | 'how_to' | 'examples',
+    customMessage?: string
+  ) => void;
   compact?: boolean;
 }
 
 export const HelpPanel: React.FC<HelpPanelProps> = ({
   response,
-  onActionClick,
   onCopyStep,
+  onAssistanceRequest,
   compact = false
 }) => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['steps']));
@@ -259,25 +263,32 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
         </div>
       )}
 
-      {/* Quick Actions */}
-      {onActionClick && (
-        <div className="mt-4 pt-3 border-t border-gray-200 flex gap-2">
-          <Button
-            onClick={() => onActionClick('need_more_help')}
-            variant="outline"
-            size="sm"
-            className="text-xs px-3 py-1"
-          >
-            Still need help?
-          </Button>
-          <Button
-            onClick={() => onActionClick('working_well')}
-            variant="outline"
-            size="sm"
-            className="text-xs px-3 py-1"
-          >
-            This is working! ✓
-          </Button>
+      {/* Assistance Buttons - Request more specific help */}
+      {onAssistanceRequest && (
+        <div className="mt-4 pt-3 border-t border-gray-200">
+          <p className="text-xs text-gray-600 mb-2">Need more specific help?</p>
+          <div className="flex flex-wrap gap-1">
+            <AssistanceButton
+              type="stuck"
+              onRequest={(type, msg) => onAssistanceRequest(type, msg)}
+              compact={true}
+            />
+            <AssistanceButton
+              type="need_details"
+              onRequest={(type, msg) => onAssistanceRequest(type, msg)}
+              compact={true}
+            />
+            <AssistanceButton
+              type="how_to"
+              onRequest={(type, msg) => onAssistanceRequest(type, msg)}
+              compact={true}
+            />
+            <AssistanceButton
+              type="examples"
+              onRequest={(type, msg) => onAssistanceRequest(type, msg)}
+              compact={true}
+            />
+          </div>
         </div>
       )}
     </Card>
