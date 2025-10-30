@@ -64,6 +64,7 @@ interface CoachMessage {
   agentMode: AgentMode;
   interventionApplied?: boolean;
   fallbackUsed?: boolean;
+  suppressDisplay?: boolean;
 }
 
 export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
