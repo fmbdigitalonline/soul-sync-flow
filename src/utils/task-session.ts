@@ -13,6 +13,7 @@ export interface StoredCoachMessage {
   isUser: boolean;
   timestamp?: string;
   agentMode?: string;
+  suppressDisplay?: boolean;
 }
 
 export interface StoredTaskSession {
@@ -172,7 +173,8 @@ export function loadStoredTaskSession(taskId: string): StoredTaskSession | null 
         content: typeof message?.content === 'string' ? message.content : '',
         isUser: Boolean(message?.isUser),
         timestamp: typeof message?.timestamp === 'string' ? message.timestamp : undefined,
-        agentMode: typeof message?.agentMode === 'string' ? message.agentMode : undefined
+        agentMode: typeof message?.agentMode === 'string' ? message.agentMode : undefined,
+        suppressDisplay: typeof message?.suppressDisplay === 'boolean' ? message.suppressDisplay : undefined
       }))
       .filter((message: StoredCoachMessage) => message.content.trim().length > 0);
 
