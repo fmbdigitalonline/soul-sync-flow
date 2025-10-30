@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  HelpCircle, 
-  MessageCircle, 
-  Lightbulb, 
+import {
+  HelpCircle,
+  MessageCircle,
+  Lightbulb,
   BookOpen,
   ChevronDown,
   ChevronUp,
-  Clock,
-  CheckCircle2
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
 
 export interface AssistanceButtonProps {
@@ -61,6 +61,10 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
   const Icon = config.icon;
 
   const handleRequest = () => {
+    if (isLoading) {
+      return;
+    }
+
     onRequest(type, customMessage || undefined);
     setCustomMessage('');
     setExpanded(false);
@@ -76,11 +80,13 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
       <Badge
         variant="outline"
         onClick={handleRequest}
-        className="text-xs cursor-pointer hover:bg-gray-50 transition-colors inline-flex items-center gap-1 px-2 py-1 h-7"
+        className={`text-xs cursor-pointer hover:bg-gray-50 transition-colors inline-flex items-center gap-1 px-2 py-1 h-7 ${
+          isLoading ? 'pointer-events-none opacity-70' : ''
+        }`}
       >
         <Icon className={`h-3 w-3 ${config.iconColor}`} />
         <span className="text-foreground">{config.label}</span>
-        {isLoading && <Clock className="h-3 w-3 animate-spin text-muted-foreground" />}
+        {isLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
         {hasResponse && <CheckCircle2 className="h-3 w-3 text-green-600" />}
       </Badge>
     );
@@ -97,7 +103,7 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
         >
           <Icon className={`h-4 w-4 mr-2 ${config.iconColor}`} />
           {config.label}
-          {isLoading && <Clock className="h-4 w-4 ml-2 animate-spin" />}
+          {isLoading && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
           {hasResponse && <CheckCircle2 className="h-4 w-4 ml-2 text-green-600" />}
         </Button>
         

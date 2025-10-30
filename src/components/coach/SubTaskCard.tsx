@@ -10,10 +10,16 @@ import {
   Circle,
   Play,
   Clock,
-  Zap
+  Zap,
+  Loader2
 } from 'lucide-react';
 import { ParsedSubTask } from '@/services/coach-message-parser';
 import { interactiveAssistanceService, AssistanceResponse } from '@/services/interactive-assistance-service';
+import { useToast } from '@/hooks/use-toast';
+import {
+  buildAggregatedAssistanceContext,
+  normalizeAssistanceResponses
+} from '@/utils/assistance-response-utils';
 
 interface SubTaskCardProps {
   subTask: ParsedSubTask;
@@ -22,49 +28,15 @@ interface SubTaskCardProps {
   compact?: boolean;
 }
 
-const formatPreviousHelpContext = (response?: AssistanceResponse): string | undefined => {
-  if (!response) {
-    return undefined;
-  }
-
-  const sections: string[] = [];
-
-  if (response.content) {
-    sections.push(response.content);
-  }
-
-  if (response.actionableSteps?.length) {
-    const steps = response.actionableSteps
-      .map((step, index) => `${index + 1}. ${step}`)
-      .join('\n');
-    sections.push(`Actionable steps:\n${steps}`);
-  }
-
-  if (response.toolsNeeded?.length) {
-    sections.push(`Tools suggested: ${response.toolsNeeded.join(', ')}`);
-  }
-
-  if (response.successCriteria?.length) {
-    const criteria = response.successCriteria
-      .map((item, index) => `${index + 1}. ${item}`)
-      .join('\n');
-    sections.push(`Success criteria:\n${criteria}`);
-  }
-
-  if (response.timeEstimate) {
-    sections.push(`Estimated time: ${response.timeEstimate}`);
-  }
-
-  return sections.join('\n\n');
-};
-
 export const SubTaskCard: React.FC<SubTaskCardProps> = ({
   subTask,
   onStart,
   onToggleComplete,
   compact = false
 }) => {
-  const [assistanceResponse, setAssistanceResponse] = useState<AssistanceResponse | null>(null);
+  const { toast } = useToast();
+
+  const [assistanceResponses, setAssistanceResponses] = useState<AssistanceResponse[]>([]);
   const [isRequestingHelp, setIsRequestingHelp] = useState(false);
   const handleAssistanceRequest = async (
     type: 'stuck' | 'need_details' | 'how_to' | 'examples',
@@ -72,7 +44,8 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
   ) => {
     setIsRequestingHelp(true);
     try {
-      const previousHelp = formatPreviousHelpContext(assistanceResponse || undefined);
+      const normalizedExisting = normalizeAssistanceResponses(assistanceResponses);
+      const previousHelp = buildAggregatedAssistanceContext(normalizedExisting);
 
       const response = await interactiveAssistanceService.requestAssistance(
         subTask.id,
@@ -82,25 +55,51 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
         message,
         previousHelp
       );
-      const previousContext = previousHelp;
-      const currentSummary = summarizeAssistanceResponse(response);
-      const aggregatedContext = previousContext
-        ? `${previousContext}\n\n---\n\n${currentSummary}`
-        : currentSummary;
-
-      const enrichedResponse: AssistanceResponse = {
+      const responseWithMeta: AssistanceResponse = {
         ...response,
-        isFollowUp: !!assistanceResponse,
-        followUpDepth: assistanceResponse ? (assistanceResponse.followUpDepth ?? 0) + 1 : 0,
+        isFollowUp: normalizedExisting.length > 0,
+        followUpDepth: normalizedExisting.length + 1
+      };
+
+      const aggregatedContext = buildAggregatedAssistanceContext([
+        ...normalizedExisting,
+        responseWithMeta
+      ]);
+
+      const responseWithContext: AssistanceResponse = {
+        ...responseWithMeta,
         previousHelpContext: aggregatedContext
       };
 
-      setAssistanceResponse(enrichedResponse);
+      setAssistanceResponses([...normalizedExisting, responseWithContext]);
+
+      toast({
+        title: normalizedExisting.length === 0
+          ? 'Help guidance loaded'
+          : `Follow-up help #${responseWithMeta.followUpDepth} loaded`,
+        description: normalizedExisting.length === 0
+          ? 'Guidance is now available for this step.'
+          : 'New follow-up help has been added below the previous guidance.'
+      });
     } catch (error) {
       console.error('Failed to get assistance:', error);
     } finally {
       setIsRequestingHelp(false);
     }
+  };
+
+  const handleClearAssistance = () => {
+    if (!assistanceResponses.length) {
+      return;
+    }
+
+    setAssistanceResponses([]);
+    setIsRequestingHelp(false);
+
+    toast({
+      title: 'Help cleared',
+      description: 'All help guidance has been removed for this step.'
+    });
   };
 
   const getEnergyColor = (energy?: string) => {
@@ -115,8 +114,8 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
   return (
     <div className="space-y-3">
       <Card className={`transition-colors duration-300 hover:bg-accent/30 ${
-        subTask.completed 
-          ? 'bg-emerald-50 border-emerald-200' 
+        subTask.completed
+          ? 'bg-emerald-50 border-emerald-200'
           : 'bg-white border-gray-200 hover:border-soul-purple/30'
       } ${compact ? 'p-3' : 'p-4'}`}>
         <div className="flex items-start gap-3">
@@ -167,28 +166,28 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
                     type="stuck"
                     onRequest={handleAssistanceRequest}
                     isLoading={isRequestingHelp}
-                    hasResponse={!!assistanceResponse}
+                    hasResponse={assistanceResponses.length > 0}
                     compact={true}
                   />
                   <AssistanceButton
                     type="need_details"
                     onRequest={handleAssistanceRequest}
                     isLoading={isRequestingHelp}
-                    hasResponse={!!assistanceResponse}
+                    hasResponse={assistanceResponses.length > 0}
                     compact={true}
                   />
                   <AssistanceButton
                     type="how_to"
                     onRequest={handleAssistanceRequest}
                     isLoading={isRequestingHelp}
-                    hasResponse={!!assistanceResponse}
+                    hasResponse={assistanceResponses.length > 0}
                     compact={true}
                   />
                   <AssistanceButton
                     type="examples"
                     onRequest={handleAssistanceRequest}
                     isLoading={isRequestingHelp}
-                    hasResponse={!!assistanceResponse}
+                    hasResponse={assistanceResponses.length > 0}
                     compact={true}
                   />
                 </>
@@ -211,19 +210,50 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
       </Card>
 
       {/* Help Panel */}
-      {assistanceResponse && (
-        <HelpPanel
-          response={assistanceResponse}
-          onAssistanceRequest={(type, customMessage) => {
-            const contextMessage = customMessage ||
-              (assistanceResponse.content
-                ? `I need more help understanding: "${assistanceResponse.content}"`
-                : undefined);
+      {(assistanceResponses.length > 0 || isRequestingHelp) && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              Help history
+            </span>
+            {assistanceResponses.length > 0 && (
+              <Button
+                onClick={handleClearAssistance}
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-blue-600 hover:text-blue-700"
+              >
+                Clear all help
+              </Button>
+            )}
+          </div>
 
-            handleAssistanceRequest(type, contextMessage);
-          }}
-          compact={compact}
-        />
+          <div className="space-y-3">
+            {assistanceResponses.map((response, index) => (
+              <HelpPanel
+                key={response.id ?? `${subTask.id}-response-${index}`}
+                response={response}
+                onAssistanceRequest={(type, customMessage) => {
+                  const contextMessage = customMessage ||
+                    (response.content
+                      ? `I need more help understanding: "${response.content}"`
+                      : undefined);
+
+                  handleAssistanceRequest(type, contextMessage);
+                }}
+                compact={compact}
+                isLoading={isRequestingHelp && index === assistanceResponses.length - 1}
+              />
+            ))}
+
+            {isRequestingHelp && assistanceResponses.length === 0 && (
+              <div className="flex items-center text-xs text-blue-600">
+                <Loader2 className="h-3 w-3 animate-spin mr-2" />
+                Loading help guidance...
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
