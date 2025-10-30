@@ -22,7 +22,11 @@ interface SubTaskCardProps {
   compact?: boolean;
 }
 
-const summarizeAssistanceResponse = (response: AssistanceResponse): string => {
+const formatPreviousHelpContext = (response?: AssistanceResponse): string | undefined => {
+  if (!response) {
+    return undefined;
+  }
+
   const sections: string[] = [];
 
   if (response.content) {
@@ -54,14 +58,6 @@ const summarizeAssistanceResponse = (response: AssistanceResponse): string => {
   return sections.join('\n\n');
 };
 
-const buildPreviousHelpContext = (response?: AssistanceResponse): string | undefined => {
-  if (!response) {
-    return undefined;
-  }
-
-  return response.previousHelpContext ?? summarizeAssistanceResponse(response);
-};
-
 export const SubTaskCard: React.FC<SubTaskCardProps> = ({
   subTask,
   onStart,
@@ -76,7 +72,7 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
   ) => {
     setIsRequestingHelp(true);
     try {
-      const previousHelp = buildPreviousHelpContext(assistanceResponse || undefined);
+      const previousHelp = formatPreviousHelpContext(assistanceResponse || undefined);
 
       const response = await interactiveAssistanceService.requestAssistance(
         subTask.id,

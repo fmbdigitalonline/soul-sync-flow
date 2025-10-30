@@ -34,7 +34,11 @@ interface WorkingInstructionsPanelProps {
   onProgressChange?: (completedInstructionIds: string[]) => void;
 }
 
-const summarizeAssistanceResponse = (response: AssistanceResponse): string => {
+const formatPreviousHelpContext = (response?: AssistanceResponse): string | undefined => {
+  if (!response) {
+    return undefined;
+  }
+
   const sections: string[] = [];
 
   if (response.content) {
@@ -64,14 +68,6 @@ const summarizeAssistanceResponse = (response: AssistanceResponse): string => {
   }
 
   return sections.join('\n\n');
-};
-
-const buildPreviousHelpContext = (response?: AssistanceResponse): string | undefined => {
-  if (!response) {
-    return undefined;
-  }
-
-  return response.previousHelpContext ?? summarizeAssistanceResponse(response);
 };
 
 export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> = ({
@@ -152,7 +148,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     try {
       const instruction = instructions.find(i => i.id === instructionId);
       const previousResponse = assistanceResponses.get(instructionId);
-      const previousHelp = buildPreviousHelpContext(previousResponse);
+      const previousHelp = formatPreviousHelpContext(previousResponse);
 
       console.log('🔍 WORKING INSTRUCTIONS: Requesting assistance', {
         instructionId,
@@ -176,20 +172,8 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
         message,
         previousHelp
       );
-      const previousContext = previousHelp;
-      const currentSummary = summarizeAssistanceResponse(response);
-      const aggregatedContext = previousContext
-        ? `${previousContext}\n\n---\n\n${currentSummary}`
-        : currentSummary;
 
-      const enrichedResponse: AssistanceResponse = {
-        ...response,
-        isFollowUp: !!previousResponse,
-        followUpDepth: previousResponse ? (previousResponse.followUpDepth ?? 0) + 1 : 0,
-        previousHelpContext: aggregatedContext
-      };
-
-      setAssistanceResponses(prev => new Map(prev).set(instructionId, enrichedResponse));
+      setAssistanceResponses(prev => new Map(prev).set(instructionId, response));
     } catch (error) {
       console.error('Failed to get assistance:', error);
     } finally {

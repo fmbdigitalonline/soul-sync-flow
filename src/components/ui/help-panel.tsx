@@ -3,10 +3,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AssistanceButton } from '@/components/ui/assistance-button';
-import {
-  CheckCircle2,
-  Clock,
-  Wrench,
+import { 
+  CheckCircle2, 
+  Clock, 
+  Wrench, 
   Target,
   ChevronDown,
   ChevronUp,
