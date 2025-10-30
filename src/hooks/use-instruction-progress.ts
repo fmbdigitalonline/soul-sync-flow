@@ -24,6 +24,7 @@ export function useInstructionProgress(taskId: string, initialCompletedIds: stri
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const latestInitialCompletedIdsRef = useRef(initialCompletedIds);
+  const hasLoadedFromDbRef = useRef(false);
 
   useEffect(() => {
     latestInitialCompletedIdsRef.current = initialCompletedIds;
@@ -31,6 +32,7 @@ export function useInstructionProgress(taskId: string, initialCompletedIds: stri
 
   // Keep track of the initial completion ids to merge with database state
   useEffect(() => {
+    if (hasLoadedFromDbRef.current) return;
     if (initialCompletedIds.length === 0) return;
 
     setCompletedInstructions(prev => {
@@ -65,13 +67,19 @@ export function useInstructionProgress(taskId: string, initialCompletedIds: stri
 
         if (fetchError) throw fetchError;
 
-        const completed = new Set(data?.map(item => item.instruction_id) || []);
-        const merged = new Set<string>();
-        latestInitialCompletedIdsRef.current.forEach(id => merged.add(id));
-        completed.forEach(id => merged.add(id));
-        setCompletedInstructions(merged);
+        const completedFromDb = new Set(data?.map(item => item.instruction_id) || []);
 
-        console.log(`✅ Loaded ${completed.size} completed instructions for task ${taskId}`);
+        if (completedFromDb.size > 0) {
+          setCompletedInstructions(completedFromDb);
+        } else {
+          const mergedFallback = new Set<string>();
+          latestInitialCompletedIdsRef.current.forEach(id => mergedFallback.add(id));
+          setCompletedInstructions(mergedFallback);
+        }
+
+        hasLoadedFromDbRef.current = true;
+
+        console.log(`✅ Loaded ${completedFromDb.size} completed instructions for task ${taskId}`);
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Failed to load instruction progress';
         console.error('❌ Error loading instruction progress:', err);

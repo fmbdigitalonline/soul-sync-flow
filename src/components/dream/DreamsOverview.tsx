@@ -41,7 +41,22 @@ export const DreamsOverview: React.FC<DreamsOverviewProps> = ({
   const { isMobile, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
   const { t } = useLanguage();
   const { toast } = useToast();
-  const { resumableTasksByGoal } = useResumableTasks(sessionRefreshKey);
+  const {
+    resumableTasksByGoal,
+    isLoading: isLoadingResumable,
+    error: resumableError
+  } = useResumableTasks(sessionRefreshKey);
+
+  React.useEffect(() => {
+    if (!resumableError) return;
+
+    console.error('Failed to load resumable tasks for dreams overview', resumableError);
+    toast({
+      title: 'Unable to check resumable plans',
+      description: resumableError,
+      variant: 'destructive'
+    });
+  }, [resumableError, toast]);
 
   const handleDeleteGoal = async (goalId: string) => {
     if (confirm('Are you sure you want to delete this dream? This action cannot be undone.')) {
@@ -161,6 +176,12 @@ export const DreamsOverview: React.FC<DreamsOverviewProps> = ({
           <h3 className="text-sm font-semibold text-muted-foreground mb-3">
             Most Recent Dream
           </h3>
+          {isLoadingResumable && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              <span>Checking resumable plans...</span>
+            </div>
+          )}
           <GoalCard
             key={goals[0].id}
             goal={goals[0]}

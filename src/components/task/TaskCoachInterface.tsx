@@ -34,7 +34,7 @@ import { TaskContext } from "@/services/task-coach-integration-service";
 import { AgentMode } from "@/types/personality-modules";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useTaskCompletion } from "@/hooks/use-task-completion";
-import { loadStoredTaskSession, saveTaskSession, StoredCoachMessage } from "@/utils/task-session";
+import { loadTaskSessionWithDbFallback, saveTaskSession, StoredCoachMessage } from "@/utils/task-session";
 
 interface Task {
   id: string;
@@ -253,7 +253,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   }, [completeTaskFromCoach, focusTime, sessionStats]);
 
   // Sanitize content to remove system prompts and internal markers
-  const sanitizeContent = (content: string): string => {
+  const sanitizeContent = useCallback((content: string): string => {
     if (!content) return '';
 
     // Remove common system prompt patterns
@@ -280,42 +280,63 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       .trim();
 
     return sanitized;
-  };
+  }, []);
 
-  // Load any stored session data from localStorage
+  // Load any stored session data from localStorage or fall back to database persistence
   useEffect(() => {
-    const storedSession = loadStoredTaskSession(task.id);
-    if (!storedSession) {
-      setInstructionProgress({});
-      setSessionStarted(false);
-      return;
-    }
+    let isMounted = true;
 
-    const hasStoredMessages = storedSession.coachMessages.length > 0;
-
-    if (hasStoredMessages) {
-      setCoachMessages(prev => {
-        if (prev.length > 0) {
-          return prev;
-        }
-
-        return storedSession.coachMessages.map(storedMessage => ({
-          id: storedMessage.id,
-          content: storedMessage.content,
-          isUser: storedMessage.isUser,
-          timestamp: storedMessage.timestamp ? new Date(storedMessage.timestamp) : new Date(),
-          agentMode: (storedMessage.agentMode as AgentMode) || 'guide'
-        }));
+    const hydrateSession = async () => {
+      const { session: storedSession, source } = await loadTaskSessionWithDbFallback(task.id, {
+        taskTitle: task.title
       });
 
-      setSessionStarted(true);
-      setIsTimerRunning(false);
-    } else {
-      setSessionStarted(false);
-    }
+      if (!isMounted) {
+        return;
+      }
 
-    setInstructionProgress(storedSession.instructionProgress || {});
-  }, [task.id]);
+      if (!storedSession) {
+        setInstructionProgress({});
+        setSessionStarted(false);
+        return;
+      }
+
+      const hasStoredMessages = storedSession.coachMessages.length > 0;
+
+      if (hasStoredMessages) {
+        if (source === 'database') {
+          console.log('💾 TaskCoachInterface: Hydrated working instructions from database fallback');
+        }
+
+        setCoachMessages(prev => {
+          if (prev.length > 0) {
+            return prev;
+          }
+
+          return storedSession.coachMessages.map(storedMessage => ({
+            id: storedMessage.id,
+            content: sanitizeContent(storedMessage.content),
+            isUser: storedMessage.isUser,
+            timestamp: storedMessage.timestamp ? new Date(storedMessage.timestamp) : new Date(),
+            agentMode: (storedMessage.agentMode as AgentMode) || 'guide'
+          }));
+        });
+
+        setSessionStarted(true);
+        setIsTimerRunning(false);
+      } else {
+        setSessionStarted(Object.keys(storedSession.instructionProgress || {}).length > 0);
+      }
+
+      setInstructionProgress(storedSession.instructionProgress || {});
+    };
+
+    hydrateSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [task.id, task.title, sanitizeContent]);
 
   // Convert task-aware messages to coach messages format
   useEffect(() => {
@@ -333,7 +354,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       }))
       .filter(msg => msg.content.trim().length > 0);
     setCoachMessages(convertedMessages);
-  }, [messages]);
+  }, [messages, sanitizeContent]);
 
   // Persist session data to localStorage for resume detection
   useEffect(() => {
