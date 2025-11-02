@@ -134,7 +134,10 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
         if (!msg.isUser) {
           const parsedMessage = CoachMessageParser.parseMessage(msg.content);
           // Only show if it's structured (working_instructions, breakdown, guidance)
-          return parsedMessage.type !== 'text';
+          return parsedMessage.type === 'working_instructions' || 
+                 parsedMessage.type === 'breakdown' || 
+                 parsedMessage.type === 'guidance' ||
+                 parsedMessage.type === 'progress';
         }
 
         return true;
@@ -543,7 +546,7 @@ Provide 4-6 concrete steps I can start working on immediately.`;
     });
     
     console.log('📤 Sending enhanced coaching message with breakdown instructions');
-    sendMessage(initialMessage, { suppressDisplay: true });
+    sendMessage(initialMessage);
   }, [task, productivityJourney, sendMessage]);
 
   // Sub-task interaction handlers

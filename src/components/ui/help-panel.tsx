@@ -100,6 +100,14 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
           <div>
             <h3 className="font-semibold text-gray-800 text-sm">Interactive Help</h3>
             <div className="flex flex-wrap items-center gap-2 mt-1">
+              {response.assistanceType && (
+                <Badge variant="outline" className="text-xs bg-purple-50 border-purple-200 text-purple-700">
+                  {response.assistanceType === 'stuck' && '🆘 I\'m Stuck'}
+                  {response.assistanceType === 'need_details' && '📋 Need Details'}
+                  {response.assistanceType === 'how_to' && '🤔 How To'}
+                  {response.assistanceType === 'examples' && '💡 Examples'}
+                </Badge>
+              )}
               <Badge variant="outline" className={`text-xs ${getHelpTypeColor(response.helpType)}`}>
                 {response.helpType.replace('_', ' ')}
               </Badge>

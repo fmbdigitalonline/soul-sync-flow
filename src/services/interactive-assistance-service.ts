@@ -23,6 +23,7 @@ export interface HermeticAssistanceResponse extends AssistanceResponse {
 export interface AssistanceResponse {
   id: string;
   requestId: string;
+  assistanceType?: 'stuck' | 'need_details' | 'how_to' | 'examples';
   helpType: 'concrete_steps' | 'examples' | 'tools_needed' | 'time_breakdown';
   content: string;
   actionableSteps: string[];
@@ -391,6 +392,7 @@ class InteractiveAssistanceService {
       return {
         id: responseId,
         requestId: request.id,
+        assistanceType: request.helpType,
         helpType: 'concrete_steps',
         content: data.content,
         actionableSteps: data.actionableSteps || [],
@@ -473,6 +475,7 @@ class InteractiveAssistanceService {
       return {
         id: responseId,
         requestId: request.id,
+        assistanceType: request.helpType,
         helpType: data?.helpType || 'concrete_steps',
         content: data?.content || `Here are structured steps for "${request.subTaskTitle}"`,
         actionableSteps: data?.actionableSteps || [],
