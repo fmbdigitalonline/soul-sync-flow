@@ -36,9 +36,18 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   const [localFocusedMilestone, setLocalFocusedMilestone] = useState<any>(null);
   const [currentView, setCurrentView] = useState<'overview' | 'milestones' | 'tasks' | 'timeline'>('overview');
 
+  useEffect(() => {
+    console.log('🎉 DreamSuccessPage: goal payload received', {
+      id: goal?.id ?? goal?.goal_id,
+      title: goal?.title,
+      milestones: goal?.milestones?.length || 0,
+      tasks: goal?.tasks?.length || 0
+    });
+  }, [goal]);
+
   // Derive the actual focused milestone - use external if provided, otherwise local
-  const focusedMilestone = externalFocusedMilestone !== undefined 
-    ? externalFocusedMilestone 
+  const focusedMilestone = externalFocusedMilestone !== undefined
+    ? externalFocusedMilestone
     : localFocusedMilestone;
 
   const tourSteps = [

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, ChevronRight, Calendar, Target, CheckCircle2 } from 'lucide-react';
@@ -19,9 +19,17 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
 }) => {
   const { spacing, getTextSize, touchTargetSize, isFoldDevice, isMobile } = useResponsiveLayout();
   const { t } = useLanguage();
-  
+
   // Show ALL milestones instead of limiting to 3
   const displayMilestones = milestones || [];
+
+  useEffect(() => {
+    const normalizedMilestones = Array.isArray(milestones) ? milestones : [];
+    console.log('🛤️ MilestonesRoadmap: milestones data received', {
+      count: normalizedMilestones.length,
+      ids: normalizedMilestones.map(milestone => milestone?.id || milestone?.title)
+    });
+  }, [milestones]);
 
   const handleMilestoneClick = (milestone: any) => {
     if (onMilestoneClick) {

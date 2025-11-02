@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Target, CheckCircle, Calendar } from 'lucide-react';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -21,6 +21,15 @@ export const InteractiveJourneyOverview: React.FC<InteractiveJourneyOverviewProp
 }) => {
   const { spacing, touchTargetSize, getTextSize, isFoldDevice, isUltraNarrow } = useResponsiveLayout();
   const { t } = useLanguage();
+
+  useEffect(() => {
+    console.log('🧭 InteractiveJourneyOverview: metrics received', {
+      milestonesCount,
+      tasksCount,
+      timeframe,
+      isHighlighted
+    });
+  }, [isHighlighted, milestonesCount, tasksCount, timeframe]);
 
   return (
     <div className={`bg-card/95 backdrop-blur-lg rounded-2xl shadow-lg transition-all duration-500 w-full max-w-full ${spacing.card} ${
