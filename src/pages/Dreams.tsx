@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, MessageCircle, RefreshCw, ToggleLeft, ToggleRight, Activity, ArrowLeft, Plus, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
@@ -238,6 +238,7 @@ const Dreams = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const { journeyId } = useParams<{ journeyId?: string }>();
 
   const handleSuccessViewJourney = useCallback(() => {
     console.log('📍 Dreams: Navigating from success to journey, tracking breadcrumb');
@@ -258,7 +259,7 @@ const Dreams = () => {
     setSelectedGoalId(goalId);
     localStorage.setItem('activeGoalId', goalId);
     setCurrentView('journey');
-    navigate('/dreams/journey');
+    navigate(`/dreams/journey/${goalId}`);
   }, [navigate]);
   
   const handleCreateAnotherDream = useCallback(() => {
@@ -323,6 +324,16 @@ const Dreams = () => {
   }, [currentView, scrollToForm]);
 
   useEffect(() => {
+    if (journeyId) {
+      console.log('📋 Route handler: journeyId found in URL:', journeyId);
+      setActiveGoalId(journeyId);
+      setSelectedGoalId(journeyId);
+      localStorage.setItem('activeGoalId', journeyId);
+      setCurrentView("journey");
+      setActiveTab("journey");
+      return;
+    }
+
     const path = location.pathname;
     if (path === "/dreams" || path === "/dreams/") {
       setCurrentView("hub");
@@ -377,7 +388,7 @@ const Dreams = () => {
     if (path.startsWith("/dreams/") && path !== "/dreams") {
       console.warn('⚠️ Unhandled Dreams route:', path);
     }
-  }, [location.pathname, createdGoal, selectedGoalId, navigate, toast]);
+  }, [location.pathname, createdGoal, selectedGoalId, navigate, toast, journeyId]);
 
   const getBlueprintInsight = useCallback(() => {
     if (!blueprintData) return t('dreams.blueprintInsight');
