@@ -16,22 +16,12 @@ export const TaskPreview: React.FC<TaskPreviewProps> = ({ task }) => {
   const { t } = useLanguage();
   
   // Use the task assistant hook to get personalized breakdown
-  const { assistantData, loading } = useTaskAssistant(task, expanded);
+  const { assistantData, loading } = useTaskAssistant(task);
 
   // Use database subtasks if available, otherwise use generated data, with loading fallback
-  const fallbackMessage = t('tasks.preview.generateOnDemand') || "Start a coaching session to generate a personalized breakdown.";
-  const databaseSubtasks = Array.isArray(task.sub_tasks)
-    ? task.sub_tasks.map((st: any) => st.title).filter((title: string) => Boolean(title && title.trim()))
-    : [];
-  const assistantSteps = assistantData?.checklistSteps?.filter((step) => step && step.trim().length > 0) || [];
-
-  const breakdown = databaseSubtasks.length > 0
-    ? databaseSubtasks
-    : assistantSteps.length > 0
-      ? assistantSteps
-      : (loading
-        ? [t('tasks.preview.generatingSteps') || "Personalizing your breakdown..."]
-        : [fallbackMessage]);
+  const breakdown = task.sub_tasks?.map((st: any) => st.title) 
+    || assistantData?.checklistSteps 
+    || (loading ? [t('tasks.preview.generatingSteps') || "Personalizing your breakdown..."] : []);
     
   const goal = assistantData?.motivationalFraming 
     || task.goal 

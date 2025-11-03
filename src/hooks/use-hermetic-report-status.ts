@@ -446,14 +446,15 @@ export const useHermeticReportStatus = () => {
   useEffect(() => {
     const now = Date.now();
     const isWithinCompletionWindow = recentCompletion && (now - recentCompletion.timestamp) < 30000; // 30 second window
-
+    
+    // Clear expired recent completion
     if (recentCompletion && !isWithinCompletionWindow) {
       console.log('🏁 HERMETIC POLLING: Completion window expired, clearing recent completion');
       setRecentCompletion(null);
     }
-
+    
     const shouldPoll = status.isGenerating || status.hasZombieJob || isWithinCompletionWindow;
-
+    
     if (!shouldPoll) {
       console.log('🛑 HERMETIC POLLING: Stopped - no active generation, zombie jobs, or recent completions');
       return;
@@ -461,15 +462,20 @@ export const useHermeticReportStatus = () => {
 
     const reasonsForPolling = [
       status.isGenerating && 'active generation',
-      status.hasZombieJob && 'zombie job detected',
+      status.hasZombieJob && 'zombie job detected', 
       isWithinCompletionWindow && `recent completion (${Math.floor((30000 - (now - recentCompletion!.timestamp)) / 1000)}s remaining)`
     ].filter(Boolean);
 
-    console.log('⏸️ HERMETIC POLLING: Automatic interval polling disabled - reasons:', reasonsForPolling.join(', '));
-    checkHermeticReportStatus();
+    console.log('🔄 HERMETIC POLLING: Starting enhanced polling every 3 seconds -', reasonsForPolling.join(', '));
+    
+    const pollForActiveJobs = setInterval(() => {
+      console.log('⏰ HERMETIC POLLING: Fetching status update...');
+      checkHermeticReportStatus();
+    }, 3000);
 
     return () => {
-      console.log('🛑 HERMETIC POLLING: No interval to clean up');
+      console.log('🛑 HERMETIC POLLING: Cleanup interval');
+      clearInterval(pollForActiveJobs);
     };
   }, [status.isGenerating, status.hasZombieJob, recentCompletion, checkHermeticReportStatus]);
 

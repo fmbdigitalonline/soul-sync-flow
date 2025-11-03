@@ -4,11 +4,9 @@ import { useEnhancedAICoach, Message, AgentType } from "./use-enhanced-ai-coach"
 import { enhancedTaskCoachIntegrationService } from "@/services/enhanced-task-coach-integration-service";
 import { TaskContext, TaskAction } from "@/services/task-coach-integration-service";
 import { dreamActivityLogger } from "@/services/dream-activity-logger";
-import { supabase } from "@/integrations/supabase/client";
-import { sanitizeCoachContent } from "@/utils/sanitize-coach-content";
 
 export const useTaskAwareCoach = (initialTask?: TaskContext) => {
-  const { messages, isLoading, isStreaming, sendMessage, resetConversation, currentAgent, switchAgent } = useEnhancedAICoach("coach", "tasks");
+  const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useEnhancedAICoach("coach", "tasks");
   const [currentTask, setCurrentTask] = useState<TaskContext | null>(initialTask || null);
   const [messageCount, setMessageCount] = useState(0);
   const [actionCount, setActionCount] = useState(0);
@@ -18,7 +16,6 @@ export const useTaskAwareCoach = (initialTask?: TaskContext) => {
   const initializedRef = useRef(false);
   const sessionIdRef = useRef(`task-coaching-${initialTask?.id || 'general'}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const lastProcessedMessageIdRef = useRef<string | null>(null);
-  const cachedBreakdownSavedRef = useRef(false);
 
   // Initialize task context only once
   useEffect(() => {
@@ -53,10 +50,6 @@ export const useTaskAwareCoach = (initialTask?: TaskContext) => {
       });
     }
   }, [initialTask?.id]); // Only depend on task ID to prevent loops
-
-  useEffect(() => {
-    cachedBreakdownSavedRef.current = false;
-  }, [currentTask?.id]);
 
   // Set agent to coach for task coaching
   useEffect(() => {
@@ -377,7 +370,7 @@ Please provide guidance focused on task completion and productivity, avoiding ge
   useEffect(() => {
     const interval = setInterval(async () => {
       const sessionDuration = Date.now() - sessionStartTimeRef.current;
-
+      
       await dreamActivityLogger.logActivity('session_stats_update', {
         session_duration_ms: sessionDuration,
         messages_sent: messageCount,
@@ -390,58 +383,6 @@ Please provide guidance focused on task completion and productivity, avoiding ge
 
     return () => clearInterval(interval);
   }, [messageCount, actionCount, currentTask?.id, currentTask?.progress]);
-
-  useEffect(() => {
-    if (!currentTask?.id) {
-      return;
-    }
-
-    if (cachedBreakdownSavedRef.current) {
-      return;
-    }
-
-    if (isStreaming) {
-      return;
-    }
-
-    if (!messages || messages.length === 0) {
-      return;
-    }
-
-    const latestAssistantMessage = [...messages].reverse().find(msg => msg.sender === 'assistant');
-    if (!latestAssistantMessage) {
-      return;
-    }
-
-    const sanitizedContent = sanitizeCoachContent(latestAssistantMessage.content);
-    if (!isLikelyBreakdownMessage(sanitizedContent)) {
-      return;
-    }
-
-    const cacheBreakdown = async () => {
-      const payload = {
-        content: sanitizedContent,
-        cached_at: new Date().toISOString(),
-        source_message_id: latestAssistantMessage.id,
-        agent_mode: latestAssistantMessage.agent_mode ?? currentAgent
-      };
-
-      const { error } = await supabase
-        .from('tasks')
-        .update({ ai_breakdown: payload })
-        .eq('id', currentTask.id);
-
-      if (error) {
-        console.error('Failed to cache AI breakdown:', error);
-        return;
-      }
-
-      cachedBreakdownSavedRef.current = true;
-      console.log('💾 Cached AI breakdown for task', currentTask.id);
-    };
-
-    cacheBreakdown();
-  }, [messages, currentTask?.id, isStreaming, currentAgent]);
 
   return {
     messages,
@@ -458,12 +399,3 @@ Please provide guidance focused on task completion and productivity, avoiding ge
     sessionStats
   };
 };
-
-function isLikelyBreakdownMessage(content: string): boolean {
-  if (!content) {
-    return false;
-  }
-
-  const numberedSteps = content.match(/\n?\s*\d+\.\s+/g) || [];
-  return content.length > 80 && numberedSteps.length >= 3;
-}

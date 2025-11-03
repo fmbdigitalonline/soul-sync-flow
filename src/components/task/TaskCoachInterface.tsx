@@ -34,9 +34,7 @@ import { TaskContext } from "@/services/task-coach-integration-service";
 import { AgentMode } from "@/types/personality-modules";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useTaskCompletion } from "@/hooks/use-task-completion";
-import { supabase } from "@/integrations/supabase/client";
 import { loadTaskSessionWithDbFallback, saveTaskSession, StoredCoachMessage } from "@/utils/task-session";
-import { sanitizeCoachContent } from "@/utils/sanitize-coach-content";
 
 interface Task {
   id: string;
@@ -51,17 +49,8 @@ interface Task {
   goal_id?: string;
 }
 
-interface GoalContext {
-  id?: string;
-  goal_id?: string;
-  title?: string;
-  description?: string;
-  [key: string]: any;
-}
-
 interface TaskCoachInterfaceProps {
   task: Task;
-  goal?: GoalContext | null;
   onBack: () => void;
   onTaskComplete: (taskId: string) => void;
 }
@@ -78,20 +67,8 @@ interface CoachMessage {
   suppressDisplay?: boolean;
 }
 
-type CachedBreakdownPayload =
-  | string
-  | {
-      content?: string;
-      cached_at?: string;
-      motivationalFraming?: string;
-      timeOptimization?: string;
-      anticipatedBlockers?: string[];
-      [key: string]: unknown;
-    };
-
 export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   task,
-  goal,
   onBack,
   onTaskComplete
 }) => {
@@ -300,7 +277,32 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
 
   // Sanitize content to remove system prompts and internal markers
   const sanitizeContent = useCallback((content: string): string => {
-    return sanitizeCoachContent(content);
+    if (!content) return '';
+
+    // Remove common system prompt patterns
+    let sanitized = content
+      // Remove XML-style tags like <thinking>, <system>, <instructions>, etc.
+      .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
+      .replace(/<system>[\s\S]*?<\/system>/gi, '')
+      .replace(/<instructions>[\s\S]*?<\/instructions>/gi, '')
+      .replace(/<prompt>[\s\S]*?<\/prompt>/gi, '')
+      .replace(/<internal>[\s\S]*?<\/internal>/gi, '')
+      // Remove prompt engineering markers
+      .replace(/\[SYSTEM\][\s\S]*?\[\/SYSTEM\]/gi, '')
+      .replace(/\[INTERNAL\][\s\S]*?\[\/INTERNAL\]/gi, '')
+      .replace(/\[PROMPT\][\s\S]*?\[\/PROMPT\]/gi, '')
+      // Clean up excessive whitespace
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    // Strip trailing structured instructions that shouldn't surface in the UI
+    sanitized = sanitized
+      .replace(/(?:\n\s*)?Provide detailed[\s\S]*$/i, '')
+      .replace(/(?:\n\s*)?Give me [\s\S]*$/i, '')
+      .replace(/(?:\n\s*)?Format requirements:[\s\S]*$/i, '')
+      .trim();
+
+    return sanitized;
   }, []);
 
   // Load any stored session data from localStorage or fall back to database persistence
@@ -488,50 +490,15 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       task_id: task.id,
       total_subtasks: currentTask?.sub_tasks?.length || 0
     });
-
+    
     const message = "I've completed all the sub-tasks! Please review my work and mark the main task as complete.";
     sendMessage(message);
   }, [task.id, currentTask?.sub_tasks?.length, sendMessage]);
 
-  const hydrateMessagesFromCache = useCallback((cached: CachedBreakdownPayload) => {
-    if (!cached) {
-      return;
-    }
-
-    const rawContent = typeof cached === 'string' ? cached : cached.content;
-    const sanitized = sanitizeContent(typeof rawContent === 'string' ? rawContent : '');
-
-    if (!sanitized) {
-      return;
-    }
-
-    const timestamp = typeof cached === 'object' && cached?.cached_at
-      ? new Date(String(cached.cached_at))
-      : new Date();
-
-    setCoachMessages(prev => {
-      const existing = prev.find(message => message.id === `cached-breakdown-${task.id}`);
-      if (existing) {
-        return prev;
-      }
-
-      const hydratedMessage: CoachMessage = {
-        id: `cached-breakdown-${task.id}`,
-        content: sanitized,
-        isUser: false,
-        timestamp,
-        agentMode: 'guide',
-        suppressDisplay: false
-      };
-
-      return [...prev, hydratedMessage];
-    });
-  }, [sanitizeContent, task.id]);
-
   // Enhanced session starter with structured task breakdown prompting
   const handleStartSession = useCallback(async () => {
     console.log('🚀 Starting coaching session for task:', task.title);
-
+    
     await dreamActivityLogger.logActivity('session_start_clicked', {
       task_id: task.id,
       task_title: task.title,
@@ -542,45 +509,10 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     setIsTimerRunning(true);
     setSidebarOpen(false);
 
-    try {
-      const { data: taskData, error: fetchError } = await supabase
-        .from('tasks')
-        .select('ai_breakdown')
-        .eq('id', task.id)
-        .single();
-
-      if (fetchError) {
-        console.error('Error fetching cached breakdown:', fetchError);
-      }
-
-      const cachedBreakdown = taskData?.ai_breakdown as CachedBreakdownPayload | undefined;
-
-      if (cachedBreakdown && (typeof cachedBreakdown === 'string' || typeof cachedBreakdown === 'object')) {
-        console.log('✅ Found cached breakdown. Hydrating session.');
-        await dreamActivityLogger.logActivity('cached_breakdown_loaded', {
-          task_id: task.id,
-          had_cached_breakdown: true
-        });
-
-        hydrateMessagesFromCache(cachedBreakdown);
-        return;
-      }
-    } catch (error) {
-      console.error('Error during cached breakdown lookup:', error);
-    }
-
     // Get current goal context
     const currentGoals = productivityJourney?.current_goals || [];
-    const matchingJourneyGoal = currentGoals.find(goalItem => {
-      const goalId = goalItem?.id ?? goalItem?.goal_id;
-      return goalId ? String(goalId) === task.goal_id : false;
-    });
-    const resolvedGoal = goal || matchingJourneyGoal || null;
-    const resolvedGoalTitle = resolvedGoal?.title ?? matchingJourneyGoal?.title;
-    const resolvedGoalDescription = resolvedGoal?.description ?? matchingJourneyGoal?.description;
-    const goalContext = resolvedGoalTitle
-      ? `\n\nThis task is part of your goal: "${resolvedGoalTitle}"${resolvedGoalDescription ? ` - ${resolvedGoalDescription}` : ''}`
-      : '';
+    const currentGoal = currentGoals.find(goal => goal.id === task.goal_id);
+    const goalContext = currentGoal ? `\n\nThis task is part of your goal: "${currentGoal.title}" - ${currentGoal.description}` : '';
 
     // CRITICAL FIX: Structured prompt to trigger WorkingInstructionsPanel
     const initialMessage = `I'm working on: "${task.title}"
@@ -615,7 +547,7 @@ Provide 4-6 concrete steps I can start working on immediately.`;
     
     console.log('📤 Sending enhanced coaching message with breakdown instructions');
     sendMessage(initialMessage);
-  }, [task, productivityJourney, goal, sendMessage, hydrateMessagesFromCache]);
+  }, [task, productivityJourney, sendMessage]);
 
   // Sub-task interaction handlers
   const handleSubTaskStart = useCallback(async (subTask: ParsedSubTask) => {
