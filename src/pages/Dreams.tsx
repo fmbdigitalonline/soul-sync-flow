@@ -255,6 +255,7 @@ const Dreams = () => {
   const handleSelectGoal = useCallback((goalId: string) => {
     console.log('🎯 Dreams: User selected goal:', goalId);
     setActiveGoalId(goalId);
+    setSelectedGoalId(goalId);
     localStorage.setItem('activeGoalId', goalId);
     setCurrentView('journey');
     navigate('/dreams/journey');
