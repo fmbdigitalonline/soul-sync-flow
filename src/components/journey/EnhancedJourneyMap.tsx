@@ -50,21 +50,6 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
   const currentGoals = (productivityJourney?.current_goals || []) as any[];
   const mainGoal = activeGoal || currentGoals[0];
 
-  // Sort milestones by order to ensure proper progression
-  const sortedMilestones = useMemo(() => {
-    const rawMilestones = Array.isArray(mainGoal?.milestones) ? mainGoal.milestones : [];
-    return [...rawMilestones].sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-  }, [mainGoal]);
-
-  const completedMilestones = sortedMilestones.filter((m: any) => m.completed);
-  const totalMilestones = sortedMilestones.length;
-  const progress = totalMilestones > 0 ? Math.round((completedMilestones.length / totalMilestones) * 100) : 0;
-  
-  const currentMilestone = sortedMilestones.find((m: any) => !m.completed);
-  const nextTasks = (mainGoal?.tasks || [])
-    .filter((t: any) => !t.completed)
-    .slice(0, 3);
-
   // Principle #3: No Fallbacks That Mask Errors - Show clear "no goal selected" state
   if (!mainGoal) {
     return (
@@ -81,6 +66,19 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
       </div>
     );
   }
+
+  // Sort milestones by order to ensure proper progression
+  const sortedMilestones = useMemo(() => {
+    const rawMilestones = Array.isArray(mainGoal?.milestones) ? mainGoal.milestones : [];
+    return [...rawMilestones].sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+  }, [mainGoal]);
+
+  const completedMilestones = sortedMilestones.filter((m: any) => m.completed);
+  const totalMilestones = sortedMilestones.length;
+  const progress = totalMilestones > 0 ? Math.round((completedMilestones.length / totalMilestones) * 100) : 0;
+  
+  const currentMilestone = sortedMilestones.find((m: any) => !m.completed);
+  const nextTasks = mainGoal.tasks?.filter((t: any) => !t.completed).slice(0, 3) || [];
 
   const getBlueprintInsight = () => {
     if (!blueprintData) return "Your journey is uniquely yours";
