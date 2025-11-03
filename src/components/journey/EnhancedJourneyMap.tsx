@@ -30,8 +30,8 @@ interface EnhancedJourneyMapProps {
   activeGoal?: any; // NEW: Accept active goal from parent (Principle #6: Respect Critical Data Pathways)
 }
 
-export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ 
-  onTaskClick, 
+export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
+  onTaskClick,
   onMilestoneClick,
   onBackToSuccessOverview,
   showSuccessBackButton,
@@ -39,6 +39,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
 }) => {
   const { productivityJourney } = useJourneyTracking();
   const { blueprintData } = useOptimizedBlueprintData();
+  const { t } = useLanguage();
   const [selectedView, setSelectedView] = useState<'overview' | 'detailed'>('overview');
   const [selectedMilestone, setSelectedMilestone] = useState<any>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -78,7 +79,23 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
   const progress = totalMilestones > 0 ? Math.round((completedMilestones.length / totalMilestones) * 100) : 0;
   
   const currentMilestone = sortedMilestones.find((m: any) => !m.completed);
-  const nextTasks = mainGoal.tasks?.filter((t: any) => !t.completed).slice(0, 3) || [];
+  const nextTasks = (mainGoal?.tasks || [])
+    .filter((t: any) => !t.completed)
+    .slice(0, 3);
+
+  const renderEmptyState = () => (
+    <div className="p-6 text-center w-full">
+      <Target className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+      <h3 className="text-lg font-semibold mb-2">
+        {activeGoal === null ? 'No Dream Selected' : t('journey.empty.title')}
+      </h3>
+      <p className="text-muted-foreground text-sm">
+        {activeGoal === null
+          ? 'Please select a dream from your overview to view your journey map.'
+          : t('journey.empty.description')}
+      </p>
+    </div>
+  );
 
   const getBlueprintInsight = () => {
     if (!blueprintData) return "Your journey is uniquely yours";
@@ -169,7 +186,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
   const MilestoneCard = ({ milestone, index }: { milestone: any; index: number }) => {
     const isCompleted = milestone.completed;
     const isCurrent = !isCompleted && index === completedMilestones.length;
-    const milestoneTasks = mainGoal.tasks?.filter((t: any) => t.milestone_id === milestone.id) || [];
+    const milestoneTasks = mainGoal?.tasks?.filter((t: any) => t.milestone_id === milestone.id) || [];
     
     const doubleTapHandlers = useDoubleTap({
       onDoubleTap: () => handleMilestoneDoubleTap(milestone),
@@ -272,49 +289,53 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
         </Button>
       )}
 
-      {/* Mobile-Optimized Journey Header */}
-      <div className="p-3 bg-gradient-to-r from-soul-purple/10 to-blue-500/10 rounded-xl border border-white/20 mb-4 w-full">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1 min-w-0 pr-3">
-            <h2 className="text-base font-bold mb-1 flex items-center leading-tight">
-              <Target className="h-4 w-4 mr-2 text-soul-purple flex-shrink-0" />
-              <span className="truncate">{mainGoal.title}</span>
-            </h2>
-            <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{mainGoal.description}</p>
-            <p className="text-xs text-soul-purple font-medium">{getBlueprintInsight()}</p>
-          </div>
-          
-          <div className="text-right flex-shrink-0">
-            <div className="text-xl font-bold text-soul-purple mb-1">{progress}%</div>
-            <div className="text-xs text-muted-foreground">Complete</div>
-          </div>
-        </div>
-        
-        <Progress value={progress} className="h-2 mb-3" />
-        
-        <div className="flex gap-2">
-          <Button
-            variant={selectedView === 'overview' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedView('overview')}
-            className="flex items-center gap-1 text-xs h-8 px-3"
-          >
-            <MapPin className="h-3 w-3" />
-            Timeline
-          </Button>
-          <Button
-            variant={selectedView === 'detailed' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedView('detailed')}
-            className="flex items-center gap-1 text-xs h-8 px-3"
-          >
-            <Star className="h-3 w-3" />
-            Focus
-          </Button>
-        </div>
-      </div>
+      {!mainGoal ? (
+        renderEmptyState()
+      ) : (
+        <>
+          {/* Mobile-Optimized Journey Header */}
+          <div className="p-3 bg-gradient-to-r from-soul-purple/10 to-blue-500/10 rounded-xl border border-white/20 mb-4 w-full">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1 min-w-0 pr-3">
+                <h2 className="text-base font-bold mb-1 flex items-center leading-tight">
+                  <Target className="h-4 w-4 mr-2 text-soul-purple flex-shrink-0" />
+                  <span className="truncate">{mainGoal.title}</span>
+                </h2>
+                <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{mainGoal.description}</p>
+                <p className="text-xs text-soul-purple font-medium">{getBlueprintInsight()}</p>
+              </div>
 
-      {selectedView === 'overview' ? (
+              <div className="text-right flex-shrink-0">
+                <div className="text-xl font-bold text-soul-purple mb-1">{progress}%</div>
+                <div className="text-xs text-muted-foreground">Complete</div>
+              </div>
+            </div>
+
+            <Progress value={progress} className="h-2 mb-3" />
+
+            <div className="flex gap-2">
+              <Button
+                variant={selectedView === 'overview' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedView('overview')}
+                className="flex items-center gap-1 text-xs h-8 px-3"
+              >
+                <MapPin className="h-3 w-3" />
+                Timeline
+              </Button>
+              <Button
+                variant={selectedView === 'detailed' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedView('detailed')}
+                className="flex items-center gap-1 text-xs h-8 px-3"
+              >
+                <Star className="h-3 w-3" />
+                Focus
+              </Button>
+            </div>
+          </div>
+
+          {selectedView === 'overview' ? (
         /* Mobile-First Journey Timeline */
         <div className="w-full">
           <h3 className="font-medium mb-3 flex items-center text-sm">
@@ -507,25 +528,23 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
               </p>
             </div>
           )}
-        </div>
+          <MilestoneDetailPopup
+            milestone={selectedMilestone}
+            tasks={mainGoal?.tasks || []}
+            isOpen={isPopupOpen}
+            onClose={() => {
+              setIsPopupOpen(false);
+              setSelectedMilestone(null);
+            }}
+            onTaskClick={onTaskClick}
+            onMilestoneAction={(milestone) => {
+              onMilestoneClick?.(milestone);
+              setIsPopupOpen(false);
+              setSelectedMilestone(null);
+            }}
+          />
+        </>
       )}
-
-      {/* Milestone Detail Popup */}
-      <MilestoneDetailPopup
-        milestone={selectedMilestone}
-        tasks={mainGoal.tasks || []}
-        isOpen={isPopupOpen}
-        onClose={() => {
-          setIsPopupOpen(false);
-          setSelectedMilestone(null);
-        }}
-        onTaskClick={onTaskClick}
-        onMilestoneAction={(milestone) => {
-          onMilestoneClick?.(milestone);
-          setIsPopupOpen(false);
-          setSelectedMilestone(null);
-        }}
-      />
     </div>
   );
 };
