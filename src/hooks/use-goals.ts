@@ -9,19 +9,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-export interface GoalTask {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'todo' | 'in_progress' | 'stuck' | 'completed';
-  completed?: boolean;
-  due_date?: string;
-  estimated_duration: string;
-  energy_level_required: string;
-  category: string;
-  optimal_time_of_day: string[];
-}
-
 export interface GoalMilestone {
   id: string;
   title: string;
@@ -38,7 +25,6 @@ export interface Goal {
   progress: number;
   alignedWith: string[];
   milestones: GoalMilestone[];
-  tasks: GoalTask[];
 }
 
 export function useGoals() {
@@ -66,8 +52,7 @@ export function useGoals() {
         .from('user_goals')
         .select(`
           *,
-          goal_milestones (*),
-          tasks (*)
+          goal_milestones (*)
         `)
         .eq('user_id', user.id)
         .eq('status', 'active')
@@ -98,25 +83,7 @@ export function useGoals() {
             title: m.title,
             completed: m.is_completed,
             order_index: m.order_index
-          })),
-        tasks: Array.isArray(goal.tasks)
-          ? goal.tasks.map((t: any) => ({
-              id: t.id,
-              title: t.title,
-              description: t.description || '',
-              status: t.status,
-              completed: t.completed,
-              due_date: t.due_date,
-              estimated_duration: t.estimated_duration,
-              energy_level_required: t.energy_level_required,
-              category: t.category,
-              optimal_time_of_day: Array.isArray(t.optimal_time_of_day)
-                ? t.optimal_time_of_day
-                : typeof t.optimal_time_of_day === 'string'
-                ? [t.optimal_time_of_day]
-                : []
-            }))
-          : []
+          }))
       }));
 
       setGoals(transformedGoals);
@@ -137,7 +104,7 @@ export function useGoals() {
 
   // Add a new goal
   const addGoal = useCallback(async (
-    goalData: Omit<Goal, 'id' | 'progress' | 'tasks'>,
+    goalData: Omit<Goal, 'id' | 'progress'>,
     milestones: { title: string }[]
   ) => {
     try {

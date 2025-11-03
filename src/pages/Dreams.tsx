@@ -80,40 +80,93 @@ const Dreams = () => {
   // Principle #2: No Hardcoded Data - Load all goals from database
   const { goals, isLoading: goalsLoading } = useGoals();
 
-  const { refetch: refetchJourneyData } = useJourneyTracking();
+  const { productivityJourney, refetch: refetchJourneyData } = useJourneyTracking();
+
+  const journeyGoals = useMemo(() => {
+    const rawGoals = productivityJourney?.current_goals;
+
+    if (!rawGoals) {
+      return [];
+    }
+
+    if (Array.isArray(rawGoals)) {
+      return rawGoals as any[];
+    }
+
+    if (typeof rawGoals === 'string') {
+      try {
+        const parsed = JSON.parse(rawGoals);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        console.warn('⚠️ Dreams: Unable to parse productivity journey goals string', error);
+        return [];
+      }
+    }
+
+    if (typeof rawGoals === 'object') {
+      return Object.values(rawGoals as Record<string, any>);
+    }
+
+    return [];
+  }, [productivityJourney?.current_goals]);
+
+  const selectedJourneyGoal = useMemo(() => {
+    if (!selectedGoalId) return null;
+
+    return (
+      journeyGoals.find(goal => {
+        const goalId = goal?.id ? String(goal.id) : undefined;
+        const altGoalId = goal?.goal_id ? String(goal.goal_id) : undefined;
+
+        return goalId === selectedGoalId || altGoalId === selectedGoalId;
+      }) || null
+    );
+  }, [journeyGoals, selectedGoalId]);
+
+  const fallbackGoalFromList = useMemo(
+    () => (selectedGoalId ? goals.find(goal => goal.id === selectedGoalId) || null : null),
+    [goals, selectedGoalId]
+  );
 
   const resolvedGoalToShow = useMemo(() => {
     console.log('🎯 Dreams: Resolving goal to show', {
       hasCreatedGoal: !!createdGoal,
-      selectedGoalId,
-      activeGoalId,
-      availableGoals: goals.length
+      hasSelectedJourneyGoal: !!selectedJourneyGoal,
+      hasFallbackGoal: !!fallbackGoalFromList,
+      journeyGoalsCount: journeyGoals.length
     });
 
-    if (createdGoal) {
-      console.log('✅ Dreams: Using createdGoal');
+    // Check if goal has complete data (using optional chaining for any type)
+    const hasCompleteData = (goal: any) => {
+      return goal && 
+             (goal.milestones || (goal as any).milestones) && 
+             ((goal as any).tasks || goal.milestones?.length > 0);
+    };
+
+    if (createdGoal && hasCompleteData(createdGoal)) {
+      console.log('✅ Dreams: Using createdGoal with complete data');
       return createdGoal;
     }
 
-    if (selectedGoalId) {
-      const selectedGoal = goals.find(goal => goal.id === selectedGoalId);
-      if (selectedGoal) {
-        console.log('✅ Dreams: Using selected goal from list');
-        return selectedGoal;
-      }
+    if (selectedJourneyGoal && hasCompleteData(selectedJourneyGoal)) {
+      console.log('✅ Dreams: Using selectedJourneyGoal with complete data');
+      return selectedJourneyGoal;
     }
 
-    if (activeGoalId) {
-      const activeGoal = goals.find(goal => goal.id === activeGoalId);
-      if (activeGoal) {
-        console.log('✅ Dreams: Using active goal');
-        return activeGoal;
-      }
+    if (fallbackGoalFromList && hasCompleteData(fallbackGoalFromList)) {
+      console.log('✅ Dreams: Using fallbackGoalFromList with complete data');
+      return fallbackGoalFromList;
     }
 
-    console.warn('⚠️ Dreams: No specific goal selected, using first available or null');
-    return goals[0] || null;
-  }, [createdGoal, selectedGoalId, activeGoalId, goals]);
+    const firstJourneyGoal = journeyGoals[0];
+    if (firstJourneyGoal && hasCompleteData(firstJourneyGoal)) {
+      console.log('✅ Dreams: Using first journey goal with complete data');
+      return firstJourneyGoal;
+    }
+
+    console.warn('⚠️ Dreams: No goal with complete data found, returning best available or null');
+    return createdGoal || selectedJourneyGoal || fallbackGoalFromList || firstJourneyGoal || null;
+  }, [createdGoal, fallbackGoalFromList, journeyGoals, selectedJourneyGoal]);
   
   // Principle #6: Respect Critical Data Pathways - Track active goal
   const [activeGoalId, setActiveGoalId] = useState<string | null>(() => {
