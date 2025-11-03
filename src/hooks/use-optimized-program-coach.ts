@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Message } from '@/services/program-aware-coach-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { LifeDomain } from '@/types/growth-program';
@@ -25,20 +25,33 @@ export const useOptimizedProgramCoach = (domain: string = 'spiritual-growth') =>
     completeStreaming 
   } = useStreamingMessage();
 
+  const fallbackBasicContext = useMemo<BasicContext>(() => ({
+    userId: '',
+    domain,
+    hasBasicBlueprint: false,
+    coreTraits: [],
+  }), [domain]);
+
+  const fallbackEnhancedContextPromise = useMemo<Promise<EnhancedContext>>(
+    () =>
+      Promise.resolve({
+        userId: '',
+        domain,
+        hasBasicBlueprint: false,
+        coreTraits: [],
+        enhancementLevel: 'basic' as const,
+      }),
+    [domain]
+  );
+
   const {
     enhancementState,
     enhancedContext,
     getContextualPrompt,
     canStartChat
   } = useProgressiveEnhancement(
-    orchestrationResult?.basicContext || { userId: '', domain, hasBasicBlueprint: false, coreTraits: [] },
-    orchestrationResult?.enhancedContextPromise || Promise.resolve({
-      userId: '',
-      domain,
-      hasBasicBlueprint: false,
-      coreTraits: [],
-      enhancementLevel: 'basic' as const
-    })
+    orchestrationResult?.basicContext ?? fallbackBasicContext,
+    orchestrationResult?.enhancedContextPromise ?? fallbackEnhancedContextPromise
   );
 
   const initializeForDomain = useCallback(async (targetDomain: string, blueprintData?: any) => {
