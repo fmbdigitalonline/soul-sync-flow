@@ -74,7 +74,7 @@ const Dreams = () => {
   const [focusedMilestoneInDetails, setFocusedMilestoneInDetails] = useState<any>(null);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]); // Track breadcrumb navigation (Pillar I: Preserve Core Intelligence)
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
-  const [previousView, setPreviousView] = useState<'hub' | 'all-goals'>('hub');
+  const [previousView, setPreviousView] = useState<'hub' | 'all-goals' | 'journey' | 'success'>('hub');
   const [sessionRefreshKey, setSessionRefreshKey] = useState(0);
 
   // Principle #2: No Hardcoded Data - Load all goals from database
@@ -232,6 +232,8 @@ const Dreams = () => {
 
   // Add the missing success page handlers
   const handleSuccessTaskStart = useCallback((task: any) => {
+    console.log('🚀 Dreams: Starting task from success page', task?.title || task?.id);
+    setPreviousView('success');
     setSelectedTask(task);
     setCurrentView('task-coach');
   }, []);
@@ -427,6 +429,8 @@ const Dreams = () => {
   }, [dreamMessages, scrollToBottom]);
 
   const handleTaskSelect = (task: Task) => {
+    console.log('🧭 Dreams: Starting task from journey view', task.title || task.id);
+    setPreviousView('journey');
     setSelectedTask(task);
     setCurrentView('task-coach');
   };
@@ -438,10 +442,10 @@ const Dreams = () => {
   };
 
   const handleBackFromTaskCoach = async () => {
-    console.log('🔙 Dreams: Returning from task coach, refreshing data');
+    console.log(`🔙 Dreams: Returning from task coach to ${previousView}`);
     await refetchJourneyData();
     setSelectedTask(null);
-    setCurrentView('journey');
+    setCurrentView(previousView === 'success' ? 'success' : 'journey');
     setSessionRefreshKey(prev => prev + 1);
   };
 
@@ -466,6 +470,7 @@ const Dreams = () => {
   const handleTaskClick = (task: Task) => {
     // Receive full task object and navigate to task coach (Principle #7: Build Transparently)
     console.log('📋 Dreams: Navigating to task with full data:', task);
+    setPreviousView('journey');
     setSelectedTask(task);
     setCurrentView('task-coach');
   };
@@ -477,6 +482,7 @@ const Dreams = () => {
       localStorage.setItem('activeGoalId', task.goal_id);
     }
 
+    setPreviousView('journey');
     setSelectedTask(task);
     setCurrentView('task-coach');
   }, []);
