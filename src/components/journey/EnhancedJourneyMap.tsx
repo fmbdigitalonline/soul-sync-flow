@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -42,12 +42,29 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
   const [selectedView, setSelectedView] = useState<'overview' | 'detailed'>('overview');
   const [selectedMilestone, setSelectedMilestone] = useState<any>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const milestoneRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const dreamAchievedRef = useRef<HTMLDivElement | null>(null);
   const { t } = useLanguage();
-  
+
   // Principle #6: Use activeGoal if provided, otherwise fall back to journey data
   const currentGoals = (productivityJourney?.current_goals || []) as any[];
   const mainGoal = activeGoal || currentGoals[0];
+
+  // Sort milestones by order to ensure proper progression
+  const sortedMilestones = useMemo(() => {
+    const rawMilestones = Array.isArray(mainGoal?.milestones) ? mainGoal.milestones : [];
+    return [...rawMilestones].sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+  }, [mainGoal]);
+
+  const completedMilestones = sortedMilestones.filter((m: any) => m.completed);
+  const totalMilestones = sortedMilestones.length;
+  const progress = totalMilestones > 0 ? Math.round((completedMilestones.length / totalMilestones) * 100) : 0;
   
+  const currentMilestone = sortedMilestones.find((m: any) => !m.completed);
+  const nextTasks = (mainGoal?.tasks || [])
+    .filter((t: any) => !t.completed)
+    .slice(0, 3);
+
   // Principle #3: No Fallbacks That Mask Errors - Show clear "no goal selected" state
   if (!mainGoal) {
     return (
@@ -57,25 +74,13 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
           {activeGoal === null ? 'No Dream Selected' : t('journey.empty.title')}
         </h3>
         <p className="text-muted-foreground text-sm">
-          {activeGoal === null 
-            ? 'Please select a dream from your overview to view your journey map.' 
+          {activeGoal === null
+            ? 'Please select a dream from your overview to view your journey map.'
             : t('journey.empty.description')}
         </p>
       </div>
     );
   }
-
-  // Sort milestones by order to ensure proper progression
-  const sortedMilestones = (mainGoal.milestones || []).sort((a: any, b: any) => 
-    (a.order || 0) - (b.order || 0)
-  );
-
-  const completedMilestones = sortedMilestones.filter((m: any) => m.completed);
-  const totalMilestones = sortedMilestones.length;
-  const progress = totalMilestones > 0 ? Math.round((completedMilestones.length / totalMilestones) * 100) : 0;
-  
-  const currentMilestone = sortedMilestones.find((m: any) => !m.completed);
-  const nextTasks = mainGoal.tasks?.filter((t: any) => !t.completed).slice(0, 3) || [];
 
   const getBlueprintInsight = () => {
     if (!blueprintData) return "Your journey is uniquely yours";
@@ -87,12 +92,51 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
     return `Optimized for your ${traits.slice(0, 2).join(' & ')} blueprint`;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      month: 'short', 
+  const formatDate = (dateInput: unknown) => {
+    if (!dateInput) {
+      return 'Date TBD';
+    }
+
+    const parsedDate = (() => {
+      if (dateInput instanceof Date) {
+        return dateInput;
+      }
+
+      if (typeof dateInput === 'string' || typeof dateInput === 'number') {
+        const constructedDate = new Date(dateInput);
+        if (!Number.isNaN(constructedDate.getTime())) {
+          return constructedDate;
+        }
+      }
+
+      return null;
+    })();
+
+    if (!parsedDate) {
+      console.warn('⚠️ EnhancedJourneyMap: Unable to format date input', dateInput);
+      return 'Date TBD';
+    }
+
+    return parsedDate.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric'
     });
   };
+
+  const scrollToMilestone = useCallback(
+    (index: number) => {
+      const milestoneElement = milestoneRefs.current[index];
+      if (milestoneElement) {
+        milestoneElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      if (index >= sortedMilestones.length) {
+        dreamAchievedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    },
+    [sortedMilestones.length]
+  );
 
   const getPhaseColor = (phase: string) => {
     const colors = {
@@ -308,18 +352,38 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
 
                 {/* Flow Arrow */}
                 <div className="flex justify-center">
-                  <ArrowDown className="h-4 w-4 text-soul-purple animate-bounce" />
+                  <button
+                    type="button"
+                    onClick={() => scrollToMilestone(0)}
+                    className="rounded-full p-1.5 focus:outline-none focus:ring-2 focus:ring-soul-purple/50"
+                    aria-label="Scroll to first milestone"
+                  >
+                    <ArrowDown className="h-4 w-4 text-soul-purple animate-bounce" />
+                  </button>
                 </div>
-                
+
                 {/* Milestones in chronological order */}
                 {sortedMilestones.map((milestone: any, index: number) => (
-                  <div key={milestone.id} className="w-full">
+                  <div
+                    key={milestone.id}
+                    className="w-full"
+                    ref={element => {
+                      milestoneRefs.current[index] = element;
+                    }}
+                  >
                     <MilestoneCard milestone={milestone} index={index} />
 
                     {/* Flow Arrow between milestones */}
                     {index < sortedMilestones.length - 1 && (
                       <div className="flex justify-center py-2">
-                        <ArrowDown className="h-3 w-3 text-gray-400" />
+                        <button
+                          type="button"
+                          onClick={() => scrollToMilestone(index + 1)}
+                          className="rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-soul-purple/40"
+                          aria-label="Scroll to next milestone"
+                        >
+                          <ArrowDown className="h-3 w-3 text-gray-400" />
+                        </button>
                       </div>
                     )}
                   </div>
@@ -327,11 +391,18 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
 
                 {/* Final Flow Arrow */}
                 <div className="flex justify-center">
-                  <ArrowDown className="h-4 w-4 text-green-500 animate-bounce" />
+                  <button
+                    type="button"
+                    onClick={() => scrollToMilestone(sortedMilestones.length)}
+                    className="rounded-full p-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+                    aria-label="Scroll to dream achievement"
+                  >
+                    <ArrowDown className="h-4 w-4 text-green-500 animate-bounce" />
+                  </button>
                 </div>
-                
+
                 {/* Dream Achievement */}
-                <div className="flex items-start space-x-3 w-full">
+                <div ref={dreamAchievedRef} className="flex items-start space-x-3 w-full">
                   <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 mt-1">
                     <Target className="h-5 w-5 text-white" />
                   </div>
