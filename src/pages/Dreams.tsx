@@ -528,7 +528,7 @@ const Dreams = () => {
   };
 
   const handleBackFromTaskCoach = async () => {
-    console.log('🔙 Dreams: Returning from task coach, refreshing data');
+    console.log(`🔙 Dreams: Returning from task coach to ${previousView}`);
     await refetchJourneyData();
     setTaskCoachContext(null);
     if (taskCoachReturnTarget === 'success') {
