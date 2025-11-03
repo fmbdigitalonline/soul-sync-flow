@@ -96,6 +96,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
         <div className="max-w-4xl mx-auto p-4">
           <TaskViews
+            activeGoal={mainGoal}
             focusedMilestone={null}
             onBackToJourney={handleBackToOverview}
             onTaskSelect={(task) => onTaskClick?.(task)}

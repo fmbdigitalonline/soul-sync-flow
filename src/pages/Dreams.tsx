@@ -693,7 +693,8 @@ const Dreams = () => {
                     </div>
                     
                     <div className="w-full">
-                      <EnhancedJourneyMap 
+                      <EnhancedJourneyMap
+                        activeGoal={resolvedGoalToShow}
                         onTaskClick={handleTaskClick}
                         onMilestoneClick={handleMilestoneClick}
                         onBackToSuccessOverview={handleBackToSuccessOverview}
@@ -713,6 +714,7 @@ const Dreams = () => {
                     </div>
                     <div className="w-full">
                       <TaskViews
+                        activeGoal={resolvedGoalToShow}
                         focusedMilestone={focusedMilestone}
                         onBackToJourney={() => setActiveTab('journey')}
                         onTaskSelect={handleTaskSelect}

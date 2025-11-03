@@ -185,6 +185,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
       <div className="min-h-screen bg-background">
         <div className="w-full max-w-full mx-auto p-3 sm:p-4 overflow-x-hidden">
           <TaskViews
+            activeGoal={goal}
             focusedMilestone={null}
             onBackToJourney={handleBackToOverview}
             onTaskSelect={onStartTask}
