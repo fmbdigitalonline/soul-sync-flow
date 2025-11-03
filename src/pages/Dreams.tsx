@@ -176,6 +176,10 @@ const Dreams = () => {
   
   // Get active goal from loaded goals
   const activeGoal = goals.find(g => g.id === activeGoalId) || null;
+  const journeyPath = useMemo(
+    () => (activeGoalId ? `/dreams/journey/${activeGoalId}` : "/dreams/journey"),
+    [activeGoalId]
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -388,7 +392,7 @@ const Dreams = () => {
     if (path.startsWith("/dreams/") && path !== "/dreams") {
       console.warn('⚠️ Unhandled Dreams route:', path);
     }
-  }, [location.pathname, createdGoal, selectedGoalId, navigate, toast, journeyId]);
+  }, [location.pathname, createdGoal, selectedGoalId, navigate, toast, journeyId, t]);
 
   const getBlueprintInsight = useCallback(() => {
     if (!blueprintData) return t('dreams.blueprintInsight');
@@ -1018,8 +1022,8 @@ const Dreams = () => {
                   Start Heart-Centered Discovery
                 </Button>
                 
-                <Button 
-                  onClick={() => navigate('/dreams/journey')}
+                <Button
+                  onClick={() => navigate(journeyPath)}
                   variant="outline"
                   className={`w-full border-2 border-border bg-accent hover:bg-accent-foreground/10 text-accent-foreground py-4 rounded-xl font-medium transition-all duration-300 font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}
                 >
@@ -1109,7 +1113,7 @@ const Dreams = () => {
                     description: t('dreams.cards.journeyMap.description'),
                     Icon: MapPin,
                     image: '/assets/home/growth.jpg',
-                    to: "/dreams/journey",
+                    to: journeyPath,
                   },
                   {
                     key: 'tasks',
@@ -1155,7 +1159,7 @@ const Dreams = () => {
                     description: t('dreams.cards.journeyMap.description'),
                     Icon: MapPin,
                     image: '/assets/home/growth.jpg',
-                    to: "/dreams/journey",
+                    to: journeyPath,
                   },
                   {
                     key: 'tasks',
