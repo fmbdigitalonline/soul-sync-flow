@@ -49,8 +49,17 @@ interface Task {
   goal_id?: string;
 }
 
+interface GoalContext {
+  id?: string;
+  goal_id?: string;
+  title?: string;
+  description?: string;
+  [key: string]: any;
+}
+
 interface TaskCoachInterfaceProps {
   task: Task;
+  goal?: GoalContext | null;
   onBack: () => void;
   onTaskComplete: (taskId: string) => void;
 }
@@ -69,6 +78,7 @@ interface CoachMessage {
 
 export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   task,
+  goal,
   onBack,
   onTaskComplete
 }) => {
@@ -498,7 +508,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   // Enhanced session starter with structured task breakdown prompting
   const handleStartSession = useCallback(async () => {
     console.log('🚀 Starting coaching session for task:', task.title);
-    
+
     await dreamActivityLogger.logActivity('session_start_clicked', {
       task_id: task.id,
       task_title: task.title,
@@ -511,8 +521,16 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
 
     // Get current goal context
     const currentGoals = productivityJourney?.current_goals || [];
-    const currentGoal = currentGoals.find(goal => goal.id === task.goal_id);
-    const goalContext = currentGoal ? `\n\nThis task is part of your goal: "${currentGoal.title}" - ${currentGoal.description}` : '';
+    const matchingJourneyGoal = currentGoals.find(goalItem => {
+      const goalId = goalItem?.id ?? goalItem?.goal_id;
+      return goalId ? String(goalId) === task.goal_id : false;
+    });
+    const resolvedGoal = goal || matchingJourneyGoal || null;
+    const resolvedGoalTitle = resolvedGoal?.title ?? matchingJourneyGoal?.title;
+    const resolvedGoalDescription = resolvedGoal?.description ?? matchingJourneyGoal?.description;
+    const goalContext = resolvedGoalTitle
+      ? `\n\nThis task is part of your goal: "${resolvedGoalTitle}"${resolvedGoalDescription ? ` - ${resolvedGoalDescription}` : ''}`
+      : '';
 
     // CRITICAL FIX: Structured prompt to trigger WorkingInstructionsPanel
     const initialMessage = `I'm working on: "${task.title}"
@@ -547,7 +565,7 @@ Provide 4-6 concrete steps I can start working on immediately.`;
     
     console.log('📤 Sending enhanced coaching message with breakdown instructions');
     sendMessage(initialMessage);
-  }, [task, productivityJourney, sendMessage]);
+  }, [task, productivityJourney, goal, sendMessage]);
 
   // Sub-task interaction handlers
   const handleSubTaskStart = useCallback(async (subTask: ParsedSubTask) => {

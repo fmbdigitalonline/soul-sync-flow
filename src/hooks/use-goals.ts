@@ -1,11 +1,10 @@
 /**
- * Hook for managing goals with database persistence
- * Following SoulSync Engineering Protocol:
- * - Principle #2: No Hardcoded Data - all goals from database
- * - Principle #7: Build Transparently - loading states and error handling
+ * Hook for managing goals with database persistence using React Query.
+ * Ensures data stays fresh across reconnects and focus changes.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -27,82 +26,80 @@ export interface Goal {
   milestones: GoalMilestone[];
 }
 
+const GOALS_QUERY_KEY = ['goals'];
+
+const transformGoals = (goalsData: any[]): Goal[] => {
+  return goalsData.map((goal: any) => ({
+    id: goal.id,
+    title: goal.title,
+    description: goal.description || '',
+    deadline: goal.target_date,
+    category: goal.category,
+    progress: goal.progress,
+    alignedWith: (goal.aligned_traits as string[]) || [],
+    milestones: (goal.goal_milestones || [])
+      .sort((a: any, b: any) => a.order_index - b.order_index)
+      .map((m: any) => ({
+        id: m.id,
+        title: m.title,
+        completed: m.is_completed,
+        order_index: m.order_index
+      }))
+  }));
+};
+
 export function useGoals() {
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Load goals from database
-  const loadGoals = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.warn('⚠️ No authenticated user - goals will not load');
-        setGoals([]);
-        setIsLoading(false);
-        return;
-      }
-
-      // Fetch goals with milestones - match actual DB schema
-      const { data: goalsData, error: goalsError } = await supabase
-        .from('user_goals')
-        .select(`
-          *,
-          goal_milestones (*)
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
-
-      if (goalsError) throw goalsError;
-
-      if (!goalsData || goalsData.length === 0) {
-        console.log('ℹ️ No goals found for user');
-        setGoals([]);
-        setIsLoading(false);
-        return;
-      }
-
-      // Transform database records to Goal type - match actual DB schema
-      const transformedGoals: Goal[] = goalsData.map((goal: any) => ({
-        id: goal.id,
-        title: goal.title,
-        description: goal.description || '',
-        deadline: goal.target_date,
-        category: goal.category,
-        progress: goal.progress,
-        alignedWith: (goal.aligned_traits as string[]) || [],
-        milestones: (goal.goal_milestones || [])
-          .sort((a: any, b: any) => a.order_index - b.order_index)
-          .map((m: any) => ({
-            id: m.id,
-            title: m.title,
-            completed: m.is_completed,
-            order_index: m.order_index
-          }))
-      }));
-
-      setGoals(transformedGoals);
-      console.log(`✅ Loaded ${transformedGoals.length} goals`);
-      
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to load goals';
-      console.error('❌ Error loading goals:', err);
-      setError(errorMsg);
-    } finally {
-      setIsLoading(false);
+  const fetchGoals = useCallback(async (): Promise<Goal[]> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.warn('⚠️ No authenticated user - goals will not load');
+      return [];
     }
+
+    const { data: goalsData, error } = await supabase
+      .from('user_goals')
+      .select(`
+        *,
+        goal_milestones (*)
+      `)
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (!goalsData || goalsData.length === 0) {
+      console.log('ℹ️ No goals found for user');
+      return [];
+    }
+
+    return transformGoals(goalsData);
   }, []);
 
-  useEffect(() => {
-    loadGoals();
-  }, [loadGoals]);
+  const {
+    data: goals = [],
+    isLoading,
+    isFetching,
+    error,
+    refetch
+  } = useQuery<Goal[]>({
+    queryKey: GOALS_QUERY_KEY,
+    queryFn: fetchGoals,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    onError: (err) => {
+      const message = err instanceof Error ? err.message : 'Failed to load goals';
+      toast({
+        title: 'Failed to load goals',
+        description: message,
+        variant: 'destructive'
+      });
+    }
+  });
 
-  // Add a new goal
   const addGoal = useCallback(async (
     goalData: Omit<Goal, 'id' | 'progress'>,
     milestones: { title: string }[]
@@ -118,7 +115,6 @@ export function useGoals() {
         return null;
       }
 
-      // Insert goal - match actual DB schema
       const { data: newGoal, error: goalError } = await supabase
         .from('user_goals')
         .insert({
@@ -136,7 +132,6 @@ export function useGoals() {
 
       if (goalError) throw goalError;
 
-      // Insert milestones
       if (milestones.length > 0 && newGoal) {
         const milestonesData = milestones.map((m, index) => ({
           goal_id: newGoal.id,
@@ -153,10 +148,10 @@ export function useGoals() {
         if (milestonesError) throw milestonesError;
       }
 
-      await loadGoals();
+      await queryClient.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
       console.log(`✅ Created goal: ${goalData.title}`);
-      
-      return newGoal.id;
+
+      return newGoal?.id ?? null;
     } catch (err) {
       console.error('❌ Error creating goal:', err);
       toast({
@@ -166,15 +161,13 @@ export function useGoals() {
       });
       return null;
     }
-  }, [loadGoals, toast]);
+  }, [queryClient, toast]);
 
-  // Toggle milestone completion
   const toggleMilestone = useCallback(async (goalId: string, milestoneId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Find current milestone state
       const goal = goals.find(g => g.id === goalId);
       if (!goal) return;
 
@@ -183,7 +176,6 @@ export function useGoals() {
 
       const newCompletedState = !milestone.completed;
 
-      // Update milestone
       const { error: updateError } = await supabase
         .from('goal_milestones')
         .update({
@@ -194,7 +186,6 @@ export function useGoals() {
 
       if (updateError) throw updateError;
 
-      // Recalculate progress
       const updatedMilestones = goal.milestones.map(m =>
         m.id === milestoneId ? { ...m, completed: newCompletedState } : m
       );
@@ -203,7 +194,6 @@ export function useGoals() {
         ? Math.round((completedCount / updatedMilestones.length) * 100)
         : 0;
 
-      // Update goal progress
       const { error: progressError } = await supabase
         .from('user_goals')
         .update({ progress: newProgress })
@@ -211,9 +201,18 @@ export function useGoals() {
 
       if (progressError) throw progressError;
 
-      await loadGoals();
+      queryClient.setQueryData<Goal[]>(GOALS_QUERY_KEY, (current) => {
+        if (!current) return current;
+        return current.map(existingGoal =>
+          existingGoal.id === goalId
+            ? { ...existingGoal, milestones: updatedMilestones, progress: newProgress }
+            : existingGoal
+        );
+      });
+
+      await queryClient.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
       console.log(`✅ Milestone ${milestoneId} toggled`);
-      
+
     } catch (err) {
       console.error('❌ Error toggling milestone:', err);
       toast({
@@ -222,9 +221,8 @@ export function useGoals() {
         variant: 'destructive'
       });
     }
-  }, [goals, loadGoals, toast]);
+  }, [goals, queryClient, toast]);
 
-  // Delete a goal
   const deleteGoal = useCallback(async (goalId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -238,9 +236,14 @@ export function useGoals() {
 
       if (deleteError) throw deleteError;
 
-      await loadGoals();
+      queryClient.setQueryData<Goal[]>(GOALS_QUERY_KEY, (current) => {
+        if (!current) return current;
+        return current.filter(goal => goal.id !== goalId);
+      });
+
+      await queryClient.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
       console.log(`✅ Goal ${goalId} deleted (soft delete)`);
-      
+
     } catch (err) {
       console.error('❌ Error deleting goal:', err);
       toast({
@@ -249,15 +252,17 @@ export function useGoals() {
         variant: 'destructive'
       });
     }
-  }, [loadGoals, toast]);
+  }, [queryClient, toast]);
+
+  const queryError = error instanceof Error ? error.message : error ? String(error) : null;
 
   return {
     goals,
-    isLoading,
-    error,
+    isLoading: isLoading || isFetching,
+    error: queryError,
     addGoal,
     toggleMilestone,
     deleteGoal,
-    reloadGoals: loadGoals
+    reloadGoals: refetch
   };
 }

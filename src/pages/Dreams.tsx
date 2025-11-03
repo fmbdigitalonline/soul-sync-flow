@@ -74,8 +74,10 @@ const Dreams = () => {
   const [focusedMilestoneInDetails, setFocusedMilestoneInDetails] = useState<any>(null);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]); // Track breadcrumb navigation (Pillar I: Preserve Core Intelligence)
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
-  const [previousView, setPreviousView] = useState<'hub' | 'all-goals'>('hub');
+  const [successReturnView, setSuccessReturnView] = useState<'hub' | 'all-goals'>('hub');
+  const [previousView, setPreviousView] = useState<'journey' | 'success'>('journey');
   const [sessionRefreshKey, setSessionRefreshKey] = useState(0);
+  const [taskCoachContext, setTaskCoachContext] = useState<{ task: Task; goal: any | null } | null>(null);
 
   // Principle #2: No Hardcoded Data - Load all goals from database
   const { goals, isLoading: goalsLoading } = useGoals();
@@ -173,9 +175,32 @@ const Dreams = () => {
     // Restore from localStorage (Principle #7: Build Transparently)
     return localStorage.getItem('activeGoalId');
   });
-  
+
   // Get active goal from loaded goals
   const activeGoal = goals.find(g => g.id === activeGoalId) || null;
+  const getGoalIdValue = (goal: any): string | null => {
+    if (!goal) return null;
+    if (goal.id) return String(goal.id);
+    if (goal.goal_id) return String(goal.goal_id);
+    return null;
+  };
+
+  const resolveGoalContextForTask = useCallback(
+    (task: Task | null) => {
+      const goalIdFromTask = task?.goal_id ? String(task.goal_id) : null;
+
+      if (goalIdFromTask) {
+        const fromJourney = journeyGoals.find(goal => getGoalIdValue(goal) === goalIdFromTask);
+        if (fromJourney) return fromJourney;
+
+        const fromGoals = goals.find(goal => goal.id === goalIdFromTask);
+        if (fromGoals) return fromGoals;
+      }
+
+      return resolvedGoalToShow || activeGoal || fallbackGoalFromList || createdGoal || null;
+    },
+    [journeyGoals, goals, resolvedGoalToShow, activeGoal, fallbackGoalFromList, createdGoal]
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -231,10 +256,14 @@ const Dreams = () => {
   }, [sendDreamMessage, resetDreamConversation]);
 
   // Add the missing success page handlers
-  const handleSuccessTaskStart = useCallback((task: any) => {
+  const handleSuccessTaskStart = useCallback((task: Task) => {
+    console.log('🎯 Dreams: Starting task from success view:', task.id);
+    setPreviousView('success');
+    const goalContext = resolveGoalContextForTask(task);
+    setTaskCoachContext({ task, goal: goalContext });
     setSelectedTask(task);
     setCurrentView('task-coach');
-  }, []);
+  }, [resolveGoalContextForTask]);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -253,13 +282,12 @@ const Dreams = () => {
   }, [createdGoal]);
   
   const handleSelectGoal = useCallback((goalId: string) => {
-    console.log('🎯 Dreams: User selected goal:', goalId);
+    console.log('🎯 Dreams: User selected goal, setting active state:', goalId);
     setActiveGoalId(goalId);
     setSelectedGoalId(goalId);
     localStorage.setItem('activeGoalId', goalId);
     setCurrentView('journey');
-    navigate('/dreams/journey');
-  }, [navigate]);
+  }, []);
   
   const handleCreateAnotherDream = useCallback(() => {
     console.log('➕ Dreams: User wants to create another dream');
@@ -284,7 +312,7 @@ const Dreams = () => {
   // Principle #2: No Hardcoded Data - Load real goal from database
   const handleViewGoalDetails = useCallback((goalId: string) => {
     console.log('🔍 Viewing goal details:', goalId);
-    setPreviousView(currentView as 'hub' | 'all-goals');
+    setSuccessReturnView(currentView === 'all-goals' ? 'all-goals' : 'hub');
     setSelectedGoalId(goalId);
     setCurrentView('success');
     navigate('/dreams/success');
@@ -415,10 +443,14 @@ const Dreams = () => {
     scrollToBottom();
   }, [dreamMessages, scrollToBottom]);
 
-  const handleTaskSelect = (task: Task) => {
+  const handleTaskSelect = useCallback((task: Task) => {
+    console.log('🧭 Dreams: Selecting task from journey views:', task.id);
+    setPreviousView('journey');
+    const goalContext = resolveGoalContextForTask(task);
+    setTaskCoachContext({ task, goal: goalContext });
     setSelectedTask(task);
     setCurrentView('task-coach');
-  };
+  }, [resolveGoalContextForTask]);
 
   const handleTaskComplete = async (taskId: string) => {
     // Pillar I: Removed duplicate toast - unified completion service handles this (Principle #8: Only Add, Never Mask)
@@ -426,13 +458,18 @@ const Dreams = () => {
     // Toast is now shown once by use-task-completion hook
   };
 
-  const handleBackFromTaskCoach = async () => {
+  const handleBackFromTaskCoach = useCallback(async () => {
     console.log('🔙 Dreams: Returning from task coach, refreshing data');
     await refetchJourneyData();
     setSelectedTask(null);
-    setCurrentView('journey');
+    setTaskCoachContext(null);
+    if (previousView === 'success') {
+      setCurrentView('success');
+    } else {
+      setCurrentView('journey');
+    }
     setSessionRefreshKey(prev => prev + 1);
-  };
+  }, [previousView, refetchJourneyData]);
 
   const handleBackToSuccessOverview = useCallback(async () => {
     // Navigate back to success landing page (Pillar III: Intentional Craft)
@@ -455,6 +492,9 @@ const Dreams = () => {
   const handleTaskClick = (task: Task) => {
     // Receive full task object and navigate to task coach (Principle #7: Build Transparently)
     console.log('📋 Dreams: Navigating to task with full data:', task);
+    setPreviousView('journey');
+    const goalContext = resolveGoalContextForTask(task);
+    setTaskCoachContext({ task, goal: goalContext });
     setSelectedTask(task);
     setCurrentView('task-coach');
   };
@@ -466,9 +506,12 @@ const Dreams = () => {
       localStorage.setItem('activeGoalId', task.goal_id);
     }
 
+    setPreviousView('journey');
+    const goalContext = resolveGoalContextForTask(task);
+    setTaskCoachContext({ task, goal: goalContext });
     setSelectedTask(task);
     setCurrentView('task-coach');
-  }, []);
+  }, [resolveGoalContextForTask]);
 
   const resolveTaskSessionType = useCallback((taskId: string) => getTaskSessionType(taskId), []);
 
@@ -476,11 +519,13 @@ const Dreams = () => {
 
   // Task Coach View - uses task-specific hook
   if (currentView === 'task-coach' && selectedTask) {
+    const goalForTaskCoach = taskCoachContext?.goal ?? resolveGoalContextForTask(selectedTask);
     return (
       <MainLayout>
         <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
           <TaskCoachInterface
             task={selectedTask}
+            goal={goalForTaskCoach ?? undefined}
             onBack={handleBackFromTaskCoach}
             onTaskComplete={handleTaskComplete}
           />
@@ -562,6 +607,19 @@ const Dreams = () => {
   }
 
   if (currentView === 'journey') {
+    const activeGoalIdValue = activeGoalId ? String(activeGoalId) : null;
+    const resolvedGoalIdValue = getGoalIdValue(resolvedGoalToShow);
+
+    if (!resolvedGoalToShow || (activeGoalIdValue && resolvedGoalIdValue && resolvedGoalIdValue !== activeGoalIdValue)) {
+      return (
+        <MainLayout>
+          <div className="min-h-screen flex items-center justify-center">
+            <Loader2 className="h-12 w-12 text-soul-purple animate-spin" />
+          </div>
+        </MainLayout>
+      );
+    }
+
     return (
       <MainLayout>
         <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
@@ -790,8 +848,8 @@ const Dreams = () => {
             variant="ghost"
             size="sm"
             onClick={() => {
-              setCurrentView(previousView === 'all-goals' ? 'all-goals' : 'hub');
-              navigate(previousView === 'all-goals' ? '/dreams/all' : '/dreams');
+              setCurrentView(successReturnView === 'all-goals' ? 'all-goals' : 'hub');
+              navigate(successReturnView === 'all-goals' ? '/dreams/all' : '/dreams');
               setSelectedGoalId(null);
             }}
             className="flex items-center gap-2"
