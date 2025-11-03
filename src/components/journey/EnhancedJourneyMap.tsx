@@ -45,10 +45,28 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const milestoneRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dreamAchievedRef = useRef<HTMLDivElement | null>(null);
+  const { t } = useLanguage();
 
   // Principle #6: Use activeGoal if provided, otherwise fall back to journey data
   const currentGoals = (productivityJourney?.current_goals || []) as any[];
   const mainGoal = activeGoal || currentGoals[0];
+
+  // Principle #3: No Fallbacks That Mask Errors - Show clear "no goal selected" state
+  if (!mainGoal) {
+    return (
+      <div className="p-6 text-center w-full">
+        <Target className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+        <h3 className="text-lg font-semibold mb-2">
+          {activeGoal === null ? 'No Dream Selected' : t('journey.empty.title')}
+        </h3>
+        <p className="text-muted-foreground text-sm">
+          {activeGoal === null
+            ? 'Please select a dream from your overview to view your journey map.'
+            : t('journey.empty.description')}
+        </p>
+      </div>
+    );
+  }
 
   // Sort milestones by order to ensure proper progression
   const sortedMilestones = useMemo(() => {
