@@ -296,9 +296,18 @@ export const useJourneyTracking = (): UseJourneyTrackingReturn => {
     }
   }, [user]);
 
-  // Refetch data
+  // Refetch data with loading state
   const refetch = useCallback(async () => {
-    await fetchJourneyData();
+    console.log('🔄 useJourneyTracking: Refetching journey data');
+    setLoading(true);
+    try {
+      await fetchJourneyData();
+      console.log('✅ useJourneyTracking: Data refetched successfully');
+    } catch (error) {
+      console.error('❌ useJourneyTracking: Refetch failed', error);
+    } finally {
+      setLoading(false);
+    }
   }, [fetchJourneyData]);
 
   // Initialize data on mount
