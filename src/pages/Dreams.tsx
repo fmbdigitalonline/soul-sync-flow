@@ -46,6 +46,7 @@ import { AllDreamsList } from "@/components/dream/AllDreamsList";
 import { useGoals } from "@/hooks/use-goals";
 import { getTaskSessionType } from "@/utils/task-session";
 import type { ResumableTask } from "@/hooks/use-resumable-tasks";
+import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 
 type Task = ResumableTask;
 
@@ -75,9 +76,73 @@ const Dreams = () => {
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [previousView, setPreviousView] = useState<'hub' | 'all-goals'>('hub');
   const [sessionRefreshKey, setSessionRefreshKey] = useState(0);
-  
+
   // Principle #2: No Hardcoded Data - Load all goals from database
   const { goals, isLoading: goalsLoading } = useGoals();
+
+  const { productivityJourney } = useJourneyTracking();
+
+  const journeyGoals = useMemo(() => {
+    const rawGoals = productivityJourney?.current_goals;
+
+    if (!rawGoals) {
+      return [];
+    }
+
+    if (Array.isArray(rawGoals)) {
+      return rawGoals as any[];
+    }
+
+    if (typeof rawGoals === 'string') {
+      try {
+        const parsed = JSON.parse(rawGoals);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        console.warn('⚠️ Dreams: Unable to parse productivity journey goals string', error);
+        return [];
+      }
+    }
+
+    if (typeof rawGoals === 'object') {
+      return Object.values(rawGoals as Record<string, any>);
+    }
+
+    return [];
+  }, [productivityJourney?.current_goals]);
+
+  const selectedJourneyGoal = useMemo(() => {
+    if (!selectedGoalId) return null;
+
+    return (
+      journeyGoals.find(goal => {
+        const goalId = goal?.id ? String(goal.id) : undefined;
+        const altGoalId = goal?.goal_id ? String(goal.goal_id) : undefined;
+
+        return goalId === selectedGoalId || altGoalId === selectedGoalId;
+      }) || null
+    );
+  }, [journeyGoals, selectedGoalId]);
+
+  const fallbackGoalFromList = useMemo(
+    () => (selectedGoalId ? goals.find(goal => goal.id === selectedGoalId) || null : null),
+    [goals, selectedGoalId]
+  );
+
+  const resolvedGoalToShow = useMemo(() => {
+    if (createdGoal) {
+      return createdGoal;
+    }
+
+    if (selectedJourneyGoal) {
+      return selectedJourneyGoal;
+    }
+
+    if (fallbackGoalFromList) {
+      return fallbackGoalFromList;
+    }
+
+    return journeyGoals[0];
+  }, [createdGoal, fallbackGoalFromList, journeyGoals, selectedJourneyGoal]);
   
   // Principle #6: Respect Critical Data Pathways - Track active goal
   const [activeGoalId, setActiveGoalId] = useState<string | null>(() => {
@@ -677,12 +742,7 @@ const Dreams = () => {
   }
 
   if (currentView === 'success') {
-    // Determine which goal to show - selected from list or newly created
-    const goalToShow = selectedGoalId 
-      ? goals.find(g => g.id === selectedGoalId) 
-      : createdGoal;
-
-    if (!goalToShow) {
+    if (!resolvedGoalToShow) {
       return (
         <MainLayout>
           <div className="text-center p-8">
@@ -712,9 +772,9 @@ const Dreams = () => {
             <span>Back</span>
           </Button>
         </div>
-        
+
         <DreamSuccessPage
-          goal={goalToShow}
+          goal={resolvedGoalToShow}
           onStartTask={handleSuccessTaskStart}
           onViewJourney={handleSuccessViewJourney}
         />
