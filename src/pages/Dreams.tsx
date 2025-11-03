@@ -49,11 +49,6 @@ import type { ResumableTask } from "@/hooks/use-resumable-tasks";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 
 type Task = ResumableTask;
-type GoalSummary = {
-  id: string;
-  title: string;
-  description?: string;
-};
 
 const Dreams = () => {
   const { 
@@ -72,16 +67,14 @@ const Dreams = () => {
   const [currentView, setCurrentView] = useState<'hub' | 'create' | 'chat' | 'journey' | 'task-coach' | 'decomposing' | 'success' | 'details' | 'all-goals'>('hub');
   const [activeTab, setActiveTab] = useState<'journey' | 'tasks' | 'focus' | 'habits'>('journey');
   const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
-  const [taskCoachContext, setTaskCoachContext] = useState<{ task: Task; goal: GoalSummary | null } | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isCreatingDream, setIsCreatingDream] = useState(false);
   const [createdGoal, setCreatedGoal] = useState<any>(null);
   const [selectedGoalForDetails, setSelectedGoalForDetails] = useState<any>(null);
   const [focusedMilestoneInDetails, setFocusedMilestoneInDetails] = useState<any>(null);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]); // Track breadcrumb navigation (Pillar I: Preserve Core Intelligence)
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
-  const [previousView, setPreviousView] = useState<'hub' | 'all-goals' | 'success'>('hub');
-  const [lastSuccessEntryPoint, setLastSuccessEntryPoint] = useState<'hub' | 'all-goals'>('hub');
-  const [taskCoachReturnTarget, setTaskCoachReturnTarget] = useState<'journey' | 'success'>('journey');
+  const [previousView, setPreviousView] = useState<'hub' | 'all-goals'>('hub');
   const [sessionRefreshKey, setSessionRefreshKey] = useState(0);
 
   // Principle #2: No Hardcoded Data - Load all goals from database
@@ -174,82 +167,7 @@ const Dreams = () => {
     console.warn('⚠️ Dreams: No goal with complete data found, returning best available or null');
     return createdGoal || selectedJourneyGoal || fallbackGoalFromList || firstJourneyGoal || null;
   }, [createdGoal, fallbackGoalFromList, journeyGoals, selectedJourneyGoal]);
-
-  const goalContextIndex = useMemo(() => {
-    const normalizeGoal = (goal: any): GoalSummary | null => {
-      if (!goal) {
-        return null;
-      }
-
-      const rawId = goal.id ?? goal.goal_id ?? goal.goalId ?? goal.uuid;
-      if (!rawId) {
-        return null;
-      }
-
-      const rawTitle = goal.title ?? goal.goal_title ?? goal.name ?? goal.goalName ?? goal.goalTitle;
-      const rawDescription = goal.description ?? goal.goal_description ?? goal.summary ?? goal.goal_summary;
-
-      return {
-        id: String(rawId),
-        title: rawTitle ? String(rawTitle) : 'Untitled Goal',
-        description: rawDescription ? String(rawDescription) : undefined
-      };
-    };
-
-    const map = new Map<string, GoalSummary>();
-    const list: GoalSummary[] = [];
-    const addGoal = (goal: any) => {
-      const normalized = normalizeGoal(goal);
-      if (!normalized) {
-        return;
-      }
-
-      const existing = map.get(normalized.id);
-      if (!existing) {
-        map.set(normalized.id, normalized);
-        list.push(normalized);
-        return;
-      }
-
-      if (!existing.description && normalized.description) {
-        const updated = { ...existing, description: normalized.description };
-        map.set(updated.id, updated);
-        const index = list.findIndex(item => item.id === updated.id);
-        if (index !== -1) {
-          list[index] = updated;
-        }
-      }
-    };
-
-    addGoal(resolvedGoalToShow);
-    addGoal(createdGoal);
-    addGoal(selectedJourneyGoal);
-    addGoal(fallbackGoalFromList);
-    journeyGoals.forEach(addGoal);
-    goals.forEach(addGoal);
-
-    return { map, list };
-  }, [createdGoal, fallbackGoalFromList, goals, journeyGoals, resolvedGoalToShow, selectedJourneyGoal]);
-
-  const deriveGoalContext = useCallback((task: Task): GoalSummary | null => {
-    const goalId = task.goal_id ? String(task.goal_id) : null;
-
-    if (goalId) {
-      const normalized = goalContextIndex.map.get(goalId);
-      if (normalized) {
-        return normalized;
-      }
-
-      return {
-        id: goalId,
-        title: 'Associated Goal',
-        description: undefined
-      };
-    }
-
-    return goalContextIndex.list.length > 0 ? goalContextIndex.list[0] : null;
-  }, [goalContextIndex]);
-
+  
   // Principle #6: Respect Critical Data Pathways - Track active goal
   const [activeGoalId, setActiveGoalId] = useState<string | null>(() => {
     // Restore from localStorage (Principle #7: Build Transparently)
@@ -258,10 +176,6 @@ const Dreams = () => {
   
   // Get active goal from loaded goals
   const activeGoal = goals.find(g => g.id === activeGoalId) || null;
-  const journeyPath = useMemo(
-    () => (activeGoalId ? `/dreams/journey/${activeGoalId}` : "/dreams/journey"),
-    [activeGoalId]
-  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -318,13 +232,9 @@ const Dreams = () => {
 
   // Add the missing success page handlers
   const handleSuccessTaskStart = useCallback((task: any) => {
-    const normalizedTask = task as Task;
-    const goalContext = deriveGoalContext(normalizedTask);
-    setTaskCoachContext({ task: normalizedTask, goal: goalContext });
-    setPreviousView('success');
-    setTaskCoachReturnTarget('success');
+    setSelectedTask(task);
     setCurrentView('task-coach');
-  }, [deriveGoalContext]);
+  }, []);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -375,9 +285,7 @@ const Dreams = () => {
   // Principle #2: No Hardcoded Data - Load real goal from database
   const handleViewGoalDetails = useCallback((goalId: string) => {
     console.log('🔍 Viewing goal details:', goalId);
-    const entryPoint: 'hub' | 'all-goals' = currentView === 'all-goals' ? 'all-goals' : 'hub';
-    setPreviousView(entryPoint);
-    setLastSuccessEntryPoint(entryPoint);
+    setPreviousView(currentView as 'hub' | 'all-goals');
     setSelectedGoalId(goalId);
     setCurrentView('success');
     navigate('/dreams/success');
@@ -480,7 +388,7 @@ const Dreams = () => {
     if (path.startsWith("/dreams/") && path !== "/dreams") {
       console.warn('⚠️ Unhandled Dreams route:', path);
     }
-  }, [location.pathname, createdGoal, selectedGoalId, navigate, toast, journeyId, t]);
+  }, [location.pathname, createdGoal, selectedGoalId, navigate, toast, journeyId]);
 
   const getBlueprintInsight = useCallback(() => {
     if (!blueprintData) return t('dreams.blueprintInsight');
@@ -519,9 +427,7 @@ const Dreams = () => {
   }, [dreamMessages, scrollToBottom]);
 
   const handleTaskSelect = (task: Task) => {
-    const goalContext = deriveGoalContext(task);
-    setTaskCoachContext({ task, goal: goalContext });
-    setTaskCoachReturnTarget('journey');
+    setSelectedTask(task);
     setCurrentView('task-coach');
   };
 
@@ -532,17 +438,10 @@ const Dreams = () => {
   };
 
   const handleBackFromTaskCoach = async () => {
-    console.log(`🔙 Dreams: Returning from task coach to ${previousView}`);
+    console.log('🔙 Dreams: Returning from task coach, refreshing data');
     await refetchJourneyData();
-    setTaskCoachContext(null);
-    if (taskCoachReturnTarget === 'success') {
-      setPreviousView(lastSuccessEntryPoint);
-      setCurrentView('success');
-      navigate('/dreams/success');
-    } else {
-      setCurrentView('journey');
-    }
-    setTaskCoachReturnTarget('journey');
+    setSelectedTask(null);
+    setCurrentView('journey');
     setSessionRefreshKey(prev => prev + 1);
   };
 
@@ -567,9 +466,7 @@ const Dreams = () => {
   const handleTaskClick = (task: Task) => {
     // Receive full task object and navigate to task coach (Principle #7: Build Transparently)
     console.log('📋 Dreams: Navigating to task with full data:', task);
-    const goalContext = deriveGoalContext(task);
-    setTaskCoachContext({ task, goal: goalContext });
-    setTaskCoachReturnTarget('journey');
+    setSelectedTask(task);
     setCurrentView('task-coach');
   };
 
@@ -580,24 +477,21 @@ const Dreams = () => {
       localStorage.setItem('activeGoalId', task.goal_id);
     }
 
-    const goalContext = deriveGoalContext(task);
-    setTaskCoachContext({ task, goal: goalContext });
-    setTaskCoachReturnTarget('journey');
+    setSelectedTask(task);
     setCurrentView('task-coach');
-  }, [deriveGoalContext]);
+  }, []);
 
   const resolveTaskSessionType = useCallback((taskId: string) => getTaskSessionType(taskId), []);
 
   // Removed duplicate authentication check - component is wrapped in ProtectedRoute
 
   // Task Coach View - uses task-specific hook
-  if (currentView === 'task-coach' && taskCoachContext) {
+  if (currentView === 'task-coach' && selectedTask) {
     return (
       <MainLayout>
         <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
           <TaskCoachInterface
-            task={taskCoachContext.task}
-            goal={taskCoachContext.goal}
+            task={selectedTask}
             onBack={handleBackFromTaskCoach}
             onTaskComplete={handleTaskComplete}
           />
@@ -907,14 +801,8 @@ const Dreams = () => {
             variant="ghost"
             size="sm"
             onClick={() => {
-              const targetView = previousView === 'all-goals'
-                ? 'all-goals'
-                : previousView === 'success'
-                  ? lastSuccessEntryPoint
-                  : 'hub';
-              setPreviousView(targetView);
-              setCurrentView(targetView);
-              navigate(targetView === 'all-goals' ? '/dreams/all' : '/dreams');
+              setCurrentView(previousView === 'all-goals' ? 'all-goals' : 'hub');
+              navigate(previousView === 'all-goals' ? '/dreams/all' : '/dreams');
               setSelectedGoalId(null);
             }}
             className="flex items-center gap-2"
@@ -1130,8 +1018,8 @@ const Dreams = () => {
                   Start Heart-Centered Discovery
                 </Button>
                 
-                <Button
-                  onClick={() => navigate(journeyPath)}
+                <Button 
+                  onClick={() => navigate('/dreams/journey')}
                   variant="outline"
                   className={`w-full border-2 border-border bg-accent hover:bg-accent-foreground/10 text-accent-foreground py-4 rounded-xl font-medium transition-all duration-300 font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}
                 >
@@ -1221,7 +1109,7 @@ const Dreams = () => {
                     description: t('dreams.cards.journeyMap.description'),
                     Icon: MapPin,
                     image: '/assets/home/growth.jpg',
-                    to: journeyPath,
+                    to: "/dreams/journey",
                   },
                   {
                     key: 'tasks',
@@ -1267,7 +1155,7 @@ const Dreams = () => {
                     description: t('dreams.cards.journeyMap.description'),
                     Icon: MapPin,
                     image: '/assets/home/growth.jpg',
-                    to: journeyPath,
+                    to: "/dreams/journey",
                   },
                   {
                     key: 'tasks',

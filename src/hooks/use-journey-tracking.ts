@@ -1,12 +1,11 @@
 /**
  * Journey Tracking Hook - Compatibility Layer
- *
+ * 
  * SoulSync Principle #1: Never Break - Preserves existing interface for productivity/growth journeys
  * This maintains the original journey tracking system while our new onboarding tracking coexists
  */
 
-import { useCallback, useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -49,152 +48,115 @@ interface UseJourneyTrackingReturn {
   [key: string]: any;
 }
 
-const JOURNEY_QUERY_KEY = 'journeyTracking';
-
-interface JourneyData {
-  productivityJourney: ProductivityJourney;
-  growthJourney: GrowthJourney;
-}
-
-const createDefaultProductivityJourney = (): ProductivityJourney => ({
-  current_goals: [],
-  completed_goals: [],
-  active_tasks: [],
-  completed_tasks: [],
-  weekly_focus: '',
-  productivity_score: 0,
-  last_updated: new Date().toISOString()
-});
-
-const createDefaultGrowthJourney = (): GrowthJourney => ({
-  current_focus_area: '',
-  reflection_entries: [],
-  insight_entries: [],
-  mood_entries: [],
-  spiritual_practices: [],
-  growth_milestones: [],
-  last_updated: new Date().toISOString()
-});
-
-const ensureJourneyData = (data?: JourneyData): JourneyData => ({
-  productivityJourney: data?.productivityJourney ?? createDefaultProductivityJourney(),
-  growthJourney: data?.growthJourney ?? createDefaultGrowthJourney()
-});
-
-const fetchJourneyData = async (userId: string): Promise<JourneyData> => {
-  try {
-    const [productivityResult, growthResult] = await Promise.all([
-      supabase
-        .from('productivity_journey')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle(),
-      supabase
-        .from('growth_journey')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle()
-    ]);
-
-    if (productivityResult.error) {
-      console.error('Error fetching productivity journey:', productivityResult.error);
-    }
-
-    if (growthResult.error) {
-      console.error('Error fetching growth journey:', growthResult.error);
-    }
-
-    const productivityData = productivityResult.data;
-    const productivity: ProductivityJourney = {
-      current_goals: Array.isArray(productivityData?.current_goals) ? productivityData.current_goals : [],
-      completed_goals: Array.isArray(productivityData?.completed_goals) ? productivityData.completed_goals : [],
-      active_tasks: Array.isArray(productivityData?.current_tasks) ? productivityData.current_tasks : [],
-      completed_tasks: Array.isArray(productivityData?.completed_tasks) ? productivityData.completed_tasks : [],
-      weekly_focus: String(productivityData?.current_position || ''),
-      productivity_score: 0,
-      last_updated: productivityData?.updated_at || new Date().toISOString()
-    };
-
-    const growthData = growthResult.data;
-    const growth: GrowthJourney = {
-      current_focus_area: (() => {
-        const focusAreas = growthData?.current_focus_areas;
-        if (Array.isArray(focusAreas) && focusAreas.length > 0) {
-          return String(focusAreas[0]);
-        }
-        return '';
-      })(),
-      reflection_entries: Array.isArray(growthData?.reflection_entries) ? growthData.reflection_entries : [],
-      insight_entries: Array.isArray(growthData?.insight_entries) ? growthData.insight_entries : [],
-      mood_entries: Array.isArray(growthData?.mood_entries) ? growthData.mood_entries : [],
-      spiritual_practices: Array.isArray(growthData?.spiritual_practices) ? growthData.spiritual_practices : [],
-      growth_milestones: Array.isArray(growthData?.growth_milestones) ? growthData.growth_milestones : [],
-      last_updated: growthData?.updated_at || new Date().toISOString()
-    };
-
-    return {
-      productivityJourney: productivity,
-      growthJourney: growth
-    };
-  } catch (error) {
-    console.error('Error in fetchJourneyData:', error);
-    return {
-      productivityJourney: createDefaultProductivityJourney(),
-      growthJourney: createDefaultGrowthJourney()
-    };
-  }
-};
-
 export const useJourneyTracking = (): UseJourneyTrackingReturn => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const [productivityJourney, setProductivityJourney] = useState<ProductivityJourney | null>(null);
+  const [growthJourney, setGrowthJourney] = useState<GrowthJourney | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const journeyQueryKey = useMemo(
-    () => (user ? [JOURNEY_QUERY_KEY, user.id] : [JOURNEY_QUERY_KEY, 'guest']) as const,
-    [user]
-  );
+  // Initialize default data structure
+  const initializeDefaultData = useCallback(() => {
+    const defaultProductivity: ProductivityJourney = {
+      current_goals: [],
+      completed_goals: [],
+      active_tasks: [],
+      completed_tasks: [],
+      weekly_focus: '',
+      productivity_score: 0,
+      last_updated: new Date().toISOString()
+    };
 
-  const {
-    data,
-    isPending,
-    isFetching,
-    refetch
-  } = useQuery<JourneyData, Error>({
-    queryKey: journeyQueryKey,
-    queryFn: async () => {
-      if (!user) {
-        return {
-          productivityJourney: createDefaultProductivityJourney(),
-          growthJourney: createDefaultGrowthJourney()
-        };
+    const defaultGrowth: GrowthJourney = {
+      current_focus_area: '',
+      reflection_entries: [],
+      insight_entries: [],
+      mood_entries: [],
+      spiritual_practices: [],
+      growth_milestones: [],
+      last_updated: new Date().toISOString()
+    };
+
+    setProductivityJourney(defaultProductivity);
+    setGrowthJourney(defaultGrowth);
+  }, []);
+
+  // Fetch journey data from database
+  const fetchJourneyData = useCallback(async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      // Fetch directly from productivity_journey and growth_journey tables
+      const [productivityResult, growthResult] = await Promise.all([
+        supabase
+          .from('productivity_journey')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('growth_journey')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle()
+      ]);
+
+      if (productivityResult.error) {
+        console.error('Error fetching productivity journey:', productivityResult.error);
       }
-      return fetchJourneyData(user.id);
-    },
-    enabled: Boolean(user),
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true
-  });
 
-  const loading = user ? (isPending || isFetching) : false;
+      if (growthResult.error) {
+        console.error('Error fetching growth journey:', growthResult.error);
+      }
 
-  const productivityJourney = data?.productivityJourney ?? createDefaultProductivityJourney();
-  const growthJourney = data?.growthJourney ?? createDefaultGrowthJourney();
+      // Build productivity journey from direct table data
+      const productivityData = productivityResult.data;
+      const productivity: ProductivityJourney = {
+        current_goals: Array.isArray(productivityData?.current_goals) ? productivityData.current_goals : [],
+        completed_goals: Array.isArray(productivityData?.completed_goals) ? productivityData.completed_goals : [],
+        active_tasks: Array.isArray(productivityData?.current_tasks) ? productivityData.current_tasks : [],
+        completed_tasks: Array.isArray(productivityData?.completed_tasks) ? productivityData.completed_tasks : [],
+        weekly_focus: String(productivityData?.current_position || ''),
+        productivity_score: 0,
+        last_updated: productivityData?.updated_at || new Date().toISOString()
+      };
+
+      // Build growth journey from direct table data
+      const growthData = growthResult.data;
+      const growth: GrowthJourney = {
+        current_focus_area: (() => {
+          const focusAreas = growthData?.current_focus_areas;
+          if (Array.isArray(focusAreas) && focusAreas.length > 0) {
+            return String(focusAreas[0]);
+          }
+          return '';
+        })(),
+        reflection_entries: Array.isArray(growthData?.reflection_entries) ? growthData.reflection_entries : [],
+        insight_entries: Array.isArray(growthData?.insight_entries) ? growthData.insight_entries : [],
+        mood_entries: Array.isArray(growthData?.mood_entries) ? growthData.mood_entries : [],
+        spiritual_practices: Array.isArray(growthData?.spiritual_practices) ? growthData.spiritual_practices : [],
+        growth_milestones: Array.isArray(growthData?.growth_milestones) ? growthData.growth_milestones : [],
+        last_updated: growthData?.updated_at || new Date().toISOString()
+      };
+
+      setProductivityJourney(productivity);
+      setGrowthJourney(growth);
+
+    } catch (error) {
+      console.error('Error in fetchJourneyData:', error);
+      initializeDefaultData(); // Fallback to defaults
+    } finally {
+      setLoading(false);
+    }
+  }, [user, initializeDefaultData]);
 
   // Update productivity journey
   const updateProductivityJourney = useCallback(async (updates: Partial<ProductivityJourney>) => {
     if (!user) return { success: false, error: 'No authenticated user' };
 
     try {
-      const currentData = ensureJourneyData(
-        queryClient.getQueryData<JourneyData>([JOURNEY_QUERY_KEY, user.id]) || data
-      );
-
-      const updatedJourney: ProductivityJourney = {
-        ...currentData.productivityJourney,
-        ...updates,
-        last_updated: new Date().toISOString()
-      };
-
+      const updatedJourney = { ...productivityJourney, ...updates, last_updated: new Date().toISOString() };
+      
+      // Store in productivity_journey table
       const { error } = await supabase
         .from('productivity_journey')
         .upsert({
@@ -208,33 +170,22 @@ export const useJourneyTracking = (): UseJourneyTrackingReturn => {
 
       if (error) throw error;
 
-      queryClient.setQueryData<JourneyData>([JOURNEY_QUERY_KEY, user.id], prev => ({
-        ...ensureJourneyData(prev),
-        productivityJourney: updatedJourney
-      }));
-
+      setProductivityJourney(updatedJourney as ProductivityJourney);
       return { success: true };
     } catch (error) {
       console.error('Error updating productivity journey:', error);
       return { success: false, error: String(error) };
     }
-  }, [data, queryClient, user]);
+  }, [user, productivityJourney]);
 
   // Update growth journey
   const updateGrowthJourney = useCallback(async (updates: Partial<GrowthJourney>) => {
     if (!user) return { success: false, error: 'No authenticated user' };
 
     try {
-      const currentData = ensureJourneyData(
-        queryClient.getQueryData<JourneyData>([JOURNEY_QUERY_KEY, user.id]) || data
-      );
-
-      const updatedJourney: GrowthJourney = {
-        ...currentData.growthJourney,
-        ...updates,
-        last_updated: new Date().toISOString()
-      };
-
+      const updatedJourney = { ...growthJourney, ...updates, last_updated: new Date().toISOString() };
+      
+      // Store in growth_journey table
       const { error } = await supabase
         .from('growth_journey')
         .upsert({
@@ -250,17 +201,13 @@ export const useJourneyTracking = (): UseJourneyTrackingReturn => {
 
       if (error) throw error;
 
-      queryClient.setQueryData<JourneyData>([JOURNEY_QUERY_KEY, user.id], prev => ({
-        ...ensureJourneyData(prev),
-        growthJourney: updatedJourney
-      }));
-
+      setGrowthJourney(updatedJourney as GrowthJourney);
       return { success: true };
     } catch (error) {
       console.error('Error updating growth journey:', error);
       return { success: false, error: String(error) };
     }
-  }, [data, queryClient, user]);
+  }, [user, growthJourney]);
 
   // Add reflection entry
   const addReflectionEntry = useCallback(async (entry: any) => {
@@ -277,24 +224,19 @@ export const useJourneyTracking = (): UseJourneyTrackingReturn => {
 
       if (error) throw error;
 
-      queryClient.setQueryData<JourneyData>([JOURNEY_QUERY_KEY, user.id], prev => {
-        const current = ensureJourneyData(prev);
-        return {
-          ...current,
-          growthJourney: {
-            ...current.growthJourney,
-            reflection_entries: [entry, ...current.growthJourney.reflection_entries],
-            last_updated: new Date().toISOString()
-          }
-        };
-      });
+      // Update local state
+      setGrowthJourney(prev => prev ? {
+        ...prev,
+        reflection_entries: [entry, ...prev.reflection_entries],
+        last_updated: new Date().toISOString()
+      } : null);
 
       return { success: true };
     } catch (error) {
       console.error('Error adding reflection entry:', error);
       return { success: false, error: String(error) };
     }
-  }, [queryClient, user]);
+  }, [user]);
 
   // Add insight entry
   const addInsightEntry = useCallback(async (entry: any) => {
@@ -311,24 +253,19 @@ export const useJourneyTracking = (): UseJourneyTrackingReturn => {
 
       if (error) throw error;
 
-      queryClient.setQueryData<JourneyData>([JOURNEY_QUERY_KEY, user.id], prev => {
-        const current = ensureJourneyData(prev);
-        return {
-          ...current,
-          growthJourney: {
-            ...current.growthJourney,
-            insight_entries: [entry, ...current.growthJourney.insight_entries],
-            last_updated: new Date().toISOString()
-          }
-        };
-      });
+      // Update local state
+      setGrowthJourney(prev => prev ? {
+        ...prev,
+        insight_entries: [entry, ...prev.insight_entries],
+        last_updated: new Date().toISOString()
+      } : null);
 
       return { success: true };
     } catch (error) {
       console.error('Error adding insight entry:', error);
       return { success: false, error: String(error) };
     }
-  }, [queryClient, user]);
+  }, [user]);
 
   // Add mood entry
   const addMoodEntry = useCallback(async (entry: any) => {
@@ -345,49 +282,55 @@ export const useJourneyTracking = (): UseJourneyTrackingReturn => {
 
       if (error) throw error;
 
-      queryClient.setQueryData<JourneyData>([JOURNEY_QUERY_KEY, user.id], prev => {
-        const current = ensureJourneyData(prev);
-        return {
-          ...current,
-          growthJourney: {
-            ...current.growthJourney,
-            mood_entries: [entry, ...current.growthJourney.mood_entries],
-            last_updated: new Date().toISOString()
-          }
-        };
-      });
+      // Update local state
+      setGrowthJourney(prev => prev ? {
+        ...prev,
+        mood_entries: [entry, ...prev.mood_entries],
+        last_updated: new Date().toISOString()
+      } : null);
 
       return { success: true };
     } catch (error) {
       console.error('Error adding mood entry:', error);
       return { success: false, error: String(error) };
     }
-  }, [queryClient, user]);
+  }, [user]);
 
   // Refetch data with loading state
-  const refetchJourney = useCallback(async () => {
-    if (!user) return;
+  const refetch = useCallback(async () => {
     console.log('🔄 useJourneyTracking: Refetching journey data');
-    const result = await refetch();
-    if (result.error) {
-      console.error('❌ useJourneyTracking: Refetch failed', result.error);
-    } else {
+    setLoading(true);
+    try {
+      await fetchJourneyData();
       console.log('✅ useJourneyTracking: Data refetched successfully');
+    } catch (error) {
+      console.error('❌ useJourneyTracking: Refetch failed', error);
+    } finally {
+      setLoading(false);
     }
-  }, [refetch, user]);
+  }, [fetchJourneyData]);
+
+  // Initialize data on mount
+  useEffect(() => {
+    if (user) {
+      fetchJourneyData();
+    } else {
+      initializeDefaultData();
+    }
+  }, [user, fetchJourneyData, initializeDefaultData]);
 
   return {
     // State
     productivityJourney,
     growthJourney,
     loading,
-
+    
     // Actions
     updateProductivityJourney,
     updateGrowthJourney,
     addReflectionEntry,
     addInsightEntry,
     addMoodEntry,
-    refetch: refetchJourney
+    refetch
   };
 };
