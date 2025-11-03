@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import { JourneyAgenticTools } from '@/services/journey-agentic-tools';
-import { hermeticIntelligenceService } from '@/services/hermetic-intelligence-service';
 import { supabase } from '@/integrations/supabase/client';
-import { enhancedTaskCoachIntegrationService } from '@/services/enhanced-task-coach-integration-service';
+import { sanitizeCoachContent } from '@/utils/sanitize-coach-content';
 
 interface TaskAssistantData {
   checklistSteps: string[];
@@ -18,113 +16,115 @@ interface UseTaskAssistantResult {
 }
 
 /**
- * Hook that generates personalized task breakdowns using hermetic data
- * and persists subtasks to the database for cross-session persistence
+ * Hook that lazily hydrates cached task breakdowns.
+ * Generation now happens on-demand inside the task coach interface,
+ * so this hook simply loads existing data when the user asks for it.
  */
-export function useTaskAssistant(task: any): UseTaskAssistantResult {
+export function useTaskAssistant(task: any, enabled = true): UseTaskAssistantResult {
   const [assistantData, setAssistantData] = useState<TaskAssistantData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // If task already has sub_tasks in database, skip generation
-    if (task.sub_tasks && task.sub_tasks.length > 0) {
-      console.log('📦 TaskAssistant: Using cached subtasks from database');
-      return;
-    }
-
     let isMounted = true;
 
-    async function generateAndPersistAssistant() {
-      if (!isMounted) return;
-      
+    if (!enabled) {
+      setLoading(false);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    if (!task?.id) {
+      setAssistantData(null);
+      setLoading(false);
+      setError(null);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const loadCachedAssistant = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // Get user authentication
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          throw new Error('User not authenticated');
-        }
-
-        console.log('🎯 TaskAssistant: Generating personalized breakdown for:', task.title);
-
-        // Fetch hermetic intelligence data
-        const hermeticResult = await hermeticIntelligenceService.getStructuredIntelligence(user.id);
-        const hermeticData = hermeticResult.success ? hermeticResult.intelligence : null;
-
-        // Fetch blueprint data
-        const { data: blueprintData } = await supabase
-          .from('blueprints')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
+        const { data, error: fetchError } = await supabase
+          .from('tasks')
+          .select('ai_breakdown')
+          .eq('id', task.id)
           .single();
 
-        // Generate task assistant data
-        const result = await JourneyAgenticTools.generateTaskAssistant(
-          task,
-          hermeticData,
-          blueprintData
-        );
-
-        if (!isMounted) return;
-
-        console.log('✨ TaskAssistant: Generated breakdown with', result.checklistSteps.length, 'steps');
-
-        // Set the current task in the integration service
-        enhancedTaskCoachIntegrationService.setCurrentTask({
-          ...task,
-          progress: 0,
-          sub_tasks: []
-        });
-
-        // Persist each checklist step as a subtask to the database
-        for (let i = 0; i < result.checklistSteps.length; i++) {
-          const step = result.checklistSteps[i];
-          
-          await enhancedTaskCoachIntegrationService.executeTaskAction({
-            type: 'add_subtask',
-            payload: {
-              id: `subtask_ai_${Date.now()}_${i}`,
-              title: step,
-              metadata: {
-                source: 'ai_assistant',
-                motivationalFraming: result.motivationalFraming,
-                timeOptimization: result.timeOptimization,
-                estimatedTime: task.estimated_duration,
-                energyRequired: task.energy_level_required
-              }
-            }
-          }, 'auto_execution');
-
-          // Small delay to prevent race conditions
-          await new Promise(resolve => setTimeout(resolve, 50));
+        if (!isMounted) {
+          return;
         }
 
-        console.log('💾 TaskAssistant: Persisted', result.checklistSteps.length, 'subtasks to database');
+        if (fetchError) {
+          console.error('❌ TaskAssistant: Failed to load cached breakdown:', fetchError);
+          setAssistantData(null);
+          setError(fetchError.message);
+          setLoading(false);
+          return;
+        }
 
-        if (!isMounted) return;
+        const cached = data?.ai_breakdown;
 
-        setAssistantData(result);
+        if (cached && typeof cached === 'object') {
+          const content = typeof cached.content === 'string' ? cached.content : '';
+          const sanitizedContent = sanitizeCoachContent(content);
+          const checklistSteps = extractChecklistSteps(sanitizedContent);
+
+          setAssistantData({
+            checklistSteps,
+            anticipatedBlockers: Array.isArray(cached.anticipatedBlockers) ? cached.anticipatedBlockers : [],
+            motivationalFraming: typeof cached.motivationalFraming === 'string' ? cached.motivationalFraming : '',
+            timeOptimization: typeof cached.timeOptimization === 'string' ? cached.timeOptimization : ''
+          });
+        } else {
+          setAssistantData(null);
+        }
+
         setLoading(false);
-
       } catch (err) {
-        console.error('❌ TaskAssistant: Generation failed:', err);
-        if (!isMounted) return;
-        
-        setError(err instanceof Error ? err.message : 'Failed to generate task breakdown');
+        if (!isMounted) {
+          return;
+        }
+
+        console.error('❌ TaskAssistant: Unexpected error loading cached breakdown:', err);
+        setAssistantData(null);
+        setError(err instanceof Error ? err.message : 'Failed to load cached breakdown');
         setLoading(false);
       }
-    }
+    };
 
-    generateAndPersistAssistant();
+    loadCachedAssistant();
 
     return () => {
       isMounted = false;
     };
-  }, [task.id]); // Only re-run when task ID changes
+  }, [task?.id, enabled]);
 
   return { assistantData, loading, error };
+}
+
+function extractChecklistSteps(content: string): string[] {
+  if (!content) {
+    return [];
+  }
+
+  const lines = content.split(/\n+/);
+  const steps: string[] = [];
+
+  for (const line of lines) {
+    const match = line.match(/^\s*\d+\.\s*(.*)$/);
+    if (match && match[1]) {
+      steps.push(match[1].trim());
+    }
+  }
+
+  if (steps.length === 0) {
+    return [content.trim()].filter(Boolean);
+  }
+
+  return steps;
 }
