@@ -37,50 +37,72 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
   showSuccessBackButton,
   activeGoal // NEW: Use activeGoal if provided (Principle #6: Respect Critical Data Pathways)
 }) => {
+  // ✅ STEP 1: Call ALL hooks first unconditionally (React Rules of Hooks)
   const { productivityJourney } = useJourneyTracking();
   const { blueprintData } = useOptimizedBlueprintData();
+  const { t } = useLanguage();
+  
   const [selectedView, setSelectedView] = useState<'overview' | 'detailed'>('overview');
   const [selectedMilestone, setSelectedMilestone] = useState<any>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const milestoneRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dreamAchievedRef = useRef<HTMLDivElement | null>(null);
-  const { t } = useLanguage();
 
-  // Principle #6: Use activeGoal if provided, otherwise fall back to journey data
+  // ✅ STEP 2: Extract mainGoal (safe to do after all hooks)
   const currentGoals = (productivityJourney?.current_goals || []) as any[];
   const mainGoal = activeGoal || currentGoals[0];
 
-  // Principle #3: No Fallbacks That Mask Errors - Show clear "no goal selected" state
-  if (!mainGoal) {
-    return (
-      <div className="p-6 text-center w-full">
-        <Target className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-        <h3 className="text-lg font-semibold mb-2">
-          {activeGoal === null ? 'No Dream Selected' : t('journey.empty.title')}
-        </h3>
-        <p className="text-muted-foreground text-sm">
-          {activeGoal === null 
-            ? 'Please select a dream from your overview to view your journey map.' 
-            : t('journey.empty.description')}
-        </p>
-      </div>
-    );
-  }
-
-  // Sort milestones by order to ensure proper progression
+  // ✅ STEP 3: Call useMemo hooks UNCONDITIONALLY (handle null inside)
   const sortedMilestones = useMemo(() => {
+    if (!mainGoal) return [];
     const rawMilestones = Array.isArray(mainGoal?.milestones) ? mainGoal.milestones : [];
     return [...rawMilestones].sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
   }, [mainGoal]);
 
-  const completedMilestones = sortedMilestones.filter((m: any) => m.completed);
-  const totalMilestones = sortedMilestones.length;
-  const progress = totalMilestones > 0 ? Math.round((completedMilestones.length / totalMilestones) * 100) : 0;
-  
-  const currentMilestone = sortedMilestones.find((m: any) => !m.completed);
-  const nextTasks = mainGoal.tasks?.filter((t: any) => !t.completed).slice(0, 3) || [];
+  const completedMilestones = useMemo(() => {
+    return sortedMilestones.filter((m: any) => m.completed);
+  }, [sortedMilestones]);
 
-  const getBlueprintInsight = () => {
+  const currentMilestone = useMemo(() => {
+    return sortedMilestones.find((m: any) => !m.completed);
+  }, [sortedMilestones]);
+
+  const nextTasks = useMemo(() => {
+    if (!mainGoal?.tasks) return [];
+    return mainGoal.tasks.filter((t: any) => !t.completed).slice(0, 3);
+  }, [mainGoal]);
+
+  const progress = useMemo(() => {
+    const totalMilestones = sortedMilestones.length;
+    return totalMilestones > 0 ? Math.round((completedMilestones.length / totalMilestones) * 100) : 0;
+  }, [sortedMilestones.length, completedMilestones.length]);
+
+  // ✅ STEP 4: Define all callbacks UNCONDITIONALLY
+  const scrollToMilestone = useCallback(
+    (index: number) => {
+      const milestoneElement = milestoneRefs.current[index];
+      if (milestoneElement) {
+        milestoneElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      if (index >= sortedMilestones.length) {
+        dreamAchievedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    },
+    [sortedMilestones.length]
+  );
+
+  const handleMilestoneDoubleTap = useCallback((milestone: any) => {
+    setSelectedMilestone(milestone);
+    setIsPopupOpen(true);
+  }, []);
+
+  const handleMilestoneSingleTap = useCallback((milestone: any) => {
+    console.log('Single tap on milestone:', milestone.title);
+  }, []);
+
+  const getBlueprintInsight = useCallback(() => {
     if (!blueprintData) return "Your journey is uniquely yours";
     
     const traits = [];
@@ -88,9 +110,9 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
     if (blueprintData.energyDecisionStrategy?.humanDesignType) traits.push(blueprintData.energyDecisionStrategy.humanDesignType);
     
     return `Optimized for your ${traits.slice(0, 2).join(' & ')} blueprint`;
-  };
+  }, [blueprintData]);
 
-  const formatDate = (dateInput: unknown) => {
+  const formatDate = useCallback((dateInput: unknown) => {
     if (!dateInput) {
       return 'Date TBD';
     }
@@ -119,24 +141,9 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
       month: 'short',
       day: 'numeric'
     });
-  };
+  }, []);
 
-  const scrollToMilestone = useCallback(
-    (index: number) => {
-      const milestoneElement = milestoneRefs.current[index];
-      if (milestoneElement) {
-        milestoneElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
-      }
-
-      if (index >= sortedMilestones.length) {
-        dreamAchievedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    },
-    [sortedMilestones.length]
-  );
-
-  const getPhaseColor = (phase: string) => {
+  const getPhaseColor = useCallback((phase: string) => {
     const colors = {
       discovery: 'from-blue-400 to-blue-600',
       planning: 'from-purple-400 to-purple-600',
@@ -144,9 +151,9 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
       analysis: 'from-orange-400 to-orange-600'
     };
     return colors[phase] || 'from-gray-400 to-gray-600';
-  };
+  }, []);
 
-  const getPhaseIcon = (phase: string) => {
+  const getPhaseIcon = useCallback((phase: string) => {
     const icons = {
       discovery: '🔍',
       planning: '📋',
@@ -154,17 +161,28 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
       analysis: '📊'
     };
     return icons[phase] || '📌';
-  };
+  }, []);
 
-  const handleMilestoneDoubleTap = (milestone: any) => {
-    setSelectedMilestone(milestone);
-    setIsPopupOpen(true);
-  };
+  // ✅ STEP 5: NOW check for null and early return (AFTER all hooks)
+  if (!mainGoal) {
+    return (
+      <div className="p-6 text-center w-full">
+        <Target className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+        <h3 className="text-lg font-semibold mb-2">
+          {activeGoal === null ? 'No Dream Selected' : t('journey.empty.title')}
+        </h3>
+        <p className="text-muted-foreground text-sm">
+          {activeGoal === null
+            ? 'Please select a dream from your overview to view your journey map.'
+            : t('journey.empty.description')}
+        </p>
+      </div>
+    );
+  }
 
-  const handleMilestoneSingleTap = (milestone: any) => {
-    // Optional: Add visual feedback for single tap
-    console.log('Single tap on milestone:', milestone.title);
-  };
+  // Derived values (safe after null check)
+  const totalMilestones = sortedMilestones.length;
+
 
   const MilestoneCard = ({ milestone, index }: { milestone: any; index: number }) => {
     const isCompleted = milestone.completed;

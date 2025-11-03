@@ -37,6 +37,21 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('overview');
 
+  // Defensive check for goal data
+  if (!goal || !goal.milestones || !goal.tasks) {
+    console.error('❌ DreamSuccessPage: Invalid goal data', { goal });
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <p className="text-lg text-muted-foreground">Goal data is incomplete or unavailable.</p>
+          <Button onClick={onViewJourney} variant="outline">
+            Return to Journey
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const tourSteps = [
     {
       message: `🎉 Congratulations! Your "${goal.title}" journey is beautifully designed and ready to unfold. I've created ${goal.milestones?.length || 0} personalized milestones that align perfectly with your soul blueprint.`,
@@ -116,9 +131,16 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   };
 
   const handleExitFocus = () => {
-    console.log('🎯 Exiting Focus Mode');
+    console.log('🎯 Exiting Focus Mode, preserving goal data');
     setFocusedMilestone(null);
     setCurrentView('overview');
+    // Ensure we stay on the page with current goal data
+    console.log('✅ Goal data preserved:', { 
+      hasMilestones: !!goal?.milestones, 
+      hasTask: !!goal?.tasks,
+      milestonesCount: goal?.milestones?.length,
+      tasksCount: goal?.tasks?.length
+    });
   };
 
   const getRecommendedTask = () => {

@@ -80,7 +80,7 @@ const Dreams = () => {
   // Principle #2: No Hardcoded Data - Load all goals from database
   const { goals, isLoading: goalsLoading } = useGoals();
 
-  const { productivityJourney } = useJourneyTracking();
+  const { productivityJourney, refetch: refetchJourneyData } = useJourneyTracking();
 
   const journeyGoals = useMemo(() => {
     const rawGoals = productivityJourney?.current_goals;
@@ -129,19 +129,43 @@ const Dreams = () => {
   );
 
   const resolvedGoalToShow = useMemo(() => {
-    if (createdGoal) {
+    console.log('🎯 Dreams: Resolving goal to show', {
+      hasCreatedGoal: !!createdGoal,
+      hasSelectedJourneyGoal: !!selectedJourneyGoal,
+      hasFallbackGoal: !!fallbackGoalFromList,
+      journeyGoalsCount: journeyGoals.length
+    });
+
+    // Check if goal has complete data (using optional chaining for any type)
+    const hasCompleteData = (goal: any) => {
+      return goal && 
+             (goal.milestones || (goal as any).milestones) && 
+             ((goal as any).tasks || goal.milestones?.length > 0);
+    };
+
+    if (createdGoal && hasCompleteData(createdGoal)) {
+      console.log('✅ Dreams: Using createdGoal with complete data');
       return createdGoal;
     }
 
-    if (selectedJourneyGoal) {
+    if (selectedJourneyGoal && hasCompleteData(selectedJourneyGoal)) {
+      console.log('✅ Dreams: Using selectedJourneyGoal with complete data');
       return selectedJourneyGoal;
     }
 
-    if (fallbackGoalFromList) {
+    if (fallbackGoalFromList && hasCompleteData(fallbackGoalFromList)) {
+      console.log('✅ Dreams: Using fallbackGoalFromList with complete data');
       return fallbackGoalFromList;
     }
 
-    return journeyGoals[0];
+    const firstJourneyGoal = journeyGoals[0];
+    if (firstJourneyGoal && hasCompleteData(firstJourneyGoal)) {
+      console.log('✅ Dreams: Using first journey goal with complete data');
+      return firstJourneyGoal;
+    }
+
+    console.warn('⚠️ Dreams: No goal with complete data found, returning best available or null');
+    return createdGoal || selectedJourneyGoal || fallbackGoalFromList || firstJourneyGoal || null;
   }, [createdGoal, fallbackGoalFromList, journeyGoals, selectedJourneyGoal]);
   
   // Principle #6: Respect Critical Data Pathways - Track active goal
@@ -401,21 +425,24 @@ const Dreams = () => {
     // Toast is now shown once by use-task-completion hook
   };
 
-  const handleBackFromTaskCoach = () => {
+  const handleBackFromTaskCoach = async () => {
+    console.log('🔙 Dreams: Returning from task coach, refreshing data');
+    await refetchJourneyData();
     setSelectedTask(null);
     setCurrentView('journey');
     setSessionRefreshKey(prev => prev + 1);
   };
 
-  const handleBackToSuccessOverview = useCallback(() => {
+  const handleBackToSuccessOverview = useCallback(async () => {
     // Navigate back to success landing page (Pillar III: Intentional Craft)
     if (navigationHistory.includes('success') && createdGoal) {
-      console.log('🔙 Dreams: Returning to success overview from journey');
+      console.log('🔙 Dreams: Returning to success overview from journey, refreshing data');
+      await refetchJourneyData();
       setCurrentView('success');
       setNavigationHistory([]);
       setFocusedMilestone(null);
     }
-  }, [navigationHistory, createdGoal]);
+  }, [navigationHistory, createdGoal, refetchJourneyData]);
 
   const handleMilestoneClick = (milestone: any) => {
     // Receive and use full milestone object (Principle #6: Respect Critical Data Pathways)
