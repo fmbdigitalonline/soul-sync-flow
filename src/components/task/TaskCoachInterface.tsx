@@ -21,7 +21,6 @@ import {
   ArrowRight
 } from "lucide-react";
 import { useTaskAwareCoach } from "@/hooks/use-task-aware-coach";
-import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { SessionProgress } from "./SessionProgress";
 import { SubTaskManager } from "./SubTaskManager";
 import { SmartQuickActions } from "./SmartQuickActions";
@@ -49,8 +48,15 @@ interface Task {
   goal_id?: string;
 }
 
+interface Goal {
+  id: string;
+  title: string;
+  description?: string;
+}
+
 interface TaskCoachInterfaceProps {
   task: Task;
+  goal?: Goal | null;
   onBack: () => void;
   onTaskComplete: (taskId: string) => void;
 }
@@ -69,6 +75,7 @@ interface CoachMessage {
 
 export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   task,
+  goal,
   onBack,
   onTaskComplete
 }) => {
@@ -97,8 +104,6 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     quickTaskActions,
     sessionStats
   } = useTaskAwareCoach(taskContext);
-  
-  const { productivityJourney, updateProductivityJourney } = useJourneyTracking();
   
   // Pillar I: Preserve existing functionality, add unified completion
   const { completeTaskFromCoach, isTaskCompleting } = useTaskCompletion({
@@ -509,10 +514,9 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     setIsTimerRunning(true);
     setSidebarOpen(false);
 
-    // Get current goal context
-    const currentGoals = productivityJourney?.current_goals || [];
-    const currentGoal = currentGoals.find(goal => goal.id === task.goal_id);
-    const goalContext = currentGoal ? `\n\nThis task is part of your goal: "${currentGoal.title}" - ${currentGoal.description}` : '';
+    const goalContext = goal
+      ? `\n\nThis task is part of your goal: "${goal.title}"${goal.description ? ` - ${goal.description}` : ''}`
+      : '';
 
     // CRITICAL FIX: Structured prompt to trigger WorkingInstructionsPanel
     const initialMessage = `I'm working on: "${task.title}"
@@ -547,7 +551,7 @@ Provide 4-6 concrete steps I can start working on immediately.`;
     
     console.log('📤 Sending enhanced coaching message with breakdown instructions');
     sendMessage(initialMessage);
-  }, [task, productivityJourney, sendMessage]);
+  }, [task, goal, sendMessage]);
 
   // Sub-task interaction handlers
   const handleSubTaskStart = useCallback(async (subTask: ParsedSubTask) => {
