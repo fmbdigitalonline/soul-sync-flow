@@ -84,7 +84,7 @@ const router = createBrowserRouter([
       { path: "dreams/all", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
       { path: "dreams/discover", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
       { path: "dreams/create", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
-      { path: "dreams/journey", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
+      { path: "dreams/journey/:journeyId?", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
       { path: "dreams/tasks", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
       { path: "dreams/focus", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
       { path: "dreams/habits", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
