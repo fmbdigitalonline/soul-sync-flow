@@ -59,8 +59,8 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
           {activeGoal === null ? 'No Dream Selected' : t('journey.empty.title')}
         </h3>
         <p className="text-muted-foreground text-sm">
-          {activeGoal === null 
-            ? 'Please select a dream from your overview to view your journey map.' 
+          {activeGoal === null
+            ? 'Please select a dream from your overview to view your journey map.'
             : t('journey.empty.description')}
         </p>
       </div>
