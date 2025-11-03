@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -35,11 +35,14 @@ interface Task {
   category: string;
   optimal_time_of_day: string[];
   goal_id?: string;
+  goal?: string;
   completed?: boolean;
+  milestone_id?: string;
 }
 
 interface Goal {
   id: string;
+  goal_id?: string;
   title: string;
   description: string;
   progress: number;
@@ -50,6 +53,7 @@ interface Goal {
 }
 
 interface TaskViewsProps {
+  activeGoal: Goal | null;
   focusedMilestone?: any;
   onBackToJourney: () => void;
   onTaskSelect: (task: Task) => void;
@@ -58,6 +62,7 @@ interface TaskViewsProps {
 }
 
 export const TaskViews: React.FC<TaskViewsProps> = ({
+  activeGoal,
   focusedMilestone,
   onBackToJourney,
   onTaskSelect,
@@ -71,34 +76,52 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
   const [mobileKanbanColumn, setMobileKanbanColumn] = useState<'todo' | 'in_progress' | 'stuck' | 'completed'>('todo');
   const { isMobile } = useIsMobile();
 
-  // Extract all tasks from goals and normalize them
-  const currentGoals = (productivityJourney?.current_goals || []) as Goal[];
-  const allTasks: Task[] = currentGoals.flatMap(goal => 
-    goal.tasks.map(task => {
+  const activeGoalId = useMemo(() => {
+    if (!activeGoal) return null;
+    const possibleId = (activeGoal as any)?.id ?? (activeGoal as any)?.goal_id;
+    return possibleId ? String(possibleId) : null;
+  }, [activeGoal]);
+
+  const allTasks: Task[] = useMemo(() => {
+    if (!activeGoal?.tasks) {
+      return [];
+    }
+
+    return activeGoal.tasks.map((task: any, index: number) => {
+      const taskId = task?.id ? String(task.id) : undefined;
       const normalizedTask: Task = {
-        id: task.id,
-        title: task.title,
-        description: task.description || '',
-        status: task.completed ? 'completed' : (task.status || 'todo'),
-        due_date: task.due_date,
-        estimated_duration: task.estimated_duration || '30 min',
-        energy_level_required: task.energy_level_required || 'medium',
-        category: task.category || 'execution',
-        optimal_time_of_day: Array.isArray(task.optimal_time_of_day) ? task.optimal_time_of_day : ['morning'],
-        goal_id: goal.id
+        id: taskId || `${activeGoalId || 'task'}-${index}`,
+        title: task?.title ?? 'Untitled Task',
+        description: task?.description || '',
+        status: task?.completed ? 'completed' : (task?.status || 'todo'),
+        due_date: task?.due_date,
+        estimated_duration: task?.estimated_duration || '30 min',
+        energy_level_required: task?.energy_level_required || 'medium',
+        category: task?.category || 'execution',
+        optimal_time_of_day: Array.isArray(task?.optimal_time_of_day) ? task.optimal_time_of_day : ['morning'],
+        goal_id: activeGoalId || undefined,
+        goal: task?.goal || activeGoal.title,
+        completed: Boolean(task?.completed),
+        milestone_id: task?.milestone_id ? String(task.milestone_id) : undefined
       };
+
       return normalizedTask;
-    })
-  );
+    });
+  }, [activeGoal, activeGoalId]);
 
   // Filter tasks by focused milestone if provided
-  const filteredTasks = focusedMilestone 
-    ? allTasks.filter(task => {
-        // For now, showing all tasks from the same goal as the milestone
-        const goal = currentGoals.find(g => g.milestones?.some(m => m.id === focusedMilestone.id));
-        return goal && task.goal_id === goal.id;
-      })
-    : allTasks;
+  const filteredTasks = useMemo(() => {
+    if (!focusedMilestone) {
+      return allTasks;
+    }
+
+    const milestoneId = focusedMilestone?.id ? String(focusedMilestone.id) : null;
+    if (!milestoneId) {
+      return allTasks;
+    }
+
+    return allTasks.filter(task => String(task.milestone_id || '') === milestoneId);
+  }, [allTasks, focusedMilestone]);
 
   // Group tasks by status for Kanban
   const tasksByStatus = {
@@ -109,36 +132,63 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
   };
 
   // Get tasks for selected date
-  const tasksForSelectedDate = filteredTasks.filter(task => {
-    if (!task.due_date) return false;
-    try {
-      const taskDate = parseISO(task.due_date);
-      if (!isValid(taskDate)) return false;
-      return isWithinInterval(taskDate, {
-        start: startOfDay(selectedDate),
-        end: endOfDay(selectedDate)
-      });
-    } catch {
-      return false;
-    }
-  });
+  const tasksForSelectedDate = useMemo(() => (
+    filteredTasks.filter(task => {
+      if (!task.due_date) return false;
+      try {
+        const taskDate = parseISO(task.due_date);
+        if (!isValid(taskDate)) return false;
+        return isWithinInterval(taskDate, {
+          start: startOfDay(selectedDate),
+          end: endOfDay(selectedDate)
+        });
+      } catch {
+        return false;
+      }
+    })
+  ), [filteredTasks, selectedDate]);
 
-  const updateTaskStatus = async (taskId: string, newStatus: 'todo' | 'in_progress' | 'stuck' | 'completed') => {
-    const updatedGoals = currentGoals.map(goal => ({
-      ...goal,
-      tasks: goal.tasks.map(task => 
-        task.id === taskId ? { 
-          ...task, 
-          status: newStatus,
-          completed: newStatus === 'completed'
-        } : task
-      )
-    }));
+  const updateTaskStatus = useCallback(async (
+    taskId: string,
+    newStatus: 'todo' | 'in_progress' | 'stuck' | 'completed'
+  ) => {
+    if (!productivityJourney || !updateProductivityJourney || !activeGoalId) {
+      return;
+    }
+
+    const currentGoals = Array.isArray(productivityJourney.current_goals)
+      ? productivityJourney.current_goals
+      : [];
+
+    const updatedGoals = currentGoals.map((goal: any) => {
+      const goalIdentifier = goal?.id ?? goal?.goal_id;
+      if (String(goalIdentifier ?? '') !== activeGoalId) {
+        return goal;
+      }
+
+      const goalTasks = Array.isArray(goal?.tasks) ? goal.tasks : [];
+
+      return {
+        ...goal,
+        tasks: goalTasks.map((task: any) => {
+          const currentTaskId = task?.id ? String(task.id) : null;
+          if (currentTaskId !== taskId) {
+            return task;
+          }
+
+          return {
+            ...task,
+            status: newStatus,
+            completed: newStatus === 'completed'
+          };
+        })
+      };
+    });
 
     await updateProductivityJourney({
       current_goals: updatedGoals
     });
-  };
+  }, [activeGoalId, productivityJourney, updateProductivityJourney]);
 
   const handleTaskStatusChange = (task: Task, newStatus: 'todo' | 'in_progress' | 'stuck' | 'completed') => {
     updateTaskStatus(task.id, newStatus);
@@ -208,6 +258,15 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
 
     return map;
   }, [filteredTasks, getSessionType, sessionRefreshKey]);
+
+  if (!activeGoal) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
+        <p>No active dream selected.</p>
+      </div>
+    );
+  }
 
   const KanbanColumn = ({
     title,

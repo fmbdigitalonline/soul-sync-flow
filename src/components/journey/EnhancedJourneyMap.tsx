@@ -16,7 +16,6 @@ import {
   ArrowDown,
   Info
 } from "lucide-react";
-import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { MilestoneDetailPopup } from "./MilestoneDetailPopup";
 import { useDoubleTap } from "@/hooks/use-double-tap";
@@ -27,21 +26,20 @@ interface EnhancedJourneyMapProps {
   onMilestoneClick?: (milestone: any) => void;
   onBackToSuccessOverview?: () => void;
   showSuccessBackButton?: boolean;
-  activeGoal?: any; // NEW: Accept active goal from parent (Principle #6: Respect Critical Data Pathways)
+  activeGoal: any | null;
 }
 
-export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ 
-  onTaskClick, 
+export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
+  onTaskClick,
   onMilestoneClick,
   onBackToSuccessOverview,
   showSuccessBackButton,
-  activeGoal // NEW: Use activeGoal if provided (Principle #6: Respect Critical Data Pathways)
+  activeGoal
 }) => {
   // ✅ STEP 1: Call ALL hooks first unconditionally (React Rules of Hooks)
-  const { productivityJourney } = useJourneyTracking();
   const { blueprintData } = useOptimizedBlueprintData();
   const { t } = useLanguage();
-  
+
   const [selectedView, setSelectedView] = useState<'overview' | 'detailed'>('overview');
   const [selectedMilestone, setSelectedMilestone] = useState<any>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -49,8 +47,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
   const dreamAchievedRef = useRef<HTMLDivElement | null>(null);
 
   // ✅ STEP 2: Extract mainGoal (safe to do after all hooks)
-  const currentGoals = (productivityJourney?.current_goals || []) as any[];
-  const mainGoal = activeGoal || currentGoals[0];
+  const mainGoal = activeGoal ?? null;
 
   // ✅ STEP 3: Call useMemo hooks UNCONDITIONALLY (handle null inside)
   const sortedMilestones = useMemo(() => {
