@@ -13,7 +13,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plus, Target, Loader2, AlertCircle, Sparkles, Heart, ArrowLeft } from 'lucide-react';
-import { useGoals } from '@/hooks/use-goals';
+import { useJourneyGoals } from '@/hooks/use-journey-goals';
 import { GoalCard } from './GoalCard';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -37,7 +37,7 @@ export const DreamsOverview: React.FC<DreamsOverviewProps> = ({
   onResumeTaskPlan,
   sessionRefreshKey = 0
 }) => {
-  const { goals, isLoading, error, deleteGoal } = useGoals();
+  const { goals, isLoading, error, deleteGoal } = useJourneyGoals();
   const { isMobile, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
   const { t } = useLanguage();
   const { toast } = useToast();

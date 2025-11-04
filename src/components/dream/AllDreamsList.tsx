@@ -11,7 +11,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2, AlertCircle } from 'lucide-react';
-import { useGoals } from '@/hooks/use-goals';
+import { useJourneyGoals } from '@/hooks/use-journey-goals';
 import { GoalCard } from './GoalCard';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -33,7 +33,7 @@ export const AllDreamsList: React.FC<AllDreamsListProps> = ({
   onResumeTaskPlan,
   sessionRefreshKey = 0
 }) => {
-  const { goals, isLoading, error, deleteGoal } = useGoals();
+  const { goals, isLoading, error, deleteGoal } = useJourneyGoals();
   const { isMobile, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
   const { t } = useLanguage();
   const { toast } = useToast();

@@ -154,6 +154,52 @@ export const useDecompositionLogic = ({
 
         // Update the soulGoal object with the real database ID
         soulGoal.id = newGoalRecord.id;
+
+        // SYNC TO PRODUCTIVITY_JOURNEY.CURRENT_GOALS (unified source of truth)
+        try {
+          const { data: journeyData } = await supabase
+            .from('productivity_journey')
+            .select('current_goals')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          const currentGoals = Array.isArray(journeyData?.current_goals) 
+            ? journeyData.current_goals 
+            : [];
+
+          // Add the new goal to current_goals array (cast to Json for DB compatibility)
+          const updatedGoals = [...currentGoals, soulGoal] as any;
+
+          if (journeyData) {
+            // Update existing journey
+            const { error: journeyUpdateError } = await supabase
+              .from('productivity_journey')
+              .update({ current_goals: updatedGoals })
+              .eq('user_id', user.id);
+
+            if (journeyUpdateError) {
+              console.error('Journey update error:', journeyUpdateError);
+            } else {
+              console.log('💾 Goal synced to productivity_journey successfully');
+            }
+          } else {
+            // Create new journey record
+            const { error: journeyInsertError } = await supabase
+              .from('productivity_journey')
+              .insert({ 
+                user_id: user.id, 
+                current_goals: updatedGoals 
+              } as any);
+
+            if (journeyInsertError) {
+              console.error('Journey insert error:', journeyInsertError);
+            } else {
+              console.log('💾 New productivity_journey created with goal');
+            }
+          }
+        } catch (journeyError) {
+          console.error('❌ Journey sync error (non-fatal):', journeyError);
+        }
         
       } catch (dbError) {
         console.error('❌ Database save error (continuing anyway):', dbError);
