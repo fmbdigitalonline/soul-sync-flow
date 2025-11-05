@@ -14,6 +14,8 @@ import { FloatingHACSOrb } from "@/components/hacs/FloatingHACSOrb";
 import { TopBar } from "./TopBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PageContainer } from "./PageContainer";
+import { ThreePanelLayout } from "./ThreePanelLayout";
+import { ContextualToolsPanel } from "./ContextualToolsPanel";
 interface MainLayoutProps {
   children: React.ReactNode;
   hideNav?: boolean;
@@ -148,38 +150,25 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           {/* Desktop Global Top Bar */}
           {user && !hideNav && <TopBar />}
           
-          <div className="flex flex-1 min-h-0">
-            {/* Desktop Sidebar */}
-            {shouldShowDesktopNav && <aside className="w-64 min-h-full bg-card/80 backdrop-blur-lg flex-col flex shadow-lg">
-                {/* Logo Section */}
-                
-
-                {/* Navigation */}
-                <nav className="flex-1 p-4 space-y-2">
-                  {navItems.map(item => {
-              const Icon = item.icon;
-              return <Link key={item.to} to={item.to} className={cn("flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200 font-cormorant font-medium", isActive(item.to) ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-semibold" : "text-muted-foreground hover:bg-accent/50 hover:text-primary")}>
-                        <Icon className="h-5 w-5" />
-                        <span>{item.label}</span>
-                      </Link>;
-            })}
-                </nav>
-
-                {/* User Actions */}
-                <div className="p-4 space-y-2">
-                  <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-muted-foreground rounded-xl hover:bg-accent/50 font-inter">
-                    <LogOut className="h-5 w-5 mr-3" />
-                    {t('nav.signOut')}
-                  </Button>
-                </div>
-              </aside>}
-
-            {/* Desktop Main Content */}
-            <main className="flex-1 flex flex-col">
-              <PageContainer className="flex-1">
+          <div className="flex flex-1 min-h-0 w-full">
+            {shouldShowDesktopNav ? (
+              // Three-panel layout for authenticated desktop users
+              <DesktopThreePanelLayout
+                navItems={navItems}
+                isActive={isActive}
+                handleSignOut={handleSignOut}
+                t={t}
+              >
                 {children}
-              </PageContainer>
-            </main>
+              </DesktopThreePanelLayout>
+            ) : (
+              // Fallback for unauthenticated or nav-hidden views
+              <main className="flex-1 flex flex-col">
+                <PageContainer className="flex-1">
+                  {children}
+                </PageContainer>
+              </main>
+            )}
           </div>
         </>}
 
@@ -187,4 +176,73 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       {user && <FloatingHACSOrb />}
     </div>;
 };
+// Desktop three-panel layout wrapper (Principle #8: Only Add)
+interface DesktopThreePanelLayoutProps {
+  children: React.ReactNode;
+  navItems: Array<{ to: string; icon: any; label: string }>;
+  isActive: (path: string) => boolean;
+  handleSignOut: () => void;
+  t: (key: string) => string;
+}
+
+const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
+  children,
+  navItems,
+  isActive,
+  handleSignOut,
+  t
+}) => {
+  return (
+    <ThreePanelLayout
+      leftPanel={
+        <aside className="h-full bg-card/80 backdrop-blur-lg flex flex-col shadow-lg">
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-2">
+            {navItems.map(item => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={cn(
+                    "flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200 font-cormorant font-medium",
+                    isActive(item.to)
+                      ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-semibold"
+                      : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                  )}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* User Actions */}
+          <div className="p-4 space-y-2">
+            <Button
+              variant="ghost"
+              onClick={handleSignOut}
+              className="w-full justify-start text-muted-foreground rounded-xl hover:bg-accent/50 font-inter"
+            >
+              <LogOut className="h-5 w-5 mr-3" />
+              {t('nav.signOut')}
+            </Button>
+          </div>
+        </aside>
+      }
+      centerPanel={
+        <main className="h-full overflow-y-auto">
+          <PageContainer className="h-full">
+            {children}
+          </PageContainer>
+        </main>
+      }
+      rightPanel={
+        <ContextualToolsPanel />
+      }
+    />
+  );
+};
+
 export default MainLayout;
