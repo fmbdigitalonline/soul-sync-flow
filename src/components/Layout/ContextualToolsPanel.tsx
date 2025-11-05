@@ -2,16 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useToast } from '@/components/ui/use-toast';
-import { useBlueprintData } from '@/hooks/use-blueprint-data';
 import {
   Sparkles,
   Target,
@@ -22,18 +12,8 @@ import {
   FileDown,
   Cloud,
   CalendarClock,
-  Play,
-  Pause,
-  Square,
-  Trash2,
-  Download,
-  ClipboardCopy,
-  ListTodo,
-  Lock,
-  Unlock,
-  CheckCircle2,
-  History,
-  AudioLines
+  ShieldCheck,
+  Link2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -347,764 +327,109 @@ function renderToolsForContext(
 
 // Context-specific tool widgets
 function JourneyTools({ activeGoal }: { activeGoal?: any }) {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-
-  const goalIdentifier = activeGoal?.id ?? activeGoal?.goal_id ?? 'default';
-  const storageNamespace = useMemo(() => `contextual-tools/${goalIdentifier}`, [goalIdentifier]);
-
-  const notesKey = `${storageNamespace}/notes`;
-  const agendaKey = `${storageNamespace}/agenda`;
-  const autoSyncKey = `${storageNamespace}/auto-sync`;
-  const syncedAtKey = `${storageNamespace}/synced-at`;
-
-  const notesInitRef = useRef(true);
-  const agendaInitRef = useRef(true);
-  const autoSyncInitRef = useRef(true);
-  const syncedAtInitRef = useRef(true);
-
-  const [notes, setNotes] = useState<WorkspaceNote[]>(() => loadFromStorage(notesKey, []));
-  useEffect(() => {
-    if (!isBrowser) {
-      return;
-    }
-    notesInitRef.current = false;
-    setNotes(loadFromStorage(notesKey, []));
-  }, [notesKey]);
-  useEffect(() => {
-    if (!isBrowser) {
-      return;
-    }
-    if (!notesInitRef.current) {
-      notesInitRef.current = true;
-      return;
-    }
-    persistToStorage(notesKey, notes);
-  }, [notes, notesKey]);
-
-  const [agendaItems, setAgendaItems] = useState<AgendaItem[]>(() => loadFromStorage(agendaKey, []));
-  useEffect(() => {
-    if (!isBrowser) {
-      return;
-    }
-    agendaInitRef.current = false;
-    setAgendaItems(loadFromStorage(agendaKey, []));
-  }, [agendaKey]);
-  useEffect(() => {
-    if (!isBrowser) {
-      return;
-    }
-    if (!agendaInitRef.current) {
-      agendaInitRef.current = true;
-      return;
-    }
-    persistToStorage(agendaKey, agendaItems);
-  }, [agendaItems, agendaKey]);
-
-  const [autoSync, setAutoSync] = useState<boolean>(() => loadFromStorage(autoSyncKey, true));
-  useEffect(() => {
-    if (!isBrowser) {
-      return;
-    }
-    autoSyncInitRef.current = false;
-    setAutoSync(loadFromStorage(autoSyncKey, true));
-  }, [autoSyncKey]);
-  useEffect(() => {
-    if (!isBrowser) {
-      return;
-    }
-    if (!autoSyncInitRef.current) {
-      autoSyncInitRef.current = true;
-      return;
-    }
-    persistToStorage(autoSyncKey, autoSync);
-  }, [autoSync, autoSyncKey]);
-
-  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(() => loadFromStorage(syncedAtKey, null));
-  useEffect(() => {
-    if (!isBrowser) {
-      return;
-    }
-    syncedAtInitRef.current = false;
-    setLastSyncedAt(loadFromStorage(syncedAtKey, null));
-  }, [syncedAtKey]);
-  useEffect(() => {
-    if (!isBrowser) {
-      return;
-    }
-    if (!syncedAtInitRef.current) {
-      syncedAtInitRef.current = true;
-      return;
-    }
-    persistToStorage(syncedAtKey, lastSyncedAt);
-  }, [lastSyncedAt, syncedAtKey]);
-
-  useEffect(() => {
-    if (!autoSync) {
-      return;
-    }
-    setLastSyncedAt(new Date().toISOString());
-  }, [notes, agendaItems, autoSync]);
-
-  const [currentNote, setCurrentNote] = useState('');
-  const [newAgendaTitle, setNewAgendaTitle] = useState('');
-  const [newAgendaStart, setNewAgendaStart] = useState(() => getDefaultStartTime());
-  const [newAgendaDuration, setNewAgendaDuration] = useState('45');
-
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recordingChunksRef = useRef<Blob[]>([]);
-  const recordingTimerRef = useRef<number | null>(null);
-  const recordingStartedAtRef = useRef<number | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
-
-  useEffect(() => {
-    return () => {
-      if (mediaRecorderRef.current?.state === 'recording') {
-        mediaRecorderRef.current.stop();
-      }
-      if (recordingTimerRef.current) {
-        window.clearInterval(recordingTimerRef.current);
-      }
-    };
-  }, []);
-
-  const startRecording = useCallback(async () => {
-    if (isRecording) {
-      return;
-    }
-
-    if (!isBrowser || !navigator.mediaDevices?.getUserMedia) {
-      toast({
-        title: 'Microphone unavailable',
-        description: 'Enable microphone access to capture voice notes.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      recordingChunksRef.current = [];
-
-      recorder.ondataavailable = event => {
-        if (event.data.size > 0) {
-          recordingChunksRef.current.push(event.data);
-        }
-      };
-
-      recorder.onstop = async () => {
-        const audioBlob = new Blob(recordingChunksRef.current, { type: 'audio/webm' });
-        recordingChunksRef.current = [];
-
-        try {
-          const content = await blobToBase64(audioBlob);
-          const durationSeconds = recordingStartedAtRef.current
-            ? Math.round((Date.now() - recordingStartedAtRef.current) / 1000)
-            : undefined;
-
-          setNotes(prev => [
-            {
-              id: `voice-${Date.now()}`,
-              type: 'voice',
-              content,
-              createdAt: new Date().toISOString(),
-              durationSeconds
-            },
-            ...prev
-          ]);
-
-          toast({
-            title: 'Voice note captured',
-            description: 'Audio insight saved to your workspace.'
-          });
-        } catch (error) {
-          console.error('Failed to persist voice note', error);
-          toast({
-            title: 'Recording error',
-            description: 'We could not save this voice note.',
-            variant: 'destructive'
-          });
-        }
-
-        stream.getTracks().forEach(track => track.stop());
-        recordingStartedAtRef.current = null;
-        setRecordingDuration(0);
-      };
-
-      recorder.start();
-      mediaRecorderRef.current = recorder;
-      recordingStartedAtRef.current = Date.now();
-      setIsRecording(true);
-      setRecordingDuration(0);
-      recordingTimerRef.current = window.setInterval(() => {
-        setRecordingDuration(prev => prev + 1);
-      }, 1000);
-
-      toast({
-        title: 'Recording started',
-        description: 'Speak freely—stop when your insight is complete.'
-      });
-    } catch (error) {
-      console.error('Unable to start recording', error);
-      toast({
-        title: 'Unable to access microphone',
-        description: 'Check your browser permissions and try again.',
-        variant: 'destructive'
-      });
-    }
-  }, [isRecording, toast]);
-
-  const stopRecording = useCallback(() => {
-    if (!isRecording) {
-      return;
-    }
-
-    mediaRecorderRef.current?.stop();
-    setIsRecording(false);
-
-    if (recordingTimerRef.current) {
-      window.clearInterval(recordingTimerRef.current);
-      recordingTimerRef.current = null;
-    }
-
-    toast({
-      title: 'Finishing recording',
-      description: 'Processing your voice note now.'
-    });
-  }, [isRecording, toast]);
-
-  const handleAddNote = useCallback(() => {
-    if (!currentNote.trim()) {
-      toast({
-        title: 'Add a note',
-        description: 'Type your insight before saving.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    setNotes(prev => [
-      {
-        id: `note-${Date.now()}`,
-        type: 'text',
-        content: currentNote.trim(),
-        createdAt: new Date().toISOString()
-      },
-      ...prev
-    ]);
-    setCurrentNote('');
-
-    toast({
-      title: 'Note saved',
-      description: 'Captured in your AI workspace.'
-    });
-  }, [currentNote, toast]);
-
-  const handleDeleteNote = useCallback(
-    (id: string) => {
-      setNotes(prev => prev.filter(note => note.id !== id));
-      toast({
-        title: 'Removed',
-        description: 'The note has been deleted.'
-      });
-    },
-    [toast]
-  );
-
-  const handleCopyNote = useCallback(
-    async (note: WorkspaceNote) => {
-      if (!isBrowser) {
-        return;
-      }
-
-      const text = note.type === 'text' ? note.content : 'Voice note attached (download to listen).';
-
-      try {
-        await navigator.clipboard.writeText(text);
-        toast({
-          title: 'Copied to clipboard',
-          description: 'Ready to paste into any document.'
-        });
-      } catch (error) {
-        console.error('Clipboard write failed', error);
-        toast({
-          title: 'Copy failed',
-          description: 'We could not copy that note.',
-          variant: 'destructive'
-        });
-      }
-    },
-    [toast]
-  );
-
-  const handleDownloadVoiceNote = useCallback(
-    (note: WorkspaceNote) => {
-      if (note.type !== 'voice') {
-        return;
-      }
-
-      safeDownload(note.content, `${note.id}.webm`);
-      toast({
-        title: 'Download started',
-        description: 'Voice note saved to your device.'
-      });
-    },
-    [toast]
-  );
-
-  const exportNotes = useCallback(
-    (format: 'txt' | 'md' | 'json') => {
-      if (!notes.length && !agendaItems.length) {
-        toast({
-          title: 'Nothing to export',
-          description: 'Capture a note or add agenda time first.',
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      let data = '';
-      let mime = 'text/plain';
-      let extension = format;
-
-      if (format === 'json') {
-        data = JSON.stringify({ notes, agenda: agendaItems }, null, 2);
-        mime = 'application/json';
-      } else {
-        const lines: string[] = [];
-
-        lines.push(`# Workspace notes`);
-        notes.forEach(note => {
-          if (note.type === 'text') {
-            lines.push(`- (${new Date(note.createdAt).toLocaleString()}) ${note.content}`);
-          } else {
-            lines.push(`- (${new Date(note.createdAt).toLocaleString()}) Voice note saved as ${note.id}.webm`);
-          }
-        });
-
-        if (agendaItems.length) {
-          lines.push('\n# Agenda');
-          agendaItems.forEach(item => {
-            lines.push(`- ${item.title} — ${toTimeRangeLabel(item.startTime, item.durationMinutes)}${item.locked ? ' 🔒' : ''}${item.completed ? ' ✅' : ''}`);
-          });
-        }
-
-        data = lines.join('\n');
-        mime = format === 'md' ? 'text/markdown' : 'text/plain';
-        extension = format === 'md' ? 'md' : 'txt';
-      }
-
-      const blob = new Blob([data], { type: mime });
-      const url = URL.createObjectURL(blob);
-      safeDownload(url, `ai-workspace-export.${extension}`);
-      URL.revokeObjectURL(url);
-
-      toast({
-        title: 'Export ready',
-        description: `Downloaded as .${extension}.`
-      });
-    },
-    [agendaItems, notes, toast]
-  );
-
-  const handleManualSync = useCallback(() => {
-    const timestamp = new Date().toISOString();
-    setLastSyncedAt(timestamp);
-    toast({
-      title: 'Workspace synced',
-      description: 'Stored locally for quick recovery.'
-    });
-  }, [toast]);
-
-  const handleAddAgendaItem = useCallback(
-    (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-
-      if (!newAgendaTitle.trim()) {
-        toast({
-          title: 'Name your focus block',
-          description: 'Add a label so you know what to work on.',
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      const parsedDuration = Number.parseInt(newAgendaDuration, 10);
-      const durationMinutes = Number.isNaN(parsedDuration) ? 45 : Math.max(5, parsedDuration);
-      const startTime = newAgendaStart || getDefaultStartTime();
-
-      const newItem: AgendaItem = {
-        id: `agenda-${Date.now()}`,
-        title: newAgendaTitle.trim(),
-        startTime,
-        durationMinutes,
-        locked: false,
-        completed: false,
-        createdAt: new Date().toISOString()
-      };
-
-      setAgendaItems(prev => [newItem, ...prev]);
-      setNewAgendaTitle('');
-      setNewAgendaDuration(String(durationMinutes));
-      setNewAgendaStart(getNextAgendaStart([newItem, ...agendaItems]));
-
-      toast({
-        title: 'Focus block scheduled',
-        description: `${newItem.title} added for ${formatMinutes(durationMinutes)}.`
-      });
-    },
-    [agendaItems, newAgendaDuration, newAgendaStart, newAgendaTitle, toast]
-  );
-
-  const handleToggleLock = useCallback((id: string) => {
-    setAgendaItems(prev =>
-      prev.map(item =>
-        item.id === id
-          ? {
-              ...item,
-              locked: !item.locked
-            }
-          : item
-      )
-    );
-  }, []);
-
-  const handleToggleComplete = useCallback((id: string) => {
-    setAgendaItems(prev =>
-      prev.map(item =>
-        item.id === id
-          ? {
-              ...item,
-              completed: !item.completed
-            }
-          : item
-      )
-    );
-  }, []);
-
-  const handleRemoveAgendaItem = useCallback(
-    (id: string) => {
-      setAgendaItems(prev => prev.filter(item => item.id !== id));
-      toast({
-        title: 'Removed from agenda',
-        description: 'The focus block was cleared.'
-      });
-    },
-    [toast]
-  );
-
-  const handleClearCompletedAgenda = useCallback(() => {
-    setAgendaItems(prev => prev.filter(item => !item.completed));
-    toast({
-      title: 'Agenda refreshed',
-      description: 'Cleared completed focus blocks.'
-    });
-  }, [toast]);
-
-  const goalTasks = useMemo(() => {
-    const tasks = activeGoal?.tasks;
-    return Array.isArray(tasks) ? tasks : [];
-  }, [activeGoal]);
-
-  const unscheduledGoalTasks = useMemo(() => {
-    if (!goalTasks.length) {
-      return [];
-    }
-
-    return goalTasks.filter(task => {
-      const taskId = String(task?.id ?? task?.task_id ?? task?.taskId ?? task?.title ?? '');
-
-      if (!taskId) {
-        return true;
-      }
-
-      return !agendaItems.some(item => item.sourceId === taskId);
-    });
-  }, [agendaItems, goalTasks]);
-
-  const handleAddNextGoalTaskToAgenda = useCallback(() => {
-    if (!unscheduledGoalTasks.length) {
-      toast({
-        title: 'All caught up',
-        description: 'Every task from this goal is already scheduled.'
-      });
-      return;
-    }
-
-    const task = unscheduledGoalTasks[0];
-    const taskId = String(task?.id ?? task?.task_id ?? task?.taskId ?? Date.now());
-    const durationMinutes = deriveTaskDuration(task);
-
-    const newItem: AgendaItem = {
-      id: `agenda-${taskId}`,
-      title: task?.title || 'Goal task',
-      startTime: getNextAgendaStart(agendaItems),
-      durationMinutes,
-      locked: true,
-      completed: false,
-      createdAt: new Date().toISOString(),
-      sourceId: taskId
-    };
-
-    setAgendaItems(prev => [newItem, ...prev]);
-
-    toast({
-      title: 'Task scheduled',
-      description: `${newItem.title} blocked for ${formatMinutes(durationMinutes)}.`
-    });
-  }, [agendaItems, toast, unscheduledGoalTasks]);
-
-  const [focusTimer, setFocusTimer] = useState<FocusTimerState>({
-    status: 'idle',
-    remainingSeconds: FOCUS_DEFAULT_DURATION
-  });
-
-  useEffect(() => {
-    if (focusTimer.status !== 'running') {
-      return;
-    }
-
-    const interval = window.setInterval(() => {
-      setFocusTimer(prev => {
-        if (prev.status !== 'running') {
-          window.clearInterval(interval);
-          return prev;
-        }
-
-        if (prev.remainingSeconds <= 1) {
-          window.clearInterval(interval);
-          toast({
-            title: 'Focus session complete',
-            description: 'Log your progress while it is fresh.'
-          });
-          return {
-            status: 'idle',
-            remainingSeconds: FOCUS_DEFAULT_DURATION
-          };
-        }
-
-        return {
-          ...prev,
-          remainingSeconds: prev.remainingSeconds - 1
-        };
-      });
-    }, 1000);
-
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [focusTimer.status, toast]);
-
-  const startFocusSession = useCallback(() => {
-    setFocusTimer({ status: 'running', remainingSeconds: FOCUS_DEFAULT_DURATION });
-    toast({
-      title: 'Focus session started',
-      description: 'Stay with one task until the timer ends.'
-    });
-  }, [toast]);
-
-  const pauseFocusSession = useCallback(() => {
-    setFocusTimer(prev => ({ ...prev, status: 'paused' }));
-    toast({
-      title: 'Focus paused',
-      description: 'Resume when you are ready.'
-    });
-  }, [toast]);
-
-  const resumeFocusSession = useCallback(() => {
-    setFocusTimer(prev => ({ ...prev, status: 'running' }));
-    toast({
-      title: 'Focus resumed',
-      description: 'Deep work timer is ticking again.'
-    });
-  }, [toast]);
-
-  const resetFocusSession = useCallback(() => {
-    setFocusTimer({ status: 'idle', remainingSeconds: FOCUS_DEFAULT_DURATION });
-  }, []);
-
-  const toggleFocusSession = useCallback(() => {
-    if (focusTimer.status === 'running') {
-      pauseFocusSession();
-      return;
-    }
-
-    if (focusTimer.status === 'paused') {
-      resumeFocusSession();
-      return;
-    }
-
-    startFocusSession();
-  }, [focusTimer.status, pauseFocusSession, resumeFocusSession, startFocusSession]);
-
-  const focusProgress = useMemo(() => {
-    if (focusTimer.status === 'idle') {
-      return 0;
-    }
-
-    return Math.min(100, ((FOCUS_DEFAULT_DURATION - focusTimer.remainingSeconds) / FOCUS_DEFAULT_DURATION) * 100);
-  }, [focusTimer]);
-
-  const goalMilestones = useMemo(
-    () => (Array.isArray(activeGoal?.milestones) ? activeGoal.milestones : []),
-    [activeGoal]
-  );
-
-  const completedMilestones =
-    activeGoal?.completedMilestones ?? goalMilestones.filter((milestone: any) => milestone?.completed).length;
-  const totalMilestones = activeGoal?.totalMilestones ?? goalMilestones.length;
+  const completedMilestones = activeGoal?.completedMilestones ?? 0;
+  const totalMilestones = activeGoal?.totalMilestones ?? 0;
   const milestoneProgress = totalMilestones
     ? Math.min(100, (completedMilestones / totalMilestones) * 100)
     : 0;
 
-  const completedTasks =
-    activeGoal?.completedTasks ?? goalTasks.filter((task: any) => task?.completed).length;
-  const totalTasks = activeGoal?.totalTasks ?? goalTasks.length;
-  const taskProgress = totalTasks ? Math.min(100, (completedTasks / totalTasks) * 100) : 0;
-
-  const completedAgendaMinutes = useMemo(
-    () =>
-      agendaItems.reduce((acc, item) => {
-        if (item.completed) {
-          return acc + item.durationMinutes;
-        }
-        return acc;
-      }, 0),
-    [agendaItems]
-  );
-
-  const totalAgendaMinutes = useMemo(
-    () => agendaItems.reduce((acc, item) => acc + item.durationMinutes, 0),
-    [agendaItems]
-  );
-
-  const lockedMinutes = useMemo(
-    () =>
-      agendaItems.reduce((acc, item) => {
-        if (item.locked) {
-          return acc + item.durationMinutes;
-        }
-        return acc;
-      }, 0),
-    [agendaItems]
-  );
-
-  const agendaProgress = totalAgendaMinutes
-    ? Math.min(100, (completedAgendaMinutes / totalAgendaMinutes) * 100)
-    : 0;
-  const lockedRatio = totalAgendaMinutes
-    ? Math.min(100, (lockedMinutes / totalAgendaMinutes) * 100)
+  const completedTasks = activeGoal?.completedTasks ?? 0;
+  const totalTasks = activeGoal?.totalTasks ?? 0;
+  const taskProgress = totalTasks
+    ? Math.min(100, (completedTasks / totalTasks) * 100)
     : 0;
 
-  const timeSpent = activeGoal?.timeSpent ?? Math.round(completedAgendaMinutes / 60);
-  const scheduledTime = activeGoal?.scheduledTime ?? Math.round(totalAgendaMinutes / 60);
+  const timeSpent = activeGoal?.timeSpent ?? 0;
+  const scheduledTime = activeGoal?.scheduledTime ?? 0;
   const timeAllocation = scheduledTime
     ? Math.min(100, (timeSpent / scheduledTime) * 100)
     : 0;
-  const activeStreak = activeGoal?.focusStreak ?? activeGoal?.streak ?? 0;
 
-  const notesCount = notes.length;
-  const voiceNoteCount = notes.filter(note => note.type === 'voice').length;
-  const pendingAgendaCount = agendaItems.filter(item => !item.completed).length;
-
-  const sortedAgenda = useMemo(
-    () => [...agendaItems].sort((a, b) => a.startTime.localeCompare(b.startTime)),
-    [agendaItems]
-  );
-
-  const upcomingAgenda = useMemo(
-    () => sortedAgenda.filter(item => !item.completed).slice(0, 3),
-    [sortedAgenda]
-  );
-
-  const quickActionStatusLabel =
-    focusTimer.status === 'running'
-      ? 'Pause focus sprint'
-      : focusTimer.status === 'paused'
-      ? 'Resume focus sprint'
-      : 'Start 25-minute focus sprint';
-
-  const featureTabs = useMemo(
-    () => [
-      {
-        id: 'workspace' as JourneyFeatureId,
-        label: 'AI Output Workspace',
-        icon: NotebookPen,
-        badge: notesCount > 0 ? Math.min(notesCount, 99).toString() : undefined
-      },
-      {
-        id: 'agenda' as JourneyFeatureId,
-        label: 'Agenda Management',
-        icon: CalendarClock,
-        badge: agendaItems.length > 0 ? Math.min(agendaItems.length, 99).toString() : undefined
-      },
-      {
-        id: 'quick-actions' as JourneyFeatureId,
-        label: 'Quick Actions',
-        icon: Zap,
-        badge: focusTimer.status !== 'idle' ? '•' : undefined
-      },
-      {
-        id: 'progress' as JourneyFeatureId,
-        label: 'Progress Overview',
-        icon: Target,
-        badge: pendingAgendaCount > 0 ? pendingAgendaCount.toString() : undefined
-      },
-      {
-        id: 'insights' as JourneyFeatureId,
-        label: 'Blueprint Insights',
-        icon: Sparkles
-      }
-    ],
-    [agendaItems.length, focusTimer.status, notesCount, pendingAgendaCount]
-  );
-
-  const [activeFeature, setActiveFeature] = useState<JourneyFeatureId>('workspace');
+  const activeStreak = activeGoal?.focusStreak ?? 0;
 
   return (
-    <TooltipProvider>
-      <div className="space-y-4">
-        <div className="rounded-2xl border border-border/60 bg-background/80 p-3">
-          <div className="flex flex-wrap items-center gap-2">
-            {featureTabs.map(tab => {
-              const Icon = tab.icon;
-              const isActive = activeFeature === tab.id;
-
-              return (
-                <Tooltip key={tab.id}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant={isActive ? 'default' : 'outline'}
-                      size="icon"
-                      className={cn(
-                        'relative h-10 w-10 shrink-0 rounded-xl',
-                        isActive ? 'shadow-md' : 'bg-background'
-                      )}
-                      onClick={() => setActiveFeature(tab.id)}
-                      aria-label={tab.label}
-                      aria-pressed={isActive}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {tab.badge ? (
-                        <span
-                          className={cn(
-                            'absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground',
-                            tab.badge === '•' && 'min-w-[10px] px-0 text-base leading-none'
-                          )}
-                        >
-                          {tab.badge}
-                        </span>
-                      ) : null}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{tab.label}</TooltipContent>
-                </Tooltip>
-              );
-            })}
+    <div className="space-y-4">
+      {/* AI Output & Tool Workspace */}
+      <Card className="p-4 space-y-4 bg-muted/40">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <div>
+            <h4 className="font-semibold text-sm">AI Output &amp; Tool Workspace</h4>
+            <p className="text-xs text-muted-foreground">
+              Capture insights, craft plans, and surface AI-generated support.
+            </p>
           </div>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-start gap-3 rounded-lg border border-border/60 p-3 bg-background/80">
+            <NotebookPen className="mt-0.5 h-4 w-4 text-primary" />
+            <div className="space-y-1">
+              <p className="text-xs font-semibold">Multimodal note-taking</p>
+              <p className="text-xs text-muted-foreground">
+                Switch between written inputs and quick voice capture to build living notes as you work.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 rounded-lg border border-border/60 p-3 bg-background/80">
+            <FileDown className="mt-0.5 h-4 w-4 text-primary" />
+            <div className="space-y-1">
+              <p className="text-xs font-semibold">Flexible exports</p>
+              <p className="text-xs text-muted-foreground">
+                Download outputs in TXT, PDF, DOCX, or Markdown for easy sharing and archival.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 rounded-lg border border-border/60 p-3 bg-background/80">
+            <Cloud className="mt-0.5 h-4 w-4 text-primary" />
+            <div className="space-y-1">
+              <p className="text-xs font-semibold">Cross-platform syncing</p>
+              <p className="text-xs text-muted-foreground">
+                Keep your saved notes and insights synced across devices for uninterrupted momentum.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 rounded-md bg-primary/5 px-3 py-2 text-xs text-primary">
+          <Mic className="h-4 w-4" />
+          <span>Enable voice mode to capture a new insight.</span>
+        </div>
+      </Card>
+
+      {/* Agenda Management */}
+      <Card className="p-4 space-y-4">
+        <div className="flex items-center gap-2">
+          <CalendarClock className="h-4 w-4 text-secondary" />
+          <h4 className="font-semibold text-sm">Agenda Management</h4>
+        </div>
+        <div className="space-y-3 text-xs text-muted-foreground">
+          <div className="flex items-start gap-2">
+            <Sparkles className="mt-0.5 h-3.5 w-3.5 text-primary" />
+            <p>
+              <span className="font-medium text-foreground">Adaptive agenda</span> automatically builds and adjusts tasks to stay aligned with your goals.
+            </p>
+          </div>
+          <div className="flex items-start gap-2">
+            <ShieldCheck className="mt-0.5 h-3.5 w-3.5 text-primary" />
+            <p>
+              <span className="font-medium text-foreground">Locked agenda time</span> protects deep work blocks by preventing double-booking or interruptions.
+            </p>
+          </div>
+          <div className="flex items-start gap-2">
+            <Link2 className="mt-0.5 h-3.5 w-3.5 text-primary" />
+            <p>
+              <span className="font-medium text-foreground">Integration hooks</span> connect to calendars and productivity APIs for automated scheduling.
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      {/* Quick Actions */}
+      <Card className="p-4 space-y-3">
+        <div className="flex items-center space-x-2">
+          <Zap className="h-4 w-4 text-primary" />
+          <h4 className="font-semibold text-sm">Quick Actions</h4>
         </div>
 
         {activeFeature === 'workspace' && (
@@ -1265,213 +590,75 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
               </div>
             </ScrollArea>
           </Card>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Select a goal to see quick actions.
+          </p>
         )}
 
-        {activeFeature === 'agenda' && (
-          <Card className="p-4 space-y-4">
-            <div className="flex items-center gap-2">
-              <CalendarClock className="h-4 w-4 text-secondary" />
-              <h4 className="font-semibold text-sm">Agenda Management</h4>
-            </div>
-
-            <form onSubmit={handleAddAgendaItem} className="space-y-3">
-              <div className="grid gap-2 sm:grid-cols-3">
-                <Input
-                  value={newAgendaTitle}
-                  onChange={event => setNewAgendaTitle(event.target.value)}
-                  placeholder="Focus activity"
-                  className="text-sm"
-                />
-                <Input
-                  type="time"
-                  value={newAgendaStart}
-                  onChange={event => setNewAgendaStart(event.target.value)}
-                  className="text-sm"
-                />
-                <Input
-                  type="number"
-                  min={5}
-                  value={newAgendaDuration}
-                  onChange={event => setNewAgendaDuration(event.target.value)}
-                  className="text-sm"
-                  placeholder="Duration (min)"
+      {/* Progress Overview */}
+      <Card className="p-4 space-y-3">
+        <div className="flex items-center space-x-2">
+          <Target className="h-4 w-4 text-secondary" />
+          <h4 className="font-semibold text-sm">Progress Overview</h4>
+        </div>
+        {activeGoal ? (
+          <div className="space-y-3 text-xs">
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Milestones</span>
+                <span className="font-medium text-foreground">
+                  {completedMilestones}/{totalMilestones}
+                </span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-muted">
+                <div
+                  className="h-1.5 rounded-full bg-primary"
+                  style={{ width: `${milestoneProgress}%` }}
                 />
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button type="submit" size="sm">
-                  <CalendarClock className="mr-2 h-3.5 w-3.5" /> Schedule block
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={handleAddNextGoalTaskToAgenda}
-                  disabled={!unscheduledGoalTasks.length}
-                >
-                  <ListTodo className="mr-2 h-3.5 w-3.5" /> Import next goal task
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleClearCompletedAgenda}
-                  disabled={!agendaItems.some(item => item.completed)}
-                >
-                  <History className="mr-2 h-3.5 w-3.5" /> Clear completed
-                </Button>
-              </div>
-            </form>
-
-            <ScrollArea className="max-h-60 rounded-lg border border-border/60 bg-background/60">
-              <div className="p-3 space-y-3">
-                {agendaItems.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    Build your day by scheduling focused blocks tied to your goals.
-                  </p>
-                ) : (
-                  sortedAgenda.map(item => (
-                    <div
-                      key={item.id}
-                      className={cn(
-                        'rounded-lg border border-border/60 bg-background/80 p-3 transition-opacity',
-                        item.completed && 'opacity-70'
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1 text-xs font-semibold text-foreground">
-                              {item.completed ? (
-                                <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                              ) : (
-                                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                              )}
-                              <span>{item.title}</span>
-                            </div>
-                            {item.locked && <Lock className="h-3.5 w-3.5 text-primary" />}
-                          </div>
-                          <p className="text-[11px] text-muted-foreground">
-                            {toTimeRangeLabel(item.startTime, item.durationMinutes)} • {formatMinutes(item.durationMinutes)}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8"
-                                onClick={() => handleToggleComplete(item.id)}
-                              >
-                                <CheckCircle2
-                                  className={cn(
-                                    'h-3.5 w-3.5',
-                                    item.completed ? 'text-primary' : 'text-muted-foreground'
-                                  )}
-                                />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{item.completed ? 'Mark as in progress' : 'Mark complete'}</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8"
-                                onClick={() => handleToggleLock(item.id)}
-                              >
-                                {item.locked ? (
-                                  <Unlock className="h-3.5 w-3.5" />
-                                ) : (
-                                  <Lock className="h-3.5 w-3.5" />
-                                )}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{item.locked ? 'Unlock time block' : 'Lock to prevent changes'}</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-destructive hover:text-destructive"
-                                onClick={() => handleRemoveAgendaItem(item.id)}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Remove block</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-          </Card>
-        )}
-
-        {activeFeature === 'quick-actions' && (
-          <Card className="p-4 space-y-3">
-            <div className="flex items-center space-x-2">
-              <Zap className="h-4 w-4 text-primary" />
-              <h4 className="font-semibold text-sm">Quick Actions</h4>
             </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button variant="secondary" className="justify-start text-left" onClick={toggleFocusSession}>
-                {focusTimer.status === 'running' ? (
-                  <Pause className="mr-2 h-3.5 w-3.5" />
-                ) : (
-                  <Play className="mr-2 h-3.5 w-3.5" />
-                )}
-                <div className="flex flex-col items-start">
-                  <span className="text-xs font-semibold">{quickActionStatusLabel}</span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {focusTimer.status === 'idle'
-                      ? 'Ready for your next deep work sprint'
-                      : `${formatSecondsAsClock(focusTimer.remainingSeconds)} remaining`}
-                  </span>
-                </div>
-              </Button>
-              <Button variant="secondary" className="justify-start text-left" onClick={() => navigate('/dreams')}>
-                <Target className="mr-2 h-3.5 w-3.5" />
-                <div className="flex flex-col items-start">
-                  <span className="text-xs font-semibold">Review journey timeline</span>
-                  <span className="text-[11px] text-muted-foreground">Jump to your dream dashboard</span>
-                </div>
-              </Button>
-              <Button variant="outline" className="justify-start text-left" onClick={() => exportNotes('md')}>
-                <Download className="mr-2 h-3.5 w-3.5" />
-                <div className="flex flex-col items-start">
-                  <span className="text-xs font-semibold">Export workspace summary</span>
-                  <span className="text-[11px] text-muted-foreground">Markdown file with notes and agenda</span>
-                </div>
-              </Button>
-              <Button
-                variant="outline"
-                className="justify-start text-left"
-                onClick={handleAddNextGoalTaskToAgenda}
-                disabled={!unscheduledGoalTasks.length}
-              >
-                <ListTodo className="mr-2 h-3.5 w-3.5" />
-                <div className="flex flex-col items-start">
-                  <span className="text-xs font-semibold">Queue next goal task</span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {unscheduledGoalTasks.length
-                      ? `${unscheduledGoalTasks.length} remaining`
-                      : 'All current tasks scheduled'}
-                  </span>
-                </div>
-              </Button>
+
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Tasks</span>
+                <span className="font-medium text-foreground">
+                  {completedTasks}/{totalTasks}
+                </span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-muted">
+                <div
+                  className="h-1.5 rounded-full bg-secondary"
+                  style={{ width: `${taskProgress}%` }}
+                />
+              </div>
             </div>
-            {!activeGoal && (
-              <p className="text-xs text-muted-foreground">
-                Select a goal in the main view to unlock contextual automations.
-              </p>
-            )}
-          </Card>
+
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Time spent vs. scheduled</span>
+                <span className="font-medium text-foreground">
+                  {timeSpent}h / {scheduledTime}h
+                </span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-muted">
+                <div
+                  className="h-1.5 rounded-full bg-primary/70"
+                  style={{ width: `${timeAllocation}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-between rounded-md bg-muted/40 px-3 py-2">
+              <span className="text-muted-foreground">Recent streak</span>
+              <span className="font-medium text-foreground">{activeStreak} days</span>
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            No active goal selected.
+          </p>
         )}
 
         {activeFeature === 'progress' && (
@@ -1652,7 +839,7 @@ const BlueprintInsightsCard: React.FC = () => {
         </div>
       ) : (
         <p className="text-xs text-muted-foreground">
-          Personality-based tips and guidance will appear here once your blueprint is synced.
+          Personality-based tips and guidance will appear here.
         </p>
       )}
     </Card>
