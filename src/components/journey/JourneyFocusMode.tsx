@@ -13,6 +13,8 @@ import {
   ArrowLeft,
   Target,
 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { safeInterpolateTranslation } from "@/utils/translation-utils";
 
 interface JourneyFocusModeProps {
   focusedMilestone: any;
@@ -27,8 +29,9 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
   onTaskClick,
   onExitFocus,
 }) => {
+  const { t, language } = useLanguage();
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US', {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -61,12 +64,12 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
             className="flex items-center gap-2 hover:bg-blue-100"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Journey
+            {t('journey.focusModeView.backToJourney')}
           </Button>
         </div>
         <Badge className="bg-blue-100 text-blue-800 border-blue-200 flex items-center gap-2 px-3 py-1 font-bold text-base animate-pulse ring-2 ring-soul-purple shadow-soul-purple/30">
           <Focus className="h-4 w-4 mr-1" />
-          You are now in Focus Mode
+          {t('journey.focusModeView.banner')}
         </Badge>
       </div>
 
@@ -79,11 +82,19 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
         <div className="flex items-center justify-center gap-4 text-xs">
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3 text-blue-500" />
-            <span>Target: {formatDate(focusedMilestone.target_date)}</span>
+            <span>
+              {safeInterpolateTranslation(t('journey.focusModeView.targetDate'), {
+                date: formatDate(focusedMilestone.target_date)
+              })}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <Target className="h-3 w-3 text-green-500" />
-            <span>{milestoneTasks.length} focused tasks</span>
+            <span>
+              {safeInterpolateTranslation(t('journey.focusModeView.focusedTasksCount'), {
+                count: milestoneTasks.length.toString()
+              })}
+            </span>
           </div>
         </div>
       </div>
@@ -93,7 +104,7 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
         <div className="p-3 bg-soul-purple/10 rounded-lg border border-soul-purple/20">
           <h4 className="font-medium text-soul-purple mb-2 flex items-center gap-2">
             <Brain className="h-4 w-4" />
-            Blueprint Alignment
+            {t('journey.focusModeView.blueprintAlignment')}
           </h4>
           <p className="text-sm text-soul-purple/80">
             {focusedMilestone.blueprint_alignment}
@@ -105,7 +116,7 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
       <div>
         <h3 className="font-medium mb-3 flex items-center">
           <Zap className="h-4 w-4 mr-2 text-soul-purple" />
-          Tasks for This Milestone
+          {t('journey.focusModeView.tasksForMilestone')}
         </h3>
         {milestoneTasks.length > 0 ? (
           <div className="space-y-2">
@@ -137,9 +148,9 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <Target className="h-8 w-8 mx-auto mb-4 opacity-50" />
-            <p className="text-sm">No specific tasks found for this milestone.</p>
+            <p className="text-sm">{t('journey.focusModeView.noTasks')}</p>
             <p className="text-xs mt-1">
-              Tasks may be distributed across milestones.
+              {t('journey.focusModeView.tasksDistributed')}
             </p>
           </div>
         )}
@@ -150,7 +161,7 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
         <div>
           <h3 className="font-medium mb-3 flex items-center">
             <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
-            Completion Criteria
+            {t('journey.focusModeView.completionCriteria')}
           </h3>
           <div className="space-y-2">
             {focusedMilestone.completion_criteria.map(

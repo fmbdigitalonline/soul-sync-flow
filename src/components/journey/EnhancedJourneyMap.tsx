@@ -20,6 +20,7 @@ import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data"
 import { MilestoneDetailPopup } from "./MilestoneDetailPopup";
 import { useDoubleTap } from "@/hooks/use-double-tap";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { safeInterpolateTranslation } from "@/utils/translation-utils";
 
 interface EnhancedJourneyMapProps {
   onTaskClick?: (task: any) => void;
@@ -100,18 +101,23 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
   }, []);
 
   const getBlueprintInsight = useCallback(() => {
-    if (!blueprintData) return "Your journey is uniquely yours";
-    
-    const traits = [];
+    if (!blueprintData) return t('journey.uniqueJourney');
+
+    const traits: string[] = [];
     if (blueprintData.cognitiveTemperamental?.mbtiType) traits.push(blueprintData.cognitiveTemperamental.mbtiType);
     if (blueprintData.energyDecisionStrategy?.humanDesignType) traits.push(blueprintData.energyDecisionStrategy.humanDesignType);
-    
-    return `Optimized for your ${traits.slice(0, 2).join(' & ')} blueprint`;
-  }, [blueprintData]);
+
+    const [firstTrait = '—', secondTrait = '—'] = [...traits, '—', '—'];
+
+    return safeInterpolateTranslation(t('journeyOverview.optimizedFor'), {
+      personalityType: firstTrait,
+      decisionStyle: secondTrait
+    });
+  }, [blueprintData, t]);
 
   const formatDate = useCallback((dateInput: unknown) => {
     if (!dateInput) {
-      return 'Date TBD';
+      return t('journey.dateTbd');
     }
 
     const parsedDate = (() => {
@@ -131,14 +137,14 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
 
     if (!parsedDate) {
       console.warn('⚠️ EnhancedJourneyMap: Unable to format date input', dateInput);
-      return 'Date TBD';
+      return t('journey.dateTbd');
     }
 
     return parsedDate.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric'
     });
-  }, []);
+  }, [t]);
 
   const getPhaseColor = useCallback((phase: string) => {
     const colors = {
@@ -257,14 +263,14 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
                   className="bg-blue-500 hover:bg-blue-600 text-xs h-7 px-2"
                 >
                   <Focus className="h-3 w-3 mr-1" />
-                  Focus
+                  {t('journey.focus')}
                 </Button>
               )}
             </div>
             
             {/* Double-tap hint */}
             <div className="mt-2 text-center">
-              <p className="text-xs text-gray-400">Double-tap for details</p>
+              <p className="text-xs text-gray-400">{t('journey.doubleTapForDetails')}</p>
             </div>
           </div>
         </div>
@@ -283,7 +289,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
           className="flex items-center gap-2 bg-background/80 hover:bg-background border-soul-purple/30 mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Success Overview
+          {t('journey.backToOverview')}
         </Button>
       )}
 
@@ -301,7 +307,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
           
           <div className="text-right flex-shrink-0">
             <div className="text-xl font-bold text-soul-purple mb-1">{progress}%</div>
-            <div className="text-xs text-muted-foreground">Complete</div>
+            <div className="text-xs text-muted-foreground">{t('journey.complete')}</div>
           </div>
         </div>
         
@@ -315,7 +321,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
             className="flex items-center gap-1 text-xs h-8 px-3"
           >
             <MapPin className="h-3 w-3" />
-            Timeline
+            {t('journey.timeline')}
           </Button>
           <Button
             variant={selectedView === 'detailed' ? 'default' : 'outline'}
@@ -324,7 +330,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
             className="flex items-center gap-1 text-xs h-8 px-3"
           >
             <Star className="h-3 w-3" />
-            Focus
+            {t('journey.focus')}
           </Button>
         </div>
       </div>
@@ -334,10 +340,10 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
         <div className="w-full">
           <h3 className="font-medium mb-3 flex items-center text-sm">
             <MapPin className="h-4 w-4 mr-2" />
-            Your Journey Path
+            {t('journey.yourJourneyPath')}
             <div className="ml-auto">
               <Badge variant="outline" className="text-xs">
-                Tap cards for details
+                {t('journey.tapForDetails')}
               </Badge>
             </div>
           </h3>
@@ -355,8 +361,8 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
                     <CheckCircle2 className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex-1 min-w-0 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <h5 className="font-medium text-gray-600 text-sm mb-1">🚀 Journey Started</h5>
-                    <p className="text-xs text-gray-500 mb-1">Your dream begins here</p>
+                    <h5 className="font-medium text-gray-600 text-sm mb-1">{t('journey.journeyStarted')}</h5>
+                    <p className="text-xs text-gray-500 mb-1">{t('journey.dreamBeginsHere')}</p>
                     <p className="text-xs text-gray-400">
                       {formatDate(mainGoal.created_at)}
                     </p>
@@ -420,10 +426,12 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
                     <Target className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                    <h4 className="font-medium text-green-800 text-sm mb-1">🎯 Dream Achieved!</h4>
+                    <h4 className="font-medium text-green-800 text-sm mb-1">{t('journey.dreamAchieved')}</h4>
                     <p className="text-xs text-green-600 mb-1 line-clamp-1">{mainGoal.title}</p>
                     <p className="text-xs text-green-500">
-                      Target: {formatDate(mainGoal.target_completion)}
+                      {safeInterpolateTranslation(t('journey.targetWithDate'), {
+                        date: formatDate(mainGoal.target_completion)
+                      })}
                     </p>
                   </div>
                 </div>
@@ -439,7 +447,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
             <div className="p-3 border-blue-200 bg-blue-50/50 rounded-lg border w-full">
               <h3 className="font-medium mb-3 flex items-center text-sm">
                 <Star className="h-4 w-4 mr-2 text-blue-500" />
-                Current Milestone Focus
+                {t('journey.currentMilestoneFocus')}
               </h3>
               <div className="bg-white p-3 rounded-lg border border-blue-200 mb-3 w-full">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -451,10 +459,16 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
                 <div className="flex items-center gap-4 text-xs flex-wrap">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3 text-blue-500" />
-                    <span>Target: {formatDate(currentMilestone.target_date)}</span>
+                    <span>
+                      {safeInterpolateTranslation(t('journey.targetWithDate'), {
+                        date: formatDate(currentMilestone.target_date)
+                      })}
+                    </span>
                   </div>
                   <Badge variant="outline" className="bg-blue-100 text-blue-700 text-xs">
-                    {currentMilestone.completion_criteria?.length || 0} criteria
+                    {safeInterpolateTranslation(t('journey.criteriaCount'), {
+                      count: (currentMilestone.completion_criteria?.length || 0).toString()
+                    })}
                   </Badge>
                 </div>
               </div>
@@ -465,7 +479,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
           <div className="w-full">
             <h3 className="font-medium mb-3 flex items-center text-sm">
               <Sparkles className="h-4 w-4 mr-2 text-soul-purple" />
-              Your Next Steps
+              {t('journey.nextSteps')}
             </h3>
             {nextTasks.length > 0 ? (
               <div className="space-y-2 w-full">
@@ -497,7 +511,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
             ) : (
               <div className="text-center py-6 text-muted-foreground w-full">
                 <Target className="h-8 w-8 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">All tasks completed! Time to celebrate this milestone.</p>
+                <p className="text-sm">{t('journey.allTasksCompleted')}</p>
               </div>
             )}
           </div>
@@ -507,7 +521,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
             <div className="w-full">
               <h3 className="font-medium mb-3 flex items-center text-sm">
                 <Sparkles className="h-4 w-4 mr-2 text-green-500" />
-                Soul Blueprint Alignment
+                {t('journey.blueprintAlignment')}
               </h3>
               <div className="grid grid-cols-1 gap-2 w-full">
                 {mainGoal.blueprint_alignment.map((trait: string, index: number) => (
@@ -518,7 +532,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
                 ))}
               </div>
               <p className="text-xs text-muted-foreground mt-3 text-center">
-                ✨ This journey honors your authentic self and natural strengths
+                {t('journey.honorsStrengths')}
               </p>
             </div>
           )}

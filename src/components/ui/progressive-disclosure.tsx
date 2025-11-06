@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
+import {
   ChevronDown, 
   ChevronRight, 
   HelpCircle, 
@@ -12,6 +12,8 @@ import {
   Zap,
   Target
 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { safeInterpolateTranslation } from '@/utils/translation-utils';
 
 interface DisclosureLevel {
   level: 'basic' | 'detailed' | 'expert';
@@ -29,26 +31,20 @@ interface ProgressiveDisclosureProps {
   defaultLevel?: 'basic' | 'detailed' | 'expert';
 }
 
-const levelConfig = {
+const levelMeta = {
   basic: {
     icon: Target,
-    color: 'bg-green-500',
-    label: 'Quick Start',
-    description: 'Simple steps to get going'
+    color: 'bg-green-500'
   },
   detailed: {
     icon: BookOpen,
-    color: 'bg-blue-500',
-    label: 'Step-by-Step',
-    description: 'Detailed instructions with examples'
+    color: 'bg-blue-500'
   },
   expert: {
     icon: Lightbulb,
-    color: 'bg-purple-500',
-    label: 'Complete Guide',
-    description: 'Comprehensive breakdown with alternatives'
+    color: 'bg-purple-500'
   }
-};
+} as const;
 
 export const ProgressiveDisclosure: React.FC<ProgressiveDisclosureProps> = ({
   topic,
@@ -56,6 +52,27 @@ export const ProgressiveDisclosure: React.FC<ProgressiveDisclosureProps> = ({
   onLevelChange,
   defaultLevel = 'basic'
 }) => {
+  const { t } = useLanguage();
+  const levelConfig = React.useMemo(
+    () => ({
+      basic: {
+        ...levelMeta.basic,
+        label: t('progressiveDisclosure.levels.basic.label'),
+        description: t('progressiveDisclosure.levels.basic.description')
+      },
+      detailed: {
+        ...levelMeta.detailed,
+        label: t('progressiveDisclosure.levels.detailed.label'),
+        description: t('progressiveDisclosure.levels.detailed.description')
+      },
+      expert: {
+        ...levelMeta.expert,
+        label: t('progressiveDisclosure.levels.expert.label'),
+        description: t('progressiveDisclosure.levels.expert.description')
+      }
+    }),
+    [t]
+  );
   const [activeLevel, setActiveLevel] = useState<'basic' | 'detailed' | 'expert'>(defaultLevel);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
@@ -144,7 +161,9 @@ export const ProgressiveDisclosure: React.FC<ProgressiveDisclosureProps> = ({
               ) : (
                 <ChevronRight className="h-4 w-4" />
               )}
-              Action Steps ({currentLevel.actionableSteps.length})
+              {safeInterpolateTranslation(t('progressiveDisclosure.actionSteps'), {
+                count: currentLevel.actionableSteps.length.toString()
+              })}
             </button>
 
             {expandedSections.has('steps') && (
@@ -174,7 +193,9 @@ export const ProgressiveDisclosure: React.FC<ProgressiveDisclosureProps> = ({
               ) : (
                 <ChevronRight className="h-4 w-4" />
               )}
-              Examples ({currentLevel.examples.length})
+              {safeInterpolateTranslation(t('progressiveDisclosure.examples'), {
+                count: currentLevel.examples.length.toString()
+              })}
             </button>
 
             {expandedSections.has('examples') && (
@@ -197,9 +218,9 @@ export const ProgressiveDisclosure: React.FC<ProgressiveDisclosureProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <HelpCircle className="h-3 w-3" />
-              <span>Need more specific help? Try a different level or ask for assistance.</span>
+              <span>{t('help.needMoreSpecificHelpDetail')}</span>
             </div>
-            
+
             <div className="flex gap-2">
               {activeLevel !== 'expert' && (
                 <Button
@@ -211,10 +232,10 @@ export const ProgressiveDisclosure: React.FC<ProgressiveDisclosureProps> = ({
                   size="sm"
                   className="text-xs px-2 py-1"
                 >
-                  More Detail
+                  {t('progressiveDisclosure.moreDetail')}
                 </Button>
               )}
-              
+
               {activeLevel !== 'basic' && (
                 <Button
                   onClick={() => {
@@ -225,7 +246,7 @@ export const ProgressiveDisclosure: React.FC<ProgressiveDisclosureProps> = ({
                   size="sm"
                   className="text-xs px-2 py-1"
                 >
-                  Simpler
+                  {t('progressiveDisclosure.simpler')}
                 </Button>
               )}
             </div>

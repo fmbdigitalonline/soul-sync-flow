@@ -28,6 +28,8 @@ import {
   buildAggregatedAssistanceContext,
   normalizeAssistanceResponses
 } from '@/utils/assistance-response-utils';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { safeInterpolateTranslation } from '@/utils/translation-utils';
 
 interface WorkingInstructionsPanelProps {
   instructions: WorkingInstruction[];
@@ -59,6 +61,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
   } = useInstructionProgress(goalId, taskId, initialCompletedIds);
   
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const [assistanceResponses, setAssistanceResponses] = useState<Map<string, AssistanceResponse[]>>(new Map());
   const [isRequestingHelp, setIsRequestingHelp] = useState<Map<string, boolean>>(new Map());
@@ -235,7 +238,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     return (
       <Card className="p-8 text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
-        <p className="text-sm text-gray-600">Loading your progress...</p>
+        <p className="text-sm text-gray-600">{t('coach.loadingProgress')}</p>
       </Card>
     );
   }
@@ -247,9 +250,9 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
         <div className="flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-medium text-red-900 mb-1">Failed to load progress</h4>
+            <h4 className="font-medium text-red-900 mb-1">{t('coach.loadProgressErrorTitle')}</h4>
             <p className="text-sm text-red-700">{progressError}</p>
-            <p className="text-xs text-red-600 mt-2">Your progress will not be saved. Please refresh or sign in.</p>
+            <p className="text-xs text-red-600 mt-2">{t('coach.loadProgressErrorDescription')}</p>
           </div>
         </div>
       </Card>
@@ -262,7 +265,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
       <Card className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
         <div className="flex items-center gap-2 mb-2">
           <Target className="h-4 w-4 text-blue-600" />
-          <span className="text-xs font-medium text-blue-700">Working Instructions</span>
+          <span className="text-xs font-medium text-blue-700">{t('coach.workingInstructions')}</span>
         </div>
         <p className="text-sm text-gray-700 leading-relaxed mb-3">
           {introText}
@@ -271,8 +274,13 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
         {/* Progress tracking */}
         <div className="space-y-2">
           <div className="flex justify-between items-center text-xs">
-            <span className="text-gray-600">Progress</span>
-            <span className="font-medium text-gray-800">{completedCount}/{totalCount} completed</span>
+            <span className="text-gray-600">{t('coach.progress')}</span>
+            <span className="font-medium text-gray-800">
+              {safeInterpolateTranslation(t('coach.completedCount'), {
+                completedCount: completedCount.toString(),
+                totalCount: totalCount.toString()
+              })}
+            </span>
           </div>
           <Progress value={progressPercentage} className="h-2" />
         </div>

@@ -1,9 +1,8 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Calendar } from "@/components/ui/calendar";
-import { 
+import {
   Calendar as CalendarIcon, 
   Kanban, 
   List, 
@@ -19,10 +18,12 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
-import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
+import { parseISO, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { TaskCard } from "../task/TaskCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TaskSessionType } from "@/utils/task-session";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { safeInterpolateTranslation } from "@/utils/translation-utils";
 
 interface Task {
   id: string;
@@ -75,6 +76,15 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
   const [activeView, setActiveView] = useState<'kanban' | 'list' | 'calendar'>('kanban');
   const [mobileKanbanColumn, setMobileKanbanColumn] = useState<'todo' | 'in_progress' | 'stuck' | 'completed'>('todo');
   const { isMobile } = useIsMobile();
+  const { t, language } = useLanguage();
+  const selectedDateLabel = selectedDate.toLocaleDateString(
+    language === 'nl' ? 'nl-NL' : 'en-US',
+    {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    }
+  );
 
   const activeGoalId = useMemo(() => {
     if (!activeGoal) return null;
@@ -263,7 +273,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
     return (
       <div className="text-center py-12 text-muted-foreground">
         <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
-        <p>No active dream selected.</p>
+        <p>{t('journey.taskViews.noActiveDream')}</p>
       </div>
     );
   }
@@ -317,7 +327,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
         
         {tasks.length === 0 && (
           <div className={`flex items-center justify-center text-muted-foreground ${isMobile ? 'h-20' : 'h-32'}`}>
-            <p className="text-sm">Drop tasks here</p>
+            <p className="text-sm">{t('journey.taskViews.dropZone')}</p>
           </div>
         )}
       </div>
@@ -327,28 +337,28 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
   const statusColumns = [
     {
       key: 'todo' as const,
-      title: 'To Do',
+      title: t('tasks.status.toDo'),
       tasks: tasksByStatus.todo,
       icon: <List className="h-4 w-4 text-slate-600" />,
       accentColor: 'bg-slate-100'
     },
     {
       key: 'in_progress' as const,
-      title: 'In Progress',
+      title: t('tasks.status.inProgress'),
       tasks: tasksByStatus.in_progress,
       icon: <Play className="h-4 w-4 text-blue-600" />,
       accentColor: 'bg-blue-100'
     },
     {
       key: 'stuck' as const,
-      title: 'Stuck',
+      title: t('tasks.status.stuck'),
       tasks: tasksByStatus.stuck,
       icon: <AlertCircle className="h-4 w-4 text-amber-600" />,
       accentColor: 'bg-amber-100'
     },
     {
       key: 'completed' as const,
-      title: 'Completed',
+      title: t('tasks.status.completed'),
       tasks: tasksByStatus.completed,
       icon: <CheckCircle2 className="h-4 w-4 text-emerald-600" />,
       accentColor: 'bg-emerald-100'
@@ -362,28 +372,31 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
     <div className="space-y-4">
       {/* Context Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onBackToJourney}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Journey
-          </Button>
-          
-          {focusedMilestone && (
-            <div className="text-sm text-muted-foreground">
-              <span className="font-medium">Focusing on:</span> {focusedMilestone.title}
-            </div>
-          )}
-        </div>
-        
-        <div className="text-sm text-muted-foreground">
-          {filteredTasks.length} tasks • {filteredTasks.filter(t => t.status === 'completed').length} completed
-        </div>
+      <div className="flex items-center space-x-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBackToJourney}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('journey.focusModeView.backToJourney')}
+        </Button>
+
+        {focusedMilestone && (
+          <div className="text-sm text-muted-foreground">
+            <span className="font-medium">{t('journey.taskViews.focusingOn')}</span> {focusedMilestone.title}
+          </div>
+        )}
       </div>
+
+      <div className="text-sm text-muted-foreground">
+        {safeInterpolateTranslation(t('journey.taskViews.summary'), {
+          total: filteredTasks.length.toString(),
+          completed: filteredTasks.filter(t => t.status === 'completed').length.toString()
+        })}
+      </div>
+    </div>
 
       {/* View Toggle */}
       <div className="flex gap-2">
@@ -394,7 +407,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
           className="flex items-center gap-2"
         >
           <Kanban className="h-4 w-4" />
-          Flow
+          {t('journey.taskViews.flow')}
         </Button>
         <Button
           variant={activeView === 'list' ? 'default' : 'outline'}
@@ -403,7 +416,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
           className="flex items-center gap-2"
         >
           <List className="h-4 w-4" />
-          Tasks
+          {t('journey.taskViews.tasks')}
         </Button>
         <Button
           variant={activeView === 'calendar' ? 'default' : 'outline'}
@@ -412,7 +425,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
           className="flex items-center gap-2"
         >
           <CalendarIcon className="h-4 w-4" />
-          Calendar
+          {t('journey.taskViews.calendar')}
         </Button>
       </div>
 
@@ -435,7 +448,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
                   className="flex items-center gap-1"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Prev
+                  {t('journey.taskViews.previous')}
                 </Button>
                 
                 <div className="flex items-center gap-2">
@@ -456,7 +469,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
                   disabled={currentColumnIndex === statusColumns.length - 1}
                   className="flex items-center gap-1"
                 >
-                  Next
+                  {t('journey.taskViews.next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -506,9 +519,9 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
       {activeView === 'list' && (
         <div className="space-y-3">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-800">All Tasks</h3>
+            <h3 className="font-semibold text-gray-800">{t('journey.taskViews.allTasks')}</h3>
             <Badge variant="outline" className="text-xs">
-              Double-tap for coaching
+              {t('journey.taskViews.doubleTapHint')}
             </Badge>
           </div>
           {filteredTasks.map(task => (
@@ -526,7 +539,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
           {filteredTasks.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <List className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No tasks found</p>
+              <p>{t('journey.taskViews.noTasksFound')}</p>
             </div>
           )}
         </div>
@@ -545,14 +558,14 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
           
           <div>
             <h4 className="font-medium mb-3">
-              Tasks for {format(selectedDate, 'MMMM d, yyyy')}
+              {safeInterpolateTranslation(t('journey.taskViews.tasksForDate'), { date: selectedDateLabel })}
             </h4>
-            
+
             <div className="space-y-2">
               {tasksForSelectedDate.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No tasks scheduled for this day</p>
+                  <p>{t('journey.taskViews.noTasksScheduled')}</p>
                 </div>
               ) : (
                 tasksForSelectedDate.map(task => (

@@ -2,8 +2,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { 
-  CheckCircle, 
+import {
+  CheckCircle,
   Plus, 
   BarChart3, 
   ArrowRight, 
@@ -11,6 +11,7 @@ import {
   Clock,
   Lightbulb
 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SmartQuickActionsProps {
   onAction: (actionId: string, message: string) => void;
@@ -25,60 +26,61 @@ export const SmartQuickActions: React.FC<SmartQuickActionsProps> = ({
   currentProgress = 0,
   hasSubTasks = false
 }) => {
+  const { t } = useLanguage();
   const quickActions = [
     {
       id: 'break_down',
       icon: <Target className="h-4 w-4" />,
-      label: 'Break Down Task',
-      message: 'Please break this task down into 3-5 specific sub-tasks I can work on step by step.',
+      label: t('quickActions.breakDownLabel'),
+      message: t('quickActions.breakDownMessage'),
       color: 'bg-blue-50 hover:bg-blue-100 border-blue-200',
       condition: !hasSubTasks
     },
     {
       id: 'next_step',
       icon: <ArrowRight className="h-4 w-4" />,
-      label: 'What\'s Next?',
-      message: 'What should I focus on next for this task?',
+      label: t('quickActions.whatsNextLabel'),
+      message: t('quickActions.whatsNextMessage'),
       color: 'bg-green-50 hover:bg-green-100 border-green-200',
       condition: true
     },
     {
       id: 'progress_check',
       icon: <BarChart3 className="h-4 w-4" />,
-      label: 'Progress Check',
-      message: 'Can you review my progress and help me update the completion percentage?',
+      label: t('quickActions.progressCheckLabel'),
+      message: t('quickActions.progressCheckMessage'),
       color: 'bg-purple-50 hover:bg-purple-100 border-purple-200',
       condition: currentProgress > 0
     },
     {
       id: 'add_subtask',
       icon: <Plus className="h-4 w-4" />,
-      label: 'Add Sub-task',
-      message: 'I need to add a new sub-task to this main task. Can you help me define it?',
+      label: t('quickActions.addSubTaskLabel'),
+      message: t('quickActions.addSubTaskMessage'),
       color: 'bg-orange-50 hover:bg-orange-100 border-orange-200',
       condition: hasSubTasks
     },
     {
       id: 'im_stuck',
       icon: <Lightbulb className="h-4 w-4" />,
-      label: 'I\'m Stuck',
-      message: 'I\'m feeling stuck on this task. Can you help me troubleshoot and find a way forward?',
+      label: t('quickActions.imStuckLabel'),
+      message: t('quickActions.imStuckMessage'),
       color: 'bg-yellow-50 hover:bg-yellow-100 border-yellow-200',
       condition: true
     },
     {
       id: 'time_check',
       icon: <Clock className="h-4 w-4" />,
-      label: 'Time Management',
-      message: 'Help me optimize my time on this task. Should I continue or take a break?',
+      label: t('quickActions.timeManagementLabel'),
+      message: t('quickActions.timeManagementMessage'),
       color: 'bg-teal-50 hover:bg-teal-100 border-teal-200',
       condition: true
     },
     {
       id: 'complete_check',
       icon: <CheckCircle className="h-4 w-4" />,
-      label: 'Mark Complete',
-      message: 'I think I\'ve finished this task. Can you verify completion and mark it as done?',
+      label: t('quickActions.markCompleteLabel'),
+      message: t('quickActions.markCompleteMessage'),
       color: 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200',
       condition: currentProgress >= 80
     }
@@ -90,7 +92,7 @@ export const SmartQuickActions: React.FC<SmartQuickActionsProps> = ({
     <Card className="p-4">
       <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
         <Target className="h-4 w-4 text-soul-purple" />
-        Smart Actions
+        {t('tasks.smartActions')}
       </h3>
       
       <div className="space-y-2">
@@ -110,7 +112,7 @@ export const SmartQuickActions: React.FC<SmartQuickActionsProps> = ({
       </div>
       
       <p className="text-xs text-muted-foreground mt-3">
-        These actions integrate directly with your task progress and coach guidance.
+        {t('tasks.smartActionsDescription')}
       </p>
     </Card>
   );

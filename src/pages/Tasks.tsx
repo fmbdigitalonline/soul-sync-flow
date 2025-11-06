@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Target, TrendingUp, CheckCircle, Plus, MessageCircle, Brain, Clock, ArrowLeft } from "lucide-react";
+import { Target, TrendingUp, CheckCircle, Plus, MessageCircle, Brain, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAICoach } from "@/hooks/use-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { safeInterpolateTranslation } from "@/utils/translation-utils";
 
 const Tasks = () => {
   const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useAICoach();
@@ -63,15 +64,17 @@ const Tasks = () => {
     resetConversation();
     toast({
       title: t('coach.newConversation'),
-      description: `New conversation started with ${t('coach.soulCoach')}`,
+      description: safeInterpolateTranslation(t('tasks.newConversationStartedWith'), {
+        coach: t('coach.soulCoach')
+      }),
     });
   };
 
   const quickActions = [
-    "Help me break down my biggest goal into actionable steps",
-    "Create a morning routine that aligns with my energy",
-    "Set up accountability for my weekly targets",
-    "Plan my most productive work blocks"
+    t('tasks.qa1'),
+    t('tasks.qa2'),
+    t('tasks.qa3'),
+    t('tasks.qa4')
   ];
 
   if (!isAuthenticated) {
@@ -83,14 +86,14 @@ const Tasks = () => {
               <Target className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold mb-3 bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
-              Productivity Mode
+              {t('tasks.title')}
             </h1>
-            <p className="mb-8 text-gray-600 leading-relaxed">Goal-focused achievement and task management</p>
-            <Button 
+            <p className="mb-8 text-gray-600 leading-relaxed">{t('tasks.subtitle')}</p>
+            <Button
               className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:shadow-lg transition-all duration-300 rounded-2xl h-12 text-white font-medium"
               onClick={() => window.location.href = '/auth'}
             >
-              Get Started
+              {t('tasks.getStarted')}
             </Button>
           </div>
         </div>
@@ -106,9 +109,9 @@ const Tasks = () => {
           {/* Mobile-Optimized Header */}
           <div className="text-center mb-4">
             <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
-              Productivity Mode
+              {t('tasks.title')}
             </h1>
-            <p className="text-sm text-gray-500">Goal-focused achievement</p>
+            <p className="text-sm text-gray-500">{t('tasks.subtitleShort')}</p>
           </div>
 
           {/* Progress Overview Card */}
@@ -116,18 +119,18 @@ const Tasks = () => {
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium flex items-center">
                 <Target className="h-4 w-4 mr-2 text-green-600" />
-                Today's Focus
+                {t('tasks.todaysFocus')}
               </h3>
               <Badge variant="outline" className="text-xs border-green-600/30">
                 <TrendingUp className="h-3 w-3 mr-1" />
-                Day 3 Streak
+                {safeInterpolateTranslation(t('tasks.dayStreak'), { count: '3' })}
               </Badge>
             </div>
-            
+
             <div className="space-y-3">
               <div className="flex justify-between text-xs">
-                <span>Daily Goals</span>
-                <span>2 of 3 complete</span>
+                <span>{t('tasks.dailyGoals')}</span>
+                <span>{safeInterpolateTranslation(t('tasks.goalsComplete'), { completed: '2', total: '3' })}</span>
               </div>
               <Progress value={66} className="h-2" />
             </div>
@@ -150,7 +153,7 @@ const Tasks = () => {
                   }`}
                 >
                   <Brain className="h-3 w-3" />
-                  AI Goals
+                  {t('tasks.aiGoals')}
                 </Button>
                 <Button
                   variant={activeTab === 'planning' ? 'default' : 'ghost'}
@@ -163,7 +166,7 @@ const Tasks = () => {
                   }`}
                 >
                   <Target className="h-3 w-3" />
-                  Planning
+                  {t('tasks.planning')}
                 </Button>
                 <Button
                   variant={activeTab === 'timer' ? 'default' : 'ghost'}
@@ -176,7 +179,7 @@ const Tasks = () => {
                   }`}
                 >
                   <Clock className="h-3 w-3" />
-                  Focus
+                  {t('tasks.focus')}
                 </Button>
                 <Button
                   variant={activeTab === 'habits' ? 'default' : 'ghost'}
@@ -189,7 +192,7 @@ const Tasks = () => {
                   }`}
                 >
                   <CheckCircle className="h-3 w-3" />
-                  Habits
+                  {t('tasks.habits')}
                 </Button>
                 <Button
                   variant={activeTab === 'goals' ? 'default' : 'ghost'}
@@ -202,7 +205,7 @@ const Tasks = () => {
                   }`}
                 >
                   <Target className="h-3 w-3" />
-                  Goals
+                  {t('tasks.goals')}
                 </Button>
                 <Button
                   variant={activeTab === 'chat' ? 'default' : 'ghost'}
@@ -215,7 +218,7 @@ const Tasks = () => {
                   }`}
                 >
                   <MessageCircle className="h-3 w-3" />
-                  Coach
+                  {t('tasks.coach')}
                 </Button>
               </div>
             </div>
@@ -229,8 +232,8 @@ const Tasks = () => {
                       <Brain className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-base font-semibold text-gray-800">AI Goal Achievement</h2>
-                      <p className="text-xs text-gray-500">Smart goal tracking and progress</p>
+                      <h2 className="text-base font-semibold text-gray-800">{t('tasks.aiGoalAchievement')}</h2>
+                      <p className="text-xs text-gray-500">{t('tasks.smartTracking')}</p>
                     </div>
                   </div>
                   <div className="w-full overflow-hidden">
@@ -246,8 +249,8 @@ const Tasks = () => {
                       <Target className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-base font-semibold text-gray-800">Planning Interface</h2>
-                      <p className="text-xs text-gray-500">Organize and structure your goals</p>
+                      <h2 className="text-base font-semibold text-gray-800">{t('tasks.planningInterface')}</h2>
+                      <p className="text-xs text-gray-500">{t('tasks.organizeYourDay')}</p>
                     </div>
                   </div>
                   <div className="w-full overflow-hidden">
@@ -263,8 +266,8 @@ const Tasks = () => {
                       <Clock className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-base font-semibold text-gray-800">Focus Timer</h2>
-                      <p className="text-xs text-gray-500">Pomodoro technique for productivity</p>
+                      <h2 className="text-base font-semibold text-gray-800">{t('tasks.focusTimer')}</h2>
+                      <p className="text-xs text-gray-500">{t('tasks.pomodoroDescription')}</p>
                     </div>
                   </div>
                   <div className="w-full overflow-hidden">
@@ -280,8 +283,8 @@ const Tasks = () => {
                       <CheckCircle className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-base font-semibold text-gray-800">Habit Tracker</h2>
-                      <p className="text-xs text-gray-500">Build consistent daily routines</p>
+                      <h2 className="text-base font-semibold text-gray-800">{t('tasks.habitTracker')}</h2>
+                      <p className="text-xs text-gray-500">{t('tasks.habitDesc')}</p>
                     </div>
                   </div>
                   <div className="w-full overflow-hidden">
@@ -297,8 +300,8 @@ const Tasks = () => {
                       <Target className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-base font-semibold text-gray-800">Goal Setting</h2>
-                      <p className="text-xs text-gray-500">Define and structure your objectives</p>
+                      <h2 className="text-base font-semibold text-gray-800">{t('tasks.goalSetting')}</h2>
+                      <p className="text-xs text-gray-500">{t('tasks.goalDesc')}</p>
                     </div>
                   </div>
                   <div className="w-full overflow-hidden">
@@ -314,14 +317,14 @@ const Tasks = () => {
                       <MessageCircle className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-base font-semibold text-gray-800">Productivity Coach</h2>
-                      <p className="text-xs text-gray-500">AI-powered goal achievement guidance</p>
+                      <h2 className="text-base font-semibold text-gray-800">{t('tasks.productivityCoach')}</h2>
+                      <p className="text-xs text-gray-500">{t('tasks.productivityCoachDesc')}</p>
                     </div>
                   </div>
-                  
+
                   {/* Quick Actions */}
                   <div className="mb-4">
-                    <h3 className="text-sm font-medium mb-3">Quick Start</h3>
+                    <h3 className="text-sm font-medium mb-3">{t('tasks.quickStart')}</h3>
                     <div className="space-y-2">
                       {quickActions.map((action, index) => (
                         <Button
@@ -339,14 +342,14 @@ const Tasks = () => {
                   </div>
                   
                   <div className="w-full h-80 overflow-hidden">
-                    <CoachInterface
-                      messages={messages}
-                      isLoading={isLoading}
-                      onSendMessage={sendMessage}
-                      messagesEndRef={messagesEndRef}
-                      taskTitle="General Coaching"
-                      estimatedDuration="~30 min"
-                    />
+                  <CoachInterface
+                    messages={messages}
+                    isLoading={isLoading}
+                    onSendMessage={sendMessage}
+                    messagesEndRef={messagesEndRef}
+                    taskTitle={t('tasks.generalCoaching')}
+                    estimatedDuration="~30 min"
+                  />
                   </div>
                 </div>
               )}

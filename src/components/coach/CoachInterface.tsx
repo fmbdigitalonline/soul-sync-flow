@@ -26,6 +26,7 @@ import { CoachStepMessage } from "./CoachStepMessage";
 import { ArrowRight } from "lucide-react";
 import { CoachLoadingMessage } from "./CoachLoadingMessage";
 import { SessionFeedback } from "@/components/memory/SessionFeedback";
+import { safeInterpolateTranslation } from "@/utils/translation-utils";
 
 interface CoachInterfaceProps {
   messages: Message[];
@@ -119,12 +120,15 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
     );
   }
 
-  const taskAwareQuickActions = [
-    "Break this task into specific sub-tasks",
-    "Help me prioritize what to do first",
-    "I'm stuck - help me troubleshoot",
-    "Check my progress and update completion"
-  ];
+  const taskAwareQuickActions = React.useMemo(
+    () => [
+      t('coach.quickActions.breakIntoSubtasks'),
+      t('coach.quickActions.prioritize'),
+      t('coach.quickActions.troubleshoot'),
+      t('coach.quickActions.checkProgress')
+    ],
+    [t]
+  );
 
   const handleQuickAction = (action: string) => {
     onSendMessage(action);
@@ -204,15 +208,15 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
             <div className="text-center p-4 text-muted-foreground">
               <ArrowRight className={cn("text-green-400 mx-auto mb-4", isMobile ? "h-8 w-8" : "h-12 w-12")} />
               <h3 className={cn("font-medium mb-1", isMobile ? "text-base" : "text-lg")}>
-                Task-Aware Coach Ready
+                {t('coach.taskAwareReadyTitle')}
               </h3>
               <p className={cn("max-w-xs mx-auto", isMobile ? "text-xs" : "text-sm")}>
-                I can help you break down tasks, track progress, and manage completion
+                {t('coach.taskAwareReadyDescription')}
               </p>
             </div>
-            
+
             <div className="space-y-2">
-              <p className="text-xs font-medium text-center text-muted-foreground">Quick Task Actions</p>
+              <p className="text-xs font-medium text-center text-muted-foreground">{t('coach.quickTaskActionsLabel')}</p>
               <div className={cn("gap-2", isMobile ? "grid grid-cols-1" : "grid grid-cols-2")}>
                 {taskAwareQuickActions.map((action, index) => (
                   <Button
@@ -250,7 +254,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
               </div>
               <div className="flex items-center space-x-2 mt-2">
                 <ArrowRight className="h-4 w-4 animate-spin" />
-                <p className="text-sm">Processing your task request...</p>
+                <p className="text-sm">{t('coach.processingTaskRequest')}</p>
               </div>
             </div>
           </div>
@@ -261,7 +265,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
           <div className="w-full mx-auto max-w-2xl md:max-w-3xl">
             <SessionFeedback
               sessionId={sessionId}
-              sessionSummary={`Task coaching session: ${taskTitle}`}
+              sessionSummary={safeInterpolateTranslation(t('coach.sessionSummary'), { taskTitle })}
               onFeedbackSubmitted={() => setShowFeedback(false)}
             />
           </div>
@@ -281,7 +285,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
               className="text-xs"
             >
               <MessageSquare className="h-3 w-3 mr-1" />
-              Rate this session
+              {t('coach.rateSession')}
             </Button>
           </div>
         )}
@@ -305,7 +309,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
           </Button>
         </div>
         <p className="text-xs text-center text-muted-foreground mt-2">
-          Task-aware coaching with integrated progress tracking
+          {t('coach.coachingTagline')}
         </p>
       </div>
     </div>

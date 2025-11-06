@@ -12,6 +12,7 @@ import { InteractiveJourneyOverview } from "@/components/dream/success/Interacti
 import { MilestoneDetailView } from "./MilestoneDetailView";
 import { TimelineDetailView } from "./TimelineDetailView";
 import { TaskViews } from "./TaskViews";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface JourneyMapProps {
   onTaskClick?: (task: any) => void;
@@ -40,6 +41,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
     currentDetailView,
     setCurrentDetailView,
   } = useJourneyMapData();
+  const { t } = useLanguage();
 
   // Add debugging to see if mainGoal has the problematic structure
   console.log('🗺️ JourneyMap mainGoal structure:', mainGoal);
@@ -141,7 +143,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
           className="flex items-center gap-2 bg-background/80 hover:bg-background border-soul-purple/30 mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Success Overview
+          {t('journey.backToOverview')}
         </Button>
       )}
 
