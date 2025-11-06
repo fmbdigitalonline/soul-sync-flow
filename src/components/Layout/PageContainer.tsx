@@ -65,7 +65,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     <div className={cn("mb-8", className)}>
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-heading font-cormorant font-bold text-foreground mb-2">
+          <h1 className="text-heading font-semibold text-foreground mb-2">
             {title}
           </h1>
           {subtitle && (
@@ -94,7 +94,7 @@ export const PageSection: React.FC<PageSectionProps> = ({
     <section className={cn("mb-12", className)}>
       {title && (
         <div className="mb-6">
-          <h2 className="text-subheading font-cormorant font-semibold text-foreground">
+          <h2 className="text-subheading font-semibold text-foreground">
             {title}
           </h2>
           {subtitle && (

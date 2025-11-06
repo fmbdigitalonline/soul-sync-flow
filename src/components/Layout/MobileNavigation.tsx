@@ -53,10 +53,10 @@ const MobileNavigation: React.FC = () => {
               key={item.to}
               to={item.to}
               className={cn(
-                "flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-200 min-w-[60px] min-h-[56px]",
+                "flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-150 min-w-[60px] min-h-[56px]",
                 active
-                  ? "bg-gradient-to-t from-soul-purple/10 to-soul-teal/10 text-soul-purple"
-                  : "text-gray-500 hover:text-soul-purple"
+                  ? "bg-primary/10 text-primary border border-primary/20"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               )}
             >
               <Icon className={cn(
@@ -64,8 +64,8 @@ const MobileNavigation: React.FC = () => {
                 active ? "scale-110" : ""
               )} />
               <span className={cn(
-                "text-xs font-medium transition-all duration-200 font-cormorant",
-                active ? "text-soul-purple" : "text-gray-400"
+                "text-xs font-medium transition-all duration-200",
+                active ? "text-primary" : "text-muted-foreground"
               )}>
                 {item.label}
               </span>

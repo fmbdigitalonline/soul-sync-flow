@@ -35,17 +35,17 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="font-cormorant text-xl flex items-center gap-2">
-          <Activity className="h-5 w-5" />
+        <CardTitle className="text-base font-semibold flex items-center gap-2">
+          <Activity className="h-4 w-4" />
           {t('user360.availability.title')}
         </CardTitle>
-        <CardDescription className="font-inter">
+        <CardDescription className="text-sm">
           {t('user360.availability.desc')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="font-cormorant text-lg">{t('user360.availability.overall')}</span>
+          <span className="text-sm font-medium">{t('user360.availability.overall')}</span>
           <Badge variant={completenessScore > 70 ? 'default' : completenessScore > 40 ? 'secondary' : 'outline'}>
             {completenessScore}%
           </Badge>
@@ -159,8 +159,8 @@ const User360Dashboard: React.FC = () => {
         <Card className="w-full max-w-md">
           <CardContent className="p-6 text-center">
             <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-            <h2 className="font-cormorant text-xl mb-2">{t('user360.loadingTitle')}</h2>
-            <p className="font-inter text-sm text-muted-foreground">
+            <h2 className="text-base font-semibold mb-2">{t('user360.loadingTitle')}</h2>
+            <p className="text-sm text-muted-foreground">
               {t('user360.loadingDesc')}
             </p>
           </CardContent>
@@ -174,23 +174,23 @@ const User360Dashboard: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="font-cormorant text-xl text-destructive">
+            <CardTitle className="text-base font-semibold text-destructive">
               {t('user360.errorTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="font-inter text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {t('user360.errorLead')}
             </p>
-            <p className="font-inter text-sm bg-destructive/10 p-3 rounded border">
+            <p className="text-sm bg-destructive/10 p-3 rounded border">
               {error}
             </p>
             <div className="flex gap-2">
-              <Button onClick={refreshProfile} className="flex-1 font-cormorant">
+              <Button onClick={refreshProfile} className="flex-1 text-sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 {t('user360.tryAgain')}
               </Button>
-              <Button onClick={forceRefreshWithSync} variant="outline" className="flex-1 font-cormorant">
+              <Button onClick={forceRefreshWithSync} variant="outline" className="flex-1 text-sm">
                 <Wifi className="h-4 w-4 mr-2" />
                 {t('user360.forceSync')}
               </Button>
@@ -206,25 +206,25 @@ const User360Dashboard: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="font-cormorant text-xl">
+            <CardTitle className="text-base font-semibold">
               {t('user360.noProfileTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="font-inter text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {t('user360.noProfileLead')}
             </p>
-            <ul className="font-inter text-sm text-muted-foreground space-y-1 list-disc pl-5">
+            <ul className="text-sm text-muted-foreground space-y-1 list-disc pl-5">
               <li>{t('user360.bulletNewUser')}</li>
               <li>{t('user360.bulletNoData')}</li>
               <li>{t('user360.bulletBlueprintProgress')}</li>
             </ul>
             <div className="flex gap-2">
-              <Button onClick={refreshProfile} className="flex-1 font-cormorant">
+              <Button onClick={refreshProfile} className="flex-1 text-sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 {t('user360.checkAgain')}
               </Button>
-              <Button onClick={forceRefreshWithSync} variant="outline" className="flex-1 font-cormorant">
+              <Button onClick={forceRefreshWithSync} variant="outline" className="flex-1 text-sm">
                 <Wifi className="h-4 w-4 mr-2" />
                 {t('user360.forceSync')}
               </Button>
@@ -241,10 +241,10 @@ const User360Dashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-cormorant text-3xl lg:text-4xl font-bold">
+            <h1 className="text-heading font-semibold">
               {t('nav.profile360')}
             </h1>
-            <p className="font-inter text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               {t('user360.subtitle')}
             </p>
           </div>

@@ -13,27 +13,27 @@ interface CosmicCardProps extends React.HTMLAttributes<HTMLDivElement> {
 const CosmicCard = React.forwardRef<HTMLDivElement, CosmicCardProps>(
   ({ className, floating = false, glow = false, variant = "default", size = "md", ...props }, ref) => {
     const variants = {
-      default: "bg-card shadow-sm hover:shadow-md hover:bg-accent/5",
-      elevated: "bg-card shadow-lg hover:shadow-xl hover:bg-accent/5",
-      interactive: "bg-card hover:bg-accent/10 hover:shadow-md cursor-pointer active:scale-[0.98]",
-      minimal: "bg-transparent hover:bg-accent/5"
+      default: "bg-card border border-border/60 hover:border-border hover:bg-muted/30",
+      elevated: "bg-card border border-border shadow-sm hover:shadow-md hover:bg-muted/30",
+      interactive: "bg-card border border-border/60 hover:border-primary/30 hover:bg-muted/30 cursor-pointer active:scale-[0.98]",
+      minimal: "bg-transparent hover:bg-muted/30"
     };
 
     const sizes = {
-      sm: "p-4 rounded-2xl",
-      md: "p-6 rounded-3xl", 
-      lg: "p-8 rounded-3xl"
+      sm: "p-3 rounded-lg",
+      md: "p-4 rounded-lg", 
+      lg: "p-6 rounded-lg"
     };
 
     return (
       <div
         ref={ref}
         className={cn(
-          "transition-all duration-300",
+          "transition-all duration-150",
           variants[variant],
           sizes[size],
           floating && "animate-float",
-          glow && "relative before:absolute before:inset-0 before:rounded-3xl before:bg-primary/20 before:blur-lg before:opacity-30 before:-z-10",
+          glow && "relative before:absolute before:inset-0 before:rounded-lg before:bg-primary/10 before:blur-md before:opacity-50 before:-z-10",
           className
         )}
         {...props}

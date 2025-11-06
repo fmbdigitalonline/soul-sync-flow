@@ -115,8 +115,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           <div className="bg-card/80 backdrop-blur-lg sticky top-0 z-40 w-full shadow-sm">
             <div className="flex items-center justify-between p-4 w-full">
               <Link to="/" className="flex items-center space-x-2">
-                
-                <span className="font-cormorant font-bold text-lg gradient-text brand-text">
+                <span className="text-base font-semibold text-primary brand-text">
                   SoulSync
                 </span>
               </Link>
@@ -131,8 +130,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             
             {/* Mobile Menu Dropdown */}
             {isMenuOpen && user && <div className="bg-card/95 backdrop-blur-lg p-4 space-y-2 w-full shadow-sm">
-                <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-muted-foreground rounded-xl font-inter">
-                  <LogOut className="h-5 w-5 mr-3" />
+                <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-muted-foreground rounded-xl text-sm">
+                  <LogOut className="h-4 w-4 mr-3" />
                   {t('nav.signOut')}
                 </Button>
               </div>}
@@ -195,9 +194,9 @@ const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
   return (
     <ThreePanelLayout
       leftPanel={
-        <aside className="h-full bg-card/80 backdrop-blur-lg flex flex-col shadow-lg">
+        <aside className="h-full bg-card flex flex-col border-r border-border/60">
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 p-3 space-y-1">
             {navItems.map(item => {
               const Icon = item.icon;
               return (
@@ -205,13 +204,13 @@ const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    "flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200 font-cormorant font-medium",
+                    "flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-150 text-sm font-medium",
                     isActive(item.to)
-                      ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-semibold"
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                      ? "bg-primary/10 text-primary border border-primary/20"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-4 w-4 flex-shrink-0" />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -219,13 +218,13 @@ const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
           </nav>
 
           {/* User Actions */}
-          <div className="p-4 space-y-2">
+          <div className="p-3 border-t border-border/60">
             <Button
               variant="ghost"
               onClick={handleSignOut}
-              className="w-full justify-start text-muted-foreground rounded-xl hover:bg-accent/50 font-inter"
+              className="w-full justify-start text-muted-foreground rounded-lg hover:bg-muted/50 text-sm"
             >
-              <LogOut className="h-5 w-5 mr-3" />
+              <LogOut className="h-4 w-4 mr-3" />
               {t('nav.signOut')}
             </Button>
           </div>
