@@ -35,6 +35,7 @@ import { AgentMode } from "@/types/personality-modules";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useTaskCompletion } from "@/hooks/use-task-completion";
 import { loadTaskSessionWithDbFallback, saveTaskSession, StoredCoachMessage } from "@/utils/task-session";
+import { safeInterpolateTranslation } from "@/utils/translation-utils";
 
 interface Task {
   id: string;
@@ -512,30 +513,23 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     // Get current goal context
     const currentGoals = productivityJourney?.current_goals || [];
     const currentGoal = currentGoals.find(goal => goal.id === task.goal_id);
-    const goalContext = currentGoal ? `\n\nThis task is part of your goal: "${currentGoal.title}" - ${currentGoal.description}` : '';
+    const goalContext = currentGoal
+      ? `\n\n${safeInterpolateTranslation(t('taskCoach.goalContext'), {
+          goalTitle: currentGoal.title,
+          goalDescription: currentGoal.description || ''
+        })}`
+      : '';
+
+    const taskDescriptionSection = task.description
+      ? `\n${safeInterpolateTranslation(t('taskCoach.taskDescriptionLabel'), { description: task.description })}`
+      : '';
 
     // CRITICAL FIX: Structured prompt to trigger WorkingInstructionsPanel
-    const initialMessage = `I'm working on: "${task.title}"
-${task.description ? `\nTask Description: ${task.description}` : ''}${goalContext}
-
-Provide detailed step-by-step work instructions in this exact format:
-
-1. **[Step Title]**:
-   [Clear, actionable description of what to do]
-   [Time estimate if relevant]
-   
-2. **[Step Title]**:
-   [Description]
-
-Format requirements:
-- Use numbered list (1., 2., 3., etc.)
-- Bold step titles with ** **
-- Add colon after each title
-- Provide substantial details for each step
-- DO NOT ask questions or say "Would you like..."
-- Give direct, executable instructions
-
-Provide 4-6 concrete steps I can start working on immediately.`;
+    const initialMessage = safeInterpolateTranslation(t('taskCoach.workingInstructionsPrompt'), {
+      taskTitle: task.title,
+      taskDescriptionSection,
+      goalContextSection: goalContext
+    });
     
     await dreamActivityLogger.logActivity('enhanced_coaching_message_sent', {
       task_id: task.id,
@@ -547,7 +541,7 @@ Provide 4-6 concrete steps I can start working on immediately.`;
     
     console.log('📤 Sending enhanced coaching message with breakdown instructions');
     sendMessage(initialMessage);
-  }, [task, productivityJourney, sendMessage]);
+  }, [task, productivityJourney, sendMessage, t]);
 
   // Sub-task interaction handlers
   const handleSubTaskStart = useCallback(async (subTask: ParsedSubTask) => {
@@ -767,15 +761,15 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
       <div className="border-b bg-background p-3 md:p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onBack}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">{t('tasks.backToJourney')}</span>
-              <span className="sm:hidden">Back</span>
+              <span className="hidden sm:inline">{t('taskCoach.backToJourney')}</span>
+              <span className="sm:hidden">{t('common.back')}</span>
             </Button>
             
             {/* Mobile sidebar toggle */}
@@ -831,7 +825,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
                 size="sm"
               >
                 <CheckCircle2 className="h-4 w-4 mr-1" />
-                Complete Task
+                {t('taskCoach.completeTask')}
               </Button>
             )}
           </div>

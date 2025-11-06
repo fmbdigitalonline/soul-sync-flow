@@ -103,6 +103,7 @@ const translations: Record<Language, Translations> = {
       back: 'Back',
       next: 'Next',
       previous: 'Previous',
+      you: 'You',
       submit: 'Submit',
       reset: 'Reset',
       search: 'Search',
@@ -184,7 +185,26 @@ const translations: Record<Language, Translations> = {
     coach: {
       preparingPlan: 'Coach is preparing your plan...',
       readyToHelp: 'Your coach is ready to help',
-      loadingMessage: 'Coach is analyzing your task...'
+      loadingMessage: 'Coach is analyzing your task...',
+      workingInstructions: 'Working Instructions',
+      progress: 'Progress',
+      completedCount: '{completedCount}/{totalCount} completed',
+      taskAwareReadyTitle: 'Task-Aware Coach Ready',
+      taskAwareReadyDescription: 'I can help you break down tasks, track progress, and manage completion',
+      quickTaskActionsLabel: 'Quick Task Actions',
+      processingTaskRequest: 'Processing your task request...',
+      rateSession: 'Rate this session',
+      sessionSummary: 'Task coaching session: {taskTitle}',
+      coachingTagline: 'Task-aware coaching with integrated progress tracking',
+      quickActions: {
+        breakIntoSubtasks: 'Break this task into specific sub-tasks',
+        prioritize: 'Help me prioritize what to do first',
+        troubleshoot: "I'm stuck - help me troubleshoot",
+        checkProgress: 'Check my progress and update completion'
+      },
+      loadingProgress: 'Loading your progress...',
+      loadProgressErrorTitle: 'Failed to load progress',
+      loadProgressErrorDescription: 'Your progress will not be saved. Please refresh or sign in.'
     },
     // Tour & Navigation translations
     tour: {
@@ -2922,6 +2942,52 @@ Help them transform their dream interest into a specific, actionable goal. Use t
       empty: {
         title: 'No Active Dream Journey',
         description: 'Create your first dream to see your personalized journey map'
+      },
+      backToOverview: 'Back to Success Overview',
+      complete: 'Complete',
+      timeline: 'Timeline',
+      focus: 'Focus',
+      yourJourneyPath: 'Your Journey Path',
+      tapForDetails: 'Tap cards for details',
+      doubleTapForDetails: 'Double-tap for details',
+      journeyStarted: '🚀 Journey Started',
+      dreamBeginsHere: 'Your dream begins here',
+      dateTbd: 'Date TBD',
+      dreamAchieved: '🎯 Dream Achieved!',
+      targetWithDate: 'Target: {date}',
+      currentMilestoneFocus: 'Current Milestone Focus',
+      criteriaCount: '{count} criteria',
+      nextSteps: 'Your Next Steps',
+      allTasksCompleted: 'All tasks completed! Time to celebrate this milestone.',
+      blueprintAlignment: 'Soul Blueprint Alignment',
+      honorsStrengths: '✨ This journey honors your authentic self and natural strengths',
+      uniqueJourney: 'Your journey is uniquely yours',
+      focusModeView: {
+        backToJourney: 'Back to Journey',
+        banner: 'You are now in Focus Mode',
+        targetDate: 'Target: {date}',
+        focusedTasksCount: '{count} focused tasks',
+        blueprintAlignment: 'Blueprint Alignment',
+        tasksForMilestone: 'Tasks for This Milestone',
+        noTasks: 'No specific tasks found for this milestone.',
+        tasksDistributed: 'Tasks may be distributed across milestones.',
+        completionCriteria: 'Completion Criteria'
+      },
+      taskViews: {
+        noActiveDream: 'No active dream selected.',
+        focusingOn: 'Focusing on:',
+        summary: '{total} tasks • {completed} completed',
+        dropZone: 'Drop tasks here',
+        flow: 'Flow',
+        tasks: 'Tasks',
+        calendar: 'Calendar',
+        previous: 'Prev',
+        next: 'Next',
+        allTasks: 'All Tasks',
+        doubleTapHint: 'Double-tap for coaching',
+        noTasksFound: 'No tasks found',
+        tasksForDate: 'Tasks for {date}',
+        noTasksScheduled: 'No tasks scheduled for this day'
       }
     },
 
@@ -2930,6 +2996,7 @@ Help them transform their dream interest into a specific, actionable goal. Use t
       title: 'Your Complete Journey Overview',
       titleShort: 'Journey Overview',
       subtitle: 'Designed specifically for your blueprint',
+      optimizedFor: 'Optimized for your {personalityType} & {decisionStyle} blueprint',
       milestones: 'Milestones',
       milestonesDesc: 'Key achievement phases',
       actionTasks: 'Action Tasks',
@@ -3086,6 +3153,8 @@ Help them transform their dream interest into a specific, actionable goal. Use t
       dailyGoals: 'Daily Goals',
       streakExample: 'Day 3 Streak',
       completeExample: '2 of 3 complete',
+      dayStreak: 'Day {count} Streak',
+      goalsComplete: '{completed} of {total} complete',
       aiGoals: 'AI Goals',
       backToJourney: 'Back to Journey',
       sessionProgress: 'Session Progress',
@@ -3112,6 +3181,14 @@ Help them transform their dream interest into a specific, actionable goal. Use t
       productivityCoach: 'Productivity Coach',
       productivityCoachDesc: 'AI-powered goal achievement guidance',
       quickStart: 'Quick Start',
+      smartActions: 'Smart Actions',
+      smartActionsDescription: 'These actions integrate directly with your task progress and coach guidance.',
+      statusLabels: {
+        todo: 'To Do',
+        inProgress: 'In Progress',
+        stuck: 'Stuck',
+        completed: 'Completed'
+      },
       qa1: 'Help me break down my biggest goal into actionable steps',
       qa2: 'Create a morning routine that aligns with my energy',
       qa3: 'Set up accountability for my weekly targets',
@@ -3154,9 +3231,81 @@ Help them transform their dream interest into a specific, actionable goal. Use t
         needDetails: 'Need more details',
         howTo: 'How do I...?',
         showExamples: 'Show examples',
+        stuckDescription: 'Get step-by-step help to move forward',
+        needDetailsDescription: 'Get specific instructions and examples',
+        howToDescription: 'Learn the exact process and tools needed',
+        showExamplesDescription: 'See concrete examples and templates',
+        tellMeMore: 'Tell me more about what you need help with:',
+        customPlaceholder: "Optional: Describe what specifically you're stuck on...",
         getHelp: 'Get Help',
         cancel: 'Cancel'
       }
+    },
+    help: {
+      needMoreSpecificHelp: 'Need more specific help?',
+      needMoreSpecificHelpDetail: 'Need more specific help? Try a different level or ask for assistance.'
+    },
+    quickActions: {
+      breakDownLabel: 'Break Down Task',
+      breakDownMessage: 'Please break this task down into 3-5 specific sub-tasks I can work on step by step.',
+      whatsNextLabel: "What's Next?",
+      whatsNextMessage: 'What should I focus on next for this task?',
+      progressCheckLabel: 'Progress Check',
+      progressCheckMessage: 'Can you review my progress and help me update the completion percentage?',
+      addSubTaskLabel: 'Add Sub-task',
+      addSubTaskMessage: 'I need to add a new sub-task to this main task. Can you help me define it?',
+      imStuckLabel: "I'm Stuck",
+      imStuckMessage: "I'm feeling stuck on this task. Can you help me troubleshoot and find a way forward?",
+      timeManagementLabel: 'Time Management',
+      timeManagementMessage: 'Help me optimize my time on this task. Should I continue or take a break?',
+      markCompleteLabel: 'Mark Complete',
+      markCompleteMessage: "I think I've finished this task. Can you verify completion and mark it as done?"
+    },
+    progressiveDisclosure: {
+      levels: {
+        basic: {
+          label: 'Quick Start',
+          description: 'Simple steps to get going'
+        },
+        detailed: {
+          label: 'Step-by-Step',
+          description: 'Detailed instructions with examples'
+        },
+        expert: {
+          label: 'Complete Guide',
+          description: 'Comprehensive breakdown with alternatives'
+        }
+      },
+      actionSteps: 'Action Steps ({count})',
+      examples: 'Examples ({count})',
+      moreDetail: 'More Detail',
+      simpler: 'Simpler'
+    },
+    taskCoach: {
+      completeTask: 'Complete Task',
+      backToJourney: 'Back to Journey',
+      workingInstructionsPrompt: `I'm working on: "{taskTitle}"{taskDescriptionSection}{goalContextSection}
+
+Provide detailed step-by-step work instructions in this exact format:
+
+1. **[Step Title]**:
+   [Clear, actionable description of what to do]
+   [Time estimate if relevant]
+
+2. **[Step Title]**:
+   [Description]
+
+Format requirements:
+- Use numbered list (1., 2., 3., etc.)
+- Bold step titles with ** **
+- Add colon after each title
+- Provide substantial details for each step
+- DO NOT ask questions or say "Would you like..."
+- Give direct, executable instructions
+
+Provide 4-6 concrete steps I can start working on immediately.`,
+      taskDescriptionLabel: 'Task Description: {description}',
+      goalContext: 'This task is part of your goal: "{goalTitle}" - {goalDescription}'
     },
     // User 360
     user360: {
@@ -3479,6 +3628,7 @@ Help them transform their dream interest into a specific, actionable goal. Use t
       back: 'Terug',
       next: 'Volgende',
       previous: 'Vorige',
+      you: 'Jij',
       submit: 'Versturen',
       reset: 'Resetten',
       search: 'Zoeken',
@@ -3559,7 +3709,26 @@ Help them transform their dream interest into a specific, actionable goal. Use t
     coach: {
       preparingPlan: 'Coach bereidt je plan voor...',
       readyToHelp: 'Je coach is klaar om te helpen',
-      loadingMessage: 'Coach analyseert je taak...'
+      loadingMessage: 'Coach analyseert je taak...',
+      workingInstructions: 'Werkinstructies',
+      progress: 'Voortgang',
+      completedCount: '{completedCount}/{totalCount} voltooid',
+      taskAwareReadyTitle: 'Taakbewuste Coach klaar',
+      taskAwareReadyDescription: 'Ik kan je helpen taken op te splitsen, voortgang bij te houden en afronding te beheren',
+      quickTaskActionsLabel: 'Snelle taakacties',
+      processingTaskRequest: 'Je taakverzoek wordt verwerkt...',
+      rateSession: 'Beoordeel deze sessie',
+      sessionSummary: 'Taakcoachingsessie: {taskTitle}',
+      coachingTagline: 'Taakbewuste coaching met geïntegreerde voortgangsbewaking',
+      quickActions: {
+        breakIntoSubtasks: 'Splits deze taak op in specifieke subtaken',
+        prioritize: 'Help me prioriteit te geven aan wat ik eerst moet doen',
+        troubleshoot: 'Ik zit vast - help me problemen op te lossen',
+        checkProgress: 'Controleer mijn voortgang en werk de voltooiing bij'
+      },
+      loadingProgress: 'Je voortgang wordt geladen...',
+      loadProgressErrorTitle: 'Voortgang laden mislukt',
+      loadProgressErrorDescription: 'Je voortgang wordt niet opgeslagen. Vernieuw de pagina of log opnieuw in.'
     },
     // Tour & Navigation translations
     tour: {
@@ -6377,6 +6546,52 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
       empty: {
         title: 'Geen Actieve Droomreis',
         description: 'Maak je eerste droom aan om je persoonlijke routekaart te zien'
+      },
+      backToOverview: 'Terug naar Succes Overzicht',
+      complete: 'Compleet',
+      timeline: 'Tijdlijn',
+      focus: 'Focus',
+      yourJourneyPath: 'Jouw Reisroute',
+      tapForDetails: 'Tik op kaarten voor details',
+      doubleTapForDetails: 'Dubbel tik voor details',
+      journeyStarted: '🚀 Reis Gestart',
+      dreamBeginsHere: 'Je droom begint hier',
+      dateTbd: 'Datum nog te bepalen',
+      dreamAchieved: '🎯 Droom Bereikt!',
+      targetWithDate: 'Doel: {date}',
+      currentMilestoneFocus: 'Huidige Mijlpaal Focus',
+      criteriaCount: '{count} criteria',
+      nextSteps: 'Jouw Volgende Stappen',
+      allTasksCompleted: 'Alle taken voltooid! Tijd om deze mijlpaal te vieren.',
+      blueprintAlignment: 'Ziel Blauwdruk Afstemming',
+      honorsStrengths: '✨ Deze reis eert je authentieke zelf en natuurlijke krachten',
+      uniqueJourney: 'Jouw reis is uniek van jou',
+      focusModeView: {
+        backToJourney: 'Terug naar Reis',
+        banner: 'Je bent nu in Focus Modus',
+        targetDate: 'Doel: {date}',
+        focusedTasksCount: '{count} gefocuste taken',
+        blueprintAlignment: 'Blauwdruk Afstemming',
+        tasksForMilestone: 'Taken voor deze mijlpaal',
+        noTasks: 'Geen specifieke taken gevonden voor deze mijlpaal.',
+        tasksDistributed: 'Taken kunnen over meerdere mijlpalen verdeeld zijn.',
+        completionCriteria: 'Voltooiingscriteria'
+      },
+      taskViews: {
+        noActiveDream: 'Geen actieve droom geselecteerd.',
+        focusingOn: 'Focus op:',
+        summary: '{total} taken • {completed} voltooid',
+        dropZone: 'Plaats taken hier',
+        flow: 'Flow',
+        tasks: 'Taken',
+        calendar: 'Kalender',
+        previous: 'Vorige',
+        next: 'Volgende',
+        allTasks: 'Alle Taken',
+        doubleTapHint: 'Dubbel tik voor coaching',
+        noTasksFound: 'Geen taken gevonden',
+        tasksForDate: 'Taken voor {date}',
+        noTasksScheduled: 'Geen taken gepland voor deze dag'
       }
     },
 
@@ -6597,6 +6812,8 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
       dailyGoals: 'Dagelijkse doelen',
       streakExample: 'Dag 3 reeks',
       completeExample: '2 van 3 voltooid',
+      dayStreak: 'Dag {count} reeks',
+      goalsComplete: '{completed} van {total} voltooid',
       aiGoals: 'AI Doelen',
       backToJourney: 'Terug naar Reis',
       sessionProgress: 'Sessie Voortgang',
@@ -6623,6 +6840,14 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
       productivityCoach: 'Productiviteitscoach',
       productivityCoachDesc: 'AI-ondersteunde begeleiding voor doelrealisatie',
       quickStart: 'Snelle start',
+      smartActions: 'Slimme acties',
+      smartActionsDescription: 'Deze acties sluiten direct aan op je taakvoortgang en coachbegeleiding.',
+      statusLabels: {
+        todo: 'Te Doen',
+        inProgress: 'Bezig',
+        stuck: 'Vastgelopen',
+        completed: 'Voltooid'
+      },
       qa1: 'Help me mijn grootste doel opdelen in concrete stappen',
       qa2: 'Maak een ochtendroutine die past bij mijn energie',
       qa3: 'Zorg voor accountability voor mijn wekelijkse doelen',
@@ -6665,9 +6890,81 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
         needDetails: 'Meer details nodig',
         howTo: 'Hoe doe ik...?',
         showExamples: 'Toon voorbeelden',
+        stuckDescription: 'Krijg stapsgewijze hulp om verder te gaan',
+        needDetailsDescription: 'Ontvang specifieke instructies en voorbeelden',
+        howToDescription: 'Leer het exacte proces en de benodigde tools',
+        showExamplesDescription: 'Bekijk concrete voorbeelden en sjablonen',
+        tellMeMore: 'Vertel me meer over waar je hulp bij nodig hebt:',
+        customPlaceholder: 'Optioneel: Beschrijf waarop je precies vastloopt...',
         getHelp: 'Hulp krijgen',
         cancel: 'Annuleren'
       }
+    },
+    help: {
+      needMoreSpecificHelp: 'Meer specifieke hulp nodig?',
+      needMoreSpecificHelpDetail: 'Meer specifieke hulp nodig? Probeer een ander niveau of vraag om ondersteuning.'
+    },
+    quickActions: {
+      breakDownLabel: 'Taak Opsplitsen',
+      breakDownMessage: 'Breek deze taak af in 3-5 specifieke subtaken waar ik stap voor stap aan kan werken.',
+      whatsNextLabel: 'Wat is Volgende?',
+      whatsNextMessage: 'Waar moet ik me als volgende op richten voor deze taak?',
+      progressCheckLabel: 'Voortgangscontrole',
+      progressCheckMessage: 'Kun je mijn voortgang bekijken en helpen het voltooiingspercentage bij te werken?',
+      addSubTaskLabel: 'Subtaak Toevoegen',
+      addSubTaskMessage: 'Ik wil een nieuwe subtaak aan deze hoofdtaak toevoegen. Kun je me helpen die te definiëren?',
+      imStuckLabel: 'Ik Zit Vast',
+      imStuckMessage: 'Ik zit vast op deze taak. Kun je me helpen om een weg vooruit te vinden?',
+      timeManagementLabel: 'Tijdbeheer',
+      timeManagementMessage: 'Help me mijn tijd voor deze taak te optimaliseren. Moet ik doorgaan of een pauze nemen?',
+      markCompleteLabel: 'Markeer als Voltooid',
+      markCompleteMessage: 'Ik denk dat ik deze taak heb afgerond. Kun je bevestigen en hem als voltooid markeren?'
+    },
+    progressiveDisclosure: {
+      levels: {
+        basic: {
+          label: 'Snelle start',
+          description: 'Eenvoudige stappen om te beginnen'
+        },
+        detailed: {
+          label: 'Stap-voor-stap',
+          description: 'Uitgebreide instructies met voorbeelden'
+        },
+        expert: {
+          label: 'Complete gids',
+          description: 'Uitgebreide uitwerking met alternatieven'
+        }
+      },
+      actionSteps: 'Actiestappen ({count})',
+      examples: 'Voorbeelden ({count})',
+      moreDetail: 'Meer details',
+      simpler: 'Eenvoudiger'
+    },
+    taskCoach: {
+      completeTask: 'Taak Voltooien',
+      backToJourney: 'Terug naar Reis',
+      workingInstructionsPrompt: `Ik werk aan: "{taskTitle}"{taskDescriptionSection}{goalContextSection}
+
+Geef gedetailleerde stap-voor-stap werkinstructies in exact dit formaat:
+
+1. **[Stap Titel]**:
+   [Duidelijke, uitvoerbare beschrijving van wat te doen]
+   [Tijdsinschatting indien relevant]
+
+2. **[Stap Titel]**:
+   [Beschrijving]
+
+Formaat vereisten:
+- Gebruik een genummerde lijst (1., 2., 3., etc.)
+- Maak staptitels vet met ** **
+- Voeg een dubbele punt toe na elke titel
+- Geef substantiële details voor elke stap
+- STEL GEEN vragen en zeg niet "Wil je..."
+- Geef directe, uitvoerbare instructies
+
+Geef 4-6 concrete stappen die ik meteen kan uitvoeren.`,
+      taskDescriptionLabel: 'Taakomschrijving: {description}',
+      goalContext: 'Deze taak maakt deel uit van je doel: "{goalTitle}" - {goalDescription}'
     },
 
     // Growth Program & Domains
@@ -6787,6 +7084,7 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
       title: 'Je Volledige Reis Overzicht',
       titleShort: 'Reis Overzicht',
       subtitle: 'Speciaal ontworpen voor jouw blauwdruk',
+      optimizedFor: 'Geoptimaliseerd voor je {personalityType}- & {decisionStyle}-blauwdruk',
       milestones: 'Mijlpalen',
       milestonesDesc: 'Belangrijke prestatiefasen',
       actionTasks: 'Actie Taken',

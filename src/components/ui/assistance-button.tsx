@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Loader2
 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface AssistanceButtonProps {
   type: 'stuck' | 'need_details' | 'how_to' | 'examples';
@@ -20,33 +21,6 @@ export interface AssistanceButtonProps {
   compact?: boolean;
 }
 
-const assistanceConfig = {
-  stuck: {
-    icon: HelpCircle,
-    label: "I'm stuck",
-    iconColor: 'text-orange-500',
-    description: 'Get step-by-step help to move forward'
-  },
-  need_details: {
-    icon: MessageCircle,
-    label: 'Need more details',
-    iconColor: 'text-blue-500',
-    description: 'Get specific instructions and examples'
-  },
-  how_to: {
-    icon: BookOpen,
-    label: 'How do I...?',
-    iconColor: 'text-purple-500',
-    description: 'Learn the exact process and tools needed'
-  },
-  examples: {
-    icon: Lightbulb,
-    label: 'Show examples',
-    iconColor: 'text-green-500',
-    description: 'See concrete examples and templates'
-  }
-};
-
 export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
   type,
   onRequest,
@@ -54,9 +28,37 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
   hasResponse = false,
   compact = false
 }) => {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [customMessage, setCustomMessage] = useState('');
-  
+
+  const assistanceConfig = useMemo(() => ({
+    stuck: {
+      icon: HelpCircle,
+      label: t('tasks.assistance.stuck'),
+      iconColor: 'text-orange-500',
+      description: t('tasks.assistance.stuckDescription')
+    },
+    need_details: {
+      icon: MessageCircle,
+      label: t('tasks.assistance.needDetails'),
+      iconColor: 'text-blue-500',
+      description: t('tasks.assistance.needDetailsDescription')
+    },
+    how_to: {
+      icon: BookOpen,
+      label: t('tasks.assistance.howTo'),
+      iconColor: 'text-purple-500',
+      description: t('tasks.assistance.howToDescription')
+    },
+    examples: {
+      icon: Lightbulb,
+      label: t('tasks.assistance.showExamples'),
+      iconColor: 'text-green-500',
+      description: t('tasks.assistance.showExamplesDescription')
+    }
+  }), [t]);
+
   const config = assistanceConfig[type];
   const Icon = config.icon;
 
@@ -120,20 +122,20 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
       {expanded && (
         <div className="p-3 bg-gray-50 rounded-lg border space-y-3">
           <p className="text-xs text-gray-600">{config.description}</p>
-          
+
           <div className="space-y-2">
             <label className="text-xs font-medium text-gray-700">
-              Tell me more about what you need help with:
+              {t('tasks.assistance.tellMeMore')}
             </label>
             <textarea
               value={customMessage}
               onChange={(e) => setCustomMessage(e.target.value)}
-              placeholder="Optional: Describe what specifically you're stuck on..."
+              placeholder={t('tasks.assistance.customPlaceholder')}
               className="w-full text-xs p-2 border rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows={2}
             />
           </div>
-          
+
           <div className="flex justify-end gap-2">
             <Button
               onClick={() => setExpanded(false)}
@@ -141,7 +143,7 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
               size="sm"
               className="text-xs px-3 py-1"
             >
-              Cancel
+              {t('tasks.assistance.cancel')}
             </Button>
             <Button
               onClick={handleRequest}
@@ -149,7 +151,7 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
               variant="default"
               className="text-xs px-3 py-1"
             >
-              Get Help
+              {t('tasks.assistance.getHelp')}
             </Button>
           </div>
         </div>

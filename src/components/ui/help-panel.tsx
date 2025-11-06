@@ -16,6 +16,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { AssistanceResponse } from '@/services/interactive-assistance-service';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HelpPanelProps {
   response: AssistanceResponse;
@@ -35,6 +36,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
   compact = false,
   isLoading = false
 }) => {
+  const { t } = useLanguage();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['steps']));
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
@@ -297,7 +299,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
       {/* Assistance Buttons - Request more specific help */}
       {onAssistanceRequest && (
         <div className="mt-4 pt-3 border-t border-gray-200">
-          <p className="text-xs text-gray-600 mb-2">Need more specific help?</p>
+          <p className="text-xs text-gray-600 mb-2">{t('help.needMoreSpecificHelp')}</p>
           <div className="flex flex-wrap gap-1">
             <AssistanceButton
               type="stuck"
