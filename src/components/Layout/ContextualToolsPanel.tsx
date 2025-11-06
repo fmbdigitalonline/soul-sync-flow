@@ -20,6 +20,8 @@ import {
   Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { interpolateTranslation } from '@/utils/translation-utils';
 
 interface ContextualToolsPanelProps {
   context?: 'journey' | 'task-coach' | 'focus' | 'tasks' | 'milestones' | 'hub' | 'chat' | 'create';
@@ -37,6 +39,7 @@ export const ContextualToolsPanel: React.FC<ContextualToolsPanelProps> = ({
   className
 }) => {
   const location = useLocation();
+  const { t } = useLanguage();
 
   // Auto-detect context from route if not provided
   const detectedContext = context || detectContextFromRoute(location.pathname);
@@ -47,14 +50,14 @@ export const ContextualToolsPanel: React.FC<ContextualToolsPanelProps> = ({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="text-subheading font-semibold text-foreground">
-            Tools & Insights
+            {t('contextualTools.toolsAndInsights')}
           </h3>
           <Badge variant="outline" className="text-xs">
             {detectedContext}
           </Badge>
         </div>
         <p className="text-caption text-muted-foreground">
-          Context-aware assistance for your current view
+          {t('contextualTools.contextAwareAssistance')}
         </p>
       </div>
 
@@ -108,6 +111,7 @@ function renderToolsForContext(
 
 // Context-specific tool widgets
 function JourneyTools({ activeGoal }: { activeGoal?: any }) {
+  const { t } = useLanguage();
   const [activeModule, setActiveModule] = useState<'workspace' | 'agenda' | 'actions' | 'progress' | 'insights'>('workspace');
   const [workspaceNotes, setWorkspaceNotes] = useState<string[]>(() => {
     if (typeof window === 'undefined') {
@@ -219,72 +223,70 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
     const baseInsights = [
       {
         id: 'flow',
-        title: 'Sustain your flow state',
-        body:
-          'Use micro-reflections after each work session to capture emotional and energetic shifts. This keeps the AI workspace attuned to your current momentum.'
+        title: t('contextualTools.sustainFlowState.title'),
+        body: t('contextualTools.sustainFlowState.body')
       },
       {
         id: 'alignment',
-        title: 'Re-align with your vision',
-        body: `Review your blueprint insights at the start of each week and adjust your agenda blocks to reflect emerging priorities from your ${guidanceSource}.`
+        title: t('contextualTools.realignVision.title'),
+        body: interpolateTranslation(t('contextualTools.realignVision.body'), { guidanceSource })
       },
       {
         id: 'celebrate',
-        title: 'Celebrate micro-wins',
-        body:
-          'When the progress module shows milestone momentum, share a quick gratitude note in the workspace to reinforce motivation.'
+        title: t('contextualTools.celebrateMicroWins.title'),
+        body: t('contextualTools.celebrateMicroWins.body')
       }
     ];
 
     if (activeStreak >= 3) {
       baseInsights.unshift({
         id: 'streak',
-        title: 'Channel your streak',
-        body: 'Your recent focus streak is a signal to tackle a bold task. Reserve a locked agenda block to protect that momentum.'
+        title: t('contextualTools.channelStreak.title'),
+        body: t('contextualTools.channelStreak.body')
       });
     }
 
     return baseInsights;
-  }, [activeGoal?.personalityProfile?.archetype, activeStreak]);
+  }, [activeGoal?.personalityProfile?.archetype, activeStreak, t]);
 
   const modules = useMemo(
     () => [
       {
         id: 'workspace' as const,
-        label: 'Workspace',
+        label: t('contextualTools.workspace.label'),
         icon: NotebookPen,
         badge: workspaceNotes.length ? `${workspaceNotes.length}` : undefined,
-        description: 'Capture AI output and notes.'
+        description: t('contextualTools.workspace.description')
       },
       {
         id: 'agenda' as const,
-        label: 'Agenda',
+        label: t('contextualTools.agenda.label'),
         icon: CalendarClock,
         badge: pendingAgendaCount ? `${pendingAgendaCount}` : undefined,
-        description: 'Schedule and lock focus blocks.'
+        description: t('contextualTools.agenda.description')
       },
       {
         id: 'actions' as const,
-        label: 'Quick Actions',
+        label: t('contextualTools.quickActions.label'),
         icon: Zap,
         badge: focusTimer.isRunning ? formattedTimer : undefined,
-        description: 'Launch timers and shortcuts.'
+        description: t('contextualTools.quickActions.description')
       },
       {
         id: 'progress' as const,
-        label: 'Progress',
+        label: t('contextualTools.progress.label'),
         icon: Target,
         badge: totalMilestones ? `${Math.round(milestoneProgress)}%` : undefined,
-        description: 'Track milestone momentum.'
+        description: t('contextualTools.progress.description')
       },
       {
         id: 'insights' as const,
-        label: 'Insights',
+        label: t('contextualTools.insights.label'),
         icon: Sparkles,
         badge: insights.length ? `${insights.length}` : undefined,
-        description: 'Blueprint-aligned guidance.'
+        description: t('contextualTools.insights.description')
       }
-    ], [workspaceNotes.length, pendingAgendaCount, focusTimer.isRunning, formattedTimer, totalMilestones, milestoneProgress, insights.length]);
+    ], [workspaceNotes.length, pendingAgendaCount, focusTimer.isRunning, formattedTimer, totalMilestones, milestoneProgress, insights.length, t]);
 
   const addWorkspaceNote = () => {
     if (!noteDraft.trim()) return;
@@ -356,15 +358,15 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
     setFocusTimer(prev => ({ ...prev, elapsed: 0, isRunning: false }));
   };
 
-  const activeGoalTitle = activeGoal?.title || 'Active Journey Goal';
+  const activeGoalTitle = activeGoal?.title || t('contextualTools.activeJourneyGoal');
 
   return (
     <div className="space-y-4">
       <Card className="p-4 space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h4 className="text-sm font-semibold text-foreground">Journey contextual tools</h4>
-            <p className="text-xs text-muted-foreground">Switch between live modules to support your current flow.</p>
+            <h4 className="text-sm font-semibold text-foreground">{t('contextualTools.journeyContextualTools')}</h4>
+            <p className="text-xs text-muted-foreground">{t('contextualTools.switchBetweenModules')}</p>
           </div>
           <Badge variant="outline" className="rounded-full px-2 py-0 text-[10px] uppercase tracking-wide">
             {activeModule}
@@ -415,26 +417,26 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
             <div className="flex items-center gap-2">
               <NotebookPen className="h-4 w-4 text-primary" />
               <div>
-                <h4 className="text-sm font-semibold text-foreground">AI workspace</h4>
-                <p className="text-xs text-muted-foreground">Capture and export insights while you iterate.</p>
+                <h4 className="text-sm font-semibold text-foreground">{t('contextualTools.aiWorkspace')}</h4>
+                <p className="text-xs text-muted-foreground">{t('contextualTools.captureAndExport')}</p>
               </div>
             </div>
             {workspaceNotes.length ? (
               <Badge variant="secondary" className="rounded-full text-[10px] uppercase tracking-wide">
-                {workspaceNotes.length} notes saved
+                {interpolateTranslation(t('contextualTools.notesSaved'), { count: workspaceNotes.length.toString() })}
               </Badge>
             ) : null}
           </div>
 
           <div className="space-y-2">
             <label className="text-xs font-semibold text-foreground" htmlFor="workspace-note">
-              Note capture
+              {t('contextualTools.noteCapture')}
             </label>
             <textarea
               id="workspace-note"
               value={noteDraft}
               onChange={event => setNoteDraft(event.target.value)}
-              placeholder="Capture your latest download, AI output, or voice transcription..."
+              placeholder={t('contextualTools.notePlaceholder')}
               className="min-h-[90px] w-full rounded-md border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
             />
             <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
@@ -445,20 +447,20 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                   className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Save to workspace
+                  {t('contextualTools.saveToWorkspace')}
                 </button>
                 <span className="inline-flex items-center gap-1 rounded-md border border-dashed border-primary/40 px-2 py-1 text-[10px] text-primary">
                   <Mic className="h-3 w-3" />
-                  Voice ready
+                  {t('contextualTools.voiceReady')}
                 </span>
               </div>
-              <span>Autosaves locally for continuity.</span>
+              <span>{t('contextualTools.autosavesLocally')}</span>
             </div>
           </div>
 
           {workspaceNotes.length ? (
             <div className="space-y-2">
-              <p className="text-xs font-semibold text-foreground">Recent notes</p>
+              <p className="text-xs font-semibold text-foreground">{t('contextualTools.recentNotes')}</p>
               <div className="space-y-2">
                 {workspaceNotes.map((note, index) => (
                   <div
@@ -472,7 +474,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Your saved notes and AI co-creations will appear here for quick reference and export.
+              {t('contextualTools.notesWillAppear')}
             </p>
           )}
 
@@ -480,18 +482,18 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
             <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-background/70 p-3">
               <FileDown className="mt-0.5 h-4 w-4 text-primary" />
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-foreground">Flexible exports</p>
+                <p className="text-xs font-semibold text-foreground">{t('contextualTools.flexibleExports')}</p>
                 <p className="text-[11px] leading-tight text-muted-foreground">
-                  Download notes in TXT, PDF, DOCX, or Markdown to move insights wherever you work.
+                  {t('contextualTools.flexibleExportsDesc')}
                 </p>
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-background/70 p-3">
               <Cloud className="mt-0.5 h-4 w-4 text-primary" />
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-foreground">Cross-platform syncing</p>
+                <p className="text-xs font-semibold text-foreground">{t('contextualTools.crossPlatformSyncing')}</p>
                 <p className="text-[11px] leading-tight text-muted-foreground">
-                  Stay in sync across desktop and mobile so your workspace context travels with you.
+                  {t('contextualTools.crossPlatformSyncingDesc')}
                 </p>
               </div>
             </div>
@@ -505,8 +507,8 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
             <div className="flex items-center gap-2">
               <CalendarClock className="h-4 w-4 text-secondary" />
               <div>
-                <h4 className="text-sm font-semibold text-foreground">Adaptive agenda</h4>
-                <p className="text-xs text-muted-foreground">Lock deep work blocks and queue goal-aligned tasks.</p>
+                <h4 className="text-sm font-semibold text-foreground">{t('contextualTools.adaptiveAgenda')}</h4>
+                <p className="text-xs text-muted-foreground">{t('contextualTools.lockDeepWorkBlocks')}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -516,11 +518,11 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                 className="inline-flex items-center gap-1 rounded-md border border-dashed border-secondary px-3 py-1.5 text-[11px] font-medium text-secondary transition-colors hover:bg-secondary/10"
               >
                 <ListTodo className="h-3.5 w-3.5" />
-                Import goal tasks
+                {t('contextualTools.importGoalTasks')}
               </button>
               {pendingAgendaCount ? (
                 <Badge variant="secondary" className="rounded-full text-[10px] uppercase tracking-wide">
-                  {pendingAgendaCount} open
+                  {interpolateTranslation(t('contextualTools.open'), { count: pendingAgendaCount.toString() })}
                 </Badge>
               ) : null}
             </div>
@@ -531,7 +533,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
               type="text"
               value={agendaInput}
               onChange={event => setAgendaInput(event.target.value)}
-              placeholder="Add an agenda item or intention"
+              placeholder={t('contextualTools.agendaPlaceholder')}
               className="rounded-md border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
             />
             <input
@@ -547,7 +549,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                 onChange={event => setLockAgendaBlock(event.target.checked)}
                 className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary"
               />
-              Lock focus block
+              {t('contextualTools.lockFocusBlock')}
             </label>
           </div>
           <div className="flex justify-end">
@@ -557,7 +559,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
               className="inline-flex items-center gap-2 rounded-md bg-secondary px-4 py-1.5 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/90"
             >
               <Plus className="h-3.5 w-3.5" />
-              Add to agenda
+              {t('contextualTools.addToAgenda')}
             </button>
           </div>
 
@@ -583,7 +585,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                       {item.locked ? (
                         <span className="inline-flex items-center gap-1 rounded-md bg-secondary/10 px-2 py-1 text-secondary">
                           <ShieldCheck className="h-3 w-3" />
-                          Locked
+                          {t('contextualTools.locked')}
                         </span>
                       ) : null}
                     </div>
@@ -598,14 +600,14 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                         : 'bg-primary text-primary-foreground hover:bg-primary/90'
                     )}
                   >
-                    {item.completed ? 'Completed' : 'Mark done'}
+                    {item.completed ? t('contextualTools.completed') : t('contextualTools.markDone')}
                   </button>
                 </div>
               ))}
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Build a living schedule that reflects your goals. Locked blocks help guard your peak focus time.
+              {t('contextualTools.buildLivingSchedule')}
             </p>
           )}
         </Card>
@@ -617,8 +619,8 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary" />
               <div>
-                <h4 className="text-sm font-semibold text-foreground">Quick actions</h4>
-                <p className="text-xs text-muted-foreground">Launch focus mode, log progress, or jump to key areas.</p>
+                <h4 className="text-sm font-semibold text-foreground">{t('contextualTools.quickActionsTitle')}</h4>
+                <p className="text-xs text-muted-foreground">{t('contextualTools.launchFocusMode')}</p>
               </div>
             </div>
             <Badge variant="outline" className="rounded-full text-[10px] uppercase tracking-wide">
@@ -629,8 +631,8 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2 rounded-lg border border-border/60 bg-muted/40 p-3">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Focus timer</span>
-                <span>{focusTimer.isRunning ? 'In progress' : 'Paused'}</span>
+                <span>{t('contextualTools.focusTimer')}</span>
+                <span>{focusTimer.isRunning ? t('contextualTools.inProgress') : t('contextualTools.paused')}</span>
               </div>
               <div className="flex items-baseline justify-between">
                 <p className="text-2xl font-semibold text-foreground">{formattedTimer}</p>
@@ -674,17 +676,17 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
               <p className="font-semibold text-foreground">{activeGoalTitle}</p>
               <div className="space-y-2 text-muted-foreground">
                 <button className="w-full rounded-md bg-primary/10 px-3 py-2 text-left font-medium text-primary transition-colors hover:bg-primary/20">
-                  Review journey timeline
+                  {t('contextualTools.reviewJourneyTimeline')}
                 </button>
                 <button className="w-full rounded-md bg-secondary/10 px-3 py-2 text-left font-medium text-secondary transition-colors hover:bg-secondary/20">
-                  Log a progress note
+                  {t('contextualTools.logProgressNote')}
                 </button>
                 <button className="w-full rounded-md bg-accent/10 px-3 py-2 text-left font-medium text-accent-foreground transition-colors hover:bg-accent/20">
-                  Open deep focus mode
+                  {t('contextualTools.openDeepFocusMode')}
                 </button>
               </div>
               <p className="text-[11px] leading-tight text-muted-foreground">
-                These shortcuts adapt as your goal evolves so you can move instantly from insight to action.
+                {t('contextualTools.shortcutsAdapt')}
               </p>
             </div>
           </div>
@@ -696,8 +698,8 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-secondary" />
             <div>
-              <h4 className="text-sm font-semibold text-foreground">Progress overview</h4>
-              <p className="text-xs text-muted-foreground">Monitor milestone momentum and time investment.</p>
+              <h4 className="text-sm font-semibold text-foreground">{t('contextualTools.progressOverview')}</h4>
+              <p className="text-xs text-muted-foreground">{t('contextualTools.monitorMilestone')}</p>
             </div>
           </div>
 
@@ -705,7 +707,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Milestones</span>
+                  <span className="text-muted-foreground">{t('contextualTools.milestones')}</span>
                   <span className="font-medium text-foreground">
                     {completedMilestones}/{totalMilestones}
                   </span>
@@ -717,7 +719,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
 
               <div className="space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tasks</span>
+                  <span className="text-muted-foreground">{t('contextualTools.tasks')}</span>
                   <span className="font-medium text-foreground">
                     {completedTasks}/{totalTasks}
                   </span>
@@ -729,7 +731,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
 
               <div className="space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Time spent vs. scheduled</span>
+                  <span className="text-muted-foreground">{t('contextualTools.timeSpentVsScheduled')}</span>
                   <span className="font-medium text-foreground">
                     {timeSpent}h / {scheduledTime}h
                   </span>
@@ -741,18 +743,18 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
 
               <div className="flex flex-wrap gap-2">
                 <div className="flex-1 rounded-md bg-muted/40 px-3 py-2">
-                  <span className="text-[11px] text-muted-foreground">Recent streak</span>
-                  <p className="text-sm font-semibold text-foreground">{activeStreak} days</p>
+                  <span className="text-[11px] text-muted-foreground">{t('contextualTools.recentStreak')}</span>
+                  <p className="text-sm font-semibold text-foreground">{activeStreak} {t('contextualTools.days')}</p>
                 </div>
                 <div className="flex-1 rounded-md bg-muted/40 px-3 py-2">
-                  <span className="text-[11px] text-muted-foreground">Focus allocation</span>
+                  <span className="text-[11px] text-muted-foreground">{t('contextualTools.focusAllocation')}</span>
                   <p className="text-sm font-semibold text-foreground">{Math.round(timeAllocation)}%</p>
                 </div>
               </div>
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Select a journey goal to unlock live progress analytics and completion metrics.
+              {t('contextualTools.selectJourneyGoal')}
             </p>
           )}
         </Card>
@@ -763,8 +765,8 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <div>
-              <h4 className="text-sm font-semibold text-foreground">Blueprint insights</h4>
-              <p className="text-xs text-muted-foreground">Personality-aligned prompts to guide your next move.</p>
+              <h4 className="text-sm font-semibold text-foreground">{t('contextualTools.blueprintInsights')}</h4>
+              <p className="text-xs text-muted-foreground">{t('contextualTools.personalityAlignedPrompts')}</p>
             </div>
           </div>
 
@@ -774,7 +776,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-semibold text-foreground">{insight.title}</p>
                   <Badge variant="outline" className="rounded-full text-[10px] uppercase tracking-wide">
-                    Insight
+                    {t('contextualTools.insight')}
                   </Badge>
                 </div>
                 <p className="text-[11px] leading-tight text-muted-foreground">{insight.body}</p>
@@ -783,7 +785,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
           </div>
 
           <p className="text-[11px] text-muted-foreground">
-            Rotate through modules as needed—your selections persist so you can jump back into the right context instantly.
+            {t('contextualTools.rotateThrough')}
           </p>
         </Card>
       ) : null}
@@ -792,12 +794,14 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
 }
 
 function TaskCoachTools({ selectedTask }: { selectedTask?: any }) {
+  const { t } = useLanguage();
+  
   return (
     <div className="space-y-4">
       <Card className="p-4 space-y-3">
         <div className="flex items-center space-x-2">
           <Clock className="h-4 w-4 text-primary" />
-          <h4 className="font-semibold text-sm">Current Task</h4>
+          <h4 className="font-semibold text-sm">{t('contextualTools.currentTask')}</h4>
         </div>
         {selectedTask ? (
           <div className="space-y-2">
@@ -808,15 +812,15 @@ function TaskCoachTools({ selectedTask }: { selectedTask?: any }) {
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">
-            No task selected
+            {t('contextualTools.noTaskSelected')}
           </p>
         )}
       </Card>
 
       <Card className="p-4 space-y-3">
-        <h4 className="font-semibold text-sm">Task Notes</h4>
+        <h4 className="font-semibold text-sm">{t('contextualTools.taskNotes')}</h4>
         <p className="text-xs text-muted-foreground">
-          Quick notes and reminders will appear here
+          {t('contextualTools.quickNotesReminders')}
         </p>
       </Card>
     </div>
@@ -824,12 +828,14 @@ function TaskCoachTools({ selectedTask }: { selectedTask?: any }) {
 }
 
 function FocusTools({ focusedMilestone }: { focusedMilestone?: any }) {
+  const { t } = useLanguage();
+  
   return (
     <div className="space-y-4">
       <Card className="p-4 space-y-3">
         <div className="flex items-center space-x-2">
           <Target className="h-4 w-4 text-secondary" />
-          <h4 className="font-semibold text-sm">Current Milestone</h4>
+          <h4 className="font-semibold text-sm">{t('contextualTools.currentMilestone')}</h4>
         </div>
         {focusedMilestone ? (
           <div className="space-y-2">
@@ -840,7 +846,7 @@ function FocusTools({ focusedMilestone }: { focusedMilestone?: any }) {
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">
-            No milestone in focus
+            {t('contextualTools.noMilestoneInFocus')}
           </p>
         )}
       </Card>
@@ -849,12 +855,14 @@ function FocusTools({ focusedMilestone }: { focusedMilestone?: any }) {
 }
 
 function TasksTools() {
+  const { t } = useLanguage();
+  
   return (
     <div className="space-y-4">
       <Card className="p-4 space-y-3">
-        <h4 className="font-semibold text-sm">Task Filters</h4>
+        <h4 className="font-semibold text-sm">{t('contextualTools.taskFilters')}</h4>
         <p className="text-xs text-muted-foreground">
-          Filter and sort options will appear here
+          {t('contextualTools.filterSortOptions')}
         </p>
       </Card>
     </div>
@@ -862,15 +870,17 @@ function TasksTools() {
 }
 
 function DiscoveryTools() {
+  const { t } = useLanguage();
+  
   return (
     <div className="space-y-4">
       <Card className="p-4 space-y-3 bg-gradient-to-br from-primary/5 to-secondary/5">
         <div className="flex items-center space-x-2">
           <Sparkles className="h-4 w-4 text-primary" />
-          <h4 className="font-semibold text-sm">Discovery Tips</h4>
+          <h4 className="font-semibold text-sm">{t('contextualTools.discoveryTips')}</h4>
         </div>
         <p className="text-xs text-muted-foreground">
-          Tips for dream discovery conversations will appear here
+          {t('contextualTools.tipsForDiscovery')}
         </p>
       </Card>
     </div>
@@ -878,12 +888,14 @@ function DiscoveryTools() {
 }
 
 function CreateTools() {
+  const { t } = useLanguage();
+  
   return (
     <div className="space-y-4">
       <Card className="p-4 space-y-3">
-        <h4 className="font-semibold text-sm">Creation Guide</h4>
+        <h4 className="font-semibold text-sm">{t('contextualTools.creationGuide')}</h4>
         <p className="text-xs text-muted-foreground">
-          Helpful hints for creating your dream will appear here
+          {t('contextualTools.helpfulHints')}
         </p>
       </Card>
     </div>

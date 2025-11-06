@@ -471,6 +471,125 @@ const translations: Record<Language, Translations> = {
       specificTasks: 'I\'ve also created specific tasks for each milestone. These are optimized for your cognitive style and include blueprint-based reasoning to help you understand why each step matters.',
       readyToBegin: 'Ready to begin? I recommend starting with this first task - it\'s perfectly aligned with your blueprint and designed to create early momentum. Shall we dive in?'
     },
+    // Contextual Tools Panel (Third Column)
+    contextualTools: {
+      toolsAndInsights: 'Tools & Insights',
+      contextAwareAssistance: 'Context-aware assistance for your current view',
+      journeyContextualTools: 'Journey contextual tools',
+      switchBetweenModules: 'Switch between live modules to support your current flow.',
+      
+      // Module labels and descriptions
+      workspace: {
+        label: 'Workspace',
+        description: 'Capture AI output and notes.'
+      },
+      agenda: {
+        label: 'Agenda',
+        description: 'Schedule and lock focus blocks.'
+      },
+      quickActions: {
+        label: 'Quick Actions',
+        description: 'Launch timers and shortcuts.'
+      },
+      progress: {
+        label: 'Progress',
+        description: 'Track milestone momentum.'
+      },
+      insights: {
+        label: 'Insights',
+        description: 'Blueprint-aligned guidance.'
+      },
+      
+      // Workspace module
+      aiWorkspace: 'AI workspace',
+      captureAndExport: 'Capture and export insights while you iterate.',
+      noteCapture: 'Note capture',
+      notePlaceholder: 'Capture your latest download, AI output, or voice transcription...',
+      saveToWorkspace: 'Save to workspace',
+      voiceReady: 'Voice ready',
+      autosavesLocally: 'Autosaves locally for continuity.',
+      notesSaved: '{count} notes saved',
+      recentNotes: 'Recent notes',
+      notesWillAppear: 'Your saved notes and AI co-creations will appear here for quick reference and export.',
+      flexibleExports: 'Flexible exports',
+      flexibleExportsDesc: 'Download notes in TXT, PDF, DOCX, or Markdown to move insights wherever you work.',
+      crossPlatformSyncing: 'Cross-platform syncing',
+      crossPlatformSyncingDesc: 'Stay in sync across desktop and mobile so your workspace context travels with you.',
+      
+      // Agenda module
+      adaptiveAgenda: 'Adaptive agenda',
+      lockDeepWorkBlocks: 'Lock deep work blocks and queue goal-aligned tasks.',
+      importGoalTasks: 'Import goal tasks',
+      open: '{count} open',
+      agendaPlaceholder: 'Add an agenda item or intention',
+      lockFocusBlock: 'Lock focus block',
+      addToAgenda: 'Add to agenda',
+      locked: 'Locked',
+      completed: 'Completed',
+      markDone: 'Mark done',
+      buildLivingSchedule: 'Build a living schedule that reflects your goals. Locked blocks help guard your peak focus time.',
+      
+      // Quick Actions module
+      quickActionsTitle: 'Quick actions',
+      launchFocusMode: 'Launch focus mode, log progress, or jump to key areas.',
+      focusTimer: 'Focus timer',
+      inProgress: 'In progress',
+      paused: 'Paused',
+      activeJourneyGoal: 'Active Journey Goal',
+      reviewJourneyTimeline: 'Review journey timeline',
+      logProgressNote: 'Log a progress note',
+      openDeepFocusMode: 'Open deep focus mode',
+      shortcutsAdapt: 'These shortcuts adapt as your goal evolves so you can move instantly from insight to action.',
+      
+      // Progress module
+      progressOverview: 'Progress overview',
+      monitorMilestone: 'Monitor milestone momentum and time investment.',
+      milestones: 'Milestones',
+      tasks: 'Tasks',
+      timeSpentVsScheduled: 'Time spent vs. scheduled',
+      recentStreak: 'Recent streak',
+      days: 'days',
+      focusAllocation: 'Focus allocation',
+      selectJourneyGoal: 'Select a journey goal to unlock live progress analytics and completion metrics.',
+      
+      // Insights module
+      blueprintInsights: 'Blueprint insights',
+      personalityAlignedPrompts: 'Personality-aligned prompts to guide your next move.',
+      insight: 'Insight',
+      rotateThrough: 'Rotate through modules as needed—your selections persist so you can jump back into the right context instantly.',
+      
+      // Insight content
+      sustainFlowState: {
+        title: 'Sustain your flow state',
+        body: 'Use micro-reflections after each work session to capture emotional and energetic shifts. This keeps the AI workspace attuned to your current momentum.'
+      },
+      realignVision: {
+        title: 'Re-align with your vision',
+        body: 'Review your blueprint insights at the start of each week and adjust your agenda blocks to reflect emerging priorities from your {guidanceSource}.'
+      },
+      celebrateMicroWins: {
+        title: 'Celebrate micro-wins',
+        body: 'When the progress module shows milestone momentum, share a quick gratitude note in the workspace to reinforce motivation.'
+      },
+      channelStreak: {
+        title: 'Channel your streak',
+        body: 'Your recent focus streak is a signal to tackle a bold task. Reserve a locked agenda block to protect that momentum.'
+      },
+      
+      // Other context tools
+      currentTask: 'Current Task',
+      noTaskSelected: 'No task selected',
+      taskNotes: 'Task Notes',
+      quickNotesReminders: 'Quick notes and reminders will appear here',
+      currentMilestone: 'Current Milestone',
+      noMilestoneInFocus: 'No milestone in focus',
+      taskFilters: 'Task Filters',
+      filterSortOptions: 'Filter and sort options will appear here',
+      discoveryTips: 'Discovery Tips',
+      tipsForDiscovery: 'Tips for dream discovery conversations will appear here',
+      creationGuide: 'Creation Guide',
+      helpfulHints: 'Helpful hints for creating your dream will appear here'
+    },
     
     // Life Clarity Funnel
     funnel: {
@@ -4078,6 +4197,198 @@ Provide 4-6 concrete steps I can start working on immediately.`,
       upcomingMilestones: 'Hier zijn je aankomende mijlpalen. Let op hoe ze zijn gesequenced om momentum op te bouwen en je {personality} natuur te eren.',
       specificTasks: 'Ik heb ook specifieke taken voor elke mijlpaal gemaakt. Deze zijn geoptimaliseerd voor je cognitieve stijl en bevatten blauwdruk-gebaseerde redenering om je te helpen begrijpen waarom elke stap belangrijk is.',
       readyToBegin: 'Klaar om te beginnen? Ik raad aan om te beginnen met deze eerste taak - het is perfect afgestemd op je blauwdruk en ontworpen om vroeg momentum te creëren. Zullen we erin duiken?'
+    },
+    // Contextual Tools Panel (Third Column)
+    contextualTools: {
+      toolsAndInsights: 'Hulpmiddelen & Inzichten',
+      contextAwareAssistance: 'Context-bewuste hulp voor je huidige weergave',
+      journeyContextualTools: 'Reis contextuele hulpmiddelen',
+      switchBetweenModules: 'Wissel tussen live modules om je huidige flow te ondersteunen.',
+      workspace: { label: 'Werkruimte', description: 'Leg AI-output en notities vast.' },
+      agenda: { label: 'Agenda', description: 'Plan en vergrendel focus blokken.' },
+      quickActions: { label: 'Snelle Acties', description: 'Start timers en snelkoppelingen.' },
+      progress: { label: 'Voortgang', description: 'Volg mijlpaal momentum.' },
+      insights: { label: 'Inzichten', description: 'Blauwdruk-gerichte begeleiding.' },
+      aiWorkspace: 'AI werkruimte',
+      captureAndExport: 'Leg inzichten vast en exporteer ze terwijl je itereert.',
+      noteCapture: 'Notitie vastleggen',
+      notePlaceholder: 'Leg je laatste download, AI-output of stemtranscriptie vast...',
+      saveToWorkspace: 'Opslaan in werkruimte',
+      voiceReady: 'Spraak klaar',
+      autosavesLocally: 'Wordt lokaal automatisch opgeslagen voor continuïteit.',
+      notesSaved: '{count} notities opgeslagen',
+      recentNotes: 'Recente notities',
+      notesWillAppear: 'Je opgeslagen notities en AI co-creaties verschijnen hier voor snelle referentie en export.',
+      flexibleExports: 'Flexibele exports',
+      flexibleExportsDesc: 'Download notities in TXT, PDF, DOCX of Markdown om inzichten te verplaatsen waar je werkt.',
+      crossPlatformSyncing: 'Cross-platform synchronisatie',
+      crossPlatformSyncingDesc: 'Blijf gesynchroniseerd op desktop en mobiel zodat je werkruimte context met je meereist.',
+      adaptiveAgenda: 'Adaptieve agenda',
+      lockDeepWorkBlocks: 'Vergrendel diep werk blokken en plaats doel-gerichte taken in de wachtrij.',
+      importGoalTasks: 'Importeer doeltaken',
+      open: '{count} open',
+      agendaPlaceholder: 'Voeg een agenda-item of intentie toe',
+      lockFocusBlock: 'Vergrendel focus blok',
+      addToAgenda: 'Toevoegen aan agenda',
+      locked: 'Vergrendeld',
+      completed: 'Voltooid',
+      markDone: 'Markeer als klaar',
+      buildLivingSchedule: 'Bouw een levend schema dat je doelen weerspiegelt. Vergrendelde blokken helpen je piek focus tijd te beschermen.',
+      quickActionsTitle: 'Snelle acties',
+      launchFocusMode: 'Start focus modus, log voortgang of spring naar belangrijke gebieden.',
+      focusTimer: 'Focus timer',
+      inProgress: 'Bezig',
+      paused: 'Gepauzeerd',
+      activeJourneyGoal: 'Actief Reisdoel',
+      reviewJourneyTimeline: 'Bekijk reis tijdlijn',
+      logProgressNote: 'Log een voortgangsnotitie',
+      openDeepFocusMode: 'Open diepe focus modus',
+      shortcutsAdapt: 'Deze snelkoppelingen passen zich aan naarmate je doel evolueert, zodat je direct van inzicht naar actie kunt gaan.',
+      progressOverview: 'Voortgangsoverzicht',
+      monitorMilestone: 'Monitor mijlpaal momentum en tijdsinvestering.',
+      milestones: 'Mijlpalen',
+      tasks: 'Taken',
+      timeSpentVsScheduled: 'Tijd besteed vs. gepland',
+      recentStreak: 'Recente streak',
+      days: 'dagen',
+      focusAllocation: 'Focus toewijzing',
+      selectJourneyGoal: 'Selecteer een reisdoel om live voortgangsanalyse en voltooiingsmetrics te ontgrendelen.',
+      blueprintInsights: 'Blauwdruk inzichten',
+      personalityAlignedPrompts: 'Persoonlijkheid-gerichte prompts om je volgende stap te begeleiden.',
+      insight: 'Inzicht',
+      rotateThrough: 'Roteer door modules indien nodig—je selecties blijven behouden zodat je direct terug kunt springen naar de juiste context.',
+      sustainFlowState: { title: 'Behoud je flow staat', body: 'Gebruik micro-reflecties na elke werksessie om emotionele en energetische verschuivingen vast te leggen. Dit houdt de AI werkruimte afgestemd op je huidige momentum.' },
+      realignVision: { title: 'Herstel afstemming met je visie', body: 'Bekijk je blauwdruk inzichten aan het begin van elke week en pas je agenda blokken aan om opkomende prioriteiten van je {guidanceSource} te weerspiegelen.' },
+      celebrateMicroWins: { title: 'Vier micro-overwinningen', body: 'Wanneer de voortgangsmodule mijlpaal momentum toont, deel dan een snelle dankbaarheidsnotitie in de werkruimte om motivatie te versterken.' },
+      channelStreak: { title: 'Kanaliseer je streak', body: 'Je recente focus streak is een signaal om een gedurfde taak aan te pakken. Reserveer een vergrendeld agenda blok om dat momentum te beschermen.' },
+      currentTask: 'Huidige Taak',
+      noTaskSelected: 'Geen taak geselecteerd',
+      taskNotes: 'Taaknotities',
+      quickNotesReminders: 'Snelle notities en herinneringen verschijnen hier',
+      currentMilestone: 'Huidige Mijlpaal',
+      noMilestoneInFocus: 'Geen mijlpaal in focus',
+      taskFilters: 'Taakfilters',
+      filterSortOptions: 'Filter- en sorteeropties verschijnen hier',
+      discoveryTips: 'Ontdekkingstips',
+      tipsForDiscovery: 'Tips voor droomontdekkingsgesprekken verschijnen hier',
+      creationGuide: 'Creatie Gids',
+      helpfulHints: 'Handige hints voor het creëren van je droom verschijnen hier'
+    },
+      contextAwareAssistance: 'Context-bewuste hulp voor je huidige weergave',
+      journeyContextualTools: 'Reis contextuele hulpmiddelen',
+      switchBetweenModules: 'Wissel tussen live modules om je huidige flow te ondersteunen.',
+      
+      // Module labels and descriptions
+      workspace: {
+        label: 'Werkruimte',
+        description: 'Leg AI-output en notities vast.'
+      },
+      agenda: {
+        label: 'Agenda',
+        description: 'Plan en vergrendel focus blokken.'
+      },
+      quickActions: {
+        label: 'Snelle Acties',
+        description: 'Start timers en snelkoppelingen.'
+      },
+      progress: {
+        label: 'Voortgang',
+        description: 'Volg mijlpaal momentum.'
+      },
+      insights: {
+        label: 'Inzichten',
+        description: 'Blauwdruk-gerichte begeleiding.'
+      },
+      
+      // Workspace module
+      aiWorkspace: 'AI werkruimte',
+      captureAndExport: 'Leg inzichten vast en exporteer ze terwijl je itereert.',
+      noteCapture: 'Notitie vastleggen',
+      notePlaceholder: 'Leg je laatste download, AI-output of stemtranscriptie vast...',
+      saveToWorkspace: 'Opslaan in werkruimte',
+      voiceReady: 'Spraak klaar',
+      autosavesLocally: 'Wordt lokaal automatisch opgeslagen voor continuïteit.',
+      notesSaved: '{count} notities opgeslagen',
+      recentNotes: 'Recente notities',
+      notesWillAppear: 'Je opgeslagen notities en AI co-creaties verschijnen hier voor snelle referentie en export.',
+      flexibleExports: 'Flexibele exports',
+      flexibleExportsDesc: 'Download notities in TXT, PDF, DOCX of Markdown om inzichten te verplaatsen waar je werkt.',
+      crossPlatformSyncing: 'Cross-platform synchronisatie',
+      crossPlatformSyncingDesc: 'Blijf gesynchroniseerd op desktop en mobiel zodat je werkruimte context met je meereist.',
+      
+      // Agenda module
+      adaptiveAgenda: 'Adaptieve agenda',
+      lockDeepWorkBlocks: 'Vergrendel diep werk blokken en plaats doel-gerichte taken in de wachtrij.',
+      importGoalTasks: 'Importeer doeltaken',
+      open: '{count} open',
+      agendaPlaceholder: 'Voeg een agenda-item of intentie toe',
+      lockFocusBlock: 'Vergrendel focus blok',
+      addToAgenda: 'Toevoegen aan agenda',
+      locked: 'Vergrendeld',
+      completed: 'Voltooid',
+      markDone: 'Markeer als klaar',
+      buildLivingSchedule: 'Bouw een levend schema dat je doelen weerspiegelt. Vergrendelde blokken helpen je piek focus tijd te beschermen.',
+      
+      // Quick Actions module
+      quickActionsTitle: 'Snelle acties',
+      launchFocusMode: 'Start focus modus, log voortgang of spring naar belangrijke gebieden.',
+      focusTimer: 'Focus timer',
+      inProgress: 'Bezig',
+      paused: 'Gepauzeerd',
+      activeJourneyGoal: 'Actief Reisdoel',
+      reviewJourneyTimeline: 'Bekijk reis tijdlijn',
+      logProgressNote: 'Log een voortgangsnotitie',
+      openDeepFocusMode: 'Open diepe focus modus',
+      shortcutsAdapt: 'Deze snelkoppelingen passen zich aan naarmate je doel evolueert, zodat je direct van inzicht naar actie kunt gaan.',
+      
+      // Progress module
+      progressOverview: 'Voortgangsoverzicht',
+      monitorMilestone: 'Monitor mijlpaal momentum en tijdsinvestering.',
+      milestones: 'Mijlpalen',
+      tasks: 'Taken',
+      timeSpentVsScheduled: 'Tijd besteed vs. gepland',
+      recentStreak: 'Recente streak',
+      days: 'dagen',
+      focusAllocation: 'Focus toewijzing',
+      selectJourneyGoal: 'Selecteer een reisdoel om live voortgangsanalyse en voltooiingsmetrics te ontgrendelen.',
+      
+      // Insights module
+      blueprintInsights: 'Blauwdruk inzichten',
+      personalityAlignedPrompts: 'Persoonlijkheid-gerichte prompts om je volgende stap te begeleiden.',
+      insight: 'Inzicht',
+      rotateThrough: 'Roteer door modules indien nodig—je selecties blijven behouden zodat je direct terug kunt springen naar de juiste context.',
+      
+      // Insight content
+      sustainFlowState: {
+        title: 'Behoud je flow staat',
+        body: 'Gebruik micro-reflecties na elke werksessie om emotionele en energetische verschuivingen vast te leggen. Dit houdt de AI werkruimte afgestemd op je huidige momentum.'
+      },
+      realignVision: {
+        title: 'Herstel afstemming met je visie',
+        body: 'Bekijk je blauwdruk inzichten aan het begin van elke week en pas je agenda blokken aan om opkomende prioriteiten van je {guidanceSource} te weerspiegelen.'
+      },
+      celebrateMicroWins: {
+        title: 'Vier micro-overwinningen',
+        body: 'Wanneer de voortgangsmodule mijlpaal momentum toont, deel dan een snelle dankbaarheidsnotitie in de werkruimte om motivatie te versterken.'
+      },
+      channelStreak: {
+        title: 'Kanaliseer je streak',
+        body: 'Je recente focus streak is een signaal om een gedurfde taak aan te pakken. Reserveer een vergrendeld agenda blok om dat momentum te beschermen.'
+      },
+      
+      // Other context tools
+      currentTask: 'Huidige Taak',
+      noTaskSelected: 'Geen taak geselecteerd',
+      taskNotes: 'Taaknotities',
+      quickNotesReminders: 'Snelle notities en herinneringen verschijnen hier',
+      currentMilestone: 'Huidige Mijlpaal',
+      noMilestoneInFocus: 'Geen mijlpaal in focus',
+      taskFilters: 'Taakfilters',
+      filterSortOptions: 'Filter- en sorteeropties verschijnen hier',
+      discoveryTips: 'Ontdekkingstips',
+      tipsForDiscovery: 'Tips voor droomontdekkingsgesprekken verschijnen hier',
+      creationGuide: 'Creatie Gids',
+      helpfulHints: 'Handige hints voor het creëren van je droom verschijnen hier'
     },
     
     // Life Clarity Funnel (Dutch)
