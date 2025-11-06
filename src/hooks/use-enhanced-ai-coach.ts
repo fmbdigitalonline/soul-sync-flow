@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
 import { useSubconsciousOrb } from '@/hooks/use-subconscious-orb';
 import { createErrorHandler } from '@/utils/error-recovery';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface Message {
   id: string;
@@ -30,6 +31,9 @@ interface VFPGraphStatus {
 }
 
 export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) => {
+  // Get current language preference
+  const { language } = useLanguage();
+  
   // Coordinated loading for streaming operations
   const { startLoading, completeLoading } = useCoordinatedLoading();
   
@@ -179,7 +183,7 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
         sessionIdRef.current,
         isEnhanced,
         currentAgent,
-        'en',
+        language,
         {
           onChunk: (content: string) => {
             setStreamingContent(content);
@@ -243,7 +247,7 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
           sessionIdRef.current,
           isEnhanced,
           currentAgent,
-          'en',
+          language,
           userName
         );
         
