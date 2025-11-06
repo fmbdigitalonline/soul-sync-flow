@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { user360Service } from './user-360-service';
+import { user360EmergencyService } from './user-360-emergency-mode';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface SyncConfiguration {
@@ -131,9 +132,19 @@ class User360SyncService {
   }
 
   // EMERGENCY I/O OPTIMIZATION: Increased debounce from 2s to 30s to reduce disk load
+  // DISK I/O PROTECTION: Skip refresh if system is under load
   private refreshTimeouts: Map<string, NodeJS.Timeout> = new Map();
+  private refreshAttempts: Map<string, number> = new Map();
+  private readonly MAX_REFRESH_PER_MINUTE = 2; // Only 2 refreshes per minute per user
   
   private async debouncedProfileRefresh(userId: string): Promise<void> {
+    // DISK I/O PROTECTION: Check refresh rate limit
+    const attempts = this.refreshAttempts.get(userId) || 0;
+    if (attempts >= this.MAX_REFRESH_PER_MINUTE) {
+      console.log(`⚠️ 360° Sync: Skipping refresh for ${userId} - rate limited (${attempts} in last minute)`);
+      return;
+    }
+
     // Clear existing timeout
     const existingTimeout = this.refreshTimeouts.get(userId);
     if (existingTimeout) {
@@ -143,9 +154,25 @@ class User360SyncService {
     // EMERGENCY: Extended timeout to 30 seconds to reduce I/O pressure
     const timeout = setTimeout(async () => {
       try {
+        // DISK I/O PROTECTION: Check emergency mode before refresh
+        const emergencyStatus = user360EmergencyService.getEmergencyStatus();
+        if (emergencyStatus.isEmergencyMode) {
+          console.log(`🚨 360° Sync: Skipping refresh in emergency mode`);
+          return;
+        }
+
         console.log(`🔄 Emergency I/O Mode: Refreshing 360° profile for user: ${userId}`);
+        
+        // Increment attempt counter
+        this.refreshAttempts.set(userId, attempts + 1);
+        
         await user360Service.refreshUserProfile(userId);
         this.refreshTimeouts.delete(userId);
+        
+        // Reset attempt counter after 60 seconds
+        setTimeout(() => {
+          this.refreshAttempts.delete(userId);
+        }, 60000);
       } catch (error) {
         console.error(`❌ Failed to refresh 360° profile for user ${userId}:`, error);
       }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { shouldEnableDebugPolling } from '@/utils/environment-check';
 
 export interface HacsIntelligence {
   id: string;
@@ -45,6 +46,11 @@ export const useHacsIntelligence = () => {
 
   // Initialize or fetch user's HACS intelligence
   const initializeIntelligence = useCallback(async () => {
+    // DISK I/O PROTECTION: Skip initialization in production if polling is disabled
+    if (!shouldEnableDebugPolling()) {
+      console.log('⚠️ HACS Intelligence: Skipping auto-initialization in production mode');
+    }
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {

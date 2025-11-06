@@ -70,8 +70,45 @@ export interface User360Profile {
 }
 
 class User360DataService {
+  // DISK I/O PROTECTION: Aggressive caching to prevent excessive queries
+  private profileCache: Map<string, { profile: User360Profile; timestamp: number }> = new Map();
+  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+  private pendingFetches: Map<string, Promise<User360Profile | null>> = new Map();
+  private cacheCleanupInterval?: NodeJS.Timeout;
+
+  constructor() {
+    // DISK I/O PROTECTION: Periodic cache cleanup to prevent memory leaks
+    this.cacheCleanupInterval = setInterval(() => {
+      const now = Date.now();
+      let cleaned = 0;
+      for (const [userId, cached] of this.profileCache.entries()) {
+        if (now - cached.timestamp > this.CACHE_TTL) {
+          this.profileCache.delete(userId);
+          cleaned++;
+        }
+      }
+      if (cleaned > 0) {
+        console.log(`🧹 360° Service: Cleaned ${cleaned} expired cache entries`);
+      }
+    }, 60000); // Run every minute
+  }
+
   async getUserProfile(userId: string, retryCount: number = 0): Promise<User360Profile | null> {
     console.log('🔄 360° Service: Aggregating user profile data for:', userId, `(attempt ${retryCount + 1})`);
+    
+    // DISK I/O PROTECTION: Check cache first
+    const cached = this.profileCache.get(userId);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      console.log('✅ 360° Service: Returning cached profile (age: ' + Math.round((Date.now() - cached.timestamp) / 1000) + 's)');
+      return cached.profile;
+    }
+
+    // DISK I/O PROTECTION: Deduplicate simultaneous requests
+    const pending = this.pendingFetches.get(userId);
+    if (pending) {
+      console.log('⏳ 360° Service: Request already in flight, waiting...');
+      return pending;
+    }
     
     // EMERGENCY I/O PROTECTION: Check if we should use emergency mode
     const emergencyStatus = user360EmergencyService.getEmergencyStatus();
@@ -80,10 +117,12 @@ class User360DataService {
       return user360EmergencyService.getEmergencySafeProfile(userId) as Promise<User360Profile | null>;
     }
     
-    try {
-      // Optimized data aggregation with timeout and error specificity
-      console.log('📊 360° Service: Starting parallel data fetch');
-      const fetchPromises = [
+    // DISK I/O PROTECTION: Track this fetch to prevent duplicates
+    const fetchPromise = (async () => {
+      try {
+        // Optimized data aggregation with timeout and error specificity
+        console.log('📊 360° Service: Starting parallel data fetch');
+        const fetchPromises = [
         this.getBlueprintDataWithTimeout(userId),
         this.getIntelligenceDataWithTimeout(userId),
         this.getMemoryNodesWithTimeout(userId),
@@ -224,15 +263,27 @@ class User360DataService {
       // Store or update the 360° profile
       const profile360 = await this.storeUser360Profile(userId, profileData, dataAvailability, dataSources);
       
-      console.log('✅ 360° Service: Profile aggregated successfully', {
+      // DISK I/O PROTECTION: Cache the result
+      this.profileCache.set(userId, {
+        profile: profile360,
+        timestamp: Date.now()
+      });
+      
+      // DISK I/O PROTECTION: Clear pending fetch
+      this.pendingFetches.delete(userId);
+      
+      console.log('✅ 360° Service: Profile aggregated and cached', {
         dataSources: dataSources.length,
         availability: Object.keys(dataAvailability).filter(key => 
           (dataAvailability as any)[key].available
-        ).length
+        ).length,
+        cacheSize: this.profileCache.size
       });
 
       return profile360;
     } catch (error) {
+      // DISK I/O PROTECTION: Clear pending fetch on error
+      this.pendingFetches.delete(userId);
       const errorMessage = error instanceof Error ? error.message : 'Database operation failed';
       console.error('❌ 360° Service: Error aggregating profile:', {
         error: errorMessage,
@@ -258,6 +309,22 @@ class User360DataService {
       const contextualError = new Error(`Profile aggregation failed: ${errorMessage} (after ${retryCount + 1} attempts)`);
       contextualError.name = 'User360ProfileError';
       throw contextualError;
+    }
+    })();
+
+    // DISK I/O PROTECTION: Store pending promise
+    this.pendingFetches.set(userId, fetchPromise);
+    return fetchPromise;
+  }
+
+  // DISK I/O PROTECTION: Cache invalidation method
+  invalidateCache(userId?: string) {
+    if (userId) {
+      this.profileCache.delete(userId);
+      console.log(`🗑️ 360° Service: Cache invalidated for user ${userId}`);
+    } else {
+      this.profileCache.clear();
+      console.log(`🗑️ 360° Service: All cache cleared (${this.profileCache.size} entries)`);
     }
   }
 

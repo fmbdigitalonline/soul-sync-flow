@@ -40,14 +40,18 @@ class User360EmergencyService {
         new Date(p.updated_at).getTime() > Date.now() - (5 * 60 * 1000) // Last 5 minutes
       ).length || 0;
 
-      // Emergency triggers
-      const highUpdateFrequency = recentUpdates > 50;
+      // DISK I/O PROTECTION: More aggressive emergency triggers
+      const highUpdateFrequency = recentUpdates > 20; // Reduced from 50
       const profileTableSize = profileStats?.length || 0;
+      const veryHighActivity = recentUpdates > 10; // New trigger
 
-      if (highUpdateFrequency || profileTableSize > 1000) {
+      if (highUpdateFrequency || profileTableSize > 500 || veryHighActivity) {
         await this.activateEmergencyMode(
           `High I/O detected: ${recentUpdates} updates in 5min, ${profileTableSize} total profiles`
         );
+      } else if (this.emergencyMode && recentUpdates < 5) {
+        // Auto-deactivate if activity drops
+        await this.deactivateEmergencyMode();
       }
 
       return this.getEmergencyStatus();
