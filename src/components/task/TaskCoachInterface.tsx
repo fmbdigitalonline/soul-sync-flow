@@ -312,7 +312,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
 
     const hydrateSession = async () => {
       const { session: storedSession, source } = await loadTaskSessionWithDbFallback(task.id, {
-        taskTitle: task.title
+        taskTitle: task.title,
+        goalId: task.goal_id
       });
 
       if (!isMounted) {

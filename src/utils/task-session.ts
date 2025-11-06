@@ -35,6 +35,7 @@ const isBrowser = typeof window !== 'undefined' && typeof window.localStorage !=
 
 export interface LoadTaskSessionOptions {
   taskTitle?: string;
+  goalId?: string;
 }
 
 export interface TaskSessionLoadResult {
@@ -97,10 +98,16 @@ async function loadTaskSessionFromDatabase(taskId: string, options: LoadTaskSess
       return null;
     }
 
-    const instructions = await workingInstructionsPersistenceService.loadWorkingInstructions(taskId, undefined);
+    const instructions = await workingInstructionsPersistenceService.loadWorkingInstructions(
+      options.goalId || '',
+      taskId
+    );
     if (!instructions || instructions.length === 0) {
+      console.log(`ℹ️ No instructions found for goal: ${options.goalId}, task: ${taskId}`);
       return null;
     }
+
+    console.log(`✅ Loaded ${instructions.length} instructions for goal: ${options.goalId}, task: ${taskId}`);
 
     const { data: progressData, error: progressError } = await supabase
       .from('task_instruction_progress')
@@ -250,6 +257,8 @@ export async function getTaskSessionTypeAsync(taskId: string): Promise<TaskSessi
   }
 
   try {
+    // Note: hasStoredInstructions uses old signature, cannot pass goalId here
+    // This is acceptable as it's just checking existence, not loading actual data
     const hasStored = await workingInstructionsPersistenceService.hasStoredInstructions(taskId, undefined);
     if (hasStored) {
       return TaskSessionType.WORK_INSTRUCTION_SESSION;
