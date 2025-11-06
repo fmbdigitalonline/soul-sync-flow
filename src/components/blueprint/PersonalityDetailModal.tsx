@@ -76,7 +76,7 @@ const PersonalityDetailModal: React.FC<PersonalityDetailModalProps> = ({
                       {subtitle}
                     </p>
                   )}
-                  <h2 className={`${getTextSize('text-5xl')} font-cormorant font-bold text-soul-purple`}>
+                  <h2 className={`${getTextSize('text-4xl')} font-semibold text-primary`}>
                     {mainValue}
                   </h2>
                 </div>

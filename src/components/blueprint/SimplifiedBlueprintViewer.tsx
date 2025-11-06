@@ -170,7 +170,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
   const SectionHeader = ({ title, isExpanded, onClick }: { title: string; isExpanded: boolean; onClick: () => void }) => (
     <button
       onClick={onClick}
-      className={`w-full flex items-center justify-between ${spacing.button} ${getTextSize('text-lg')} font-cormorant font-semibold text-left hover:bg-muted/50 rounded-lg transition-colors`}
+      className={`w-full flex items-center justify-between ${spacing.button} ${getTextSize('text-base')} font-semibold text-left hover:bg-muted/50 rounded-lg transition-colors`}
     >
       <span>{title}</span>
       {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
@@ -182,7 +182,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
       {/* Header with status */}
       <div className="flex flex-col gap-3 mb-6 w-full max-w-full">
         <div className="w-full max-w-full">
-          <h2 className={`${getTextSize('text-2xl')} font-cormorant font-bold break-words`}>
+          <h2 className={`${getTextSize('text-xl')} font-semibold break-words`}>
             {interpolateTranslation(t('blueprint.profile.title'), { userName })}
           </h2>
           <p className={`${getTextSize('text-sm')} font-inter text-muted-foreground break-words`}>
@@ -255,8 +255,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   role="button"
                   aria-label={`View detailed information about your MBTI type: ${mbtiType}`}
                 >
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.mbtiType')}</h4>
-                  <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple break-words`}>{mbtiType}</p>
+                  <h4 className={`font-semibold text-primary ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.mbtiType')}</h4>
+                  <p className={`${getTextSize('text-2xl')} font-semibold text-primary break-words`}>{mbtiType}</p>
                   {(() => {
                     const desc = getDescription('mbtiDescriptions', mbtiType);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -303,8 +303,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   role="button"
                   aria-label={`View detailed information about your Life Path number: ${lifePath}`}
                 >
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.lifePath')}</h4>
-                  <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple`}>{lifePath}</p>
+                  <h4 className={`font-semibold text-primary ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.lifePath')}</h4>
+                  <p className={`${getTextSize('text-2xl')} font-semibold text-primary`}>{lifePath}</p>
                   {(() => {
                     const desc = getDescription('lifePathDescriptions', lifePath);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -345,8 +345,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   role="button"
                   aria-label={`View detailed information about your Sun sign: ${sunSign}`}
                 >
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.sunSign')}</h4>
-                  <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple break-words`}>{sunSign}</p>
+                  <h4 className={`font-semibold text-primary ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.sunSign')}</h4>
+                  <p className={`${getTextSize('text-2xl')} font-semibold text-primary break-words`}>{sunSign}</p>
                   {(() => {
                     const desc = getDescription('sunSignDescriptions', sunSign);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -396,8 +396,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   role="button"
                   aria-label={`View detailed information about your Human Design type: ${hdType}`}
                 >
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.humanDesign')}</h4>
-                  <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{hdType}</p>
+                  <h4 className={`font-semibold text-primary ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.humanDesign')}</h4>
+                  <p className={`${getTextSize('text-base')} font-semibold text-primary break-words mb-2`}>{hdType}</p>
                   {(() => {
                     const desc = getDescription('humanDesignDescriptions', hdType);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -444,8 +444,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   role="button"
                   aria-label={`View detailed information about your Chinese Zodiac: ${chineseZodiac}`}
                 >
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.chineseZodiac')}</h4>
-                  <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac} {element}</p>
+                  <h4 className={`font-semibold text-primary ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.chineseZodiac')}</h4>
+                  <p className={`${getTextSize('text-base')} font-semibold text-primary break-words`}>{chineseZodiac} {element}</p>
                   {(() => {
                     const desc = getDescription('chineseZodiacDescriptions', chineseZodiac);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -499,8 +499,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   role="button"
                   aria-label={`View detailed information about your MBTI personality type`}
                 >
-                  <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.personalityType')}</h4>
-                  <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{mbtiType}</p>
+                  <h4 className={`font-semibold text-primary mb-2 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.personalityType')}</h4>
+                  <p className={`${getTextSize('text-3xl')} font-semibold text-primary break-words`}>{mbtiType}</p>
                   {(() => {
                     const desc = getDescription('mbtiDescriptions', mbtiType);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -535,7 +535,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   role="button"
                   aria-label="View cognitive functions details"
                 >
-                  <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.cognitiveFunctions')}</h4>
+                  <h4 className={`font-semibold text-primary mb-2 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.cognitiveFunctions')}</h4>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}><strong>{t('blueprint.descriptions.dominant')}</strong> {dominantFunction}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}><strong>{t('blueprint.descriptions.auxiliary')}</strong> {auxiliaryFunction}</p>
                   {(() => {
@@ -556,8 +556,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   tabIndex={0}
                   role="button"
                 >
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.taskApproach')}</h5>
-                  <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{taskApproach}</p>
+                  <h5 className={`font-semibold text-primary mb-1 ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.taskApproach')}</h5>
+                  <p className={`${getTextSize('text-base')} font-semibold text-primary capitalize break-words`}>{taskApproach}</p>
                   {(() => {
                     const desc = getDescription('taskApproachDescriptions', taskApproach);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -573,8 +573,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   tabIndex={0}
                   role="button"
                 >
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.communication')}</h5>
-                  <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{communicationStyle}</p>
+                  <h5 className={`font-semibold text-primary mb-1 ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.communication')}</h5>
+                  <p className={`${getTextSize('text-base')} font-semibold text-primary capitalize break-words`}>{communicationStyle}</p>
                   {(() => {
                     const desc = getDescription('communicationDescriptions', communicationStyle);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -590,8 +590,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   tabIndex={0}
                   role="button"
                 >
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.decisionMaking')}</h5>
-                  <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{decisionMaking}</p>
+                  <h5 className={`font-semibold text-primary mb-1 ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.decisionMaking')}</h5>
+                  <p className={`${getTextSize('text-base')} font-semibold text-primary capitalize break-words`}>{decisionMaking}</p>
                   {(() => {
                     const desc = getDescription('decisionMakingDescriptions', decisionMaking);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -645,8 +645,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   role="button"
                   aria-label={`View detailed information about your Human Design energy type`}
                 >
-                  <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.energyType')}</h4>
-                  <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{hdType}</p>
+                  <h4 className={`font-semibold text-primary mb-2 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.energyType')}</h4>
+                  <p className={`${getTextSize('text-3xl')} font-semibold text-primary break-words mb-2`}>{hdType}</p>
                   {(() => {
                     const desc = getDescription('humanDesignDescriptions', hdType);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -681,8 +681,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   role="button"
                   aria-label={`View detailed information about your decision authority`}
                 >
-                  <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.decisionAuthority')}</h4>
-                  <p className={`${getTextSize('text-xl')} font-cormorant font-bold text-soul-purple break-words mb-2`}>{authority}</p>
+                  <h4 className={`font-semibold text-primary mb-2 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.decisionAuthority')}</h4>
+                  <p className={`${getTextSize('text-xl')} font-semibold text-primary break-words mb-2`}>{authority}</p>
                   {(() => {
                     const desc = getDescription('authorityDescriptions', authority);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -701,8 +701,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   tabIndex={0}
                   role="button"
                 >
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.strategy')}</h5>
-                  <p className={`${getTextSize('text-lg')} font-inter font-bold capitalize text-soul-purple break-words`}>{strategy}</p>
+                  <h5 className={`font-semibold text-primary mb-1 ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.strategy')}</h5>
+                  <p className={`${getTextSize('text-base')} font-semibold capitalize text-primary break-words`}>{strategy}</p>
                   {(() => {
                     const desc = getDescription('strategyDescriptions', strategy);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -718,8 +718,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   tabIndex={0}
                   role="button"
                 >
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.profile')}</h5>
-                  <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple break-words`}>{profile}</p>
+                  <h5 className={`font-semibold text-primary mb-1 ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.profile')}</h5>
+                  <p className={`${getTextSize('text-base')} font-semibold text-primary break-words`}>{profile}</p>
                   {(() => {
                     const desc = getDescription('profileDescriptions', profile);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -735,8 +735,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   tabIndex={0}
                   role="button"
                 >
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.pacing')}</h5>
-                  <p className={`${getTextSize('text-lg')} font-inter font-bold capitalize text-soul-purple break-words`}>{pacing}</p>
+                  <h5 className={`font-semibold text-primary mb-1 ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.pacing')}</h5>
+                  <p className={`${getTextSize('text-base')} font-semibold capitalize text-primary break-words`}>{pacing}</p>
                   {(() => {
                     const desc = getDescription('pacingDescriptions', pacing);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -790,8 +790,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   role="button"
                   aria-label={`View detailed information about your Life Path number`}
                 >
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.lifePathNumber')}</h4>
-                  <p className={`${getTextSize('text-4xl')} font-cormorant font-bold text-soul-purple`}>{lifePath}</p>
+                  <h4 className={`font-semibold text-primary ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.lifePathNumber')}</h4>
+                  <p className={`${getTextSize('text-4xl')} font-semibold text-primary`}>{lifePath}</p>
                   {(() => {
                     const desc = getDescription('lifePathDescriptions', lifePath);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -827,8 +827,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     role="button"
                     aria-label={`View detailed information about your Expression number`}
                   >
-                    <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.expressionNumber')}</h4>
-                    <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{expressionNumber}</p>
+                    <h4 className={`font-semibold text-primary ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.expressionNumber')}</h4>
+                    <p className={`${getTextSize('text-3xl')} font-semibold text-primary`}>{expressionNumber}</p>
                     {(() => {
                       const desc = getDescription('expressionNumberDescriptions', expressionNumber);
                       return <PersonalityDescription {...desc} compact={true} />;
@@ -844,8 +844,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     tabIndex={0}
                     role="button"
                   >
-                    <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.soulUrgeNumber')}</h4>
-                    <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{soulUrgeNumber}</p>
+                    <h4 className={`font-semibold text-primary ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.soulUrgeNumber')}</h4>
+                    <p className={`${getTextSize('text-3xl')} font-semibold text-primary`}>{soulUrgeNumber}</p>
                     {(() => {
                       const desc = getDescription('soulUrgeDescriptions', soulUrgeNumber);
                       return <PersonalityDescription {...desc} compact={true} />;
@@ -863,8 +863,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     tabIndex={0}
                     role="button"
                   >
-                    <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.personalityNumber')}</h4>
-                    <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{personalityNumber}</p>
+                    <h4 className={`font-semibold text-primary ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.personalityNumber')}</h4>
+                    <p className={`${getTextSize('text-3xl')} font-semibold text-primary`}>{personalityNumber}</p>
                     {(() => {
                       const desc = getDescription('personalityNumberDescriptions', personalityNumber);
                       return <PersonalityDescription {...desc} compact={true} />;
@@ -880,8 +880,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     tabIndex={0}
                     role="button"
                   >
-                    <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.birthdayNumber')}</h4>
-                    <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{birthdayNumber}</p>
+                    <h4 className={`font-semibold text-primary ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.birthdayNumber')}</h4>
+                    <p className={`${getTextSize('text-3xl')} font-semibold text-primary`}>{birthdayNumber}</p>
                     {(() => {
                       const desc = getDescription('birthdayNumberDescriptions', birthdayNumber);
                       return <PersonalityDescription {...desc} compact={true} />;
@@ -941,8 +941,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   role="button"
                   aria-label={`View detailed information about your Sun sign`}
                 >
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.sunSign')}</h4>
-                  <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{sunSign}</p>
+                  <h4 className={`font-semibold text-primary ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.sunSign')}</h4>
+                  <p className={`${getTextSize('text-3xl')} font-semibold text-primary break-words`}>{sunSign}</p>
                   {(() => {
                     const desc = getDescription('sunSignDescriptions', sunSign);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -989,8 +989,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   role="button"
                   aria-label={`View detailed information about your Moon sign`}
                 >
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.moonSign')}</h4>
-                  <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{moonSign}</p>
+                  <h4 className={`font-semibold text-primary ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.moonSign')}</h4>
+                  <p className={`${getTextSize('text-3xl')} font-semibold text-primary break-words`}>{moonSign}</p>
                   {(() => {
                     const desc = getDescription('moonSignDescriptions', moonSign);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -1037,8 +1037,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   role="button"
                   aria-label={`View detailed information about your Rising sign`}
                 >
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.risingSign')}</h4>
-                  <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{risingSign}</p>
+                  <h4 className={`font-semibold text-primary ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.risingSign')}</h4>
+                  <p className={`${getTextSize('text-3xl')} font-semibold text-primary break-words`}>{risingSign}</p>
                   {(() => {
                     const desc = getDescription('risingSignDescriptions', risingSign);
                     return <PersonalityDescription {...desc} compact={true} />;
@@ -1056,7 +1056,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   tabIndex={0}
                   role="button"
                 >
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.socialStyle')}</h5>
+                  <h5 className={`font-semibold text-primary mb-1 ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.socialStyle')}</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.values.warm')}</p>
                   {(() => {
                     const desc = getDescription('socialStyleDescriptions', 'warm');
@@ -1072,7 +1072,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   tabIndex={0}
                   role="button"
                 >
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.publicVibe')}</h5>
+                  <h5 className={`font-semibold text-primary mb-1 ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.publicVibe')}</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.values.approachable')}</p>
                   {(() => {
                     const desc = getDescription('publicVibeDescriptions', 'approachable');
@@ -1088,7 +1088,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   tabIndex={0}
                   role="button"
                 >
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.leadershipStyle')}</h5>
+                  <h5 className={`font-semibold text-primary mb-1 ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.leadershipStyle')}</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-soul-purple capitalize break-words`}>{t('blueprint.values.collaborative')}</p>
                   {(() => {
                     const desc = getDescription('leadershipStyleDescriptions', 'collaborative');
@@ -1126,8 +1126,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 role="button"
                 aria-label={`View detailed information about your Chinese Zodiac sign`}
               >
-                <h5 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.generationalInfluence')}</h5>
-                <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac} {element}</p>
+                <h5 className={`font-semibold text-primary mb-2 ${getTextSize('text-xs')} uppercase tracking-wide break-words`}>{t('blueprint.labels.generationalInfluence')}</h5>
+                <p className={`${getTextSize('text-base')} font-semibold text-primary break-words`}>{chineseZodiac} {element}</p>
                 {(() => {
                   const desc = getDescription('chineseZodiacDescriptions', chineseZodiac);
                   return <PersonalityDescription {...desc} compact={true} />;
