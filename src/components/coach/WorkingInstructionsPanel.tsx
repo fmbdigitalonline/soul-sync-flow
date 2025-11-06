@@ -31,6 +31,7 @@ import {
 
 interface WorkingInstructionsPanelProps {
   instructions: WorkingInstruction[];
+  goalId: string;
   taskId: string;
   onInstructionComplete: (instructionId: string) => void;
   onAllInstructionsComplete: () => void;
@@ -41,6 +42,7 @@ interface WorkingInstructionsPanelProps {
 
 export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> = ({
   instructions,
+  goalId,
   taskId,
   onInstructionComplete,
   onAllInstructionsComplete,
@@ -54,7 +56,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     isLoading: isLoadingProgress,
     error: progressError,
     toggleInstruction
-  } = useInstructionProgress(taskId, initialCompletedIds);
+  } = useInstructionProgress(goalId, taskId, initialCompletedIds);
   
   const { toast } = useToast();
 
@@ -84,10 +86,10 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
 
       // Persist instructions to database if they don't exist
       try {
-        const hasStored = await workingInstructionsPersistenceService.hasStoredInstructions(taskId);
+        const hasStored = await workingInstructionsPersistenceService.hasStoredInstructions(goalId, taskId);
         if (!hasStored && instructions.length > 0) {
           console.log('💾 WORKING INSTRUCTIONS: Persisting instructions to database...');
-          await workingInstructionsPersistenceService.saveWorkingInstructions(taskId, instructions);
+          await workingInstructionsPersistenceService.saveWorkingInstructions(goalId, taskId, instructions);
           console.log('✅ WORKING INSTRUCTIONS: Instructions saved');
         }
       } catch (error) {
@@ -97,7 +99,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     };
 
     initialize();
-  }, [taskId, instructions]);
+  }, [goalId, taskId, instructions]);
 
   const handleInstructionToggle = useCallback(async (instructionId: string) => {
     await toggleInstruction(instructionId);

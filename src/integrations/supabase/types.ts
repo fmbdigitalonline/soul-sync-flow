@@ -3835,6 +3835,7 @@ export type Database = {
         Row: {
           created_at: string
           description: string
+          goal_id: string | null
           id: string
           instruction_id: string
           order_index: number
@@ -3848,6 +3849,7 @@ export type Database = {
         Insert: {
           created_at?: string
           description: string
+          goal_id?: string | null
           id?: string
           instruction_id: string
           order_index?: number
@@ -3861,6 +3863,7 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string
+          goal_id?: string | null
           id?: string
           instruction_id?: string
           order_index?: number

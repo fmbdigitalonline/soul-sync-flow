@@ -8,6 +8,7 @@ import { ArrowRight } from 'lucide-react';
 interface TaskCoachMessageRendererProps {
   content: string;
   isUser: boolean;
+  goalId?: string;
   taskId: string; // Add taskId for instruction progress tracking
   onSubTaskStart: (subTask: ParsedSubTask) => void;
   onSubTaskComplete: (subTask: ParsedSubTask) => void;
@@ -21,6 +22,7 @@ interface TaskCoachMessageRendererProps {
 export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> = ({
   content,
   isUser,
+  goalId,
   taskId,
   onSubTaskStart,
   onSubTaskComplete,
@@ -71,6 +73,7 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
       <div className="w-full mx-auto max-w-2xl md:max-w-3xl my-2">
         <StructuredMessageRenderer
           parsedMessage={parsedMessage}
+          goalId={goalId}
           taskId={taskId}
           onSubTaskStart={onSubTaskStart}
           onSubTaskComplete={onSubTaskComplete}
@@ -89,6 +92,7 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
       <div className="w-full mx-auto max-w-2xl md:max-w-3xl my-2">
         <StructuredMessageRenderer
           parsedMessage={parsedMessage}
+          goalId={goalId}
           taskId={taskId}
           onSubTaskStart={onSubTaskStart}
           onSubTaskComplete={onSubTaskComplete}
@@ -107,6 +111,7 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
       <div className="w-full mx-auto max-w-2xl md:max-w-3xl my-2">
         <StructuredMessageRenderer
           parsedMessage={parsedMessage}
+          goalId={goalId}
           taskId={taskId}
           onSubTaskStart={onSubTaskStart}
           onSubTaskComplete={onSubTaskComplete}

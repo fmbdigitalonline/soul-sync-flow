@@ -40,6 +40,7 @@ class WorkingInstructionsPersistenceService {
    * @throws Error if save fails - no silent fallbacks
    */
   async saveWorkingInstructions(
+    goalId: string,
     taskId: string,
     instructions: WorkingInstruction[]
   ): Promise<void> {
@@ -52,6 +53,7 @@ class WorkingInstructionsPersistenceService {
     // Convert to database format
     const instructionsToSave = instructions.map((instruction, index) => ({
       user_id: user.id,
+      goal_id: goalId,
       task_id: taskId,
       instruction_id: instruction.id,
       title: instruction.title,
@@ -64,7 +66,7 @@ class WorkingInstructionsPersistenceService {
     const { error } = await supabase
       .from('task_working_instructions')
       .upsert(instructionsToSave, {
-        onConflict: 'user_id,task_id,instruction_id',
+        onConflict: 'user_id,goal_id,task_id,instruction_id',
       });
 
     if (error) {
@@ -80,19 +82,29 @@ class WorkingInstructionsPersistenceService {
    * @returns Array of instructions or empty array if none found
    * @throws Error if database query fails
    */
-  async loadWorkingInstructions(taskId: string): Promise<WorkingInstruction[]> {
+  async loadWorkingInstructions(goalIdOrTaskId: string, taskId?: string): Promise<WorkingInstruction[]> {
+    // Support both old (taskId only) and new (goalId, taskId) signatures
+    const isNewSignature = taskId !== undefined;
+    const actualGoalId = isNewSignature ? goalIdOrTaskId : '';
+    const actualTaskId = isNewSignature ? taskId : goalIdOrTaskId;
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       throw new Error("User must be authenticated to load working instructions");
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('task_working_instructions')
       .select('*')
       .eq('user_id', user.id)
-      .eq('task_id', taskId)
-      .order('order_index', { ascending: true });
+      .eq('task_id', actualTaskId);
+
+    // Only filter by goal_id if using new signature
+    if (isNewSignature && actualGoalId) {
+      query = query.eq('goal_id', actualGoalId);
+    }
+
+    const { data, error } = await query.order('order_index', { ascending: true });
 
     if (error) {
       console.error("❌ Failed to load working instructions:", error);
@@ -120,17 +132,27 @@ class WorkingInstructionsPersistenceService {
   /**
    * Check if instructions exist for a task
    */
-  async hasStoredInstructions(taskId: string): Promise<boolean> {
+  async hasStoredInstructions(goalIdOrTaskId: string, taskId?: string): Promise<boolean> {
+    // Support both old and new signatures
+    const isNewSignature = taskId !== undefined;
+    const actualGoalId = isNewSignature ? goalIdOrTaskId : '';
+    const actualTaskId = isNewSignature ? taskId : goalIdOrTaskId;
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) return false;
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('task_working_instructions')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
-      .eq('task_id', taskId)
-      .limit(1);
+      .eq('task_id', actualTaskId);
+
+    // Only filter by goal_id if using new signature
+    if (isNewSignature && actualGoalId) {
+      query = query.eq('goal_id', actualGoalId);
+    }
+
+    const { data, error } = await query.limit(1);
 
     if (error) {
       console.error("❌ Failed to check for stored instructions:", error);
@@ -144,7 +166,7 @@ class WorkingInstructionsPersistenceService {
    * Delete all instructions for a task
    * Useful for cleanup when task is deleted
    */
-  async deleteInstructions(taskId: string): Promise<void> {
+  async deleteInstructions(goalId: string, taskId: string): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -155,6 +177,7 @@ class WorkingInstructionsPersistenceService {
       .from('task_working_instructions')
       .delete()
       .eq('user_id', user.id)
+      .eq('goal_id', goalId)
       .eq('task_id', taskId);
 
     if (error) {

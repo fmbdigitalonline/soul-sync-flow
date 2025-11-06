@@ -64,10 +64,10 @@ export const InstructionsHistoryPanel: React.FC = () => {
         return;
       }
 
-      // Load instructions for each task
+      // Load instructions for each task (using old signature for backward compatibility)
       const instructionsMap = new Map<string, WorkingInstruction[]>();
       for (const taskId of taskIds) {
-        const instructions = await workingInstructionsPersistenceService.loadWorkingInstructions(taskId);
+        const instructions = await workingInstructionsPersistenceService.loadWorkingInstructions(taskId, undefined);
         if (instructions.length > 0) {
           instructionsMap.set(taskId, instructions);
         }

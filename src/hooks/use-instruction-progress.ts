@@ -16,7 +16,7 @@ interface InstructionProgress {
   completed_at?: string;
 }
 
-export function useInstructionProgress(taskId: string, initialCompletedIds: string[] = []) {
+export function useInstructionProgress(goalId: string, taskId: string, initialCompletedIds: string[] = []) {
   const [completedInstructions, setCompletedInstructions] = useState<Set<string>>(
     () => new Set(initialCompletedIds)
   );
@@ -42,7 +42,7 @@ export function useInstructionProgress(taskId: string, initialCompletedIds: stri
     });
   }, [initialCompletedIds]);
 
-  // Load instruction progress from database
+      // Load instruction progress from database
   useEffect(() => {
     if (!taskId) return;
 
@@ -124,6 +124,7 @@ export function useInstructionProgress(taskId: string, initialCompletedIds: stri
         .from('task_instruction_progress')
         .upsert({
           user_id: user.id,
+          goal_id: goalId || '',
           task_id: taskId,
           instruction_id: instructionId,
           is_completed: newCompletedState,

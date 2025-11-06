@@ -97,7 +97,7 @@ async function loadTaskSessionFromDatabase(taskId: string, options: LoadTaskSess
       return null;
     }
 
-    const instructions = await workingInstructionsPersistenceService.loadWorkingInstructions(taskId);
+    const instructions = await workingInstructionsPersistenceService.loadWorkingInstructions(taskId, undefined);
     if (!instructions || instructions.length === 0) {
       return null;
     }
@@ -250,7 +250,7 @@ export async function getTaskSessionTypeAsync(taskId: string): Promise<TaskSessi
   }
 
   try {
-    const hasStored = await workingInstructionsPersistenceService.hasStoredInstructions(taskId);
+    const hasStored = await workingInstructionsPersistenceService.hasStoredInstructions(taskId, undefined);
     if (hasStored) {
       return TaskSessionType.WORK_INSTRUCTION_SESSION;
     }
