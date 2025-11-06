@@ -158,11 +158,11 @@ const SpiritualGrowth = () => {
                 className="flex items-center gap-2 text-muted-foreground hover:text-primary"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back to Options
+                {t('spiritualGrowth.ui.backToOptions')}
               </Button>
               <div className="text-center">
-                <h1 className="text-xl font-heading font-bold text-foreground">Heart-Centered Coach</h1>
-                <p className="text-sm text-muted-foreground">Connected & Ready</p>
+                <h1 className="text-xl font-heading font-bold text-foreground">{t('spiritualGrowth.ui.heartCenteredCoach')}</h1>
+                <p className="text-sm text-muted-foreground">{t('spiritualGrowth.ui.connectedReady')}</p>
               </div>
               <div className="w-20" />
             </div>
@@ -195,7 +195,7 @@ const SpiritualGrowth = () => {
                   data-track="navigation-back-to-welcome"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Growth Coach
+                  {t('spiritualGrowth.ui.backToGrowthCoach')}
                 </Button>
               </div>
               
@@ -218,12 +218,12 @@ const SpiritualGrowth = () => {
               className="mb-2"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Growth Coach
+              {t('spiritualGrowth.ui.backToGrowthCoach')}
             </Button>
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-center gradient-text mb-6">Growth Tools</h2>
+            <h2 className="text-xl font-bold text-center gradient-text mb-6">{t('spiritualGrowth.ui.growthTools')}</h2>
             <div className="grid grid-cols-2 gap-4">
               <Button
                 variant="outline"
@@ -231,7 +231,7 @@ const SpiritualGrowth = () => {
                 className="h-20 flex-col gap-2"
               >
                 <Heart className="h-6 w-6" />
-                Mood Tracker
+                {t('spiritualGrowth.ui.moodTracker')}
               </Button>
               <Button
                 variant="outline"
@@ -239,7 +239,7 @@ const SpiritualGrowth = () => {
                 className="h-20 flex-col gap-2"
               >
                 <Sparkles className="h-6 w-6" />
-                Reflection
+                {t('spiritualGrowth.ui.reflection')}
               </Button>
               <Button
                 variant="outline"
@@ -247,7 +247,7 @@ const SpiritualGrowth = () => {
                 className="h-20 flex-col gap-2"
               >
                 <BookOpen className="h-6 w-6" />
-                Insights
+                {t('spiritualGrowth.ui.insights')}
               </Button>
               <Button
                 variant="outline"
@@ -255,7 +255,7 @@ const SpiritualGrowth = () => {
                 className="h-20 flex-col gap-2"
               >
                 <Calendar className="h-6 w-6" />
-                Weekly Review
+                {t('spiritualGrowth.ui.weeklyReview')}
               </Button>
             </div>
           </div>
@@ -275,7 +275,7 @@ const SpiritualGrowth = () => {
               className="mb-2"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Tools
+              {t('spiritualGrowth.ui.backToTools')}
             </Button>
           </div>
           <MoodTracker onMoodSave={addMoodEntry} />
@@ -295,7 +295,7 @@ const SpiritualGrowth = () => {
               className="mb-2"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Tools
+              {t('spiritualGrowth.ui.backToTools')}
             </Button>
           </div>
           <ReflectionPrompts onReflectionSave={addReflectionEntry} />
@@ -315,7 +315,7 @@ const SpiritualGrowth = () => {
               className="mb-2"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Tools
+              {t('spiritualGrowth.ui.backToTools')}
             </Button>
           </div>
           <InsightJournal onInsightSave={addInsightEntry} />
@@ -335,7 +335,7 @@ const SpiritualGrowth = () => {
               className="mb-2"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Tools
+              {t('spiritualGrowth.ui.backToTools')}
             </Button>
           </div>
           <WeeklyInsights />
@@ -464,7 +464,7 @@ const SpiritualGrowth = () => {
                 className="mb-4"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Assessment Options
+                {t('spiritualGrowth.ui.backToAssessmentOptions')}
               </Button>
             </div>
             
@@ -611,7 +611,7 @@ const SpiritualGrowth = () => {
                             
                             <div className="ml-2 flex justify-end">
                               <div className="text-xs h-6 px-2 text-primary hover:bg-primary/10 rounded flex items-center">
-                                Open
+                                {t('spiritualGrowth.ui.open')}
                               </div>
                             </div>
                           </div>

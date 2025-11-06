@@ -3402,7 +3402,9 @@ Provide 4-6 concrete steps I can start working on immediately.`,
         reflection: 'Reflection',
         insights: 'Insights',
         weeklyReview: 'Weekly Review',
-        backToTools: 'Back to Tools'
+        backToTools: 'Back to Tools',
+        backToAssessmentOptions: 'Back to Assessment Options',
+        open: 'Open'
       }
     },
 
@@ -6774,7 +6776,9 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
         reflection: 'Reflectie',
         insights: 'Inzichten',
         weeklyReview: 'Wekelijkse review',
-        backToTools: 'Terug naar tools'
+        backToTools: 'Terug naar tools',
+        backToAssessmentOptions: 'Terug naar beoordelingsopties',
+        open: 'Openen'
       }
     },
     // Learning
