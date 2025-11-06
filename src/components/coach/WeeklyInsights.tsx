@@ -48,7 +48,7 @@ export const WeeklyInsights: React.FC = () => {
                 {insights.moodTrends.dominantMood}
               </Badge>
               <Badge variant="outline">
-                {insights.moodTrends.energyPattern} Energy
+                {insights.moodTrends.energyPattern}
               </Badge>
             </div>
           </div>

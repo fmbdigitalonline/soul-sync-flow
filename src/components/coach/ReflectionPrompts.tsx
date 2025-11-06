@@ -56,8 +56,8 @@ export const ReflectionPrompts: React.FC<ReflectionPromptsProps> = ({ onReflecti
       onReflectionSave(selectedPrompt, reflection);
       setSaved(true);
       toast({
-        title: "Reflection saved",
-        description: "Your insights have been added to your growth patterns",
+        title: t('reflection.saved'),
+        description: t('reflection.description'),
       });
       
       // Reset after 2 seconds
@@ -128,7 +128,7 @@ export const ReflectionPrompts: React.FC<ReflectionPromptsProps> = ({ onReflecti
                 onClick={() => setSelectedPrompt("")}
                 className="flex-1"
               >
-                {t('back')}
+                {t('common.back')}
               </Button>
               <Button
                 size="sm"

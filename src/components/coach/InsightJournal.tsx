@@ -43,8 +43,8 @@ export const InsightJournal: React.FC<InsightJournalProps> = ({ onInsightSave })
       onInsightSave(journalEntry, selectedTags);
       setSaved(true);
       toast({
-        title: "Insight journaled",
-        description: "Your insight has been added to your personal database",
+        title: t('journal.saved'),
+        description: t('journal.description'),
       });
       
       // Reset after 2 seconds

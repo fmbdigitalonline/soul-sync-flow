@@ -3408,6 +3408,89 @@ Provide 4-6 concrete steps I can start working on immediately.`,
       }
     },
 
+    // Mood Tracker
+    moodTracker: {
+      title: 'Mood Tracker',
+      emotionalState: 'How are you feeling?',
+      energyLevel: 'Energy Level',
+      joyful: 'Joyful',
+      content: 'Content',
+      neutral: 'Neutral',
+      reflective: 'Reflective',
+      challenged: 'Challenged',
+      high: 'High',
+      steady: 'Steady',
+      low: 'Low',
+      moodTracked: 'Mood Tracked',
+      saveToPatterns: 'Save to Patterns',
+      patternsHelp: 'Track your patterns to understand your emotional rhythms'
+    },
+
+    // Reflection Prompts
+    reflection: {
+      title: 'Reflection Prompts',
+      dailyReflection: 'Daily Reflection',
+      deepInsight: 'Deep Insight',
+      lifeDirection: 'Life Direction',
+      reflecting: 'Reflecting on',
+      placeholder: 'Share your thoughts and feelings...',
+      saveReflection: 'Save Reflection',
+      saved: 'Reflection saved',
+      description: 'Regular reflection deepens self-awareness and integration',
+      daily: {
+        joy: 'What brought you joy today?',
+        challenge: 'What challenged you today, and what did it teach you?',
+        authentic: 'When did you feel most authentically yourself today?',
+        gratitude: 'What are you grateful for in this moment?'
+      },
+      insight: {
+        pattern: 'What pattern are you noticing in your life right now?',
+        soul: 'What is your soul trying to tell you?',
+        comfort: 'What keeps you in your comfort zone?',
+        blueprint: 'How does this align with your soul blueprint?'
+      },
+      direction: {
+        aligned: 'Where do you feel most aligned with your path?',
+        resisting: 'What are you resisting that wants to emerge?',
+        trust: 'What would it look like to trust yourself completely?',
+        energy: 'Where is your energy naturally flowing right now?'
+      }
+    },
+
+    // Insight Journal
+    journal: {
+      title: 'Insight Journal',
+      placeholder: 'Capture your insights, realizations, and aha moments...',
+      tagLabel: 'Tag this insight',
+      saveButton: 'Save Insight',
+      saved: 'Insight saved',
+      description: 'Your personal database of wisdom and growth moments',
+      tags: {
+        breakthrough: 'Breakthrough',
+        pattern: 'Pattern',
+        gratitude: 'Gratitude',
+        challenge: 'Challenge',
+        growth: 'Growth',
+        clarity: 'Clarity',
+        alignment: 'Alignment',
+        wisdom: 'Wisdom'
+      }
+    },
+
+    // Weekly Insights
+    weekly: {
+      title: 'Weekly Insights',
+      growthScore: 'Weekly Growth Score',
+      dominantMood: 'Dominant Mood',
+      keyReflections: 'Key Reflection Themes',
+      growthThemes: 'Growth Themes',
+      observedPatterns: 'Observed Patterns',
+      patterns: {
+        awareness: 'Increasing self-awareness',
+        consistency: 'Building consistency in practice'
+      }
+    },
+
     // Growth Program & Domains
     growth: {
       domains: {
@@ -6781,6 +6864,90 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
         open: 'Openen'
       }
     },
+
+    // Stemmingsmeter
+    moodTracker: {
+      title: 'Stemmingsmeter',
+      emotionalState: 'Hoe voel je je?',
+      energyLevel: 'Energieniveau',
+      joyful: 'Vreugdevol',
+      content: 'Tevreden',
+      neutral: 'Neutraal',
+      reflective: 'Reflectief',
+      challenged: 'Uitgedaagd',
+      high: 'Hoog',
+      steady: 'Stabiel',
+      low: 'Laag',
+      moodTracked: 'Stemming vastgelegd',
+      saveToPatterns: 'Opslaan naar patronen',
+      patternsHelp: 'Volg je patronen om je emotionele ritmes te begrijpen'
+    },
+
+    // Reflectie
+    reflection: {
+      title: 'Reflectie Prompts',
+      dailyReflection: 'Dagelijkse Reflectie',
+      deepInsight: 'Diep Inzicht',
+      lifeDirection: 'Levensrichting',
+      reflecting: 'Reflecteren op',
+      placeholder: 'Deel je gedachten en gevoelens...',
+      saveReflection: 'Reflectie opslaan',
+      saved: 'Reflectie opgeslagen',
+      description: 'Regelmatige reflectie verdiept zelfbewustzijn en integratie',
+      daily: {
+        joy: 'Wat bracht je vandaag vreugde?',
+        challenge: 'Wat daagde je vandaag uit, en wat leerde het je?',
+        authentic: 'Wanneer voelde je je vandaag het meest authentiek jezelf?',
+        gratitude: 'Waar ben je op dit moment dankbaar voor?'
+      },
+      insight: {
+        pattern: 'Welk patroon merk je op dit moment in je leven op?',
+        soul: 'Wat probeert je ziel je te vertellen?',
+        comfort: 'Wat houdt je in je comfortzone?',
+        blueprint: 'Hoe sluit dit aan bij je zielenblauwdruk?'
+      },
+      direction: {
+        aligned: 'Waar voel je je het meest afgestemd op je pad?',
+        resisting: 'Wat weiger je dat wil ontstaan?',
+        trust: 'Hoe zou het eruitzien om jezelf volledig te vertrouwen?',
+        energy: 'Waar stroomt je energie nu natuurlijk naartoe?'
+      }
+    },
+
+    // Inzichtenjournaal
+    journal: {
+      title: 'Inzichtenjournaal',
+      placeholder: 'Leg je inzichten, realisaties en aha-momenten vast...',
+      tagLabel: 'Tag dit inzicht',
+      saveButton: 'Inzicht opslaan',
+      saved: 'Inzicht opgeslagen',
+      description: 'Je persoonlijke database van wijsheid en groeimomenten',
+      tags: {
+        breakthrough: 'Doorbraak',
+        pattern: 'Patroon',
+        gratitude: 'Dankbaarheid',
+        challenge: 'Uitdaging',
+        growth: 'Groei',
+        clarity: 'Helderheid',
+        alignment: 'Afstemming',
+        wisdom: 'Wijsheid'
+      }
+    },
+
+    // Wekelijkse inzichten
+    weekly: {
+      title: 'Wekelijkse Inzichten',
+      growthScore: 'Wekelijkse Groeiscore',
+      dominantMood: 'Dominante Stemming',
+      keyReflections: 'Belangrijke Reflectie Thema\'s',
+      growthThemes: 'Groeithema\'s',
+      observedPatterns: 'Waargenomen Patronen',
+      patterns: {
+        awareness: 'Toenemend zelfbewustzijn',
+        consistency: 'Consistentie opbouwen in praktijk'
+      }
+    },
+
     // Learning
     learning: {
       responseRecorded: 'Reactie Opgenomen',
