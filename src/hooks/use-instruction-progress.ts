@@ -23,24 +23,7 @@ export function useInstructionProgress(goalId: string, taskId: string, initialCo
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const latestInitialCompletedIdsRef = useRef(initialCompletedIds);
   const hasLoadedFromDbRef = useRef(false);
-
-  useEffect(() => {
-    latestInitialCompletedIdsRef.current = initialCompletedIds;
-  }, [initialCompletedIds]);
-
-  // Keep track of the initial completion ids to merge with database state
-  useEffect(() => {
-    if (hasLoadedFromDbRef.current) return;
-    if (initialCompletedIds.length === 0) return;
-
-    setCompletedInstructions(prev => {
-      const merged = new Set(prev);
-      initialCompletedIds.forEach(id => merged.add(id));
-      return merged;
-    });
-  }, [initialCompletedIds]);
 
       // Load instruction progress from database
   useEffect(() => {
@@ -69,12 +52,9 @@ export function useInstructionProgress(goalId: string, taskId: string, initialCo
 
         const completedFromDb = new Set(data?.map(item => item.instruction_id) || []);
 
+        // If we have data from database, use it; otherwise keep initial state
         if (completedFromDb.size > 0) {
           setCompletedInstructions(completedFromDb);
-        } else {
-          const mergedFallback = new Set<string>();
-          latestInitialCompletedIdsRef.current.forEach(id => mergedFallback.add(id));
-          setCompletedInstructions(mergedFallback);
         }
 
         hasLoadedFromDbRef.current = true;
