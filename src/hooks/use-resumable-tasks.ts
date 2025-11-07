@@ -87,14 +87,14 @@ export function useResumableTasks(sessionRefreshKey = 0) {
               return;
             }
 
-            const immediateType = getTaskSessionType(task.id);
+            const immediateType = getTaskSessionType(task.goal_id, task.id);
             if (immediateType === TaskSessionType.WORK_INSTRUCTION_SESSION) {
               sessionChecks.push(Promise.resolve({ goalId, task }));
               return;
             }
 
             sessionChecks.push(
-              getTaskSessionTypeAsync(task.id)
+              getTaskSessionTypeAsync(task.id, task.goal_id)
                 .then(sessionType => {
                   if (sessionType === TaskSessionType.WORK_INSTRUCTION_SESSION) {
                     return { goalId, task };

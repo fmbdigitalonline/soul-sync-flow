@@ -470,7 +470,7 @@ const Dreams = () => {
     setCurrentView('task-coach');
   }, []);
 
-  const resolveTaskSessionType = useCallback((taskId: string) => getTaskSessionType(taskId), []);
+  const resolveTaskSessionType = useCallback((taskId: string, goalId?: string) => getTaskSessionType(goalId, taskId), []);
 
   // Removed duplicate authentication check - component is wrapped in ProtectedRoute
 

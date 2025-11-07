@@ -58,7 +58,7 @@ interface TaskViewsProps {
   focusedMilestone?: any;
   onBackToJourney: () => void;
   onTaskSelect: (task: Task) => void;
-  getSessionType?: (taskId: string) => TaskSessionType;
+  getSessionType?: (taskId: string, goalId?: string) => TaskSessionType;
   sessionRefreshKey?: number;
 }
 
@@ -259,7 +259,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
 
     filteredTasks.forEach(task => {
       try {
-        map.set(task.id, resolver(task.id));
+        map.set(task.id, resolver(task.id, task.goal_id));
       } catch (error) {
         console.error('Failed to resolve task session type', error);
         map.set(task.id, TaskSessionType.NO_SESSION);

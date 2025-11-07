@@ -26,6 +26,21 @@ export interface StoredTaskSession {
 const SESSION_KEY_PREFIX = 'task_coach_session_';
 const WORKING_INSTRUCTION_REGEX = /\d+\.\s*\*\*.+?\*\*:/;
 
+function getSessionStorageKey(goalId: string | undefined, taskId: string): string | null {
+  if (!goalId) {
+    console.warn(`⚠️ Missing goal ID for task ${taskId} - cannot generate scoped session key`);
+    return null;
+  }
+
+  const encodedGoalId = encodeURIComponent(goalId);
+  const encodedTaskId = encodeURIComponent(taskId);
+  return `${SESSION_KEY_PREFIX}${encodedGoalId}__${encodedTaskId}`;
+}
+
+function getLegacySessionStorageKey(taskId: string): string {
+  return `${SESSION_KEY_PREFIX}${taskId}`;
+}
+
 type TaskSessionPayload = {
   coachMessages: StoredCoachMessage[];
   instructionProgress?: Record<string, boolean>;
@@ -156,7 +171,8 @@ async function loadTaskSessionFromDatabase(taskId: string, options: LoadTaskSess
 }
 
 export async function loadTaskSessionWithDbFallback(taskId: string, options: LoadTaskSessionOptions = {}): Promise<TaskSessionLoadResult> {
-  const localSession = loadStoredTaskSession(taskId);
+  const goalId = options.goalId;
+  const localSession = goalId ? loadStoredTaskSession(goalId, taskId) : null;
   if (localSession) {
     return { session: localSession, source: 'localStorage' };
   }
@@ -169,11 +185,16 @@ export async function loadTaskSessionWithDbFallback(taskId: string, options: Loa
   return { session: null, source: 'none' };
 }
 
-export function loadStoredTaskSession(taskId: string): StoredTaskSession | null {
+export function loadStoredTaskSession(goalId: string, taskId: string): StoredTaskSession | null {
   if (!isBrowser) return null;
 
+  const scopedKey = getSessionStorageKey(goalId, taskId);
+  if (!scopedKey) {
+    return null;
+  }
+
   try {
-    const raw = window.localStorage.getItem(`${SESSION_KEY_PREFIX}${taskId}`);
+    const raw = window.localStorage.getItem(scopedKey) || window.localStorage.getItem(getLegacySessionStorageKey(taskId));
     if (!raw) return null;
 
     const parsed = JSON.parse(raw);
@@ -195,20 +216,34 @@ export function loadStoredTaskSession(taskId: string): StoredTaskSession | null 
       ? parsed.instructionProgress as Record<string, boolean>
       : undefined;
 
-    return {
+    const session: StoredTaskSession = {
       taskId,
       updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : new Date().toISOString(),
       coachMessages,
       instructionProgress
     };
+
+    // If we loaded from legacy storage, migrate to scoped key to prevent leakage
+    if (!window.localStorage.getItem(scopedKey)) {
+      window.localStorage.setItem(scopedKey, JSON.stringify(session));
+      window.localStorage.removeItem(getLegacySessionStorageKey(taskId));
+    }
+
+    return session;
   } catch (error) {
     console.error('Failed to load stored task session', error);
     return null;
   }
 }
 
-export function saveTaskSession(taskId: string, payload: TaskSessionPayload): void {
+export function saveTaskSession(goalId: string, taskId: string, payload: TaskSessionPayload): void {
   if (!isBrowser) return;
+
+  const storageKey = getSessionStorageKey(goalId, taskId);
+  if (!storageKey) {
+    console.warn(`⚠️ Skipping save for task ${taskId} - missing goal scope`);
+    return;
+  }
 
   const session: StoredTaskSession = {
     taskId,
@@ -218,24 +253,36 @@ export function saveTaskSession(taskId: string, payload: TaskSessionPayload): vo
   };
 
   try {
-    window.localStorage.setItem(`${SESSION_KEY_PREFIX}${taskId}`, JSON.stringify(session));
+    window.localStorage.setItem(storageKey, JSON.stringify(session));
+    // Clean up any legacy keys lingering for this task
+    window.localStorage.removeItem(getLegacySessionStorageKey(taskId));
   } catch (error) {
     console.error('Failed to persist task coach session', error);
   }
 }
 
-export function clearTaskSession(taskId: string): void {
+export function clearTaskSession(goalId: string, taskId: string): void {
   if (!isBrowser) return;
 
+  const storageKey = getSessionStorageKey(goalId, taskId);
+  const legacyKey = getLegacySessionStorageKey(taskId);
+
   try {
-    window.localStorage.removeItem(`${SESSION_KEY_PREFIX}${taskId}`);
+    if (storageKey) {
+      window.localStorage.removeItem(storageKey);
+    }
+    window.localStorage.removeItem(legacyKey);
   } catch (error) {
     console.error('Failed to clear task coach session', error);
   }
 }
 
-export function getTaskSessionType(taskId: string): TaskSessionType {
-  const session = loadStoredTaskSession(taskId);
+export function getTaskSessionType(goalId: string | undefined, taskId: string): TaskSessionType {
+  if (!goalId) {
+    return TaskSessionType.NO_SESSION;
+  }
+
+  const session = loadStoredTaskSession(goalId, taskId);
 
   if (!session || session.coachMessages.length === 0) {
     return TaskSessionType.NO_SESSION;
@@ -257,7 +304,7 @@ export function hasWorkingInstructionMessage(content: string): boolean {
 }
 
 export async function getTaskSessionTypeAsync(taskId: string, goalId?: string): Promise<TaskSessionType> {
-  const localType = getTaskSessionType(taskId);
+  const localType = getTaskSessionType(goalId, taskId);
   if (localType !== TaskSessionType.NO_SESSION) {
     return localType;
   }

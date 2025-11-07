@@ -203,10 +203,11 @@ class SoulGoalDecompositionService {
       });
 
       // STEP 4: Parse and validate AI response (WITH HEALING FALLBACK)
+      const goalId = this.createGoalId(title);
       let parsedGoal;
       try {
         // Attempt 1: Standard Parse
-        parsedGoal = await this.parseAIResponseWithValidation(data.response, title, category);
+        parsedGoal = await this.parseAIResponseWithValidation(data.response, title, category, goalId);
       } catch (parseError: any) {
         console.warn('⚠️ INITIAL PARSE FAILED. Attempting AI Self-Healing.', parseError.message);
         
@@ -220,7 +221,7 @@ class SoulGoalDecompositionService {
             );
             
             // Run the healed JSON through validation (re-stringify and parse)
-            parsedGoal = await this.parseAIResponseWithValidation(JSON.stringify(rawHealedJson), title, category);
+            parsedGoal = await this.parseAIResponseWithValidation(JSON.stringify(rawHealedJson), title, category, goalId);
             
             console.log('✨ JSON SUCCESSFULLY HEALED AND VALIDATED');
           } catch (healingError) {
@@ -241,7 +242,6 @@ class SoulGoalDecompositionService {
       });
 
       // STEP 5: Create structured goal
-      const goalId = `goal_${Date.now()}`;
       const targetDate = this.calculateTargetDate(timeframe);
 
       const soulGoal: SoulGeneratedGoal = {
@@ -856,7 +856,8 @@ ${malformedString}`;
   private parseAIResponseWithValidation = async (
     aiResponse: string,
     goalTitle: string,
-    category: string
+    category: string,
+    goalId: string
   ): Promise<{
     milestones: any[];
     tasks: any[];
@@ -1054,50 +1055,97 @@ ${malformedString}`;
       tasksWithPrerequisites: `${tasksWithPrerequisites}/${parsed.tasks?.length || 0}`
     });
 
+    const { goalSlug, baseTimestamp } = this.getGoalInstructionContext(goalId, goalTitle);
+
     // Ensure all required fields exist
     const validatedMilestones = (parsed.milestones || []).map((m: any, index: number) => ({
-      id: m.id || `milestone_${index + 1}_${Date.now()}`,
+      id: m.id || `milestone_${index + 1}_${baseTimestamp}`,
       title: m.title || `Milestone ${index + 1}`,
       description: m.description || '',
       target_date: m.target_date || new Date().toISOString().split('T')[0],
       completed: false,
-      completion_criteria: Array.isArray(m.completion_criteria) 
-        ? m.completion_criteria 
+      completion_criteria: Array.isArray(m.completion_criteria)
+        ? m.completion_criteria
         : (m.completion_criteria ? [String(m.completion_criteria)] : []),
       blueprint_alignment: m.blueprint_alignment || {}
     }));
 
-    const validatedTasks = (parsed.tasks || []).map((t: any, index: number) => {
-      // Calculate milestone and task indices for unique ID generation
-      const milestoneIndex = Math.floor(index / 3) + 1; // Assuming ~3 tasks per milestone
-      const taskInMilestone = (index % 3) + 1;
-      const goalIdShort = goalId.replace('goal_', '').slice(0, 8);
-      const timestamp = Date.now();
-      
-      // Generate unique ID including goal context
-      const uniqueId = `task_${goalIdShort}_${milestoneIndex}_${taskInMilestone}_${timestamp}`;
-      
-      // If AI provided ID follows new format, use it; otherwise use unique fallback
-      const finalId = (t.id && t.id.includes('_GOALID_') && t.id.includes('_TIMESTAMP')) 
-        ? t.id.replace('_GOALID_', `_${goalIdShort}_`).replace('_TIMESTAMP', `_${timestamp}`)
-        : (t.id && !t.id.match(/^task_\d+_\d+$/)) // Accept if not generic pattern
-          ? t.id 
-          : uniqueId;
-      
+    const milestoneIndexMap = new Map<string, number>();
+    validatedMilestones.forEach((milestone, index) => {
+      milestoneIndexMap.set(milestone.id, index + 1);
+    });
+
+    const milestoneTaskCounters = new Map<string, number>();
+    const rawTaskIdMap = new Map<string, string>();
+
+    const rawTasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
+
+    const intermediateTasks = rawTasks.map((t: any, index: number) => {
+      const rawMilestoneId = typeof t.milestone_id === 'string' ? t.milestone_id : '';
+      const resolvedMilestoneId = rawMilestoneId && milestoneIndexMap.has(rawMilestoneId)
+        ? rawMilestoneId
+        : validatedMilestones[0]?.id;
+
+      const milestoneIndex = resolvedMilestoneId ? (milestoneIndexMap.get(resolvedMilestoneId) || 1) : 1;
+      const milestoneCounterKey = resolvedMilestoneId || 'default';
+      const taskInMilestone = (milestoneTaskCounters.get(milestoneCounterKey) || 0) + 1;
+      milestoneTaskCounters.set(milestoneCounterKey, taskInMilestone);
+
+      const uniqueId = `task_${goalSlug}_${milestoneIndex}_${taskInMilestone}_${baseTimestamp}`;
+
+      const rawTaskId = typeof t.id === 'string' ? t.id : undefined;
+      let finalId = uniqueId;
+
+      if (rawTaskId) {
+        if (/^task_[a-z0-9]+_\d+_\d+_\d+$/i.test(rawTaskId)) {
+          finalId = rawTaskId;
+        } else if (rawTaskId.includes('_GOALID_') && rawTaskId.includes('_TIMESTAMP')) {
+          finalId = rawTaskId
+            .replace('_GOALID_', `_${goalSlug}_`)
+            .replace('_TIMESTAMP', `_${baseTimestamp}`);
+        }
+
+        rawTaskIdMap.set(rawTaskId, finalId);
+      }
+
+      rawTaskIdMap.set(finalId, finalId);
+
+      const rawPrerequisites = Array.isArray(t.prerequisites)
+        ? t.prerequisites.map((prereq: any) => String(prereq))
+        : [];
+
       return {
         id: finalId,
         title: t.title || `Task ${index + 1}`,
         description: t.description || '',
-        milestone_id: t.milestone_id || validatedMilestones[0]?.id,
+        milestone_id: resolvedMilestoneId || validatedMilestones[0]?.id,
         completed: false,
         estimated_duration: t.estimated_duration || '1-2 hours',
         energy_level_required: t.energy_level_required || 'medium',
         category: t.category || 'execution',
         optimal_timing: t.optimal_timing,
         blueprint_reasoning: t.blueprint_reasoning,
-        prerequisites: Array.isArray(t.prerequisites) 
-          ? t.prerequisites 
-          : (t.prerequisites ? [String(t.prerequisites)] : [])
+        rawPrerequisites
+      };
+    });
+
+    const validatedTasks = intermediateTasks.map(task => {
+      const prerequisites = task.rawPrerequisites.map(prerequisiteId => {
+        if (rawTaskIdMap.has(prerequisiteId)) {
+          return rawTaskIdMap.get(prerequisiteId)!;
+        }
+        if (prerequisiteId.includes('_GOALID_') && prerequisiteId.includes('_TIMESTAMP')) {
+          return prerequisiteId
+            .replace('_GOALID_', `_${goalSlug}_`)
+            .replace('_TIMESTAMP', `_${baseTimestamp}`);
+        }
+        return prerequisiteId;
+      });
+
+      const { rawPrerequisites, ...rest } = task;
+      return {
+        ...rest,
+        prerequisites
       };
     });
 
@@ -1139,6 +1187,47 @@ ${malformedString}`;
     return date.toISOString().split('T')[0];
   }
 
+  private createGoalId = (title: string): string => {
+    const normalizedTitle = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 24) || 'goal';
+
+    const timestamp = Math.floor(Date.now() / 1000);
+    return `goal_${normalizedTitle}_${timestamp}`;
+  };
+
+  private getGoalInstructionContext = (goalId: string, goalTitle: string): { goalSlug: string; baseTimestamp: number } => {
+    const withoutPrefix = goalId.replace(/^goal_/, '');
+    const parts = withoutPrefix.split('_');
+    const maybeTimestamp = parts[parts.length - 1];
+    const parsedTimestamp = maybeTimestamp && /^\d+$/.test(maybeTimestamp)
+      ? parseInt(maybeTimestamp, 10)
+      : Math.floor(Date.now() / 1000);
+
+    const slugSource = parts.length > 1
+      ? parts.slice(0, -1).join('_')
+      : withoutPrefix;
+
+    const fallbackSlug = goalTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 24) || 'goal';
+
+    const goalSlug = (slugSource || fallbackSlug)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 24) || fallbackSlug;
+
+    return {
+      goalSlug,
+      baseTimestamp: parsedTimestamp
+    };
+  };
+
   // ============================================
   // DATABASE OPERATIONS
   // ============================================
@@ -1150,7 +1239,7 @@ ${malformedString}`;
 
       // Structure goal as JSONB object
       const goalData = {
-        id: `goal_${Date.now()}`,
+        id: goal.id,
         title: goal.title,
         description: goal.description,
         category: goal.category,
