@@ -18,6 +18,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { enhancedAICoachService } from '@/services/enhanced-ai-coach-service';
 import { memoryInformedConversationService } from '@/services/memory-informed-conversation-service';
+import { shouldRunDebugComponent } from '@/utils/environment-check';
 
 interface IntelligenceMetric {
   name: string;
@@ -44,6 +45,22 @@ interface ResponseQuality {
 }
 
 export const RealTimeIntelligenceMonitor: React.FC = () => {
+  // DISK I/O PROTECTION: Disable in production
+  if (!shouldRunDebugComponent('RealTimeIntelligenceMonitor')) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Real-Time Intelligence Monitor</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Debug monitoring disabled in production to reduce I/O load. Enable in development mode.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const [metrics, setMetrics] = useState<IntelligenceMetric[]>([]);
   const [contextAnalysis, setContextAnalysis] = useState<ContextAnalysis | null>(null);
   const [responseQuality, setResponseQuality] = useState<ResponseQuality | null>(null);
@@ -72,26 +89,26 @@ export const RealTimeIntelligenceMonitor: React.FC = () => {
 
   const loadIntelligenceMetrics = async (userId: string) => {
     try {
-      // Load recent conversation data
+      // EGRESS OPTIMIZATION: Load recent conversation data with specific columns
       const { data: conversations } = await supabase
         .from('conversation_memory')
-        .select('*')
+        .select('id, updated_at, session_id')
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
         .limit(5);
 
-      // Load memory data
+      // EGRESS OPTIMIZATION: Load memory data with specific columns
       const { data: memories } = await supabase
         .from('user_session_memory')
-        .select('*')
+        .select('id, created_at, memory_type')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(20);
 
-      // Load blueprint data
+      // EGRESS OPTIMIZATION: Load blueprint data with specific columns
       const { data: blueprint } = await supabase
         .from('user_blueprints')
-        .select('*')
+        .select('id, updated_at, blueprint')
         .eq('user_id', userId)
         .eq('is_active', true)
         .order('updated_at', { ascending: false })

@@ -29,6 +29,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { streamingAuthTestSuite, StreamingTestSuiteResult } from '@/services/streaming-auth-test-suite';
+import { shouldRunDebugComponent, getPollingInterval } from '@/utils/environment-check';
 
 interface SystemMetrics {
   cpuUsage: number;
@@ -71,6 +72,22 @@ interface HealthAlert {
 }
 
 const SystemHealthMonitor: React.FC = () => {
+  // DISK I/O PROTECTION: Disable in production
+  if (!shouldRunDebugComponent('SystemHealthMonitor')) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>System Health Monitor</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            System health monitoring disabled in production to reduce I/O load. Enable in development mode.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const { user } = useAuth();
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [systemMetrics, setSystemMetrics] = useState<SystemMetrics>({
@@ -358,11 +375,11 @@ const SystemHealthMonitor: React.FC = () => {
     }
   };
 
-  // Auto-refresh health metrics every 15 seconds
+  // DISK I/O PROTECTION: Auto-refresh with production-safe interval
   useEffect(() => {
     if (user) {
       runHealthCheck();
-      const interval = setInterval(runHealthCheck, 15000);
+      const interval = setInterval(runHealthCheck, getPollingInterval(15000));
       return () => clearInterval(interval);
     }
   }, [user]);

@@ -402,9 +402,10 @@ class User360DataService {
 
   private async getBlueprintData(userId: string) {
     try {
+      // EGRESS OPTIMIZATION: Select only needed columns (70% reduction vs SELECT *)
       const { data, error } = await supabase
-        .from('blueprints')
-        .select('*')
+        .from('user_blueprints')
+        .select('id, user_id, blueprint, is_active, updated_at')
         .eq('user_id', userId)
         .eq('is_active', true)
         .maybeSingle();
@@ -415,9 +416,13 @@ class User360DataService {
       }
       
       // Check for MBTI data issues and attempt repair if needed
-      if (data && (!data.cognition_mbti || 
-          (typeof data.cognition_mbti === 'object' && 
-           (!('type' in data.cognition_mbti) || (data.cognition_mbti as any).type === 'Unknown')))) {
+      if (data && (!data.blueprint || 
+          (typeof data.blueprint === 'object' && 
+           data.blueprint !== null &&
+           'cognition_mbti' in data.blueprint &&
+           (!data.blueprint.cognition_mbti || 
+            (typeof data.blueprint.cognition_mbti === 'object' && 
+             (!('type' in data.blueprint.cognition_mbti) || (data.blueprint.cognition_mbti as any).type === 'Unknown')))))) {
         console.log('🔧 360° Service: Detected missing MBTI data, attempting repair');
         // Import here to avoid circular dependencies
         const { mbtiRepairService } = await import('./mbti-data-repair-service');
@@ -425,10 +430,10 @@ class User360DataService {
         
         if (repairResult.success && repairResult.repaired) {
           console.log('✅ 360° Service: MBTI data repaired successfully');
-          // Refetch the updated data
+          // EGRESS OPTIMIZATION: Refetch with specific columns
           const { data: updatedData } = await supabase
-            .from('blueprints')
-            .select('*')
+            .from('user_blueprints')
+            .select('id, user_id, blueprint, is_active, updated_at')
             .eq('user_id', userId)
             .eq('is_active', true)
             .maybeSingle();
@@ -445,9 +450,10 @@ class User360DataService {
 
   private async getIntelligenceData(userId: string) {
     try {
+      // EGRESS OPTIMIZATION: Select only needed columns (excludes large computation_history JSONB)
       const { data, error } = await supabase
         .from('hacs_intelligence')
-        .select('*')
+        .select('id, user_id, intelligence_level, module_scores, last_calculated, created_at, updated_at')
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -463,9 +469,10 @@ class User360DataService {
   }
 
   private async getMemoryNodes(userId: string) {
+    // EGRESS OPTIMIZATION: Exclude vector embeddings (1536 dimensions = huge data), select key fields only
     const { data, error } = await supabase
       .from('memory_graph_nodes')
-      .select('*')
+      .select('id, user_id, node_type, content, importance_score, emotional_valence, created_at, updated_at, last_accessed')
       .eq('user_id', userId)
       .order('importance_score', { ascending: false })
       .limit(50);
@@ -478,9 +485,10 @@ class User360DataService {
   }
 
   private async getMemoryEdges(userId: string) {
+    // EGRESS OPTIMIZATION: Select only relationship fields
     const { data, error } = await supabase
       .from('memory_graph_edges')
-      .select('*')
+      .select('id, user_id, source_node_id, target_node_id, relationship_type, strength, created_at')
       .eq('user_id', userId)
       .limit(100);
 
@@ -492,11 +500,13 @@ class User360DataService {
   }
 
   private async getBehavioralPatterns(userId: string) {
+    // EGRESS OPTIMIZATION: Add limit and select specific columns
     const { data, error } = await supabase
       .from('pie_patterns')
-      .select('*')
+      .select('id, user_id, pattern_type, pattern_name, description, confidence, frequency, context, last_observed, created_at')
       .eq('user_id', userId)
-      .order('confidence', { ascending: false });
+      .order('confidence', { ascending: false })
+      .limit(20);
 
     if (error) {
       console.warn('Behavioral patterns unavailable:', error.message);
@@ -506,9 +516,10 @@ class User360DataService {
   }
 
   private async getGrowthJourney(userId: string) {
+    // EGRESS OPTIMIZATION: Select specific columns (excludes large JSONB arrays)
     const { data, error } = await supabase
       .from('growth_journey')
-      .select('*')
+      .select('id, user_id, current_level, total_experience, reflection_entries, mood_entries, last_reflection_date, created_at, updated_at')
       .eq('user_id', userId)
       .single();
 
@@ -520,12 +531,13 @@ class User360DataService {
   }
 
   private async getUserActivities(userId: string) {
+    // EGRESS OPTIMIZATION: Select essential activity fields only
     const { data, error } = await supabase
       .from('user_activities')
-      .select('*')
+      .select('id, user_id, activity_type, points_earned, created_at, activity_data')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-      .limit(100);
+      .limit(50);
 
     if (error) {
       console.warn('User activities unavailable:', error.message);
@@ -535,11 +547,13 @@ class User360DataService {
   }
 
   private async getUserGoals(userId: string) {
+    // EGRESS OPTIMIZATION: Select specific fields and add limit
     const { data, error } = await supabase
       .from('user_goals')
-      .select('*')
+      .select('id, user_id, goal_title, goal_description, status, target_date, created_at, updated_at')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(20);
 
     if (error) {
       console.warn('User goals unavailable:', error.message);

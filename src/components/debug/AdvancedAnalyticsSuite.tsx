@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { shouldRunDebugComponent, getPollingInterval } from '@/utils/environment-check';
 
 interface UserBehaviorMetrics {
   sessionDuration: number;
@@ -75,6 +76,22 @@ interface UserSegment {
 }
 
 const AdvancedAnalyticsSuite: React.FC = () => {
+  // DISK I/O PROTECTION: Disable in production
+  if (!shouldRunDebugComponent('AdvancedAnalyticsSuite')) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Advanced Analytics Suite</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Advanced analytics disabled in production to reduce I/O load. Enable in development mode.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const { user } = useAuth();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [userBehaviorMetrics, setUserBehaviorMetrics] = useState<UserBehaviorMetrics>({
@@ -120,31 +137,34 @@ const AdvancedAnalyticsSuite: React.FC = () => {
     try {
       console.log('📊 Analyzing user behavior patterns...');
 
-      // Get user activities for behavior analysis
+      // EGRESS OPTIMIZATION: Get user activities with specific columns
       const { data: activities } = await supabase
         .from('user_activities')
-        .select('*')
+        .select('id, activity_type, created_at')
         .eq('user_id', user.id)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .limit(50);
 
-      // Get conversation data for engagement analysis
+      // EGRESS OPTIMIZATION: Get conversation data with specific columns
       const { data: conversations } = await supabase
         .from('conversation_memory')
-        .select('*')
+        .select('id, created_at, session_id')
         .eq('user_id', user.id)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .limit(50);
 
-      // Get session feedback for satisfaction analysis
+      // EGRESS OPTIMIZATION: Get session feedback with specific columns
       const { data: feedback } = await supabase
         .from('session_feedback')
-        .select('*')
+        .select('id, rating, created_at')
         .eq('user_id', user.id)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .limit(20);
 
-      // Get user profile data
+      // EGRESS OPTIMIZATION: Get user profile with specific columns
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('*')
+        .select('id, user_id, display_name')
         .eq('user_id', user.id)
         .single();
 
@@ -432,11 +452,11 @@ const AdvancedAnalyticsSuite: React.FC = () => {
     }
   };
 
-  // Auto-refresh analytics every 60 seconds
+  // DISK I/O PROTECTION: Auto-refresh with production-safe interval
   useEffect(() => {
     if (user) {
       runComprehensiveAnalysis();
-      const interval = setInterval(runComprehensiveAnalysis, 60000);
+      const interval = setInterval(runComprehensiveAnalysis, getPollingInterval(60000));
       return () => clearInterval(interval);
     }
   }, [user]);
