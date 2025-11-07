@@ -259,6 +259,42 @@ export class HermeticAssistanceContextBuilder {
   }
 
   /**
+   * Get help-type-specific instructions
+   */
+  private getHelpTypeInstructions(helpType: string): string {
+    switch (helpType) {
+      case 'stuck':
+        return `**Focus**: Diagnose why they're blocked and provide the smallest possible first move.
+- Acknowledge their avoidance pattern if it matches this situation
+- Offer momentum-building micro-actions that leverage their execution style
+- Keep steps under 5 minutes to break through resistance`;
+      
+      case 'need_details':
+        return `**Focus**: Break the work into ultra-specific, unambiguous sub-steps.
+- Spell out exact quantities, timeboxes, and templates
+- Use their cognitive edge to structure the breakdown
+- Provide clarity over motivation (they know what to do, they need HOW)`;
+      
+      case 'how_to':
+        return `**Focus**: Provide an exact procedure with zero ambiguity.
+- Outline step-by-step process with specific tools
+- Mention required resources or references
+- Show what the finished state should look like
+- Frame it using their execution style`;
+      
+      case 'examples':
+        return `**Focus**: Provide concrete, real-world examples they can mirror.
+- Give 2-3 specific examples relevant to the task
+- Contrast different approaches when possible
+- Explain what makes each example effective
+- Reference their past successes if applicable`;
+      
+      default:
+        return `**Focus**: Provide grounded, practical support tailored to their working style.`;
+    }
+  }
+
+  /**
    * Build system prompt for AI with full Hermetic context
    */
   buildSystemPrompt(
@@ -299,6 +335,8 @@ ${context.recovery.healingModalities.join(', ') || 'Take breaks as needed'}
 ## YOUR TASK:
 Provide guidance for: "${taskTitle}"
 Help Type: ${helpType}
+
+${this.getHelpTypeInstructions(helpType)}
 
 ## CRITICAL INSTRUCTIONS:
 1. **Leverage their strengths** - Frame steps using their execution style and cognitive edge
