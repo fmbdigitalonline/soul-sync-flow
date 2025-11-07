@@ -397,6 +397,11 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       return;
     }
 
+    if (!task.goal_id) {
+      console.warn(`⚠️ Task ${task.id} missing goal_id - skipping session persistence to prevent leakage`);
+      return;
+    }
+
     const storedMessages: StoredCoachMessage[] = coachMessages.map(message => ({
       id: message.id,
       content: message.content,
@@ -406,11 +411,11 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       suppressDisplay: message.suppressDisplay
     }));
 
-    saveTaskSession(task.id, {
+    saveTaskSession(task.goal_id, task.id, {
       coachMessages: storedMessages,
       instructionProgress
     });
-  }, [coachMessages, instructionProgress, task.id]);
+  }, [coachMessages, instructionProgress, task.goal_id, task.id]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
