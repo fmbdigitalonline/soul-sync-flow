@@ -98,8 +98,14 @@ async function loadTaskSessionFromDatabase(taskId: string, options: LoadTaskSess
       return null;
     }
 
+    // Require goalId for proper instruction isolation
+    if (!options.goalId) {
+      console.warn(`⚠️ No goal ID provided for task ${taskId}, cannot load specific instructions`);
+      return null;
+    }
+
     const instructions = await workingInstructionsPersistenceService.loadWorkingInstructions(
-      options.goalId || '',
+      options.goalId,
       taskId
     );
     if (!instructions || instructions.length === 0) {
@@ -250,16 +256,19 @@ export function hasWorkingInstructionMessage(content: string): boolean {
   return WORKING_INSTRUCTION_REGEX.test(content);
 }
 
-export async function getTaskSessionTypeAsync(taskId: string): Promise<TaskSessionType> {
+export async function getTaskSessionTypeAsync(taskId: string, goalId?: string): Promise<TaskSessionType> {
   const localType = getTaskSessionType(taskId);
   if (localType !== TaskSessionType.NO_SESSION) {
     return localType;
   }
 
+  // Can only check database if we have a goal ID for proper isolation
+  if (!goalId) {
+    return TaskSessionType.NO_SESSION;
+  }
+
   try {
-    // Note: hasStoredInstructions uses old signature, cannot pass goalId here
-    // This is acceptable as it's just checking existence, not loading actual data
-    const hasStored = await workingInstructionsPersistenceService.hasStoredInstructions(taskId, undefined);
+    const hasStored = await workingInstructionsPersistenceService.hasStoredInstructions(goalId, taskId);
     if (hasStored) {
       return TaskSessionType.WORK_INSTRUCTION_SESSION;
     }

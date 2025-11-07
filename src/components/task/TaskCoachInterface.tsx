@@ -311,6 +311,14 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     let isMounted = true;
 
     const hydrateSession = async () => {
+      // Validate that task has goal_id for proper instruction isolation
+      if (!task.goal_id) {
+        console.error(`❌ Task ${task.id} has no goal_id, cannot load session. This prevents instruction leakage.`);
+        setInstructionProgress({});
+        setSessionStarted(false);
+        return;
+      }
+
       const { session: storedSession, source } = await loadTaskSessionWithDbFallback(task.id, {
         taskTitle: task.title,
         goalId: task.goal_id

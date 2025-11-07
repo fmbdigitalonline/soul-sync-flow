@@ -79,32 +79,31 @@ class WorkingInstructionsPersistenceService {
 
   /**
    * Load working instructions from database
+   * @param goalId - The goal ID (required)
+   * @param taskId - The task ID (required)
    * @returns Array of instructions or empty array if none found
    * @throws Error if database query fails
    */
-  async loadWorkingInstructions(goalIdOrTaskId: string, taskId?: string): Promise<WorkingInstruction[]> {
-    // Support both old (taskId only) and new (goalId, taskId) signatures
-    const isNewSignature = taskId !== undefined;
-    const actualGoalId = isNewSignature ? goalIdOrTaskId : '';
-    const actualTaskId = isNewSignature ? taskId : goalIdOrTaskId;
+  async loadWorkingInstructions(goalId: string, taskId: string): Promise<WorkingInstruction[]> {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       throw new Error("User must be authenticated to load working instructions");
     }
 
-    let query = supabase
+    if (!goalId || !taskId) {
+      console.error("❌ Both goal_id and task_id are required to load working instructions");
+      return [];
+    }
+
+    // ALWAYS filter by both goal_id AND task_id for uniqueness
+    const { data, error } = await supabase
       .from('task_working_instructions')
       .select('*')
       .eq('user_id', user.id)
-      .eq('task_id', actualTaskId);
-
-    // Only filter by goal_id if using new signature
-    if (isNewSignature && actualGoalId) {
-      query = query.eq('goal_id', actualGoalId);
-    }
-
-    const { data, error } = await query.order('order_index', { ascending: true });
+      .eq('goal_id', goalId)
+      .eq('task_id', taskId)
+      .order('order_index', { ascending: true });
 
     if (error) {
       console.error("❌ Failed to load working instructions:", error);
@@ -112,7 +111,7 @@ class WorkingInstructionsPersistenceService {
     }
 
     if (!data || data.length === 0) {
-      console.log(`ℹ️ No stored instructions found for task ${taskId}`);
+      console.log(`ℹ️ No stored instructions found for goal ${goalId}, task ${taskId}`);
       return [];
     }
 
@@ -125,34 +124,33 @@ class WorkingInstructionsPersistenceService {
       toolsNeeded: Array.isArray(stored.tools_needed) ? stored.tools_needed : [],
     }));
 
-    console.log(`✅ Loaded ${instructions.length} working instructions for task ${taskId}`);
+    console.log(`✅ Loaded ${instructions.length} working instructions for goal ${goalId}, task ${taskId}`);
     return instructions;
   }
 
   /**
    * Check if instructions exist for a task
+   * @param goalId - The goal ID (required)
+   * @param taskId - The task ID (required)
    */
-  async hasStoredInstructions(goalIdOrTaskId: string, taskId?: string): Promise<boolean> {
-    // Support both old and new signatures
-    const isNewSignature = taskId !== undefined;
-    const actualGoalId = isNewSignature ? goalIdOrTaskId : '';
-    const actualTaskId = isNewSignature ? taskId : goalIdOrTaskId;
+  async hasStoredInstructions(goalId: string, taskId: string): Promise<boolean> {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) return false;
 
-    let query = supabase
+    if (!goalId || !taskId) {
+      console.error("❌ Both goal_id and task_id are required to check stored instructions");
+      return false;
+    }
+
+    // ALWAYS filter by both goal_id AND task_id for uniqueness
+    const { data, error } = await supabase
       .from('task_working_instructions')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
-      .eq('task_id', actualTaskId);
-
-    // Only filter by goal_id if using new signature
-    if (isNewSignature && actualGoalId) {
-      query = query.eq('goal_id', actualGoalId);
-    }
-
-    const { data, error } = await query.limit(1);
+      .eq('goal_id', goalId)
+      .eq('task_id', taskId)
+      .limit(1);
 
     if (error) {
       console.error("❌ Failed to check for stored instructions:", error);

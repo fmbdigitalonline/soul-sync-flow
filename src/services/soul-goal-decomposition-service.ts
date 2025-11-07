@@ -656,7 +656,7 @@ Return as JSON with **EXACTLY ${structure.milestoneCount} milestones** and **${s
   ],
   "tasks": [
     {
-      "id": "task_1_1",
+      "id": "task_GOALID_1_1_TIMESTAMP",
       "title": "First concrete action for milestone 1 of ${title}",
       "description": "Step-by-step what to do RIGHT NOW",
       "milestone_id": "milestone_1",
@@ -669,9 +669,9 @@ Return as JSON with **EXACTLY ${structure.milestoneCount} milestones** and **${s
       "prerequisites": []
     },
     {
-      "id": "task_1_2",
+      "id": "task_GOALID_1_2_TIMESTAMP",
       "title": "Second action for milestone 1",
-      "description": "What to do AFTER task_1_1",
+      "description": "What to do AFTER task_GOALID_1_1_TIMESTAMP",
       "milestone_id": "milestone_1",
       "completed": false,
       "estimated_duration": "1-2 hours",
@@ -679,10 +679,10 @@ Return as JSON with **EXACTLY ${structure.milestoneCount} milestones** and **${s
       "category": "planning",
       "optimal_timing": "When ready for lighter work",
       "blueprint_reasoning": "Aligns with auxiliary function",
-      "prerequisites": ["task_1_1"]
+      "prerequisites": ["task_GOALID_1_1_TIMESTAMP"]
     },
     {
-      "id": "task_2_1",
+      "id": "task_GOALID_2_1_TIMESTAMP",
       "title": "First action for milestone 2",
       "description": "What to do for milestone 2",
       "milestone_id": "milestone_2",
@@ -692,9 +692,17 @@ Return as JSON with **EXACTLY ${structure.milestoneCount} milestones** and **${s
       "category": "execution",
       "optimal_timing": "Optimal time",
       "blueprint_reasoning": "Why this fits",
-      "prerequisites": ["task_1_2"]
+      "prerequisites": ["task_GOALID_1_2_TIMESTAMP"]
     }
   ],
+  
+  CRITICAL INSTRUCTION FOR TASK IDs:
+  - Replace GOALID with a unique identifier derived from the goal title (lowercase, no spaces)
+  - Replace TIMESTAMP with the current timestamp or unique number
+  - Format: task_GOALID_MILESTONE_TASKNUM_TIMESTAMP
+  - Example: "task_fitness123_1_1_1699123456", "task_fitness123_1_2_1699123456"
+  - This ensures task IDs are unique across ALL goals and dreams
+  - NEVER use generic IDs like "task_1_1" or "task_2_1"
   "blueprint_insights": [
     "How this journey uses their Hermetic 2.0 identity constructs",
     "How timing respects their temporal biology",
@@ -1059,21 +1067,39 @@ ${malformedString}`;
       blueprint_alignment: m.blueprint_alignment || {}
     }));
 
-    const validatedTasks = (parsed.tasks || []).map((t: any, index: number) => ({
-      id: t.id || `task_${index + 1}_${Date.now()}`,
-      title: t.title || `Task ${index + 1}`,
-      description: t.description || '',
-      milestone_id: t.milestone_id || validatedMilestones[0]?.id,
-      completed: false,
-      estimated_duration: t.estimated_duration || '1-2 hours',
-      energy_level_required: t.energy_level_required || 'medium',
-      category: t.category || 'execution',
-      optimal_timing: t.optimal_timing,
-      blueprint_reasoning: t.blueprint_reasoning,
-      prerequisites: Array.isArray(t.prerequisites) 
-        ? t.prerequisites 
-        : (t.prerequisites ? [String(t.prerequisites)] : [])
-    }));
+    const validatedTasks = (parsed.tasks || []).map((t: any, index: number) => {
+      // Calculate milestone and task indices for unique ID generation
+      const milestoneIndex = Math.floor(index / 3) + 1; // Assuming ~3 tasks per milestone
+      const taskInMilestone = (index % 3) + 1;
+      const goalIdShort = goalId.replace('goal_', '').slice(0, 8);
+      const timestamp = Date.now();
+      
+      // Generate unique ID including goal context
+      const uniqueId = `task_${goalIdShort}_${milestoneIndex}_${taskInMilestone}_${timestamp}`;
+      
+      // If AI provided ID follows new format, use it; otherwise use unique fallback
+      const finalId = (t.id && t.id.includes('_GOALID_') && t.id.includes('_TIMESTAMP')) 
+        ? t.id.replace('_GOALID_', `_${goalIdShort}_`).replace('_TIMESTAMP', `_${timestamp}`)
+        : (t.id && !t.id.match(/^task_\d+_\d+$/)) // Accept if not generic pattern
+          ? t.id 
+          : uniqueId;
+      
+      return {
+        id: finalId,
+        title: t.title || `Task ${index + 1}`,
+        description: t.description || '',
+        milestone_id: t.milestone_id || validatedMilestones[0]?.id,
+        completed: false,
+        estimated_duration: t.estimated_duration || '1-2 hours',
+        energy_level_required: t.energy_level_required || 'medium',
+        category: t.category || 'execution',
+        optimal_timing: t.optimal_timing,
+        blueprint_reasoning: t.blueprint_reasoning,
+        prerequisites: Array.isArray(t.prerequisites) 
+          ? t.prerequisites 
+          : (t.prerequisites ? [String(t.prerequisites)] : [])
+      };
+    });
 
     console.log('✅ PARSING COMPLETED:', {
       milestones: validatedMilestones.length,
