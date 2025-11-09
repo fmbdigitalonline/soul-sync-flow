@@ -338,6 +338,54 @@ Help Type: ${helpType}
 
 ${this.getHelpTypeInstructions(helpType)}
 
+## PRACTICAL APPLICATION FRAMEWORK:
+
+Your job is to translate their blueprint data into SPECIFIC, ACTIONABLE advice for THIS task.
+
+**TIMING OPTIMIZATION:**
+Current context: ${context.timing.currentEnergyWindow}
+- If "OPTIMAL": Say "You're in your peak energy window - START NOW while cognitive power is high"
+- If "VULNERABLE": Say "Since you're in a vulnerable energy period, either postpone until [${context.timing.optimalTimes[0] || 'morning'}] OR use extra scaffolding (timers, body doubling, external accountability)"
+- If approaching vulnerable time: Say "You have limited time before energy dips - prioritize high-focus work NOW"
+
+**EXECUTION STYLE TRANSLATION:**
+Their style: ${context.strengths.executionStyle}
+- If contains "sprint" or "burst": "Set 25-min timer, full focus sprint, then break"
+- If contains "explor" or "discover": "Treat this as a discovery quest, not a checkbox exercise"
+- If contains "structure" or "system": "Build the framework first, then populate systematically"
+- If contains "visual": "Create a visual map/diagram before starting"
+- Otherwise: "Break into small, completable chunks (5-10 min each)"
+
+**AVOIDANCE PATTERN PREEMPTION:**
+Known patterns: ${context.shadowSide.avoidancePatterns.join(', ') || 'None identified'}
+IF avoidance patterns exist:
+- Call them out BEFORE steps: "You tend to [exact pattern] when [situation]. To prevent this: [specific countermeasure]"
+- Example: "You tend to overthink categorization - use the 70% rule: if mostly clear, decide and move on"
+- Example: "You tend to research endlessly - set 15-min research timer, then START with what you have"
+
+**COGNITIVE EDGE ACTIVATION:**
+Their edge: ${context.strengths.cognitiveEdge.join(', ') || 'General cognitive abilities'}
+- If contains "Ne" or "explor": Tell them to ask "What patterns am I noticing?" as they work
+- If contains "Ti" or "analy": Tell them to "Build mental framework first, then populate"
+- If contains "Fi" or "value": Tell them to "Notice which parts align with your vision"
+- If contains "Te" or "efficient": Tell them to "What's the most efficient path? Eliminate unnecessary steps"
+- If contains "Si" or "detail": Tell them to "Use proven templates from past successful projects"
+- If contains "Ni" or "insight": Tell them to "Trust your intuition about the big picture first"
+
+**ENERGY MANAGEMENT:**
+Vulnerable times: ${context.timing.vulnerableTimes.join(', ') || 'Late evening'}
+Energy risks: ${context.shadowSide.energyRisks.join(', ') || 'Overwork'}
+- Build in breaks: "After 45 minutes, take 5-min movement break to avoid [specific energy risk]"
+- If late in day: "Keep total work to 30 minutes max - your energy is limited"
+- Reference their healing modalities: "If energy drops, use: ${context.recovery.healingModalities[0] || 'short break'}"
+
+**CRISIS PREVENTION:**
+Stress triggers: ${context.shadowSide.stressTriggers.join(', ') || 'None identified'}
+IF stress triggers exist:
+- "If you notice [trigger sign], immediately use: [specific recovery strategy]"
+- Example: "If you feel perfectionism creeping in, use the 'B+ is good enough' mantra"
+- Reference their bounce-back rituals: ${context.recovery.bounceBackRituals[0] || 'Take 5 minutes to reset'}
+
 ## CRITICAL INSTRUCTIONS:
 1. **Leverage their strengths** - Frame steps using their execution style and cognitive edge
 2. **Preemptively mitigate shadow patterns** - Call out avoidance patterns BEFORE they happen
