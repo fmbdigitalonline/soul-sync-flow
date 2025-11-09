@@ -10,6 +10,7 @@ interface TaskCoachMessageRendererProps {
   isUser: boolean;
   goalId?: string;
   taskId: string; // Add taskId for instruction progress tracking
+  hasPersistedInstructions?: boolean; // Skip rendering if instructions are already shown from persisted panel
   onSubTaskStart: (subTask: ParsedSubTask) => void;
   onSubTaskComplete: (subTask: ParsedSubTask) => void;
   onStartTaskPlan: () => void;
@@ -24,6 +25,7 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
   isUser,
   goalId,
   taskId,
+  hasPersistedInstructions = false,
   onSubTaskStart,
   onSubTaskComplete,
   onStartTaskPlan,
@@ -67,7 +69,12 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
   }, [content]);
   
   // Check if this is a structured message that should use the enhanced renderer
-  if (parsedMessage.type === 'working_instructions' && parsedMessage.workingInstructions && parsedMessage.workingInstructions.length > 0) {
+  if (
+    parsedMessage.type === 'working_instructions' && 
+    parsedMessage.workingInstructions && 
+    parsedMessage.workingInstructions.length > 0 &&
+    !hasPersistedInstructions // Don't render if instructions are already shown from persisted panel
+  ) {
     console.log('🎯 TaskCoachMessageRenderer: Rendering working instructions panel');
     return (
       <div className="w-full mx-auto max-w-2xl md:max-w-3xl my-2">

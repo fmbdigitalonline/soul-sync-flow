@@ -36,6 +36,8 @@ import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useTaskCompletion } from "@/hooks/use-task-completion";
 import { loadTaskSessionWithDbFallback, saveTaskSession, StoredCoachMessage } from "@/utils/task-session";
 import { safeInterpolateTranslation } from "@/utils/translation-utils";
+import { workingInstructionsPersistenceService, WorkingInstruction } from '@/services/working-instructions-persistence-service';
+import { WorkingInstructionsPanel } from '@/components/coach/WorkingInstructionsPanel';
 
 interface Task {
   id: string;
@@ -116,6 +118,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   const [taskCompleted, setTaskCompleted] = useState(false);
   const [coachMessages, setCoachMessages] = useState<CoachMessage[]>([]);
   const [instructionProgress, setInstructionProgress] = useState<Record<string, boolean>>({});
+  const [persistedInstructions, setPersistedInstructions] = useState<any[]>([]);
+  const [loadingPersistedInstructions, setLoadingPersistedInstructions] = useState(true);
 
   const completedInstructionIds = useMemo(
     () => Object.entries(instructionProgress)
@@ -164,6 +168,47 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     }
     return 1;
   }, [task.estimated_duration]);
+
+  // Load persisted instructions from database on mount
+  useEffect(() => {
+    const loadInstructions = async () => {
+      if (!task.goal_id || !task.id) {
+        console.log('⚠️ TaskCoachInterface: Cannot load instructions - missing goal_id or task_id');
+        setLoadingPersistedInstructions(false);
+        return;
+      }
+
+      console.log('📥 TaskCoachInterface: Loading persisted instructions', {
+        goalId: task.goal_id,
+        taskId: task.id
+      });
+
+      try {
+        const instructions = await workingInstructionsPersistenceService.loadWorkingInstructions(
+          task.goal_id,
+          task.id
+        );
+
+        if (instructions.length > 0) {
+          console.log(`✅ TaskCoachInterface: Loaded ${instructions.length} persisted instructions`);
+          // Transform to include completed property for compatibility with WorkingInstructionsPanel
+          const transformedInstructions = instructions.map(instruction => ({
+            ...instruction,
+            completed: false // Will be managed by instructionProgress state
+          }));
+          setPersistedInstructions(transformedInstructions);
+        } else {
+          console.log('ℹ️ TaskCoachInterface: No persisted instructions found');
+        }
+      } catch (error) {
+        console.error('❌ TaskCoachInterface: Failed to load persisted instructions', error);
+      } finally {
+        setLoadingPersistedInstructions(false);
+      }
+    };
+
+    loadInstructions();
+  }, [task.goal_id, task.id]);
 
   // Log component mount with error handling
   useEffect(() => {
@@ -948,6 +993,22 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
           ) : (
             <>
               <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4 space-y-4 min-h-0">
+                {/* Persisted Instructions Panel - Always Show if Available */}
+                {!loadingPersistedInstructions && persistedInstructions.length > 0 && (
+                  <div className="mb-6">
+                    <WorkingInstructionsPanel
+                      instructions={persistedInstructions}
+                      goalId={task.goal_id}
+                      taskId={task.id}
+                      onInstructionComplete={handleInstructionComplete}
+                      onAllInstructionsComplete={handleAllInstructionsComplete}
+                      originalText="Your working instructions for this task"
+                      initialCompletedIds={completedInstructionIds}
+                      onProgressChange={handleInstructionProgressChange}
+                    />
+                  </div>
+                )}
+
                 {visibleMessages.map((message) => (
                   <TaskCoachMessageRenderer
                     key={`${message.id}-${task.id}`}
@@ -955,6 +1016,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
                     isUser={message.isUser}
                     goalId={task.goal_id}
                     taskId={task.id}
+                    hasPersistedInstructions={persistedInstructions.length > 0}
                     onSubTaskStart={handleSubTaskStart}
                     onSubTaskComplete={handleSubTaskComplete}
                     onStartTaskPlan={handleStartTaskPlan}
