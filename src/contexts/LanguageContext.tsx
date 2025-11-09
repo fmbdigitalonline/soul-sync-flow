@@ -373,6 +373,7 @@ const translations: Record<Language, Translations> = {
       // Sections
       journeyMap: 'Journey Map',
       yourTasks: 'Your Tasks',
+      viewingTasksFor: 'Viewing tasks for',
       focusSession: 'Focus Session',
       habitsSection: 'Habits',
       
@@ -4101,6 +4102,7 @@ Provide 4-6 concrete steps I can start working on immediately.`,
       // Sections
       journeyMap: 'Reiskaart',
       yourTasks: 'Je Taken',
+      viewingTasksFor: 'Bekijk taken voor',
       focusSession: 'Focus Sessie',
       habitsSection: 'Gewoontes',
       

@@ -133,7 +133,10 @@ const Dreams = () => {
       hasCreatedGoal: !!createdGoal,
       hasSelectedJourneyGoal: !!selectedJourneyGoal,
       hasFallbackGoal: !!fallbackGoalFromList,
-      journeyGoalsCount: journeyGoals.length
+      journeyGoalsCount: journeyGoals.length,
+      selectedGoalId,
+      currentView,
+      activeTab
     });
 
     // Check if goal has complete data (using optional chaining for any type)
@@ -181,6 +184,18 @@ const Dreams = () => {
   const { t } = useLanguage();
   const { blueprintData } = useBlueprintData();
   const { spacing, layout, touchTargetSize, getTextSize, isFoldDevice, isUltraNarrow, isMobile } = useResponsiveLayout();
+
+  // Track the displayed goal to maintain context across tab switches
+  useEffect(() => {
+    if (currentView === 'journey' && resolvedGoalToShow) {
+      const goalIdentifier = resolvedGoalToShow.id || resolvedGoalToShow.goal_id;
+      if (goalIdentifier && goalIdentifier !== selectedGoalId) {
+        console.log('🔒 Dreams: Locking goal context for journey view', goalIdentifier);
+        setSelectedGoalId(String(goalIdentifier));
+        localStorage.setItem('activeGoalId', String(goalIdentifier));
+      }
+    }
+  }, [currentView, resolvedGoalToShow, selectedGoalId]);
 
   // Dream creation form state
   const [dreamForm, setDreamForm] = useState({
@@ -706,6 +721,13 @@ const Dreams = () => {
 
                 {activeTab === 'tasks' && (
                   <div className="w-full">
+                    {resolvedGoalToShow && (
+                      <div className="mb-3 p-2 bg-soul-purple/10 border border-soul-purple/20 rounded-lg">
+                        <p className={`text-soul-purple font-medium ${getTextSize('text-xs')}`}>
+                          📍 {t('dreams.viewingTasksFor')}: {resolvedGoalToShow.title}
+                        </p>
+                      </div>
+                    )}
                     <div className={`flex items-center justify-between mb-3 ${isFoldDevice ? 'flex-col items-start gap-1' : ''}`}>
                       <h3 className={`font-heading font-semibold flex items-center gap-2 text-card-foreground ${getTextSize('text-sm')}`}>
                         <Target className={`text-primary ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
