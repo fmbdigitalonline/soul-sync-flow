@@ -950,7 +950,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
               <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4 space-y-4 min-h-0">
                 {visibleMessages.map((message) => (
                   <TaskCoachMessageRenderer
-                    key={message.id}
+                    key={`${message.id}-${task.id}`}
                     content={message.content}
                     isUser={message.isUser}
                     goalId={task.goal_id}

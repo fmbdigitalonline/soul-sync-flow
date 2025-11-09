@@ -44,6 +44,22 @@ class WorkingInstructionsPersistenceService {
     taskId: string,
     instructions: WorkingInstruction[]
   ): Promise<void> {
+    // ADD VALIDATION - Ensure valid task IDs before saving
+    if (!goalId || goalId === 'unknown' || goalId.trim() === '') {
+      throw new Error(`Invalid goalId: "${goalId}". Cannot save working instructions without valid goal ID.`);
+    }
+    
+    if (!taskId || taskId.trim() === '') {
+      throw new Error(`Invalid taskId: "${taskId}". Cannot save working instructions without valid task ID.`);
+    }
+
+    console.log('🔍 SAVE VALIDATION:', {
+      goalId,
+      taskId,
+      instructionCount: instructions.length,
+      instructionTitles: instructions.map(i => i.title)
+    });
+
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {

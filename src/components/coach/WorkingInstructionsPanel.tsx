@@ -89,14 +89,25 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
 
       // Persist instructions to database if they don't exist
       try {
+        // ADD DEFENSIVE LOGGING - Track task ID flow
+        console.log('💾 WorkingInstructionsPanel: About to persist instructions', {
+          goalId,
+          taskId,
+          instructionCount: instructions.length,
+          firstInstructionTitle: instructions[0]?.title,
+          instructionIds: instructions.map(i => i.id)
+        });
+
         const hasStored = await workingInstructionsPersistenceService.hasStoredInstructions(goalId, taskId);
         if (!hasStored && instructions.length > 0) {
-          console.log('💾 WORKING INSTRUCTIONS: Persisting instructions to database...');
+          console.log('💾 Saving working instructions:', { goalId, taskId, count: instructions.length });
           await workingInstructionsPersistenceService.saveWorkingInstructions(goalId, taskId, instructions);
-          console.log('✅ WORKING INSTRUCTIONS: Instructions saved');
+          console.log('✅ Instructions saved successfully');
+        } else {
+          console.log('ℹ️ Instructions already exist or none to save', { hasStored, instructionCount: instructions.length });
         }
       } catch (error) {
-        console.error('❌ WORKING INSTRUCTIONS: Failed to persist instructions', error);
+        console.error('❌ Failed to persist instructions', { goalId, taskId, error });
         // Don't block UI on persistence errors - Principle #7: Transparent errors
       }
     };
