@@ -124,6 +124,8 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     }
   }, [toggleInstruction, completedInstructions, onInstructionComplete]);
 
+  const { language } = useLanguage();
+
   const handleAssistanceRequest = useCallback(async (
     instructionId: string,
     instructionTitle: string,
@@ -143,7 +145,8 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
         instructionTitle,
         type,
         hasHermeticIntelligence: !!hermeticIntelligence,
-        hasPreviousHelp: !!previousHelp
+        hasPreviousHelp: !!previousHelp,
+        language
       });
 
       const response = await interactiveAssistanceService.requestAssistance(
@@ -158,7 +161,8 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
           hermeticIntelligence // Pass Hermetic Intelligence for personalization
         },
         message,
-        previousHelp
+        previousHelp,
+        language
       );
 
       const responseWithMeta: AssistanceResponse = {
@@ -200,7 +204,7 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
         return updated;
       });
     }
-  }, [instructions, hermeticIntelligence, assistanceResponses, toast]);
+  }, [instructions, hermeticIntelligence, assistanceResponses, toast, language]);
 
   const handleClearAssistance = useCallback((instructionId: string) => {
     if (!(assistanceResponses.get(instructionId)?.length)) {

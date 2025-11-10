@@ -181,7 +181,8 @@ class InteractiveAssistanceService {
     helpType: 'stuck' | 'need_details' | 'how_to' | 'examples',
     context: any,
     userMessage?: string,
-    previousHelp?: string
+    previousHelp?: string,
+    language: string = 'en'
   ): Promise<AssistanceResponse> {
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -215,7 +216,7 @@ class InteractiveAssistanceService {
     });
 
     // Generate contextual assistance
-    const response = await this.generateContextualAssistance(request);
+    const response = await this.generateContextualAssistance(request, language);
     
     this.assistanceResponses.set(response.id, response);
 
@@ -237,11 +238,12 @@ class InteractiveAssistanceService {
     return response;
   }
 
-  private async generateContextualAssistance(request: AssistanceRequest): Promise<AssistanceResponse> {
+  private async generateContextualAssistance(request: AssistanceRequest, language: string = 'en'): Promise<AssistanceResponse> {
     console.log('🔍 ASSISTANCE: Starting contextual assistance generation', {
       subTaskTitle: request.subTaskTitle,
       helpType: request.helpType,
-      hasHermeticIntelligence: !!request.context.hermeticIntelligence
+      hasHermeticIntelligence: !!request.context.hermeticIntelligence,
+      language
     });
 
     const responseId = `resp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -261,7 +263,7 @@ class InteractiveAssistanceService {
         confidence: hermeticIntelligence.extraction_confidence,
         version: hermeticIntelligence.extraction_version
       });
-      return await this.generateHermeticAIAssistance(request, responseId, hermeticIntelligence);
+      return await this.generateHermeticAIAssistance(request, responseId, hermeticIntelligence, language);
     }
 
     console.log('⚠️ ASSISTANCE: No Hermetic Intelligence, falling back to templates');
@@ -285,7 +287,7 @@ class InteractiveAssistanceService {
 
     // Final fallback to generic AI assistance
     console.log('🤖 ASSISTANCE: Using generic AI assistance');
-    return await this.generateAIAssistance(request, responseId);
+    return await this.generateAIAssistance(request, responseId, language);
   }
 
   private async resolveHermeticIntelligence(
@@ -338,7 +340,8 @@ class InteractiveAssistanceService {
   private async generateHermeticAIAssistance(
     request: AssistanceRequest,
     responseId: string,
-    intelligence: HermeticStructuredIntelligence
+    intelligence: HermeticStructuredIntelligence,
+    language: string = 'en'
   ): Promise<AssistanceResponse> {
     try {
       // Build Hermetic context
@@ -366,7 +369,8 @@ class InteractiveAssistanceService {
           taskTitle: request.subTaskTitle,
           helpType: request.helpType,
           hermeticContext: context,
-          taskContext: request.context
+          taskContext: request.context,
+          language
         }
       });
 
@@ -407,7 +411,7 @@ class InteractiveAssistanceService {
     } catch (error) {
       console.error('❌ ASSISTANCE: Hermetic AI generation failed:', error);
       // Fallback to generic assistance
-      return await this.generateAIAssistance(request, responseId);
+      return await this.generateAIAssistance(request, responseId, language);
     }
   }
 
@@ -445,7 +449,7 @@ class InteractiveAssistanceService {
     );
   }
 
-  private async generateAIAssistance(request: AssistanceRequest, responseId: string): Promise<AssistanceResponse> {
+  private async generateAIAssistance(request: AssistanceRequest, responseId: string, language: string = 'en'): Promise<AssistanceResponse> {
     const sanitizedContext = this.sanitizeTaskContext(request.context);
     const systemPrompt = this.buildGenericSystemPrompt(request, sanitizedContext);
 
@@ -458,7 +462,8 @@ class InteractiveAssistanceService {
           taskTitle: request.subTaskTitle,
           helpType: request.helpType,
           hermeticContext: null,
-          taskContext: sanitizedContext
+          taskContext: sanitizedContext,
+          language
         }
       });
 

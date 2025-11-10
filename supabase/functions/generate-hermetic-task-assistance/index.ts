@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const BASE_CORS_HEADERS = {
@@ -317,9 +318,17 @@ serve(async (req) => {
     taskContext = (payload?.taskContext && typeof payload.taskContext === 'object')
       ? payload.taskContext
       : undefined;
+    const language = typeof payload?.language === 'string' ? payload.language : 'en';
+    
+    const languageInstruction = language === 'nl' 
+      ? '\n\nIMPORTANT: Respond in Dutch (Nederlands). All content, steps, and criteria must be in Dutch.'
+      : language === 'en'
+        ? '\n\nIMPORTANT: Respond in English.'
+        : `\n\nIMPORTANT: Respond in language code: ${language}`;
+    
     const systemPrompt = typeof payload?.systemPrompt === 'string' && payload.systemPrompt.trim().length > 0
-      ? payload.systemPrompt
-      : "You are SoulSync's structured task assistant. Provide concrete, time-bound micro-steps.";
+      ? payload.systemPrompt + languageInstruction
+      : "You are SoulSync's structured task assistant. Provide concrete, time-bound micro-steps." + languageInstruction;
 
     fallbackPayload = buildFallbackAssistance({
       taskTitle: safeTitle,
@@ -350,26 +359,28 @@ serve(async (req) => {
       hasHermeticContext: !!hermeticContext,
       strengthsCount: hermeticContext?.strengths?.cognitiveEdge?.length,
       shadowPatternsCount: hermeticContext?.shadowSide?.avoidancePatterns?.length,
-      currentEnergy: hermeticContext?.timing?.currentEnergyWindow
+      currentEnergy: hermeticContext?.timing?.currentEnergyWindow,
+      language: payload?.language || 'en'
     });
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return respondFallback('missing_lovable_api_key');
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      return respondFallback('missing_openai_api_key');
     }
 
     const serializedContext = JSON.stringify(taskContext ?? {});
 
     let response: Response;
     try {
-      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "gpt-4.1-mini-2025-04-14",
+          max_completion_tokens: 2000,
           messages: [
             { role: "system", content: systemPrompt },
             {
@@ -431,8 +442,8 @@ serve(async (req) => {
         }),
       });
     } catch (error) {
-      console.error('❌ HERMETIC ASSISTANCE: Lovable fetch failed', error);
-      return respondFallback('lovable_fetch_failed');
+      console.error('❌ HERMETIC ASSISTANCE: OpenAI fetch failed', error);
+      return respondFallback('openai_fetch_failed');
     }
 
     if (!response.ok) {
@@ -446,10 +457,10 @@ serve(async (req) => {
       console.error('❌ HERMETIC ASSISTANCE: AI API error', response.status, errorText);
 
       const reason = response.status === 429
-        ? 'lovable_rate_limited'
+        ? 'openai_rate_limited'
         : response.status === 402
-          ? 'lovable_payment_required'
-          : `lovable_status_${response.status}`;
+          ? 'openai_payment_required'
+          : `openai_status_${response.status}`;
 
       return respondFallback(reason);
     }
@@ -459,7 +470,7 @@ serve(async (req) => {
       result = await response.json();
     } catch (error) {
       console.error('❌ HERMETIC ASSISTANCE: Failed to parse AI response', error);
-      return respondFallback('invalid_lovable_response');
+      return respondFallback('invalid_openai_response');
     }
 
     const toolCall = result?.choices?.[0]?.message?.tool_calls?.[0];
