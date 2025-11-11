@@ -21,6 +21,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HelpPanelProps {
   response: AssistanceResponse;
+  assistanceResponseDbId?: string; // Database ID for step progress tracking
   onCopyStep?: (step: string) => void;
   onAssistanceRequest?: (
     type: 'stuck' | 'need_details' | 'how_to' | 'examples',
@@ -32,6 +33,7 @@ interface HelpPanelProps {
 
 export const HelpPanel: React.FC<HelpPanelProps> = ({
   response,
+  assistanceResponseDbId,
   onCopyStep,
   onAssistanceRequest,
   compact = false,

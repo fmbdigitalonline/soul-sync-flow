@@ -22,7 +22,9 @@ export interface HermeticAssistanceResponse extends AssistanceResponse {
 
 export interface AssistanceResponse {
   id: string;
+  dbId?: string; // Database ID for persistence
   requestId: string;
+  title?: string; // Title for display
   assistanceType?: 'stuck' | 'need_details' | 'how_to' | 'examples';
   helpType: 'concrete_steps' | 'examples' | 'tools_needed' | 'time_breakdown';
   content: string;
@@ -31,6 +33,7 @@ export interface AssistanceResponse {
   timeEstimate?: string;
   successCriteria: string[];
   timestamp: Date;
+  requestContext?: Record<string, any>; // Context about the request
   isFollowUp?: boolean;
   followUpDepth?: number;
   previousHelpContext?: string;

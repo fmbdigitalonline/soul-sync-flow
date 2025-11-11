@@ -15,19 +15,14 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { WorkingInstruction, deriveCoachIntroText } from '@/services/coach-message-parser';
-import { AssistanceButton } from '@/components/ui/assistance-button';
-import { HelpPanel } from '@/components/ui/help-panel';
-import { interactiveAssistanceService, AssistanceResponse } from '@/services/interactive-assistance-service';
+import { interactiveAssistanceService } from '@/services/interactive-assistance-service';
 import { useInstructionProgress } from '@/hooks/use-instruction-progress';
+import { InstructionAssistanceManager } from './InstructionAssistanceManager';
 import { hermeticIntelligenceService } from '@/services/hermetic-intelligence-service';
 import type { HermeticStructuredIntelligence } from '@/types/hermetic-intelligence';
 import { supabase } from '@/integrations/supabase/client';
 import { workingInstructionsPersistenceService } from '@/services/working-instructions-persistence-service';
 import { useToast } from '@/hooks/use-toast';
-import {
-  buildAggregatedAssistanceContext,
-  normalizeAssistanceResponses
-} from '@/utils/assistance-response-utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { safeInterpolateTranslation } from '@/utils/translation-utils';
 
@@ -63,7 +58,6 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  const [assistanceResponses, setAssistanceResponses] = useState<Map<string, AssistanceResponse[]>>(new Map());
   const [isRequestingHelp, setIsRequestingHelp] = useState<Map<string, boolean>>(new Map());
   const [hermeticIntelligence, setHermeticIntelligence] = useState<HermeticStructuredIntelligence | null>(null);
 
@@ -136,16 +130,12 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
 
     try {
       const instruction = instructions.find(i => i.id === instructionId);
-      const existingResponses = assistanceResponses.get(instructionId) ?? [];
-      const normalizedExisting = normalizeAssistanceResponses(existingResponses);
-      const previousHelp = buildAggregatedAssistanceContext(normalizedExisting);
 
       console.log('🔍 WORKING INSTRUCTIONS: Requesting assistance', {
         instructionId,
         instructionTitle,
         type,
         hasHermeticIntelligence: !!hermeticIntelligence,
-        hasPreviousHelp: !!previousHelp,
         language
       });
 
@@ -161,42 +151,34 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
           hermeticIntelligence // Pass Hermetic Intelligence for personalization
         },
         message,
-        previousHelp,
+        undefined,
         language
       );
 
-      const responseWithMeta: AssistanceResponse = {
-        ...response,
-        isFollowUp: normalizedExisting.length > 0,
-        followUpDepth: normalizedExisting.length + 1
-      };
-
-      const aggregatedContext = buildAggregatedAssistanceContext([
-        ...normalizedExisting,
-        responseWithMeta
-      ]);
-
-      const responseWithContext: AssistanceResponse = {
-        ...responseWithMeta,
-        previousHelpContext: aggregatedContext
-      };
-
-      setAssistanceResponses(prev => {
-        const updated = new Map(prev);
-        updated.set(instructionId, [...normalizedExisting, responseWithContext]);
-        return updated;
-      });
+      // Get the persistence service for this instruction
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Import the service locally to avoid dependency issues
+        const { assistanceResponsePersistenceService } = await import('@/services/assistance-response-persistence-service');
+        await assistanceResponsePersistenceService.saveAssistanceResponse(
+          user.id,
+          taskId,
+          instructionId,
+          response
+        );
+      }
 
       toast({
-        title: normalizedExisting.length === 0
-          ? 'Help guidance loaded'
-          : `Follow-up help #${responseWithMeta.followUpDepth} loaded`,
-        description: normalizedExisting.length === 0
-          ? 'Guidance is now available for this instruction.'
-          : 'New follow-up help has been added below the previous guidance.'
+        title: 'Help guidance loaded',
+        description: 'Guidance is now available for this instruction.'
       });
     } catch (error) {
       console.error('Failed to get assistance:', error);
+      toast({
+        title: 'Failed to load help',
+        description: 'Please try again.',
+        variant: 'destructive'
+      });
     } finally {
       setIsRequestingHelp(prev => {
         const updated = new Map(prev);
@@ -204,30 +186,33 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
         return updated;
       });
     }
-  }, [instructions, hermeticIntelligence, assistanceResponses, toast, language]);
+  }, [instructions, hermeticIntelligence, toast, language, taskId]);
 
-  const handleClearAssistance = useCallback((instructionId: string) => {
-    if (!(assistanceResponses.get(instructionId)?.length)) {
-      return;
+  const handleClearAssistance = useCallback(async (instructionId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    try {
+      const { assistanceResponsePersistenceService } = await import('@/services/assistance-response-persistence-service');
+      await assistanceResponsePersistenceService.deleteResponsesForInstruction(
+        user.id,
+        taskId,
+        instructionId
+      );
+
+      toast({
+        title: 'Help cleared',
+        description: 'All help guidance has been removed for this instruction.'
+      });
+    } catch (error) {
+      console.error('Failed to clear assistance:', error);
+      toast({
+        title: 'Failed to clear help',
+        description: 'Please try again.',
+        variant: 'destructive'
+      });
     }
-
-    setAssistanceResponses(prev => {
-      const updated = new Map(prev);
-      updated.delete(instructionId);
-      return updated;
-    });
-
-    setIsRequestingHelp(prev => {
-      const updated = new Map(prev);
-      updated.delete(instructionId);
-      return updated;
-    });
-
-    toast({
-      title: 'Help cleared',
-      description: 'All help guidance has been removed for this instruction.'
-    });
-  }, [assistanceResponses, toast]);
+  }, [taskId, toast]);
 
   React.useEffect(() => {
     if (onProgressChange) {
@@ -305,7 +290,6 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
       <div className="space-y-3">
         {instructions.map((instruction, index) => {
           const isCompleted = completedInstructions.has(instruction.id);
-          const responses = assistanceResponses.get(instruction.id) ?? [];
           const isHelpLoading = isRequestingHelp.get(instruction.id) || false;
           
           return (
@@ -351,8 +335,8 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
                     {instruction.description}
                   </p>
                   
-                  {/* Meta information and assistance buttons */}
-                  <div className="flex items-center gap-2 flex-wrap">
+                  {/* Meta information */}
+                  <div className="flex items-center gap-2 flex-wrap mb-3">
                     {instruction.timeEstimate && (
                       <Badge variant="outline" className="text-xs">
                         <Clock className="h-3 w-3 mr-1" />
@@ -366,92 +350,19 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
                         {instruction.toolsNeeded.join(', ')}
                       </Badge>
                     )}
-                    
-                    {/* Assistance Buttons - only show for incomplete instructions */}
-                    {!isCompleted && (
-                      <>
-                        <AssistanceButton
-                          type="stuck"
-                          onRequest={(type, msg) => handleAssistanceRequest(instruction.id, instruction.title, type, msg)}
-                          isLoading={isHelpLoading}
-                          hasResponse={responses.length > 0}
-                          compact={true}
-                        />
-                        <AssistanceButton
-                          type="need_details"
-                          onRequest={(type, msg) => handleAssistanceRequest(instruction.id, instruction.title, type, msg)}
-                          isLoading={isHelpLoading}
-                          hasResponse={responses.length > 0}
-                          compact={true}
-                        />
-                        <AssistanceButton
-                          type="how_to"
-                          onRequest={(type, msg) => handleAssistanceRequest(instruction.id, instruction.title, type, msg)}
-                          isLoading={isHelpLoading}
-                          hasResponse={responses.length > 0}
-                          compact={true}
-                        />
-                        <AssistanceButton
-                          type="examples"
-                          onRequest={(type, msg) => handleAssistanceRequest(instruction.id, instruction.title, type, msg)}
-                          isLoading={isHelpLoading}
-                          hasResponse={responses.length > 0}
-                          compact={true}
-                        />
-                      </>
-                    )}
                   </div>
 
-                  {(responses.length > 0 || isHelpLoading) && (
-                    <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                          Help history
-                        </span>
-                        {responses.length > 0 && (
-                          <Button
-                            onClick={() => handleClearAssistance(instruction.id)}
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-xs text-blue-600 hover:text-blue-700"
-                          >
-                            Clear all help
-                          </Button>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        {responses.map((response, responseIndex) => (
-                          <HelpPanel
-                            key={response.id ?? `${instruction.id}-response-${responseIndex}`}
-                            response={response}
-                            onAssistanceRequest={(type, customMessage) => {
-                              const contextMessage = customMessage ||
-                                (response.content
-                                  ? `I need more help understanding: "${response.content}"`
-                                  : undefined);
-
-                              handleAssistanceRequest(
-                                instruction.id,
-                                instruction.title,
-                                type,
-                                contextMessage
-                              );
-                            }}
-                            compact={true}
-                            isLoading={isHelpLoading && responseIndex === responses.length - 1}
-                          />
-                        ))}
-
-                        {isHelpLoading && responses.length === 0 && (
-                          <div className="flex items-center text-xs text-blue-600">
-                            <Loader2 className="h-3 w-3 animate-spin mr-2" />
-                            Loading help guidance...
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  {/* Assistance Manager Component */}
+                  <InstructionAssistanceManager
+                    taskId={taskId}
+                    instructionId={instruction.id}
+                    instructionTitle={instruction.title}
+                    isCompleted={isCompleted}
+                    onAssistanceRequest={(type, msg) => 
+                      handleAssistanceRequest(instruction.id, instruction.title, type, msg)
+                    }
+                    isRequestingHelp={isHelpLoading}
+                  />
                 </div>
               </div>
             </Card>
