@@ -138,6 +138,12 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
         // (AI responses that don't parse as structured content)
         if (!msg.isUser) {
           const parsedMessage = CoachMessageParser.parseMessage(msg.content);
+          
+          // Hide working_instructions if they're shown in persisted panel
+          if (parsedMessage.type === 'working_instructions' && persistedInstructions.length > 0) {
+            return false;
+          }
+          
           // Only show if it's structured (working_instructions, breakdown, guidance)
           return parsedMessage.type === 'working_instructions' || 
                  parsedMessage.type === 'breakdown' || 
@@ -147,7 +153,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
 
         return true;
       }),
-    [coachMessages]
+    [coachMessages, persistedInstructions.length]
   );
 
   // Calculate total days for progress tracking
