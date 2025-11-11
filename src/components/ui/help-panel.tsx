@@ -141,9 +141,9 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
 
       {/* Content */}
       <div className="mb-4 space-y-2">
-        <p className="text-sm text-gray-700 leading-relaxed">
+        <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line space-y-1">
           {response.content}
-        </p>
+        </div>
         {isLoading && (
           <div className="flex items-center text-xs text-blue-600">
             <Loader2 className="h-3 w-3 animate-spin mr-2" />
