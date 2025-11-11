@@ -39,10 +39,12 @@ export interface StoredAssistanceResponse {
 export interface StoredStepProgress {
   id: string;
   user_id: string;
-  response_id: string;
+  assistance_response_id: string;
   step_index: number;
   step_content: string;
   is_completed: boolean;
+  completed_at: string | null;
+  uncompleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -190,12 +192,14 @@ class AssistanceResponsePersistenceService {
       .from('assistance_step_progress')
       .upsert({
         user_id: userId,
-        response_id: responseDbId,
+        assistance_response_id: responseDbId,
         step_index: stepIndex,
         step_content: stepContent,
         is_completed: isCompleted,
+        completed_at: isCompleted ? new Date().toISOString() : null,
+        uncompleted_at: !isCompleted ? new Date().toISOString() : null,
       }, {
-        onConflict: 'user_id,response_id,step_index',
+        onConflict: 'user_id,assistance_response_id,step_index',
       });
 
     if (error) {
@@ -246,7 +250,7 @@ class AssistanceResponsePersistenceService {
       .from('assistance_step_progress')
       .select('*')
       .eq('user_id', userId)
-      .in('response_id', responseIds)
+      .in('assistance_response_id', responseIds)
       .eq('is_completed', true);
 
     if (stepError) {
@@ -254,12 +258,12 @@ class AssistanceResponsePersistenceService {
       throw new Error(`Failed to load step progress: ${stepError.message}`);
     }
 
-    // Group by response_id
+    // Group by assistance_response_id
     const grouped = new Map<string, Set<number>>();
     
     if (stepData) {
       stepData.forEach((row: any) => {
-        const responseId = row.response_id;
+        const responseId = row.assistance_response_id;
         if (!grouped.has(responseId)) {
           grouped.set(responseId, new Set());
         }
@@ -304,7 +308,7 @@ class AssistanceResponsePersistenceService {
         .from('assistance_step_progress')
         .delete()
         .eq('user_id', userId)
-        .in('response_id', responseIds);
+        .in('assistance_response_id', responseIds);
     }
 
     // Then delete responses

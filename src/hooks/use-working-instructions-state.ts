@@ -160,7 +160,7 @@ export function useWorkingInstructionsState(goalId: string, taskId: string) {
       // 2. Update local state
       setStepProgress(prev => {
         const updated = new Map(prev);
-        const steps = new Set(updated.get(responseDbId) || new Set());
+        const steps = new Set<number>(updated.get(responseDbId) || new Set<number>());
         
         if (isCompleted) {
           steps.add(stepIndex);

@@ -233,6 +233,8 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
               <HelpPanel
                 key={response.id ?? `${subTask.id}-response-${index}`}
                 response={response}
+                completedSteps={new Set<number>()} // SubTaskCard doesn't persist step progress yet
+                onToggleStep={() => {}} // SubTaskCard doesn't persist step progress yet
                 onAssistanceRequest={(type, customMessage) => {
                   const contextMessage = customMessage ||
                     (response.content
