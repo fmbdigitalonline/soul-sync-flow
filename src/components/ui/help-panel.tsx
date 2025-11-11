@@ -13,7 +13,8 @@ import {
   Copy,
   Lightbulb,
   MessageCircle,
-  Loader2
+  Loader2,
+  Languages
 } from 'lucide-react';
 import { AssistanceResponse } from '@/services/interactive-assistance-service';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -36,7 +37,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
   compact = false,
   isLoading = false
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['steps']));
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
@@ -102,6 +103,10 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
           <div>
             <h3 className="font-semibold text-gray-800 text-sm">Interactive Help</h3>
             <div className="flex flex-wrap items-center gap-2 mt-1">
+              <Badge variant="outline" className="text-xs bg-indigo-50 border-indigo-200 text-indigo-700">
+                <Languages className="h-3 w-3 mr-1" />
+                {language === 'nl' ? 'Nederlands' : 'English'}
+              </Badge>
               {response.assistanceType && (
                 <Badge variant="outline" className="text-xs bg-purple-50 border-purple-200 text-purple-700">
                   {response.assistanceType === 'stuck' && '🆘 I\'m Stuck'}
