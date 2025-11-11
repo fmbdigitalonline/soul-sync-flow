@@ -410,6 +410,45 @@ export type Database = {
         }
         Relationships: []
       }
+      assistance_step_progress: {
+        Row: {
+          assistance_response_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          is_completed: boolean
+          step_content: string
+          step_index: number
+          uncompleted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assistance_response_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          step_content: string
+          step_index: number
+          uncompleted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assistance_response_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          step_content?: string
+          step_index?: number
+          uncompleted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       blueprint_facts: {
         Row: {
           confidence: number | null
@@ -3746,6 +3785,75 @@ export type Database = {
           rating?: number
           session_id?: string
           session_summary?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      task_assistance_responses: {
+        Row: {
+          actionable_steps: string[]
+          assistance_type: string
+          content: string
+          created_at: string
+          follow_up_depth: number | null
+          goal_id: string
+          help_type: string
+          id: string
+          instruction_id: string
+          is_follow_up: boolean
+          previous_help_context: string | null
+          request_context: Json | null
+          request_id: string
+          success_criteria: string[]
+          task_id: string
+          time_estimate: string | null
+          title: string | null
+          tools_needed: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actionable_steps?: string[]
+          assistance_type?: string
+          content: string
+          created_at?: string
+          follow_up_depth?: number | null
+          goal_id: string
+          help_type: string
+          id?: string
+          instruction_id: string
+          is_follow_up?: boolean
+          previous_help_context?: string | null
+          request_context?: Json | null
+          request_id: string
+          success_criteria?: string[]
+          task_id: string
+          time_estimate?: string | null
+          title?: string | null
+          tools_needed?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actionable_steps?: string[]
+          assistance_type?: string
+          content?: string
+          created_at?: string
+          follow_up_depth?: number | null
+          goal_id?: string
+          help_type?: string
+          id?: string
+          instruction_id?: string
+          is_follow_up?: boolean
+          previous_help_context?: string | null
+          request_context?: Json | null
+          request_id?: string
+          success_criteria?: string[]
+          task_id?: string
+          time_estimate?: string | null
+          title?: string | null
+          tools_needed?: string[]
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
