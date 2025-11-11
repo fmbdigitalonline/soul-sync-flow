@@ -21,6 +21,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HelpPanelProps {
   response: AssistanceResponse;
+  completedSteps: Set<number>; // From parent, not local state
+  onToggleStep: (stepIndex: number, stepContent: string) => void; // Delegate to parent
   onCopyStep?: (step: string) => void;
   onAssistanceRequest?: (
     type: 'stuck' | 'need_details' | 'how_to' | 'examples',
@@ -32,6 +34,8 @@ interface HelpPanelProps {
 
 export const HelpPanel: React.FC<HelpPanelProps> = ({
   response,
+  completedSteps, // Received from parent
+  onToggleStep, // Received from parent
   onCopyStep,
   onAssistanceRequest,
   compact = false,
@@ -39,7 +43,6 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
 }) => {
   const { t, language } = useLanguage();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['steps']));
-  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
   const toggleSection = (section: string) => {
     const newExpanded = new Set(expandedSections);
@@ -52,13 +55,8 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
   };
 
   const toggleStepComplete = (stepIndex: number) => {
-    const newCompleted = new Set(completedSteps);
-    if (newCompleted.has(stepIndex)) {
-      newCompleted.delete(stepIndex);
-    } else {
-      newCompleted.add(stepIndex);
-    }
-    setCompletedSteps(newCompleted);
+    const stepContent = response.actionableSteps[stepIndex];
+    onToggleStep(stepIndex, stepContent); // Delegate to parent
   };
 
   const copyStep = (step: string) => {

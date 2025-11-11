@@ -34,6 +34,9 @@ export interface AssistanceResponse {
   isFollowUp?: boolean;
   followUpDepth?: number;
   previousHelpContext?: string;
+  dbId?: string; // Database ID for tracking persistence
+  title?: string; // For displaying in history
+  requestContext?: string; // For debugging
 }
 
 export interface HelpTemplate {

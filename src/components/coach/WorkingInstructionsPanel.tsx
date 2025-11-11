@@ -30,6 +30,7 @@ import {
 } from '@/utils/assistance-response-utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { safeInterpolateTranslation } from '@/utils/translation-utils';
+import { useWorkingInstructionsState } from '@/hooks/use-working-instructions-state';
 
 interface WorkingInstructionsPanelProps {
   instructions: WorkingInstruction[];
@@ -60,10 +61,20 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     toggleInstruction
   } = useInstructionProgress(goalId, taskId, initialCompletedIds);
   
+  // Use unified state management for assistance responses and step progress
+  const {
+    assistanceResponses,
+    stepProgress,
+    isLoading: isLoadingAssistance,
+    error: assistanceError,
+    saveResponse,
+    toggleStep,
+    clearResponsesForInstruction
+  } = useWorkingInstructionsState(goalId, taskId);
+  
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  const [assistanceResponses, setAssistanceResponses] = useState<Map<string, AssistanceResponse[]>>(new Map());
   const [isRequestingHelp, setIsRequestingHelp] = useState<Map<string, boolean>>(new Map());
   const [hermeticIntelligence, setHermeticIntelligence] = useState<HermeticStructuredIntelligence | null>(null);
 
@@ -178,14 +189,18 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
 
       const responseWithContext: AssistanceResponse = {
         ...responseWithMeta,
-        previousHelpContext: aggregatedContext
+        previousHelpContext: aggregatedContext,
+        title: instructionTitle,
+        requestContext: JSON.stringify({
+          instructionId,
+          instructionTitle,
+          type,
+          message
+        })
       };
 
-      setAssistanceResponses(prev => {
-        const updated = new Map(prev);
-        updated.set(instructionId, [...normalizedExisting, responseWithContext]);
-        return updated;
-      });
+      // Save to database AND update local state atomically
+      await saveResponse(instructionId, responseWithContext);
 
       toast({
         title: normalizedExisting.length === 0
@@ -206,28 +221,34 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
     }
   }, [instructions, hermeticIntelligence, assistanceResponses, toast, language]);
 
-  const handleClearAssistance = useCallback((instructionId: string) => {
+  const handleClearAssistance = useCallback(async (instructionId: string) => {
     if (!(assistanceResponses.get(instructionId)?.length)) {
       return;
     }
 
-    setAssistanceResponses(prev => {
-      const updated = new Map(prev);
-      updated.delete(instructionId);
-      return updated;
-    });
+    try {
+      // Clear from database AND local state atomically
+      await clearResponsesForInstruction(instructionId);
 
-    setIsRequestingHelp(prev => {
-      const updated = new Map(prev);
-      updated.delete(instructionId);
-      return updated;
-    });
+      setIsRequestingHelp(prev => {
+        const updated = new Map(prev);
+        updated.delete(instructionId);
+        return updated;
+      });
 
-    toast({
-      title: 'Help cleared',
-      description: 'All help guidance has been removed for this instruction.'
-    });
-  }, [assistanceResponses, toast]);
+      toast({
+        title: 'Help cleared',
+        description: 'All help guidance has been removed for this instruction.'
+      });
+    } catch (error) {
+      console.error('Failed to clear assistance:', error);
+      toast({
+        title: 'Error clearing help',
+        description: 'Failed to clear help guidance. Please try again.',
+        variant: 'destructive'
+      });
+    }
+  }, [assistanceResponses, clearResponsesForInstruction, toast]);
 
   React.useEffect(() => {
     if (onProgressChange) {
@@ -249,25 +270,31 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
   ), [originalText]);
 
   // Principle #7: Build Transparently - show loading states
-  if (isLoadingProgress) {
+  if (isLoadingProgress || isLoadingAssistance) {
     return (
       <Card className="p-8 text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
-        <p className="text-sm text-gray-600">{t('coach.loadingProgress')}</p>
+        <p className="text-sm text-gray-600">
+          {isLoadingProgress ? t('coach.loadingProgress') : 'Loading assistance history...'}
+        </p>
       </Card>
     );
   }
 
   // Principle #3: No Fallbacks That Mask Errors - surface issues
-  if (progressError) {
+  if (progressError || assistanceError) {
     return (
       <Card className="p-6 border-red-200 bg-red-50">
         <div className="flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-medium text-red-900 mb-1">{t('coach.loadProgressErrorTitle')}</h4>
-            <p className="text-sm text-red-700">{progressError}</p>
-            <p className="text-xs text-red-600 mt-2">{t('coach.loadProgressErrorDescription')}</p>
+            <h4 className="font-medium text-red-900 mb-1">
+              {progressError ? t('coach.loadProgressErrorTitle') : 'Failed to load assistance'}
+            </h4>
+            <p className="text-sm text-red-700">{progressError || assistanceError}</p>
+            <p className="text-xs text-red-600 mt-2">
+              {progressError ? t('coach.loadProgressErrorDescription') : 'Please refresh the page to try again.'}
+            </p>
           </div>
         </div>
       </Card>
@@ -423,8 +450,14 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
                       <div className="space-y-3">
                         {responses.map((response, responseIndex) => (
                           <HelpPanel
-                            key={response.id ?? `${instruction.id}-response-${responseIndex}`}
+                            key={response.dbId ?? response.id ?? `${instruction.id}-response-${responseIndex}`}
                             response={response}
+                            completedSteps={stepProgress.get(response.dbId!) || new Set()}
+                            onToggleStep={(stepIdx, content) => {
+                              if (response.dbId) {
+                                toggleStep(response.dbId, stepIdx, content);
+                              }
+                            }}
                             onAssistanceRequest={(type, customMessage) => {
                               const contextMessage = customMessage ||
                                 (response.content
