@@ -21,7 +21,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HelpPanelProps {
   response: AssistanceResponse;
-  assistanceResponseDbId?: string; // Database ID for step progress tracking
   onCopyStep?: (step: string) => void;
   onAssistanceRequest?: (
     type: 'stuck' | 'need_details' | 'how_to' | 'examples',
@@ -33,7 +32,6 @@ interface HelpPanelProps {
 
 export const HelpPanel: React.FC<HelpPanelProps> = ({
   response,
-  assistanceResponseDbId,
   onCopyStep,
   onAssistanceRequest,
   compact = false,
@@ -143,9 +141,9 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
 
       {/* Content */}
       <div className="mb-4 space-y-2">
-        <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line space-y-1">
+        <p className="text-sm text-gray-700 leading-relaxed">
           {response.content}
-        </div>
+        </p>
         {isLoading && (
           <div className="flex items-center text-xs text-blue-600">
             <Loader2 className="h-3 w-3 animate-spin mr-2" />
