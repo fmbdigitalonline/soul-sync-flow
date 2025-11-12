@@ -679,12 +679,31 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             <Button
               variant={reportType === 'hermetic' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setReportType('hermetic')}
+              onClick={() => {
+                if (!hermeticReport) {
+                  toast({
+                    title: "Premium Feature",
+                    description: "Alleen beschikbaar voor premium gebruikers",
+                    variant: "default"
+                  });
+                } else {
+                  setReportType('hermetic');
+                }
+              }}
               disabled={!hermeticReport}
-              className="rounded-md px-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600"
+              className={`rounded-md px-3 ${
+                !hermeticReport 
+                  ? 'opacity-50 cursor-not-allowed bg-gradient-to-r from-purple-600/30 to-blue-600/30 text-white/50' 
+                  : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600'
+              }`}
             >
               <Star className="h-4 w-4 mr-2" />
               {t('report.hermeticReport')}
+              {!hermeticReport && (
+                <Badge variant="outline" className="ml-2 bg-amber-500/20 text-amber-100 border-amber-300/30">
+                  Premium
+                </Badge>
+              )}
               {hermeticReport && (
                 <Badge variant="outline" className="ml-2 bg-white/20 text-white border-white/30">
                   {hermeticReport.report_content.word_count}+ words
@@ -745,15 +764,15 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               )
             )}
             
-            {/* Standalone Purge Stuck Jobs Button - Always Available */}
-            <PurgeStuckJobsButton />
+            {/* Standalone Purge Stuck Jobs Button - Dev Only */}
+            {import.meta.env.DEV && <PurgeStuckJobsButton />}
           </div>
         </div>
       )}
 
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 ${spacing.gap} w-full`}>
         <div className="min-w-0 flex-1">
-          <h3 className={`font-bold font-display break-words ${getTextSize('text-xl')}`}>
+          <h3 className={`font-bold font-display whitespace-nowrap overflow-hidden text-ellipsis ${getTextSize('text-xl')}`}>
             {reportType === 'hermetic' ? 'Hermetic Blueprint Report' : 'Personality Report'}
           </h3>
           <p className={`text-muted-foreground break-words ${getTextSize('text-sm')}`}>
@@ -791,20 +810,22 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               <Maximize2 className="h-4 w-4" />
               <span className="ml-1 sm:ml-2">{t('reportModal.viewFullReport')}</span>
             </Button>
-            <Button 
-              onClick={handleRegenerate} 
-              variant="outline" 
-              size="sm"
-              disabled={generating}
-              className="flex-1 sm:flex-none"
-            >
-              {generating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="h-4 w-4" />
-              )}
-              <span className="ml-1 sm:ml-2">{generating ? t('settings.regenerating') : t('common.regenerate')}</span>
-            </Button>
+            {import.meta.env.DEV && (
+              <Button 
+                onClick={handleRegenerate} 
+                variant="outline" 
+                size="sm"
+                disabled={generating}
+                className="flex-1 sm:flex-none"
+              >
+                {generating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                <span className="ml-1 sm:ml-2">{generating ? t('settings.regenerating') : t('common.regenerate')}</span>
+              </Button>
+            )}
             <Button onClick={handleRefresh} variant="ghost" size="sm" className="flex-shrink-0">
               <RefreshCw className="h-4 w-4" />
             </Button>
