@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronDown, ChevronRight, User, Sparkles, Star, Calculator, Circle } from "lucide-react";
+import { ChevronDown, ChevronRight, User, Sparkles, Star, Calculator, Circle, Lock } from "lucide-react";
 import { EnhancedBlueprintData, ViewDepth } from "@/types/blueprint-enhanced";
 import { personalityFusionService } from "@/services/personality-fusion-service";
 import { PersonalityProfile } from "@/types/personality-fusion";
@@ -312,6 +312,27 @@ export const EnhancedBlueprintViewer: React.FC<EnhancedBlueprintViewerProps> = (
       {/* Sections Stack */}
       <ScrollArea className="h-[calc(100vh-300px)] w-full">
         <div className={`space-y-${spacing.card} ${isMobile ? 'pr-2' : 'pr-4'}`}>
+          <Card className="border-dashed border-soul-purple/30 bg-muted/30 shadow-none">
+            <CardContent
+              className={`${spacing.card} flex ${isMobile ? 'flex-col items-center text-center' : 'items-center'} gap-4 text-muted-foreground`}
+            >
+              <div className={`rounded-full bg-muted-foreground/10 p-3 ${isMobile ? '' : 'flex-shrink-0'}`}>
+                <Lock className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className={`${getTextSize("text-lg")} font-semibold`}>Hermetisch Rapport</h3>
+                <p className={`${getTextSize("text-sm")} text-muted-foreground/80`}>
+                  Alleen toegankelijk voor premium gebruikers
+                </p>
+              </div>
+              <Badge
+                variant="outline"
+                className={`${isMobile ? 'mt-2' : 'ml-auto'} bg-soul-purple/10 text-soul-purple border-soul-purple/30`}
+              >
+                Premium
+              </Badge>
+            </CardContent>
+          </Card>
           {sections.map((section) => (
             <div key={section.key}>
               {section.component || (

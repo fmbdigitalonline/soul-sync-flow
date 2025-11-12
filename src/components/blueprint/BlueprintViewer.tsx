@@ -9,7 +9,7 @@ import { EnhancedBlueprintData } from "@/types/blueprint-enhanced";
 import { BlueprintEnhancementService } from "@/services/blueprint-enhancement-service";
 import EnhancedBlueprintViewer from "./EnhancedBlueprintViewer";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
-import { ChevronDown, ChevronRight, User, Brain, Heart, Compass, Star, Calculator, Globe } from "lucide-react";
+import { ChevronDown, ChevronRight, User, Brain, Heart, Compass, Star, Calculator, Globe, Lock } from "lucide-react";
 
 interface BlueprintViewerProps {
   blueprint: BlueprintData;
@@ -179,6 +179,27 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
 
       <ScrollArea className={`${isMobile ? 'h-[60vh]' : 'h-[70vh]'} w-full`}>
         <div className={`space-y-4 pr-2 ${spacing.gap}`}>
+          <Card className="border-dashed border-soul-purple/30 bg-muted/30 shadow-none">
+            <CardContent
+              className={`${spacing.card} flex ${isMobile ? 'flex-col items-center text-center' : 'items-center'} gap-4 text-muted-foreground`}
+            >
+              <div className={`rounded-full bg-muted-foreground/10 p-3 ${isMobile ? '' : 'flex-shrink-0'}`}>
+                <Lock className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className={`${getTextSize('text-lg')} font-semibold`}>Hermetisch Rapport</h3>
+                <p className={`${getTextSize('text-sm')} text-muted-foreground/80`}>
+                  Alleen toegankelijk voor premium gebruikers
+                </p>
+              </div>
+              <Badge
+                variant="outline"
+                className={`${isMobile ? 'mt-2' : 'ml-auto'} bg-soul-purple/10 text-soul-purple border-soul-purple/30`}
+              >
+                Premium
+              </Badge>
+            </CardContent>
+          </Card>
           {/* Overview Section */}
           <Card>
             <div className={spacing.card}>
