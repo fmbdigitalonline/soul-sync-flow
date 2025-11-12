@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { aiPersonalityReportService, PersonalityReport } from '@/services/ai-personality-report-service';
+import { canAccessHermeticReport } from '@/utils/hermeticAccess';
 import { hermeticPersonalityReportService, HermeticPersonalityReport } from '@/services/hermetic-personality-report-service';
 import { blueprintService } from '@/services/blueprint-service';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +27,9 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+  
+  // Check if user has access to hermetic reports (UI-only check)
+  const hasHermeticAccess = canAccessHermeticReport(user);
   const { toast } = useToast();
   const { spacing, getTextSize, isMobile, isUltraNarrow, isFoldDevice } = useResponsiveLayout();
   const [report, setReport] = useState<PersonalityReport | null>(null);
@@ -680,31 +684,37 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               variant={reportType === 'hermetic' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => {
-                if (!hermeticReport) {
+                if (!hasHermeticAccess) {
+                  toast({
+                    title: "Toegang Geweigerd",
+                    description: "Hermetisch rapport is alleen beschikbaar voor specifieke gebruikers",
+                    variant: "default"
+                  });
+                } else if (!hermeticReport) {
                   toast({
                     title: "Premium Feature",
-                    description: "Alleen beschikbaar voor premium gebruikers",
+                    description: "Genereer eerst een hermetisch rapport",
                     variant: "default"
                   });
                 } else {
                   setReportType('hermetic');
                 }
               }}
-              disabled={!hermeticReport}
+              disabled={!hasHermeticAccess || !hermeticReport}
               className={`rounded-md px-3 ${
-                !hermeticReport 
+                !hasHermeticAccess || !hermeticReport
                   ? 'opacity-50 cursor-not-allowed bg-gradient-to-r from-purple-600/30 to-blue-600/30 text-white/50' 
                   : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600'
               }`}
             >
               <Star className="h-4 w-4 mr-2" />
               {t('report.hermeticReport')}
-              {!hermeticReport && (
+              {(!hasHermeticAccess || !hermeticReport) && (
                 <Badge variant="outline" className="ml-2 bg-amber-500/20 text-amber-100 border-amber-300/30">
-                  Premium
+                  {!hasHermeticAccess ? 'Beperkte Toegang' : 'Premium'}
                 </Badge>
               )}
-              {hermeticReport && (
+              {hasHermeticAccess && hermeticReport && (
                 <Badge variant="outline" className="ml-2 bg-white/20 text-white border-white/30">
                   {hermeticReport.report_content.word_count}+ words
                 </Badge>
@@ -729,7 +739,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                 Generate Standard
               </Button>
             )}
-            {!hermeticReport && (
+            {!hermeticReport && hasHermeticAccess && (
               hermeticStatus.hasZombieJob ? (
                 <div className="flex flex-col gap-2">
                   <div className="text-xs text-warning flex items-center gap-1">
@@ -762,6 +772,20 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   Generate Hermetic
                 </Button>
               )
+            )}
+            {!hermeticReport && !hasHermeticAccess && (
+              <Button 
+                disabled
+                variant="outline"
+                size="sm"
+                className="opacity-50 cursor-not-allowed border-gray-300 text-gray-400"
+              >
+                <Star className="h-4 w-4 mr-2" />
+                Generate Hermetic
+                <Badge variant="outline" className="ml-2 bg-gray-100 text-gray-500 border-gray-300">
+                  Beperkte Toegang
+                </Badge>
+              </Button>
             )}
             
             {/* Standalone Purge Stuck Jobs Button - Dev Only */}
