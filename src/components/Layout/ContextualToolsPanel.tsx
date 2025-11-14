@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -17,7 +16,8 @@ import {
   Play,
   Pause,
   ListTodo,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -38,11 +38,10 @@ export const ContextualToolsPanel: React.FC<ContextualToolsPanelProps> = ({
   selectedTask,
   className
 }) => {
-  const location = useLocation();
   const { t } = useLanguage();
 
-  // Auto-detect context from route if not provided
-  const detectedContext = context || detectContextFromRoute(location.pathname);
+  // Keep the Journey contextual tools available everywhere by default
+  const detectedContext = context || 'journey';
 
   return (
     <div className={cn("h-full p-6 space-y-6", className)}>
@@ -66,18 +65,6 @@ export const ContextualToolsPanel: React.FC<ContextualToolsPanelProps> = ({
     </div>
   );
 };
-
-// Helper: Detect context from route
-function detectContextFromRoute(pathname: string): string {
-  if (pathname.includes('/journey')) return 'journey';
-  if (pathname.includes('/tasks')) return 'tasks';
-  if (pathname.includes('/focus')) return 'focus';
-  if (pathname.includes('/habits')) return 'habits';
-  if (pathname.includes('/discover') || pathname.includes('/chat')) return 'chat';
-  if (pathname.includes('/create')) return 'create';
-  if (pathname.includes('/coach')) return 'task-coach';
-  return 'hub';
-}
 
 // Helper: Render tools based on context (Principle #2: No Hardcoded Data)
 function renderToolsForContext(
@@ -294,6 +281,10 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
     setNoteDraft('');
   };
 
+  const removeWorkspaceNote = (indexToRemove: number) => {
+    setWorkspaceNotes(prev => prev.filter((_, index) => index !== indexToRemove));
+  };
+
   const handleAddAgendaItem = () => {
     if (!agendaInput.trim()) return;
 
@@ -465,9 +456,17 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                 {workspaceNotes.map((note, index) => (
                   <div
                     key={`${note}-${index}`}
-                    className="rounded-md border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground"
+                    className="rounded-md border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground flex items-start justify-between gap-3"
                   >
-                    {note}
+                    <span className="flex-1 whitespace-pre-wrap break-words">{note}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeWorkspaceNote(index)}
+                      className="inline-flex items-center rounded-md p-1 text-muted-foreground transition-colors hover:text-destructive"
+                      aria-label={t('contextualTools.deleteNote')}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 ))}
               </div>
