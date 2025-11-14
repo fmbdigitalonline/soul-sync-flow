@@ -65,7 +65,7 @@ export function useJourneyGoals() {
       }
 
       const currentGoals = journeyData?.current_goals || [];
-      
+
       if (!Array.isArray(currentGoals) || currentGoals.length === 0) {
         console.log('ℹ️ No goals found in productivity journey');
         setGoals([]);
@@ -73,8 +73,32 @@ export function useJourneyGoals() {
         return;
       }
 
+      // Deduplicate any goals with the same ID before transforming
+      const dedupedGoals = currentGoals.reduce((acc: any[], goal: any) => {
+        if (!goal) return acc;
+
+        const goalIdentifier = goal.id || goal.goal_id || `${goal.title}-${goal.category}`;
+        if (!goalIdentifier) return acc;
+
+        const goalKey = String(goalIdentifier);
+        const alreadyExists = acc.some(existing => {
+          const existingId = existing.id || existing.goal_id || `${existing.title}-${existing.category}`;
+          return existingId && String(existingId) === goalKey;
+        });
+
+        if (alreadyExists) {
+          console.warn('⚠️ Duplicate goal detected in productivity journey - ignoring duplicate', {
+            goalId: goalKey,
+            title: goal.title
+          });
+          return acc;
+        }
+
+        return [...acc, goal];
+      }, [] as any[]);
+
       // Transform journey goals to Goal type
-      const transformedGoals: Goal[] = currentGoals
+      const transformedGoals: Goal[] = dedupedGoals
         .filter((goal: any) => goal && goal.id)
         .map((goal: any) => {
           const milestones = Array.isArray(goal.milestones) ? goal.milestones : [];
