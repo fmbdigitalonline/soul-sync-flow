@@ -23,6 +23,12 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { interpolateTranslation } from '@/utils/translation-utils';
 
+interface WorkspaceNote {
+  id: string;
+  content: string;
+  createdAt: string;
+}
+
 interface ContextualToolsPanelProps {
   context?: 'journey' | 'task-coach' | 'focus' | 'tasks' | 'milestones' | 'hub' | 'chat' | 'create';
   activeGoal?: any;
@@ -100,13 +106,37 @@ function renderToolsForContext(
 function JourneyTools({ activeGoal }: { activeGoal?: any }) {
   const { t } = useLanguage();
   const [activeModule, setActiveModule] = useState<'workspace' | 'agenda' | 'actions' | 'progress' | 'insights'>('workspace');
-  const [workspaceNotes, setWorkspaceNotes] = useState<string[]>(() => {
+  const [workspaceNotes, setWorkspaceNotes] = useState<WorkspaceNote[]>(() => {
     if (typeof window === 'undefined') {
       return [];
     }
     try {
       const stored = window.localStorage.getItem('journey-workspace-notes');
-      return stored ? JSON.parse(stored) : [];
+      if (!stored) return [];
+
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+
+      const fallbackTimestamp = new Date().toISOString();
+      if (parsed.every((note: unknown) => typeof note === 'string')) {
+        return parsed.map((note: string, index: number) => ({
+          id: `legacy-note-${index}-${Date.now()}`,
+          content: note,
+          createdAt: fallbackTimestamp
+        }));
+      }
+
+      return parsed
+        .filter((note: any): note is WorkspaceNote =>
+          note && typeof note === 'object' && 'content' in note
+        )
+        .map((note: any, index: number) => ({
+          id: typeof note.id === 'string' ? note.id : `note-${Date.now()}-${index}`,
+          content: typeof note.content === 'string' ? note.content : String(note.content ?? ''),
+          createdAt: typeof note.createdAt === 'string' ? note.createdAt : fallbackTimestamp
+        }));
     } catch (error) {
       console.error('Failed to parse journey workspace notes', error);
       return [];
@@ -276,13 +306,32 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
     ], [workspaceNotes.length, pendingAgendaCount, focusTimer.isRunning, formattedTimer, totalMilestones, milestoneProgress, insights.length, t]);
 
   const addWorkspaceNote = () => {
-    if (!noteDraft.trim()) return;
-    setWorkspaceNotes(prev => [noteDraft.trim(), ...prev]);
+    const trimmedNote = noteDraft.trim();
+    if (!trimmedNote) return;
+
+    const newNote: WorkspaceNote = {
+      id: `note-${Date.now()}`,
+      content: trimmedNote,
+      createdAt: new Date().toISOString()
+    };
+
+    setWorkspaceNotes(prev => [newNote, ...prev]);
     setNoteDraft('');
   };
 
-  const removeWorkspaceNote = (indexToRemove: number) => {
-    setWorkspaceNotes(prev => prev.filter((_, index) => index !== indexToRemove));
+  const removeWorkspaceNote = (idToRemove: string) => {
+    setWorkspaceNotes(prev => prev.filter(note => note.id !== idToRemove));
+  };
+
+  const formatNoteTimestamp = (timestamp: string) => {
+    try {
+      return new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      }).format(new Date(timestamp));
+    } catch (error) {
+      return timestamp;
+    }
   };
 
   const handleAddAgendaItem = () => {
@@ -453,15 +502,22 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
             <div className="space-y-2">
               <p className="text-xs font-semibold text-foreground">{t('contextualTools.recentNotes')}</p>
               <div className="space-y-2">
-                {workspaceNotes.map((note, index) => (
+                {workspaceNotes.map(note => (
                   <div
-                    key={`${note}-${index}`}
+                    key={note.id}
                     className="rounded-md border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground flex items-start justify-between gap-3"
                   >
-                    <span className="flex-1 whitespace-pre-wrap break-words">{note}</span>
+                    <div className="flex-1 space-y-1">
+                      <span className="flex-1 whitespace-pre-wrap break-words text-foreground text-xs">
+                        {note.content}
+                      </span>
+                      <span className="block text-[10px] text-muted-foreground">
+                        {formatNoteTimestamp(note.createdAt)}
+                      </span>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => removeWorkspaceNote(index)}
+                      onClick={() => removeWorkspaceNote(note.id)}
                       className="inline-flex items-center rounded-md p-1 text-muted-foreground transition-colors hover:text-destructive"
                       aria-label={t('contextualTools.deleteNote')}
                     >
