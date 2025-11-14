@@ -163,12 +163,24 @@ export const useDecompositionLogic = ({
             .eq('user_id', user.id)
             .maybeSingle();
 
-          const currentGoals = Array.isArray(journeyData?.current_goals) 
-            ? journeyData.current_goals 
+          const currentGoals = Array.isArray(journeyData?.current_goals)
+            ? journeyData.current_goals
             : [];
 
-          // Add the new goal to current_goals array (cast to Json for DB compatibility)
-          const updatedGoals = [...currentGoals, soulGoal] as any;
+          const newGoalId = String(newGoalRecord.id);
+          const sanitizedGoal = {
+            ...soulGoal,
+            id: newGoalId
+          };
+
+          // Remove any existing goal with the same ID before adding the new one
+          const dedupedGoals = currentGoals.filter((goal: any) => {
+            const existingId = goal?.id || goal?.goal_id;
+            return existingId ? String(existingId) !== newGoalId : true;
+          });
+
+          // Add newest goal to the front so the latest dream appears first
+          const updatedGoals = [sanitizedGoal, ...dedupedGoals] as any;
 
           if (journeyData) {
             // Update existing journey
@@ -186,9 +198,9 @@ export const useDecompositionLogic = ({
             // Create new journey record
             const { error: journeyInsertError } = await supabase
               .from('productivity_journey')
-              .insert({ 
-                user_id: user.id, 
-                current_goals: updatedGoals 
+              .insert({
+                user_id: user.id,
+                current_goals: updatedGoals
               } as any);
 
             if (journeyInsertError) {
@@ -200,7 +212,7 @@ export const useDecompositionLogic = ({
         } catch (journeyError) {
           console.error('❌ Journey sync error (non-fatal):', journeyError);
         }
-        
+
       } catch (dbError) {
         console.error('❌ Database save error (continuing anyway):', dbError);
       }
