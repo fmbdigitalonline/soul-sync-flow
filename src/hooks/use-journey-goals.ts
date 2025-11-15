@@ -65,7 +65,7 @@ export function useJourneyGoals() {
       }
 
       const currentGoals = journeyData?.current_goals || [];
-      
+
       if (!Array.isArray(currentGoals) || currentGoals.length === 0) {
         console.log('ℹ️ No goals found in productivity journey');
         setGoals([]);
@@ -73,8 +73,52 @@ export function useJourneyGoals() {
         return;
       }
 
+      // Deduplicate by ID and by normalized content signature so legacy duplicates are hidden
+      const normalize = (value: unknown) =>
+        typeof value === 'string' ? value.trim().toLowerCase() : '';
+
+      const seenGoalIds = new Set<string>();
+      const seenGoalSignatures = new Set<string>();
+
+      const dedupedGoals = currentGoals.reduce((acc: any[], goal: any) => {
+        if (!goal) return acc;
+
+        const rawIdentifier = goal.id || goal.goal_id;
+        const goalIdKey = rawIdentifier ? String(rawIdentifier) : null;
+
+        const signatureParts = [
+          normalize(goal.title),
+          normalize(goal.description),
+          normalize(goal.category),
+          normalize(goal.target_completion || goal.deadline)
+        ];
+        const hasMeaningfulSignature = signatureParts.some(Boolean);
+        const signatureKey = hasMeaningfulSignature ? signatureParts.join('|') : null;
+
+        const isDuplicateById = goalIdKey ? seenGoalIds.has(goalIdKey) : false;
+        const isDuplicateBySignature = signatureKey ? seenGoalSignatures.has(signatureKey) : false;
+
+        if (isDuplicateById || isDuplicateBySignature) {
+          console.warn('⚠️ Duplicate goal detected in productivity journey - ignoring duplicate', {
+            goalId: goalIdKey,
+            signature: signatureKey,
+            title: goal.title
+          });
+          return acc;
+        }
+
+        if (goalIdKey) {
+          seenGoalIds.add(goalIdKey);
+        }
+        if (signatureKey) {
+          seenGoalSignatures.add(signatureKey);
+        }
+
+        return [...acc, goal];
+      }, [] as any[]);
+
       // Transform journey goals to Goal type
-      const transformedGoals: Goal[] = currentGoals
+      const transformedGoals: Goal[] = dedupedGoals
         .filter((goal: any) => goal && goal.id)
         .map((goal: any) => {
           const milestones = Array.isArray(goal.milestones) ? goal.milestones : [];
