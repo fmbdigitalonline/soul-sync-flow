@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSoulOrb } from '@/contexts/SoulOrbContext';
 import { soulGoalDecompositionService, SoulGeneratedGoal } from '@/services/soul-goal-decomposition-service';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,6 +44,8 @@ export const useDecompositionLogic = ({
   const [actionExecuted, setActionExecuted] = useState(false);
   const [allStagesCompleted, setAllStagesCompleted] = useState(false);
   const [stageProcessing, setStageProcessing] = useState(false);
+  const isDecomposingRef = useRef(false);
+  const hasSuccessfullySavedGoalRef = useRef(false);
 
   // Memoized user type to prevent infinite re-rendering
   const userType = useMemo(() => {
@@ -67,6 +69,18 @@ export const useDecompositionLogic = ({
 
   // Enhanced Soul Goal Decomposition with better error handling
   const decomposeWithSoul = useCallback(async () => {
+    if (hasSuccessfullySavedGoalRef.current) {
+      console.log('⏭️ Soul goal already created for this decomposition run - skipping duplicate request');
+      return;
+    }
+
+    if (isDecomposingRef.current) {
+      console.log('⏳ Soul goal decomposition already in progress - ignoring duplicate trigger');
+      return;
+    }
+
+    isDecomposingRef.current = true;
+
     const startTime = Date.now();
     console.log('🎯 Starting Soul goal decomposition...', {
       dreamTitle,
@@ -216,7 +230,7 @@ export const useDecompositionLogic = ({
       } catch (dbError) {
         console.error('❌ Database save error (continuing anyway):', dbError);
       }
-      
+
     } catch (error) {
       const endTime = Date.now();
       const duration = endTime - startTime;
@@ -228,6 +242,8 @@ export const useDecompositionLogic = ({
       });
       
       throw error; // Re-throw to be caught by stage handler
+    } finally {
+      isDecomposingRef.current = false;
     }
   }, [dreamTitle, dreamDescription, dreamTimeframe, dreamCategory, blueprintData]);
 
