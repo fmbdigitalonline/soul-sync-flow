@@ -150,7 +150,7 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
                   <p className="text-xs text-muted-foreground mb-1">{task.description || t('journey.journeyStarted')}</p>
                   <div className="flex gap-1">
                     <Badge variant="outline" className="text-xs">
-                      {task.estimated_duration || t('journey.taskViews.summary', { total: '—', completed: '—' })}
+                      {task.estimated_duration || '—'}
                     </Badge>
                     <Badge variant="outline" className="text-xs">
                       {task.energy_level_required || '—'}
