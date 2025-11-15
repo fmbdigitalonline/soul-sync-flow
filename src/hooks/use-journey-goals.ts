@@ -73,45 +73,25 @@ export function useJourneyGoals() {
         return;
       }
 
-      // Deduplicate by ID and by normalized content signature so legacy duplicates are hidden
-      const normalize = (value: unknown) =>
-        typeof value === 'string' ? value.trim().toLowerCase() : '';
-
-      const seenGoalIds = new Set<string>();
-      const seenGoalSignatures = new Set<string>();
-
+      // Deduplicate any goals with the same ID before transforming
       const dedupedGoals = currentGoals.reduce((acc: any[], goal: any) => {
         if (!goal) return acc;
 
-        const rawIdentifier = goal.id || goal.goal_id;
-        const goalIdKey = rawIdentifier ? String(rawIdentifier) : null;
+        const goalIdentifier = goal.id || goal.goal_id || `${goal.title}-${goal.category}`;
+        if (!goalIdentifier) return acc;
 
-        const signatureParts = [
-          normalize(goal.title),
-          normalize(goal.description),
-          normalize(goal.category),
-          normalize(goal.target_completion || goal.deadline)
-        ];
-        const hasMeaningfulSignature = signatureParts.some(Boolean);
-        const signatureKey = hasMeaningfulSignature ? signatureParts.join('|') : null;
+        const goalKey = String(goalIdentifier);
+        const alreadyExists = acc.some(existing => {
+          const existingId = existing.id || existing.goal_id || `${existing.title}-${existing.category}`;
+          return existingId && String(existingId) === goalKey;
+        });
 
-        const isDuplicateById = goalIdKey ? seenGoalIds.has(goalIdKey) : false;
-        const isDuplicateBySignature = signatureKey ? seenGoalSignatures.has(signatureKey) : false;
-
-        if (isDuplicateById || isDuplicateBySignature) {
+        if (alreadyExists) {
           console.warn('⚠️ Duplicate goal detected in productivity journey - ignoring duplicate', {
-            goalId: goalIdKey,
-            signature: signatureKey,
+            goalId: goalKey,
             title: goal.title
           });
           return acc;
-        }
-
-        if (goalIdKey) {
-          seenGoalIds.add(goalIdKey);
-        }
-        if (signatureKey) {
-          seenGoalSignatures.add(signatureKey);
         }
 
         return [...acc, goal];

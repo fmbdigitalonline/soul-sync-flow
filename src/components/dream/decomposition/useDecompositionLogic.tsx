@@ -227,8 +227,6 @@ export const useDecompositionLogic = ({
           console.error('❌ Journey sync error (non-fatal):', journeyError);
         }
 
-        hasSuccessfullySavedGoalRef.current = true;
-
       } catch (dbError) {
         console.error('❌ Database save error (continuing anyway):', dbError);
       }
