@@ -30,6 +30,10 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
   onExitFocus,
 }) => {
   const { t, language } = useLanguage();
+  const handleTaskClick = (taskId?: string) => {
+    if (!taskId) return;
+    onTaskClick?.(taskId);
+  };
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US', {
       month: "short",
@@ -38,12 +42,24 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
     });
   };
 
+  const normalizedMilestoneKeyword =
+    typeof focusedMilestone?.title === 'string'
+      ? focusedMilestone.title.toLowerCase().split(' ')[0]
+      : '';
+
   const milestoneTasks =
-    mainGoal.tasks?.filter(
-      (task: any) =>
-        task.milestone_id === focusedMilestone.id ||
-        task.title.toLowerCase().includes(focusedMilestone.title.toLowerCase().split(" ")[0])
-    ) || [];
+    mainGoal.tasks?.filter((task: any) => {
+      if (!task) return false;
+
+      if (task.milestone_id && focusedMilestone?.id) {
+        return task.milestone_id === focusedMilestone.id;
+      }
+
+      if (!normalizedMilestoneKeyword) return false;
+
+      const taskTitle = typeof task.title === 'string' ? task.title.toLowerCase() : '';
+      return taskTitle.includes(normalizedMilestoneKeyword);
+    }) || [];
 
   React.useEffect(() => {
     console.log(`[FocusMode] Entered for milestone:`, focusedMilestone.title);
@@ -122,22 +138,22 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
           <div className="space-y-2">
             {milestoneTasks.map((task: any, index: number) => (
               <div
-                key={task.id}
+                key={task.id ?? index}
                 className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-secondary/20 cursor-pointer transition-all duration-200 hover:shadow-md"
-                onClick={() => onTaskClick?.(task.id)}
+                onClick={() => handleTaskClick(task.id)}
               >
                 <div className="w-6 h-6 bg-soul-purple/20 rounded-full flex items-center justify-center text-soul-purple font-medium text-xs">
                   {index + 1}
                 </div>
                 <div className="flex-1">
-                  <h5 className="font-medium text-sm">{task.title}</h5>
-                  <p className="text-xs text-muted-foreground mb-1">{task.description}</p>
+                  <h5 className="font-medium text-sm">{task.title || t('journey.taskViews.noTasksFound')}</h5>
+                  <p className="text-xs text-muted-foreground mb-1">{task.description || t('journey.journeyStarted')}</p>
                   <div className="flex gap-1">
                     <Badge variant="outline" className="text-xs">
-                      {task.estimated_duration}
+                      {task.estimated_duration || t('journey.taskViews.summary', { total: '—', completed: '—' })}
                     </Badge>
                     <Badge variant="outline" className="text-xs">
-                      {task.energy_level_required}
+                      {task.energy_level_required || '—'}
                     </Badge>
                   </div>
                 </div>
