@@ -519,7 +519,7 @@ async function getHermeticEducationalContext(
       .from('personality_reports')
       .select('report_content')
       .eq('user_id', userId)
-      .eq('report_type', 'hermetic_2.0')
+      .eq('blueprint_version', '2.0')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
