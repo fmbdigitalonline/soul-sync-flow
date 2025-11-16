@@ -402,48 +402,136 @@ async function fuseWithHACSIntelligence(
   }
 }
 
-// NEW: Fetch relevant Hermetic 2.0 report sections for educational responses
+/**
+ * Calculate token budget based on intent complexity
+ * Principle #2: Real data budgeting, no arbitrary limits
+ */
+function calculateContextBudget(intent: string): {
+  hermeticSections: number;
+  vectorChunks: number;
+  behavioralMemories: number;
+  totalWordsEstimate: number;
+} {
+  switch(intent) {
+    case 'BLUEPRINT_GUIDANCE':
+    case 'SHADOW_EXPLORATION':
+      return {
+        hermeticSections: 5,
+        vectorChunks: 5,
+        behavioralMemories: 5,
+        totalWordsEstimate: 1800
+      };
+    
+    case 'EDUCATIONAL':
+    case 'ALIGNED_ACTION':
+      return {
+        hermeticSections: 3,
+        vectorChunks: 5,
+        behavioralMemories: 3,
+        totalWordsEstimate: 1300
+      };
+    
+    default: // MIXED, FACTUAL, INTERPRETIVE
+      return {
+        hermeticSections: 2,
+        vectorChunks: 3,
+        behavioralMemories: 2,
+        totalWordsEstimate: 800
+      };
+  }
+}
+
+// NEW: Fetch relevant Hermetic 2.0 report sections with intent-based prioritization
 async function getHermeticEducationalContext(
   userId: string,
   message: string,
-  supabase: any
+  supabase: any,
+  intent: string = 'MIXED'
 ): Promise<{ sections: Record<string, any>; topicMap: string[] }> {
   try {
-    console.log('📖 EDUCATIONAL MODE: Fetching Hermetic report sections');
+    console.log('📖 HERMETIC CONTEXT: Fetching report sections for intent:', intent);
     
-    // Detect conversation topic from message
-    const messageLower = message.toLowerCase();
+    // Intent-based section prioritization (Principle #6: Respect Critical Data Pathways)
     let prioritySections: string[] = [];
     
-    // Topic detection (matches hermetic-report-access-service.ts logic)
-    if (messageLower.includes('relationship') || messageLower.includes('connect')) {
-      prioritySections.push('relationship_style', 'attachment_style');
+    switch(intent) {
+      case 'BLUEPRINT_GUIDANCE':
+        prioritySections = [
+          'integrated_summary',
+          'core_personality_pattern', 
+          'decision_making_style',
+          'authentic_expression_guide',
+          'transformation_roadmap'
+        ];
+        break;
+      
+      case 'EDUCATIONAL':
+        prioritySections = [
+          'core_personality_pattern',
+          'shadow_work',
+          'behavioral_patterns',
+          'cognitive_style'
+        ];
+        break;
+      
+      case 'SHADOW_EXPLORATION':
+        prioritySections = [
+          'shadow_work',
+          'transformation_roadmap',
+          'inner_conflicts',
+          'growth_edges'
+        ];
+        break;
+      
+      case 'ALIGNED_ACTION':
+        prioritySections = [
+          'decision_making_style',
+          'authentic_expression_guide',
+          'transformation_roadmap'
+        ];
+        break;
+        
+      default:
+        prioritySections = [
+          'integrated_summary',
+          'core_personality_pattern',
+          'decision_making_style'
+        ];
     }
-    if (messageLower.includes('decision') || messageLower.includes('choice')) {
+    
+    // Topic-based expansion (existing logic preserved)
+    const messageLower = message.toLowerCase();
+    if (/\b(relationship|connect|people|social)\b/i.test(messageLower)) {
+      prioritySections.push('relationship_dynamics', 'communication_style');
+    }
+    if (/\b(decision|choice|stuck|should i)\b/i.test(messageLower)) {
       prioritySections.push('decision_making_style', 'core_personality_pattern');
     }
-    if (messageLower.includes('energy') || messageLower.includes('alone') || messageLower.includes('tired')) {
+    if (/\b(energy|alone|tired|recharge)\b/i.test(messageLower)) {
       prioritySections.push('current_energy_timing', 'energy_patterns');
     }
-    if (messageLower.includes('purpose') || messageLower.includes('calling')) {
+    if (/\b(purpose|calling|meaning)\b/i.test(messageLower)) {
       prioritySections.push('life_path_purpose', 'integrated_summary');
     }
     
-    // Default: Core sections if no specific topic
-    if (prioritySections.length === 0) {
-      prioritySections = ['integrated_summary', 'core_personality_pattern', 'decision_making_style'];
-    }
-    
-    // Fetch full Hermetic report
+    // Fetch from CORRECT table (Principle #1: Fix bugs, don't mask them)
     const { data: reportData, error } = await supabase
-      .from('hermetic_structured_intelligence')
+      .from('personality_reports')
       .select('report_content')
       .eq('user_id', userId)
-      .single();
+      .eq('report_type', 'hermetic_2.0')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
     
-    if (error || !reportData) {
-      console.log('⚠️ No Hermetic report found, falling back to standard mode');
-      return { sections: {}, topicMap: [] };
+    if (error) {
+      console.error('❌ Error fetching Hermetic report:', error);
+      throw error; // Principle #3: Surface errors, don't mask
+    }
+    
+    if (!reportData) {
+      console.log('⚠️ No Hermetic report found for user');
+      return { sections: {}, topicMap: [] }; // Principle #2: Real empty state, not simulated data
     }
     
     const reportContent = typeof reportData.report_content === 'string' 
@@ -467,7 +555,92 @@ async function getHermeticEducationalContext(
     
   } catch (error) {
     console.error('❌ Error fetching Hermetic educational context:', error);
-    return { sections: {}, topicMap: [] };
+    throw error; // Principle #3: Don't mask errors with fallbacks
+  }
+}
+
+/**
+ * Retrieve relevant behavioral patterns from user_session_memory
+ * Principle #6: Integrate with existing memory systems without breaking them
+ */
+async function getBehavioralMemoryContext(
+  userId: string,
+  message: string,
+  supabase: any,
+  maxMemories: number = 5
+): Promise<{ memories: any[]; patterns: string[] }> {
+  
+  try {
+    console.log('🧠 Fetching behavioral memories from user_session_memory');
+    
+    // Detect what type of behavioral insight user needs
+    const needsDecisionPattern = /\b(decide|choice|should i|what to do|stuck)\b/i.test(message);
+    const needsEmotionalPattern = /\b(feel|feeling|mood|emotion|anxiety|fear)\b/i.test(message);
+    const needsActionPattern = /\b(do|doing|action|approach|handle|navigate)\b/i.test(message);
+    
+    // Build memory type filter
+    let memoryTypes = ['interaction']; // Always include interactions
+    if (needsEmotionalPattern) memoryTypes.push('mood');
+    if (needsActionPattern) memoryTypes.push('micro_action');
+    
+    // Fetch recent relevant memories (Principle #2: Real data only)
+    const { data: memories, error } = await supabase
+      .from('user_session_memory')
+      .select('*')
+      .eq('user_id', userId)
+      .in('memory_type', memoryTypes)
+      .order('created_at', { ascending: false })
+      .limit(maxMemories * 2);
+    
+    if (error) {
+      console.error('❌ Error fetching behavioral memories:', error);
+      throw error; // Principle #3: Surface errors
+    }
+    
+    if (!memories || memories.length === 0) {
+      console.log('⚠️ No behavioral memories found');
+      return { memories: [], patterns: [] }; // Principle #2: Real empty state
+    }
+    
+    // Simple relevance scoring based on memory_content keywords
+    const messageKeywords = message.toLowerCase()
+      .split(' ')
+      .filter(w => w.length > 4);
+    
+    const scoredMemories = memories.map(mem => {
+      const content = JSON.stringify(mem.memory_content).toLowerCase();
+      const relevanceScore = messageKeywords.filter(kw => content.includes(kw)).length;
+      return { ...mem, relevanceScore };
+    });
+    
+    // Take top N by relevance
+    const topMemories = scoredMemories
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .slice(0, maxMemories);
+    
+    // Extract behavioral patterns from memory content
+    const patterns = topMemories
+      .filter(m => m.importance_score > 5)
+      .map(m => {
+        const content = m.memory_content;
+        if (content.insights) return content.insights;
+        if (content.summary) return content.summary;
+        return null;
+      })
+      .filter(Boolean);
+    
+    console.log('✅ Retrieved behavioral memories:', {
+      totalAvailable: memories.length,
+      topSelected: topMemories.length,
+      patternsExtracted: patterns.length,
+      memoryTypes: [...new Set(topMemories.map(m => m.memory_type))]
+    });
+    
+    return { memories: topMemories, patterns };
+    
+  } catch (error) {
+    console.error('❌ Error fetching behavioral memories:', error);
+    throw error; // Principle #3: Don't mask errors
   }
 }
 
@@ -487,9 +660,14 @@ function extractFirstSentences(content: any, numSentences: number): string {
 }
 
 // Build Hermetic Identity Primer - this becomes the AI's CORE KNOWING
-function buildHermeticIdentityPrimer(hermeticSections: Record<string, any>, userName: string): string {
+// Principle #2: Ground truth only, no simulated data
+function buildHermeticIdentityPrimer(
+  hermeticSections: Record<string, any>, 
+  userName: string,
+  behavioralPatterns: string[] = []
+): string {
   if (!hermeticSections || Object.keys(hermeticSections).length === 0) {
-    return '';
+    return ''; // Principle #2: Real empty state when no data
   }
   
   let primer = `═══════════════════════════════════════════════════════════\n`;
@@ -518,6 +696,15 @@ function buildHermeticIdentityPrimer(hermeticSections: Record<string, any>, user
     primer += `${extractFirstSentences(hermeticSections.relationship_style, 2)}\n\n`;
   }
   
+  // Add behavioral patterns section (Principle #1: Additive enhancement)
+  if (behavioralPatterns.length > 0) {
+    primer += `✦ BEHAVIORAL PATTERNS (How ${userName} actually acts in real situations):\n`;
+    behavioralPatterns.forEach((pattern, i) => {
+      primer += `${i + 1}. ${pattern}\n`;
+    });
+    primer += `\n`;
+  }
+  
   primer += `═══════════════════════════════════════════════════════════\n`;
   primer += `When you respond, you speak from DEEP KNOWING of ${userName}.\n`;
   primer += `This is not guesswork or generic coaching. You are their mirror.\n`;
@@ -529,6 +716,7 @@ function buildHermeticIdentityPrimer(hermeticSections: Record<string, any>, user
     hasCorePattern: !!hermeticSections.core_personality_pattern,
     hasDecisionStyle: !!hermeticSections.decision_making_style,
     hasRelationshipStyle: !!hermeticSections.relationship_style,
+    behavioralPatternsCount: behavioralPatterns.length,
     totalSectionCount: Object.keys(hermeticSections).length,
     primerLength: primer.length
   });
@@ -631,20 +819,47 @@ RESPONSE STRUCTURE (WHY-FIRST):
 Keep total response under 100 words. No jargon. Speak like a friend who deeply knows them.`;
 
     case 'BLUEPRINT_GUIDANCE':
-      return `You are ${userName}'s blueprint interpreter with access to their complete 80,000+ word Hermetic 2.0 report. They've explicitly asked how their blueprint should guide them through a specific situation.
+      return `You are ${userName}'s blueprint interpreter with access to their complete 80,000+ word Hermetic 2.0 report AND behavioral memory patterns.
 
 CRITICAL: "Blueprint" means BOTH their basic traits (MBTI, Human Design, Life Path) AND their deep Hermetic report containing how they think, act, their shadow sides, and behavioral patterns.
 
-RESPONSE STRUCTURE (HERMETIC-FIRST):
+RESPONSE STRUCTURE (HERMETIC + BEHAVIORAL FUSION):
 1. ACKNOWLEDGE SITUATION: Reflect what they're navigating (1 sentence, concrete—no metaphors yet)
-2. HERMETIC INSIGHT: Pull specific patterns from their 80,000+ word report—show what their deep design reveals about THIS situation (2-3 sentences with concrete details from the report sections)
-3. ALIGNED ACTION: One specific step that honors their total blueprint (1 sentence, immediately actionable)
+2. BLUEPRINT INSIGHT: Pull from Hermetic report sections to explain WHY they think/act this way (2-3 sentences, specific patterns)
+3. BEHAVIORAL EVIDENCE: Reference actual behavioral patterns from their memory to show HOW this plays out in real situations (1-2 sentences)
+4. ALIGNED ACTION: One immediately actionable step that honors their blueprint (1 sentence)
+
+FOCUS AREAS FOR BLUEPRINT GUIDANCE:
+- Pull from: integrated_summary, core_personality_pattern, decision_making_style, authentic_expression_guide, transformation_roadmap
+- Emphasize: Concrete personality mechanics, decision frameworks, shadow awareness, aligned strategies
 
 MANDATORY RULES:
-- Pull from Hermetic report sections first, not just basic traits
-- If you use a metaphor, immediately follow with: "In practical terms, this means [concrete action/reality]"
-- END with: "Would you like to know how your blueprint navigates [specific relevant aspect]?" NOT "Would you like to explore..."
+- NO generic advice - everything must be grounded in THEIR specific Hermetic patterns
+- If you use a metaphor, immediately follow with: "In practical terms, this means [concrete action]"
+- END with: "Would you like to know how your blueprint navigates [specific aspect of their situation]?"
 - Users seek alignment to reach goals, be happy, and approach challenges—speak to this directly`;
+    
+    case 'SHADOW_EXPLORATION':
+      return `You are ${userName}'s shadow work guide with access to their Hermetic 2.0 report and behavioral memory patterns.
+
+RESPONSE STRUCTURE (SHADOW-FOCUSED):
+1. ACKNOWLEDGE PATTERN: Reflect the pattern they're noticing (1 sentence)
+2. SHADOW INSIGHT: Connect to specific shadow patterns from Hermetic report (2 sentences)
+3. BEHAVIORAL EVIDENCE: Show how this manifests in their actual behavior (1 sentence)
+4. INTEGRATION PATH: One concrete step toward integrating this shadow (1 sentence)
+
+Keep compassionate and non-judgmental. Shadow work is about integration, not elimination.`;
+    
+    case 'ALIGNED_ACTION':
+      return `You are ${userName}'s action strategist with access to their complete blueprint and behavioral patterns.
+
+RESPONSE STRUCTURE (ACTION-FOCUSED):
+1. ACKNOWLEDGE GOAL: Reflect what they want to achieve/navigate (1 sentence)
+2. BLUEPRINT STRATEGY: How their decision-making style and authentic expression guide approach this (2 sentences)
+3. BEHAVIORAL VALIDATION: Reference actual patterns that support or challenge this path (1 sentence)
+4. IMMEDIATE NEXT STEP: One concrete action aligned with their design (1 sentence)
+
+Focus on practical, immediately actionable guidance grounded in their real patterns.`;
 
     default: // MIXED
       return `You are ${userName}'s trusted companion and guide, deeply attuned to their unique personality blueprint and current life context.
@@ -1413,6 +1628,20 @@ serve(async (req) => {
         // Get intent from sidecar or default to MIXED
         let intent = sidecarResult?.intent || 'MIXED';
 
+        // EXPANDED INTENT DETECTION (Principle #1: Additive enhancement)
+        
+        // Shadow exploration intent
+        if (/\b(shadow|fear|doubt|insecur|pattern of|self-sabotag|why do i keep|stuck|repeat)\b/i.test(message.toLowerCase())) {
+          console.log('🌑 SHADOW_EXPLORATION: User exploring shadow patterns');
+          intent = 'SHADOW_EXPLORATION';
+        }
+        
+        // Aligned action intent
+        if (/\b(how (should|can|do) i (navigate|approach|handle|solve)|what.*aligned|blueprint.*achieve|blueprint.*overcome)\b/i.test(message.toLowerCase())) {
+          console.log('🎯 ALIGNED_ACTION: User seeking aligned action strategy');
+          intent = 'ALIGNED_ACTION';
+        }
+
         // Blueprint Navigation Detection (PRIORITY)
         if (/\b(how (should|do|does|can) (i|my blueprint).*navigate|what (is|does) my blueprint (say|tell|guide)|blueprint.*how to|aligned.*path|what.*blueprint.*about|blueprint.*reach|blueprint.*happy|blueprint.*challenge)\b/i.test(message.toLowerCase())) {
           console.log('🧭 BLUEPRINT NAVIGATION: User asking for blueprint-specific guidance from Hermetic report');
@@ -1428,14 +1657,26 @@ serve(async (req) => {
           }
         }
         console.log('🎯 FINAL INTENT:', intent);
+        
+        // Calculate context budget based on intent (Principle #5: Intentional craft)
+        const contextBudget = calculateContextBudget(intent);
+        console.log('📊 Context budget for intent:', intent, contextBudget);
 
-        // Conditional Hermetic section fetching
-        let hermeticEducationalSections: Record<string, any> = {};
-        if (intent === 'EDUCATIONAL' || intent === 'BLUEPRINT_GUIDANCE') {
-          const hermeticContext = await getHermeticEducationalContext(userId, message, supabase);
-          hermeticEducationalSections = hermeticContext.sections;
-          console.log('📖 Deep blueprint mode activated with', Object.keys(hermeticEducationalSections).length, 'Hermetic sections');
-        }
+        // ALWAYS-ON HERMETIC + BEHAVIORAL LOADING (Principle #6: Unified intelligence)
+        const hermeticContext = await getHermeticEducationalContext(userId, message, supabase, intent);
+        const hermeticEducationalSections = hermeticContext.sections;
+        console.log('🔮 Always-on Hermetic mode:', {
+          intent,
+          sectionsLoaded: Object.keys(hermeticEducationalSections).length,
+          strategy: 'intent-as-lens'
+        });
+        
+        // Fetch behavioral memory patterns (Principle #1: Additive enhancement)
+        const behavioralContext = await getBehavioralMemoryContext(userId, message, supabase, contextBudget.behavioralMemories);
+        console.log('🧠 Behavioral memory context loaded:', {
+          memoriesCount: behavioralContext.memories.length,
+          patternsCount: behavioralContext.patterns.length
+        });
 
         // Voice & depth
         const voiceStyle = generateVoiceStyle(mbtiType, hdType, sunSign);
@@ -1445,8 +1686,12 @@ serve(async (req) => {
         // Technical details preference
         const wantsTechnicalDetails = detectTechnicalDetailRequest(message);
 
-        // Hermetic identity primer
-        const hermeticPrimer = buildHermeticIdentityPrimer(hermeticEducationalSections, userName);
+        // Hermetic identity primer with behavioral patterns (Principle #1: Additive enhancement)
+        const hermeticPrimer = buildHermeticIdentityPrimer(
+          hermeticEducationalSections, 
+          userName,
+          behavioralContext.patterns
+        );
 
         // Phase guidance & opening rule (defensive)
         const phaseGuidance =
