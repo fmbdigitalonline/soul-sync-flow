@@ -630,6 +630,22 @@ RESPONSE STRUCTURE (WHY-FIRST):
 
 Keep total response under 100 words. No jargon. Speak like a friend who deeply knows them.`;
 
+    case 'BLUEPRINT_GUIDANCE':
+      return `You are ${userName}'s blueprint interpreter with access to their complete 80,000+ word Hermetic 2.0 report. They've explicitly asked how their blueprint should guide them through a specific situation.
+
+CRITICAL: "Blueprint" means BOTH their basic traits (MBTI, Human Design, Life Path) AND their deep Hermetic report containing how they think, act, their shadow sides, and behavioral patterns.
+
+RESPONSE STRUCTURE (HERMETIC-FIRST):
+1. ACKNOWLEDGE SITUATION: Reflect what they're navigating (1 sentence, concrete—no metaphors yet)
+2. HERMETIC INSIGHT: Pull specific patterns from their 80,000+ word report—show what their deep design reveals about THIS situation (2-3 sentences with concrete details from the report sections)
+3. ALIGNED ACTION: One specific step that honors their total blueprint (1 sentence, immediately actionable)
+
+MANDATORY RULES:
+- Pull from Hermetic report sections first, not just basic traits
+- If you use a metaphor, immediately follow with: "In practical terms, this means [concrete action/reality]"
+- END with: "Would you like to know how your blueprint navigates [specific relevant aspect]?" NOT "Would you like to explore..."
+- Users seek alignment to reach goals, be happy, and approach challenges—speak to this directly`;
+
     default: // MIXED
       return `You are ${userName}'s trusted companion and guide, deeply attuned to their unique personality blueprint and current life context.
 
@@ -1397,6 +1413,12 @@ serve(async (req) => {
         // Get intent from sidecar or default to MIXED
         let intent = sidecarResult?.intent || 'MIXED';
 
+        // Blueprint Navigation Detection (PRIORITY)
+        if (/\b(how (should|do|does|can) (i|my blueprint).*navigate|what (is|does) my blueprint (say|tell|guide)|blueprint.*how to|aligned.*path|what.*blueprint.*about|blueprint.*reach|blueprint.*happy|blueprint.*challenge)\b/i.test(message.toLowerCase())) {
+          console.log('🧭 BLUEPRINT NAVIGATION: User asking for blueprint-specific guidance from Hermetic report');
+          intent = 'BLUEPRINT_GUIDANCE';
+        }
+
         // Fallback educational detection
         if (intent === 'MIXED' || intent === 'unknown') {
           const educationalKeywords = /\b(why (do i|am i|can't i|does|is it)|how come|what makes me|i keep|i don't understand)\b/i;
@@ -1409,10 +1431,10 @@ serve(async (req) => {
 
         // Conditional Hermetic section fetching
         let hermeticEducationalSections: Record<string, any> = {};
-        if (intent === 'EDUCATIONAL') {
+        if (intent === 'EDUCATIONAL' || intent === 'BLUEPRINT_GUIDANCE') {
           const hermeticContext = await getHermeticEducationalContext(userId, message, supabase);
           hermeticEducationalSections = hermeticContext.sections;
-          console.log('📖 Educational mode activated with', Object.keys(hermeticEducationalSections).length, 'Hermetic sections');
+          console.log('📖 Deep blueprint mode activated with', Object.keys(hermeticEducationalSections).length, 'Hermetic sections');
         }
 
         // Voice & depth
@@ -1452,6 +1474,12 @@ serve(async (req) => {
           "- DO NOT use flowery metaphors or abstract language to hide that you don't understand",
           "- Address what they mean, not what personality patterns predict they might mean",
           "",
+          "🎨 METAPHOR GROUNDING RULE:",
+          "- If you use a metaphor, image, or poetic language, immediately follow it with the concrete practical meaning",
+          "- Format: '[Metaphor]' → 'In practical terms, this means [concrete action/reality]'",
+          "- Example: 'You're a rare constellation' → 'In practical terms, your unique combination of traits makes you valuable but also harder to fit into conventional roles'",
+          "- NEVER leave metaphors unexplained—not everyone processes abstract language the same way",
+          "",
           "CONVERSATION FLOW:",
           "- DO NOT repeat or paraphrase the user's question back to them - jump directly into your response",
           '- If this is a continuing conversation, NO greetings, NO welcomes, NO reintroductions',
@@ -1469,7 +1497,8 @@ serve(async (req) => {
           '2. For factual queries: Provide precise data first, then brief context',
           '3. For interpretive queries: Focus on insights and guidance',
           '4. For mixed queries: Balance facts with meaningful interpretation',
-          '5. CONVERSATION FLOW INTELLIGENCE: ' + getConversationFlowGuidance(conversationState)
+          '5. CONVERSATION FLOW INTELLIGENCE: ' + getConversationFlowGuidance(conversationState),
+          '6. ENDING QUESTIONS: Instead of "Would you like to explore...", offer: "Would you like to know how your blueprint navigates [specific relevant aspect]?"'
         ].join('\n');
 
         // Final prompt pieces
