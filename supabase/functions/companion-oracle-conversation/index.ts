@@ -1702,8 +1702,6 @@ serve(async (req) => {
           console.error('⚠️ Behavioral memory fetch failed, continuing without:', error);
           // Principle #1: Additive only - failure doesn't break Hermetic context
         }
-          patternsCount: behavioralContext.patterns.length
-        });
 
         // Voice & depth
         const voiceStyle = generateVoiceStyle(mbtiType, hdType, sunSign);
