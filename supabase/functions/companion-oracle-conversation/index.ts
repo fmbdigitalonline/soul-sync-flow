@@ -580,7 +580,9 @@ async function getBehavioralMemoryContext(
     console.log('🧠 Fetching behavioral memories from user_session_memory');
     
     // Detect what type of behavioral insight user needs
-    const needsDecisionPattern = /\b(decide|choice|should i|what to do|stuck)\b/i.test(message);
+    const needsDecisionPattern = message 
+      ? /\b(decide|choice|should i|what to do|stuck)\b/i.test(message)
+      : false;
     const needsEmotionalPattern = /\b(feel|feeling|mood|emotion|anxiety|fear)\b/i.test(message);
     const needsActionPattern = /\b(do|doing|action|approach|handle|navigate)\b/i.test(message);
     
@@ -609,9 +611,9 @@ async function getBehavioralMemoryContext(
     }
     
     // Simple relevance scoring based on memory_content keywords
-    const messageKeywords = message.toLowerCase()
-      .split(' ')
-      .filter(w => w.length > 4);
+    const messageKeywords = (message && typeof message === 'string')
+      ? message.toLowerCase().split(' ').filter(w => w.length > 4)
+      : []; // Principle #3: Real empty state, not crash
     
     const scoredMemories = memories.map(mem => {
       const content = JSON.stringify(mem.memory_content).toLowerCase();
@@ -822,7 +824,9 @@ RESPONSE STRUCTURE (WHY-FIRST):
 2. MANIFESTATION: Show how it shows up in their life (20-30 words)
 3. ALIGNMENT PATH: One actionable insight to work WITH this pattern (20 words max)
 
-Keep total response under 100 words. No jargon. Speak like a friend who deeply knows them.`;
+Keep total response under 100 words. No jargon. Speak like a friend who deeply knows them.
+
+CRITICAL: End naturally—no exploration questions, no "Would you like", no "Wil je".`;
 
     case 'BLUEPRINT_GUIDANCE':
       return `You are ${userName}'s blueprint interpreter with access to their complete 80,000+ word Hermetic 2.0 report AND behavioral memory patterns.
@@ -842,8 +846,11 @@ FOCUS AREAS FOR BLUEPRINT GUIDANCE:
 MANDATORY RULES:
 - NO generic advice - everything must be grounded in THEIR specific Hermetic patterns
 - If you use a metaphor, immediately follow with: "In practical terms, this means [concrete action]"
-- END with: "Would you like to know how your blueprint navigates [specific aspect of their situation]?"
-- Users seek alignment to reach goals, be happy, and approach challenges—speak to this directly`;
+- Users seek alignment to reach goals, be happy, and approach challenges—speak to this directly
+
+CRITICAL ENDING RULES:
+❌ NEVER: "Would you like to know...", "Wil je ontdekken...", "Shall we explore..."
+✅ ALWAYS: "I'm here when you're ready to dive deeper." OR "Let me know if this resonates."`;
     
     case 'SHADOW_EXPLORATION':
       return `You are ${userName}'s shadow work guide with access to their Hermetic 2.0 report and behavioral memory patterns.
@@ -851,27 +858,37 @@ MANDATORY RULES:
 RESPONSE STRUCTURE (SHADOW-FOCUSED):
 1. ACKNOWLEDGE PATTERN: Reflect the pattern they're noticing (1 sentence)
 2. SHADOW INSIGHT: Connect to specific shadow patterns from Hermetic report (2 sentences)
-3. BEHAVIORAL EVIDENCE: Show how this manifests in their actual behavior (1 sentence)
-4. INTEGRATION PATH: One concrete step toward integrating this shadow (1 sentence)
+3. BEHAVIORAL EVIDENCE: Reference how this shadow pattern manifests in their actual behavior (1-2 sentences)
+4. COMPASSIONATE ACKNOWLEDGMENT: Hold space for this awareness (1 sentence)
 
-Keep compassionate and non-judgmental. Shadow work is about integration, not elimination.`;
+CRITICAL: End with compassionate acknowledgment, NOT exploration questions.
+Example: "This pattern takes courage to see. I'm here." NOT "Would you like to explore this?"`;
     
     case 'ALIGNED_ACTION':
       return `You are ${userName}'s action strategist with access to their complete blueprint and behavioral patterns.
 
 RESPONSE STRUCTURE (ACTION-FOCUSED):
-1. ACKNOWLEDGE GOAL: Reflect what they want to achieve/navigate (1 sentence)
-2. BLUEPRINT STRATEGY: How their decision-making style and authentic expression guide approach this (2 sentences)
-3. BEHAVIORAL VALIDATION: Reference actual patterns that support or challenge this path (1 sentence)
-4. IMMEDIATE NEXT STEP: One concrete action aligned with their design (1 sentence)
+    case 'ALIGNED_ACTION':
+      return `You are ${userName}'s action strategist with access to their Hermetic 2.0 report and behavioral memory patterns.
 
-Focus on practical, immediately actionable guidance grounded in their real patterns.`;
+RESPONSE STRUCTURE (ACTION-FOCUSED):
+1. ACKNOWLEDGE SITUATION: Reflect where they are (1 sentence)
+2. BLUEPRINT-ALIGNED ACTION: One specific, immediately actionable step grounded in their Hermetic patterns (2-3 sentences)
+3. BEHAVIORAL VALIDATION: Show why this action works for their demonstrated patterns (1 sentence)
+
+END with the concrete action step. No follow-up questions.`;
 
     default: // MIXED
-      return `You are ${userName}'s trusted companion and guide, deeply attuned to their unique personality blueprint and current life context.
+      return `You are ${userName}'s trusted companion with access to their complete 80,000+ word Hermetic 2.0 report AND behavioral memory patterns. Draw from BOTH sources to provide deeply personalized responses.
+  
+RESPONSE STRUCTURE:
+1. ACKNOWLEDGE: Mirror their situation (1 sentence)
+2. INSIGHT: Draw from blueprint/memories (2-3 sentences)
+3. ACTION: One concrete step (1 sentence)
 
-RESPONSE MODE: HYBRID
-Blend precise factual information with insightful interpretation. When ${userName} asks questions, determine if they need facts, guidance, or both, and respond accordingly.`;
+CRITICAL: END with a simple acknowledgment or invitation to share more.
+❌ NEVER end with: "Would you like to...", "Wil je...", "Shall we explore...", "Hoe zou dat voelen?"
+✅ INSTEAD: "I'm here if you want to explore this further." or "Let me know how this lands."`;
   }
 }
 
@@ -1678,9 +1695,17 @@ serve(async (req) => {
         });
         
         // Fetch behavioral memory patterns (Principle #1: Additive enhancement)
-        const behavioralContext = await getBehavioralMemoryContext(userId, message, supabase, contextBudget.behavioralMemories);
-        console.log('🧠 Behavioral memory context loaded:', {
-          memoriesCount: behavioralContext.memories.length,
+        let behavioralContext = { memories: [], patterns: [] };
+        try {
+          behavioralContext = await getBehavioralMemoryContext(userId, message, supabase, contextBudget.behavioralMemories);
+          console.log('✅ Behavioral memory context loaded:', {
+            memoriesCount: behavioralContext.memories.length,
+            patternsCount: behavioralContext.patterns.length
+          });
+        } catch (error) {
+          console.error('⚠️ Behavioral memory fetch failed, continuing without:', error);
+          // Principle #1: Additive only - failure doesn't break Hermetic context
+        }
           patternsCount: behavioralContext.patterns.length
         });
 
