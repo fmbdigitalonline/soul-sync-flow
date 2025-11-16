@@ -968,102 +968,102 @@ serve(async (req) => {
       // STEP 2: Legacy pipeline fallback if sidecar didn't provide results
       if (semanticChunks.length === 0 && structuredFacts.length === 0) {
         console.log('🔮 STEP 2: Using legacy vector search pipeline');
-        
-      // SURGICAL FIX: Normalize chunk shape immediately after all retrieval paths
-      if (semanticChunks.length > 0) {
-        semanticChunks = semanticChunks.map(c => ({
-          ...c,
-          content: c.content ?? c.chunk_content ?? '',
-          chunk_content: undefined
-        }));
-        console.log('🔧 NORMALIZED CHUNKS: All chunks now use .content key');
-      }
-        
+
+        // SURGICAL FIX: Normalize chunk shape immediately after all retrieval paths
+        if (semanticChunks.length > 0) {
+          semanticChunks = semanticChunks.map(c => ({
+            ...c,
+            content: c.content ?? c.chunk_content ?? '',
+            chunk_content: undefined
+          }));
+          console.log('🔧 NORMALIZED CHUNKS: All chunks now use .content key');
+        }
+
         // STEP 1: Check for pre-computed embeddings first
-      console.log('🔮 STEP 1: Checking for pre-computed embeddings...');
-      const { data: embeddingCheck, error: embeddingError } = await supabase
-        .from('blueprint_text_embeddings')
-        .select('id, chunk_content, created_at')
-        .eq('user_id', userId)
-        .limit(10);
-      
-      console.log('🔮 STEP 1 RESULT: Embedding availability check:', {
-        embeddingsFound: embeddingCheck?.length || 0,
-        embeddingError: embeddingError?.message || null,
-        sampleIds: embeddingCheck?.slice(0, 3).map(e => e.id) || [],
-        oldestEmbedding: embeddingCheck?.[embeddingCheck.length - 1]?.created_at || null
-      });
+        console.log('🔮 STEP 1: Checking for pre-computed embeddings...');
+        const { data: embeddingCheck, error: embeddingError } = await supabase
+          .from('blueprint_text_embeddings')
+          .select('id, chunk_content, created_at')
+          .eq('user_id', userId)
+          .limit(10);
 
-      if (embeddingCheck && embeddingCheck.length > 0) {
-        console.log('🔮 STEP 2: Pre-computed embeddings found, proceeding with vector search');
-        
-        try {
-          // Create contextual search text by combining current message with conversation context
-          const contextualSearchText = conversationHistory.length > 0 
-            ? `${conversationHistory.slice(-5).map(msg => `${msg.role}: ${msg.content}`).join(' ')} current: ${message}`
-            : message;
+        console.log('🔮 STEP 1 RESULT: Embedding availability check:', {
+          embeddingsFound: embeddingCheck?.length || 0,
+          embeddingError: embeddingError?.message || null,
+          sampleIds: embeddingCheck?.slice(0, 3).map(e => e.id) || [],
+          oldestEmbedding: embeddingCheck?.[embeddingCheck.length - 1]?.created_at || null
+        });
 
-          console.log('🔮 STEP 3: Generating embedding for contextual search:', {
-            originalMessage: message,
-            contextualSearchLength: contextualSearchText.length,
-            conversationContextUsed: conversationHistory.length > 0,
-            timestamp: new Date().toISOString()
-          });
+        if (embeddingCheck && embeddingCheck.length > 0) {
+          console.log('🔮 STEP 2: Pre-computed embeddings found, proceeding with vector search');
 
-          const embeddingStartTime = Date.now();
-          const embeddingResponse = await supabase.functions.invoke('openai-embeddings', {
-            body: { query: contextualSearchText },
-            headers: {
-              Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+          try {
+            // Create contextual search text by combining current message with conversation context
+            const contextualSearchText = conversationHistory.length > 0
+              ? `${conversationHistory.slice(-5).map(msg => `${msg.role}: ${msg.content}`).join(' ')} current: ${message}`
+              : message;
+
+            console.log('🔮 STEP 3: Generating embedding for contextual search:', {
+              originalMessage: message,
+              contextualSearchLength: contextualSearchText.length,
+              conversationContextUsed: conversationHistory.length > 0,
+              timestamp: new Date().toISOString()
+            });
+
+            const embeddingStartTime = Date.now();
+            const embeddingResponse = await supabase.functions.invoke('openai-embeddings', {
+              body: { query: contextualSearchText },
+              headers: {
+                Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+              }
+            });
+            const embeddingDuration = Date.now() - embeddingStartTime;
+
+            console.log('🔮 STEP 3 RESULT: Embedding generation completed:', {
+              success: !!embeddingResponse.data?.embedding,
+              embeddingLength: embeddingResponse.data?.embedding?.length || 0,
+              processingTime: embeddingDuration + 'ms',
+              error: embeddingResponse.error?.message || null,
+              statusCode: embeddingResponse.status,
+              responseDataKeys: Object.keys(embeddingResponse.data || {}),
+              responseErrorKeys: Object.keys(embeddingResponse.error || {})
+            });
+
+            if (embeddingResponse.error) {
+              console.error('❌ ORACLE FATAL: Embedding generation failed with error:', {
+                error: embeddingResponse.error,
+                status: embeddingResponse.status,
+                data: embeddingResponse.data
+              });
+              throw new Error('Failed to generate message embedding: ' + embeddingResponse.error.message);
             }
-          });
-          const embeddingDuration = Date.now() - embeddingStartTime;
 
-          console.log('🔮 STEP 3 RESULT: Embedding generation completed:', {
-            success: !!embeddingResponse.data?.embedding,
-            embeddingLength: embeddingResponse.data?.embedding?.length || 0,
-            processingTime: embeddingDuration + 'ms',
-            error: embeddingResponse.error?.message || null,
-            statusCode: embeddingResponse.status,
-            responseDataKeys: Object.keys(embeddingResponse.data || {}),
-            responseErrorKeys: Object.keys(embeddingResponse.error || {})
-          });
-          
-          if (embeddingResponse.error) {
-            console.error('❌ ORACLE FATAL: Embedding generation failed with error:', {
-              error: embeddingResponse.error,
-              status: embeddingResponse.status,
-              data: embeddingResponse.data
+            const messageEmbedding = embeddingResponse.data?.embedding;
+            if (!messageEmbedding || !Array.isArray(messageEmbedding)) {
+              console.error('❌ ORACLE FATAL: Invalid embedding format received:', {
+                embeddingType: typeof messageEmbedding,
+                isArray: Array.isArray(messageEmbedding),
+                length: messageEmbedding?.length,
+                sample: messageEmbedding?.slice(0, 5)
+              });
+              throw new Error('Invalid embedding format received from OpenAI');
+            }
+
+            console.log('✅ ORACLE SUCCESS: Generated valid query embedding:', {
+              dimensions: messageEmbedding.length,
+              firstFewValues: messageEmbedding.slice(0, 5),
+              lastFewValues: messageEmbedding.slice(-5),
+              allValuesNumeric: messageEmbedding.every(v => typeof v === 'number'),
+              hasNaN: messageEmbedding.some(v => isNaN(v)),
+              magnitude: Math.sqrt(messageEmbedding.reduce((sum, val) => sum + val * val, 0))
             });
-            throw new Error('Failed to generate message embedding: ' + embeddingResponse.error.message);
-          }
-          
-          const messageEmbedding = embeddingResponse.data?.embedding;
-          if (!messageEmbedding || !Array.isArray(messageEmbedding)) {
-            console.error('❌ ORACLE FATAL: Invalid embedding format received:', {
-              embeddingType: typeof messageEmbedding,
-              isArray: Array.isArray(messageEmbedding),
-              length: messageEmbedding?.length,
-              sample: messageEmbedding?.slice(0, 5)
-            });
-            throw new Error('Invalid embedding format received from OpenAI');
-          }
-          
-          console.log('✅ ORACLE SUCCESS: Generated valid query embedding:', {
-            dimensions: messageEmbedding.length,
-            firstFewValues: messageEmbedding.slice(0, 5),
-            lastFewValues: messageEmbedding.slice(-5),
-            allValuesNumeric: messageEmbedding.every(v => typeof v === 'number'),
-            hasNaN: messageEmbedding.some(v => isNaN(v)),
-            magnitude: Math.sqrt(messageEmbedding.reduce((sum, val) => sum + val * val, 0))
-          });
-          
-          // STEP 4: Analyze message for facet-aware retrieval
-          console.log('🔮 STEP 4A: Analyzing message for semantic facets and tags');
-          
-          const messageLower = message.toLowerCase();
-          const facetFilters: string[] = [];
-          const tagFilters: string[] = [];
+
+            // STEP 4: Analyze message for facet-aware retrieval
+            console.log('🔮 STEP 4A: Analyzing message for semantic facets and tags');
+
+            const messageLower = message.toLowerCase();
+            const facetFilters: string[] = [];
+            const tagFilters: string[] = [];
           
           // Personality & identity queries
           if (/who am i|personality|character|nature|essence|identity/.test(messageLower)) {
@@ -1302,27 +1302,28 @@ serve(async (req) => {
             });
           }
         }
-      } else {
-        console.log('❌ ORACLE ERROR: No pre-computed embeddings found for user');
-        console.log('🔮 DIAGNOSIS: Missing embeddings analysis:', {
-          userId: userId.substring(0, 8) + '...',
-          embeddingCheckError: embeddingError?.message,
-          recommendedAction: 'User needs to complete blueprint processing first',
-          tableName: 'blueprint_text_embeddings',
-          requiredProcessing: 'process-blueprint-embeddings function'
-        });
-        oracleStatus = 'initializing';
+        } else {
+          console.log('❌ ORACLE ERROR: No pre-computed embeddings found for user');
+          console.log('🔮 DIAGNOSIS: Missing embeddings analysis:', {
+            userId: userId.substring(0, 8) + '...',
+            embeddingCheckError: embeddingError?.message,
+            recommendedAction: 'User needs to complete blueprint processing first',
+            tableName: 'blueprint_text_embeddings',
+            requiredProcessing: 'process-blueprint-embeddings function'
+          });
+          oracleStatus = 'initializing';
+        }
       }
     } else {
-    console.log('🔮 ENHANCED ORACLE: Skipped - Oracle mode disabled or no personality context');
-    console.log('🔮 PIPELINE STATUS:', {
-      useOracleMode,
-      hasPersonalityContext: !!personalityContext,
-      reason: !useOracleMode ? 'Oracle mode disabled' : 'No personality context'
-    });
+      console.log('🔮 ENHANCED ORACLE: Skipped - Oracle mode disabled or no personality context');
+      console.log('🔮 PIPELINE STATUS:', {
+        useOracleMode,
+        hasPersonalityContext: !!personalityContext,
+        reason: !useOracleMode ? 'Oracle mode disabled' : 'No personality context'
+      });
     }
-    
-  console.log('🔮 ENHANCED ORACLE COMPLETE: Final status summary:', {
+
+    console.log('🔮 ENHANCED ORACLE COMPLETE: Final status summary:', {
       oracleStatus,
       structuredFactsFound: structuredFacts.length,
       semanticChunksFound: semanticChunks.length,
