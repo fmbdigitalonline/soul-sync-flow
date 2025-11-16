@@ -865,10 +865,6 @@ CRITICAL: End with compassionate acknowledgment, NOT exploration questions.
 Example: "This pattern takes courage to see. I'm here." NOT "Would you like to explore this?"`;
     
     case 'ALIGNED_ACTION':
-      return `You are ${userName}'s action strategist with access to their complete blueprint and behavioral patterns.
-
-RESPONSE STRUCTURE (ACTION-FOCUSED):
-    case 'ALIGNED_ACTION':
       return `You are ${userName}'s action strategist with access to their Hermetic 2.0 report and behavioral memory patterns.
 
 RESPONSE STRUCTURE (ACTION-FOCUSED):
