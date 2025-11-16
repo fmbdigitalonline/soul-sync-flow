@@ -158,17 +158,48 @@ export class ConversationMemoryService {
       const { data: { user } } = await supabase.auth.getUser();
       const effectiveUserId = userId || user?.id || 'anonymous';
       
-      const { error } = await supabase
-        .from('conversation_memory')
-        .upsert({
-          session_id: threadId,
-          user_id: effectiveUserId,
-          messages: updatedMessages as any, // JSON type casting
-          last_activity: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
+      // Retry logic for race conditions
+      let retries = 3;
+      let error = null;
+
+      while (retries > 0) {
+        const result = await supabase
+          .from('conversation_memory')
+          .upsert({
+            session_id: threadId,
+            user_id: effectiveUserId,
+            messages: updatedMessages as any,
+            last_activity: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'session_id,user_id',
+            ignoreDuplicates: false
+          });
+        
+        if (!result.error) {
+          error = null;
+          break;
+        }
+        
+        if (result.error.code === '409' || result.error.message.includes('conflict') || result.error.code === '23505') {
+          retries--;
+          if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 100 * (4 - retries)));
+            continue;
+          }
+        }
+        
+        error = result.error;
+        break;
+      }
 
       if (error) {
+        if (error.code === '23505' || error.message.includes('duplicate')) {
+          BlueprintHealthChecker.logHealthCheck('ConversationMemory', 'warning', 
+            `Conflict resolved: Updated existing conversation for session ${threadId}`);
+          return true;
+        }
+        
         BlueprintHealthChecker.logHealthCheck('ConversationMemory', 'fail', 
           `Storage failed: ${error.message}`);
         return false;
@@ -343,32 +374,9 @@ export class ConversationMemoryService {
     message: any,
     userId?: string
   ): Promise<boolean> {
-    try {
-      const validatedMessage = this.validateMessage(message);
-      if (!validatedMessage) {
-        console.error('❌ PROGRESSIVE STORAGE: Invalid message format');
-        return false;
-      }
-
-      // Progressive memory storage temporarily disabled due to schema mismatch
-      // TODO: Fix progressive memory service schema alignment
-      const structuredMessage = null;
-
-      if (!structuredMessage) {
-        console.error('❌ PROGRESSIVE STORAGE: Failed to store in structured format');
-        // Fall back to legacy storage
-        return this.storeMessageWithEmbedding(threadId, message, userId);
-      }
-
-      // Also store in legacy format for backwards compatibility
-      const legacyStored = await this.storeMessage(threadId, message, userId);
-      
-      console.log('✅ PROGRESSIVE STORAGE: Message stored in both progressive and legacy formats');
-      return legacyStored;
-    } catch (error) {
-      console.error('❌ PROGRESSIVE STORAGE: Error, falling back to embedding storage:', error);
-      return this.storeMessageWithEmbedding(threadId, message, userId);
-    }
+    // Progressive memory currently disabled - use embedding storage
+    console.warn('⚠️ PROGRESSIVE STORAGE: Currently disabled, using embedding storage');
+    return this.storeMessageWithEmbedding(threadId, message, userId);
   }
 
   /**
