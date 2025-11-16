@@ -571,6 +571,12 @@ async function getBehavioralMemoryContext(
 ): Promise<{ memories: any[]; patterns: string[] }> {
   
   try {
+    // Principle #2: Operate on ground truth - validate input
+    if (!message || typeof message !== 'string') {
+      console.log('⚠️ No valid message provided for behavioral memory context');
+      return { memories: [], patterns: [] };
+    }
+    
     console.log('🧠 Fetching behavioral memories from user_session_memory');
     
     // Detect what type of behavioral insight user needs
