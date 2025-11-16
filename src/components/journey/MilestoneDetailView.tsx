@@ -15,16 +15,27 @@ export const MilestoneDetailView: React.FC<MilestoneDetailViewProps> = ({
   onBack,
   onMilestoneSelect
 }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      month: 'short', 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'TBD';
+    const parsedDate = new Date(dateString);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return 'TBD';
+    }
+
+    return parsedDate.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
       year: 'numeric'
     });
   };
 
-  const completedMilestones = milestones.filter(m => m.completed);
-  const currentMilestone = milestones.find(m => !m.completed);
+  const safeMilestones = Array.isArray(milestones)
+    ? milestones.filter((milestone) => milestone && typeof milestone === 'object')
+    : [];
+
+  const completedMilestones = safeMilestones.filter(m => Boolean(m?.completed));
+  const currentMilestone = safeMilestones.find(m => !m?.completed);
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5">
@@ -42,7 +53,7 @@ export const MilestoneDetailView: React.FC<MilestoneDetailViewProps> = ({
           </Button>
           <div className="text-center flex-1">
             <h1 className="text-xl font-bold text-gray-800">Journey Milestones</h1>
-            <p className="text-sm text-gray-500">{completedMilestones.length} of {milestones.length} completed</p>
+            <p className="text-sm text-gray-500">{completedMilestones.length} of {safeMilestones.length} completed</p>
           </div>
           <div className="w-24" />
         </div>
@@ -59,7 +70,7 @@ export const MilestoneDetailView: React.FC<MilestoneDetailViewProps> = ({
               <div className="text-xs text-gray-500">In Progress</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-gray-400">{milestones.length - completedMilestones.length - (currentMilestone ? 1 : 0)}</div>
+              <div className="text-2xl font-bold text-gray-400">{safeMilestones.length - completedMilestones.length - (currentMilestone ? 1 : 0)}</div>
               <div className="text-xs text-gray-500">Upcoming</div>
             </div>
           </div>
@@ -77,14 +88,25 @@ export const MilestoneDetailView: React.FC<MilestoneDetailViewProps> = ({
             <div className="absolute left-5 top-8 bottom-8 w-0.5 bg-gradient-to-b from-soul-purple via-blue-400 to-gray-300"></div>
             
             <div className="space-y-6">
-              {milestones.map((milestone, index) => {
-                const isCompleted = milestone.completed;
+              {safeMilestones.map((milestone, index) => {
+                const isCompleted = Boolean(milestone?.completed);
                 const isCurrent = !isCompleted && index === completedMilestones.length;
+                const milestoneTitle = typeof milestone?.title === 'string' && milestone.title.trim()
+                  ? milestone.title
+                  : `Milestone ${index + 1}`;
+                const milestoneDescription = milestone?.description || 'Stay focused and keep moving forward.';
+                const completionCriteriaCount = Array.isArray(milestone?.completion_criteria)
+                  ? milestone.completion_criteria.length
+                  : 0;
+                const handleMilestoneFocus = () => {
+                  if (!milestone) return;
+                  onMilestoneSelect(milestone);
+                };
                 
                 return (
                   <button
-                    key={milestone.id}
-                    onClick={() => onMilestoneSelect(milestone)}
+                    key={milestone?.id ?? `milestone-${index}`}
+                    onClick={handleMilestoneFocus}
                     className="flex items-start space-x-4 relative z-10 w-full text-left group transition-all duration-300 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-soul-purple/50 rounded-lg"
                   >
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
@@ -108,7 +130,7 @@ export const MilestoneDetailView: React.FC<MilestoneDetailViewProps> = ({
                          }}>
                       <div className="flex items-center justify-between mb-2">
                         <h3 className={`font-semibold text-sm ${isCompleted ? 'line-through text-gray-500' : 'text-gray-800'}`}>
-                          {milestone.title}
+                          {milestoneTitle}
                         </h3>
                         {isCurrent && (
                           <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 text-xs">
@@ -117,12 +139,12 @@ export const MilestoneDetailView: React.FC<MilestoneDetailViewProps> = ({
                         )}
                       </div>
                       
-                      <p className="text-xs text-gray-600 mb-3">{milestone.description}</p>
+                      <p className="text-xs text-gray-600 mb-3">{milestoneDescription}</p>
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-xs text-gray-500">
                           <Calendar className="h-3 w-3" />
-                          <span>Target: {formatDate(milestone.target_date)}</span>
+                          <span>Target: {formatDate(milestone?.target_date)}</span>
                         </div>
                         
                         <div className="text-xs text-gray-400 group-hover:text-soul-purple transition-colors">
@@ -130,9 +152,9 @@ export const MilestoneDetailView: React.FC<MilestoneDetailViewProps> = ({
                         </div>
                       </div>
                       
-                      {milestone.completion_criteria && milestone.completion_criteria.length > 0 && (
+                      {completionCriteriaCount > 0 && (
                         <div className="mt-2 text-xs text-gray-500">
-                          {milestone.completion_criteria.length} completion criteria
+                          {completionCriteriaCount} completion criteria
                         </div>
                       )}
                     </div>
