@@ -547,8 +547,9 @@ function generateVoiceStyle(mbti: string, hd: string, sun: string): string {
   }
   
   if (mbti.includes('N')) {
-    style += "- Explore possibilities, patterns, and big-picture connections\n";
-    style += "- Use metaphors and abstract concepts they'll appreciate\n";
+    style += "- Connect to patterns and possibilities they naturally see\n";
+    style += "- CRITICAL: Understand their ACTUAL message first, including any irony, contradiction, or paradox\n";
+    style += "- Use metaphors ONLY when they clarify meaning, never as a substitute for comprehension\n";
   } else {
     style += "- Focus on practical, concrete guidance and real-world applications\n";
   }
@@ -1369,11 +1370,21 @@ serve(async (req) => {
             formatFactsByFacet(structuredFacts)
           : '';
 
-      const narrativeSection =
-        (semanticChunks && semanticChunks.length > 0)
-          ? '\n\nPERSONALITY INSIGHTS:\n' +
-            semanticChunks.map(ch => ch.content || '').join('\n\n')
-          : '';
+      // Filter semantic chunks based on conversation relevance
+      const isDiscussingEmotions = /\b(feel|feeling|emotion|fear|doubt|worry|anxiety|struggle|shadow|insecur|worth|reject)\b/i.test(message);
+      const relevantChunks = (semanticChunks && semanticChunks.length > 0)
+        ? semanticChunks.filter(ch => {
+            const content = ch.content || '';
+            const isShadowPattern = /\b(self-doubt|fear of rejection|need for validation|feeling unworthy|oscillat|pattern of)\b/i.test(content);
+            // Include shadow patterns ONLY if user is discussing emotions
+            return !isShadowPattern || isDiscussingEmotions;
+          })
+        : [];
+
+      const narrativeSection = relevantChunks.length > 0
+        ? '\n\nPERSONALITY INSIGHTS (Use ONLY if directly relevant to understanding their current message):\n' +
+          relevantChunks.map(ch => ch.content || '').join('\n\n')
+        : '';
 
       // FUSION: Generate intent-aware prompt based on sidecar results
       const generateHybridPrompt = async () => {
@@ -1434,6 +1445,13 @@ serve(async (req) => {
 
         // Universal rules
         const universalRules = [
+          "🎯 CRITICAL COMPREHENSION RULES:",
+          "- Before responding, verify you understood what they ACTUALLY said",
+          "- If their message contains irony, contradiction, or paradox, address it explicitly",
+          "- DO NOT use flowery metaphors or abstract language to hide that you don't understand",
+          "- Address what they mean, not what personality patterns predict they might mean",
+          "",
+          "CONVERSATION FLOW:",
           "- DO NOT repeat or paraphrase the user's question back to them - jump directly into your response",
           '- If this is a continuing conversation, NO greetings, NO welcomes, NO reintroductions',
           "- Respond directly and naturally to what they asked - don't echo their words",
@@ -1672,13 +1690,57 @@ serve(async (req) => {
     const aiResponse = JSON.parse(responseText);
     let response = aiResponse.choices[0]?.message?.content || 'I sense a disturbance in our connection. Please try reaching out again.'
 
+    // 🔍 QUALITY CONTROL: Validate response alignment with conversation
+    const validateResponseQuality = () => {
+      const userMessage = message.toLowerCase();
+      const responseLower = response.toLowerCase();
+      
+      // Check for contradiction/irony in user message
+      const hasContradiction = /\b(but|while|though|however|although)\b/i.test(message);
+      const hasIrony = /\b(natural.*lack|comes.*to me.*lack|good at.*problem|easy.*difficult)\b/i.test(message);
+      
+      // Count metaphors (river, stream, flow, spark, glow, dance, journey, etc.)
+      const metaphorCount = (response.match(/\b(river|stream|flow|spark|glow|dance|journey|bridge|path|seed|bloom|treasure|mirror|wave)\b/gi) || []).length;
+      
+      // Check if response addresses recent conversation context
+      const recentContext = conversationMessages.slice(-3).map(m => m.content.toLowerCase()).join(' ');
+      const hasContextAlignment = conversationMessages.length < 2 || 
+        recentContext.split(' ').some(word => word.length > 4 && responseLower.includes(word));
+      
+      // Validation results
+      const validation = {
+        hasContradiction,
+        hasIrony,
+        addressedContradiction: hasContradiction && (responseLower.includes('contradict') || responseLower.includes('irony') || responseLower.includes('paradox')),
+        metaphorCount,
+        excessiveMetaphors: metaphorCount > 2,
+        hasContextAlignment,
+        userMessageLength: message.length,
+        responseLength: response.length
+      };
+      
+      console.log('🔍 QUALITY CONTROL:', {
+        validation,
+        passed: (!hasContradiction || validation.addressedContradiction) && 
+                !validation.excessiveMetaphors && 
+                validation.hasContextAlignment,
+        userMessage: message.substring(0, 100),
+        responsePreview: response.substring(0, 150)
+      });
+      
+      return validation;
+    };
+    
+    const qualityCheck = validateResponseQuality();
+
     // FUSION STEP 2: Prepare oracle response data for HACS intelligence integration
     const oracleResponseData = {
       response,
       oracleStatus,
       semanticChunks: semanticChunks.length,
       quality: intelligenceLevel > 70 ? 0.9 : 0.8, // Higher quality for advanced users
-      personalityContext
+      personalityContext,
+      qualityCheck // Include validation results
     };
 
     // Log metrics for cost tracking
@@ -1690,7 +1752,15 @@ serve(async (req) => {
       intelligenceLevel,
       backgroundFusion: enableBackgroundIntelligence,
       tokens: tokenUsage,
-      responseLength: response.length
+      responseLength: response.length,
+      qualityValidation: {
+        passed: (!qualityCheck.hasContradiction || qualityCheck.addressedContradiction) && 
+                !qualityCheck.excessiveMetaphors && 
+                qualityCheck.hasContextAlignment,
+        metaphorCount: qualityCheck.metaphorCount,
+        contextAligned: qualityCheck.hasContextAlignment,
+        contradictionHandled: !qualityCheck.hasContradiction || qualityCheck.addressedContradiction
+      }
     });
 
     // FUSION STEP 3: Prepare immediate response (background tasks will run AFTER this is sent)
