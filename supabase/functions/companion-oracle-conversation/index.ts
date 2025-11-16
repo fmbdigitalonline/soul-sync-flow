@@ -2014,6 +2014,9 @@ serve(async (req) => {
     const aiResponse = JSON.parse(responseText);
     let response = aiResponse.choices[0]?.message?.content || 'I sense a disturbance in our connection. Please try reaching out again.'
 
+    // Build lightweight reference array for recent conversational context (exclude system prompts)
+    const conversationMessages = messagesToSend.filter(msg => msg.role !== 'system' && typeof msg.content === 'string');
+
     // 🔍 QUALITY CONTROL: Validate response alignment with conversation
     const validateResponseQuality = () => {
       const userMessage = message.toLowerCase();
@@ -2028,7 +2031,7 @@ serve(async (req) => {
       
       // Check if response addresses recent conversation context
       const recentContext = conversationMessages.slice(-3).map(m => m.content.toLowerCase()).join(' ');
-      const hasContextAlignment = conversationMessages.length < 2 || 
+      const hasContextAlignment = conversationMessages.length < 2 ||
         recentContext.split(' ').some(word => word.length > 4 && responseLower.includes(word));
       
       // Validation results
