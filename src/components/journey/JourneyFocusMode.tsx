@@ -42,6 +42,32 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
     });
   };
 
+  const formatBlueprintAlignment = (alignment: any) => {
+    if (!alignment) return '';
+    if (typeof alignment === 'string') return alignment;
+    if (Array.isArray(alignment)) return alignment.filter(Boolean).join(' • ');
+
+    if (typeof alignment === 'object') {
+      const { addresses_patterns, leverages_strengths, optimal_timing } = alignment as Record<string, any>;
+
+      const formatValue = (value: any) => {
+        if (Array.isArray(value)) return value.filter(Boolean).join(', ');
+        if (value && typeof value === 'object') return Object.values(value).join(', ');
+        return value ? String(value) : '';
+      };
+
+      const parts = [
+        addresses_patterns ? `Addresses patterns: ${formatValue(addresses_patterns)}` : '',
+        leverages_strengths ? `Leverages strengths: ${formatValue(leverages_strengths)}` : '',
+        optimal_timing ? `Optimal timing: ${formatValue(optimal_timing)}` : ''
+      ].filter(Boolean);
+
+      return parts.join(' • ');
+    }
+
+    return String(alignment);
+  };
+
   const normalizedMilestoneKeyword =
     typeof focusedMilestone?.title === 'string'
       ? focusedMilestone.title.toLowerCase().split(' ')[0]
@@ -67,6 +93,8 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
       console.log(`[FocusMode] Exited`);
     };
   }, [focusedMilestone]);
+
+  const blueprintAlignmentText = formatBlueprintAlignment(focusedMilestone?.blueprint_alignment);
 
   return (
     <div className="space-y-6 animate-fade-in transition-all duration-300">
@@ -116,14 +144,14 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
       </div>
 
       {/* Blueprint Alignment for this Milestone */}
-      {focusedMilestone.blueprint_alignment && (
+      {blueprintAlignmentText && (
         <div className="p-3 bg-soul-purple/10 rounded-lg border border-soul-purple/20">
           <h4 className="font-medium text-soul-purple mb-2 flex items-center gap-2">
             <Brain className="h-4 w-4" />
             {t('journey.focusModeView.blueprintAlignment')}
           </h4>
           <p className="text-sm text-soul-purple/80">
-            {focusedMilestone.blueprint_alignment}
+            {blueprintAlignmentText}
           </p>
         </div>
       )}
