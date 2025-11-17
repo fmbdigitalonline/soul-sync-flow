@@ -27,6 +27,11 @@ interface WorkspaceNote {
   id: string;
   content: string;
   createdAt: string;
+  priority: 'low' | 'medium' | 'high';
+  attachment?: {
+    name: string;
+    dataUrl: string;
+  };
 }
 
 interface ContextualToolsPanelProps {
@@ -124,7 +129,8 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
         return parsed.map((note: string, index: number) => ({
           id: `legacy-note-${index}-${Date.now()}`,
           content: note,
-          createdAt: fallbackTimestamp
+          createdAt: fallbackTimestamp,
+          priority: 'medium'
         }));
       }
 
@@ -135,7 +141,14 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
         .map((note: any, index: number) => ({
           id: typeof note.id === 'string' ? note.id : `note-${Date.now()}-${index}`,
           content: typeof note.content === 'string' ? note.content : String(note.content ?? ''),
-          createdAt: typeof note.createdAt === 'string' ? note.createdAt : fallbackTimestamp
+          createdAt: typeof note.createdAt === 'string' ? note.createdAt : fallbackTimestamp,
+          priority: note.priority === 'low' || note.priority === 'high' ? note.priority : 'medium',
+          attachment: note.attachment && typeof note.attachment === 'object'
+            ? {
+              name: typeof note.attachment.name === 'string' ? note.attachment.name : 'attachment',
+              dataUrl: typeof note.attachment.dataUrl === 'string' ? note.attachment.dataUrl : ''
+            }
+            : undefined
         }));
     } catch (error) {
       console.error('Failed to parse journey workspace notes', error);
@@ -143,6 +156,8 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
     }
   });
   const [noteDraft, setNoteDraft] = useState('');
+  const [notePriority, setNotePriority] = useState<WorkspaceNote['priority']>('medium');
+  const [noteAttachment, setNoteAttachment] = useState<WorkspaceNote['attachment']>();
   const [agendaItems, setAgendaItems] = useState<
     Array<{ id: string; text: string; scheduledFor: string; locked: boolean; completed: boolean }>
   >(() => {
@@ -312,11 +327,15 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
     const newNote: WorkspaceNote = {
       id: `note-${Date.now()}`,
       content: trimmedNote,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      priority: notePriority,
+      attachment: noteAttachment?.dataUrl ? noteAttachment : undefined
     };
 
     setWorkspaceNotes(prev => [newNote, ...prev]);
     setNoteDraft('');
+    setNotePriority('medium');
+    setNoteAttachment(undefined);
   };
 
   const removeWorkspaceNote = (idToRemove: string) => {
@@ -479,6 +498,62 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
               placeholder={t('contextualTools.notePlaceholder')}
               className="min-h-[90px] w-full rounded-md border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
             />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-foreground" htmlFor="workspace-priority">
+                  {t('contextualTools.notePriority')}
+                </label>
+                <select
+                  id="workspace-priority"
+                  value={notePriority}
+                  onChange={event => setNotePriority(event.target.value as WorkspaceNote['priority'])}
+                  className="w-full rounded-md border border-border bg-background px-2 py-1 text-xs"
+                >
+                  <option value="low">{t('contextualTools.priorityOptions.low')}</option>
+                  <option value="medium">{t('contextualTools.priorityOptions.medium')}</option>
+                  <option value="high">{t('contextualTools.priorityOptions.high')}</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-foreground" htmlFor="workspace-attachment">
+                  {t('contextualTools.addAttachment')}
+                </label>
+                <input
+                  id="workspace-attachment"
+                  type="file"
+                  accept="image/*"
+                  className="w-full text-xs"
+                  onChange={event => {
+                    const file = event.target.files?.[0];
+                    if (!file) {
+                      setNoteAttachment(undefined);
+                      return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                      const dataUrl = e.target?.result;
+                      if (typeof dataUrl === 'string') {
+                        setNoteAttachment({ name: file.name, dataUrl });
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+                {noteAttachment?.dataUrl ? (
+                  <div className="flex items-center justify-between rounded-md border border-dashed border-primary/50 bg-primary/5 px-2 py-1 text-[11px] text-foreground">
+                    <span className="truncate" title={noteAttachment.name}>{noteAttachment.name}</span>
+                    <button
+                      type="button"
+                      className="text-destructive"
+                      onClick={() => setNoteAttachment(undefined)}
+                    >
+                      {t('contextualTools.removeAttachment')}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            </div>
             <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
               <div className="flex items-center gap-2">
                 <button
@@ -508,12 +583,39 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                     className="rounded-md border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground flex items-start justify-between gap-3"
                   >
                     <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                            note.priority === 'high' && 'bg-destructive/10 text-destructive border border-destructive/40',
+                            note.priority === 'medium' && 'bg-amber-50 text-amber-700 border border-amber-200',
+                            note.priority === 'low' && 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          )}
+                        >
+                          {t(`contextualTools.priorityOptions.${note.priority}` as const)}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatNoteTimestamp(note.createdAt)}
+                        </span>
+                      </div>
                       <span className="flex-1 whitespace-pre-wrap break-words text-foreground text-xs">
                         {note.content}
                       </span>
-                      <span className="block text-[10px] text-muted-foreground">
-                        {formatNoteTimestamp(note.createdAt)}
-                      </span>
+                      {note.attachment?.dataUrl ? (
+                        <div className="mt-1 overflow-hidden rounded-md border border-border/50 bg-background">
+                          <img
+                            src={note.attachment.dataUrl}
+                            alt={note.attachment.name}
+                            className="max-h-40 w-full object-cover"
+                          />
+                          <div className="flex items-center justify-between px-2 py-1 text-[10px] text-muted-foreground">
+                            <span className="truncate" title={note.attachment.name}>
+                              {note.attachment.name}
+                            </span>
+                            <span>{t('contextualTools.attachmentPreview')}</span>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                     <button
                       type="button"
