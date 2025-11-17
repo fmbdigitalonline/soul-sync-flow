@@ -17,7 +17,8 @@ import {
   Pause,
   ListTodo,
   Plus,
-  Trash2
+  Trash2,
+  Download
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -340,6 +341,46 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
 
   const removeWorkspaceNote = (idToRemove: string) => {
     setWorkspaceNotes(prev => prev.filter(note => note.id !== idToRemove));
+  };
+
+  const downloadWorkspaceNote = (note: WorkspaceNote) => {
+    try {
+      const content = [
+        `${t('contextualTools.notePriority')}: ${t(
+          `contextualTools.priorityOptions.${note.priority}` as const
+        )}`,
+        `${t('contextualTools.capturedOn')}: ${formatNoteTimestamp(note.createdAt)}`,
+        '',
+        note.content
+      ].join('\n');
+
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `workspace-note-${new Date(note.createdAt).getTime()}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download note', error);
+    }
+  };
+
+  const downloadWorkspaceAttachment = (attachment?: WorkspaceNote['attachment']) => {
+    if (!attachment?.dataUrl) return;
+
+    try {
+      const link = document.createElement('a');
+      link.href = attachment.dataUrl;
+      link.download = attachment.name || 'attachment';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Failed to download attachment', error);
+    }
   };
 
   const formatNoteTimestamp = (timestamp: string) => {
