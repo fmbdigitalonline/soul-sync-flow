@@ -2,21 +2,17 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { safeInterpolateTranslation } from "@/utils/sanitize";
-import MainLayout from "@/components/Layout/MainLayout";
-import { PageContainer, PageHeader, PageSection } from "@/components/Layout/PageContainer";
-import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
 import { Button } from "@/components/ui/button";
 import { TutorialModal } from "@/components/tutorial/TutorialModal";
 import PersonalityDemo from "@/components/personality/PersonalityDemo";
-import { LanguageSelector } from "@/components/ui/language-selector";
-import { HomeMenuGrid, type HomeMenuItem } from "@/components/home/HomeMenuGrid";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useTutorialFlow } from "@/hooks/use-tutorial-flow";
 import { isAdminUser } from "@/utils/isAdminUser";
-import { Heart, Sparkles, Brain, BookOpen, ArrowRight, LogIn, LayoutDashboard, ListTodo, User } from "lucide-react";
+import { Heart, Sparkles, Brain, BookOpen, ArrowRight, LayoutDashboard, ListTodo, User, CheckCircle, Lightbulb, Search, ChevronRight } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CosmicCard } from "@/components/ui/cosmic-card";
 const Index = () => {
   const {
     user
