@@ -35,6 +35,9 @@ interface WorkspaceNote {
   };
 }
 
+const MAX_WORKSPACE_ATTACHMENT_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_WORKSPACE_STORAGE_BYTES = 4.5 * 1024 * 1024; // slightly under 5MB browser quota
+
 interface ContextualToolsPanelProps {
   context?: 'journey' | 'task-coach' | 'focus' | 'tasks' | 'milestones' | 'hub' | 'chat' | 'create';
   activeGoal?: any;
@@ -159,6 +162,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
   const [noteDraft, setNoteDraft] = useState('');
   const [notePriority, setNotePriority] = useState<WorkspaceNote['priority']>('medium');
   const [noteAttachment, setNoteAttachment] = useState<WorkspaceNote['attachment']>();
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [agendaItems, setAgendaItems] = useState<
     Array<{ id: string; text: string; scheduledFor: string; locked: boolean; completed: boolean }>
   >(() => {
@@ -192,7 +196,38 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem('journey-workspace-notes', JSON.stringify(workspaceNotes));
+
+    try {
+      const sanitizedNotes = workspaceNotes.map(note => {
+        if (!note.attachment?.dataUrl) return note;
+
+        const attachmentBytes = new Blob([note.attachment.dataUrl]).size;
+        if (attachmentBytes > MAX_WORKSPACE_ATTACHMENT_SIZE) {
+          return { ...note, attachment: undefined };
+        }
+
+        return note;
+      });
+
+      const serialized = JSON.stringify(sanitizedNotes);
+      const serializedBytes = new Blob([serialized]).size;
+
+      if (serializedBytes > MAX_WORKSPACE_STORAGE_BYTES) {
+        const notesWithoutAttachments = sanitizedNotes.map(note => ({ ...note, attachment: undefined }));
+        const strippedSerialized = JSON.stringify(notesWithoutAttachments);
+
+        if (new Blob([strippedSerialized]).size <= MAX_WORKSPACE_STORAGE_BYTES) {
+          window.localStorage.setItem('journey-workspace-notes', strippedSerialized);
+        } else {
+          console.warn('Workspace notes exceed local storage capacity; skipping persistence.');
+        }
+        return;
+      }
+
+      window.localStorage.setItem('journey-workspace-notes', serialized);
+    } catch (error) {
+      console.error('Failed to persist journey workspace notes', error);
+    }
   }, [workspaceNotes]);
 
   useEffect(() => {
@@ -568,8 +603,18 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                     const file = event.target.files?.[0];
                     if (!file) {
                       setNoteAttachment(undefined);
+                      setAttachmentError(null);
                       return;
                     }
+
+                    if (file.size > MAX_WORKSPACE_ATTACHMENT_SIZE) {
+                      setAttachmentError('Attachments must be smaller than 2MB to save locally.');
+                      setNoteAttachment(undefined);
+                      event.target.value = '';
+                      return;
+                    }
+
+                    setAttachmentError(null);
 
                     const reader = new FileReader();
                     reader.onload = e => {
@@ -581,6 +626,9 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                     reader.readAsDataURL(file);
                   }}
                 />
+                {attachmentError ? (
+                  <p className="text-[11px] text-destructive">{attachmentError}</p>
+                ) : null}
                 {noteAttachment?.dataUrl ? (
                   <div className="flex items-center justify-between rounded-md border border-dashed border-primary/50 bg-primary/5 px-2 py-1 text-[11px] text-foreground">
                     <span className="truncate" title={noteAttachment.name}>{noteAttachment.name}</span>
