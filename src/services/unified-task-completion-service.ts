@@ -5,16 +5,16 @@
  * Pillar III: Intentional Craft - Polished completion experience
  */
 
-import { taskCoachIntegrationService } from './task-coach-integration-service';
 import { dreamActivityLogger } from './dream-activity-logger';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  TaskCompletionEvent, 
-  TaskCompletionContext, 
-  TaskCompletionResult, 
+import {
+  TaskCompletionEvent,
+  TaskCompletionContext,
+  TaskCompletionResult,
   TaskCompletionListener,
-  TaskCompletionState 
+  TaskCompletionState
 } from '@/types/task-completion';
+import { TaskContext, taskCoachIntegrationService } from './task-coach-integration-service';
 
 class UnifiedTaskCompletionService {
   private listeners: Set<TaskCompletionListener> = new Set();
@@ -46,7 +46,7 @@ class UnifiedTaskCompletionService {
    * Pillar I: Preserve existing functionality, add integration
    */
   async completeTask(
-    taskId: string, 
+    taskId: string,
     completionMethod: TaskCompletionEvent['completionMethod'],
     context: TaskCompletionContext,
     sessionData?: TaskCompletionEvent['sessionData']
@@ -60,9 +60,17 @@ class UnifiedTaskCompletionService {
 
     try {
       // Step 1: Get current task context from existing service
-      const currentTask = taskCoachIntegrationService.getCurrentTask();
+      let currentTask = taskCoachIntegrationService.getCurrentTask();
       if (!currentTask || currentTask.id !== taskId) {
-        throw new Error(`Task context mismatch: expected ${taskId}, got ${currentTask?.id || 'null'}`);
+        console.warn('⚠️ UnifiedTaskCompletion: Task context mismatch detected, attempting to resolve.');
+        const resolvedTask = await this.resolveTaskContext(taskId);
+
+        if (!resolvedTask) {
+          throw new Error(`Task context mismatch: expected ${taskId}, got ${currentTask?.id || 'null'}`);
+        }
+
+        taskCoachIntegrationService.setCurrentTask(resolvedTask);
+        currentTask = resolvedTask;
       }
 
       // Step 2: Execute core completion via existing service
@@ -304,6 +312,51 @@ class UnifiedTaskCompletionService {
         return '/tasks'; // Return to task list
       default:
         return '/tasks'; // Default fallback
+    }
+  }
+
+  /**
+   * Resolve and hydrate task context when the cached context is missing or mismatched
+   */
+  private async resolveTaskContext(taskId: string): Promise<TaskContext | null> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data: journey } = await supabase
+        .from('productivity_journey')
+        .select('current_goals')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!journey?.current_goals || !Array.isArray(journey.current_goals)) {
+        return null;
+      }
+
+      for (const goal of journey.current_goals) {
+        if (!Array.isArray(goal?.tasks)) continue;
+
+        const matchedTask = goal.tasks.find((task: any) => task?.id === taskId);
+        if (matchedTask) {
+          return {
+            id: matchedTask.id,
+            title: matchedTask.title,
+            description: matchedTask.description,
+            status: matchedTask.status || 'todo',
+            estimated_duration: matchedTask.estimated_duration || '1 hour',
+            energy_level_required: matchedTask.energy_level_required || 'medium',
+            category: matchedTask.category || 'general',
+            goal_id: goal.id,
+            sub_tasks: matchedTask.sub_tasks || [],
+            progress: matchedTask.progress ?? (matchedTask.completed ? 100 : 0)
+          } as TaskContext;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Failed to resolve task context:', error);
+      return null;
     }
   }
 
