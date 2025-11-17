@@ -657,26 +657,6 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                           </div>
                         </div>
                       ) : null}
-                      <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
-                        <button
-                          type="button"
-                          onClick={() => downloadWorkspaceNote(note)}
-                          className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 font-medium transition-colors hover:border-primary hover:text-primary"
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          {t('contextualTools.downloadNote')}
-                        </button>
-                        {note.attachment?.dataUrl ? (
-                          <button
-                            type="button"
-                            onClick={() => downloadWorkspaceAttachment(note.attachment)}
-                            className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 font-medium transition-colors hover:border-primary hover:text-primary"
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                            {t('contextualTools.downloadAttachment')}
-                          </button>
-                        ) : null}
-                      </div>
                     </div>
                     <button
                       type="button"
