@@ -45,10 +45,27 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
 }) => {
   // Render working instructions with interactive checkable cards
   if (parsedMessage.type === 'working_instructions' && parsedMessage.workingInstructions && parsedMessage.workingInstructions.length > 0) {
+    // Validate goalId exists before rendering
+    if (!goalId || goalId === 'unknown') {
+      console.error('❌ StructuredMessageRenderer: Cannot render working instructions without valid goalId', {
+        taskId,
+        goalIdReceived: goalId,
+        instructionCount: parsedMessage.workingInstructions.length
+      });
+      
+      return (
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">
+            ⚠️ Working instructions cannot be saved: Missing goal context. Please navigate to this task from a goal.
+          </p>
+        </div>
+      );
+    }
+    
     return (
       <WorkingInstructionsPanel
         instructions={parsedMessage.workingInstructions}
-        goalId={goalId || 'unknown'}
+        goalId={goalId}
         taskId={taskId}
         onInstructionComplete={onInstructionComplete || (() => {})}
         onAllInstructionsComplete={onAllInstructionsComplete || (() => {})}

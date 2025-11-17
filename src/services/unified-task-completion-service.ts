@@ -333,8 +333,11 @@ class UnifiedTaskCompletionService {
         return null;
       }
 
-      for (const goal of journey.current_goals) {
-        if (!Array.isArray(goal?.tasks)) continue;
+      // Type assertion: current_goals is stored as Json but represents an array of goal objects
+      const goals = journey.current_goals as any[];
+
+      for (const goal of goals) {
+        if (!goal || typeof goal !== 'object' || !Array.isArray(goal.tasks)) continue;
 
         const matchedTask = goal.tasks.find((task: any) => task?.id === taskId);
         if (matchedTask) {

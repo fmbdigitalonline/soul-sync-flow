@@ -109,6 +109,12 @@ export const WorkingInstructionsPanel: React.FC<WorkingInstructionsPanelProps> =
           instructionIds: instructions.map(i => i.id)
         });
 
+        // Validate IDs before attempting save
+        if (!goalId || goalId === 'unknown' || !taskId) {
+          console.error('❌ Cannot save working instructions: Invalid IDs', { goalId, taskId });
+          return;
+        }
+
         const hasStored = await workingInstructionsPersistenceService.hasStoredInstructions(goalId, taskId);
         if (!hasStored && instructions.length > 0) {
           console.log('💾 Saving working instructions:', { goalId, taskId, count: instructions.length });
