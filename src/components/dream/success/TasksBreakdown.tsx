@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckSquare, Clock, Zap, ChevronDown, ChevronUp, Target } from 'lucide-react';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { extractDreamEssence } from '@/utils/text-essence';
 
 interface TasksBreakdownProps {
   tasks: any[];
@@ -122,8 +123,11 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
                             {task.title}
                           </h4>
                           {!isFoldDevice && task.description && (
-                            <p className={`text-gray-600 mb-2 line-clamp-2 ${getTextSize('text-xs')}`}>
-                              {task.description}
+                            <p
+                              className={`text-gray-600 mb-2 line-clamp-2 ${getTextSize('text-xs')}`}
+                              title={task.description.length > 200 ? task.description : undefined}
+                            >
+                              {extractDreamEssence(task.description || '', 180)}
                             </p>
                           )}
                           
@@ -145,8 +149,11 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
                           
                           {task.blueprint_reasoning && !isFoldDevice && (
                             <div className="mt-2">
-                              <p className={`text-soul-purple bg-soul-purple/10 rounded px-2 py-1 inline-block ${getTextSize('text-xs')}`}>
-                                💡 {task.blueprint_reasoning}
+                              <p
+                                className={`text-soul-purple bg-soul-purple/10 rounded px-2 py-1 inline-block ${getTextSize('text-xs')}`}
+                                title={task.blueprint_reasoning.length > 220 ? task.blueprint_reasoning : undefined}
+                              >
+                                💡 {extractDreamEssence(task.blueprint_reasoning, 200)}
                               </p>
                             </div>
                           )}
