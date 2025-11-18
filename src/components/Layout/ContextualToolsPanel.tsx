@@ -621,9 +621,9 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                 {workspaceNotes.map(note => (
                   <div
                     key={note.id}
-                    className="rounded-md border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground flex items-start justify-between gap-3"
+                    className="rounded-md border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground flex items-start justify-between gap-3 overflow-hidden"
                   >
-                    <div className="flex-1 space-y-1">
+                    <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center gap-2">
                         <span
                           className={cn(
@@ -639,7 +639,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                           {formatNoteTimestamp(note.createdAt)}
                         </span>
                       </div>
-                      <span className="flex-1 whitespace-pre-wrap break-words text-foreground text-xs">
+                      <span className="flex-1 min-w-0 whitespace-pre-wrap break-words text-foreground text-xs">
                         {note.content}
                       </span>
                       {note.attachment?.dataUrl ? (
