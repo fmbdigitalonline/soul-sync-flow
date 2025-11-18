@@ -33,7 +33,7 @@ export const DreamSuccessView: React.FC<DreamSuccessViewProps> = ({
   const [selectedTask, setSelectedTask] = useState<any>(null);
 
   const dreamEssence = useMemo(
-    () => extractDreamEssence(dream?.description || '', 160),
+    () => extractDreamEssence(dream?.description || ''),
     [dream?.description]
   );
 
