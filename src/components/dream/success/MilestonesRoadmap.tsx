@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { MapPin, ChevronRight, Calendar, Target, CheckCircle2 } from 'lucide-react';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { extractDreamEssence } from '@/utils/text-essence';
 
 interface MilestonesRoadmapProps {
   milestones: any[];
@@ -93,8 +94,11 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
                 </Badge>
               </div>
               
-              <p className={`text-gray-600 mb-3 leading-relaxed line-clamp-2 ${getTextSize('text-xs')}`}>
-                {milestone.description}
+              <p
+                className={`text-gray-600 mb-3 leading-relaxed line-clamp-2 ${getTextSize('text-xs')}`}
+                title={milestone.description && milestone.description.length > 180 ? milestone.description : undefined}
+              >
+                {extractDreamEssence(milestone.description || '', 170)}
               </p>
               
               {milestone.blueprint_alignment?.recommendations && (

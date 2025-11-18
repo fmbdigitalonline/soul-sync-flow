@@ -6,6 +6,42 @@ export interface JSONExtractionResult<T = any> {
   extractedJson?: string;
 }
 
+const repairCommonJsonIssues = (input: string): string => {
+  let repaired = '';
+  let inString = false;
+  let escapeNext = false;
+
+  for (const char of input) {
+    if (inString) {
+      if (!escapeNext && (char === '\n' || char === '\r')) {
+        repaired += '\\n';
+        continue;
+      }
+
+      if (!escapeNext && char === '"') {
+        inString = false;
+      }
+
+      escapeNext = !escapeNext && char === '\\';
+      repaired += char;
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+    }
+
+    repaired += char;
+    escapeNext = !escapeNext && char === '\\';
+  }
+
+  if (inString) {
+    repaired += '"';
+  }
+
+  return repaired;
+};
+
 export const extractAndParseJSON = <T = any>(
   aiResponse: string,
   context: string = 'AI Response'
@@ -90,7 +126,7 @@ export const extractAndParseJSON = <T = any>(
     }
 
     const parsed = JSON.parse(extractedJson);
-    
+
     console.log(`✅ JSON PARSE SUCCESS - ${context}:`, {
       type: Array.isArray(parsed) ? 'array' : 'object',
       keys: Array.isArray(parsed) ? parsed.length : Object.keys(parsed).length
@@ -108,10 +144,32 @@ export const extractAndParseJSON = <T = any>(
       responsePreview: aiResponse.substring(0, 500)
     });
 
+    // Attempt healing when standard parsing fails (e.g. unterminated strings)
+    try {
+      const repairedJson = repairCommonJsonIssues(extractedJson);
+      const repairedParsed = JSON.parse(repairedJson);
+
+      console.log(`✅ JSON REPAIR SUCCESS - ${context}:`, {
+        type: Array.isArray(repairedParsed) ? 'array' : 'object',
+        keys: Array.isArray(repairedParsed) ? repairedParsed.length : Object.keys(repairedParsed).length
+      });
+
+      return {
+        success: true,
+        data: repairedParsed as T,
+        extractedJson: repairedJson
+      };
+    } catch (repairError) {
+      console.error(`❌ JSON REPAIR FAILED - ${context}:`, {
+        error: repairError instanceof Error ? repairError.message : String(repairError)
+      });
+    }
+
     return {
       success: false,
       error: parseError instanceof Error ? parseError.message : 'JSON parse failed',
-      originalResponse: aiResponse
+      originalResponse: aiResponse,
+      extractedJson
     };
   }
 };
