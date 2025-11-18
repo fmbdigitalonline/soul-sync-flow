@@ -1,12 +1,12 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Sparkles,
-  Target,
-  CheckSquare,
+import { 
+  Sparkles, 
+  Target, 
+  CheckSquare, 
   Calendar,
   TrendingUp,
   Eye,
@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { MilestonesRoadmap } from './MilestonesRoadmap';
 import { TasksBreakdown } from './TasksBreakdown';
-import { extractDreamEssence } from '@/utils/text-essence';
 
 interface DreamSuccessViewProps {
   dream: any;
@@ -31,11 +30,6 @@ export const DreamSuccessView: React.FC<DreamSuccessViewProps> = ({
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedMilestone, setSelectedMilestone] = useState<any>(null);
   const [selectedTask, setSelectedTask] = useState<any>(null);
-
-  const dreamEssence = useMemo(
-    () => extractDreamEssence(dream?.description || ''),
-    [dream?.description]
-  );
 
   const milestones = dream?.milestones || [];
   const tasks = dream?.tasks || [];
@@ -67,12 +61,7 @@ export const DreamSuccessView: React.FC<DreamSuccessViewProps> = ({
           
           <div className="bg-card/80 backdrop-blur-lg rounded-xl p-4 max-w-2xl mx-auto shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800 mb-2">{dream?.title}</h2>
-            <p
-              className="text-sm text-gray-600 mb-4"
-              title={dream?.description?.length && dreamEssence !== dream?.description ? dream?.description : undefined}
-            >
-              {dreamEssence}
-            </p>
+            <p className="text-sm text-gray-600 mb-4">{dream?.description}</p>
             
             <div className="flex items-center justify-center gap-4 text-sm">
               <Badge variant="outline" className="flex items-center gap-1">

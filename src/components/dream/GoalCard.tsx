@@ -7,7 +7,7 @@
  * - Principle #7: Build Transparently - shows loading and error states
  */
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,6 @@ import { format } from 'date-fns';
 import { Goal } from '@/hooks/use-goals';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import type { ResumableTask } from '@/hooks/use-resumable-tasks';
-import { extractDreamEssence } from '@/utils/text-essence';
 
 interface GoalCardProps {
   goal: Goal;
@@ -73,11 +72,6 @@ export const GoalCard: React.FC<GoalCardProps> = ({
   const remainingResumeCount = resumableTasks.length - resumeDisplayTasks.length;
   const primaryResumeTask = resumableTasks[0];
 
-  const descriptionPreview = useMemo(
-    () => extractDreamEssence(goal.description || '', 140),
-    [goal.description]
-  );
-
   return (
     <Card className={`w-full overflow-hidden hover:shadow-lg transition-all duration-300 border border-border bg-card ${spacing.container}`}>
       {/* Category Banner */}
@@ -96,9 +90,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({
             {goal.title}
           </h3>
           <p className={`text-muted-foreground line-clamp-2 mb-3 ${getTextSize('text-sm')}`}>
-            <span title={descriptionPreview !== goal.description ? goal.description : undefined}>
-              {descriptionPreview}
-            </span>
+            {goal.description}
           </p>
           
           {/* Progress Bar */}

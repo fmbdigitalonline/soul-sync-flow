@@ -1,11 +1,10 @@
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Play, Clock, ArrowRight } from 'lucide-react';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { extractDreamEssence } from '@/utils/text-essence';
 
 interface RecommendedTaskProps {
   task: any;
@@ -36,16 +35,6 @@ export const RecommendedTask: React.FC<RecommendedTaskProps> = ({
     }
   };
 
-  const taskDescription = useMemo(
-    () => extractDreamEssence(task.description || '', 200),
-    [task.description]
-  );
-
-  const blueprintReasoning = useMemo(
-    () => extractDreamEssence(task.blueprint_reasoning || '', 220),
-    [task.blueprint_reasoning]
-  );
-
   return (
     <div className={`bg-gradient-to-br from-soul-purple/10 to-soul-teal/5 rounded-2xl border border-soul-purple/20 transition-all duration-500 w-full overflow-hidden ${spacing.card} ${
       isHighlighted ? 'ring-2 ring-soul-purple shadow-soul-purple/20 transform scale-[1.01]' : ''
@@ -69,11 +58,8 @@ export const RecommendedTask: React.FC<RecommendedTaskProps> = ({
             <h4 className={`font-semibold text-gray-800 mb-2 leading-tight ${getTextSize('text-base')}`}>
               {task.title}
             </h4>
-            <p
-              className={`text-gray-600 mb-4 leading-relaxed line-clamp-3 ${getTextSize('text-sm')}`}
-              title={taskDescription !== task.description ? task.description : undefined}
-            >
-              {taskDescription}
+            <p className={`text-gray-600 mb-4 leading-relaxed line-clamp-3 ${getTextSize('text-sm')}`}>
+              {task.description}
             </p>
             
             <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -91,11 +77,8 @@ export const RecommendedTask: React.FC<RecommendedTaskProps> = ({
                 <p className={`text-soul-purple font-medium mb-1 leading-tight ${getTextSize('text-xs')}`}>
                   {t('recommendedTask.whyPerfect')}
                 </p>
-                <p
-                  className={`text-gray-700 leading-relaxed line-clamp-4 ${getTextSize('text-xs')}`}
-                  title={blueprintReasoning !== task.blueprint_reasoning ? task.blueprint_reasoning : undefined}
-                >
-                  {blueprintReasoning}
+                <p className={`text-gray-700 leading-relaxed line-clamp-4 ${getTextSize('text-xs')}`}>
+                  {task.blueprint_reasoning}
                 </p>
               </div>
             )}
