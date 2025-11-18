@@ -935,6 +935,7 @@ const Dreams = () => {
                       placeholder={t("dreams.placeholderDream")}
                       value={dreamForm.title}
                       onChange={(e) => setDreamForm(prev => ({ ...prev, title: e.target.value }))}
+                      maxLength={2000}
                       className={`border-border rounded-xl focus:border-primary focus:ring-primary/20 w-full font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}
                     />
                   </div>
@@ -946,6 +947,7 @@ const Dreams = () => {
                       placeholder={t("dreams.placeholderWhy")}
                       value={dreamForm.description}
                       onChange={(e) => setDreamForm(prev => ({ ...prev, description: e.target.value }))}
+                      maxLength={2000}
                       className={`border-border rounded-xl focus:border-primary focus:ring-primary/20 resize-none w-full font-ui ${getTextSize('text-sm')} ${isFoldDevice ? 'min-h-[60px]' : 'min-h-[70px]'}`}
                     />
                   </div>
