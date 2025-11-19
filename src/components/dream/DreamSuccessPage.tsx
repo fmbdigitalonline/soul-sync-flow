@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSoulOrb } from '@/contexts/SoulOrbContext';
 import { CelebrationHeader } from './success/CelebrationHeader';
 import { GuidedTourPanel } from './success/GuidedTourPanel';
@@ -20,6 +20,32 @@ interface DreamSuccessPageProps {
   onMilestoneSelect?: (milestone: any) => void;
   onExitFocus?: () => void;
 }
+
+const MAX_ESSENCE_LENGTH = 160;
+
+const getEssenceTitle = (title?: string): string => {
+  if (!title) {
+    return 'Your Dream Journey';
+  }
+
+  const normalizedTitle = title.replace(/\s+/g, ' ').trim();
+  if (!normalizedTitle) {
+    return 'Your Dream Journey';
+  }
+
+  const firstSentenceMatch = normalizedTitle.match(/[^.!?]+[.!?]?/);
+  let essence = (firstSentenceMatch ? firstSentenceMatch[0] : normalizedTitle).trim();
+
+  if (essence.length > MAX_ESSENCE_LENGTH) {
+    essence = essence.slice(0, MAX_ESSENCE_LENGTH).trim();
+    essence = essence.replace(/[\s,]+$/, '');
+    if (!/[.!?]$/.test(essence)) {
+      essence = `${essence}...`;
+    }
+  }
+
+  return essence;
+};
 
 export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   goal,
@@ -50,9 +76,11 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
     ? externalFocusedMilestone
     : localFocusedMilestone;
 
+  const goalEssenceTitle = useMemo(() => getEssenceTitle(goal?.title), [goal?.title]);
+
   const tourSteps = [
     {
-      message: `🎉 Congratulations! Your "${goal.title}" journey is beautifully designed and ready to unfold. I've created ${goal.milestones?.length || 0} personalized milestones that align perfectly with your soul blueprint.`,
+      message: `🎉 Congratulations! Your "${goalEssenceTitle}" journey is beautifully designed and ready to unfold. I've created ${goal.milestones?.length || 0} personalized milestones that align perfectly with your soul blueprint.`,
       highlight: 'celebration',
       duration: 4000
     },
@@ -211,11 +239,11 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   return (
     <div className="min-h-screen bg-background w-full overflow-x-hidden">
       <div className="w-full max-w-full mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6">
-        
+
         <CelebrationHeader
           speaking={speaking}
           celebrationComplete={celebrationComplete}
-          goalTitle={goal.title}
+          goalTitle={goalEssenceTitle}
         />
 
         <div className="w-full max-w-full">
