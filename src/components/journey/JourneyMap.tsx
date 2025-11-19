@@ -42,6 +42,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
     setCurrentDetailView,
   } = useJourneyMapData();
   const { t } = useLanguage();
+  const [taskMilestoneFilter, setTaskMilestoneFilter] = React.useState<any | null>(null);
 
   // Add debugging to see if mainGoal has the problematic structure
   console.log('🗺️ JourneyMap mainGoal structure:', mainGoal);
@@ -69,6 +70,13 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
 
   const handleBackToOverview = () => {
     setCurrentDetailView(null);
+    setTaskMilestoneFilter(null);
+  };
+
+  const handleViewTasksFromFocus = (milestone: any) => {
+    setTaskMilestoneFilter(milestone);
+    setFocusedMilestone(null);
+    setCurrentDetailView("tasks");
   };
 
   const handleMilestoneSelect = (milestone: any) => {
@@ -99,7 +107,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
         <div className="max-w-4xl mx-auto p-4">
           <TaskViews
             activeGoal={mainGoal}
-            focusedMilestone={null}
+            focusedMilestone={taskMilestoneFilter}
             onBackToJourney={handleBackToOverview}
             onTaskSelect={(task) => onTaskClick?.(task)}
           />
@@ -128,6 +136,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
         mainGoal={mainGoal}
         onTaskClick={onTaskClick}
         onExitFocus={exitFocusMode}
+        onViewMilestoneTasks={handleViewTasksFromFocus}
       />
     );
   }
