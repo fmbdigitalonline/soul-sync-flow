@@ -3101,6 +3101,7 @@ Help them transform their dream interest into a specific, actionable goal. Use t
         focusedTasksCount: '{count} focused tasks',
         blueprintAlignment: 'Blueprint Alignment',
         tasksForMilestone: 'Tasks for This Milestone',
+        openTaskBoard: 'Open milestone task board',
         noTasks: 'No specific tasks found for this milestone.',
         tasksDistributed: 'Tasks may be distributed across milestones.',
         completionCriteria: 'Completion Criteria'
@@ -6879,6 +6880,7 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
         focusedTasksCount: '{count} gefocuste taken',
         blueprintAlignment: 'Blauwdruk Afstemming',
         tasksForMilestone: 'Taken voor deze mijlpaal',
+        openTaskBoard: 'Ga naar het takenbord',
         noTasks: 'Geen specifieke taken gevonden voor deze mijlpaal.',
         tasksDistributed: 'Taken kunnen over meerdere mijlpalen verdeeld zijn.',
         completionCriteria: 'Voltooiingscriteria'
