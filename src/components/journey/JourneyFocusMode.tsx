@@ -204,7 +204,21 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
                     </Badge>
                   </div>
                 </div>
-                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                {onViewMilestoneTasks ? (
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleOpenTaskBoard();
+                    }}
+                    className="p-1 rounded-full hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-soul-purple"
+                    aria-label={t('journey.focusModeView.openTaskBoard')}
+                  >
+                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                ) : (
+                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                )}
               </div>
             ))}
           </div>
