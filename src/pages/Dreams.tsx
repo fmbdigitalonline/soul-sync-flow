@@ -7,7 +7,7 @@ import EnhancedBlueprintViewer from "@/components/blueprint/EnhancedBlueprintVie
 import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
 import { BlueprintHealthCheck } from "@/components/blueprint/BlueprintHealthCheck";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageCircle, RefreshCw, ToggleLeft, ToggleRight, Activity, ArrowLeft, Plus, Sparkles } from "lucide-react";
+import { Loader2, MessageCircle, RefreshCw, Activity, ArrowLeft, Plus, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -49,6 +49,158 @@ import type { ResumableTask } from "@/hooks/use-resumable-tasks";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 
 type Task = ResumableTask;
+
+type DreamCategoryKey =
+  | 'personal_growth'
+  | 'career'
+  | 'health'
+  | 'relationships'
+  | 'creativity'
+  | 'financial'
+  | 'spiritual';
+
+const DREAM_CATEGORY_SUBDOMAINS: Record<DreamCategoryKey, string[]> = {
+  personal_growth: [
+    'Productiviteit & Focus',
+    'Zelfdiscipline',
+    'Leergewoontes & Skill Acquisition',
+    'Mindset & Psychologie',
+    'Emotieregulatie',
+    'Stressmanagement',
+    'Mind–Body Regulatie',
+    'Zelfcompassie',
+    'Interne Motivatie',
+    'Identiteitsontwikkeling',
+    'Tijdperceptie & Flow',
+    'Mentale weerbaarheid',
+    'Besluitvorming',
+    'Levensorganisatie',
+    'Zelfvertrouwen',
+    'Gedragspsychologie',
+    'Zelfkennis',
+    'Doelen stellen',
+    'Impulscontrole',
+    'Zelfexpressie'
+  ],
+  career: [
+    'Software Engineering',
+    'Marketing',
+    'Sales',
+    'Leadership & Management',
+    'Projectmanagement',
+    'UX/UI Design',
+    'Data Science',
+    'Content Creatie',
+    'Copywriting',
+    'Branding',
+    'Consultancy',
+    'Public Speaking',
+    'Analytical Thinking',
+    'Community Building',
+    'HR & Performance Management',
+    'Customer Support Excellence',
+    'E-learning & Edutainment',
+    'Career Switching',
+    'Operations Management',
+    'Employer Branding',
+    'LinkedIn Personal Branding'
+  ],
+  health: [
+    'Fitness & Strength Training',
+    'Hypertrofie (Muscle Growth)',
+    'Functionele Fitness',
+    'Hardlopen',
+    'Cardiotraining',
+    'Mobiliteit & Flexibiliteit',
+    'Slaapoptimalisatie',
+    'Darmgezondheid',
+    'Hormoonbalans',
+    'Burnout Herstel',
+    'Mentale Gezondheid',
+    'Longevity / Anti-Aging',
+    'Holistische Gezondheid',
+    'Fat Loss / Gewichtsverlies',
+    'Revalidatie',
+    'Ademhalingstraining',
+    'Gezonde Lifestyle'
+  ],
+  relationships: [
+    'Romantische Relaties',
+    'Communicatie',
+    'Sociale Vaardigheden',
+    'Conflictbeheersing',
+    'Netwerken',
+    'Familiecommunicatie',
+    'Parenting Skills',
+    'Teamdynamiek',
+    'Charisma',
+    'Intimiteit & Verbinding',
+    'Grenzen Stellen',
+    'Sociale Dynamiek',
+    'Attraction & Dating Dynamics'
+  ],
+  creativity: [
+    'Schrijven',
+    'Storytelling',
+    'Film & Video',
+    'YouTube Creatie',
+    'Podcasting',
+    'Muziekproductie',
+    'Fotografie',
+    'Concept Art',
+    'Digital Branding Design',
+    'Animation',
+    'Virale Content',
+    'Creative Direction',
+    'Social Media Storytelling',
+    'Color Grading',
+    'Creative Flow'
+  ],
+  financial: [
+    'Personal Finance',
+    'Investeren',
+    'Trading',
+    'Ondernemerschap',
+    'E-commerce',
+    'B2B SaaS',
+    'Freelancing',
+    'Geldpsychologie',
+    'Vastgoed',
+    'Crypto & DeFi',
+    'Side Hustles',
+    'Pensioenplanning',
+    'Financial Independence',
+    'Wealth Mindset'
+  ],
+  spiritual: [
+    'Mindfulness',
+    'Meditatie',
+    'Innerlijke Rust',
+    'Spirituele Groei',
+    'Zelfreflectie',
+    'Dankbaarheid',
+    'Ademwerk',
+    'Stress–Trauma Verwerking',
+    'Bewustzijnstraining',
+    'Energiebeheer'
+  ]
+};
+
+const DEFAULT_CATEGORY: DreamCategoryKey = 'personal_growth';
+const getDefaultSubdomainForCategory = (category: DreamCategoryKey) =>
+  DREAM_CATEGORY_SUBDOMAINS[category]?.[0] || '';
+const DEFAULT_SUBDOMAIN = getDefaultSubdomainForCategory(DEFAULT_CATEGORY);
+
+const isValidDreamCategory = (value: string): value is DreamCategoryKey =>
+  value in DREAM_CATEGORY_SUBDOMAINS;
+
+type DreamFormState = {
+  title: string;
+  description: string;
+  category: DreamCategoryKey;
+  timeframe: string;
+  subdomain: string;
+};
 
 const Dreams = () => {
   const { 
@@ -198,12 +350,34 @@ const Dreams = () => {
   }, [currentView, resolvedGoalToShow, selectedGoalId]);
 
   // Dream creation form state
-  const [dreamForm, setDreamForm] = useState({
+  const [dreamForm, setDreamForm] = useState<DreamFormState>({
     title: '',
     description: '',
-    category: 'personal_growth',
-    timeframe: '3 months'
+    category: DEFAULT_CATEGORY,
+    timeframe: '3 months',
+    subdomain: DEFAULT_SUBDOMAIN
   });
+
+  const availableSubdomains = useMemo(() => {
+    return DREAM_CATEGORY_SUBDOMAINS[dreamForm.category] ?? [];
+  }, [dreamForm.category]);
+
+  useEffect(() => {
+    if (!availableSubdomains.length) return;
+    const hasValidSubdomain = availableSubdomains.includes(dreamForm.subdomain);
+    if (hasValidSubdomain) return;
+    setDreamForm(prev => ({ ...prev, subdomain: availableSubdomains[0] }));
+  }, [availableSubdomains, dreamForm.subdomain]);
+
+  const handleCategoryChange = useCallback((value: string) => {
+    if (!value) return;
+    const nextCategory = isValidDreamCategory(value) ? value : DEFAULT_CATEGORY;
+    setDreamForm(prev => ({
+      ...prev,
+      category: nextCategory,
+      subdomain: getDefaultSubdomainForCategory(nextCategory)
+    }));
+  }, []);
 
   const formRef = useRef<HTMLDivElement>(null);
   const scrollToForm = useCallback(() => {
@@ -229,12 +403,13 @@ const Dreams = () => {
     setCreatedGoal(decomposedGoal);
     setCurrentView('success');
     setIsCreatingDream(false);
-    
+
     setDreamForm({
       title: '',
       description: '',
-      category: 'personal_growth',
-      timeframe: '3 months'
+      category: DEFAULT_CATEGORY,
+      timeframe: '3 months',
+      subdomain: DEFAULT_SUBDOMAIN
     });
   }, []);
 
@@ -284,13 +459,21 @@ const Dreams = () => {
 
   const handleDiscoveryComplete = useCallback(() => {
     if (isReadyForDecomposition && intakeData) {
+      const resolvedCategory =
+        typeof intakeData.category === 'string' && isValidDreamCategory(intakeData.category)
+          ? intakeData.category
+          : DEFAULT_CATEGORY;
+
       setDreamForm({
         title: intakeData.title,
         description: intakeData.description || '',
-        category: intakeData.category,
-        timeframe: intakeData.timeframe
+        category: resolvedCategory,
+        timeframe: intakeData.timeframe,
+        subdomain:
+          (typeof intakeData.subdomain === 'string' && intakeData.subdomain) ||
+          getDefaultSubdomainForCategory(resolvedCategory)
       });
-      
+
       setCurrentView('decomposing');
       setIsCreatingDream(true);
     }
@@ -325,10 +508,27 @@ const Dreams = () => {
     if (prefillData && currentView === 'create') {
       try {
         const parsedData = JSON.parse(prefillData);
-        setDreamForm(parsedData);
+        setDreamForm(prev => {
+          const parsedCategory =
+            typeof parsedData.category === 'string' && isValidDreamCategory(parsedData.category)
+              ? parsedData.category
+              : prev.category;
+
+          const parsedSubdomain =
+            typeof parsedData.subdomain === 'string' && parsedData.subdomain.length > 0
+              ? parsedData.subdomain
+              : getDefaultSubdomainForCategory(parsedCategory);
+
+          return {
+            ...prev,
+            ...parsedData,
+            category: parsedCategory,
+            subdomain: parsedSubdomain
+          } as DreamFormState;
+        });
         sessionStorage.removeItem('dreamFormPrefill'); // Clear after use
         console.log('✅ DREAMS: Form pre-filled from steward completion:', parsedData);
-        
+
         // Scroll to form
         scrollToForm();
       } catch (error) {
@@ -956,9 +1156,9 @@ const Dreams = () => {
                   <div className={`space-y-4`}>
                     <div className="space-y-2">
                       <label className={`font-heading font-semibold text-card-foreground block ${getTextSize('text-sm')}`}>{t("dreams.category")}</label>
-                      <Select 
-                        value={dreamForm.category} 
-                        onValueChange={(value) => setDreamForm(prev => ({ ...prev, category: value }))}
+                      <Select
+                        value={dreamForm.category}
+                        onValueChange={handleCategoryChange}
                       >
                         <SelectTrigger className={`border-border rounded-xl focus:border-primary w-full font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}>
                           <SelectValue />
@@ -975,10 +1175,37 @@ const Dreams = () => {
                       </Select>
                     </div>
 
+                    {availableSubdomains.length > 0 && (
+                      <div className="space-y-2">
+                        <label className={`font-heading font-semibold text-card-foreground block ${getTextSize('text-sm')}`}>
+                          Subdomein
+                        </label>
+                        <Select
+                          value={dreamForm.subdomain}
+                          onValueChange={(value) => setDreamForm(prev => ({ ...prev, subdomain: value }))}
+                        >
+                          <SelectTrigger className={`border-border rounded-xl focus:border-primary w-full font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}>
+                            <SelectValue placeholder="Kies een subdomein" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl border-border">
+                            {availableSubdomains.map(subdomain => (
+                              <SelectItem
+                                key={subdomain}
+                                value={subdomain}
+                                className={`rounded-lg font-ui ${getTextSize('text-sm')}`}
+                              >
+                                {subdomain}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <label className={`font-heading font-semibold text-card-foreground block ${getTextSize('text-sm')}`}>{t("dreams.timeline")}</label>
-                      <Select 
-                        value={dreamForm.timeframe} 
+                      <Select
+                        value={dreamForm.timeframe}
                         onValueChange={(value) => setDreamForm(prev => ({ ...prev, timeframe: value }))}
                       >
                         <SelectTrigger className={`border-border rounded-xl focus:border-primary w-full font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}>
