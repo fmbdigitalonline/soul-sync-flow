@@ -61,6 +61,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   const [celebrationComplete, setCelebrationComplete] = useState(false);
   const [localFocusedMilestone, setLocalFocusedMilestone] = useState<any>(null);
   const [currentView, setCurrentView] = useState<'overview' | 'milestones' | 'tasks' | 'timeline'>('overview');
+  const [taskMilestoneFilter, setTaskMilestoneFilter] = useState<any | null>(null);
 
   useEffect(() => {
     console.log('🎉 DreamSuccessPage: goal payload received', {
@@ -142,12 +143,16 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   };
 
   const handleNavigateToSection = (section: 'milestones' | 'tasks' | 'timeline') => {
+    if (section !== 'tasks') {
+      setTaskMilestoneFilter(null);
+    }
     setCurrentView(section);
     console.log(`🎯 Navigating to ${section} section`);
   };
 
   const handleBackToOverview = () => {
     setCurrentView('overview');
+    setTaskMilestoneFilter(null);
   };
 
   const handleMilestoneSelect = (milestone: any) => {
@@ -165,7 +170,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
 
   const handleExitFocus = () => {
     console.log('🎯 Exiting Focus Mode');
-    
+
     // If parent provides handler, use it
     if (externalOnExitFocus) {
       externalOnExitFocus();
@@ -174,6 +179,21 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
       setLocalFocusedMilestone(null);
       setCurrentView('overview');
     }
+
+    setTaskMilestoneFilter(null);
+  };
+
+  const handleViewMilestoneTasks = (milestone: any) => {
+    if (!milestone) return;
+    setTaskMilestoneFilter(milestone);
+
+    if (externalOnExitFocus) {
+      externalOnExitFocus();
+    } else {
+      setLocalFocusedMilestone(null);
+    }
+
+    setCurrentView('tasks');
   };
 
   const getRecommendedTask = () => {
@@ -189,7 +209,9 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
         <JourneyFocusMode
           focusedMilestone={focusedMilestone}
           mainGoal={goal}
+          onTaskClick={onStartTask}
           onExitFocus={handleExitFocus}
+          onViewMilestoneTasks={handleViewMilestoneTasks}
         />
       </div>
     );
@@ -214,7 +236,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
         <div className="w-full max-w-full mx-auto p-3 sm:p-4 overflow-x-hidden">
           <TaskViews
             activeGoal={goal}
-            focusedMilestone={null}
+            focusedMilestone={taskMilestoneFilter}
             onBackToJourney={handleBackToOverview}
             onTaskSelect={onStartTask}
           />
