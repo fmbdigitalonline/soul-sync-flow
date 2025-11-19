@@ -19,8 +19,9 @@ import { safeInterpolateTranslation } from "@/utils/translation-utils";
 interface JourneyFocusModeProps {
   focusedMilestone: any;
   mainGoal: any;
-  onTaskClick?: (taskId: string) => void;
+  onTaskClick?: (task: any) => void;
   onExitFocus: () => void;
+  onViewMilestoneTasks?: (milestone: any) => void;
 }
 
 export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
@@ -28,11 +29,24 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
   mainGoal,
   onTaskClick,
   onExitFocus,
+  onViewMilestoneTasks,
 }) => {
   const { t, language } = useLanguage();
-  const handleTaskClick = (taskId?: string) => {
-    if (!taskId) return;
-    onTaskClick?.(taskId);
+  const handleTaskClick = (task?: any) => {
+    if (!task) return;
+
+    const goalId = mainGoal?.id ?? mainGoal?.goal_id;
+    const normalizedTask = {
+      ...task,
+      goal_id: task.goal_id ?? goalId,
+      goal: task.goal ?? mainGoal?.title ?? mainGoal?.goal_title,
+    };
+
+    onTaskClick?.(normalizedTask);
+  };
+  const handleOpenTaskBoard = () => {
+    if (!onViewMilestoneTasks) return;
+    onViewMilestoneTasks(focusedMilestone);
   };
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US', {
@@ -158,17 +172,30 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
 
       {/* Focused Tasks */}
       <div>
-        <h3 className="font-medium mb-3 flex items-center">
-          <Zap className="h-4 w-4 mr-2 text-soul-purple" />
-          {t('journey.focusModeView.tasksForMilestone')}
-        </h3>
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <h3 className="font-medium flex items-center">
+            <Zap className="h-4 w-4 mr-2 text-soul-purple" />
+            {t('journey.focusModeView.tasksForMilestone')}
+          </h3>
+          {onViewMilestoneTasks && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenTaskBoard}
+              className="flex items-center gap-1 text-xs"
+            >
+              <Target className="h-3 w-3" />
+              {t('journey.focusModeView.openTaskBoard')}
+            </Button>
+          )}
+        </div>
         {milestoneTasks.length > 0 ? (
           <div className="space-y-2">
             {milestoneTasks.map((task: any, index: number) => (
               <div
                 key={task.id ?? index}
                 className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-secondary/20 cursor-pointer transition-all duration-200 hover:shadow-md"
-                onClick={() => handleTaskClick(task.id)}
+                onClick={() => handleTaskClick(task)}
               >
                 <div className="w-6 h-6 bg-soul-purple/20 rounded-full flex items-center justify-center text-soul-purple font-medium text-xs">
                   {index + 1}
