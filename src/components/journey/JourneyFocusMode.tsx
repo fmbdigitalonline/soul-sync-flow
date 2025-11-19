@@ -34,15 +34,7 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
   const { t, language } = useLanguage();
   const handleTaskClick = (task?: any) => {
     if (!task) return;
-
-    const goalId = mainGoal?.id ?? mainGoal?.goal_id;
-    const normalizedTask = {
-      ...task,
-      goal_id: task.goal_id ?? goalId,
-      goal: task.goal ?? mainGoal?.title ?? mainGoal?.goal_title,
-    };
-
-    onTaskClick?.(normalizedTask);
+    onTaskClick?.(task);
   };
   const handleOpenTaskBoard = () => {
     if (!onViewMilestoneTasks) return;
