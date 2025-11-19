@@ -21,6 +21,7 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Heart, Target, MapPin, Calendar, Zap, Brain, Clock, CheckCircle } from "lucide-react";
 import { useBlueprintAwareDreamDiscoveryCoach } from "@/hooks/use-blueprint-aware-dream-discovery-coach";
 import { DreamSuggestionCard } from "@/components/dream/DreamSuggestionCard";
@@ -1215,7 +1216,7 @@ const Dreams = () => {
                     </div>
 
                     {availableSubdomains.length > 0 && (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <label className={`font-heading font-semibold text-card-foreground ${getTextSize('text-sm')}`}>
                             Subdomein Focus
@@ -1225,25 +1226,22 @@ const Dreams = () => {
                         <p className={`text-muted-foreground/80 ${getTextSize('text-xs')}`}>
                           {DREAM_CATEGORY_SUBDOMAINS[dreamForm.category]?.heading}
                         </p>
-                        <Select
+                        <ToggleGroup
+                          type="single"
                           value={dreamForm.subdomain}
-                          onValueChange={(value) => setDreamForm(prev => ({ ...prev, subdomain: value }))}
+                          onValueChange={(value) => value && setDreamForm(prev => ({ ...prev, subdomain: value }))}
+                          className="flex flex-wrap gap-2"
                         >
-                          <SelectTrigger className={`border-border rounded-xl focus:border-primary w-full font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}>
-                            <SelectValue placeholder="Kies een subdomein" />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl border-border">
-                            {availableSubdomains.map(subdomain => (
-                              <SelectItem
-                                key={subdomain.value}
-                                value={subdomain.value}
-                                className={`rounded-lg font-ui ${getTextSize('text-sm')}`}
-                              >
-                                {subdomain.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          {availableSubdomains.map(subdomain => (
+                            <ToggleGroupItem
+                              key={subdomain.value}
+                              value={subdomain.value}
+                              className={`font-ui text-left flex-1 min-w-[140px] justify-start rounded-full border border-border bg-background/50 text-foreground data-[state=on]:bg-primary/10 data-[state=on]:text-primary ${getTextSize('text-xs')} ${touchTargetSize}`}
+                            >
+                              {subdomain.label}
+                            </ToggleGroupItem>
+                          ))}
+                        </ToggleGroup>
                       </div>
                     )}
 
