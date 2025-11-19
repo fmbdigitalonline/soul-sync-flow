@@ -21,8 +21,7 @@ interface DreamSuccessPageProps {
   onExitFocus?: () => void;
 }
 
-const MAX_ESSENCE_CHARACTERS = 90;
-const MAX_ESSENCE_WORDS = 12;
+const MAX_ESSENCE_LENGTH = 160;
 
 const getEssenceTitle = (title?: string): string => {
   if (!title) {
@@ -34,28 +33,15 @@ const getEssenceTitle = (title?: string): string => {
     return 'Your Dream Journey';
   }
 
-  // Try to capture a natural sentence first, otherwise fall back to a strict word limit
   const firstSentenceMatch = normalizedTitle.match(/[^.!?]+[.!?]?/);
   let essence = (firstSentenceMatch ? firstSentenceMatch[0] : normalizedTitle).trim();
 
-  // If the first sentence is still too long, reduce it to the first handful of words
-  if (essence.length > MAX_ESSENCE_CHARACTERS) {
-    const words = essence.split(' ').slice(0, MAX_ESSENCE_WORDS);
-    essence = words.join(' ').trim();
-  }
-
-  if (essence.length > MAX_ESSENCE_CHARACTERS) {
-    essence = essence.slice(0, MAX_ESSENCE_CHARACTERS).trim();
-  }
-
-  essence = essence.replace(/[\s,;:-]+$/, '');
-
-  if (!essence) {
-    return 'Your Dream Journey';
-  }
-
-  if (!/[.!?]$/.test(essence)) {
-    essence = `${essence}...`;
+  if (essence.length > MAX_ESSENCE_LENGTH) {
+    essence = essence.slice(0, MAX_ESSENCE_LENGTH).trim();
+    essence = essence.replace(/[\s,]+$/, '');
+    if (!/[.!?]$/.test(essence)) {
+      essence = `${essence}...`;
+    }
   }
 
   return essence;
