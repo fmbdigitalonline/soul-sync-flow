@@ -347,8 +347,8 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
               </Badge>
             </div>
           </h3>
-          
-          <div className="relative w-full">
+
+          <div className="relative w-full max-h-[70vh] overflow-y-auto pr-1">
             {/* Mobile-Optimized Timeline */}
             <div className="relative w-full">
               {/* Connecting Line */}
