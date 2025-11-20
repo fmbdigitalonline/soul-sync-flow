@@ -12,6 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { isAdminUser } from "@/utils/isAdminUser";
 import { EnhancedProductivityDashboard } from "@/components/productivity/EnhancedProductivityDashboard";
+import { XPProgressSummary } from "@/components/dashboard/XPProgressSummary";
 
 import { PIEContextualInsights } from "@/components/pie/PIEContextualInsights";
 import { PIEUserExperienceHub } from "@/components/pie/PIEUserExperienceHub";
@@ -227,11 +228,11 @@ const Dashboard = () => {
           )}
           
           <TabsContent value="overview" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               <div className="cosmic-card">
                 <h2 className="text-xl font-bold mb-4">Welcome to your Soul Dashboard</h2>
                 <p>This is your personalized space to track your progress, gain insights, and connect with your inner self.</p>
-                
+
                 <div className="mt-4">
                   <PIEContextualInsights context="dashboard" compact={false} maxInsights={2} />
                 </div>
@@ -247,6 +248,7 @@ const Dashboard = () => {
                   </Button>
                 </div>
               </div>
+              <XPProgressSummary />
             </div>
           </TabsContent>
           

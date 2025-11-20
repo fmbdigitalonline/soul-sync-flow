@@ -290,6 +290,35 @@ export const useXPProgression = () => {
 
   useEffect(() => {
     initializeProgress();
+
+    // Real-time XP updates: refresh when backend tables change or emitter notifies
+    const setupRealtime = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const channel = supabase.channel('xp-progress-updates')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'user_xp_progress', filter: `user_id=eq.${user.id}` },
+          () => initializeProgress()
+        )
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'user_xp_events', filter: `user_id=eq.${user.id}` },
+          () => initializeProgress()
+        )
+        .subscribe();
+
+      const handleLocalUpdate = () => initializeProgress();
+      window.addEventListener('xp-progress-updated', handleLocalUpdate);
+
+      return () => {
+        supabase.removeChannel(channel);
+        window.removeEventListener('xp-progress-updated', handleLocalUpdate);
+      };
+    };
+
+    setupRealtime();
   }, [initializeProgress]);
 
   return {

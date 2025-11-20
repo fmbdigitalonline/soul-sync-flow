@@ -18,11 +18,21 @@ export function useXPEventEmitter() {
     source: string
   ): Promise<{ success: boolean; deltaXP?: number; error?: string }> => {
     try {
+      const sanitizedQuality = Math.max(0, Math.min(1, quality));
+
+      console.log('🎯 XP Event → xp-award-service', {
+        userId,
+        dims,
+        quality: sanitizedQuality,
+        kinds,
+        source
+      });
+
       const { data, error } = await supabase.functions.invoke('xp-award-service', {
         body: {
           userId,
           dims,
-          quality: Math.max(0, Math.min(1, quality)),
+          quality: sanitizedQuality,
           kinds,
           source
         }
@@ -33,7 +43,16 @@ export function useXPEventEmitter() {
         return { success: false, error: error.message };
       }
 
-      console.log('✅ XP Event emitted:', { dims, quality, kinds, deltaXP: data?.deltaXP });
+      console.log('✅ XP Event emitted:', {
+        dims,
+        quality: sanitizedQuality,
+        kinds,
+        deltaXP: data?.deltaXP
+      });
+
+      // Notify any XP-aware dashboards to refresh
+      window.dispatchEvent(new CustomEvent('xp-progress-updated'));
+
       return { success: true, deltaXP: data?.deltaXP };
     } catch (error) {
       console.error('❌ XP Event error:', error);

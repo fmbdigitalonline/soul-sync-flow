@@ -13,6 +13,7 @@ import { MilestoneDetailView } from "./MilestoneDetailView";
 import { TimelineDetailView } from "./TimelineDetailView";
 import { TaskViews } from "./TaskViews";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { XPMilestoneTracker } from "@/components/journey/XPMilestoneTracker";
 
 interface JourneyMapProps {
   onTaskClick?: (task: any) => void;
@@ -164,6 +165,8 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
         isHighlighted={false}
         onNavigateToSection={handleNavigateToSection}
       />
+
+      <XPMilestoneTracker />
 
       <JourneyHeader
         mainGoal={mainGoal}
