@@ -21,6 +21,7 @@ Phase 3 successfully integrates all 6 core confidence/intelligence systems with 
    - `src/services/vfp-xp-integration.ts` - Personality processing XP awards
    - `src/services/learning-xp-integration.ts` - Learning interaction XP awards
    - `src/hooks/use-xp-event-emitter.ts` - Client-side XP event hook
+   - `src/hooks/use-xp-progression.ts` + XP dashboards - Real-time visuals for orb and journey
 
 ### Modified Edge Functions
 
