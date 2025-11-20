@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,6 @@ import { MilestoneDetailPopup } from "./MilestoneDetailPopup";
 import { useDoubleTap } from "@/hooks/use-double-tap";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { safeInterpolateTranslation } from "@/utils/translation-utils";
-import { supabase } from "@/integrations/supabase/client";
 
 interface EnhancedJourneyMapProps {
   onTaskClick?: (task: any) => void;
@@ -47,56 +46,9 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const milestoneRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dreamAchievedRef = useRef<HTMLDivElement | null>(null);
-  const [hydratedGoal, setHydratedGoal] = useState<any>(activeGoal ?? null);
-  const [isHydrating, setIsHydrating] = useState(false);
 
   // ✅ STEP 2: Extract mainGoal (safe to do after all hooks)
-  const mainGoal = hydratedGoal ?? activeGoal ?? null;
-
-  useEffect(() => {
-    setHydratedGoal(activeGoal ?? null);
-  }, [activeGoal]);
-
-  useEffect(() => {
-    const fetchMissingMilestones = async () => {
-      if (!activeGoal) return;
-
-      const hasMilestones = Array.isArray(activeGoal.milestones) && activeGoal.milestones.length > 0;
-      const goalId = activeGoal.id || activeGoal.goal_id;
-
-      if (hasMilestones || !goalId) return;
-
-      try {
-        setIsHydrating(true);
-        const { data, error } = await supabase
-          .from('goal_milestones')
-          .select('*')
-          .eq('goal_id', goalId)
-          .order('order_index', { ascending: true });
-
-        if (error) {
-          console.error('❌ EnhancedJourneyMap: Failed to hydrate milestones', error);
-          return;
-        }
-
-        if (Array.isArray(data)) {
-          setHydratedGoal({
-            ...activeGoal,
-            milestones: data.map(milestone => ({
-              ...milestone,
-              order: milestone.order_index ?? milestone.order
-            }))
-          });
-        }
-      } catch (hydrationError) {
-        console.error('❌ EnhancedJourneyMap: Unexpected error hydrating milestones', hydrationError);
-      } finally {
-        setIsHydrating(false);
-      }
-    };
-
-    fetchMissingMilestones();
-  }, [activeGoal]);
+  const mainGoal = activeGoal ?? null;
 
   // ✅ STEP 3: Call useMemo hooks UNCONDITIONALLY (handle null inside)
   const sortedMilestones = useMemo(() => {
@@ -428,14 +380,6 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
                     <ArrowDown className="h-4 w-4 text-soul-purple animate-bounce" />
                   </button>
                 </div>
-
-                {sortedMilestones.length === 0 && (
-                  <div className="p-4 border border-dashed border-soul-purple/30 rounded-lg bg-white/60 text-center text-sm text-muted-foreground">
-                    {isHydrating
-                      ? t('journey.loadingMilestones') || 'Loading your milestones…'
-                      : t('journey.noMilestonesFound') || 'No milestones found for this journey yet.'}
-                  </div>
-                )}
 
                 {/* Milestones in chronological order */}
                 {sortedMilestones.map((milestone: any, index: number) => (
