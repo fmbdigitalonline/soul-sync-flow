@@ -8,9 +8,7 @@ import { ConversationMessage } from "@/hooks/use-hacs-conversation";
 import { TypewriterText } from "@/components/coach/TypewriterText";
 import { ThinkingDots } from "./ThinkingDots";
 import { useGlobalChatState } from "@/hooks/use-global-chat-state";
-import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
 import { VFPGraphFeedback } from "@/components/coach/VFPGraphFeedback";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
@@ -37,7 +35,6 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   const [initialMessageCount, setInitialMessageCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { updateChatLoading } = useGlobalChatState();
-  const { isMobile } = useIsMobile();
 
   // Track initial message count to avoid animating historical messages
   useEffect(() => {
@@ -95,16 +92,11 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full relative">
+    <div className="flex flex-col h-full">
 
       {/* Messages */}
-      <ScrollArea className={cn(
-        "flex-1",
-        isMobile 
-          ? "h-[calc(100%-10rem)]"
-          : "h-[calc(100%-5rem)]"
-      )}>
-        <div className="px-3 py-2 pb-20 space-y-3">
+      <ScrollArea className="flex-1 overflow-y-auto">
+        <div className="px-3 py-2 pb-6 space-y-3">
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-4">
               <p>Start a conversation to begin intelligence learning</p>
@@ -174,20 +166,15 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       </ScrollArea>
 
       {/* Input - Sticky to bottom */}
-      <div className={cn(
-        "absolute left-0 right-0 bg-background px-2 py-1 z-[10000]",
-        isMobile 
-          ? "bottom-[64px]"
-          : "bottom-0"
-      )}>
-        <div className="flex space-x-2">
+      <div className="border-t bg-background px-3 py-3">
+        <div className="flex space-x-2 items-end">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
             disabled={isLoading}
-            className="flex-1 text-base pb-[env(safe-area-inset-bottom)]"
+            className="flex-1 text-base"
           />
           <Button
             onClick={handleButtonClick}
