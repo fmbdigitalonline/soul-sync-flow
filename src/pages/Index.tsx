@@ -16,6 +16,19 @@ import { isAdminUser } from "@/utils/isAdminUser";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Flame, Compass, RefreshCw } from "lucide-react";
+import { useHACSInsights, type HACSInsight } from "@/hooks/use-hacs-insights";
+
+const useSafeHACSInsights = () => {
+  if (typeof useHACSInsights === "function") {
+    return useHACSInsights();
+  }
+
+  return {
+    loadHistoricalInsights: async () => [],
+    currentInsight: null,
+    insightQueue: []
+  } as ReturnType<typeof useHACSInsights>;
+};
 
 type ActivityType = "conversation" | "dream" | "task" | "insight";
 
@@ -61,10 +74,14 @@ const Index = () => {
     continueTutorial,
     completeTutorial
   } = useTutorialFlow();
+  const { loadHistoricalInsights, currentInsight, insightQueue } = useSafeHACSInsights();
   const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
   const [continueItem, setContinueItem] = useState<ContinueItem | null>(null);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
   const [activityLoading, setActivityLoading] = useState(false);
+  const [guidanceInsight, setGuidanceInsight] = useState<HACSInsight | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [hasLoadedGuidance, setHasLoadedGuidance] = useState(false);
   const welcomeMessage = useMemo(() => {
     if (!user) return null;
     if (hasBlueprint) {
@@ -168,6 +185,18 @@ const Index = () => {
     };
   }, []);
 
+  const mapInsightToActivity = useCallback((insight: HACSInsight): ActivityItem => {
+    return {
+      id: `insight-${insight.id}`,
+      type: 'insight',
+      title: 'Blueprint Insight Added',
+      description: insight.text,
+      timestamp: insight.timestamp ? new Date(insight.timestamp).toISOString() : undefined,
+      actionLabel: 'View Insight',
+      actionPath: '/blueprint'
+    };
+  }, []);
+
   const deriveContinueItem = useCallback((conversation: any | null, activities: any[]): ContinueItem | null => {
     const candidates: ContinueItem[] = [];
 
@@ -225,8 +254,25 @@ const Index = () => {
         .limit(8);
 
       const mappedActivities = (activitiesData || []).map(mapActivityToItem);
-      setRecentActivities(mappedActivities);
-      setLastSynced(activitiesData?.[0]?.created_at || null);
+
+      let insightActivities: ActivityItem[] = [];
+      try {
+        const historicalInsights = await loadHistoricalInsights();
+        insightActivities = (historicalInsights || []).map(mapInsightToActivity);
+      } catch (insightError) {
+        console.error('Error enriching activity stream with insights', insightError);
+      }
+
+      const combinedActivities = [...mappedActivities, ...insightActivities]
+        .sort((a, b) => {
+          const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+          const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+          return bTime - aTime;
+        })
+        .slice(0, 6);
+
+      setRecentActivities(combinedActivities);
+      setLastSynced(combinedActivities?.[0]?.timestamp || activitiesData?.[0]?.created_at || null);
 
       const { data: conversationData } = await supabase
         .from('conversation_memory')
@@ -244,7 +290,7 @@ const Index = () => {
     } finally {
       setActivityLoading(false);
     }
-  }, [deriveContinueItem, mapActivityToItem, user]);
+  }, [deriveContinueItem, loadHistoricalInsights, mapActivityToItem, mapInsightToActivity, user]);
 
   useEffect(() => {
     if (!user) {
@@ -254,6 +300,42 @@ const Index = () => {
     }
     fetchActivityData();
   }, [fetchActivityData, user]);
+
+  useEffect(() => {
+    if (!user) {
+      setGuidanceInsight(null);
+      setHasLoadedGuidance(false);
+      return;
+    }
+
+    let isActive = true;
+
+    const syncGuidance = async () => {
+      if (!hasLoadedGuidance) {
+        setInsightsLoading(true);
+        try {
+          const historical = await loadHistoricalInsights();
+          if (!isActive) return;
+          const candidate = currentInsight || insightQueue[0] || historical[0] || null;
+          setGuidanceInsight(candidate || null);
+          setHasLoadedGuidance(true);
+        } finally {
+          if (isActive) setInsightsLoading(false);
+        }
+      } else {
+        const candidate = currentInsight || insightQueue[0];
+        if (candidate && isActive) {
+          setGuidanceInsight(candidate);
+        }
+      }
+    };
+
+    syncGuidance();
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentInsight, hasLoadedGuidance, insightQueue, loadHistoricalInsights, user]);
   if (showDemo) {
     return <MainLayout>
         <PageContainer>
@@ -322,36 +404,43 @@ const Index = () => {
         )}
 
         <PageSection className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="space-y-1">
-              <div className="text-sm text-muted-foreground">Section 2 — Activity Stream</div>
-              <h3 className="text-xl font-semibold">Recent Activity</h3>
+          <div className="rounded-2xl border border-border/70 bg-card p-4 sm:p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="text-sm text-muted-foreground">Section 2 — Activity Stream</div>
+                <h3 className="text-xl font-semibold">Recent Activity</h3>
+              </div>
+              {user && <Button variant="ghost" size="sm" onClick={fetchActivityData} disabled={activityLoading}>
+                  <RefreshCw className={cn("h-4 w-4 mr-2", activityLoading && "animate-spin")} />
+                  Refresh
+                </Button>}
             </div>
-            {user && <Button variant="ghost" size="sm" onClick={fetchActivityData} disabled={activityLoading}>
-                <RefreshCw className={cn("h-4 w-4 mr-2", activityLoading && "animate-spin")} />
-                Refresh
-              </Button>}
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {recentActivities.length > 0 ? recentActivities.map((activity) => {
-            const iconByType: Record<ActivityType, JSX.Element> = {
-              conversation: <MessageCircle className="h-5 w-5 text-primary" />, dream: <Moon className="h-5 w-5 text-primary" />, task: <ListChecks className="h-5 w-5 text-primary" />, insight: <Lightbulb className="h-5 w-5 text-primary" /> };
-            return <div key={activity.id} className="rounded-xl border border-border/70 bg-card p-4 flex flex-col gap-2 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  {iconByType[activity.type]}
-                  <span>{activity.title}</span>
-                </div>
-                {activity.description && <p className="text-sm text-muted-foreground line-clamp-2">“{activity.description}”</p>}
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{activity.timestamp ? formatRelativeTime(activity.timestamp) : ''}</span>
-                  <Button variant="ghost" size="sm" className="h-8" onClick={() => navigate(activity.actionPath)}>
-                    {activity.actionLabel}
-                  </Button>
-                </div>
-              </div>;
-          }) : <div className="rounded-xl border border-dashed border-border/70 bg-card/50 p-6 text-center text-muted-foreground">
-              {user ? 'No recent activity yet. Start a conversation or set a task to see updates here.' : 'Sign in to see your unified activity stream.'}
-            </div>}
+
+            {recentActivities.length > 0 ? <ol className="relative space-y-4 border-l border-border/70 pl-4">
+                {recentActivities.map((activity) => {
+                const iconByType: Record<ActivityType, JSX.Element> = {
+                  conversation: <MessageCircle className="h-5 w-5 text-primary" />, dream: <Moon className="h-5 w-5 text-primary" />, task: <ListChecks className="h-5 w-5 text-primary" />, insight: <Lightbulb className="h-5 w-5 text-primary" /> };
+                return <li key={activity.id} className="relative">
+                    <span className="absolute -left-5 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary ring-4 ring-primary/10">
+                      {iconByType[activity.type]}
+                    </span>
+                    <div className="rounded-xl border border-border/70 bg-background p-4 shadow-sm space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-col">
+                          <p className="text-sm font-medium">{activity.title}</p>
+                          {activity.description && <p className="text-sm text-muted-foreground line-clamp-2">“{activity.description}”</p>}
+                        </div>
+                        <Button variant="outline" size="sm" className="h-8" onClick={() => navigate(activity.actionPath)}>
+                          {activity.actionLabel}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{activity.timestamp ? formatRelativeTime(activity.timestamp) : 'Just now'}</p>
+                    </div>
+                  </li>;
+              })}
+              </ol> : <div className="rounded-xl border border-dashed border-border/70 bg-background p-6 text-center text-muted-foreground">
+                {user ? 'No recent activity yet. Start a conversation or set a task to see updates here.' : 'Sign in to see your unified activity stream.'}
+              </div>}
           </div>
         </PageSection>
 
@@ -361,11 +450,13 @@ const Index = () => {
               <Compass className="h-5 w-5" />
               <span>Today’s Guidance</span>
             </div>
-            <p className="text-lg font-medium">{currentSubtitle}</p>
-            <p className="text-sm text-muted-foreground">Focus on invitations, not initiation. Lean on your blueprint strengths to keep momentum.</p>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigate('/blueprint')}>
-                Expand
+            <p className="text-lg font-medium">{guidanceInsight?.text || currentSubtitle}</p>
+            <p className="text-sm text-muted-foreground">
+              {guidanceInsight ? `Source: ${guidanceInsight.module} · ${formatRelativeTime(guidanceInsight.timestamp?.toString())}` : insightsLoading ? 'Gathering your latest insights…' : 'We will surface blueprint insights and conversation highlights here once you engage.'}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate('/blueprint')} disabled={!guidanceInsight && insightsLoading}>
+                {guidanceInsight ? 'Expand' : 'Blueprint'}
               </Button>
               <Button variant="ghost" size="sm" onClick={handleTutorialStart}>
                 Take tour
@@ -378,7 +469,8 @@ const Index = () => {
               <Sparkles className="h-5 w-5" />
               <span>Smart Shortcuts</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <p className="text-sm text-muted-foreground">Jump straight into the three core flows.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Button variant="outline" className="justify-start h-auto py-3" onClick={() => navigate('/companion')}>
                 <MessageCircle className="h-5 w-5 mr-2" />
                 Start a Conversation
