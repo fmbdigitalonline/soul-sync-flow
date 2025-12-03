@@ -179,11 +179,10 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       {/* Input - Sticky to bottom */}
       <div
         className={cn(
-          "left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90 px-3 pb-3 pt-2",
-          "border-t border-border/40",
+          "left-0 right-0 px-3 pb-4 pt-2",
           isMobile
             ? "fixed"
-            : "absolute bottom-0"
+            : "absolute bottom-4"
         )}
         style={isMobile ? { bottom: "calc(84px + env(safe-area-inset-bottom))" } : undefined}
       >
