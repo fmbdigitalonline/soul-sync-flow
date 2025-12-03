@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { SoulOrbAvatar } from "@/components/ui/avatar";
 import { Home, Heart, MessageCircle, Sparkles, Settings, LogOut, Menu, X, Star, TestTube, User, PanelRightOpen } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -169,6 +170,30 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               {children}
             </PageContainer>
           </main>
+
+          {/* Contextual Tools access for mobile */}
+          {user && <Sheet open={isToolsOpen} onOpenChange={setIsToolsOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="fixed bottom-20 right-4 z-40 shadow-lg rounded-full"
+                  onClick={() => setIsToolsOpen(true)}
+                >
+                  <PanelRightOpen className="h-4 w-4 mr-2" />
+                  {t('contextualTools.toolsAndInsights')}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full max-w-md p-0">
+                <SheetHeader className="px-6 pt-6">
+                  <SheetTitle>{t('contextualTools.toolsAndInsights')}</SheetTitle>
+                  <SheetDescription>{t('contextualTools.contextAwareAssistance')}</SheetDescription>
+                </SheetHeader>
+                <div className="max-h-[calc(100dvh-8rem)] overflow-y-auto">
+                  <ContextualToolsPanel className="pt-2" />
+                </div>
+              </SheetContent>
+            </Sheet>}
 
           {/* Mobile Bottom Navigation */}
           {user && <MobileNavigation />}
