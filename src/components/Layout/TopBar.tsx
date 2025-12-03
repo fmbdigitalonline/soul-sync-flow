@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Search, Bell } from "lucide-react";
+import { Search, Bell, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -10,9 +10,15 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 interface TopBarProps {
   className?: string;
+  showToolsToggle?: boolean;
+  toolsPanelCollapsed?: boolean;
+  onToolsPanelToggle?: () => void;
 }
 export const TopBar: React.FC<TopBarProps> = ({
-  className
+  className,
+  showToolsToggle,
+  toolsPanelCollapsed = false,
+  onToolsPanelToggle
 }) => {
   const {
     user
@@ -40,7 +46,11 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Right: Actions */}
         <div className="flex items-center justify-end space-x-4">
           <LanguageSelector />
-          
+
+          {showToolsToggle && <Button aria-label={t('contextualTools.toolsAndInsights')} variant="ghost" size="icon" onClick={() => onToolsPanelToggle?.()} className="rounded-xl h-10 w-10">
+              {toolsPanelCollapsed ? <PanelRightOpen className="h-5 w-5" /> : <PanelRightClose className="h-5 w-5" />}
+            </Button>}
+
           {/* Notifications */}
           <Button aria-label={t('common.notifications')} variant="ghost" size="icon" className="relative rounded-xl h-10 w-10">
             <Bell className="h-5 w-5" />
