@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { SoulOrbAvatar } from "@/components/ui/avatar";
-import { Home, Heart, MessageCircle, Sparkles, Settings, LogOut, Menu, X, Star, TestTube, User } from "lucide-react";
+import { Home, Heart, MessageCircle, Sparkles, Settings, LogOut, Menu, X, Star, TestTube, User, PanelRightOpen } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -16,6 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { PageContainer } from "./PageContainer";
 import { ThreePanelLayout } from "./ThreePanelLayout";
 import { ContextualToolsPanel } from "./ContextualToolsPanel";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 interface MainLayoutProps {
   children: React.ReactNode;
   hideNav?: boolean;
@@ -37,6 +37,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isToolsOpen, setIsToolsOpen] = useState(false);
   const {
     isMobile
   } = useIsMobile();
@@ -119,12 +120,38 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                   SoulSync
                 </span>
               </Link>
-              {/* Language selector on mobile top right */}
+              {/* Mobile actions on top right */}
               <div className="flex items-center space-x-2">
-                <LanguageSelector />
-                {user && <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)} className="rounded-xl">
+                {user && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="rounded-xl"
+                  >
                     {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                  </Button>}
+                  </Button>
+                )}
+                {user && (
+                  <Sheet open={isToolsOpen} onOpenChange={setIsToolsOpen}>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-xl">
+                        <PanelRightOpen className="h-5 w-5" />
+                        <span className="sr-only">{t('contextualTools.toolsAndInsights')}</span>
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right" className="w-full max-w-md p-0">
+                      <SheetHeader className="px-6 pt-6">
+                        <SheetTitle>{t('contextualTools.toolsAndInsights')}</SheetTitle>
+                        <SheetDescription>{t('contextualTools.contextAwareAssistance')}</SheetDescription>
+                      </SheetHeader>
+                      <div className="max-h-[calc(100dvh-8rem)] overflow-y-auto">
+                        <ContextualToolsPanel className="pt-2" />
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                )}
+                <LanguageSelector />
               </div>
             </div>
             
@@ -171,8 +198,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           </div>
         </>}
 
-      {/* HACS Floating Orb - Always visible when authenticated */}
-      {user && <FloatingHACSOrb />}
+      {/* HACS Floating Orb - Always visible when authenticated on larger viewports */}
+      {user && !isMobile && <FloatingHACSOrb />}
     </div>;
 };
 // Desktop three-panel layout wrapper (Principle #8: Only Add)
