@@ -1,22 +1,40 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { safeInterpolateTranslation } from "@/utils/sanitize";
 import MainLayout from "@/components/Layout/MainLayout";
-import { PageContainer, PageHeader, PageSection } from "@/components/Layout/PageContainer";
+import { PageContainer, PageSection } from "@/components/Layout/PageContainer";
 import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
 import { Button } from "@/components/ui/button";
 import { TutorialModal } from "@/components/tutorial/TutorialModal";
 import PersonalityDemo from "@/components/personality/PersonalityDemo";
-import { LanguageSelector } from "@/components/ui/language-selector";
-import { HomeMenuGrid, type HomeMenuItem } from "@/components/home/HomeMenuGrid";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
-import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useTutorialFlow } from "@/hooks/use-tutorial-flow";
 import { isAdminUser } from "@/utils/isAdminUser";
-import { Heart, Sparkles, Brain, BookOpen, ArrowRight, LogIn, LayoutDashboard, ListTodo, User } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
+import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Lightning, Compass, RefreshCw } from "lucide-react";
+
+type ActivityType = "conversation" | "dream" | "task" | "insight";
+
+interface ActivityItem {
+  id: string;
+  type: ActivityType;
+  title: string;
+  description?: string;
+  timestamp?: string;
+  actionLabel: string;
+  actionPath: string;
+}
+
+interface ContinueItem {
+  type: ActivityType;
+  title: string;
+  lastActivity?: string;
+  actionPath: string;
+}
 const Index = () => {
   const {
     user
@@ -38,21 +56,15 @@ const Index = () => {
     language
   } = useLanguage();
   const {
-    spacing,
-    layout,
-    touchTargetSize,
-    getTextSize,
-    isFoldDevice,
-    isUltraNarrow,
-    isMobile
-  } = useResponsiveLayout();
-  const {
     tutorialState,
     startTutorial,
     continueTutorial,
     completeTutorial
   } = useTutorialFlow();
-  console.log('🎭 Index render - user:', !!user, 'showTutorial:', showTutorial, 'tutorialState:', tutorialState);
+  const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
+  const [continueItem, setContinueItem] = useState<ContinueItem | null>(null);
+  const [lastSynced, setLastSynced] = useState<string | null>(null);
+  const [activityLoading, setActivityLoading] = useState(false);
   const welcomeMessage = useMemo(() => {
     if (!user) return null;
     if (hasBlueprint) {
@@ -78,57 +90,6 @@ const Index = () => {
     return subtitleMessages[0] || t("index.subtitle");
   }, [subtitleMessages, t]);
 
-  const homeMenuItems = useMemo<HomeMenuItem[]>(() => [{
-    key: 'dashboard',
-    to: '/dashboard',
-    title: t('index.dashboard'),
-    description: t('index.dashboardDesc'),
-    Icon: LayoutDashboard,
-    image: '/assets/home/dashboard.jpg'
-  }, {
-    key: 'blueprint',
-    to: '/blueprint',
-    title: t('index.blueprint'),
-    description: t('index.blueprintDesc'),
-    Icon: BookOpen,
-    image: '/assets/home/blueprint.jpg'
-  }, {
-    key: 'companion',
-    to: '/companion',
-    title: t('index.companion'),
-    description: t('index.companionDesc'),
-    Icon: Brain,
-    image: '/assets/home/companion.jpg'
-  }, {
-    key: 'tasks',
-    to: '/tasks',
-    title: t('index.tasks'),
-    description: t('index.tasksDesc'),
-    Icon: ListTodo,
-    image: '/assets/home/tasks.jpg'
-  }, {
-    key: 'dreams',
-    to: '/dreams',
-    title: t('index.dreams'),
-    description: t('index.dreamsDesc'),
-    Icon: Heart,
-    image: '/assets/home/dreams.jpg'
-  }, {
-    key: 'growth',
-    to: '/spiritual-growth',
-    title: t('index.growth'),
-    description: t('index.growthDesc'),
-    Icon: Sparkles,
-    image: '/lovable-uploads/bea17e2a-7b41-43b0-a24d-7d3405de2679.png'
-  }, {
-    key: 'profile',
-    to: '/profile',
-    title: t('index.profile'),
-    description: t('index.profileDesc'),
-    Icon: User,
-    image: '/assets/home/profile.jpg'
-  }], [t]);
-
   useEffect(() => {
     if (user && !loading && welcomeMessage) {
       const timer = setTimeout(() => {
@@ -137,38 +98,162 @@ const Index = () => {
       return () => clearTimeout(timer);
     }
   }, [user, loading, welcomeMessage, speak]);
-  const handleGetStarted = () => {
-    if (user) {
-      if (hasBlueprint) {
-        speak(t("index.startingTutorial"));
-        navigate("/blueprint");
-      } else {
-        navigate("/onboarding");
-      }
-    } else {
-      navigate("/auth");
-    }
-  };
   const handleTutorialStart = () => {
-    console.log('🎭 TUTORIAL BUTTON CLICKED - Starting handleTutorialStart');
-    console.log('🎭 User exists:', !!user);
-    console.log('🎭 Current showTutorial state:', showTutorial);
-    console.log('🎭 Current tutorialState:', tutorialState);
     if (!user) {
-      console.log('🎭 ERROR: No user found, cannot start tutorial');
       return;
     }
     try {
-      console.log('🎭 Calling startTutorial()...');
-      const newTutorialState = startTutorial();
-      console.log('🎭 startTutorial() returned:', newTutorialState);
-      console.log('🎭 Setting showTutorial to true...');
+      startTutorial();
       setShowTutorial(true);
-      console.log('🎭 Tutorial modal should now be visible');
     } catch (error) {
       console.error('🎭 ERROR in handleTutorialStart:', error);
     }
   };
+
+  const formatRelativeTime = useCallback((dateString?: string | null) => {
+    if (!dateString) return '';
+    const now = new Date();
+    const target = new Date(dateString);
+    const diffMs = now.getTime() - target.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    if (diffMinutes < 1) return 'just now';
+    if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+  }, []);
+
+  const mapActivityToItem = useCallback((activity: any): ActivityItem => {
+    const activityType = String(activity.activity_type || '').toLowerCase();
+    const description = activity.activity_data?.summary || activity.activity_data?.message || activity.activity_data?.title || '';
+    let type: ActivityType = 'task';
+    if (activityType.includes('conversation')) {
+      type = 'conversation';
+    } else if (activityType.includes('dream') || activityType.includes('milestone')) {
+      type = 'dream';
+    } else if (activityType.includes('insight') || activityType.includes('blueprint')) {
+      type = 'insight';
+    }
+
+    const titleByType: Record<ActivityType, string> = {
+      conversation: 'Conversation with Companion',
+      dream: 'Dream Progress',
+      task: 'Task Updated',
+      insight: 'Blueprint Insight Added'
+    };
+
+    const actionPathByType: Record<ActivityType, string> = {
+      conversation: '/companion',
+      dream: '/dreams',
+      task: '/tasks',
+      insight: '/blueprint'
+    };
+
+    const actionLabelByType: Record<ActivityType, string> = {
+      conversation: 'Open Conversation',
+      dream: 'View Dream',
+      task: 'Open Task',
+      insight: 'View Insight'
+    };
+
+    return {
+      id: activity.id,
+      type,
+      title: titleByType[type],
+      description: description,
+      timestamp: activity.created_at,
+      actionLabel: actionLabelByType[type],
+      actionPath: actionPathByType[type]
+    };
+  }, []);
+
+  const deriveContinueItem = useCallback((conversation: any | null, activities: any[]): ContinueItem | null => {
+    const candidates: ContinueItem[] = [];
+
+    if (conversation) {
+      candidates.push({
+        type: 'conversation',
+        title: `Continue your conversation${conversation.recovery_context?.companionName ? ` with ${conversation.recovery_context.companionName}` : ' with Metgezel'}`,
+        lastActivity: conversation.last_activity,
+        actionPath: '/companion'
+      });
+    }
+
+    const dreamActivity = activities.find(act => {
+      const actType = String(act.activity_type || '').toLowerCase();
+      return actType.includes('dream') || actType.includes('milestone');
+    });
+
+    if (dreamActivity) {
+      candidates.push({
+        type: 'dream',
+        title: `Continue Dream Milestone${dreamActivity.activity_data?.title ? `: “${dreamActivity.activity_data.title}”` : ''}`,
+        lastActivity: dreamActivity.created_at,
+        actionPath: '/dreams'
+      });
+    }
+
+    const taskActivity = activities.find(act => String(act.activity_type || '').toLowerCase().includes('task'));
+    if (taskActivity) {
+      candidates.push({
+        type: 'task',
+        title: taskActivity.activity_data?.title ? `Resume “${taskActivity.activity_data.title}”` : 'Continue your task list',
+        lastActivity: taskActivity.created_at,
+        actionPath: '/tasks'
+      });
+    }
+
+    if (candidates.length === 0) return null;
+
+    return candidates.sort((a, b) => {
+      const aTime = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
+      const bTime = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
+      return bTime - aTime;
+    })[0];
+  }, []);
+
+  const fetchActivityData = useCallback(async () => {
+    if (!user) return;
+    setActivityLoading(true);
+    try {
+      const { data: activitiesData } = await supabase
+        .from('user_activities')
+        .select('id, activity_type, activity_data, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(8);
+
+      const mappedActivities = (activitiesData || []).map(mapActivityToItem);
+      setRecentActivities(mappedActivities);
+      setLastSynced(activitiesData?.[0]?.created_at || null);
+
+      const { data: conversationData } = await supabase
+        .from('conversation_memory')
+        .select('session_id, last_activity, recovery_context')
+        .eq('user_id', user.id)
+        .eq('conversation_stage', 'active')
+        .order('last_activity', { ascending: false })
+        .limit(1);
+
+      const conversation = conversationData?.[0] || null;
+      const continueCandidate = deriveContinueItem(conversation, activitiesData || []);
+      setContinueItem(continueCandidate);
+    } catch (error) {
+      console.error('Error loading activity data', error);
+    } finally {
+      setActivityLoading(false);
+    }
+  }, [deriveContinueItem, mapActivityToItem, user]);
+
+  useEffect(() => {
+    if (!user) {
+      setRecentActivities([]);
+      setContinueItem(null);
+      return;
+    }
+    fetchActivityData();
+  }, [fetchActivityData, user]);
   if (showDemo) {
     return <MainLayout>
         <PageContainer>
@@ -182,75 +267,159 @@ const Index = () => {
   return <MainLayout>
       <PageContainer maxWidth="saas" className="sm:min-h-screen flex flex-col justify-start sm:justify-center bg-gradient-to-br from-background via-accent/5 to-primary/5 px-4 sm:px-0">
         {/* Hero Section */}
-        <PageSection className="text-center mb-0 sm:mb-6">
-          <div className="space-y-1 mb-0 sm:space-y-6 sm:mb-6">
-            <h1 className="text-4xl sm:text-5xl font-bold font-cormorant gradient-text">
-              {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), {
-              name: userName
-            })}
-            </h1>
-            
-            <div className="flex items-center justify-center">
-              <PersonalizedQuoteDisplay className="text-lg text-muted-foreground font-inter" interval={4000} />
+        <PageSection className="mb-6 sm:mb-8">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">Welcome Back</p>
+                <h1 className="text-4xl sm:text-5xl font-bold font-cormorant gradient-text">
+                  {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), { name: userName })}
+                </h1>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground" title="Last synced from your latest activity">
+                <Clock className="h-4 w-4" />
+                <span>{lastSynced ? `Last synced ${formatRelativeTime(lastSynced)}` : 'Last synced moments ago'}</span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-card shadow-sm border border-border/60 p-4 sm:p-6 flex flex-col gap-2">
+              <div className="text-sm text-muted-foreground">Your Quote of the Day</div>
+              <PersonalizedQuoteDisplay className="text-lg sm:text-xl text-foreground font-inter" interval={4000} />
+              <p className="text-sm text-muted-foreground">{currentSubtitle}</p>
             </div>
           </div>
         </PageSection>
 
-        {/* Navigation Cards - Starting Hub - Only show when authenticated */}
         {user && (
-          <PageSection className="mb-0 sm:mb-6">
-            <HomeMenuGrid items={homeMenuItems} />
+          <PageSection className="mb-8">
+            <div className="rounded-2xl bg-primary/10 border border-primary/20 p-6 sm:p-8 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-primary font-semibold">
+                    <Lightning className="h-5 w-5" />
+                    <span>Continue Where You Left Off</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">
+                    {continueItem?.title || 'You are all caught up'}
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    {continueItem?.lastActivity ? `Last activity ${formatRelativeTime(continueItem.lastActivity)}` : 'Pick a focus to jump back in and keep momentum.'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    size="lg"
+                    onClick={() => navigate(continueItem?.actionPath || '/companion')}
+                    disabled={!continueItem}
+                    className="font-inter h-touch px-8"
+                  >
+                    Resume
+                  </Button>
+                </div>
+              </div>
+            </div>
           </PageSection>
         )}
 
-        {/* Admin Demo Button */}
+        <PageSection className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="space-y-1">
+              <div className="text-sm text-muted-foreground">Section 2 — Activity Stream</div>
+              <h3 className="text-xl font-semibold">Recent Activity</h3>
+            </div>
+            {user && <Button variant="ghost" size="sm" onClick={fetchActivityData} disabled={activityLoading}>
+                <RefreshCw className={cn("h-4 w-4 mr-2", activityLoading && "animate-spin")} />
+                Refresh
+              </Button>}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {recentActivities.length > 0 ? recentActivities.map((activity) => {
+            const iconByType: Record<ActivityType, JSX.Element> = {
+              conversation: <MessageCircle className="h-5 w-5 text-primary" />, dream: <Moon className="h-5 w-5 text-primary" />, task: <ListChecks className="h-5 w-5 text-primary" />, insight: <Lightbulb className="h-5 w-5 text-primary" /> };
+            return <div key={activity.id} className="rounded-xl border border-border/70 bg-card p-4 flex flex-col gap-2 shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  {iconByType[activity.type]}
+                  <span>{activity.title}</span>
+                </div>
+                {activity.description && <p className="text-sm text-muted-foreground line-clamp-2">“{activity.description}”</p>}
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{activity.timestamp ? formatRelativeTime(activity.timestamp) : ''}</span>
+                  <Button variant="ghost" size="sm" className="h-8" onClick={() => navigate(activity.actionPath)}>
+                    {activity.actionLabel}
+                  </Button>
+                </div>
+              </div>;
+          }) : <div className="rounded-xl border border-dashed border-border/70 bg-card/50 p-6 text-center text-muted-foreground">
+              {user ? 'No recent activity yet. Start a conversation or set a task to see updates here.' : 'Sign in to see your unified activity stream.'}
+            </div>}
+          </div>
+        </PageSection>
+
+        <PageSection className="mb-8 grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-primary font-semibold">
+              <Compass className="h-5 w-5" />
+              <span>Today’s Guidance</span>
+            </div>
+            <p className="text-lg font-medium">{currentSubtitle}</p>
+            <p className="text-sm text-muted-foreground">Focus on invitations, not initiation. Lean on your blueprint strengths to keep momentum.</p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate('/blueprint')}>
+                Expand
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleTutorialStart}>
+                Take tour
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-primary font-semibold">
+              <Sparkles className="h-5 w-5" />
+              <span>Smart Shortcuts</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Button variant="outline" className="justify-start h-auto py-3" onClick={() => navigate('/companion')}>
+                <MessageCircle className="h-5 w-5 mr-2" />
+                Start a Conversation
+              </Button>
+              <Button variant="outline" className="justify-start h-auto py-3" onClick={() => navigate('/blueprint')}>
+                <BookOpen className="h-5 w-5 mr-2" />
+                View Blueprint Highlights
+              </Button>
+              <Button variant="outline" className="justify-start h-auto py-3" onClick={() => navigate('/tasks')}>
+                <ListChecks className="h-5 w-5 mr-2" />
+                Check Growth Tasks
+              </Button>
+            </div>
+          </div>
+        </PageSection>
+
+        {!user && <PageSection className="mb-8 text-center space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-2xl font-semibold">Get started with SoulSync</h3>
+              <p className="text-muted-foreground">Create an account to track conversations, dreams, and growth tasks in one hub.</p>
+            </div>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button onClick={() => navigate('/get-started')} size="lg" className="font-inter h-touch px-8">
+                <ArrowRight className="h-5 w-5 mr-2" />
+                {t('index.getStarted')}
+              </Button>
+              <Button asChild variant="outline" size="lg" className="font-inter h-touch px-8">
+                <Link to="/auth">
+                  <LogIn className="h-5 w-5 mr-2" />
+                  {t('auth.signIn')}
+                </Link>
+              </Button>
+            </div>
+          </PageSection>}
+
         {user && isAdminUser(user) && <div className="flex justify-center mb-8">
             <Button onClick={() => setShowDemo(true)} variant="outline" className="font-inter h-touch">
               <Brain className="h-5 w-5 mr-2" />
               {t('index.demoButton')}
             </Button>
           </div>}
-
-        {/* Language Selector */}
-        
-
-        {/* Action Buttons - Modern CTA section */}
-        <PageSection className="text-center">
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-            {user && hasBlueprint && <>
-                <Button onClick={() => navigate('/blueprint')} size="lg" className="font-inter group h-touch px-8">
-                  <BookOpen className="h-5 w-5 mr-2 group-hover:rotate-3 transition-transform" />
-                  {t('index.viewBlueprint')}
-                  <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
-                <Button onClick={handleTutorialStart} variant="outline" size="lg" className="font-inter h-touch px-8">
-                  <BookOpen className="h-5 w-5 mr-2" />
-                  {t('index.takeTour')}
-                </Button>
-              </>}
-            {user && !hasBlueprint && <div className="flex flex-col sm:flex-row gap-4">
-                <Button onClick={() => navigate('/onboarding')} size="lg" className="font-inter h-touch px-8">
-                  {t('index.getStarted')}
-                </Button>
-                <Button onClick={handleTutorialStart} variant="outline" size="lg" className="font-inter h-touch px-8">
-                  <BookOpen className="h-5 w-5 mr-2" />
-                  {t('index.takeTour')}
-                </Button>
-              </div>}
-            {!user && <div className="flex flex-col sm:flex-row gap-4">
-                <Button onClick={() => navigate('/get-started')} size="lg" className="font-inter h-touch px-8">
-                  <ArrowRight className="h-5 w-5 mr-2" />
-                  {t('index.getStarted')}
-                </Button>
-                <Button asChild variant="outline" size="lg" className="font-inter h-touch px-8">
-                  <Link to="/auth">
-                    <LogIn className="h-5 w-5 mr-2" />
-                    {t('auth.signIn')}
-                  </Link>
-                </Button>
-              </div>}
-          </div>
-        </PageSection>
       </PageContainer>
 
       {showTutorial && <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} tutorialState={tutorialState} onContinue={continueTutorial} onComplete={completeTutorial} />}
