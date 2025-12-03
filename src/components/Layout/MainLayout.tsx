@@ -121,12 +121,38 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                   SoulSync
                 </span>
               </Link>
-              {/* Language selector on mobile top right */}
+              {/* Mobile actions on top right */}
               <div className="flex items-center space-x-2">
-                <LanguageSelector />
-                {user && <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)} className="rounded-xl">
+                {user && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="rounded-xl"
+                  >
                     {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                  </Button>}
+                  </Button>
+                )}
+                {user && (
+                  <Sheet open={isToolsOpen} onOpenChange={setIsToolsOpen}>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-xl">
+                        <PanelRightOpen className="h-5 w-5" />
+                        <span className="sr-only">{t('contextualTools.toolsAndInsights')}</span>
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right" className="w-full max-w-md p-0">
+                      <SheetHeader className="px-6 pt-6">
+                        <SheetTitle>{t('contextualTools.toolsAndInsights')}</SheetTitle>
+                        <SheetDescription>{t('contextualTools.contextAwareAssistance')}</SheetDescription>
+                      </SheetHeader>
+                      <div className="max-h-[calc(100dvh-8rem)] overflow-y-auto">
+                        <ContextualToolsPanel className="pt-2" />
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                )}
+                <LanguageSelector />
               </div>
             </div>
             
