@@ -15,7 +15,7 @@ import { useTutorialFlow } from "@/hooks/use-tutorial-flow";
 import { isAdminUser } from "@/utils/isAdminUser";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Lightning, Compass, RefreshCw } from "lucide-react";
+import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Flame, Compass, RefreshCw } from "lucide-react";
 
 type ActivityType = "conversation" | "dream" | "task" | "insight";
 
@@ -296,7 +296,7 @@ const Index = () => {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-primary font-semibold">
-                    <Lightning className="h-5 w-5" />
+                    <Flame className="h-5 w-5" />
                     <span>Continue Where You Left Off</span>
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">
