@@ -87,24 +87,30 @@ export class SmartInsightController {
     return hoursSinceLastDelivery >= 24;
   }
 
-  // Check if user should receive conversation insights (limited frequency)
+  // PHASE 1 FIX: Relaxed conversation insight delivery for active users
   static canDeliverConversationInsight(userId: string): boolean {
     const activity = this.activityTracker.get(userId);
-    if (!activity) return false;
+    
+    // PHASE 1: Allow insights even without prior activity tracking (new users)
+    if (!activity) {
+      console.log('✅ canDeliverConversationInsight: No prior activity - allowing for new user');
+      return true;
+    }
 
-    // Check global cooldown - no insights of any type in last 30 minutes
+    // Check global cooldown - reduced from 30 min to 5 min
     if (!this.checkGlobalCooldown(userId)) {
       return false;
     }
 
-    // Check conversation insight specific cooldown - max 1 per 2 hours
+    // PHASE 1 FIX: Reduced conversation insight cooldown from 2 hours to 30 minutes
     const conversationLog = this.insightLogs.get(`${userId}_conversation`);
     if (conversationLog) {
       const now = new Date();
       const lastDelivery = new Date(conversationLog.lastDelivery);
       const hoursSinceLastConversationInsight = (now.getTime() - lastDelivery.getTime()) / (1000 * 60 * 60);
       
-      if (hoursSinceLastConversationInsight < 2) {
+      if (hoursSinceLastConversationInsight < 0.5) { // 30 min instead of 2 hours
+        console.log(`⏰ Conversation cooldown: ${Math.round((0.5 - hoursSinceLastConversationInsight) * 60)} minutes remaining`);
         return false;
       }
     }
@@ -113,22 +119,38 @@ export class SmartInsightController {
     const hoursSinceLastConversation = (now.getTime() - activity.lastConversation.getTime()) / (1000 * 60 * 60);
     const hoursSinceLastSeen = (now.getTime() - activity.lastSeen.getTime()) / (1000 * 60 * 60);
 
+    // PHASE 1 FIX: More permissive conditions for active users
     // Deliver conversation insights when:
-    // 1. User had a conversation and then left/returned to app, OR
-    // 2. User has been idle for 1+ hours and returns
+    // 1. User is ACTIVE (not idle) - they deserve wisdom while engaged
+    // 2. User had a recent conversation (within 24h)
+    // 3. User returned after brief absence (> 5 minutes)
+    const isActiveUser = activity.isIdle === false;
+    const hadRecentConversation = hoursSinceLastConversation < 24;
+    const justReturned = hoursSinceLastSeen > 0.08; // ~5 minutes
+    
+    console.log('🎯 canDeliverConversationInsight check:', {
+      isActiveUser,
+      hadRecentConversation,
+      justReturned,
+      hoursSinceLastConversation: hoursSinceLastConversation.toFixed(2),
+      hoursSinceLastSeen: hoursSinceLastSeen.toFixed(2)
+    });
+    
     return (
-      (hoursSinceLastConversation < 24 && hoursSinceLastSeen > 0.5) || // Had conversation, then left/returned (increased from 0.1 to 0.5 hours)
-      (activity.isIdle === false && hoursSinceLastSeen > 2) // Returned after 2+ hour idle (increased from 1 to 2 hours)
+      (hadRecentConversation && justReturned) || // Had conversation, then brief pause
+      (isActiveUser && hadRecentConversation) || // ACTIVE user with recent conversation - speak while present!
+      (isActiveUser && hoursSinceLastSeen < 0.5) // Active user, seen recently - engage them
     );
   }
 
-  // Global cooldown check - prevents any insight delivery within 30 minutes of last insight
+  // PHASE 1 FIX: Reduced global cooldown from 30 min to 5 min
+  // The system was too "polite" - waiting for users to leave before speaking
   static checkGlobalCooldown(userId: string): boolean {
     const analyticalLog = this.insightLogs.get(`${userId}_analytical`);
     const conversationLog = this.insightLogs.get(`${userId}_conversation`);
     
     const now = new Date();
-    const cooldownMinutes = 30;
+    const cooldownMinutes = 5; // Reduced from 30 - be present, not absent
     
     // Check if analytical insight was delivered recently
     if (analyticalLog) {
