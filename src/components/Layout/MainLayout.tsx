@@ -123,18 +123,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               </Link>
               {/* Mobile actions on top right */}
               <div className="flex items-center space-x-2">
-                {user && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="rounded-xl"
-                  >
+                {user && <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)} className="rounded-xl">
                     {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                  </Button>
-                )}
-                {user && (
-                  <Sheet open={isToolsOpen} onOpenChange={setIsToolsOpen}>
+                  </Button>}
+                {user && <Sheet open={isToolsOpen} onOpenChange={setIsToolsOpen}>
                     <SheetTrigger asChild>
                       <Button variant="ghost" size="icon" className="rounded-xl">
                         <PanelRightOpen className="h-5 w-5" />
@@ -150,8 +142,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                         <ContextualToolsPanel className="pt-2" />
                       </div>
                     </SheetContent>
-                  </Sheet>
-                )}
+                  </Sheet>}
                 <LanguageSelector />
               </div>
             </div>
@@ -174,15 +165,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           {/* Contextual Tools access for mobile */}
           {user && <Sheet open={isToolsOpen} onOpenChange={setIsToolsOpen}>
               <SheetTrigger asChild>
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  className="fixed bottom-20 right-4 z-40 shadow-lg rounded-full"
-                  onClick={() => setIsToolsOpen(true)}
-                >
-                  <PanelRightOpen className="h-4 w-4 mr-2" />
-                  {t('contextualTools.toolsAndInsights')}
-                </Button>
+                
               </SheetTrigger>
               <SheetContent side="right" className="w-full max-w-md p-0">
                 <SheetHeader className="px-6 pt-6">
@@ -202,24 +185,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           {user && !hideNav && <TopBar />}
           
           <div className="flex flex-1 min-h-0 w-full">
-            {shouldShowDesktopNav ? (
-              // Three-panel layout for authenticated desktop users
-              <DesktopThreePanelLayout
-                navItems={navItems}
-                isActive={isActive}
-                handleSignOut={handleSignOut}
-                t={t}
-              >
+            {shouldShowDesktopNav ?
+        // Three-panel layout for authenticated desktop users
+        <DesktopThreePanelLayout navItems={navItems} isActive={isActive} handleSignOut={handleSignOut} t={t}>
                 {children}
-              </DesktopThreePanelLayout>
-            ) : (
-              // Fallback for unauthenticated or nav-hidden views
-              <main className="flex-1 flex flex-col">
+              </DesktopThreePanelLayout> :
+        // Fallback for unauthenticated or nav-hidden views
+        <main className="flex-1 flex flex-col">
                 <PageContainer className="flex-1">
                   {children}
                 </PageContainer>
-              </main>
-            )}
+              </main>}
           </div>
         </>}
 
@@ -230,12 +206,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 // Desktop three-panel layout wrapper (Principle #8: Only Add)
 interface DesktopThreePanelLayoutProps {
   children: React.ReactNode;
-  navItems: Array<{ to: string; icon: any; label: string }>;
+  navItems: Array<{
+    to: string;
+    icon: any;
+    label: string;
+  }>;
   isActive: (path: string) => boolean;
   handleSignOut: () => void;
   t: (key: string) => string;
 }
-
 const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
   children,
   navItems,
@@ -243,57 +222,29 @@ const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
   handleSignOut,
   t
 }) => {
-  return (
-    <ThreePanelLayout
-      leftPanel={
-        <aside className="h-full bg-card flex flex-col border-r border-border/60">
+  return <ThreePanelLayout leftPanel={<aside className="h-full bg-card flex flex-col border-r border-border/60">
           {/* Navigation */}
           <nav className="flex-1 p-3 space-y-1">
             {navItems.map(item => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={cn(
-                    "flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-150 text-sm font-medium",
-                    isActive(item.to)
-                      ? "bg-primary/10 text-primary border border-primary/20"
-                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                  )}
-                >
+        const Icon = item.icon;
+        return <Link key={item.to} to={item.to} className={cn("flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-150 text-sm font-medium", isActive(item.to) ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground")}>
                   <Icon className="h-4 w-4 flex-shrink-0" />
                   <span>{item.label}</span>
-                </Link>
-              );
-            })}
+                </Link>;
+      })}
           </nav>
 
           {/* User Actions */}
           <div className="p-3 border-t border-border/60">
-            <Button
-              variant="ghost"
-              onClick={handleSignOut}
-              className="w-full justify-start text-muted-foreground rounded-lg hover:bg-muted/50 text-sm"
-            >
+            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-muted-foreground rounded-lg hover:bg-muted/50 text-sm">
               <LogOut className="h-4 w-4 mr-3" />
               {t('nav.signOut')}
             </Button>
           </div>
-        </aside>
-      }
-      centerPanel={
-        <main className="h-full overflow-y-auto">
+        </aside>} centerPanel={<main className="h-full overflow-y-auto">
           <PageContainer className="h-full">
             {children}
           </PageContainer>
-        </main>
-      }
-      rightPanel={
-        <ContextualToolsPanel />
-      }
-    />
-  );
+        </main>} rightPanel={<ContextualToolsPanel />} />;
 };
-
 export default MainLayout;
