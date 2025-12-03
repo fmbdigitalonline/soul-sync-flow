@@ -3,7 +3,8 @@ import * as React from "react"
 
 // Breakpoints for different mobile experiences
 const ULTRA_NARROW_BREAKPOINT = 400
-const MOBILE_BREAKPOINT = 768
+// Treat tablets (e.g., iPad widths) as desktop/tablet layout by lowering the mobile cutoff
+const MOBILE_BREAKPOINT = 640
 const FOLD_5_WIDTH = 344
 
 export function useIsMobile() {
