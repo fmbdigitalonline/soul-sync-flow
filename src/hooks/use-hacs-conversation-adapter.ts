@@ -36,7 +36,6 @@ export interface HACSConversationAdapter {
   userName: string;
   markMessageStreamingComplete: (messageId: string) => void;
   addOptimisticMessage: (message: ConversationMessage) => void;
-  sessionId: string | null;
 }
 
 export const useHACSConversationAdapter = (
@@ -521,7 +520,6 @@ export const useHACSConversationAdapter = (
     acsState: enhancedCoach.acsState,
     userName: enhancedCoach.userName,
     markMessageStreamingComplete: handleOracleStreamingComplete,
-    addOptimisticMessage,
-    sessionId: sessionIdRef.current || stableThreadId
+    addOptimisticMessage
   };
 };

@@ -3409,50 +3409,38 @@ export type Database = {
         }
         Relationships: []
       }
-      conversational_context_events: {
+      pie_astrological_events: {
         Row: {
           category: string
           created_at: string
           description: string
-          detected_intent: string | null
           end_time: string | null
           event_type: string
           id: string
           intensity: number
           personal_relevance: number
-          related_goal_id: string | null
-          sentiment_score: number | null
-          session_id: string | null
           start_time: string
         }
         Insert: {
           category: string
           created_at?: string
           description: string
-          detected_intent?: string | null
           end_time?: string | null
           event_type: string
           id?: string
           intensity: number
           personal_relevance: number
-          related_goal_id?: string | null
-          sentiment_score?: number | null
-          session_id?: string | null
           start_time: string
         }
         Update: {
           category?: string
           created_at?: string
           description?: string
-          detected_intent?: string | null
           end_time?: string | null
           event_type?: string
           id?: string
           intensity?: number
           personal_relevance?: number
-          related_goal_id?: string | null
-          sentiment_score?: number | null
-          session_id?: string | null
           start_time?: string
         }
         Relationships: []
@@ -3511,7 +3499,7 @@ export type Database = {
         }
         Relationships: []
       }
-      reflective_action_plans: {
+      pie_insights: {
         Row: {
           acknowledged: boolean
           communication_style: string
@@ -3528,12 +3516,10 @@ export type Database = {
           personalized_for_blueprint: boolean
           predictive_rule_id: string
           priority: string
-          proposed_actions: Json | null
           title: string
           trigger_event: string
           trigger_time: string
           user_feedback: string | null
-          user_feedback_status: string | null
           user_id: string
         }
         Insert: {
@@ -3552,12 +3538,10 @@ export type Database = {
           personalized_for_blueprint?: boolean
           predictive_rule_id: string
           priority: string
-          proposed_actions?: Json | null
           title: string
           trigger_event: string
           trigger_time: string
           user_feedback?: string | null
-          user_feedback_status?: string | null
           user_id: string
         }
         Update: {
@@ -3576,12 +3560,10 @@ export type Database = {
           personalized_for_blueprint?: boolean
           predictive_rule_id?: string
           priority?: string
-          proposed_actions?: Json | null
           title?: string
           trigger_event?: string
           trigger_time?: string
           user_feedback?: string | null
-          user_feedback_status?: string | null
           user_id?: string
         }
         Relationships: []
@@ -3637,9 +3619,8 @@ export type Database = {
         }
         Relationships: []
       }
-      blueprint_logic_matrix: {
+      pie_predictive_rules: {
         Row: {
-          cognitive_profile_tag: string | null
           confidence: number
           created_at: string
           creation_date: string
@@ -3650,13 +3631,11 @@ export type Database = {
           magnitude: number
           minimum_occurrences: number
           statistical_significance: number
-          trigger_condition: Json | null
           user_data_types: Json
           user_id: string
           window_hours: number
         }
         Insert: {
-          cognitive_profile_tag?: string | null
           confidence: number
           created_at?: string
           creation_date?: string
@@ -3667,13 +3646,11 @@ export type Database = {
           magnitude: number
           minimum_occurrences: number
           statistical_significance: number
-          trigger_condition?: Json | null
           user_data_types?: Json
           user_id: string
           window_hours: number
         }
         Update: {
-          cognitive_profile_tag?: string | null
           confidence?: number
           created_at?: string
           creation_date?: string
@@ -3684,7 +3661,6 @@ export type Database = {
           magnitude?: number
           minimum_occurrences?: number
           statistical_significance?: number
-          trigger_condition?: Json | null
           user_data_types?: Json
           user_id?: string
           window_hours?: number

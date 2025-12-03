@@ -318,7 +318,7 @@ export class EnhancedPIEAgentService extends PIEService {
   // Store insights for scheduled delivery
   private async storeInsightsForDelivery(userId: string, insights: ProactiveInsight[]): Promise<void> {
     for (const insight of insights.slice(0, 3)) { // Limit to top 3
-      await supabase.from('reflective_action_plans').insert({
+      await supabase.from('pie_insights').insert({
         user_id: userId,
         pattern_id: `agent_${insight.type}`,
         predictive_rule_id: insight.id,
