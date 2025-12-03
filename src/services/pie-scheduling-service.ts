@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BlueprintHeuristic,
@@ -208,7 +207,7 @@ class ReflectiveAnalysisService {
 
   private async generateReflectiveAction(userId: string, rule: BlueprintHeuristic, context: ConversationContextEvent, patterns: string[] = []): Promise<ReflectiveActionPlan> {
     const actionPlan: ReflectiveActionPlan = {
-      id: randomUUID(),
+      id: crypto.randomUUID(),
       userId,
       patternId: rule.conditions.userDataTypes.join('-') || 'context',
       predictiveRuleId: rule.id,
