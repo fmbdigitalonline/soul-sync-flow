@@ -11,6 +11,7 @@ import { useSubconsciousOrb } from "@/hooks/use-subconscious-orb";
 import { supabase } from "@/integrations/supabase/client";
 import { HACSChatInterface } from "@/components/hacs/HACSChatInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { pieService } from "@/services/pie-service";
 
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -19,7 +20,8 @@ import { OracleInitializationBanner } from "@/components/coach/OracleInitializat
 
 const Coach = () => {
   const [userId, setUserId] = useState<string | null>(null);
-  
+  const [isEndingSession, setIsEndingSession] = useState(false);
+
   const {
     messages,
     isLoading,
@@ -29,7 +31,8 @@ const Coach = () => {
     resetConversation,
     markMessageStreamingComplete,
     recordVFPGraphFeedback,
-    addOptimisticMessage
+    addOptimisticMessage,
+    sessionId
   } = useHACSConversationAdapter("guide", "companion");
 
   // Shadow detection integration - only for message processing
@@ -46,9 +49,15 @@ const Coach = () => {
     const checkHermeticStatus = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      
+
       setUserId(user.id);
-      
+
+      try {
+        await pieService.initialize(user.id);
+      } catch (error) {
+        console.error('⚠️ PIE initialization failed:', error);
+      }
+
       // Just check if intelligence exists, don't trigger anything
       const { data: existingIntelligence } = await supabase
         .from('hermetic_structured_intelligence')
@@ -92,6 +101,53 @@ const Coach = () => {
     });
   };
 
+  const buildSessionSummary = () => {
+    const userMessages = messages.filter(message => message.role === 'user');
+    const recentMessages = userMessages.slice(-3).map(msg => msg.content.trim()).filter(Boolean);
+    if (recentMessages.length === 0) {
+      return 'User ended session without additional notes.';
+    }
+
+    const preview = recentMessages.join(' | ').slice(0, 400);
+    return `User discussed goals and blockers. Recent notes: ${preview}`;
+  };
+
+  const handleSessionEnd = async () => {
+    if (isEndingSession) return;
+
+    setIsEndingSession(true);
+    try {
+      if (!userId) {
+        throw new Error('No authenticated user for session end.');
+      }
+
+      const reflectiveSummary = buildSessionSummary();
+
+      if (sessionId) {
+        await pieService.processConversationSession(
+          sessionId,
+          reflectiveSummary || 'Session ended without summary.'
+        );
+        toast({
+          title: 'Reflective bridge triggered',
+          description: 'Generating action plan from this chat session.',
+        });
+      } else {
+        console.warn('⚠️ Missing session identifier, skipping Reflective Bridge trigger');
+      }
+    } catch (error) {
+      console.error('Failed to trigger Reflective Bridge:', error);
+      toast({
+        title: 'Could not trigger reflection',
+        description: 'We could not process this session for reflection.',
+        variant: 'destructive'
+      });
+    } finally {
+      resetConversation();
+      setIsEndingSession(false);
+    }
+  };
+
 
   // Removed duplicate authentication check - component is wrapped in ProtectedRoute
 
@@ -123,6 +179,15 @@ const Coach = () => {
           className="w-full"
         >
           {t('companion.clearConversation')}
+        </Button>
+        <Button
+          onClick={handleSessionEnd}
+          variant="default"
+          size="sm"
+          className="w-full mt-2"
+          disabled={isEndingSession}
+        >
+          {isEndingSession ? 'Processing reflection...' : 'End chat & generate plan'}
         </Button>
       </CosmicCard>
     </div>
