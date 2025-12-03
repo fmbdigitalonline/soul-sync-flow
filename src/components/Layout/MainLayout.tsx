@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
-import { Home, Heart, MessageCircle, Sparkles, Settings, LogOut, Menu, X, Star, TestTube, User, PanelsRightOpen } from "lucide-react";
+import { Home, Heart, MessageCircle, Sparkles, Settings, LogOut, Menu, X, Star, TestTube, User, PanelRightOpen } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -154,7 +154,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                   className="fixed bottom-20 right-4 z-40 shadow-lg rounded-full"
                   onClick={() => setIsToolsOpen(true)}
                 >
-                  <PanelsRightOpen className="h-4 w-4 mr-2" />
+                  <PanelRightOpen className="h-4 w-4 mr-2" />
                   {t('contextualTools.toolsAndInsights')}
                 </Button>
               </SheetTrigger>
