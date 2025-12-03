@@ -344,9 +344,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   //     setShowProgressInsightDisplay(true);
   //   }
   // }, [progressInsightReady, progressInsight]);
-  // ✅ AUTO-TRIGGER REMOVED: Users now manually click the exclamation mark to view insights
-  // ✅ INSIGHTS DISABLED - No more automatic hermetic progress insight generation
-  const AUTO_INSIGHTS_ENABLED = false; // Disabled to prevent spamming messages
+  // ✅ PHASE 1 FIX: Re-enabled automatic insight generation
+  // Voice enabled - the system can now proactively communicate with users
+  const AUTO_INSIGHTS_ENABLED = true; // Enabled for proactive insight delivery
 
   // REMOVED: Hermetic progress autonomous triggers (no more automatic spamming)
 

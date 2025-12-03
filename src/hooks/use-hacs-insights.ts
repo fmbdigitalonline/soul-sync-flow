@@ -907,10 +907,11 @@ export const useHACSInsights = () => {
     ];
 
     if (meaningfulActivities.includes(activityType)) {
-      // Higher probability for analytics-based insights (80% for meaningful activities)
-      const shouldGenerate = Math.random() < 0.8;
+      // PHASE 1 FIX: Deterministic insight generation for meaningful activities
+      // If activity is meaningful, insight should be value-driven, not luck-driven
+      const shouldGenerate = true; // 100% - no more gambling with wisdom
       
-      console.log('🔍 Should generate insight?', shouldGenerate, 'Activity:', activityType);
+      console.log('🔍 Deterministic insight trigger for activity:', activityType);
       
       if (shouldGenerate && !currentInsight) {
         console.log('🔍 Triggering insight generation...');

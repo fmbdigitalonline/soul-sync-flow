@@ -123,8 +123,8 @@ export const useHACSMicroLearning = () => {
       return false;
     }
 
-    // Smart timing: trigger after user engagement, not randomly
-    const shouldTrigger = Math.random() < 0.3; // 30% chance
+    // PHASE 1 FIX: Increased from 30% to 85% - insight should be value-driven, not luck-driven
+    const shouldTrigger = Math.random() < 0.85; // 85% chance - deterministic learning over random silence
     
     console.log('🎯 Should trigger learning?', shouldTrigger);
     

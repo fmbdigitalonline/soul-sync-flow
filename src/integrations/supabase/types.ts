@@ -613,6 +613,151 @@ export type Database = {
         }
         Relationships: []
       }
+      bp_agent_outputs: {
+        Row: {
+          agent_name: string
+          agent_number: number
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          job_id: string
+          section_content: string
+          section_id: string
+          section_title: string
+          section_type: string
+          stage: string
+          status: string
+          word_count: number | null
+        }
+        Insert: {
+          agent_name: string
+          agent_number: number
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          job_id: string
+          section_content: string
+          section_id: string
+          section_title: string
+          section_type?: string
+          stage: string
+          status?: string
+          word_count?: number | null
+        }
+        Update: {
+          agent_name?: string
+          agent_number?: number
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          job_id?: string
+          section_content?: string
+          section_id?: string
+          section_title?: string
+          section_type?: string
+          stage?: string
+          status?: string
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bp_agent_outputs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "bp_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bp_generation_jobs: {
+        Row: {
+          business_idea: string
+          business_name: string
+          context_data: Json
+          created_at: string | null
+          current_stage: string
+          current_step_index: number
+          entrepreneur_name: string
+          error_message: string | null
+          final_plan: Json | null
+          heartbeat_at: string | null
+          id: string
+          progress_percentage: number
+          status: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          business_idea: string
+          business_name: string
+          context_data?: Json
+          created_at?: string | null
+          current_stage?: string
+          current_step_index?: number
+          entrepreneur_name: string
+          error_message?: string | null
+          final_plan?: Json | null
+          heartbeat_at?: string | null
+          id?: string
+          progress_percentage?: number
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          business_idea?: string
+          business_name?: string
+          context_data?: Json
+          created_at?: string | null
+          current_stage?: string
+          current_step_index?: number
+          entrepreneur_name?: string
+          error_message?: string | null
+          final_plan?: Json | null
+          heartbeat_at?: string | null
+          id?: string
+          progress_percentage?: number
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      bp_generation_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          job_id: string
+          log_level: string
+          message: string
+          metadata: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          job_id: string
+          log_level?: string
+          message: string
+          metadata?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          job_id?: string
+          log_level?: string
+          message?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bp_generation_logs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "bp_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coach_action_logs: {
         Row: {
           action_payload: Json
@@ -4491,10 +4636,15 @@ export type Database = {
         Args: { p_habit_id: string; p_user_id: string }
         Returns: number
       }
+      can_access_blueprint: {
+        Args: { blueprint_user_id: string }
+        Returns: boolean
+      }
       check_admin_status: { Args: never; Returns: boolean }
       cleanup_expired_generation_jobs: { Args: never; Returns: undefined }
       cleanup_expired_hot_memory: { Args: never; Returns: undefined }
       cleanup_old_memories: { Args: never; Returns: undefined }
+      cleanup_stale_bp_jobs: { Args: never; Returns: number }
       cleanup_stuck_hermetic_jobs:
         | { Args: never; Returns: number }
         | { Args: { p_user_id?: string }; Returns: number }
