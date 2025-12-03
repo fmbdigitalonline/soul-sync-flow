@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
@@ -17,6 +17,8 @@ import { PageContainer } from "./PageContainer";
 import { ThreePanelLayout } from "./ThreePanelLayout";
 import { ContextualToolsPanel } from "./ContextualToolsPanel";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+
+const TOOLS_PANEL_COLLAPSED_STORAGE_KEY = "threePanelLayout:toolsPanelCollapsed";
 interface MainLayoutProps {
   children: React.ReactNode;
   hideNav?: boolean;
@@ -39,9 +41,27 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
+  const [isToolsPanelCollapsed, setIsToolsPanelCollapsed] = useState(false);
   const {
     isMobile
   } = useIsMobile();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const storedValue = localStorage.getItem(TOOLS_PANEL_COLLAPSED_STORAGE_KEY);
+    if (storedValue !== null) {
+      setIsToolsPanelCollapsed(storedValue === "true");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(TOOLS_PANEL_COLLAPSED_STORAGE_KEY, String(isToolsPanelCollapsed));
+  }, [isToolsPanelCollapsed]);
+
+  const toggleToolsPanel = useCallback(() => {
+    setIsToolsPanelCollapsed(prev => !prev);
+  }, []);
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -182,12 +202,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           {user && <MobileNavigation />}
         </> : <>
           {/* Desktop Global Top Bar */}
-          {user && !hideNav && <TopBar />}
+          {user && !hideNav && <TopBar showToolsToggle toolsPanelCollapsed={isToolsPanelCollapsed} onToolsPanelToggle={toggleToolsPanel} />}
           
           <div className="flex flex-1 min-h-0 w-full">
             {shouldShowDesktopNav ?
         // Three-panel layout for authenticated desktop users
-        <DesktopThreePanelLayout navItems={navItems} isActive={isActive} handleSignOut={handleSignOut} t={t}>
+        <DesktopThreePanelLayout navItems={navItems} isActive={isActive} handleSignOut={handleSignOut} t={t} toolsPanelCollapsed={isToolsPanelCollapsed} onToolsPanelToggle={toggleToolsPanel}>
                 {children}
               </DesktopThreePanelLayout> :
         // Fallback for unauthenticated or nav-hidden views
@@ -214,13 +234,17 @@ interface DesktopThreePanelLayoutProps {
   isActive: (path: string) => boolean;
   handleSignOut: () => void;
   t: (key: string) => string;
+  toolsPanelCollapsed: boolean;
+  onToolsPanelToggle: () => void;
 }
 const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
   children,
   navItems,
   isActive,
   handleSignOut,
-  t
+  t,
+  toolsPanelCollapsed,
+  onToolsPanelToggle
 }) => {
   return <ThreePanelLayout leftPanel={<aside className="h-full bg-card flex flex-col border-r border-border/60">
           {/* Navigation */}
@@ -245,6 +269,6 @@ const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
           <PageContainer className="h-full">
             {children}
           </PageContainer>
-        </main>} rightPanel={<ContextualToolsPanel />} />;
+        </main>} rightPanel={<ContextualToolsPanel />} toolsPanelCollapsed={toolsPanelCollapsed} onToolsPanelToggle={onToolsPanelToggle} showInlineToolsToggle={false} />;
 };
 export default MainLayout;
