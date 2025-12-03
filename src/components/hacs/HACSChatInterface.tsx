@@ -100,11 +100,14 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       {/* Messages */}
       <ScrollArea className={cn(
         "flex-1",
-        isMobile 
+        isMobile
           ? "h-[calc(100%-10rem)]"
           : "h-[calc(100%-5rem)]"
       )}>
-        <div className="px-3 py-2 pb-20 space-y-3">
+        <div className={cn(
+          "px-3 py-2 space-y-3",
+          isMobile ? "pb-32" : "pb-24"
+        )}>
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-4">
               <p>Start a conversation to begin intelligence learning</p>
@@ -174,35 +177,41 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       </ScrollArea>
 
       {/* Input - Sticky to bottom */}
-      <div className={cn(
-        "absolute left-0 right-0 bg-background px-2 py-1 z-[10000]",
-        isMobile 
-          ? "bottom-[64px]"
-          : "bottom-0"
-      )}>
-        <div className="flex space-x-2">
-          <Input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Type your message..."
-            disabled={isLoading}
-            className="flex-1 text-base pb-[env(safe-area-inset-bottom)]"
-          />
-          <Button
-            onClick={handleButtonClick}
-            disabled={!inputValue.trim() && !isStreamingResponse}
-            size="lg"
-            className="h-14 px-4"
-          >
-            {isStreamingResponse ? (
-              <Square className="h-5 w-5" />
-            ) : isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <SendHorizontal className="h-5 w-5" />
-            )}
-          </Button>
+      <div
+        className={cn(
+          "left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90 px-3 pb-3 pt-2",
+          "border-t border-border/40",
+          isMobile
+            ? "fixed"
+            : "absolute bottom-0"
+        )}
+        style={isMobile ? { bottom: "calc(84px + env(safe-area-inset-bottom))" } : undefined}
+      >
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-2 bg-card border border-border/60 rounded-full shadow-lg px-3 py-2">
+            <Input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Type your message..."
+              disabled={isLoading}
+              className="flex-1 text-base border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
+            <Button
+              onClick={handleButtonClick}
+              disabled={!inputValue.trim() && !isStreamingResponse}
+              size="icon"
+              className="h-11 w-11 rounded-full"
+            >
+              {isStreamingResponse ? (
+                <Square className="h-5 w-5" />
+              ) : isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <SendHorizontal className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
