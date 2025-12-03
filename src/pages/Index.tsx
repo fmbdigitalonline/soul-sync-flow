@@ -16,22 +16,7 @@ import { isAdminUser } from "@/utils/isAdminUser";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Flame, Compass, RefreshCw } from "lucide-react";
-import { useHACSInsights, type HACSInsight } from "@/hooks/use-hacs-insights";
-
-const useSafeHACSInsights = () => {
-  if (typeof useHACSInsights === "function") {
-    return useHACSInsights();
-  }
-
-  return {
-    loadHistoricalInsights: async () => [],
-    currentInsight: null,
-    insightQueue: []
-  } as ReturnType<typeof useHACSInsights>;
-};
-
 type ActivityType = "conversation" | "dream" | "task" | "insight";
-
 interface ActivityItem {
   id: string;
   type: ActivityType;
@@ -41,7 +26,6 @@ interface ActivityItem {
   actionLabel: string;
   actionPath: string;
 }
-
 interface ContinueItem {
   type: ActivityType;
   title: string;
@@ -74,7 +58,7 @@ const Index = () => {
     continueTutorial,
     completeTutorial
   } = useTutorialFlow();
-  const { loadHistoricalInsights, currentInsight, insightQueue } = useSafeHACSInsights();
+  const { loadHistoricalInsights, currentInsight, insightQueue } = useHACSInsights();
   const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
   const [continueItem, setContinueItem] = useState<ContinueItem | null>(null);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
@@ -106,7 +90,6 @@ const Index = () => {
   const currentSubtitle = useMemo(() => {
     return subtitleMessages[0] || t("index.subtitle");
   }, [subtitleMessages, t]);
-
   useEffect(() => {
     if (user && !loading && welcomeMessage) {
       const timer = setTimeout(() => {
@@ -126,7 +109,6 @@ const Index = () => {
       console.error('🎭 ERROR in handleTutorialStart:', error);
     }
   };
-
   const formatRelativeTime = useCallback((dateString?: string | null) => {
     if (!dateString) return '';
     const now = new Date();
@@ -140,7 +122,6 @@ const Index = () => {
     const diffDays = Math.floor(diffHours / 24);
     return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
   }, []);
-
   const mapActivityToItem = useCallback((activity: any): ActivityItem => {
     const activityType = String(activity.activity_type || '').toLowerCase();
     const description = activity.activity_data?.summary || activity.activity_data?.message || activity.activity_data?.title || '';
@@ -152,28 +133,24 @@ const Index = () => {
     } else if (activityType.includes('insight') || activityType.includes('blueprint')) {
       type = 'insight';
     }
-
     const titleByType: Record<ActivityType, string> = {
       conversation: 'Conversation with Companion',
       dream: 'Dream Progress',
       task: 'Task Updated',
       insight: 'Blueprint Insight Added'
     };
-
     const actionPathByType: Record<ActivityType, string> = {
       conversation: '/companion',
       dream: '/dreams',
       task: '/tasks',
       insight: '/blueprint'
     };
-
     const actionLabelByType: Record<ActivityType, string> = {
       conversation: 'Open Conversation',
       dream: 'View Dream',
       task: 'Open Task',
       insight: 'View Insight'
     };
-
     return {
       id: activity.id,
       type,
@@ -184,22 +161,8 @@ const Index = () => {
       actionPath: actionPathByType[type]
     };
   }, []);
-
-  const mapInsightToActivity = useCallback((insight: HACSInsight): ActivityItem => {
-    return {
-      id: `insight-${insight.id}`,
-      type: 'insight',
-      title: 'Blueprint Insight Added',
-      description: insight.text,
-      timestamp: insight.timestamp ? new Date(insight.timestamp).toISOString() : undefined,
-      actionLabel: 'View Insight',
-      actionPath: '/blueprint'
-    };
-  }, []);
-
   const deriveContinueItem = useCallback((conversation: any | null, activities: any[]): ContinueItem | null => {
     const candidates: ContinueItem[] = [];
-
     if (conversation) {
       candidates.push({
         type: 'conversation',
@@ -208,12 +171,10 @@ const Index = () => {
         actionPath: '/companion'
       });
     }
-
     const dreamActivity = activities.find(act => {
       const actType = String(act.activity_type || '').toLowerCase();
       return actType.includes('dream') || actType.includes('milestone');
     });
-
     if (dreamActivity) {
       candidates.push({
         type: 'dream',
@@ -222,7 +183,6 @@ const Index = () => {
         actionPath: '/dreams'
       });
     }
-
     const taskActivity = activities.find(act => String(act.activity_type || '').toLowerCase().includes('task'));
     if (taskActivity) {
       candidates.push({
@@ -232,56 +192,30 @@ const Index = () => {
         actionPath: '/tasks'
       });
     }
-
     if (candidates.length === 0) return null;
-
     return candidates.sort((a, b) => {
       const aTime = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
       const bTime = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
       return bTime - aTime;
     })[0];
   }, []);
-
   const fetchActivityData = useCallback(async () => {
     if (!user) return;
     setActivityLoading(true);
     try {
-      const { data: activitiesData } = await supabase
-        .from('user_activities')
-        .select('id, activity_type, activity_data, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(8);
-
+      const {
+        data: activitiesData
+      } = await supabase.from('user_activities').select('id, activity_type, activity_data, created_at').eq('user_id', user.id).order('created_at', {
+        ascending: false
+      }).limit(8);
       const mappedActivities = (activitiesData || []).map(mapActivityToItem);
-
-      let insightActivities: ActivityItem[] = [];
-      try {
-        const historicalInsights = await loadHistoricalInsights();
-        insightActivities = (historicalInsights || []).map(mapInsightToActivity);
-      } catch (insightError) {
-        console.error('Error enriching activity stream with insights', insightError);
-      }
-
-      const combinedActivities = [...mappedActivities, ...insightActivities]
-        .sort((a, b) => {
-          const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-          const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-          return bTime - aTime;
-        })
-        .slice(0, 6);
-
-      setRecentActivities(combinedActivities);
-      setLastSynced(combinedActivities?.[0]?.timestamp || activitiesData?.[0]?.created_at || null);
-
-      const { data: conversationData } = await supabase
-        .from('conversation_memory')
-        .select('session_id, last_activity, recovery_context')
-        .eq('user_id', user.id)
-        .eq('conversation_stage', 'active')
-        .order('last_activity', { ascending: false })
-        .limit(1);
-
+      setRecentActivities(mappedActivities);
+      setLastSynced(activitiesData?.[0]?.created_at || null);
+      const {
+        data: conversationData
+      } = await supabase.from('conversation_memory').select('session_id, last_activity, recovery_context').eq('user_id', user.id).eq('conversation_stage', 'active').order('last_activity', {
+        ascending: false
+      }).limit(1);
       const conversation = conversationData?.[0] || null;
       const continueCandidate = deriveContinueItem(conversation, activitiesData || []);
       setContinueItem(continueCandidate);
@@ -290,8 +224,7 @@ const Index = () => {
     } finally {
       setActivityLoading(false);
     }
-  }, [deriveContinueItem, loadHistoricalInsights, mapActivityToItem, mapInsightToActivity, user]);
-
+  }, [deriveContinueItem, mapActivityToItem, user]);
   useEffect(() => {
     if (!user) {
       setRecentActivities([]);
@@ -355,7 +288,9 @@ const Index = () => {
               <div className="space-y-1">
                 <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">Welcome Back</p>
                 <h1 className="text-4xl sm:text-5xl font-bold font-cormorant gradient-text">
-                  {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), { name: userName })}
+                  {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), {
+                  name: userName
+                })}
                 </h1>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground" title="Last synced from your latest activity">
@@ -367,13 +302,12 @@ const Index = () => {
             <div className="rounded-2xl bg-card shadow-sm border border-border/60 p-4 sm:p-6 flex flex-col gap-2">
               <div className="text-sm text-muted-foreground">Your Quote of the Day</div>
               <PersonalizedQuoteDisplay className="text-lg sm:text-xl text-foreground font-inter" interval={4000} />
-              <p className="text-sm text-muted-foreground">{currentSubtitle}</p>
+              
             </div>
           </div>
         </PageSection>
 
-        {user && (
-          <PageSection className="mb-8">
+        {user && <PageSection className="mb-8">
             <div className="rounded-2xl bg-primary/10 border border-primary/20 p-6 sm:p-8 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="space-y-2">
@@ -389,19 +323,13 @@ const Index = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button
-                    size="lg"
-                    onClick={() => navigate(continueItem?.actionPath || '/companion')}
-                    disabled={!continueItem}
-                    className="font-inter h-touch px-8"
-                  >
+                  <Button size="lg" onClick={() => navigate(continueItem?.actionPath || '/companion')} disabled={!continueItem} className="font-inter h-touch px-8">
                     Resume
                   </Button>
                 </div>
               </div>
             </div>
-          </PageSection>
-        )}
+          </PageSection>}
 
         <PageSection className="mb-8">
           <div className="rounded-2xl border border-border/70 bg-card p-4 sm:p-6 shadow-sm space-y-4">
@@ -415,32 +343,35 @@ const Index = () => {
                   Refresh
                 </Button>}
             </div>
-
-            {recentActivities.length > 0 ? <ol className="relative space-y-4 border-l border-border/70 pl-4">
-                {recentActivities.map((activity) => {
-                const iconByType: Record<ActivityType, JSX.Element> = {
-                  conversation: <MessageCircle className="h-5 w-5 text-primary" />, dream: <Moon className="h-5 w-5 text-primary" />, task: <ListChecks className="h-5 w-5 text-primary" />, insight: <Lightbulb className="h-5 w-5 text-primary" /> };
-                return <li key={activity.id} className="relative">
-                    <span className="absolute -left-5 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary ring-4 ring-primary/10">
-                      {iconByType[activity.type]}
-                    </span>
-                    <div className="rounded-xl border border-border/70 bg-background p-4 shadow-sm space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex flex-col">
-                          <p className="text-sm font-medium">{activity.title}</p>
-                          {activity.description && <p className="text-sm text-muted-foreground line-clamp-2">“{activity.description}”</p>}
-                        </div>
-                        <Button variant="outline" size="sm" className="h-8" onClick={() => navigate(activity.actionPath)}>
-                          {activity.actionLabel}
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{activity.timestamp ? formatRelativeTime(activity.timestamp) : 'Just now'}</p>
-                    </div>
-                  </li>;
-              })}
-              </ol> : <div className="rounded-xl border border-dashed border-border/70 bg-background p-6 text-center text-muted-foreground">
-                {user ? 'No recent activity yet. Start a conversation or set a task to see updates here.' : 'Sign in to see your unified activity stream.'}
-              </div>}
+            {user && <Button variant="ghost" size="sm" onClick={fetchActivityData} disabled={activityLoading}>
+                <RefreshCw className={cn("h-4 w-4 mr-2", activityLoading && "animate-spin")} />
+                Refresh
+              </Button>}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {recentActivities.length > 0 ? recentActivities.map(activity => {
+            const iconByType: Record<ActivityType, JSX.Element> = {
+              conversation: <MessageCircle className="h-5 w-5 text-primary" />,
+              dream: <Moon className="h-5 w-5 text-primary" />,
+              task: <ListChecks className="h-5 w-5 text-primary" />,
+              insight: <Lightbulb className="h-5 w-5 text-primary" />
+            };
+            return <div key={activity.id} className="rounded-xl border border-border/70 bg-card p-4 flex flex-col gap-2 shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  {iconByType[activity.type]}
+                  <span>{activity.title}</span>
+                </div>
+                {activity.description && <p className="text-sm text-muted-foreground line-clamp-2">“{activity.description}”</p>}
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{activity.timestamp ? formatRelativeTime(activity.timestamp) : ''}</span>
+                  <Button variant="ghost" size="sm" className="h-8" onClick={() => navigate(activity.actionPath)}>
+                    {activity.actionLabel}
+                  </Button>
+                </div>
+              </div>;
+          }) : <div className="rounded-xl border border-dashed border-border/70 bg-card/50 p-6 text-center text-muted-foreground">
+              {user ? 'No recent activity yet. Start a conversation or set a task to see updates here.' : 'Sign in to see your unified activity stream.'}
+            </div>}
           </div>
         </PageSection>
 

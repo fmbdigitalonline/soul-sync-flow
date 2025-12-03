@@ -20,7 +20,10 @@ export const PersonalizedQuoteDisplay: React.FC<PersonalizedQuoteDisplayProps> =
   const {
     user
   } = useAuth();
-  const { t, language } = useLanguage();
+  const {
+    t,
+    language
+  } = useLanguage();
   const {
     quotes,
     hasPersonalizedQuotes,
@@ -73,17 +76,11 @@ export const PersonalizedQuoteDisplay: React.FC<PersonalizedQuoteDisplayProps> =
   return <div className="space-y-2">
       <RotatingText texts={displayQuotes} className={className} interval={interval} />
       {hasPersonalizedQuotes ? <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-          <Sparkles className="h-3 w-3 text-soul-purple" />
-          <span className="py-[10px]">{t('personalizedQuotes.personalizedText')}</span>
-          {quotes.length < 5 && (
-            <button 
-              onClick={handleRegenerateQuotes}
-              className="ml-2 p-1 rounded-full hover:bg-muted/50 transition-colors"
-              title={t('personalizedQuotes.generateMoreTitle')}
-            >
+          
+          
+          {quotes.length < 5 && <button onClick={handleRegenerateQuotes} className="ml-2 p-1 rounded-full hover:bg-muted/50 transition-colors" title={t('personalizedQuotes.generateMoreTitle')}>
               <RefreshCw className="h-3 w-3" />
-            </button>
-          )}
+            </button>}
         </div> : displayQuotes.length > 0 && <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
           <span>{t('personalizedQuotes.defaultText')}</span>
         </div>}
