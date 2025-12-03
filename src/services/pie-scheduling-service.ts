@@ -30,11 +30,17 @@ class PIESchedulingService {
       
       // Get upcoming astrological events
       const upcomingEvents = await this.getUpcomingAstrologicalEvents();
-      
-      // Match rules with upcoming events
-      for (const event of upcomingEvents) {
-        const matchingRules = rules.filter(rule => 
-          rule.eventType === event.eventType || 
+
+      // Fallback to conversation-derived triggers when no astrological events are present
+      const conversationalTriggers = await this.getConversationalTriggers();
+      const mergedTriggers = upcomingEvents.length > 0
+        ? [...upcomingEvents, ...conversationalTriggers]
+        : conversationalTriggers;
+
+      // Match rules with upcoming and conversational events
+      for (const event of mergedTriggers) {
+        const matchingRules = rules.filter(rule =>
+          rule.eventType === event.eventType ||
           this.isEventTypeMatch(rule.eventType, event.eventType)
         );
 
@@ -178,6 +184,73 @@ class PIESchedulingService {
       }));
     } catch (error) {
       console.error("Error getting astrological events:", error);
+      return [];
+    }
+  }
+
+  private async getConversationalTriggers(): Promise<AstrologicalEvent[]> {
+    if (!this.userId) return [];
+
+    try {
+      const now = new Date();
+      const lookback = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)); // Last 7 days of conversation signals
+
+      const conversationSources = [
+        { table: 'conversation_memory', timeField: 'created_at', typeField: 'memory_type', relevanceField: 'relevance_score' },
+        { table: 'conversation_threads', timeField: 'created_at', typeField: 'thread_type', relevanceField: 'signal_strength' },
+        { table: 'conversation_messages', timeField: 'created_at', typeField: 'message_type', relevanceField: 'sentiment_score' },
+        { table: 'message_embeddings', timeField: 'created_at', typeField: 'embedding_type', relevanceField: 'similarity_score' },
+        { table: 'hot_memory_cache', timeField: 'created_at', typeField: 'memory_type', relevanceField: 'confidence' },
+        { table: 'user_session_memory', timeField: 'created_at', typeField: 'session_type', relevanceField: 'relevance' },
+        { table: 'memory_deltas', timeField: 'created_at', typeField: 'delta_type', relevanceField: 'impact_score' },
+        { table: 'user_blueprints', timeField: 'updated_at', typeField: 'blueprint_type', relevanceField: 'stability_score' },
+        { table: 'hacs_intelligence', timeField: 'created_at', typeField: 'signal_type', relevanceField: 'confidence' },
+        { table: 'conversation_insights', timeField: 'created_at', typeField: 'insight_type', relevanceField: 'confidence' }
+      ];
+
+      const triggers: AstrologicalEvent[] = [];
+
+      for (const source of conversationSources) {
+        const { data, error } = await supabase
+          .from(source.table)
+          .select('*')
+          .eq('user_id', this.userId)
+          .gte(source.timeField, lookback.toISOString())
+          .order(source.timeField, { ascending: false })
+          .limit(25);
+
+        if (error) {
+          console.error(`Error getting conversational triggers from ${source.table}:`, error);
+          continue;
+        }
+
+        (data || []).forEach((record: any, index: number) => {
+          const eventId = `${source.table}_${record.id || record.uuid || index}`;
+          const eventType = (record[source.typeField] || source.table).toString();
+          const startTime = record[source.timeField] || now.toISOString();
+          const intensity = typeof record[source.relevanceField] === 'number'
+            ? Math.min(Math.max(record[source.relevanceField], 0), 1)
+            : 0.5;
+          const personalRelevance = typeof record.personal_relevance === 'number'
+            ? Math.min(Math.max(record.personal_relevance, 0), 1)
+            : 0.5;
+
+          triggers.push({
+            id: eventId,
+            eventType,
+            startTime,
+            endTime: record.end_time || undefined,
+            intensity,
+            personalRelevance,
+            description: record.description || `Conversation-derived trigger from ${source.table}`,
+            category: 'transit'
+          });
+        });
+      }
+
+      return triggers;
+    } catch (error) {
+      console.error("Error getting conversational triggers:", error);
       return [];
     }
   }
