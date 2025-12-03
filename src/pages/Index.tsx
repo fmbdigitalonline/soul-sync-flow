@@ -12,6 +12,7 @@ import PersonalityDemo from "@/components/personality/PersonalityDemo";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { useTutorialFlow } from "@/hooks/use-tutorial-flow";
+import { useHACSInsights, type HACSInsight } from "@/hooks/use-hacs-insights";
 import { isAdminUser } from "@/utils/isAdminUser";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
