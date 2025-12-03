@@ -58,10 +58,14 @@ const Index = () => {
     continueTutorial,
     completeTutorial
   } = useTutorialFlow();
+  const { loadHistoricalInsights, currentInsight, insightQueue } = useHACSInsights();
   const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
   const [continueItem, setContinueItem] = useState<ContinueItem | null>(null);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
   const [activityLoading, setActivityLoading] = useState(false);
+  const [guidanceInsight, setGuidanceInsight] = useState<HACSInsight | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [hasLoadedGuidance, setHasLoadedGuidance] = useState(false);
   const welcomeMessage = useMemo(() => {
     if (!user) return null;
     if (hasBlueprint) {
@@ -229,6 +233,42 @@ const Index = () => {
     }
     fetchActivityData();
   }, [fetchActivityData, user]);
+
+  useEffect(() => {
+    if (!user) {
+      setGuidanceInsight(null);
+      setHasLoadedGuidance(false);
+      return;
+    }
+
+    let isActive = true;
+
+    const syncGuidance = async () => {
+      if (!hasLoadedGuidance) {
+        setInsightsLoading(true);
+        try {
+          const historical = await loadHistoricalInsights();
+          if (!isActive) return;
+          const candidate = currentInsight || insightQueue[0] || historical[0] || null;
+          setGuidanceInsight(candidate || null);
+          setHasLoadedGuidance(true);
+        } finally {
+          if (isActive) setInsightsLoading(false);
+        }
+      } else {
+        const candidate = currentInsight || insightQueue[0];
+        if (candidate && isActive) {
+          setGuidanceInsight(candidate);
+        }
+      }
+    };
+
+    syncGuidance();
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentInsight, hasLoadedGuidance, insightQueue, loadHistoricalInsights, user]);
   if (showDemo) {
     return <MainLayout>
         <PageContainer>
@@ -292,10 +332,16 @@ const Index = () => {
           </PageSection>}
 
         <PageSection className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="space-y-1">
-              <div className="text-sm text-muted-foreground">Section 2 — Activity Stream</div>
-              <h3 className="text-xl font-semibold">Recent Activity</h3>
+          <div className="rounded-2xl border border-border/70 bg-card p-4 sm:p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="text-sm text-muted-foreground">Section 2 — Activity Stream</div>
+                <h3 className="text-xl font-semibold">Recent Activity</h3>
+              </div>
+              {user && <Button variant="ghost" size="sm" onClick={fetchActivityData} disabled={activityLoading}>
+                  <RefreshCw className={cn("h-4 w-4 mr-2", activityLoading && "animate-spin")} />
+                  Refresh
+                </Button>}
             </div>
             {user && <Button variant="ghost" size="sm" onClick={fetchActivityData} disabled={activityLoading}>
                 <RefreshCw className={cn("h-4 w-4 mr-2", activityLoading && "animate-spin")} />
@@ -335,11 +381,13 @@ const Index = () => {
               <Compass className="h-5 w-5" />
               <span>Today’s Guidance</span>
             </div>
-            <p className="text-lg font-medium">{currentSubtitle}</p>
-            <p className="text-sm text-muted-foreground">Focus on invitations, not initiation. Lean on your blueprint strengths to keep momentum.</p>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigate('/blueprint')}>
-                Expand
+            <p className="text-lg font-medium">{guidanceInsight?.text || currentSubtitle}</p>
+            <p className="text-sm text-muted-foreground">
+              {guidanceInsight ? `Source: ${guidanceInsight.module} · ${formatRelativeTime(guidanceInsight.timestamp?.toString())}` : insightsLoading ? 'Gathering your latest insights…' : 'We will surface blueprint insights and conversation highlights here once you engage.'}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate('/blueprint')} disabled={!guidanceInsight && insightsLoading}>
+                {guidanceInsight ? 'Expand' : 'Blueprint'}
               </Button>
               <Button variant="ghost" size="sm" onClick={handleTutorialStart}>
                 Take tour
@@ -352,7 +400,8 @@ const Index = () => {
               <Sparkles className="h-5 w-5" />
               <span>Smart Shortcuts</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <p className="text-sm text-muted-foreground">Jump straight into the three core flows.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Button variant="outline" className="justify-start h-auto py-3" onClick={() => navigate('/companion')}>
                 <MessageCircle className="h-5 w-5 mr-2" />
                 Start a Conversation
