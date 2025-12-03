@@ -1,7 +1,7 @@
 import { pieService } from './pie-service';
 import { pieDataCollectionService } from './pie-data-collection-service';
 import { piePatternDetectionService } from './pie-pattern-detection-service';
-import { pieSchedulingService } from './pie-scheduling-service';
+import { reflectiveAnalysisService } from './pie-scheduling-service';
 import { pieInsightGenerationService } from './pie-insight-generation-service';
 import { personalityFusionService } from './personality-fusion-service';
 import { realTimeAstronomicalService } from './real-time-astronomical-service';
@@ -159,16 +159,16 @@ class PIEPatentTestRunner {
       }
       console.log(`✅ Step 1d Complete: Generated ${predictiveRules.length} predictive rules`);
 
-      // (e) Monitor calendar data for next occurrence
-      console.log('🔬 Step 1e: Scheduling insights based on REAL patterns...');
-      await pieSchedulingService.scheduleInsights();
-      console.log(`✅ Step 1e Complete: Insights scheduled`);
-
-      // (f) Deliver proactive notification
-      console.log('🔬 Step 1f: Checking REAL pending insights...');
-      const insights = await pieSchedulingService.checkPendingInsights();
-      this.evidence.notificationDeliveries += insights.length;
-      console.log(`✅ Step 1f Complete: Found ${insights.length} pending insights`);
+      // (e) Run reflective analysis after simulated conversation closure
+      console.log('🔬 Step 1e: Generating reflective action plans from conversation context...');
+      const reflectivePlan = await reflectiveAnalysisService.processPostConversation(
+        this.testUserId,
+        `test_session_${Date.now()}`,
+        'Simulated patent validation conversation summary'
+      );
+      const notificationCount = reflectivePlan ? 1 : 0;
+      this.evidence.notificationDeliveries += notificationCount;
+      console.log(`✅ Step 1e Complete: ${notificationCount} reflective plan(s) generated`);
 
       // ENHANCED PASS/FAIL LOGIC FOR 100% REAL-TIME VALIDATION
       const hasRealData = allMoodData.length > 0;
@@ -198,7 +198,7 @@ class PIEPatentTestRunner {
           realCorrelationResults: realCorrelationResults.length,
           validCorrelations: realCorrelationResults.filter(c => c.confidence > 0.1).length,
           predictiveRules: predictiveRules.length,
-          pendingInsights: insights.length,
+            pendingInsights: notificationCount,
           dataValidation: '100% dynamic real-time data',
           correlationMethods: ['sliding_window', 'fourier_spectral', 'wavelet_coherence'],
           sentimentAnalysis: 'advanced_contextual_nlp'
@@ -623,7 +623,7 @@ class PIEPatentTestRunner {
     
     try {
       const patternMiningActive = piePatternDetectionService.isActive();
-      const schedulerActive = pieSchedulingService.isActive();
+      const schedulerActive = reflectiveAnalysisService.isActive();
       const dataCollectionActive = pieDataCollectionService.isActive();
       const memoryValidated = await this.validateMemoryStorage();
       

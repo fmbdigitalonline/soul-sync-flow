@@ -1,18 +1,19 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  PIEPattern, 
-  PIEInsight, 
-  PIEDataPoint, 
-  PIEConfiguration, 
+import {
+  PIEPattern,
+  PIEInsight,
+  PIEDataPoint,
+  PIEConfiguration,
   PIEPredictiveRule,
   PIE_CONFIDENCE_THRESHOLD,
-  PIE_STATISTICAL_SIGNIFICANCE_THRESHOLD
+  PIE_STATISTICAL_SIGNIFICANCE_THRESHOLD,
+  ReflectiveActionPlan
 } from "@/types/pie-types";
 import { pieDataCollectionService } from "./pie-data-collection-service";
 import { piePatternDetectionService } from "./pie-pattern-detection-service";
 import { pieInsightGenerationService } from "./pie-insight-generation-service";
-import { pieSchedulingService } from "./pie-scheduling-service";
+import { reflectiveAnalysisService } from "./pie-scheduling-service";
 
 export class PIEService {
   private userId: string | null = null;
@@ -31,7 +32,7 @@ export class PIEService {
     await pieDataCollectionService.initialize(userId);
     await piePatternDetectionService.initialize(userId);
     await pieInsightGenerationService.initialize(userId);
-    await pieSchedulingService.initialize(userId);
+    await reflectiveAnalysisService.initialize(userId);
     
     this.isInitialized = true;
     console.log("✅ PIE initialized successfully");
@@ -163,14 +164,20 @@ export class PIEService {
           }
         }
 
-        // 5. Schedule proactive insights
-        await pieSchedulingService.scheduleInsights();
+        // 5. Reflection-driven actions are triggered after conversations, not scheduled astrology windows
       }
 
     } catch (error) {
       console.error("PIE processing error:", error);
       // Continue gracefully - don't break the main flow
     }
+  }
+
+  // Retrofit trigger: invoked when a conversation thread finishes or goes idle
+  async processConversationSession(sessionId: string, summary: string): Promise<ReflectiveActionPlan | null> {
+    if (!this.isInitialized || !this.userId) return null;
+
+    return reflectiveAnalysisService.processPostConversation(this.userId, sessionId, summary);
   }
 
   // Patent Claim 1(d): Generate predictive rules from patterns
@@ -234,7 +241,7 @@ export class PIEService {
         };
 
         const { error } = await supabase
-          .from('pie_predictive_rules')
+          .from('blueprint_logic_matrix')
           .upsert(dbRule);
 
         if (error) {
@@ -252,7 +259,7 @@ export class PIEService {
 
     try {
       const { data, error } = await supabase
-        .from('pie_insights')
+        .from('reflective_action_plans')
         .select('*')
         .eq('user_id', this.userId)
         .eq('delivered', true)
@@ -310,9 +317,9 @@ export class PIEService {
     try {
       // Update the insight with feedback
       const { error } = await supabase
-        .from('pie_insights')
+        .from('reflective_action_plans')
         .update({
-          user_feedback: feedback.type === 'detailed' ? feedback.feedback : 
+          user_feedback: feedback.type === 'detailed' ? feedback.feedback :
                         feedback.helpful ? 'helpful' : 'not_helpful',
           acknowledged: true
         })
@@ -334,7 +341,7 @@ export class PIEService {
 
     try {
       const { error } = await supabase
-        .from('pie_insights')
+        .from('reflective_action_plans')
         .update({
           acknowledged: true
         })
@@ -356,7 +363,7 @@ export class PIEService {
     try {
       // Set expiration time to now to effectively dismiss the insight
       const { error } = await supabase
-        .from('pie_insights')
+        .from('reflective_action_plans')
         .update({
           expiration_time: new Date().toISOString(),
           acknowledged: true
@@ -390,7 +397,7 @@ export class PIEService {
       userId: this.userId,
       dataCollectionActive: pieDataCollectionService.isActive(),
       patternDetectionActive: piePatternDetectionService.isActive(),
-      schedulingActive: pieSchedulingService.isActive(),
+      reflectiveAnalysisActive: reflectiveAnalysisService.isActive(),
       confidenceThreshold: PIE_CONFIDENCE_THRESHOLD,
       statisticalThreshold: PIE_STATISTICAL_SIGNIFICANCE_THRESHOLD
     };
@@ -403,7 +410,7 @@ export class PIEService {
     await pieDataCollectionService.cleanup();
     await piePatternDetectionService.cleanup();
     await pieInsightGenerationService.cleanup();
-    await pieSchedulingService.cleanup();
+    await reflectiveAnalysisService.cleanup();
     
     this.isInitialized = false;
     this.userId = null;
