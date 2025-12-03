@@ -26,6 +26,12 @@ export interface PIEPredictiveRule {
   statisticalSignificance: number; // p-value from correlation analysis
 }
 
+// Retrofitted heuristic for blueprint-driven logic
+export interface BlueprintHeuristic extends PIEPredictiveRule {
+  cognitiveProfileTag?: string;
+  triggerCondition?: Record<string, any>;
+}
+
 export interface PIEPattern {
   id: string;
   userId: string;
@@ -101,6 +107,24 @@ export interface PIEInsight {
   // Personalization
   communicationStyle: string; // Based on VFP-Graph
   personalizedForBlueprint: boolean;
+}
+
+// Retrofitted reflective action that updates project boards instead of horoscopes
+export interface ReflectiveActionPlan extends PIEInsight {
+  proposedActions?: Record<string, any>;
+  userFeedbackStatus?: string;
+}
+
+export interface ConversationContextEvent {
+  id: string;
+  sessionId?: string;
+  sentimentScore?: number;
+  detectedIntent?: string;
+  relatedGoalId?: string;
+  summary?: string;
+  topic?: string;
+  startTime?: string;
+  eventType?: string;
 }
 
 export interface PIEConfiguration {
