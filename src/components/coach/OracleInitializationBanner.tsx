@@ -190,34 +190,7 @@ export const OracleInitializationBanner = ({ userId }: OracleInitializationBanne
 
   // Modern embeddings with facets - full power
   if (embeddingCount && embeddingCount > 0 && !hasLegacyEmbeddings) {
-    return (
-      <div className="flex items-center justify-between gap-4 px-4 py-3 bg-primary/10 rounded-lg border border-primary/20">
-        <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium text-primary">
-            Oracle: Full Power ({embeddingCount} semantic memories)
-          </span>
-        </div>
-        <Button
-          onClick={handleUpgrade}
-          disabled={isProcessing}
-          variant="outline"
-          size="sm"
-        >
-          {isProcessing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Reprocessing...
-            </>
-          ) : (
-            <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Force Reprocess
-            </>
-          )}
-        </Button>
-      </div>
-    );
+    return null;
   }
 
   // Show processing state if active embedding job exists
