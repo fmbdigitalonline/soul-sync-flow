@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, BookOpen, Calendar, MessageCircle, Settings, TrendingUp, ArrowLeft, User, Heart, Clock, ListChecks } from "lucide-react";
+import { Sparkles, BookOpen, Calendar, Settings, TrendingUp, ArrowLeft, Heart, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
@@ -633,24 +633,19 @@ const SpiritualGrowth = () => {
 
   // Welcome view with hub layout and contextual guidance
   const lastSync = growthJourney?.last_updated || blueprintData?.updated_at || user?.last_sign_in_at;
-  const formattedLastSync = lastSync
-    ? new Date(lastSync).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-    : 'Awaiting first sync';
-  const currentFocus = growthJourney?.current_focus_area || t('spiritualGrowth.ui.defaultFocus', { defaultValue: 'Centering & Clarity' });
-  const reflectionCount = growthJourney?.reflection_entries?.length ?? 0;
-  const insightCount = growthJourney?.insight_entries?.length ?? 0;
-  const moodCount = growthJourney?.mood_entries?.length ?? 0;
 
-  const focusTitleText = currentFocus;
+  const focusTitleText = growthJourney?.current_focus_area || 'Emotional Alignment';
   const focusDescriptionText = "Your inner peace is the key to unlock your higher consciousness.";
   const lastSyncedLabel = formatRelativeTime(lastSync || '') || 'Awaiting first sync';
-
+  
   const continuationCards: {
     key: ActiveView;
     title: string;
     description: string;
     icon: React.ElementType;
     tag?: string;
+    tagClass?: string;
+    iconClass?: string;
     onClick: () => void;
   }[] = [
     {
@@ -659,22 +654,28 @@ const SpiritualGrowth = () => {
       description: needsAssessment ? 'Growth wheel awaiting assessment' : 'Growth wheel in-view',
       icon: Settings,
       tag: needsAssessment ? 'Start' : 'Resume',
+      tagClass: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+      iconClass: 'bg-indigo-50 text-indigo-600',
       onClick: () => setActiveView('life_os_full')
     },
     {
       key: 'life_os_guided',
       title: 'Guided Discovery',
-      description: 'Guided mapping to deepen your focus.',
+      description: 'Step 1 of 10',
       icon: BookOpen,
       tag: 'Resume',
+      tagClass: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+      iconClass: 'bg-purple-50 text-purple-600',
       onClick: () => setActiveView('life_os_guided')
     },
     {
       key: 'life_os_progressive',
       title: 'Progressive Journey',
-      description: 'Step-by-step expansion of your domains.',
+      description: 'Step 1 of 10',
       icon: TrendingUp,
-      tag: 'Step 2 of 10',
+      tag: 'Resume',
+      tagClass: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+      iconClass: 'bg-blue-50 text-blue-600',
       onClick: () => setActiveView('life_os_progressive')
     },
     {
@@ -683,23 +684,9 @@ const SpiritualGrowth = () => {
       description: programStatus ? `Focused on ${programStatus.domain?.replace(/_/g, ' ') || 'integration'}` : 'Focus on integration',
       icon: Heart,
       tag: 'Focus on Integration AI',
+      tagClass: 'bg-rose-50 text-rose-600 border-rose-100',
+      iconClass: 'bg-rose-50 text-rose-500',
       onClick: () => setActiveView('growth_program')
-    },
-    {
-      key: 'immediate_chat',
-      title: 'Heart-Centered Coach',
-      description: growthJourney?.last_updated ? `Last chat ${formatRelativeTime(growthJourney.last_updated)}` : 'Open a human-centered chat',
-      icon: MessageCircle,
-      tag: 'Resume',
-      onClick: handleStartSpiritualGrowth
-    },
-    {
-      key: 'life_os_quick_focus',
-      title: 'Quick Focus',
-      description: 'Choose a focus for today in one tap.',
-      icon: ListChecks,
-      tag: 'Start',
-      onClick: () => setActiveView('life_os_quick_focus')
     }
   ];
 
@@ -712,104 +699,100 @@ const SpiritualGrowth = () => {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto py-8 px-4 max-w-5xl space-y-6">
-          <div className="space-y-1">
-            <h1 className="text-2xl md:text-3xl font-heading font-semibold text-foreground">
-              {getUserDisplayName()}, here is your current spiritual trajectory
-            </h1>
-            <p className="text-sm text-muted-foreground">Last-synced {lastSyncedLabel}</p>
-          </div>
+      <div className="min-h-screen bg-[#f7f5ff]">
+        <div className="container mx-auto max-w-2xl px-5 py-10 space-y-8">
+          <div className="flex flex-col gap-3 rounded-3xl border border-purple-100 bg-white/90 p-5 shadow-sm">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <h1 className="text-2xl md:text-3xl font-heading font-semibold text-foreground">
+                {getUserDisplayName()}, here is your current spiritual trajectory
+              </h1>
+              <div className="flex items-center gap-2 rounded-full border border-purple-100 bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700">
+                <Clock className="h-4 w-4" />
+                <span>Last-synced {lastSyncedLabel}</span>
+              </div>
+            </div>
 
-          <CosmicCard className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-none shadow-md">
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="rounded-2xl border border-border/60 bg-white shadow-sm">
+              <div className="flex items-center gap-2 px-4 pt-4 text-sm text-muted-foreground">
                 <Sparkles className="h-4 w-4 text-primary" />
                 <span>Today&apos;s Growth Focus</span>
               </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+              <div className="space-y-3 p-4 pt-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Heart className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-xl md:text-2xl font-semibold text-foreground">{focusTitleText}</h2>
-                    <p className="text-sm text-muted-foreground">{focusDescriptionText}</p>
+                    <p className="text-sm font-semibold text-foreground">{focusTitleText}</p>
+                    <p className="text-xs text-muted-foreground">Your inner peace unlocks higher consciousness.</p>
                   </div>
+                </div>
+                <div className="rounded-xl border border-purple-100 bg-purple-50 px-4 py-3 text-sm text-purple-900 shadow-inner">
+                  {focusDescriptionText}
                 </div>
               </div>
             </div>
-          </CosmicCard>
+          </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Continue Where You Left Off</p>
-                <h3 className="text-lg font-semibold text-foreground">Pick back up with guided support</h3>
-              </div>
-              <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">Resume</span>
+              <h3 className="text-lg font-semibold text-foreground">Continue Where You Left Off</h3>
+              <span className="rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">Resume</span>
             </div>
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2">
               {continuationCards.map(tile => (
                 <button
                   key={tile.key}
                   onClick={tile.onClick}
-                  className="flex flex-col items-start gap-2 rounded-xl border border-border bg-card/80 p-4 text-left shadow-sm hover:border-primary/50 hover:shadow-md transition"
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-white px-4 py-3 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md"
                 >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                        <tile.icon className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{tile.title}</p>
-                        <p className="text-xs text-muted-foreground">{tile.description}</p>
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${tile.iconClass || 'bg-muted text-primary'}`}>
+                      <tile.icon className="h-5 w-5" />
                     </div>
-                    {tile.tag && (
-                      <span className="text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary font-medium whitespace-nowrap">{tile.tag}</span>
-                    )}
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-foreground">{tile.title}</p>
+                      <p className="text-xs text-muted-foreground">{tile.description}</p>
+                    </div>
                   </div>
+                  {tile.tag && (
+                    <span className={`whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-semibold ${tile.tagClass || 'bg-primary/10 text-primary border-primary/20'}`}>
+                      {tile.tag}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Explore Growth Modules</h3>
-              <span className="text-sm text-muted-foreground">Find your best focus</span>
-            </div>
-            <div className="grid gap-3 md:grid-cols-4">
+            <h3 className="text-lg font-semibold text-foreground">Explore Growth Modules</h3>
+            <div className="grid grid-cols-2 gap-3">
               {moduleOptions.map(module => (
                 <button
                   key={module.title}
                   onClick={module.onClick}
-                  className="relative overflow-hidden rounded-xl shadow-md group border border-border/60 bg-card"
+                  className="group rounded-2xl border border-border/70 bg-white p-2 shadow-sm transition hover:border-primary/40 hover:shadow-md"
                 >
-                  <img
-                    src={module.image}
-                    alt={module.title}
-                    className="h-32 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-                  <div className="absolute bottom-3 left-3 text-left">
-                    <p className="text-sm font-semibold text-white">{module.title}</p>
+                  <div className="overflow-hidden rounded-xl">
+                    <img
+                      src={module.image}
+                      alt={module.title}
+                      className="h-32 w-full object-cover transition duration-300 group-hover:scale-105"
+                      loading="lazy"
+                      decoding="async"
+                    />
                   </div>
+                  <p className="mt-3 text-center text-sm font-semibold text-foreground">{module.title}</p>
                 </button>
               ))}
             </div>
           </div>
 
-          <CosmicCard className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-semibold">Recent Activity</h3>
-              </div>
-              <span className="text-xs text-muted-foreground">8 hours ago</span>
+          <div className="space-y-4 rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Clock className="h-4 w-4 text-primary" />
+              <span>Recent Activity</span>
             </div>
             <div className="space-y-3">
               {loadingActivity && (
@@ -819,16 +802,16 @@ const SpiritualGrowth = () => {
                 <p className="text-sm text-muted-foreground">No growth activities yet. Log a mood, reflection, or insight to begin.</p>
               )}
               {!loadingActivity && recentGrowthActivity.map(activity => (
-                <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/60">
-                  <div className="h-2.5 w-2.5 rounded-full bg-primary mt-1" />
+                <div key={activity.id} className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/40 px-3 py-2">
+                  <div className="mt-2 h-2 w-2 rounded-full bg-primary" />
                   <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">{describeActivity(activity)}</p>
-                    <p className="text-xs text-muted-foreground/80">{formatTimestamp(activity.created_at)}</p>
+                    <p className="text-sm text-foreground">{describeActivity(activity)}</p>
+                    <p className="text-xs text-muted-foreground">{formatTimestamp(activity.created_at)}</p>
                   </div>
                 </div>
               ))}
             </div>
-          </CosmicCard>
+          </div>
         </div>
       </div>
     </MainLayout>
