@@ -644,6 +644,8 @@ const SpiritualGrowth = () => {
     description: string;
     icon: React.ElementType;
     tag?: string;
+    tagClass?: string;
+    iconClass?: string;
     onClick: () => void;
   }[] = [
     {
@@ -652,6 +654,8 @@ const SpiritualGrowth = () => {
       description: needsAssessment ? 'Growth wheel awaiting assessment' : 'Growth wheel in-view',
       icon: Settings,
       tag: needsAssessment ? 'Start' : 'Resume',
+      tagClass: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+      iconClass: 'bg-indigo-50 text-indigo-600',
       onClick: () => setActiveView('life_os_full')
     },
     {
@@ -660,6 +664,8 @@ const SpiritualGrowth = () => {
       description: 'Step 1 of 10',
       icon: BookOpen,
       tag: 'Resume',
+      tagClass: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+      iconClass: 'bg-purple-50 text-purple-600',
       onClick: () => setActiveView('life_os_guided')
     },
     {
@@ -676,6 +682,8 @@ const SpiritualGrowth = () => {
       description: programStatus ? `Focused on ${programStatus.domain?.replace(/_/g, ' ') || 'integration'}` : 'Focus on integration',
       icon: Heart,
       tag: 'Focus on Integration AI',
+      tagClass: 'bg-rose-50 text-rose-600 border-rose-100',
+      iconClass: 'bg-rose-50 text-rose-500',
       onClick: () => setActiveView('growth_program')
     }
   ];
