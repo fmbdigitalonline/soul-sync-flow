@@ -9,11 +9,12 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2, Eye, EyeOff, Sparkles } from "lucide-react";
+import { Loader2, Eye, EyeOff, Sparkles, AlertTriangle, RefreshCw } from "lucide-react";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { getFunnelData, clearFunnelData, getFunnelSummary } from "@/utils/funnel-data";
 import { useJourneyTracking } from "@/hooks/use-onboarding-journey-tracking";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +22,7 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isResettingSession, setIsResettingSession] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -219,6 +221,38 @@ export default function Auth() {
     }
   };
 
+  const clearSupabaseAuthTokens = () => {
+    try {
+      const keys = Object.keys(localStorage);
+      keys
+        .filter((key) => key.startsWith("sb-") || key.toLowerCase().includes("supabase"))
+        .forEach((key) => localStorage.removeItem(key));
+    } catch (error) {
+      console.error("Error clearing Supabase auth tokens:", error);
+    }
+  };
+
+  const handleSessionReset = async () => {
+    setIsResettingSession(true);
+    try {
+      await supabase.auth.signOut();
+      clearSupabaseAuthTokens();
+      toast({
+        title: "Session reset",
+        description: "We updated our login system. Please sign in again to continue.",
+      });
+    } catch (error: any) {
+      console.error("Session reset error:", error);
+      toast({
+        title: t('error'),
+        description: error.message || "Unable to reset session. Please clear site data manually and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResettingSession(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -234,6 +268,31 @@ export default function Auth() {
           <div className="flex justify-end">
             <LanguageSelector />
           </div>
+
+          <Alert className="bg-amber-50 border-amber-200 text-amber-900">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>One-time sign in required</AlertTitle>
+            <AlertDescription className="space-y-2 text-left">
+              <p className="text-sm">
+                We refreshed our authentication backend. If you were logged in before, please sign out and sign back in once to continue.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-1"
+                onClick={handleSessionReset}
+                disabled={isResettingSession || isLoading}
+              >
+                {isResettingSession ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                )}
+                Reset session
+              </Button>
+            </AlertDescription>
+          </Alert>
           
           {fromFunnel && funnelData && (
             <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4">
