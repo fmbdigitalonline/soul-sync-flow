@@ -75,15 +75,15 @@ export const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
           <>
             <ResizableHandle className="w-px bg-border hover:bg-primary/20 transition-colors" />
             <ResizablePanel
-              defaultSize={26} 
-              minSize={20} 
+              defaultSize={26}
+              minSize={20}
               maxSize={35}
               className={cn(
                 "transition-all duration-300",
                 `min-w-[${minToolsPanelWidth}px] max-w-[${maxToolsPanelWidth}px]`
               )}
             >
-              <div className="h-full overflow-y-auto bg-card/50 backdrop-blur-sm border-l border-border">
+              <div className="h-full overflow-y-auto bg-card/50 backdrop-blur-sm">
                 {rightPanel}
               </div>
             </ResizablePanel>
