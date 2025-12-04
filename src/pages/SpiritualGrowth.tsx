@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo, useState, useCallback } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,6 @@ import { useBlueprintData } from "@/hooks/use-blueprint-data";
 import { useAuth } from "@/contexts/AuthContext";
 import { LifeDomain, ProgramStatus } from "@/types/growth-program";
 
-// Consistent 3-column square grid
-import DreamMenuGrid, { type DreamMenuItem } from "@/components/dream/DreamMenuGrid";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useLifeOrchestrator } from "@/hooks/use-life-orchestrator";
 import { agentGrowthIntegration } from "@/services/agent-growth-integration";
 // Tile images - use shared home assets for consistency
@@ -47,8 +44,6 @@ const SpiritualGrowth = () => {
   const { t } = useLanguage();
   const { blueprintData } = useBlueprintData();
   const { user } = useAuth();
-  const { isMobile } = useIsMobile();
-
   const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
   const { needsAssessment, assessments, checkAssessmentNeeds } = useLifeOrchestrator();
   const [recentGrowthActivity, setRecentGrowthActivity] = useState<any[]>([]);
@@ -161,101 +156,7 @@ const SpiritualGrowth = () => {
     loadProgramStatus();
   }, [user]);
 
-  const continueCards = useMemo(() => {
-    const cards: {
-      key: string;
-      title: string;
-      description: string;
-      actionLabel: string;
-      onClick: () => void;
-    }[] = [];
-
-    if (growthJourney?.last_updated) {
-      cards.push({
-        key: 'immediate_chat',
-        title: 'Resume Heart-Centered Coaching',
-        description: `Last check-in ${formatRelativeTime(growthJourney.last_updated)}`,
-        actionLabel: 'Open Coach Chat',
-        onClick: () => setActiveView('immediate_chat')
-      });
-    }
-
-    if (programStatus) {
-      const programTitle = programStatus.status === 'active' ? 'Continue Growth Program' : 'Review Growth Program';
-      const domainLabel = programStatus.domain ? programStatus.domain.replace(/_/g, ' ') : 'your program';
-      cards.push({
-        key: 'growth_program',
-        title: programTitle,
-        description: `Focused on ${domainLabel}${programStatus.updatedAt ? ` • updated ${formatRelativeTime(programStatus.updatedAt)}` : ''}`,
-        actionLabel: 'Go to Program',
-        onClick: () => setActiveView('growth_program')
-      });
-    }
-
-    const latestAssessment = assessments?.reduce((latest, assessment) => {
-      if (!latest) return assessment;
-      return new Date(assessment.updated_at) > new Date(latest.updated_at) ? assessment : latest;
-    }, undefined as typeof assessments[number] | undefined);
-
-    if (latestAssessment && !needsAssessment) {
-      cards.push({
-        key: 'life_os_full',
-        title: 'Open Life Operating System',
-        description: `Last assessment in ${latestAssessment.domain.replace(/_/g, ' ')} ${formatRelativeTime(latestAssessment.updated_at)}`,
-        actionLabel: 'View Dashboard',
-        onClick: () => setActiveView('life_os_full')
-      });
-    } else if (needsAssessment) {
-      cards.push({
-        key: 'life_os_guided',
-        title: 'Resume Guided Discovery',
-        description: 'Pick up the Life OS guided assessment to map your focus areas.',
-        actionLabel: 'Start Guided Assessment',
-        onClick: () => setActiveView('life_os_guided')
-      });
-    }
-
-    return cards;
-  }, [assessments, formatRelativeTime, growthJourney?.last_updated, needsAssessment, programStatus]);
-  const recommendedActions = useMemo(() => {
-    const actions: { title: string; description: string; onSelect: () => void }[] = [];
-    const focusArea = growthJourney?.current_focus_area || blueprintData?.life_purpose?.primary_theme;
-
-    if (focusArea) {
-      actions.push({
-        title: `Deepen your ${focusArea} focus`,
-        description: "Open your structured growth program to act on today's priorities.",
-        onSelect: () => setActiveView('growth_program')
-      });
-    }
-
-    if ((growthJourney?.mood_entries?.length || 0) === 0) {
-      actions.push({
-        title: "Log today's mood", 
-        description: "Capture how you're feeling to keep the Heart-Centered Coach in sync.",
-        onSelect: () => setActiveView('mood')
-      });
-    } else {
-      actions.push({
-        title: "Continue with Heart-Centered Coach",
-        description: "Pick up your last conversation and request a next micro-step.",
-        onSelect: () => handleStartSpiritualGrowth()
-      });
-    }
-
-    actions.push({
-      title: "Capture a fresh insight",
-      description: "Log a quick win, ritual, or download so it reinforces your blueprint.",
-      onSelect: () => setActiveView('insight')
-    });
-
-    return actions.slice(0, 3);
-  }, [
-    blueprintData?.life_purpose?.primary_theme,
-    growthJourney?.current_focus_area,
-    growthJourney?.mood_entries?.length,
-    handleStartSpiritualGrowth
-  ]);
+  
 
   const formatTimestamp = (dateString: string) => {
     const date = new Date(dateString);
@@ -740,285 +641,194 @@ const SpiritualGrowth = () => {
   const insightCount = growthJourney?.insight_entries?.length ?? 0;
   const moodCount = growthJourney?.mood_entries?.length ?? 0;
 
+  const focusTitle = currentFocus;
+  const focusDescription = "Your inner peace is the key to unlock your higher consciousness.";
+  const lastSyncedLabel = formatRelativeTime(lastSync || '') || 'Awaiting first sync';
+
+  const continuationTiles: {
+    key: ActiveView;
+    title: string;
+    description: string;
+    icon: React.ElementType;
+    tag?: string;
+    onClick: () => void;
+  }[] = [
+    {
+      key: 'life_os_full',
+      title: 'Life Operating System',
+      description: needsAssessment ? 'Growth wheel awaiting assessment' : 'Growth wheel in-view',
+      icon: Settings,
+      tag: needsAssessment ? 'Start' : 'Resume',
+      onClick: () => setActiveView('life_os_full')
+    },
+    {
+      key: 'life_os_guided',
+      title: 'Guided Discovery',
+      description: 'Guided mapping to deepen your focus.',
+      icon: BookOpen,
+      tag: 'Resume',
+      onClick: () => setActiveView('life_os_guided')
+    },
+    {
+      key: 'life_os_progressive',
+      title: 'Progressive Journey',
+      description: 'Step-by-step expansion of your domains.',
+      icon: TrendingUp,
+      tag: 'Step 2 of 10',
+      onClick: () => setActiveView('life_os_progressive')
+    },
+    {
+      key: 'growth_program',
+      title: 'Blueprint alignment',
+      description: programStatus ? `Focused on ${programStatus.domain?.replace(/_/g, ' ') || 'integration'}` : 'Focus on integration',
+      icon: Heart,
+      tag: 'Focus on Integration AI',
+      onClick: () => setActiveView('growth_program')
+    },
+    {
+      key: 'immediate_chat',
+      title: 'Heart-Centered Coach',
+      description: growthJourney?.last_updated ? `Last chat ${formatRelativeTime(growthJourney.last_updated)}` : 'Open a human-centered chat',
+      icon: MessageCircle,
+      tag: 'Resume',
+      onClick: handleStartSpiritualGrowth
+    },
+    {
+      key: 'life_os_quick_focus',
+      title: 'Quick Focus',
+      description: 'Choose a focus for today in one tap.',
+      icon: ListChecks,
+      tag: 'Start',
+      onClick: () => setActiveView('life_os_quick_focus')
+    }
+  ];
+
+  const exploreModules = [
+    { title: 'Quick Focus', image: coachImg, onClick: () => setActiveView('life_os_quick_focus') },
+    { title: 'Full Assessment', image: lifeOsImg, onClick: () => setActiveView('life_os_full') },
+    { title: 'Guided Discovery', image: programImg, onClick: () => setActiveView('life_os_guided') },
+    { title: 'Progressive Journey', image: toolsImg, onClick: () => setActiveView('life_os_progressive') },
+  ];
+
   return (
     <MainLayout>
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto py-8 px-4 max-w-6xl space-y-6">
-          <div className="text-center space-y-2">
-            <p className="text-sm text-primary/80 font-semibold tracking-wide">{t('spiritualGrowth.title')}</p>
-            <h1 className="text-3xl font-heading font-bold text-foreground">{t('spiritualGrowth.subtitle')}</h1>
-            <p className="text-muted-foreground max-w-3xl mx-auto">
-              Begin with a clear snapshot of where you are, then choose the next best step when you are ready.
-            </p>
+        <div className="container mx-auto py-8 px-4 max-w-5xl space-y-6">
+          <div className="space-y-1">
+            <h1 className="text-2xl md:text-3xl font-heading font-semibold text-foreground">
+              {getUserDisplayName()}, here is your current spiritual trajectory
+            </h1>
+            <p className="text-sm text-muted-foreground">Last-synced {lastSyncedLabel}</p>
           </div>
 
-          {continueCards.length > 0 && (
-            <div className="mb-8">
-              <div className="bg-card border border-primary/10 rounded-xl shadow-sm p-4 md:p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-xs uppercase tracking-[0.2em] text-primary/80">Continue</p>
-                    <h2 className="text-xl font-semibold text-foreground">Pick up where you left off</h2>
+          <CosmicCard className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-none shadow-md">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span>Today&apos;s Growth Focus</span>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                    <Heart className="h-5 w-5" />
                   </div>
-                </div>
-
-                <div className="space-y-3">
-                  {continueCards.map(card => (
-                    <div
-                      key={card.key}
-                      className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 bg-muted/50 rounded-lg border border-border/60"
-                    >
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-foreground">{card.title}</p>
-                        <p className="text-sm text-muted-foreground">{card.description}</p>
-                      </div>
-                      <Button onClick={card.onClick} className="w-full md:w-auto">
-                        {card.actionLabel}
-                      </Button>
-                    </div>
-                  ))}
+                  <div>
+                    <h2 className="text-xl md:text-2xl font-semibold text-foreground">{focusTitle}</h2>
+                    <p className="text-sm text-muted-foreground">{focusDescription}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          )}
-          <div className="grid gap-4 md:grid-cols-3">
-            <CosmicCard className="md:col-span-1">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                    <User className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Welcome back</p>
-                    <p className="text-xl font-semibold">{getUserDisplayName()}</p>
-                  </div>
-                </div>
-                <span className="text-xs text-muted-foreground">Last sync • {formattedLastSync}</span>
-              </div>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <p>Your blueprint traits keep guiding your journey: {getCoreTraits().join(', ')}.</p>
-                <p>We’ll keep this hub current as you reflect, log moods, and sync new insights.</p>
-              </div>
-            </CosmicCard>
+          </CosmicCard>
 
-            <CosmicCard className="md:col-span-1">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <p className="text-sm text-muted-foreground">Growth status</p>
-                </div>
-                <span className="text-xs text-primary/80">Updated {formattedLastSync}</span>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Continue Where You Left Off</p>
+                <h3 className="text-lg font-semibold text-foreground">Pick back up with guided support</h3>
               </div>
-              <h2 className="text-xl font-semibold text-foreground mb-3">Today’s focus: {currentFocus}</h2>
-              <div className="grid grid-cols-3 gap-2 mb-4 text-center">
-                <div className="rounded-lg border p-3">
-                  <p className="text-2xl font-bold text-foreground">{moodCount}</p>
-                  <p className="text-xs text-muted-foreground">Mood logs</p>
-                </div>
-                <div className="rounded-lg border p-3">
-                  <p className="text-2xl font-bold text-foreground">{reflectionCount}</p>
-                  <p className="text-xs text-muted-foreground">Reflections</p>
-                </div>
-                <div className="rounded-lg border p-3">
-                  <p className="text-2xl font-bold text-foreground">{insightCount}</p>
-                  <p className="text-xs text-muted-foreground">Insights</p>
-                </div>
-              </div>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-muted-foreground">Keep momentum with a quick check-in or guided reflection.</p>
-                <Button onClick={handleStartSpiritualGrowth} size="sm">
-                  Continue with coach
-                </Button>
-              </div>
-            </CosmicCard>
-
-            <CosmicCard className="md:col-span-1">
-              <div className="flex items-center gap-2 mb-3">
-                <MessageCircle className="h-4 w-4 text-primary" />
-                <p className="text-sm text-muted-foreground">Context for today</p>
-              </div>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <p>
-                  You’re stepping in with {currentFocus.toLowerCase()} on your mind. Your coach can help you translate recent moods and
-                  insights into a focused next step.
-                </p>
-                <p>
-                  Prefer to self-pace? Jump into tools to log a quick feeling, reflect, or review your weekly insights before exploring
-                  the full growth program.
-                </p>
-              </div>
-            </CosmicCard>
-          </div>
-
-          {(() => {
-            const items: DreamMenuItem[] = [
-              {
-                key: 'immediate_chat',
-                title: t('spiritualGrowth.cards.heartCentered.title'),
-                description: t('spiritualGrowth.cards.heartCentered.description'),
-                Icon: Sparkles,
-                image: coachImg,
-                onClick: handleStartSpiritualGrowth,
-              },
-              {
-                key: 'life_os_choices',
-                title: t('spiritualGrowth.cards.lifeOperatingSystem.title'),
-                description: t('spiritualGrowth.cards.lifeOperatingSystem.description'),
-                Icon: Settings,
-                image: lifeOsImg,
-                onClick: () => setActiveView('life_os_choices'),
-              },
-              {
-                key: 'growth_program',
-                title: t('spiritualGrowth.cards.structuredProgram.title'),
-                description: t('spiritualGrowth.cards.structuredProgram.description'),
-                Icon: TrendingUp,
-                image: programImg,
-                onClick: () => setActiveView('growth_program'),
-              },
-              {
-                key: 'tools',
-                title: t('spiritualGrowth.cards.spiritualTools.title'),
-                description: t('spiritualGrowth.cards.spiritualTools.description'),
-                Icon: BookOpen,
-                image: toolsImg,
-                onClick: () => setActiveView('tools'),
-              },
-            ];
-
-            if (isMobile) {
-              const homeMenuItems = items.map(item => ({
-                key: item.key,
-                to: '', // No navigation needed for onClick items
-                title: item.title,
-                description: item.description,
-                Icon: item.Icon,
-                image: item.image
-              }));
-
-              return (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-foreground">Explore when you’re ready</p>
-                    <span className="text-xs text-muted-foreground">Guided options</span>
-                  </div>
-                  {homeMenuItems.map(item => {
-                    const originalItem = items.find(i => i.key === item.key);
-                    return (
-                      <article key={item.key} className="bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden group cursor-pointer" onClick={originalItem?.onClick}>
-                        <div className="flex h-full pl-4">
-                          <div className="w-12 h-12 relative overflow-hidden flex-shrink-0 rounded-md mt-2">
-                            {item.image ? (
-                              <img
-                                src={item.image}
-                                alt={`${item.title} background`}
-                                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                                loading="lazy"
-                                decoding="async"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                                <item.Icon className="h-5 w-5 text-primary/50" aria-hidden="true" />
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex-1 p-4 bg-card flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-1.5 mb-0.5">
-                                <item.Icon className="h-3.5 w-3.5 text-primary flex-shrink-0" aria-hidden="true" />
-                                <h3 className="text-xs font-semibold text-foreground leading-tight">{item.title}</h3>
-                              </div>
-                              <p className="text-xs text-muted-foreground leading-tight line-clamp-1">{item.description}</p>
-                            </div>
-
-                            <div className="ml-2 flex justify-end">
-                              <div className="text-xs h-6 px-2 text-primary hover:bg-primary/10 rounded flex items-center">
-                                {t('spiritualGrowth.ui.open')}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              );
-            }
-
-            return (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Explore when you’re ready</p>
-                    <p className="text-sm text-muted-foreground">Move into deeper work or stay with quick check-ins.</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">Guided options</span>
-                </div>
-                <DreamMenuGrid items={items} />
-              </div>
-            );
-          })()}
-
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <CosmicCard className="h-full">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <ListChecks className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-semibold">Recommended Next Actions</h3>
-                </div>
-                <span className="text-xs text-muted-foreground">AI-powered</span>
-              </div>
-              <div className="space-y-3">
-                {recommendedActions.map((action, index) => (
-                  <button
-                    key={index}
-                    onClick={action.onSelect}
-                    className="w-full text-left p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-foreground">{action.title}</span>
-                      <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">Resume</span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {continuationTiles.map(tile => (
+                <button
+                  key={tile.key}
+                  onClick={tile.onClick}
+                  className="flex flex-col items-start gap-2 rounded-xl border border-border bg-card/80 p-4 text-left shadow-sm hover:border-primary/50 hover:shadow-md transition"
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                        <tile.icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{tile.title}</p>
+                        <p className="text-xs text-muted-foreground">{tile.description}</p>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">{action.description}</p>
-                  </button>
-                ))}
-                {recommendedActions.length === 0 && (
-                  <p className="text-sm text-muted-foreground">We'll suggest your next moves once we learn more about your journey.</p>
-                )}
-              </div>
-            </CosmicCard>
-
-            <CosmicCard className="h-full">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-semibold">Recent Growth Activity</h3>
-                </div>
-                <span className="text-xs text-muted-foreground">Reinforce your momentum</span>
-              </div>
-              <div className="space-y-3">
-                {loadingActivity && (
-                  <p className="text-sm text-muted-foreground">Loading your recent activities...</p>
-                )}
-                {!loadingActivity && recentGrowthActivity.length === 0 && (
-                  <p className="text-sm text-muted-foreground">No growth activities yet. Log a mood, reflection, or insight to begin.</p>
-                )}
-                {!loadingActivity && recentGrowthActivity.map(activity => (
-                  <div key={activity.id} className="p-3 rounded-lg border border-border">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-foreground">{describeActivity(activity)}</span>
-                      <span className="text-xs text-muted-foreground">{formatTimestamp(activity.created_at)}</span>
-                    </div>
-                    {activity.activity_data?.outcome && (
-                      <p className="text-sm text-muted-foreground mt-1">Outcome: {activity.activity_data.outcome}</p>
+                    {tile.tag && (
+                      <span className="text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary font-medium whitespace-nowrap">{tile.tag}</span>
                     )}
                   </div>
-                ))}
-              </div>
-            </CosmicCard>
+                </button>
+              ))}
+            </div>
           </div>
 
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground">Explore Growth Modules</h3>
+              <span className="text-sm text-muted-foreground">Find your best focus</span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-4">
+              {exploreModules.map(module => (
+                <button
+                  key={module.title}
+                  onClick={module.onClick}
+                  className="relative overflow-hidden rounded-xl shadow-md group border border-border/60 bg-card"
+                >
+                  <img
+                    src={module.image}
+                    alt={module.title}
+                    className="h-32 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+                  <div className="absolute bottom-3 left-3 text-left">
+                    <p className="text-sm font-semibold text-white">{module.title}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <CosmicCard className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-semibold">Recent Activity</h3>
+              </div>
+              <span className="text-xs text-muted-foreground">8 hours ago</span>
+            </div>
+            <div className="space-y-3">
+              {loadingActivity && (
+                <p className="text-sm text-muted-foreground">Loading your recent activities...</p>
+              )}
+              {!loadingActivity && recentGrowthActivity.length === 0 && (
+                <p className="text-sm text-muted-foreground">No growth activities yet. Log a mood, reflection, or insight to begin.</p>
+              )}
+              {!loadingActivity && recentGrowthActivity.map(activity => (
+                <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/60">
+                  <div className="h-2.5 w-2.5 rounded-full bg-primary mt-1" />
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">{describeActivity(activity)}</p>
+                    <p className="text-xs text-muted-foreground/80">{formatTimestamp(activity.created_at)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CosmicCard>
         </div>
       </div>
     </MainLayout>
