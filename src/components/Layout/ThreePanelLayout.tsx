@@ -50,7 +50,7 @@ export const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
           {leftPanel}
         </ResizablePanel>
 
-        <ResizableHandle className="w-px bg-border hover:bg-primary/20 transition-colors" />
+        <ResizableHandle />
 
         {/* Center Panel - Main Content (flexible) */}
         <ResizablePanel defaultSize={toolsPanelCollapsed ? 84 : 58} minSize={40}>
@@ -73,7 +73,7 @@ export const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
         {/* Right Panel - Contextual Tools (collapsible) */}
         {!toolsPanelCollapsed && (
           <>
-            <ResizableHandle className="w-px bg-border hover:bg-primary/20 transition-colors" />
+            <ResizableHandle />
             <ResizablePanel
               defaultSize={26}
               minSize={20}
