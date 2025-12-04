@@ -1,7 +1,9 @@
 import React, { useRef, useEffect, useMemo, useState, useCallback } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
+import { Sparkles, Moon, BookOpen, Calendar, MessageCircle, Settings, TrendingUp, ArrowLeft, User, Heart, Clock, ListChecks } from "lucide-react";
 import { Sparkles, BookOpen, Calendar, MessageCircle, Settings, TrendingUp, ArrowLeft, User, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
@@ -51,6 +53,8 @@ const SpiritualGrowth = () => {
 
   const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
   const { needsAssessment, assessments, checkAssessmentNeeds } = useLifeOrchestrator();
+  const [recentGrowthActivity, setRecentGrowthActivity] = useState<any[]>([]);
+  const [loadingActivity, setLoadingActivity] = useState(false);
 
   // Check authentication status
   useEffect(() => {
@@ -215,6 +219,119 @@ const SpiritualGrowth = () => {
 
     return cards;
   }, [assessments, formatRelativeTime, growthJourney?.last_updated, needsAssessment, programStatus]);
+  const recommendedActions = useMemo(() => {
+    const actions: { title: string; description: string; onSelect: () => void }[] = [];
+    const focusArea = growthJourney?.current_focus_area || blueprintData?.life_purpose?.primary_theme;
+
+    if (focusArea) {
+      actions.push({
+        title: `Deepen your ${focusArea} focus`,
+        description: "Open your structured growth program to act on today's priorities.",
+        onSelect: () => setActiveView('growth_program')
+      });
+    }
+
+    if ((growthJourney?.mood_entries?.length || 0) === 0) {
+      actions.push({
+        title: "Log today's mood", 
+        description: "Capture how you're feeling to keep the Heart-Centered Coach in sync.",
+        onSelect: () => setActiveView('mood')
+      });
+    } else {
+      actions.push({
+        title: "Continue with Heart-Centered Coach",
+        description: "Pick up your last conversation and request a next micro-step.",
+        onSelect: () => handleStartSpiritualGrowth()
+      });
+    }
+
+    actions.push({
+      title: "Capture a fresh insight",
+      description: "Log a quick win, ritual, or download so it reinforces your blueprint.",
+      onSelect: () => setActiveView('insight')
+    });
+
+    return actions.slice(0, 3);
+  }, [
+    blueprintData?.life_purpose?.primary_theme,
+    growthJourney?.current_focus_area,
+    growthJourney?.mood_entries?.length,
+    handleStartSpiritualGrowth
+  ]);
+
+  const formatTimestamp = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  useEffect(() => {
+    const fetchRecentActivity = async () => {
+      if (!user) return;
+      setLoadingActivity(true);
+      const growthTypes = [
+        'reflection_entry',
+        'insight_entry',
+        'mood_entry',
+        'task_completed',
+        'ritual_completed',
+        'blueprint_sync',
+        'growth_task',
+        'growth_check_in'
+      ];
+
+      const { data, error } = await supabase
+        .from('user_activities')
+        .select('id, activity_type, activity_data, created_at')
+        .eq('user_id', user.id)
+        .in('activity_type', growthTypes)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error('Error fetching growth activity:', error);
+        setLoadingActivity(false);
+        return;
+      }
+
+      setRecentGrowthActivity(data || []);
+      setLoadingActivity(false);
+    };
+
+    fetchRecentActivity();
+  }, [user]);
+
+  const describeActivity = (activity: any) => {
+    const type = activity.activity_type as string;
+    const data = activity.activity_data || {};
+
+    switch (type) {
+      case 'reflection_entry':
+        return data.prompt ? `Reflection: ${data.prompt}` : 'Reflection saved';
+      case 'insight_entry':
+        return data.title ? `Insight: ${data.title}` : 'Insight captured';
+      case 'mood_entry':
+        return data.mood ? `Mood: ${data.mood}` : 'Mood logged';
+      case 'task_completed':
+      case 'growth_task':
+        return data.title ? `Task completed: ${data.title}` : 'Growth task completed';
+      case 'ritual_completed':
+        return data.name ? `Ritual: ${data.name}` : 'Ritual completed';
+      case 'blueprint_sync':
+        return 'Blueprint synchronized';
+      case 'growth_check_in':
+        return 'Growth check-in recorded';
+      default:
+        return 'Growth activity logged';
+    }
+  };
 
   if (!isAuthenticated) {
     return (
@@ -844,6 +961,65 @@ const SpiritualGrowth = () => {
               </div>
             );
           })()}
+
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CosmicCard className="h-full">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <ListChecks className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">Recommended Next Actions</h3>
+                </div>
+                <span className="text-xs text-muted-foreground">AI-powered</span>
+              </div>
+              <div className="space-y-3">
+                {recommendedActions.map((action, index) => (
+                  <button
+                    key={index}
+                    onClick={action.onSelect}
+                    className="w-full text-left p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-foreground">{action.title}</span>
+                      <Sparkles className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">{action.description}</p>
+                  </button>
+                ))}
+                {recommendedActions.length === 0 && (
+                  <p className="text-sm text-muted-foreground">We'll suggest your next moves once we learn more about your journey.</p>
+                )}
+              </div>
+            </CosmicCard>
+
+            <CosmicCard className="h-full">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">Recent Growth Activity</h3>
+                </div>
+                <span className="text-xs text-muted-foreground">Reinforce your momentum</span>
+              </div>
+              <div className="space-y-3">
+                {loadingActivity && (
+                  <p className="text-sm text-muted-foreground">Loading your recent activities...</p>
+                )}
+                {!loadingActivity && recentGrowthActivity.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No growth activities yet. Log a mood, reflection, or insight to begin.</p>
+                )}
+                {!loadingActivity && recentGrowthActivity.map(activity => (
+                  <div key={activity.id} className="p-3 rounded-lg border border-border">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-foreground">{describeActivity(activity)}</span>
+                      <span className="text-xs text-muted-foreground">{formatTimestamp(activity.created_at)}</span>
+                    </div>
+                    {activity.activity_data?.outcome && (
+                      <p className="text-sm text-muted-foreground mt-1">Outcome: {activity.activity_data.outcome}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CosmicCard>
+          </div>
 
         </div>
       </div>
