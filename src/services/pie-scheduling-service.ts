@@ -211,8 +211,8 @@ class PIESchedulingService {
       const triggers: AstrologicalEvent[] = [];
 
       for (const source of conversationSources) {
-        const { data, error } = await supabase
-          .from(source.table)
+      const { data, error } = await (supabase as any)
+        .from(source.table)
           .select('*')
           .eq('user_id', this.userId)
           .gte(source.timeField, lookback.toISOString())
