@@ -246,7 +246,7 @@ const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
   toolsPanelCollapsed,
   onToolsPanelToggle
 }) => {
-  return <ThreePanelLayout leftPanel={<aside className="h-full bg-card flex flex-col border-r border-border/60">
+  return <ThreePanelLayout leftPanel={<aside className="h-full bg-card flex flex-col">
           {/* Navigation */}
           <nav className="flex-1 p-3 space-y-1">
             {navItems.map(item => {
