@@ -674,8 +674,6 @@ const SpiritualGrowth = () => {
       description: 'Step 1 of 10',
       icon: TrendingUp,
       tag: 'Resume',
-      tagClass: 'bg-indigo-50 text-indigo-700 border-indigo-100',
-      iconClass: 'bg-blue-50 text-blue-600',
       onClick: () => setActiveView('life_os_progressive')
     },
     {
@@ -699,10 +697,10 @@ const SpiritualGrowth = () => {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-[#f7f5ff]">
-        <div className="container mx-auto max-w-2xl px-5 py-10 space-y-8">
-          <div className="flex flex-col gap-3 rounded-3xl border border-purple-100 bg-white/90 p-5 shadow-sm">
-            <div className="flex flex-col items-center gap-2 text-center">
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto max-w-4xl px-4 py-10 space-y-8">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h1 className="text-2xl md:text-3xl font-heading font-semibold text-foreground">
                 {getUserDisplayName()}, here is your current spiritual trajectory
               </h1>
@@ -712,7 +710,7 @@ const SpiritualGrowth = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border/60 bg-white shadow-sm">
+            <div className="rounded-2xl border border-border/70 bg-white shadow-sm">
               <div className="flex items-center gap-2 px-4 pt-4 text-sm text-muted-foreground">
                 <Sparkles className="h-4 w-4 text-primary" />
                 <span>Today&apos;s Growth Focus</span>
@@ -724,7 +722,7 @@ const SpiritualGrowth = () => {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-foreground">{focusTitleText}</p>
-                    <p className="text-xs text-muted-foreground">Your inner peace unlocks higher consciousness.</p>
+                    <p className="text-xs text-muted-foreground">Your peace unlocks higher consciousness.</p>
                   </div>
                 </div>
                 <div className="rounded-xl border border-purple-100 bg-purple-50 px-4 py-3 text-sm text-purple-900 shadow-inner">
@@ -747,7 +745,7 @@ const SpiritualGrowth = () => {
                   className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-white px-4 py-3 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${tile.iconClass || 'bg-muted text-primary'}`}>
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-primary">
                       <tile.icon className="h-5 w-5" />
                     </div>
                     <div className="text-left">
@@ -756,7 +754,7 @@ const SpiritualGrowth = () => {
                     </div>
                   </div>
                   {tile.tag && (
-                    <span className={`whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-semibold ${tile.tagClass || 'bg-primary/10 text-primary border-primary/20'}`}>
+                    <span className="whitespace-nowrap rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
                       {tile.tag}
                     </span>
                   )}
@@ -767,7 +765,7 @@ const SpiritualGrowth = () => {
 
           <div className="space-y-3">
             <h3 className="text-lg font-semibold text-foreground">Explore Growth Modules</h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 md:grid-cols-4">
               {moduleOptions.map(module => (
                 <button
                   key={module.title}
