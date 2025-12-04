@@ -26,12 +26,6 @@ import { LifeDomain, ProgramStatus } from "@/types/growth-program";
 
 import { useLifeOrchestrator } from "@/hooks/use-life-orchestrator";
 import { agentGrowthIntegration } from "@/services/agent-growth-integration";
-// Tile images - use shared home assets for consistency
-const coachImg = '/assets/home/companion.jpg';
-const lifeOsImg = '/assets/home/dashboard.jpg';
-const programImg = '/assets/home/growth.jpg';
-const toolsImg = '/assets/home/dreams.jpg';
-
 type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | 'life_os_choices' | 'life_os_quick_focus' | 'life_os_full' | 'life_os_guided' | 'life_os_progressive' | null;
 
 const SpiritualGrowth = () => {
@@ -648,7 +642,7 @@ const SpiritualGrowth = () => {
   const continuationCards: {
     key: ActiveView;
     title: string;
-    description: string;
+    helper: string;
     icon: React.ElementType;
     tag?: string;
     onClick: () => void;
@@ -656,7 +650,7 @@ const SpiritualGrowth = () => {
     {
       key: 'life_os_full',
       title: 'Life Operating System',
-      description: needsAssessment ? 'Growth wheel awaiting assessment' : 'Growth wheel in-view',
+      helper: needsAssessment ? 'Growth wheel assessment' : 'Growth wheel in-view',
       icon: Settings,
       tag: needsAssessment ? 'Start' : 'Resume',
       onClick: () => setActiveView('life_os_full')
@@ -664,7 +658,7 @@ const SpiritualGrowth = () => {
     {
       key: 'life_os_guided',
       title: 'Guided Discovery',
-      description: 'Guided mapping to deepen your focus.',
+      helper: 'Guided mapping to focus',
       icon: BookOpen,
       tag: 'Resume',
       onClick: () => setActiveView('life_os_guided')
@@ -672,7 +666,7 @@ const SpiritualGrowth = () => {
     {
       key: 'life_os_progressive',
       title: 'Progressive Journey',
-      description: 'Step-by-step expansion of your domains.',
+      helper: 'Step-by-step expansion',
       icon: TrendingUp,
       tag: 'Step 2 of 10',
       onClick: () => setActiveView('life_os_progressive')
@@ -680,7 +674,7 @@ const SpiritualGrowth = () => {
     {
       key: 'growth_program',
       title: 'Blueprint alignment',
-      description: programStatus ? `Focused on ${programStatus.domain?.replace(/_/g, ' ') || 'integration'}` : 'Focus on integration',
+      helper: programStatus ? `Focus: ${programStatus.domain?.replace(/_/g, ' ') || 'integration'}` : 'Focus on integration',
       icon: Heart,
       tag: 'Focus on Integration AI',
       onClick: () => setActiveView('growth_program')
@@ -688,7 +682,7 @@ const SpiritualGrowth = () => {
     {
       key: 'immediate_chat',
       title: 'Heart-Centered Coach',
-      description: growthJourney?.last_updated ? `Last chat ${formatRelativeTime(growthJourney.last_updated)}` : 'Open a human-centered chat',
+      helper: growthJourney?.last_updated ? `Last chat ${formatRelativeTime(growthJourney.last_updated)}` : 'Open a heart chat',
       icon: MessageCircle,
       tag: 'Resume',
       onClick: handleStartSpiritualGrowth
@@ -696,7 +690,7 @@ const SpiritualGrowth = () => {
     {
       key: 'life_os_quick_focus',
       title: 'Quick Focus',
-      description: 'Choose a focus for today in one tap.',
+      helper: 'Choose today’s focus',
       icon: ListChecks,
       tag: 'Start',
       onClick: () => setActiveView('life_os_quick_focus')
@@ -704,39 +698,49 @@ const SpiritualGrowth = () => {
   ];
 
   const moduleOptions = [
-    { title: 'Quick Focus', image: coachImg, onClick: () => setActiveView('life_os_quick_focus') },
-    { title: 'Full Assessment', image: lifeOsImg, onClick: () => setActiveView('life_os_full') },
-    { title: 'Guided Discovery', image: programImg, onClick: () => setActiveView('life_os_guided') },
-    { title: 'Progressive Journey', image: toolsImg, onClick: () => setActiveView('life_os_progressive') },
+    { title: 'Quick Focus', icon: ListChecks, onClick: () => setActiveView('life_os_quick_focus') },
+    { title: 'Full Assessment', icon: Settings, onClick: () => setActiveView('life_os_full') },
+    { title: 'Guided Discovery', icon: BookOpen, onClick: () => setActiveView('life_os_guided') },
+    { title: 'Progressive Journey', icon: TrendingUp, onClick: () => setActiveView('life_os_progressive') },
   ];
 
   return (
     <MainLayout>
       <div className="min-h-screen bg-background">
         <div className="container mx-auto py-8 px-4 max-w-5xl space-y-6">
-          <div className="space-y-1">
+          <div className="space-y-2">
             <h1 className="text-2xl md:text-3xl font-heading font-semibold text-foreground">
               {getUserDisplayName()}, here is your current spiritual trajectory
             </h1>
-            <p className="text-sm text-muted-foreground">Last-synced {lastSyncedLabel}</p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              <span>Last-synced {lastSyncedLabel}</span>
+            </div>
           </div>
 
-          <CosmicCard className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-none shadow-md">
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span>Today&apos;s Growth Focus</span>
+          <CosmicCard className="bg-card/90 border shadow-sm p-5">
+            <div className="flex items-start gap-3">
+              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-purple-100 to-primary/20 flex items-center justify-center text-xl">
+                🪐
               </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                    <Heart className="h-5 w-5" />
+              <div className="flex flex-col gap-2 w-full">
+                <div className="flex flex-wrap items-center gap-2 justify-between">
+                  <div className="inline-flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">
+                      Today&apos;s Growth Focus
+                    </span>
+                    <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>{lastSyncedLabel}</span>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-xl md:text-2xl font-semibold text-foreground">{focusTitleText}</h2>
-                    <p className="text-sm text-muted-foreground">{focusDescriptionText}</p>
-                  </div>
+                  <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                    {focusTitleText}
+                  </span>
                 </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {focusDescriptionText}
+                </p>
               </div>
             </div>
           </CosmicCard>
@@ -749,26 +753,25 @@ const SpiritualGrowth = () => {
               </div>
               <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">Resume</span>
             </div>
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
               {continuationCards.map(tile => (
                 <button
                   key={tile.key}
                   onClick={tile.onClick}
-                  className="flex flex-col items-start gap-2 rounded-xl border border-border bg-card/80 p-4 text-left shadow-sm hover:border-primary/50 hover:shadow-md transition"
+                  className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card/80 p-4 text-center shadow-sm hover:border-primary/60 hover:shadow-md transition"
                 >
                   <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                        <tile.icon className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{tile.title}</p>
-                        <p className="text-xs text-muted-foreground">{tile.description}</p>
-                      </div>
-                    </div>
-                    {tile.tag && (
+                    {tile.tag ? (
                       <span className="text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary font-medium whitespace-nowrap">{tile.tag}</span>
-                    )}
+                    ) : <span />}
+                    <Sparkles className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                    <tile.icon className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">{tile.title}</p>
+                    <p className="text-xs text-muted-foreground">{tile.helper}</p>
                   </div>
                 </button>
               ))}
@@ -780,38 +783,29 @@ const SpiritualGrowth = () => {
               <h3 className="text-lg font-semibold text-foreground">Explore Growth Modules</h3>
               <span className="text-sm text-muted-foreground">Find your best focus</span>
             </div>
-            <div className="grid gap-3 md:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
               {moduleOptions.map(module => (
                 <button
                   key={module.title}
                   onClick={module.onClick}
-                  className="relative overflow-hidden rounded-xl shadow-md group border border-border/60 bg-card"
+                  className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card/90 p-4 text-center shadow-sm hover:border-primary/60 hover:shadow-md transition"
                 >
-                  <img
-                    src={module.image}
-                    alt={module.title}
-                    className="h-32 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-                  <div className="absolute bottom-3 left-3 text-left">
-                    <p className="text-sm font-semibold text-white">{module.title}</p>
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 text-primary flex items-center justify-center">
+                    <module.icon className="h-6 w-6" />
                   </div>
+                  <p className="text-sm font-semibold text-foreground">{module.title}</p>
+                  <p className="text-xs text-muted-foreground">Open</p>
                 </button>
               ))}
             </div>
           </div>
 
-          <CosmicCard className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-semibold">Recent Activity</h3>
-              </div>
-              <span className="text-xs text-muted-foreground">8 hours ago</span>
+          <CosmicCard className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Recent Activity</h3>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {loadingActivity && (
                 <p className="text-sm text-muted-foreground">Loading your recent activities...</p>
               )}
@@ -819,12 +813,14 @@ const SpiritualGrowth = () => {
                 <p className="text-sm text-muted-foreground">No growth activities yet. Log a mood, reflection, or insight to begin.</p>
               )}
               {!loadingActivity && recentGrowthActivity.map(activity => (
-                <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/60">
-                  <div className="h-2.5 w-2.5 rounded-full bg-primary mt-1" />
-                  <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">{describeActivity(activity)}</p>
-                    <p className="text-xs text-muted-foreground/80">{formatTimestamp(activity.created_at)}</p>
+                <div key={activity.id} className="flex items-center justify-between rounded-lg border border-border bg-card/80 px-3 py-2">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm text-foreground">{describeActivity(activity)}</p>
                   </div>
+                  <span className="text-xs text-muted-foreground">{formatTimestamp(activity.created_at)}</span>
                 </div>
               ))}
             </div>
