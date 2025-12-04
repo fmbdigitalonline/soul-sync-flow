@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, BookOpen, Calendar, MessageCircle, Settings, TrendingUp, ArrowLeft, User, Heart, Clock, ListChecks } from "lucide-react";
+import { Sparkles, BookOpen, Calendar, MessageCircle, Settings, TrendingUp, ArrowLeft, User, Heart, Clock, ListChecks, Compass, Feather } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,12 +26,6 @@ import { LifeDomain, ProgramStatus } from "@/types/growth-program";
 
 import { useLifeOrchestrator } from "@/hooks/use-life-orchestrator";
 import { agentGrowthIntegration } from "@/services/agent-growth-integration";
-// Tile images - use shared home assets for consistency
-const coachImg = '/assets/home/companion.jpg';
-const lifeOsImg = '/assets/home/dashboard.jpg';
-const programImg = '/assets/home/growth.jpg';
-const toolsImg = '/assets/home/dreams.jpg';
-
 type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | 'life_os_choices' | 'life_os_quick_focus' | 'life_os_full' | 'life_os_guided' | 'life_os_progressive' | null;
 
 const SpiritualGrowth = () => {
@@ -229,6 +223,28 @@ const SpiritualGrowth = () => {
         return 'Growth check-in recorded';
       default:
         return 'Growth activity logged';
+    }
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'reflection_entry':
+        return Feather;
+      case 'insight_entry':
+        return Sparkles;
+      case 'mood_entry':
+        return Heart;
+      case 'task_completed':
+      case 'growth_task':
+        return ListChecks;
+      case 'ritual_completed':
+        return Calendar;
+      case 'blueprint_sync':
+        return Settings;
+      case 'growth_check_in':
+        return Clock;
+      default:
+        return User;
     }
   };
 
@@ -633,13 +649,76 @@ const SpiritualGrowth = () => {
 
   // Welcome view with hub layout and contextual guidance
   const lastSync = growthJourney?.last_updated || blueprintData?.updated_at || user?.last_sign_in_at;
-  const formattedLastSync = lastSync
-    ? new Date(lastSync).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-    : 'Awaiting first sync';
   const currentFocus = growthJourney?.current_focus_area || t('spiritualGrowth.ui.defaultFocus', { defaultValue: 'Centering & Clarity' });
-  const reflectionCount = growthJourney?.reflection_entries?.length ?? 0;
-  const insightCount = growthJourney?.insight_entries?.length ?? 0;
-  const moodCount = growthJourney?.mood_entries?.length ?? 0;
+
+  const focusTitle = currentFocus;
+  const focusDescription = "Your inner peace is the key to unlock your higher consciousness.";
+  const lastSyncedLabel = formatRelativeTime(lastSync || '') || 'Awaiting first sync';
+
+  const continuationTiles: {
+    key: ActiveView;
+    title: string;
+    description: string;
+    icon: React.ElementType;
+    tag?: string;
+    onClick: () => void;
+  }[] = [
+    {
+      key: 'life_os_full',
+      title: 'Life Operating System',
+      description: needsAssessment ? 'Growth wheel awaiting assessment' : 'Growth wheel in-view',
+      icon: Settings,
+      tag: needsAssessment ? 'Start' : 'Resume',
+      onClick: () => setActiveView('life_os_full')
+    },
+    {
+      key: 'life_os_guided',
+      title: 'Guided Discovery',
+      description: 'Guided mapping to deepen your focus.',
+      icon: BookOpen,
+      tag: 'Resume',
+      onClick: () => setActiveView('life_os_guided')
+    },
+    {
+      key: 'life_os_progressive',
+      title: 'Progressive Journey',
+      description: 'Step-by-step expansion of your domains.',
+      icon: TrendingUp,
+      tag: 'Step 2 of 10',
+      onClick: () => setActiveView('life_os_progressive')
+    },
+    {
+      key: 'growth_program',
+      title: 'Blueprint alignment',
+      description: programStatus ? `Focused on ${programStatus.domain?.replace(/_/g, ' ') || 'integration'}` : 'Focus on integration',
+      icon: Heart,
+      tag: 'Focus on Integration AI',
+      onClick: () => setActiveView('growth_program')
+    },
+    {
+      key: 'immediate_chat',
+      title: 'Heart-Centered Coach',
+      description: growthJourney?.last_updated ? `Last chat ${formatRelativeTime(growthJourney.last_updated)}` : 'Open a human-centered chat',
+      icon: MessageCircle,
+      tag: 'Resume',
+      onClick: handleStartSpiritualGrowth
+    },
+    {
+      key: 'life_os_quick_focus',
+      title: 'Quick Focus',
+      description: 'Choose a focus for today in one tap.',
+      icon: ListChecks,
+      tag: 'Start',
+      onClick: () => setActiveView('life_os_quick_focus')
+    }
+  ];
+
+  const exploreModules = [
+    { title: 'Quick Focus', description: 'Pick a focus for today', icon: ListChecks, accent: 'bg-emerald-100 text-emerald-700', onClick: () => setActiveView('life_os_quick_focus') },
+    { title: 'Full Assessment', description: 'See your full picture', icon: Compass, accent: 'bg-indigo-100 text-indigo-700', onClick: () => setActiveView('life_os_full') },
+    { title: 'Guided Discovery', description: 'Flow with guided steps', icon: BookOpen, accent: 'bg-amber-100 text-amber-700', onClick: () => setActiveView('life_os_guided') },
+    { title: 'Progressive Journey', description: 'Grow step-by-step', icon: TrendingUp, accent: 'bg-rose-100 text-rose-700', onClick: () => setActiveView('life_os_progressive') },
+  ];
 
   const focusTitleText = currentFocus;
   const focusDescriptionText = "Your inner peace is the key to unlock your higher consciousness.";
