@@ -641,11 +641,11 @@ const SpiritualGrowth = () => {
   const insightCount = growthJourney?.insight_entries?.length ?? 0;
   const moodCount = growthJourney?.mood_entries?.length ?? 0;
 
-  const focusTitle = currentFocus;
-  const focusDescription = "Your inner peace is the key to unlock your higher consciousness.";
+  const focusTitleText = currentFocus;
+  const focusDescriptionText = "Your inner peace is the key to unlock your higher consciousness.";
   const lastSyncedLabel = formatRelativeTime(lastSync || '') || 'Awaiting first sync';
 
-  const continuationTiles: {
+  const continuationCards: {
     key: ActiveView;
     title: string;
     description: string;
@@ -703,7 +703,7 @@ const SpiritualGrowth = () => {
     }
   ];
 
-  const exploreModules = [
+  const moduleOptions = [
     { title: 'Quick Focus', image: coachImg, onClick: () => setActiveView('life_os_quick_focus') },
     { title: 'Full Assessment', image: lifeOsImg, onClick: () => setActiveView('life_os_full') },
     { title: 'Guided Discovery', image: programImg, onClick: () => setActiveView('life_os_guided') },
@@ -733,8 +733,8 @@ const SpiritualGrowth = () => {
                     <Heart className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-xl md:text-2xl font-semibold text-foreground">{focusTitle}</h2>
-                    <p className="text-sm text-muted-foreground">{focusDescription}</p>
+                    <h2 className="text-xl md:text-2xl font-semibold text-foreground">{focusTitleText}</h2>
+                    <p className="text-sm text-muted-foreground">{focusDescriptionText}</p>
                   </div>
                 </div>
               </div>
@@ -750,7 +750,7 @@ const SpiritualGrowth = () => {
               <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">Resume</span>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
-              {continuationTiles.map(tile => (
+              {continuationCards.map(tile => (
                 <button
                   key={tile.key}
                   onClick={tile.onClick}
@@ -781,7 +781,7 @@ const SpiritualGrowth = () => {
               <span className="text-sm text-muted-foreground">Find your best focus</span>
             </div>
             <div className="grid gap-3 md:grid-cols-4">
-              {exploreModules.map(module => (
+              {moduleOptions.map(module => (
                 <button
                   key={module.title}
                   onClick={module.onClick}
