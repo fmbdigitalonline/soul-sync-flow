@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useMemo, useState, useCallback } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
@@ -22,12 +22,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
 import { useAuth } from "@/contexts/AuthContext";
-import { LifeDomain } from "@/types/growth-program";
+import { LifeDomain, ProgramStatus } from "@/types/growth-program";
 
 // Consistent 3-column square grid
 import DreamMenuGrid, { type DreamMenuItem } from "@/components/dream/DreamMenuGrid";
 import { HomeMenuGrid } from "@/components/home/HomeMenuGrid";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLifeOrchestrator } from "@/hooks/use-life-orchestrator";
+import { agentGrowthIntegration } from "@/services/agent-growth-integration";
 // Tile images - use shared home assets for consistency
 const coachImg = '/assets/home/companion.jpg';
 const lifeOsImg = '/assets/home/dashboard.jpg';
@@ -40,14 +42,16 @@ const SpiritualGrowth = () => {
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("coach", "spiritual-growth");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<ActiveView>('welcome');
+  const [programStatus, setProgramStatus] = useState<{ status: ProgramStatus; domain?: LifeDomain; updatedAt?: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
   const { blueprintData } = useBlueprintData();
   const { user } = useAuth();
   const { isMobile } = useIsMobile();
-  
+
   const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
+  const { needsAssessment, assessments, checkAssessmentNeeds } = useLifeOrchestrator();
 
   // Check authentication status
   useEffect(() => {
@@ -117,6 +121,101 @@ const SpiritualGrowth = () => {
     
     return traits.length > 0 ? traits : ['Unique Soul', 'Growth-Focused'];
   };
+
+  const formatRelativeTime = useCallback((dateString?: string | null) => {
+    if (!dateString) return '';
+    const now = new Date();
+    const target = new Date(dateString);
+    const diffMs = now.getTime() - target.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    if (diffMinutes < 1) return 'just now';
+    if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+  }, []);
+
+  useEffect(() => {
+    checkAssessmentNeeds();
+  }, [checkAssessmentNeeds]);
+
+  useEffect(() => {
+    const loadProgramStatus = async () => {
+      if (!user) return;
+      try {
+        const program = await agentGrowthIntegration.getCurrentProgram(user.id);
+        if (program) {
+          setProgramStatus({
+            status: program.status,
+            domain: program.domain,
+            updatedAt: program.updated_at
+          });
+        }
+      } catch (error) {
+        console.error('Error loading program status:', error);
+      }
+    };
+
+    loadProgramStatus();
+  }, [user]);
+
+  const continueCards = useMemo(() => {
+    const cards: {
+      key: string;
+      title: string;
+      description: string;
+      actionLabel: string;
+      onClick: () => void;
+    }[] = [];
+
+    if (growthJourney?.last_updated) {
+      cards.push({
+        key: 'immediate_chat',
+        title: 'Resume Heart-Centered Coaching',
+        description: `Last check-in ${formatRelativeTime(growthJourney.last_updated)}`,
+        actionLabel: 'Open Coach Chat',
+        onClick: () => setActiveView('immediate_chat')
+      });
+    }
+
+    if (programStatus) {
+      const programTitle = programStatus.status === 'active' ? 'Continue Growth Program' : 'Review Growth Program';
+      const domainLabel = programStatus.domain ? programStatus.domain.replace(/_/g, ' ') : 'your program';
+      cards.push({
+        key: 'growth_program',
+        title: programTitle,
+        description: `Focused on ${domainLabel}${programStatus.updatedAt ? ` • updated ${formatRelativeTime(programStatus.updatedAt)}` : ''}`,
+        actionLabel: 'Go to Program',
+        onClick: () => setActiveView('growth_program')
+      });
+    }
+
+    const latestAssessment = assessments?.reduce((latest, assessment) => {
+      if (!latest) return assessment;
+      return new Date(assessment.updated_at) > new Date(latest.updated_at) ? assessment : latest;
+    }, undefined as typeof assessments[number] | undefined);
+
+    if (latestAssessment && !needsAssessment) {
+      cards.push({
+        key: 'life_os_full',
+        title: 'Open Life Operating System',
+        description: `Last assessment in ${latestAssessment.domain.replace(/_/g, ' ')} ${formatRelativeTime(latestAssessment.updated_at)}`,
+        actionLabel: 'View Dashboard',
+        onClick: () => setActiveView('life_os_full')
+      });
+    } else if (needsAssessment) {
+      cards.push({
+        key: 'life_os_guided',
+        title: 'Resume Guided Discovery',
+        description: 'Pick up the Life OS guided assessment to map your focus areas.',
+        actionLabel: 'Start Guided Assessment',
+        onClick: () => setActiveView('life_os_guided')
+      });
+    }
+
+    return cards;
+  }, [assessments, formatRelativeTime, growthJourney?.last_updated, needsAssessment, programStatus]);
 
   if (!isAuthenticated) {
     return (
@@ -530,6 +629,36 @@ const SpiritualGrowth = () => {
               {t("spiritualGrowth.subtitle")}
             </p>
           </div>
+
+          {continueCards.length > 0 && (
+            <div className="mb-8">
+              <div className="bg-card border border-primary/10 rounded-xl shadow-sm p-4 md:p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-xs uppercase tracking-[0.2em] text-primary/80">Continue</p>
+                    <h2 className="text-xl font-semibold text-foreground">Pick up where you left off</h2>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {continueCards.map(card => (
+                    <div
+                      key={card.key}
+                      className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 bg-muted/50 rounded-lg border border-border/60"
+                    >
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-foreground">{card.title}</p>
+                        <p className="text-sm text-muted-foreground">{card.description}</p>
+                      </div>
+                      <Button onClick={card.onClick} className="w-full md:w-auto">
+                        {card.actionLabel}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {(() => {
             const items: DreamMenuItem[] = [
