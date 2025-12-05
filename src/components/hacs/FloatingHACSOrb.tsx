@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
 import { SpeechBubble } from '@/components/ui/speech-bubble';
@@ -112,6 +112,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     removeCurrentInsight,
     addInsightToQueue
   } = useHACSInsights();
+  const insightQueueRef = useRef(insightQueue);
   
   // NEW: Add autonomous orchestration
   const { triggerIntelligentIntervention, generatePersonalizedInsight } = useAutonomousOrchestration();
@@ -188,12 +189,13 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [showWhisperBubble, setShowWhisperBubble] = useState(false);
   const [currentWhisper, setCurrentWhisper] = useState<string>('');
   const [lastProcessedMessageId, setLastProcessedMessageId] = useState<string | null>(null);
+  const [activeConversationSessionId, setActiveConversationSessionId] = useState<string | null>(null);
 
-  console.log('FloatingHACSOrb render:', { 
-    loading, 
-    intelligence, 
-    currentQuestion, 
-    currentInsight, 
+  console.log('FloatingHACSOrb render:', {
+    loading,
+    intelligence,
+    currentQuestion,
+    currentInsight,
     isGenerating, 
     isGeneratingInsight,
     // Phase 3: Updated logging with database validation
@@ -202,6 +204,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     databaseError: databaseValidation.error,
     introductionActive: introductionState.isActive
   });
+
+  useEffect(() => {
+    insightQueueRef.current = insightQueue;
+  }, [insightQueue]);
 
   // Use XP-based progress if available, otherwise fall back to legacy intelligence level
   const intelligenceLevel = intelligence?.intelligence_level || 0;
@@ -295,8 +301,32 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
     console.log('🔌 FLOATING ORBS: Wiring processMessage to conversation stream');
 
+    const loadLatestSession = async () => {
+      try {
+        const { data: latestConversation, error } = await supabase
+          .from('hacs_conversations')
+          .select('session_id')
+          .eq('user_id', userProfile.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          console.error('⚠️ FLOATING ORBS: Unable to load latest conversation session', error);
+          return;
+        }
+
+        if (latestConversation?.session_id) {
+          setActiveConversationSessionId(latestConversation.session_id);
+        }
+      } catch (sessionError) {
+        console.error('⚠️ FLOATING ORBS: Session lookup failed', sessionError);
+      }
+    };
+
     // Trigger initial processing on mount
     processMessage('initial_load_check', `initial_${Date.now()}`);
+    loadLatestSession();
 
     // Subscribe to hacs_conversations for real-time updates
     const channel = supabase
@@ -312,16 +342,37 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         async (payload) => {
           console.log('📨 FLOATING ORBS: New conversation detected', payload);
           const newData = payload.new as any;
-          
+
+          if (newData?.session_id && newData.session_id !== activeConversationSessionId) {
+            console.log('🆕 FLOATING ORBS: Updating active session from realtime payload');
+            setActiveConversationSessionId(newData.session_id);
+          }
+
           // Extract latest message content from conversation_data
           if (newData?.conversation_data?.messages) {
             const messages = newData.conversation_data.messages;
             const latestMessage = messages[messages.length - 1];
-            
+
             if (latestMessage?.content && latestMessage.id !== lastProcessedMessageId) {
               console.log('🔄 FLOATING ORBS: Processing new message via realtime');
               setLastProcessedMessageId(latestMessage.id);
               await processMessage(latestMessage.content, latestMessage.id || `msg_${Date.now()}`);
+
+              const insightContext = {
+                source: 'realtime_conversation',
+                sessionId: newData.session_id,
+                messageId: latestMessage.id || newData.id,
+                role: latestMessage.role,
+                module: latestMessage.module,
+                timestamp: latestMessage.timestamp || newData.created_at,
+                content: latestMessage.content
+              };
+
+              const realtimeInsight = await triggerInsightCheck('conversation_ended', insightContext);
+
+              if (realtimeInsight && !insightQueueRef.current.some(insight => insight.id === realtimeInsight.id)) {
+                addInsightToQueue(realtimeInsight);
+              }
             }
           }
         }
@@ -332,7 +383,15 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       console.log('🔌 FLOATING ORBS: Unsubscribing from conversation listener');
       supabase.removeChannel(channel);
     };
-  }, [isSystemReady, userProfile?.id, processMessage, lastProcessedMessageId]);
+  }, [
+    isSystemReady,
+    userProfile?.id,
+    processMessage,
+    lastProcessedMessageId,
+    triggerInsightCheck,
+    addInsightToQueue,
+    activeConversationSessionId
+  ]);
 
   // Enhanced database intelligence fetching
   useEffect(() => {
@@ -341,8 +400,15 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       const fetchDatabaseIntelligence = async () => {
         try {
           // Get the most recent actual session ID from conversation data
-          let sessionId = 'session_1758796587625_0xpq51g44'; // Use known active session
-          
+          const sessionId = activeConversationSessionId;
+
+          if (!sessionId) {
+            console.log('🔍 FLOATING ORBS: No active conversation session found for whispers');
+            setSubconsciousWhispers([]);
+            setDatabaseIntelligence(null);
+            return;
+          }
+
           console.log('🔍 FLOATING ORBS: Fetching database intelligence for whispers', {
             userId: userProfile.id,
             sessionId,
@@ -384,7 +450,14 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       const timer = setTimeout(fetchDatabaseIntelligence, 2000);
       return () => clearTimeout(timer);
     }
-  }, [isSystemReady, userProfile?.id, loading, introductionState.isActive, getSubconsciousInsights]);
+  }, [
+    isSystemReady,
+    userProfile?.id,
+    loading,
+    introductionState.isActive,
+    getSubconsciousInsights,
+    activeConversationSessionId
+  ]);
 
   // Auto-display hermetic progress insights at top-center - DISABLED (manual only)
   // useEffect(() => {
