@@ -6,6 +6,7 @@ import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
 import { createErrorHandler } from '@/utils/error-recovery';
 import { conversationMemoryService } from '@/services/conversation-memory-service';
 import { useXPEventEmitter } from './use-xp-event-emitter';
+import { hermeticIntelligenceBridge } from '@/services/hermetic-intelligence-bridge';
 
 export interface ConversationMessage {
   id: string;
@@ -544,12 +545,42 @@ export const useHACSConversation = () => {
           console.error('❌ Error loading user blueprint:', blueprintError);
         }
 
+        const trimmedContent = content.trim();
+
         let userProfile = {};
-        if (blueprint?.blueprint) {
-          const blueprintData = blueprint.blueprint as any;
+        let hermeticContext = null;
+        const blueprintData = blueprint?.blueprint as any;
+
+        try {
+          hermeticContext = await hermeticIntelligenceBridge.getHermeticCompanionContext(
+            user.id,
+            trimmedContent,
+            6
+          );
+        } catch (error) {
+          console.warn('⚠️ ORACLE CONTEXT: Hermetic intelligence bridge unavailable, using fallback', error);
+        }
+
+        if (hermeticContext?.personalityContext?.corePersonalityPattern || hermeticContext?.personalityContext?.decisionStyle) {
+          userProfile = {
+            name: blueprintData?.user_meta?.preferred_name || 'Seeker',
+            corePersonalityPattern: hermeticContext.personalityContext.corePersonalityPattern,
+            decisionStyle: hermeticContext.personalityContext.decisionStyle,
+            communicationTone: hermeticContext.personalityContext.communicationTone,
+            hermeticSource: 'hermetic_2.0'
+          };
+
+          console.log('🔮 ORACLE CONTEXT: Using Hermetic 2.0 profile', {
+            messageCount: recentMessages.length,
+            corePersonalityPattern: hermeticContext.personalityContext.corePersonalityPattern,
+            decisionStyle: hermeticContext.personalityContext.decisionStyle,
+            communicationTone: hermeticContext.personalityContext.communicationTone,
+            hermeticReportSections: hermeticContext.relevantReportSections.length
+          });
+        } else if (blueprintData) {
           userProfile = {
             name: blueprintData.user_meta?.preferred_name || 'Seeker',
-            mbti: blueprintData.user_meta?.personality?.likelyType || 
+            mbti: blueprintData.user_meta?.personality?.likelyType ||
                   blueprintData.cognition_mbti?.type || 'Unknown',
             hdType: blueprintData.energy_strategy_human_design?.type || 'Unknown',
             sunSign: blueprintData.archetype_western?.sun_sign || 'Unknown'
@@ -559,12 +590,12 @@ export const useHACSConversation = () => {
         console.log('🔮 ORACLE CONTEXT: Sending enhanced context', {
           messageCount: recentMessages.length,
           userProfile: userProfile,
-          currentMessage: content.trim()
+          currentMessage: trimmedContent
         });
 
         response = await supabase.functions.invoke('companion-oracle-conversation', {
           body: {
-            message: content.trim(),
+            message: trimmedContent,
             userId: user.id,
             sessionId: currentSessionId || `companion_${user.id}`,
             useOracleMode: true,

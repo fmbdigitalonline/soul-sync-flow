@@ -97,6 +97,8 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
     // PRIORITY: Full cyan when hermetic progress is complete
     if (hermeticProgress >= 100) {
       return "from-cyan-400 via-cyan-300 to-cyan-200"; // Hermetic mastery - full cyan
+    } else if (hermeticProgress >= 60) {
+      return "from-cyan-500 via-emerald-400 to-teal-300"; // Hermetic intelligence actively powering response
     } else if (subconsciousMode === 'advice_ready') {
       return "from-teal-400 via-teal-300 to-emerald-300"; // Ready with advice
     } else if (subconsciousMode === 'thinking') {
