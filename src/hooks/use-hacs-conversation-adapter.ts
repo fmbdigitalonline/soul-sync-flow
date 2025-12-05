@@ -211,6 +211,25 @@ export const useHACSConversationAdapter = (
   // Return HACS messages directly - they already have the correct ConversationMessage format
   // No conversion needed since HACSChatInterface expects ConversationMessage type
 
+  // Add optimistic message callback
+  const addOptimisticMessage = useCallback((message: ConversationMessage) => {
+    hacsConversation.setMessages(prev => [...prev, message]);
+  }, [hacsConversation.setMessages]);
+
+  const appendOptimisticUserMessage = useCallback((messageContent: string) => {
+    const clientMsgId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const optimisticMessage: ConversationMessage = {
+      id: clientMsgId,
+      role: 'user',
+      content: messageContent.trim(),
+      timestamp: new Date().toISOString(),
+      client_msg_id: clientMsgId
+    };
+
+    addOptimisticMessage(optimisticMessage);
+    return optimisticMessage;
+  }, [addOptimisticMessage]);
+
   // PHASE 1: DUAL-PATHWAY ARCHITECTURE - Asynchronous Intelligence Model
   const sendMessage = useCallback(async (
     content: string,
@@ -219,7 +238,9 @@ export const useHACSConversationAdapter = (
     agentOverride?: string
   ) => {
     if (!content.trim()) return;
-    
+
+    let userMessageOptimisticallyAdded = false;
+
     console.log('🚀 DUAL-PATHWAY: sendMessage called', {
       content: content.substring(0, 50),
       agentOverride,
@@ -252,7 +273,7 @@ export const useHACSConversationAdapter = (
         sessionId 
       });
 
-      // ORACLE-FIRST FLOW: Prioritize Oracle response in companion mode  
+      // ORACLE-FIRST FLOW: Prioritize Oracle response in companion mode
       if (isCompanionMode) {
         console.log('🔮 ORACLE-FIRST: Starting Oracle-prioritized conversation flow');
         
@@ -434,20 +455,29 @@ export const useHACSConversationAdapter = (
           immediateProcessingTime: immediateResponse.processingTime
         });
 
+        // Optimistically add the user message before skipping in HACS sendMessage
+        appendOptimisticUserMessage(content);
+        userMessageOptimisticallyAdded = true;
+
         // Standard HACS conversation for non-companion modes
         await hacsConversation.sendMessage(content, true); // Skip user message - already added optimistically
       }
-      
+
     } catch (error) {
       console.error('❌ DUAL-PATHWAY ERROR: One or both pathways failed', error);
       clearTimeout(loadingTimeout);
       handleOracleError(error, { dualPathway: true });
+
+      // Ensure the user message is present for reconciliation when skipping
+      if (!isCompanionMode && !userMessageOptimisticallyAdded) {
+        appendOptimisticUserMessage(content);
+      }
       // Fallback to original HACS conversation
       await hacsConversation.sendMessage(content, true); // Skip user message - already added optimistically
     } finally {
       clearTimeout(loadingTimeout);
     }
-  }, [hacsConversation.sendMessage, hacsConversation.sendOracleMessage, initialAgent, isCompanionMode, startOracleOperation, handleOracleError]);
+  }, [appendOptimisticUserMessage, hacsConversation.sendMessage, hacsConversation.sendOracleMessage, initialAgent, isCompanionMode, startOracleOperation, handleOracleError]);
 
   const resetConversation = useCallback(() => {
     hacsConversation.clearConversation();
@@ -484,16 +514,11 @@ export const useHACSConversationAdapter = (
     };
   }, [forceRecovery]);
 
-  // Add optimistic message callback
-  const addOptimisticMessage = useCallback((message: ConversationMessage) => {
-    hacsConversation.setMessages(prev => [...prev, message]);
-  }, [hacsConversation.setMessages]);
-
   // Message reconciliation - update optimistic messages with server data
   const reconcileOptimisticMessage = useCallback((clientMsgId: string, serverMessage: Partial<ConversationMessage>) => {
-    hacsConversation.setMessages(prev => 
-      prev.map(msg => 
-        msg.client_msg_id === clientMsgId 
+    hacsConversation.setMessages(prev =>
+      prev.map(msg =>
+        msg.client_msg_id === clientMsgId
           ? { ...msg, ...serverMessage, client_msg_id: clientMsgId } 
           : msg
       )
