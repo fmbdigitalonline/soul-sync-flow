@@ -266,7 +266,11 @@ export const useHACSConversation = () => {
     }
   }, [user, recordConversationInteraction, refreshIntelligence, determineResponseQuality]);
 
-  const sendMessage = useCallback(async (content: string, skipUserMessage: boolean = false) => {
+  const sendMessage = useCallback(async (
+    content: string,
+    skipUserMessage: boolean = false,
+    injectedMessageHistory?: ConversationMessage[] | ConversationMessage
+  ) => {
     if (!user || !content.trim()) return;
 
     console.log('🚀 HACS CONVERSATION: sendMessage called', {
@@ -282,13 +286,26 @@ export const useHACSConversation = () => {
     setIsTyping(true);
 
     try {
+      const sanitizedContent = content.trim();
+
+      const providedHistory = injectedMessageHistory
+        ? Array.isArray(injectedMessageHistory)
+          ? injectedMessageHistory
+          : [...messages, injectedMessageHistory]
+        : undefined;
+
+      const messageHistoryForPayload = skipUserMessage
+        ? (providedHistory ?? messages)
+        : undefined;
+
+      let userMessage: ConversationMessage | undefined;
       // Only add user message if not skipped (for optimistic UI scenarios)
       if (!skipUserMessage) {
         const clientMsgId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const userMessage: ConversationMessage = {
+        userMessage = {
           id: clientMsgId,
           role: 'user',
-          content: content.trim(),
+          content: sanitizedContent,
           timestamp: new Date().toISOString(),
           client_msg_id: clientMsgId
         };
@@ -312,13 +329,15 @@ export const useHACSConversation = () => {
           userId: user.id,
           sessionId: currentSessionId || `companion_${user.id}`,
           conversationId,
-          userMessage: content.trim(),
-          messageHistory: skipUserMessage ? messages : [...messages, { 
-            id: `client_${Date.now()}`, 
-            role: 'user', 
-            content: content.trim(), 
-            timestamp: new Date().toISOString() 
-          }]
+          userMessage: sanitizedContent,
+          messageHistory: skipUserMessage
+            ? messageHistoryForPayload
+            : [...messages, userMessage ?? {
+              id: `client_${Date.now()}`,
+              role: 'user',
+              content: sanitizedContent,
+              timestamp: new Date().toISOString()
+            }]
         }
       });
 
@@ -356,22 +375,32 @@ export const useHACSConversation = () => {
       console.log('✅ HACS message added to state');
 
       // Save conversation to database
-      const userMessageForSave = skipUserMessage ? 
-        { 
-          id: `client_${Date.now()}`, 
-          role: 'user' as const, 
-          content: content.trim(), 
-          timestamp: new Date().toISOString() 
-        } : 
-        messages.find(msg => msg.role === 'user' && msg.content === content.trim()) || 
-        { 
-          id: `client_${Date.now()}`, 
-          role: 'user' as const, 
-          content: content.trim(), 
-          timestamp: new Date().toISOString() 
+      const optimisticUserMessage = skipUserMessage
+        ? (messageHistoryForPayload || messages).slice().reverse().find(msg =>
+            msg.role === 'user' &&
+            (msg.client_msg_id || msg.content.trim() === sanitizedContent)
+          )
+        : undefined;
+
+      const userMessageForSave = skipUserMessage
+        ? optimisticUserMessage ?? {
+          id: `client_${Date.now()}`,
+          role: 'user' as const,
+          content: sanitizedContent,
+          timestamp: new Date().toISOString()
+        }
+        : userMessage || messages.find(msg => msg.role === 'user' && msg.content === sanitizedContent) || {
+          id: `client_${Date.now()}`,
+          role: 'user' as const,
+          content: sanitizedContent,
+          timestamp: new Date().toISOString()
         };
-      
-      await saveConversation([...messages.filter(m => m.content !== content.trim() || m.role !== 'user'), userMessageForSave, hacsMessage]);
+
+      const conversationForSave = skipUserMessage
+        ? [...(messageHistoryForPayload ?? messages), hacsMessage]
+        : [...messages, userMessageForSave, hacsMessage];
+
+      await saveConversation(conversationForSave);
 
       // Update HACS intelligence if provided
       if (data.intelligence_bonus && data.intelligence_bonus > 0) {

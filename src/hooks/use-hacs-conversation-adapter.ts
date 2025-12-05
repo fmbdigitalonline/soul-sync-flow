@@ -240,6 +240,7 @@ export const useHACSConversationAdapter = (
     if (!content.trim()) return;
 
     let userMessageOptimisticallyAdded = false;
+    let optimisticUserMessage: ConversationMessage | undefined;
 
     console.log('🚀 DUAL-PATHWAY: sendMessage called', {
       content: content.substring(0, 50),
@@ -456,11 +457,17 @@ export const useHACSConversationAdapter = (
         });
 
         // Optimistically add the user message before skipping in HACS sendMessage
-        appendOptimisticUserMessage(content);
+        optimisticUserMessage = appendOptimisticUserMessage(content);
         userMessageOptimisticallyAdded = true;
 
         // Standard HACS conversation for non-companion modes
-        await hacsConversation.sendMessage(content, true); // Skip user message - already added optimistically
+        await hacsConversation.sendMessage(
+          content,
+          true,
+          optimisticUserMessage
+            ? [...hacsConversation.messages, optimisticUserMessage]
+            : hacsConversation.messages
+        ); // Skip user message - already added optimistically
       }
 
     } catch (error) {
@@ -470,14 +477,18 @@ export const useHACSConversationAdapter = (
 
       // Ensure the user message is present for reconciliation when skipping
       if (!isCompanionMode && !userMessageOptimisticallyAdded) {
-        appendOptimisticUserMessage(content);
+        optimisticUserMessage = appendOptimisticUserMessage(content);
       }
       // Fallback to original HACS conversation
-      await hacsConversation.sendMessage(content, true); // Skip user message - already added optimistically
+      await hacsConversation.sendMessage(
+        content,
+        true,
+        optimisticUserMessage ? [...hacsConversation.messages, optimisticUserMessage] : hacsConversation.messages
+      ); // Skip user message - already added optimistically
     } finally {
       clearTimeout(loadingTimeout);
     }
-  }, [appendOptimisticUserMessage, hacsConversation.sendMessage, hacsConversation.sendOracleMessage, initialAgent, isCompanionMode, startOracleOperation, handleOracleError]);
+  }, [appendOptimisticUserMessage, hacsConversation.messages, hacsConversation.sendMessage, hacsConversation.sendOracleMessage, initialAgent, isCompanionMode, startOracleOperation, handleOracleError]);
 
   const resetConversation = useCallback(() => {
     hacsConversation.clearConversation();
