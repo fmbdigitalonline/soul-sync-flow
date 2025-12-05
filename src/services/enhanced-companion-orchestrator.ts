@@ -58,6 +58,14 @@ export class EnhancedCompanionOrchestrator {
         personalityInsights: hermeticContext.personalityContext.coreNarratives.length
       });
 
+      if (hermeticContext.personalityContext.corePersonalityPattern || hermeticContext.personalityContext.decisionStyle) {
+        console.log('🧬 HERMETIC INTEGRATION: Enriched traits detected', {
+          corePersonalityPattern: hermeticContext.personalityContext.corePersonalityPattern,
+          decisionStyle: hermeticContext.personalityContext.decisionStyle,
+          communicationTone: hermeticContext.personalityContext.communicationTone
+        });
+      }
+
       // Phase 2: Extract and track conversation elements (EXISTING)
       const conversationElements = conversationMemoryTracker.extractElementsFromMessage(
         userMessage, 
@@ -300,6 +308,12 @@ export class EnhancedCompanionOrchestrator {
 ${personality.coreNarratives.slice(0, 3).map(n => `• ${n}`).join('\n')}
 
 **Execution Style:** ${personality.executionStyle}
+
+${personality.corePersonalityPattern ? `**Core Personality Pattern:** ${personality.corePersonalityPattern}` : ''}
+
+${personality.decisionStyle ? `**Decision Style:** ${personality.decisionStyle}` : ''}
+
+${personality.communicationTone ? `**Communication Tone:** ${personality.communicationTone}` : ''}
 
 **Spiritual Framework:** ${personality.spiritualFramework}
 

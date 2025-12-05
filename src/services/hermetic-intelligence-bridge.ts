@@ -44,6 +44,9 @@ export interface HermeticCompanionContext {
     spiritualFramework: string;
     conflictAreas: string[];
     adaptationStyle: string[];
+    corePersonalityPattern?: string;
+    decisionStyle?: string;
+    communicationTone?: string;
   };
   
   // Intelligence Metadata
@@ -110,7 +113,10 @@ class HermeticIntelligenceBridge {
         fullHermeticReport: fullReportSections.sections,
         relevantReportSections: Object.keys(fullReportSections.sections),
         reportMetadata: fullReportSections.metadata,
-        personalityContext: this.aggregatePersonalityContext(structuredIntelligence),
+        personalityContext: this.aggregatePersonalityContext(
+          structuredIntelligence,
+          fullReportSections.sections
+        ),
         extractionMetadata: this.extractMetadata(structuredIntelligence)
       };
 
@@ -122,6 +128,8 @@ class HermeticIntelligenceBridge {
         dimensionsAvailable: structuredIntelligence ? Object.keys(structuredIntelligence).length : 0,
         semanticChunks: semanticChunks.length,
         personalityInsights: context.personalityContext.coreNarratives.length,
+        corePersonalityPattern: context.personalityContext.corePersonalityPattern,
+        decisionStyle: context.personalityContext.decisionStyle,
         // NEW: Full report metrics
         fullReportSections: context.relevantReportSections.length,
         reportContentLength: context.reportMetadata.contentLength,
@@ -276,7 +284,10 @@ class HermeticIntelligenceBridge {
    * Aggregate personality insights from all 13 intelligence dimensions
    * PRINCIPLE #2: Ground truth - extract real patterns from actual data
    */
-  private aggregatePersonalityContext(intelligence: HermeticStructuredIntelligence | null): HermeticCompanionContext['personalityContext'] {
+  private aggregatePersonalityContext(
+    intelligence: HermeticStructuredIntelligence | null,
+    reportSections?: Record<string, any>
+  ): HermeticCompanionContext['personalityContext'] {
     if (!intelligence) {
       return {
         coreNarratives: [],
@@ -284,7 +295,10 @@ class HermeticIntelligenceBridge {
         executionStyle: 'Unknown - No intelligence data',
         spiritualFramework: 'Unknown - No intelligence data',
         conflictAreas: [],
-        adaptationStyle: []
+        adaptationStyle: [],
+        corePersonalityPattern: undefined,
+        decisionStyle: undefined,
+        communicationTone: undefined
       };
     }
 
@@ -319,13 +333,33 @@ class HermeticIntelligenceBridge {
         intelligence.adaptive_feedback?.change_resistance_profile || ''
       ].filter(Boolean).slice(0, 3);
 
+      // Hermetic 2.0 enriched traits from full report context
+      const corePersonalityPattern = this.extractSectionSummary(
+        reportSections?.core_personality_pattern || intelligence.identity_constructs?.core_pattern
+      );
+
+      const decisionStyle = this.extractSectionSummary(
+        reportSections?.decision_style ||
+        reportSections?.decision_making_style ||
+        intelligence.execution_bias?.decision_frame ||
+        intelligence.execution_bias?.preferred_style
+      );
+
+      const communicationTone = this.extractSectionSummary(
+        reportSections?.linguistic_fingerprint ||
+        intelligence.linguistic_fingerprint?.communication_signatures?.[0]
+      );
+
       return {
         coreNarratives,
         dominantPatterns,
         executionStyle,
         spiritualFramework,
         conflictAreas,
-        adaptationStyle
+        adaptationStyle,
+        corePersonalityPattern,
+        decisionStyle,
+        communicationTone
       };
     } catch (error) {
       console.error('❌ HERMETIC BRIDGE: Error aggregating personality context:', error);
@@ -335,9 +369,35 @@ class HermeticIntelligenceBridge {
         executionStyle: 'Error - Unable to determine',
         spiritualFramework: 'Error - Unable to determine',
         conflictAreas: ['Error extracting conflicts'],
-        adaptationStyle: ['Error extracting adaptation style']
+        adaptationStyle: ['Error extracting adaptation style'],
+        corePersonalityPattern: undefined,
+        decisionStyle: undefined,
+        communicationTone: undefined
       };
     }
+  }
+
+  /**
+   * Extract concise summary from report section or raw text
+   */
+  private extractSectionSummary(section: any): string | undefined {
+    if (!section) return undefined;
+
+    try {
+      if (typeof section === 'string') {
+        return section.slice(0, 320);
+      }
+
+      if (typeof section === 'object') {
+        if (section.summary) return String(section.summary).slice(0, 320);
+        if (section.description) return String(section.description).slice(0, 320);
+        if (Array.isArray(section)) return section[0]?.toString().slice(0, 320);
+      }
+    } catch (error) {
+      console.warn('⚠️ HERMETIC BRIDGE: Failed to summarize section', error);
+    }
+
+    return undefined;
   }
 
   /**
