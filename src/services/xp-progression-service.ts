@@ -39,12 +39,30 @@ export const Config = {
 } as const;
 
 /**
- * Convert XP to percentage using logistic curve
- * ~25% at ~925 XP (1-3 weeks)
- * Late progress slows naturally
+ * Convert XP to percentage using adjusted logistic curve
+ * PHASE 3 FIX: Made early progress visible
+ * 
+ * Previous formula: Math.floor(100 / (1 + Math.exp(-(xp - 1200) / 250)))
+ * - 30 XP = 0.92% (rounds to 0% - INVISIBLE)
+ * - 100 XP = 1.1% (rounds to 1% - barely visible)
+ * 
+ * New formula: Hybrid approach for visible early progress
+ * - 0-200 XP: Linear scaling (0.055 per XP = ~5% at 100 XP, ~11% at 200 XP)
+ * - 200+ XP: Adjusted sigmoid for natural late-game slowdown
  */
 export function xpToPercent(xp: number): number {
-  return Math.floor(100 / (1 + Math.exp(-(xp - 1200) / 250)));
+  // Early game: Linear scaling for visible progress
+  if (xp < 200) {
+    // 0.055 per XP = 5.5% at 100 XP, 11% at 200 XP
+    return Math.floor(xp * 0.055);
+  }
+  
+  // Mid/late game: Adjusted sigmoid starting from 11%
+  // Shifted curve: starts at 11% (200 XP), reaches ~50% at 800 XP, ~90% at 1500 XP
+  const basePercent = 11; // Where linear phase ends
+  const sigmoidContribution = (100 - basePercent) / (1 + Math.exp(-(xp - 800) / 300));
+  
+  return Math.floor(Math.min(100, basePercent + sigmoidContribution));
 }
 
 /**
@@ -220,20 +238,31 @@ export function getDimensionName(dim: Dim): string {
 
 /**
  * Get next milestone and XP needed
+ * PHASE 3 FIX: Updated inverse calculation to match new xpToPercent formula
  */
 export function getNextMilestone(
   currentPercent: number,
   xpTotal: number
 ): { milestone: number; xpNeeded: number } | null {
-  const milestones = [50, 60, 70, 80, 90, 100];
+  const milestones = [10, 25, 50, 60, 70, 80, 90, 100]; // Added early milestones
   const nextMilestone = milestones.find((m) => m > currentPercent);
 
   if (!nextMilestone) return null;
 
-  // Calculate XP needed for next milestone using inverse of xpToPercent
-  // percent = 100 / (1 + exp(-(xp - 1200) / 250))
-  // Solving for xp: xp = 1200 + 250 * ln((percent / (100 - percent)))
-  const targetXP = 1200 + 250 * Math.log(nextMilestone / (100 - nextMilestone));
+  // Calculate XP needed for next milestone using inverse of new xpToPercent
+  let targetXP: number;
+  
+  if (nextMilestone <= 11) {
+    // Linear phase: xp = percent / 0.055
+    targetXP = nextMilestone / 0.055;
+  } else {
+    // Sigmoid phase: inverse of basePercent + sigmoidContribution
+    // percent = 11 + (89 / (1 + exp(-(xp - 800) / 300)))
+    // Solving for xp: xp = 800 + 300 * ln((percent - 11) / (100 - percent))
+    const adjustedPercent = Math.max(11.1, Math.min(99.9, nextMilestone)); // Clamp to avoid infinity
+    targetXP = 800 + 300 * Math.log((adjustedPercent - 11) / (100 - adjustedPercent));
+  }
+  
   const xpNeeded = Math.ceil(Math.max(0, targetXP - xpTotal));
 
   return { milestone: nextMilestone, xpNeeded };

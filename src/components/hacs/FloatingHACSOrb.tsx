@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
 import { SpeechBubble } from '@/components/ui/speech-bubble';
 import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
+import { supabase } from '@/integrations/supabase/client';
 import { useHACSMicroLearning } from '@/hooks/use-hacs-micro-learning';
 import { useHACSInsights } from '@/hooks/use-hacs-insights';
 import { useAutonomousOrchestration } from '@/hooks/use-autonomous-orchestration';
@@ -177,7 +178,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     patternDetected, 
     adviceReady,
     confidence: shadowConfidence,
-    getSessionInsights: getSubconsciousInsights
+    getSessionInsights: getSubconsciousInsights,
+    processMessage // PHASE 2 FIX: Extract processMessage to wire it up
   } = useSubconsciousOrb();
 
   // State for database-powered whispers
@@ -185,6 +187,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [databaseIntelligence, setDatabaseIntelligence] = useState<any>(null);
   const [showWhisperBubble, setShowWhisperBubble] = useState(false);
   const [currentWhisper, setCurrentWhisper] = useState<string>('');
+  const [lastProcessedMessageId, setLastProcessedMessageId] = useState<string | null>(null);
 
   console.log('FloatingHACSOrb render:', { 
     loading, 
@@ -284,6 +287,52 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       setShowBubble(false);
     }
   }, [currentQuestion, currentInsight, showBubble, clearCurrentQuestion]);
+
+  // PHASE 2 FIX: Wire processMessage to actually trigger on load and conversation changes
+  // Subscribe to hacs_conversations for real-time processing
+  useEffect(() => {
+    if (!isSystemReady || !userProfile?.id) return;
+
+    console.log('🔌 FLOATING ORBS: Wiring processMessage to conversation stream');
+
+    // Trigger initial processing on mount
+    processMessage('initial_load_check', `initial_${Date.now()}`);
+
+    // Subscribe to hacs_conversations for real-time updates
+    const channel = supabase
+      .channel('orb-conversation-listener')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'hacs_conversations',
+          filter: `user_id=eq.${userProfile.id}`
+        },
+        async (payload) => {
+          console.log('📨 FLOATING ORBS: New conversation detected', payload);
+          const newData = payload.new as any;
+          
+          // Extract latest message content from conversation_data
+          if (newData?.conversation_data?.messages) {
+            const messages = newData.conversation_data.messages;
+            const latestMessage = messages[messages.length - 1];
+            
+            if (latestMessage?.content && latestMessage.id !== lastProcessedMessageId) {
+              console.log('🔄 FLOATING ORBS: Processing new message via realtime');
+              setLastProcessedMessageId(latestMessage.id);
+              await processMessage(latestMessage.content, latestMessage.id || `msg_${Date.now()}`);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔌 FLOATING ORBS: Unsubscribing from conversation listener');
+      supabase.removeChannel(channel);
+    };
+  }, [isSystemReady, userProfile?.id, processMessage, lastProcessedMessageId]);
 
   // Enhanced database intelligence fetching
   useEffect(() => {

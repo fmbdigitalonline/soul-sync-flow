@@ -1,5 +1,28 @@
 import { supabase } from '@/integrations/supabase/client';
 
+/**
+ * MODULE_TO_DOMAIN_MAP: Maps Hermetic module codes to domain names
+ * This fixes the critical mismatch between stored data (module codes like 'NIK')
+ * and expected data format (domain names like 'foundation')
+ */
+export const MODULE_TO_DOMAIN_MAP: Record<string, string> = {
+  'NIK': 'foundation',      // Needs/Instincts/Karma -> Foundation
+  'CPSR': 'relationships',  // Communication/Patterns/Social -> Relationships
+  'HFME': 'health',         // Health/Fitness/Mind/Energy -> Health
+  'ACS': 'growth',          // Alignment/Correction/Strategy -> Growth
+  'PIE': 'creativity',      // Pattern/Idea/Expression -> Creativity
+  'TWS': 'career',          // Time/Work/Structure -> Career
+  'VFP': 'spirituality',    // Values/Faith/Purpose -> Spirituality
+  'CNR': 'causality',       // Cause/Navigate/Result -> Causality
+  'DPEM': 'emotions',       // Dynamics/Polarity/Energy/Mood -> Emotions
+  'TMG': 'timing',          // Timing/Memory/Growth -> Timing
+  'BRM': 'beliefs',         // Beliefs/Reality/Manifestation -> Beliefs
+};
+
+export const DOMAIN_TO_MODULE_MAP: Record<string, string> = Object.fromEntries(
+  Object.entries(MODULE_TO_DOMAIN_MAP).map(([k, v]) => [v, k])
+);
+
 export interface DatabaseIntelligenceInsight {
   domain: string;
   signal_strength: number;
@@ -29,6 +52,9 @@ export interface DatabaseIntelligenceData {
   energy_timing_patterns?: Record<string, number>;
   personality_traits?: Record<string, any>;
   shadow_patterns?: Array<{ type: string; frequency: number }>;
+  // NEW: Active modules from hermeticResults array
+  activeModules?: string[];
+  rawHermeticResults?: Array<{ module: string; processed: boolean; [key: string]: any }>;
 }
 
 /**
@@ -146,23 +172,32 @@ export class DatabaseIntelligenceBridge {
         return null;
       }
 
+      // PHASE 1 FIX: Parse hermeticResults array correctly from hot_memory_cache
+      const rawContent = this.safeParseJson(hotMemoryData?.raw_content);
+      const { activeModules, moduleAnalysis, rawHermeticResults } = this.parseHermeticResults(rawContent);
+
       // Parse and structure intelligence data (Principle #2: Real data only)
       const intelligenceData: DatabaseIntelligenceData = {
-        eleven_module_analysis: this.safeParseJson(hotMemoryData?.raw_content) || {},
+        eleven_module_analysis: moduleAnalysis,
         conversation_patterns: this.extractConversationPatterns(sessionMemoryData || []),
         unspoken_domains: this.identifyUnspokenDomains(sessionMemoryData || [], memoryDeltasData || []),
         polarity_balance: this.analyzePolarityBalance(sessionMemoryData || []),
         energy_timing_patterns: this.extractEnergyPatterns(memoryDeltasData || []),
-        personality_traits: this.extractPersonalityTraits(this.safeParseJson(hotMemoryData?.raw_content)),
-        shadow_patterns: this.extractShadowPatterns(sessionMemoryData || [])
+        personality_traits: this.extractPersonalityTraits(rawContent),
+        shadow_patterns: this.extractShadowPatterns(sessionMemoryData || []),
+        // NEW: Include parsed module data
+        activeModules,
+        rawHermeticResults
       };
 
       console.log('✅ DATABASE BRIDGE: Intelligence context assembled', {
-        hasElevenModules: Object.keys(intelligenceData.eleven_module_analysis).length > 0,
+        hasElevenModules: Object.keys(intelligenceData.eleven_module_analysis || {}).length > 0,
+        activeModulesCount: activeModules.length,
+        activeModules,
         conversationPatternsCount: Object.keys(intelligenceData.conversation_patterns).length,
-        unspokenDomainsCount: intelligenceData.unspoken_domains.length,
+        unspokenDomainsCount: intelligenceData.unspoken_domains?.length || 0,
         polarityBalance: intelligenceData.polarity_balance,
-        energyPatternsCount: Object.keys(intelligenceData.energy_timing_patterns).length
+        energyPatternsCount: Object.keys(intelligenceData.energy_timing_patterns || {}).length
       });
 
       return intelligenceData;
@@ -229,8 +264,69 @@ export class DatabaseIntelligenceBridge {
   }
 
   /**
+   * PHASE 1 FIX: Parse hermeticResults array from hot_memory_cache
+   * The data is stored as { hermeticResults: [{ module: 'NIK', processed: true, ... }] }
+   * NOT as { eleven_module_analysis: { home_family: {...} } }
+   */
+  private static parseHermeticResults(rawContent: Record<string, any>): {
+    activeModules: string[];
+    moduleAnalysis: Record<string, any>;
+    rawHermeticResults: Array<{ module: string; processed: boolean; [key: string]: any }>;
+  } {
+    const result = {
+      activeModules: [] as string[],
+      moduleAnalysis: {} as Record<string, any>,
+      rawHermeticResults: [] as Array<{ module: string; processed: boolean; [key: string]: any }>
+    };
+
+    // Check for hermeticResults array (actual data structure)
+    if (rawContent?.hermeticResults && Array.isArray(rawContent.hermeticResults)) {
+      result.rawHermeticResults = rawContent.hermeticResults;
+      
+      rawContent.hermeticResults.forEach((item: any) => {
+        if (item?.module) {
+          // Map module code to domain name
+          const domainName = MODULE_TO_DOMAIN_MAP[item.module] || item.module.toLowerCase();
+          
+          // Track active (processed) modules
+          if (item.processed === true) {
+            result.activeModules.push(domainName);
+          }
+          
+          // Build module analysis with domain names as keys
+          result.moduleAnalysis[domainName] = {
+            module_code: item.module,
+            processed: item.processed,
+            signal_strength: item.processed ? 0.8 : 0.3,
+            ...item
+          };
+        }
+      });
+
+      console.log('🔧 DATABASE BRIDGE: Parsed hermeticResults array', {
+        rawCount: rawContent.hermeticResults.length,
+        activeModules: result.activeModules,
+        mappedDomains: Object.keys(result.moduleAnalysis)
+      });
+    }
+    // Fallback: check for legacy eleven_module_analysis format
+    else if (rawContent?.eleven_module_analysis) {
+      result.moduleAnalysis = rawContent.eleven_module_analysis;
+      result.activeModules = Object.keys(rawContent.eleven_module_analysis);
+    }
+    // Fallback: check for brainMetrics or other nested structures
+    else if (rawContent?.brainMetrics) {
+      console.log('🔧 DATABASE BRIDGE: Found brainMetrics structure');
+      result.moduleAnalysis = { metrics: rawContent.brainMetrics };
+    }
+
+    return result;
+  }
+
+  /**
    * Generate subconscious whispers based on negative space analysis
    * Enhanced to work with session conversation data when memory_deltas is empty
+   * PHASE 1 FIX: Now uses activeModules from parseHermeticResults
    */
   static generateSubconsciousWhispers(
     intelligenceData: DatabaseIntelligenceData
@@ -239,23 +335,26 @@ export class DatabaseIntelligenceBridge {
     const currentTime = Date.now();
 
     try {
-      // Enhanced whisper generation - create whispers about unspoken domains
-      if (intelligenceData.eleven_module_analysis) {
-        const spokenDomains = Object.keys(intelligenceData.eleven_module_analysis);
-        const allDomains = ['home_family', 'foundation', 'relationships', 'career', 'health', 'spirituality', 'creativity', 'growth'];
-        const unspokenDomains = allDomains.filter(domain => !spokenDomains.includes(domain));
+      // PHASE 1 FIX: Use activeModules (domain names) instead of eleven_module_analysis keys
+      const spokenDomains = intelligenceData.activeModules || Object.keys(intelligenceData.eleven_module_analysis || {});
+      const allDomains = ['foundation', 'relationships', 'career', 'health', 'spirituality', 'creativity', 'growth', 'emotions', 'timing', 'beliefs', 'causality'];
+      const unspokenDomains = allDomains.filter(domain => !spokenDomains.includes(domain));
+
+      console.log('🔧 DATABASE BRIDGE: Whisper generation', {
+        spokenDomains,
+        unspokenDomains: unspokenDomains.slice(0, 3)
+      });
         
-        // Generate whispers for prominent unspoken areas
-        unspokenDomains.slice(0, 2).forEach(domain => {
-          whispers.push({
-            type: 'domain_gap',
-            whisper: this.formatDomainGapWhisper(domain),
-            confidence: 0.75,
-            source_modules: ['Foundation Analysis'],
-            timestamp: currentTime
-          });
+      // Generate whispers for prominent unspoken areas
+      unspokenDomains.slice(0, 2).forEach(domain => {
+        whispers.push({
+          type: 'domain_gap',
+          whisper: this.formatDomainGapWhisper(domain),
+          confidence: 0.75,
+          source_modules: ['Foundation Analysis'],
+          timestamp: currentTime
         });
-      }
+      });
 
       // Foundation-specific whispers for current session context
       if (intelligenceData.conversation_patterns?.dominant_themes?.includes('foundation')) {
