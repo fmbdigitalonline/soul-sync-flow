@@ -517,7 +517,7 @@ async function getHermeticEducationalContext(
     // Fetch from CORRECT table (Principle #1: Fix bugs, don't mask them)
     const { data: reportData, error } = await supabase
       .from('personality_reports')
-      .select('report_content')
+      .select('report_content, structured_intelligence')
       .eq('user_id', userId)
       .eq('blueprint_version', '2.0')
       .order('created_at', { ascending: false })
@@ -534,19 +534,35 @@ async function getHermeticEducationalContext(
       return { sections: {}, topicMap: [] }; // Principle #2: Real empty state, not simulated data
     }
     
-    const reportContent = typeof reportData.report_content === 'string' 
-      ? JSON.parse(reportData.report_content) 
+    const reportContent = typeof reportData.report_content === 'string'
+      ? JSON.parse(reportData.report_content)
       : reportData.report_content;
-    
+
+    const structuredIntelligence = typeof reportData.structured_intelligence === 'string'
+      ? JSON.parse(reportData.structured_intelligence)
+      : reportData.structured_intelligence;
+
+    let contentSource: 'report_content' | 'structured_intelligence' = 'report_content';
+    let selectedContent = reportContent;
+
+    if (!selectedContent || Object.keys(selectedContent).length === 0) {
+      selectedContent = structuredIntelligence;
+      contentSource = 'structured_intelligence';
+    }
+
     // Extract priority sections
     const extractedSections: Record<string, any> = {};
     prioritySections.forEach(section => {
-      if (reportContent[section]) {
-        extractedSections[section] = reportContent[section];
+      if (selectedContent?.[section]) {
+        extractedSections[section] = selectedContent[section];
       }
     });
-    
-    console.log(`✅ Retrieved ${Object.keys(extractedSections).length} Hermetic sections for educational mode`);
+
+    console.log(`✅ Retrieved ${Object.keys(extractedSections).length} Hermetic sections for educational mode`, {
+      source: contentSource,
+      hasReportContent: !!reportContent,
+      hasStructuredIntelligence: !!structuredIntelligence
+    });
     
     return { 
       sections: extractedSections, 
