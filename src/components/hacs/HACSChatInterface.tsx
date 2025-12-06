@@ -11,6 +11,9 @@ import { useGlobalChatState } from "@/hooks/use-global-chat-state";
 import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
 import { VFPGraphFeedback } from "@/components/coach/VFPGraphFeedback";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { InteractiveSentenceText } from "@/components/coach/InteractiveSentenceText";
+import { SentenceActionButtons, SentenceAction } from "@/components/coach/SentenceActionButtons";
+import { toast } from "sonner";
 
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
@@ -35,9 +38,52 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [initialMessageCount, setInitialMessageCount] = useState(0);
+  const [selectedSentences, setSelectedSentences] = useState<Record<string, string | null>>({});
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<SentenceAction | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { updateChatLoading } = useGlobalChatState();
   const { isMobile } = useIsMobile();
+
+  // Handle sentence selection toggle
+  const handleSentenceSelect = (messageId: string, sentence: string | null) => {
+    setSelectedSentences(prev => ({
+      ...prev,
+      [messageId]: sentence
+    }));
+  };
+
+  // Handle sentence action buttons
+  const handleSentenceAction = async (action: SentenceAction, sentence: string) => {
+    const prompts: Record<string, string> = {
+      go_deeper: `Tell me more about: "${sentence}"`,
+      next_action: `What's my next best action regarding: "${sentence}"`,
+      challenge: `Help me question or challenge this: "${sentence}"`,
+    };
+    
+    if (action === "save_insight") {
+      toast.success("Insight saved!");
+      setSelectedSentences({});
+      return;
+    }
+    
+    const prompt = prompts[action];
+    if (!prompt) return;
+    
+    setIsProcessingAction(true);
+    setLoadingAction(action);
+    
+    try {
+      setSelectedSentences({}); // Clear selection
+      await onSendMessage(prompt);
+    } catch (error) {
+      console.error("Failed to send action:", error);
+      toast.error("Failed to send message");
+    } finally {
+      setIsProcessingAction(false);
+      setLoadingAction(null);
+    }
+  };
 
   // Track initial message count to avoid animating historical messages
   useEffect(() => {
@@ -145,9 +191,27 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                           onStreamingComplete={onStreamingComplete}
                         />
                       ) : (
-                        message.content
+                        <InteractiveSentenceText
+                          text={message.content}
+                          selectedSentence={selectedSentences[message.id] || null}
+                          onSentenceSelect={(sentence) => handleSentenceSelect(message.id, sentence)}
+                          disabled={isLoading || isProcessingAction}
+                        />
                       )}
                     </div>
+                    
+                    {/* Inline action buttons when sentence is selected */}
+                    {selectedSentences[message.id] && (
+                      <div className="mt-3 pt-2 border-t border-border/30">
+                        <SentenceActionButtons
+                          selectedSentence={selectedSentences[message.id]!}
+                          onAction={handleSentenceAction}
+                          isLoading={isProcessingAction}
+                          loadingAction={loadingAction}
+                        />
+                      </div>
+                    )}
+                    
                     {message.isQuestion && (
                       <div className="mt-2 text-xs text-muted-foreground opacity-70">
                         Question from: {message.module}
