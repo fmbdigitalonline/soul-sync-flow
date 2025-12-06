@@ -335,19 +335,19 @@ class HermeticIntelligenceBridge {
 
       // Hermetic 2.0 enriched traits from full report context
       const corePersonalityPattern = this.extractSectionSummary(
-        reportSections?.core_personality_pattern || intelligence.identity_constructs?.core_pattern
+        reportSections?.core_personality_pattern || (intelligence.identity_constructs as any)?.core_pattern
       );
 
       const decisionStyle = this.extractSectionSummary(
         reportSections?.decision_style ||
         reportSections?.decision_making_style ||
-        intelligence.execution_bias?.decision_frame ||
-        intelligence.execution_bias?.preferred_style
+        (intelligence.execution_bias as any)?.decision_frame ||
+        (intelligence.execution_bias as any)?.preferred_style
       );
 
       const communicationTone = this.extractSectionSummary(
         reportSections?.linguistic_fingerprint ||
-        intelligence.linguistic_fingerprint?.communication_signatures?.[0]
+        (intelligence.linguistic_fingerprint as any)?.communication_signatures?.[0]
       );
 
       return {

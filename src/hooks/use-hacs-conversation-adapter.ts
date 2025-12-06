@@ -278,6 +278,14 @@ export const useHACSConversationAdapter = (
       if (isCompanionMode) {
         console.log('🔮 ORACLE-FIRST: Starting Oracle-prioritized conversation flow');
         
+        // ✅ PHASE 1 FIX: Add user message IMMEDIATELY for instant UI feedback
+        optimisticUserMessage = appendOptimisticUserMessage(content);
+        userMessageOptimisticallyAdded = true;
+        
+        // ✅ PHASE 2 FIX: Show thinking animation IMMEDIATELY
+        hacsConversation.setIsLoading(true);
+        hacsConversation.setIsTyping(true);
+        
         // Start coordinated Oracle operation with timeout cleanup
         const abortController = startOracleOperation();
         
@@ -356,17 +364,9 @@ export const useHACSConversationAdapter = (
           responseLength: oracleResponse.response?.length || 0
         });
         
-        // Deduplication check to prevent race conditions
-        const lastMessage = hacsConversation.messages[hacsConversation.messages.length - 1];
-        const isDuplicate = lastMessage?.content === content.trim() && lastMessage?.role === 'user';
-        
-        if (isDuplicate) {
-          console.warn('🔄 ADAPTER: Duplicate user message detected, skipping redundant addition');
-          await hacsConversation.sendOracleMessage(content, oracleResponse, true);
-        } else {
-          // PHASE 2 FIX: Use sendOracleMessage and let hook add user message once
-          await hacsConversation.sendOracleMessage(content, oracleResponse, false);
-        }
+        // ✅ PHASE 3 FIX: Always skip user message addition - we already added it optimistically
+        console.log('🔮 ADAPTER: Using optimistic user message, skipping duplicate addition');
+        await hacsConversation.sendOracleMessage(content, oracleResponse, true);
           
           // PILLAR I & II: Store messages using enhanced ConversationMemoryService with semantic embeddings
           try {
@@ -421,6 +421,8 @@ export const useHACSConversationAdapter = (
         } finally {
           // Ensure cleanup happens regardless of success/failure
           cleanup();
+          // ✅ PHASE 4 FIX: Clear loading state (error recovery)
+          hacsConversation.setIsTyping(false);
         }
         
       } else {
