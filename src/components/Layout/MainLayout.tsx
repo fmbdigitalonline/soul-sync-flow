@@ -209,13 +209,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           {/* Mobile Bottom Navigation */}
           {user && <MobileNavigation />}
         </> : <>
-          {/* Desktop Global Top Bar */}
-          {user && !hideNav && <TopBar showToolsToggle toolsPanelCollapsed={isToolsPanelCollapsed} onToolsPanelToggle={toggleToolsPanel} />}
+          {/* Desktop/Tablet Global Top Bar */}
+          {user && !hideNav && <TopBar showToolsToggle toolsPanelCollapsed={isToolsPanelCollapsed} onToolsPanelToggle={isTablet ? () => setIsToolsOpen(true) : toggleToolsPanel} />}
           
           <div className="flex flex-1 min-h-0 w-full">
             {shouldShowDesktopNav ?
-        // Three-panel layout for authenticated desktop users
-        <DesktopThreePanelLayout navItems={navItems} isActive={isActive} handleSignOut={handleSignOut} t={t} toolsPanelCollapsed={isToolsPanelCollapsed} onToolsPanelToggle={toggleToolsPanel} isTablet={isTablet}>
+        // Three-panel layout for authenticated desktop users (tablets use 2-panel with Sheet)
+        <DesktopThreePanelLayout navItems={navItems} isActive={isActive} handleSignOut={handleSignOut} t={t} toolsPanelCollapsed={isTablet ? true : isToolsPanelCollapsed} onToolsPanelToggle={toggleToolsPanel} isTablet={isTablet}>
                 {children}
               </DesktopThreePanelLayout> :
         // Fallback for unauthenticated or nav-hidden views
@@ -225,6 +225,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 </PageContainer>
               </main>}
           </div>
+
+          {/* Tools Sheet for Tablets (same as mobile) */}
+          {user && isTablet && <Sheet open={isToolsOpen} onOpenChange={setIsToolsOpen}>
+              <SheetContent side="right" className="w-full max-w-md p-0">
+                <SheetHeader className="px-6 pt-6">
+                  <SheetTitle>{t('contextualTools.toolsAndInsights')}</SheetTitle>
+                  <SheetDescription>{t('contextualTools.contextAwareAssistance')}</SheetDescription>
+                </SheetHeader>
+                <div className="max-h-[calc(100dvh-8rem)] overflow-y-auto">
+                  <ContextualToolsPanel className="pt-2" />
+                </div>
+              </SheetContent>
+            </Sheet>}
         </>}
 
       {/* HACS Floating Orb - Always visible when authenticated */}
