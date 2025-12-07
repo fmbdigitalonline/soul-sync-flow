@@ -15,6 +15,7 @@ interface ThreePanelLayoutProps {
   toolsPanelCollapsed: boolean;
   onToolsPanelToggle: () => void;
   showInlineToolsToggle?: boolean;
+  isTablet?: boolean;
 }
 
 export const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
@@ -27,7 +28,8 @@ export const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
   className,
   toolsPanelCollapsed,
   onToolsPanelToggle,
-  showInlineToolsToggle = true
+  showInlineToolsToggle = true,
+  isTablet = false
 }) => {
   // Keyboard shortcut: Cmd/Ctrl + ]
   useEffect(() => {
@@ -45,8 +47,13 @@ export const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
   return (
     <div className={cn("flex h-full w-full", className)}>
       <ResizablePanelGroup direction="horizontal" className="w-full">
-        {/* Left Panel - Navigation (fixed) */}
-        <ResizablePanel defaultSize={16} minSize={14} maxSize={20} className="min-w-[240px]">
+        {/* Left Panel - Navigation (responsive) */}
+        <ResizablePanel 
+          defaultSize={isTablet ? 14 : 16} 
+          minSize={isTablet ? 12 : 14} 
+          maxSize={20} 
+          className="min-w-[160px]"
+        >
           {leftPanel}
         </ResizablePanel>
 

@@ -5,10 +5,12 @@ import * as React from "react"
 const ULTRA_NARROW_BREAKPOINT = 400
 // Treat tablets (e.g., iPad widths) as desktop/tablet layout by lowering the mobile cutoff
 const MOBILE_BREAKPOINT = 640
+const TABLET_BREAKPOINT = 1024
 const FOLD_5_WIDTH = 344
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  const [isTablet, setIsTablet] = React.useState<boolean | undefined>(undefined)
   const [isUltraNarrow, setIsUltraNarrow] = React.useState<boolean | undefined>(undefined)
   const [isFoldDevice, setIsFoldDevice] = React.useState<boolean | undefined>(undefined)
 
@@ -16,6 +18,7 @@ export function useIsMobile() {
     const updateBreakpoints = () => {
       const width = window.innerWidth
       setIsMobile(width < MOBILE_BREAKPOINT)
+      setIsTablet(width >= MOBILE_BREAKPOINT && width < TABLET_BREAKPOINT)
       setIsUltraNarrow(width < ULTRA_NARROW_BREAKPOINT)
       setIsFoldDevice(width <= FOLD_5_WIDTH + 50) // Some tolerance for fold devices
     }
@@ -25,12 +28,17 @@ export function useIsMobile() {
 
     // Create media query listeners for more accurate detection
     const mobileQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    const tabletQuery = window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT}px) and (max-width: ${TABLET_BREAKPOINT - 1}px)`)
     const ultraNarrowQuery = window.matchMedia(`(max-width: ${ULTRA_NARROW_BREAKPOINT - 1}px)`)
     const foldQuery = window.matchMedia(`(max-width: ${FOLD_5_WIDTH + 50}px)`)
     
     // Modern event listener
     const handleMobileChange = (e: MediaQueryListEvent) => {
       setIsMobile(e.matches)
+    }
+    
+    const handleTabletChange = (e: MediaQueryListEvent) => {
+      setIsTablet(e.matches)
     }
     
     const handleUltraNarrowChange = (e: MediaQueryListEvent) => {
@@ -44,11 +52,13 @@ export function useIsMobile() {
     // Add listeners
     if (mobileQuery.addEventListener) {
       mobileQuery.addEventListener('change', handleMobileChange)
+      tabletQuery.addEventListener('change', handleTabletChange)
       ultraNarrowQuery.addEventListener('change', handleUltraNarrowChange)
       foldQuery.addEventListener('change', handleFoldChange)
     } else {
       // Fallback for older browsers
       mobileQuery.addListener(handleMobileChange)
+      tabletQuery.addListener(handleTabletChange)
       ultraNarrowQuery.addListener(handleUltraNarrowChange)
       foldQuery.addListener(handleFoldChange)
     }
@@ -59,11 +69,13 @@ export function useIsMobile() {
     return () => {
       if (mobileQuery.removeEventListener) {
         mobileQuery.removeEventListener('change', handleMobileChange)
+        tabletQuery.removeEventListener('change', handleTabletChange)
         ultraNarrowQuery.removeEventListener('change', handleUltraNarrowChange)
         foldQuery.removeEventListener('change', handleFoldChange)
       } else {
         // Fallback for older browsers
         mobileQuery.removeListener(handleMobileChange)
+        tabletQuery.removeListener(handleTabletChange)
         ultraNarrowQuery.removeListener(handleUltraNarrowChange)
         foldQuery.removeListener(handleFoldChange)
       }
@@ -73,6 +85,7 @@ export function useIsMobile() {
 
   return {
     isMobile: !!isMobile,
+    isTablet: !!isTablet,
     isUltraNarrow: !!isUltraNarrow,
     isFoldDevice: !!isFoldDevice
   }
