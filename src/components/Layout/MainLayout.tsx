@@ -43,8 +43,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [isToolsPanelCollapsed, setIsToolsPanelCollapsed] = useState(false);
   const {
-    isMobile
+    isMobile,
+    isTablet
   } = useIsMobile();
+
+  // Auto-collapse tools panel on tablets
+  useEffect(() => {
+    if (isTablet) {
+      setIsToolsPanelCollapsed(true);
+    }
+  }, [isTablet]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -207,7 +215,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           <div className="flex flex-1 min-h-0 w-full">
             {shouldShowDesktopNav ?
         // Three-panel layout for authenticated desktop users
-        <DesktopThreePanelLayout navItems={navItems} isActive={isActive} handleSignOut={handleSignOut} t={t} toolsPanelCollapsed={isToolsPanelCollapsed} onToolsPanelToggle={toggleToolsPanel}>
+        <DesktopThreePanelLayout navItems={navItems} isActive={isActive} handleSignOut={handleSignOut} t={t} toolsPanelCollapsed={isToolsPanelCollapsed} onToolsPanelToggle={toggleToolsPanel} isTablet={isTablet}>
                 {children}
               </DesktopThreePanelLayout> :
         // Fallback for unauthenticated or nav-hidden views
@@ -236,6 +244,7 @@ interface DesktopThreePanelLayoutProps {
   t: (key: string) => string;
   toolsPanelCollapsed: boolean;
   onToolsPanelToggle: () => void;
+  isTablet?: boolean;
 }
 const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
   children,
@@ -244,7 +253,8 @@ const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
   handleSignOut,
   t,
   toolsPanelCollapsed,
-  onToolsPanelToggle
+  onToolsPanelToggle,
+  isTablet = false
 }) => {
   return <ThreePanelLayout leftPanel={<aside className="h-full bg-card flex flex-col">
           {/* Navigation */}
@@ -269,6 +279,6 @@ const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
           <PageContainer className="h-full">
             {children}
           </PageContainer>
-        </main>} rightPanel={<ContextualToolsPanel />} toolsPanelCollapsed={toolsPanelCollapsed} onToolsPanelToggle={onToolsPanelToggle} showInlineToolsToggle={false} />;
+        </main>} rightPanel={<ContextualToolsPanel />} toolsPanelCollapsed={toolsPanelCollapsed} onToolsPanelToggle={onToolsPanelToggle} showInlineToolsToggle={false} isTablet={isTablet} />;
 };
 export default MainLayout;
