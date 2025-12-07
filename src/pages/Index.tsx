@@ -16,7 +16,7 @@ import { useHACSInsights, type HACSInsight } from "@/hooks/use-hacs-insights";
 import { isAdminUser } from "@/utils/isAdminUser";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Flame, Compass, RefreshCw, ChevronRight } from "lucide-react";
+import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Flame, Compass, RefreshCw, ChevronRight, CheckCircle2, Smile } from "lucide-react";
 
 type ActivityType = "conversation" | "dream" | "task" | "insight";
 
@@ -296,55 +296,73 @@ const Index = () => {
       <PageContainer maxWidth="saas" className="sm:min-h-screen flex flex-col justify-start sm:justify-center bg-gradient-to-br from-background via-accent/5 to-primary/5 px-4 sm:px-0">
         {/* Hero Section */}
         <PageSection className="mb-6 sm:mb-8">
-          <div className="flex flex-col gap-3">
+          <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="space-y-1">
-                <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">Welcome Back</p>
+              <div className="space-y-2">
                 <h1 className="text-4xl sm:text-5xl font-bold font-cormorant gradient-text">
                   {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), {
                     name: userName
                   })}
                 </h1>
+                <div className="flex items-center gap-2 text-sm text-foreground/80" title="Last synced from your latest activity">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  <span>{lastSynced ? `Last synced ${formatRelativeTime(lastSynced)}` : 'Last synced moments ago'}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground" title="Last synced from your latest activity">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
-                <span>{lastSynced ? `Last synced ${formatRelativeTime(lastSynced)}` : 'Last synced moments ago'}</span>
+                <span>{currentSubtitle}</span>
               </div>
             </div>
 
-            {/* Quote - no card wrapper */}
-            <div className="mt-2">
-              <p className="text-sm text-muted-foreground mb-1">Your Quote of the Day</p>
-              <PersonalizedQuoteDisplay className="text-xl sm:text-2xl text-foreground/80 font-inter italic" interval={4000} />
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <Smile className="h-4 w-4 text-primary" />
+              <span>How are you feeling today?</span>
             </div>
-          </div>
-        </PageSection>
 
-        {user && (
-          <PageSection className="mb-8">
-            <div className="rounded-2xl bg-primary/10 border border-primary/20 p-6 sm:p-8 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-primary font-semibold">
+            <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+              <div className="rounded-2xl border border-primary/15 bg-primary/5 p-5 sm:p-6 shadow-sm">
+                <div className="flex items-center gap-2 text-primary font-semibold mb-3">
+                  <Sparkles className="h-5 w-5" />
+                  <span>Today&apos;s Growth of the Day</span>
+                </div>
+                <PersonalizedQuoteDisplay className="text-base sm:text-lg text-foreground/90 font-inter italic" interval={4000} />
+                <p className="text-sm text-muted-foreground mt-3">
+                  {guidanceInsight?.personalizedMessage || guidanceInsight?.text || 'Set a calm intention and notice what your mind is drawn to today.'}
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <Button size="lg" onClick={() => navigate(continueItem?.actionPath || '/companion')} className="font-inter h-touch px-6">
+                    Resume
+                  </Button>
+                  <span className="text-xs text-muted-foreground">Micro-reflection refreshed every sync.</span>
+                </div>
+              </div>
+
+              {user && (
+                <div className="rounded-2xl bg-primary/10 border border-primary/20 p-5 sm:p-6 shadow-sm">
+                  <div className="flex items-center gap-2 text-primary font-semibold mb-2">
                     <Flame className="h-5 w-5" />
                     <span>Continue Where You Left Off</span>
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
                     {continueItem?.title || 'You are all caught up'}
                   </h2>
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-muted-foreground text-sm mt-1">
                     {continueItem?.lastActivity ? `Last activity ${formatRelativeTime(continueItem.lastActivity)}` : 'Pick a focus to jump back in and keep momentum.'}
                   </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button size="lg" onClick={() => navigate(continueItem?.actionPath || '/companion')} disabled={!continueItem} className="font-inter h-touch px-8">
+                  <Button
+                    size="lg"
+                    onClick={() => navigate(continueItem?.actionPath || '/companion')}
+                    disabled={!continueItem}
+                    className="font-inter h-touch px-6 mt-4 w-full"
+                  >
                     Resume
                   </Button>
                 </div>
-              </div>
+              )}
             </div>
-          </PageSection>
-        )}
+          </div>
+        </PageSection>
 
         {/* Recent Activity - Clean List Layout */}
         <PageSection className="mb-8">
