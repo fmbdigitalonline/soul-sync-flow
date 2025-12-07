@@ -1,6 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import React, { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 interface RotatingTextProps {
   texts: string[];
@@ -8,11 +7,7 @@ interface RotatingTextProps {
   className?: string;
 }
 
-export const RotatingText: React.FC<RotatingTextProps> = ({ 
-  texts, 
-  interval = 4000, 
-  className 
-}) => {
+export const RotatingText: React.FC<RotatingTextProps> = ({ texts, interval = 4000, className }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
 
@@ -21,7 +16,7 @@ export const RotatingText: React.FC<RotatingTextProps> = ({
 
     const timer = setInterval(() => {
       setIsVisible(false);
-      
+
       setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % texts.length);
         setIsVisible(true);
@@ -34,13 +29,8 @@ export const RotatingText: React.FC<RotatingTextProps> = ({
   if (texts.length === 0) return null;
 
   return (
-    <div className={cn("transition-opacity duration-200 mt-6", className)}>
-      <span 
-        className={cn(
-          "transition-opacity duration-200",
-          isVisible ? "opacity-100" : "opacity-0"
-        )}
-      >
+    <div className={cn("transition-opacity duration-200 mt-6 text-sm", className)}>
+      <span className={cn("transition-opacity duration-200", isVisible ? "opacity-100" : "opacity-0")}>
         "{texts[currentIndex]}"
       </span>
     </div>
