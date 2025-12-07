@@ -37,7 +37,6 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   onAddOptimisticMessage,
 }) => {
   const [inputValue, setInputValue] = useState("");
-  const [initialMessageCount, setInitialMessageCount] = useState(0);
   const [selectedSentences, setSelectedSentences] = useState<Record<string, string | null>>({});
   const [isProcessingAction, setIsProcessingAction] = useState(false);
   const [loadingAction, setLoadingAction] = useState<SentenceAction | null>(null);
@@ -53,12 +52,13 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     }));
   };
 
-  // Handle sentence action buttons
+  // Handle sentence action buttons - sends hidden context prompt
   const handleSentenceAction = async (action: SentenceAction, sentence: string) => {
-    const prompts: Record<string, string> = {
-      go_deeper: `Tell me more about: "${sentence}"`,
-      next_action: `What's my next best action regarding: "${sentence}"`,
-      challenge: `Help me question or challenge this: "${sentence}"`,
+    // These are internal instructions - not shown to user
+    const hiddenPrompts: Record<string, string> = {
+      go_deeper: `[CONTEXT: User selected this sentence for deeper exploration: "${sentence}"] Expand on this insight with more depth and practical understanding.`,
+      next_action: `[CONTEXT: User wants next steps for: "${sentence}"] Provide concrete next actions they can take.`,
+      challenge: `[CONTEXT: User wants to challenge/question: "${sentence}"] Help them examine this from different angles and question assumptions.`,
     };
     
     if (action === "save_insight") {
@@ -67,15 +67,16 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       return;
     }
     
-    const prompt = prompts[action];
-    if (!prompt) return;
+    const hiddenPrompt = hiddenPrompts[action];
+    if (!hiddenPrompt) return;
     
     setIsProcessingAction(true);
     setLoadingAction(action);
     
     try {
       setSelectedSentences({}); // Clear selection
-      await onSendMessage(prompt);
+      // Send as hidden context - adapter should handle not displaying this as user message
+      await onSendMessage(hiddenPrompt);
     } catch (error) {
       console.error("Failed to send action:", error);
       toast.error("Failed to send message");
@@ -84,13 +85,6 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       setLoadingAction(null);
     }
   };
-
-  // Track initial message count to avoid animating historical messages
-  useEffect(() => {
-    if (initialMessageCount === 0 && messages.length > 0) {
-      setInitialMessageCount(messages.length);
-    }
-  }, [messages.length, initialMessageCount]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -161,7 +155,13 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
           )}
           
           {messages.map((message, index) => {
-            const isNewMessage = index >= initialMessageCount;
+            // Hide messages that start with [CONTEXT: - these are internal action prompts
+            const isHiddenContextMessage = message.role === "user" && message.content.startsWith("[CONTEXT:");
+            if (isHiddenContextMessage) return null;
+            
+            // Show interactive sentences for ALL completed AI messages (not currently streaming)
+            const isCurrentlyStreaming = message.isStreaming;
+            
             return (
               <div
                 key={message.id}
@@ -182,10 +182,10 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                 ) : (
                   <div className="w-full">
                     <div className="text-sm leading-relaxed text-muted-foreground">
-                      {isNewMessage ? (
+                      {isCurrentlyStreaming ? (
                         <TypewriterText 
                           text={message.content} 
-                          isStreaming={message.isStreaming || false}
+                          isStreaming={true}
                           speed={45}
                           messageId={message.id}
                           onStreamingComplete={onStreamingComplete}
