@@ -7,6 +7,7 @@ import { createErrorHandler } from '@/utils/error-recovery';
 import { conversationMemoryService } from '@/services/conversation-memory-service';
 import { useXPEventEmitter } from './use-xp-event-emitter';
 import { hermeticIntelligenceBridge } from '@/services/hermetic-intelligence-bridge';
+import { SubconsciousOrbController } from '@/services/subconscious-orb-controller';
 
 export interface ConversationMessage {
   id: string;
@@ -374,6 +375,17 @@ export const useHACSConversation = () => {
 
       setMessages(prev => [...prev, hacsMessage]);
       console.log('✅ HACS message added to state');
+
+      // 🔮 PHASE 4 FIX: Trigger subconscious orb shadow detection on every conversation
+      try {
+        await SubconsciousOrbController.processMessage(
+          sanitizedContent,
+          `conversation_${Date.now()}`
+        );
+        console.log('🔮 Subconscious orb triggered for shadow detection on user message');
+      } catch (orbError) {
+        console.warn('⚠️ Subconscious orb processing skipped:', orbError);
+      }
 
       // Save conversation to database
       const optimisticUserMessage = skipUserMessage

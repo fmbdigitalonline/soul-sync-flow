@@ -305,7 +305,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       try {
         const { data: latestConversation, error } = await supabase
           .from('hacs_conversations')
-          .select('session_id')
+          .select('session_id, conversation_data')
           .eq('user_id', userProfile.id)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -318,14 +318,29 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
         if (latestConversation?.session_id) {
           setActiveConversationSessionId(latestConversation.session_id);
+          
+          // PHASE 3 FIX: Process REAL user message content, not placeholder string
+          const conversationData = latestConversation.conversation_data as any;
+          const messages = Array.isArray(conversationData) 
+            ? conversationData 
+            : conversationData?.messages || [];
+          
+          if (Array.isArray(messages) && messages.length > 0) {
+            const userMessages = messages.filter((m: any) => m.role === 'user');
+            const latestUserMsg = userMessages[userMessages.length - 1];
+            if (latestUserMsg?.content) {
+              console.log('🔄 FLOATING ORBS: Processing latest user message on load', {
+                contentPreview: latestUserMsg.content.substring(0, 50)
+              });
+              await processMessage(latestUserMsg.content, latestUserMsg.id || `initial_${Date.now()}`);
+            }
+          }
         }
       } catch (sessionError) {
         console.error('⚠️ FLOATING ORBS: Session lookup failed', sessionError);
       }
     };
 
-    // Trigger initial processing on mount
-    processMessage('initial_load_check', `initial_${Date.now()}`);
     loadLatestSession();
 
     // Subscribe to hacs_conversations for real-time updates
@@ -334,7 +349,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'hacs_conversations',
           filter: `user_id=eq.${userProfile.id}`
