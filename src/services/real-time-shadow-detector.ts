@@ -9,6 +9,26 @@ export interface LivePatternResult {
 }
 
 export class RealTimeShadowDetector extends ConversationShadowDetector {
+  private static readonly EMOTIONAL_TRIGGERS = [
+    'overwhelmed', 'frustrated', 'angry', 'annoyed', 'triggered', 'upset',
+    'irritated', 'bothered', 'stressed', 'anxious', 'worried', 'concerned'
+  ];
+
+  private static readonly PROJECTION_PATTERNS = [
+    'they always', 'people never', 'everyone does', 'nobody understands',
+    'others should', 'why do they', 'those people', 'that person'
+  ];
+
+  private static readonly RESISTANCE_PATTERNS = [
+    'i should', 'i have to', 'i need to', 'i must', 'supposed to',
+    'but i cant', 'its too hard', 'impossible', 'never works'
+  ];
+
+  private static readonly LIMITING_BELIEFS = [
+    'im not good', 'i cant do', 'im bad at', 'im terrible', 'i never',
+    'i always fail', 'not smart enough', 'not worthy', 'dont deserve'
+  ];
+
   // Pre-compiled regex cache for 90% performance improvement
   private static regexCache = new Map<string, RegExp>();
   
@@ -130,17 +150,24 @@ export class RealTimeShadowDetector extends ConversationShadowDetector {
       return { pattern: null, confidence: 0, processingTime: performance.now() - startTime, cached: false };
     }
   }
+
+  private static getOrCreateRegex(cacheKey: string, pattern: string): RegExp {
+    let regex = this.regexCache.get(cacheKey);
+    if (!regex) {
+      regex = new RegExp(pattern, 'gi');
+      this.regexCache.set(cacheKey, regex);
+    }
+
+    return regex;
+  }
   
   /**
    * Fast emotional trigger detection using cached regex
    */
   private static detectLiveTriggers(content: string): ShadowPattern | null {
     for (const trigger of this.EMOTIONAL_TRIGGERS) {
-      let regex = this.regexCache.get(trigger);
-      if (!regex) {
-        regex = new RegExp(`\\b${trigger}\\b`, 'gi');
-        this.regexCache.set(trigger, regex);
-      }
+      const cacheKey = `trigger_${trigger}`;
+      const regex = this.getOrCreateRegex(cacheKey, `\\b${trigger}\\b`);
       
       const matches = content.match(regex);
       if (matches && matches.length > 0) {
@@ -170,11 +197,8 @@ export class RealTimeShadowDetector extends ConversationShadowDetector {
    */
   private static detectLiveProjections(content: string): ShadowPattern | null {
     for (const pattern of this.PROJECTION_PATTERNS) {
-      let regex = this.regexCache.get(`proj_${pattern}`);
-      if (!regex) {
-        regex = new RegExp(`\\b${pattern.replace(/\s+/g, '\\s+')}\\b`, 'gi');
-        this.regexCache.set(`proj_${pattern}`, regex);
-      }
+      const cacheKey = `proj_${pattern}`;
+      const regex = this.getOrCreateRegex(cacheKey, `\\b${pattern.replace(/\s+/g, '\\s+')}\\b`);
       
       const matches = content.match(regex);
       if (matches && matches.length > 0) {
@@ -203,11 +227,8 @@ export class RealTimeShadowDetector extends ConversationShadowDetector {
    */
   private static detectLiveResistance(content: string): ShadowPattern | null {
     for (const pattern of this.RESISTANCE_PATTERNS) {
-      let regex = this.regexCache.get(`resist_${pattern}`);
-      if (!regex) {
-        regex = new RegExp(`\\b${pattern.replace(/\s+/g, '\\s+')}\\b`, 'gi');
-        this.regexCache.set(`resist_${pattern}`, regex);
-      }
+      const cacheKey = `resist_${pattern}`;
+      const regex = this.getOrCreateRegex(cacheKey, `\\b${pattern.replace(/\s+/g, '\\s+')}\\b`);
       
       const matches = content.match(regex);
       if (matches && matches.length > 0) {
@@ -236,11 +257,8 @@ export class RealTimeShadowDetector extends ConversationShadowDetector {
    */
   private static detectLiveLimitingBeliefs(content: string): ShadowPattern | null {
     for (const belief of this.LIMITING_BELIEFS) {
-      let regex = this.regexCache.get(`belief_${belief}`);
-      if (!regex) {
-        regex = new RegExp(`\\b${belief.replace(/\s+/g, '\\s+')}\\b`, 'gi');
-        this.regexCache.set(`belief_${belief}`, regex);
-      }
+      const cacheKey = `belief_${belief}`;
+      const regex = this.getOrCreateRegex(cacheKey, `\\b${belief.replace(/\s+/g, '\\s+')}\\b`);
       
       const matches = content.match(regex);
       if (matches && matches.length > 0) {

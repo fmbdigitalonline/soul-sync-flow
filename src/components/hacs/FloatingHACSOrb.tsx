@@ -321,10 +321,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           
           // PHASE 3 FIX: Process REAL user message content, not placeholder string
           const conversationData = latestConversation.conversation_data as any;
-          const messages = Array.isArray(conversationData) 
-            ? conversationData 
+          // Handle both array and object formats from Supabase
+          const messages = Array.isArray(conversationData)
+            ? conversationData
             : conversationData?.messages || [];
-          
+
           if (Array.isArray(messages) && messages.length > 0) {
             const userMessages = messages.filter((m: any) => m.role === 'user');
             const latestUserMsg = userMessages[userMessages.length - 1];
@@ -364,9 +365,16 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           }
 
           // Extract latest message content from conversation_data
-          if (newData?.conversation_data?.messages) {
-            const messages = newData.conversation_data.messages;
-            const latestMessage = messages[messages.length - 1];
+          if (newData?.conversation_data) {
+            // Handle both array and object formats from Supabase
+            const messages = Array.isArray(newData.conversation_data)
+              ? newData.conversation_data
+              : newData.conversation_data?.messages || [];
+
+            const userMessages = Array.isArray(messages)
+              ? messages.filter((m: any) => m.role === 'user')
+              : [];
+            const latestMessage = userMessages[userMessages.length - 1];
 
             if (latestMessage?.content && latestMessage.id !== lastProcessedMessageId) {
               console.log('🔄 FLOATING ORBS: Processing new message via realtime');
@@ -806,10 +814,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
            )}
 
           {/* Red exclamation mark for unacknowledged insights OR progress messages - clickable */}
-          {((currentInsight && !currentInsight.acknowledged) || progressInsightReady) && (
+          {((currentInsight && !currentInsight.acknowledged) || progressInsightReady || adviceReady) && (
             <motion.div
               className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
-              animate={{ 
+              animate={{
                 scale: [1, 1.15, 1],
                 boxShadow: [
                   "0 0 0 0 rgba(239, 68, 68, 0.7)",
