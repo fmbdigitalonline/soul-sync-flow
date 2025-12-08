@@ -17,9 +17,7 @@ import { isAdminUser } from "@/utils/isAdminUser";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Flame, Compass, RefreshCw, ChevronRight } from "lucide-react";
-
 type ActivityType = "conversation" | "dream" | "task" | "insight";
-
 interface ActivityItem {
   id: string;
   type: ActivityType;
@@ -30,24 +28,43 @@ interface ActivityItem {
   actionPath: string;
   progress?: number;
 }
-
 interface ContinueItem {
   type: ActivityType;
   title: string;
   lastActivity?: string;
   actionPath: string;
 }
-
 const Index = () => {
-  const { user } = useAuth();
-  const { speak } = useSoulOrb();
+  const {
+    user
+  } = useAuth();
+  const {
+    speak
+  } = useSoulOrb();
   const navigate = useNavigate();
   const [showDemo, setShowDemo] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
-  const { blueprintData, hasBlueprint, loading, getDisplayName } = useOptimizedBlueprintData();
-  const { t, language } = useLanguage();
-  const { tutorialState, startTutorial, continueTutorial, completeTutorial } = useTutorialFlow();
-  const { loadHistoricalInsights, currentInsight, insightQueue } = useHACSInsights();
+  const {
+    blueprintData,
+    hasBlueprint,
+    loading,
+    getDisplayName
+  } = useOptimizedBlueprintData();
+  const {
+    t,
+    language
+  } = useLanguage();
+  const {
+    tutorialState,
+    startTutorial,
+    continueTutorial,
+    completeTutorial
+  } = useTutorialFlow();
+  const {
+    loadHistoricalInsights,
+    currentInsight,
+    insightQueue
+  } = useHACSInsights();
   const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
   const [continueItem, setContinueItem] = useState<ContinueItem | null>(null);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
@@ -55,7 +72,6 @@ const Index = () => {
   const [guidanceInsight, setGuidanceInsight] = useState<HACSInsight | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [hasLoadedGuidance, setHasLoadedGuidance] = useState(false);
-
   const welcomeMessage = useMemo(() => {
     if (!user) return null;
     if (hasBlueprint) {
@@ -64,7 +80,6 @@ const Index = () => {
       return t("index.createToGetStarted");
     }
   }, [user, hasBlueprint, t]);
-
   const subtitleMessages = useMemo(() => {
     if (user && hasBlueprint) {
       return [t("index.subtitle")];
@@ -75,15 +90,12 @@ const Index = () => {
     }
     return [t("index.subtitle")];
   }, [t, language, user, hasBlueprint]);
-
   const userName = useMemo(() => {
     return blueprintData?.user_meta?.preferred_name || getDisplayName || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Friend';
   }, [blueprintData, getDisplayName, user]);
-
   const currentSubtitle = useMemo(() => {
     return subtitleMessages[0] || t("index.subtitle");
   }, [subtitleMessages, t]);
-
   useEffect(() => {
     if (user && !loading && welcomeMessage) {
       const timer = setTimeout(() => {
@@ -92,7 +104,6 @@ const Index = () => {
       return () => clearTimeout(timer);
     }
   }, [user, loading, welcomeMessage, speak]);
-
   const handleTutorialStart = () => {
     if (!user) {
       return;
@@ -104,7 +115,6 @@ const Index = () => {
       console.error('🎭 ERROR in handleTutorialStart:', error);
     }
   };
-
   const formatRelativeTime = useCallback((dateString?: string | null) => {
     if (!dateString) return '';
     const now = new Date();
@@ -118,7 +128,6 @@ const Index = () => {
     const diffDays = Math.floor(diffHours / 24);
     return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
   }, []);
-
   const mapActivityToItem = useCallback((activity: any): ActivityItem => {
     const activityType = String(activity.activity_type || '').toLowerCase();
     const description = activity.activity_data?.summary || activity.activity_data?.message || activity.activity_data?.title || '';
@@ -148,10 +157,9 @@ const Index = () => {
       task: 'Open Task',
       insight: 'View Insight'
     };
-    
+
     // Extract progress if available
     const progressValue = activity.activity_data?.progress ?? activity.activity_data?.completion_percentage;
-    
     return {
       id: activity.id,
       type,
@@ -163,7 +171,6 @@ const Index = () => {
       progress: typeof progressValue === 'number' ? Math.round(progressValue) : undefined
     };
   }, []);
-
   const deriveContinueItem = useCallback((conversation: any | null, activities: any[]): ContinueItem | null => {
     const candidates: ContinueItem[] = [];
     if (conversation) {
@@ -202,18 +209,21 @@ const Index = () => {
       return bTime - aTime;
     })[0];
   }, []);
-
   const fetchActivityData = useCallback(async () => {
     if (!user) return;
     setActivityLoading(true);
     try {
-      const { data: activitiesData } = await supabase.from('user_activities').select('id, activity_type, activity_data, created_at').eq('user_id', user.id).order('created_at', {
+      const {
+        data: activitiesData
+      } = await supabase.from('user_activities').select('id, activity_type, activity_data, created_at').eq('user_id', user.id).order('created_at', {
         ascending: false
       }).limit(8);
       const mappedActivities = (activitiesData || []).map(mapActivityToItem);
       setRecentActivities(mappedActivities);
       setLastSynced(activitiesData?.[0]?.created_at || null);
-      const { data: conversationData } = await supabase.from('conversation_memory').select('session_id, last_activity, recovery_context').eq('user_id', user.id).eq('conversation_stage', 'active').order('last_activity', {
+      const {
+        data: conversationData
+      } = await supabase.from('conversation_memory').select('session_id, last_activity, recovery_context').eq('user_id', user.id).eq('conversation_stage', 'active').order('last_activity', {
         ascending: false
       }).limit(1);
       const conversation = conversationData?.[0] || null;
@@ -225,7 +235,6 @@ const Index = () => {
       setActivityLoading(false);
     }
   }, [deriveContinueItem, mapActivityToItem, user]);
-
   useEffect(() => {
     if (!user) {
       setRecentActivities([]);
@@ -234,16 +243,13 @@ const Index = () => {
     }
     fetchActivityData();
   }, [fetchActivityData, user]);
-
   useEffect(() => {
     if (!user) {
       setGuidanceInsight(null);
       setHasLoadedGuidance(false);
       return;
     }
-
     let isActive = true;
-
     const syncGuidance = async () => {
       if (!hasLoadedGuidance) {
         setInsightsLoading(true);
@@ -263,47 +269,39 @@ const Index = () => {
         }
       }
     };
-
     syncGuidance();
-
     return () => {
       isActive = false;
     };
   }, [currentInsight, hasLoadedGuidance, insightQueue, loadHistoricalInsights, user]);
-
   if (showDemo) {
-    return (
-      <MainLayout>
+    return <MainLayout>
         <PageContainer>
           <Button variant="ghost" onClick={() => setShowDemo(false)} className="mb-4">
             {t("index.backToHome")}
           </Button>
           <PersonalityDemo />
         </PageContainer>
-      </MainLayout>
-    );
+      </MainLayout>;
   }
-
   const iconByType: Record<ActivityType, JSX.Element> = {
     conversation: <MessageCircle className="h-5 w-5 text-primary" />,
     dream: <Moon className="h-5 w-5 text-primary" />,
     task: <ListChecks className="h-5 w-5 text-primary" />,
     insight: <Lightbulb className="h-5 w-5 text-primary" />
   };
-
-  return (
-    <MainLayout>
+  return <MainLayout>
       <PageContainer maxWidth="saas" className="sm:min-h-screen flex flex-col justify-start sm:justify-center bg-gradient-to-br from-background via-accent/5 to-primary/5 px-4 sm:px-0">
         {/* Hero Section */}
         <PageSection className="mb-6 sm:mb-8">
           <div className="flex flex-col gap-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="space-y-1">
-                <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">Welcome Back</p>
+                
                 <h1 className="text-4xl sm:text-5xl font-bold font-cormorant gradient-text">
                   {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), {
-                    name: userName
-                  })}
+                  name: userName
+                })}
                 </h1>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground" title="Last synced from your latest activity">
@@ -320,8 +318,7 @@ const Index = () => {
           </div>
         </PageSection>
 
-        {user && (
-          <PageSection className="mb-8">
+        {user && <PageSection className="mb-8">
             <div className="rounded-2xl bg-primary/10 border border-primary/20 p-6 sm:p-8 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="space-y-2">
@@ -343,37 +340,24 @@ const Index = () => {
                 </div>
               </div>
             </div>
-          </PageSection>
-        )}
+          </PageSection>}
 
         {/* Recent Activity - Clean List Layout */}
         <PageSection className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <h3 className="text-xl font-semibold">Recent Activity</h3>
-              {user && (
-                <Button variant="ghost" size="sm" onClick={fetchActivityData} disabled={activityLoading} className="h-8 w-8 p-0">
+              {user && <Button variant="ghost" size="sm" onClick={fetchActivityData} disabled={activityLoading} className="h-8 w-8 p-0">
                   <RefreshCw className={cn("h-4 w-4", activityLoading && "animate-spin")} />
-                </Button>
-              )}
+                </Button>}
             </div>
-            {recentActivities.length > 3 && (
-              <Button variant="link" size="sm" onClick={() => navigate('/activity')} className="text-primary">
+            {recentActivities.length > 3 && <Button variant="link" size="sm" onClick={() => navigate('/activity')} className="text-primary">
                 View all <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            )}
+              </Button>}
           </div>
           
           <div className="space-y-0">
-            {recentActivities.length > 0 ? recentActivities.slice(0, 3).map((activity, idx) => (
-              <div 
-                key={activity.id} 
-                className={cn(
-                  "flex items-center gap-4 py-4 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg px-2 -mx-2",
-                  idx !== Math.min(2, recentActivities.length - 1) && "border-b border-border/30"
-                )}
-                onClick={() => navigate(activity.actionPath)}
-              >
+            {recentActivities.length > 0 ? recentActivities.slice(0, 3).map((activity, idx) => <div key={activity.id} className={cn("flex items-center gap-4 py-4 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg px-2 -mx-2", idx !== Math.min(2, recentActivities.length - 1) && "border-b border-border/30")} onClick={() => navigate(activity.actionPath)}>
                 {/* Icon */}
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   {iconByType[activity.type]}
@@ -388,28 +372,22 @@ const Index = () => {
                 </div>
                 
                 {/* Progress Bar */}
-                {activity.progress !== undefined && (
-                  <div className="flex items-center gap-2 shrink-0">
+                {activity.progress !== undefined && <div className="flex items-center gap-2 shrink-0">
                     <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-primary rounded-full transition-all" 
-                        style={{ width: `${activity.progress}%` }}
-                      />
+                      <div className="h-full bg-primary rounded-full transition-all" style={{
+                  width: `${activity.progress}%`
+                }} />
                     </div>
                     <span className="text-sm text-muted-foreground w-10 text-right">
                       {activity.progress}%
                     </span>
-                  </div>
-                )}
+                  </div>}
                 
                 {/* Arrow */}
                 <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-              </div>
-            )) : (
-              <div className="py-8 text-center text-muted-foreground">
+              </div>) : <div className="py-8 text-center text-muted-foreground">
                 {user ? 'No recent activity yet. Start a conversation or set a task to see updates here.' : 'Sign in to see your unified activity stream.'}
-              </div>
-            )}
+              </div>}
           </div>
         </PageSection>
 
@@ -456,8 +434,7 @@ const Index = () => {
           </div>
         </PageSection>
 
-        {!user && (
-          <PageSection className="mb-8 text-center space-y-4">
+        {!user && <PageSection className="mb-8 text-center space-y-4">
             <div className="space-y-2">
               <h3 className="text-2xl font-semibold">Get started with SoulSync</h3>
               <p className="text-muted-foreground">Create an account to track conversations, dreams, and growth tasks in one hub.</p>
@@ -474,30 +451,17 @@ const Index = () => {
                 </Link>
               </Button>
             </div>
-          </PageSection>
-        )}
+          </PageSection>}
 
-        {user && isAdminUser(user) && (
-          <div className="flex justify-center mb-8">
+        {user && isAdminUser(user) && <div className="flex justify-center mb-8">
             <Button onClick={() => setShowDemo(true)} variant="outline" className="font-inter h-touch">
               <Brain className="h-5 w-5 mr-2" />
               {t('index.demoButton')}
             </Button>
-          </div>
-        )}
+          </div>}
       </PageContainer>
 
-      {showTutorial && (
-        <TutorialModal 
-          isOpen={showTutorial} 
-          onClose={() => setShowTutorial(false)} 
-          tutorialState={tutorialState} 
-          onContinue={continueTutorial} 
-          onComplete={completeTutorial} 
-        />
-      )}
-    </MainLayout>
-  );
+      {showTutorial && <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} tutorialState={tutorialState} onContinue={continueTutorial} onComplete={completeTutorial} />}
+    </MainLayout>;
 };
-
 export default Index;
