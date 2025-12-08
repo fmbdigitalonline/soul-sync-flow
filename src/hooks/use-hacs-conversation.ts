@@ -290,6 +290,10 @@ export const useHACSConversation = () => {
     try {
       const sanitizedContent = content.trim();
 
+      // Fire and forget - don't await this
+      SubconsciousOrbController.processMessage(sanitizedContent, `msg_${Date.now()}`)
+        .catch(console.warn);
+
       const providedHistory = injectedMessageHistory
         ? Array.isArray(injectedMessageHistory)
           ? injectedMessageHistory
