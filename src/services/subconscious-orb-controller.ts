@@ -130,7 +130,7 @@ export class SubconsciousOrbController {
         willTrigger: result.pattern && result.confidence > 0.6
       });
 
-      if (result.pattern && result.confidence > 0.6) {
+      if (result.pattern && result.confidence > 0.5) {
         // Check for duplicate recent patterns
         if (!PatternBuffer.hasSimilarRecentPattern(result.pattern)) {
           // Add to pattern buffer

@@ -138,7 +138,7 @@ export class RealTimeShadowDetector extends ConversationShadowDetector {
     for (const trigger of this.EMOTIONAL_TRIGGERS) {
       let regex = this.regexCache.get(trigger);
       if (!regex) {
-        regex = new RegExp(`\\\\b${trigger}\\\\b`, 'gi');
+        regex = new RegExp(`\\b${trigger}\\b`, 'gi');
         this.regexCache.set(trigger, regex);
       }
       
@@ -172,7 +172,7 @@ export class RealTimeShadowDetector extends ConversationShadowDetector {
     for (const pattern of this.PROJECTION_PATTERNS) {
       let regex = this.regexCache.get(`proj_${pattern}`);
       if (!regex) {
-        regex = new RegExp(pattern.replace(' ', '\\s+'), 'gi');
+        regex = new RegExp(`\\b${pattern.replace(/\s+/g, '\\s+')}\\b`, 'gi');
         this.regexCache.set(`proj_${pattern}`, regex);
       }
       
@@ -205,7 +205,7 @@ export class RealTimeShadowDetector extends ConversationShadowDetector {
     for (const pattern of this.RESISTANCE_PATTERNS) {
       let regex = this.regexCache.get(`resist_${pattern}`);
       if (!regex) {
-        regex = new RegExp(pattern.replace(' ', '\\s+'), 'gi');
+        regex = new RegExp(`\\b${pattern.replace(/\s+/g, '\\s+')}\\b`, 'gi');
         this.regexCache.set(`resist_${pattern}`, regex);
       }
       
@@ -238,7 +238,7 @@ export class RealTimeShadowDetector extends ConversationShadowDetector {
     for (const belief of this.LIMITING_BELIEFS) {
       let regex = this.regexCache.get(`belief_${belief}`);
       if (!regex) {
-        regex = new RegExp(belief.replace(' ', '\\s+'), 'gi');
+        regex = new RegExp(`\\b${belief.replace(/\s+/g, '\\s+')}\\b`, 'gi');
         this.regexCache.set(`belief_${belief}`, regex);
       }
       
