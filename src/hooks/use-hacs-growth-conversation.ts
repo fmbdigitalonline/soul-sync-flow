@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, supabaseUrl } from '@/integrations/supabase/client';
 
 interface GrowthConversationMessage {
   id: string;
@@ -166,7 +166,6 @@ export const useHACSGrowthConversation = () => {
         throw new Error('No authentication session');
       }
 
-      const supabaseUrl = 'https://qxaajirrqrcnmvtowjbg.supabase.co';
       const response = await fetch(`${supabaseUrl}/functions/v1/hacs-growth-conversation`, {
         method: 'POST',
         headers: {

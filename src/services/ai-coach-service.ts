@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseUrl } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 import { unifiedBrainService } from "./unified-brain-service";
@@ -266,7 +266,7 @@ Remember: Every response should feel like it comes from someone who truly knows 
       
       console.log('🔐 Using authenticated session token for ai-coach-stream');
       
-      const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/ai-coach-stream`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,

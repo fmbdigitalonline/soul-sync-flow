@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseUrl } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { soulSyncService } from "./soul-sync-service";
 import { createBlueprintFilter } from "./blueprint-personality-filter";
@@ -610,7 +610,7 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
         return;
       }
       
-      const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/ai-coach-stream`, {
         method: 'POST',
         headers,
         body: JSON.stringify({

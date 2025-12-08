@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, supabaseUrl } from '@/integrations/supabase/client';
 import { hermeticIntelligenceService } from './hermetic-intelligence-service';
 import { hermeticReportAccessService } from './hermetic-report-access-service';
 import type { HermeticStructuredIntelligence } from '@/types/hermetic-intelligence';
@@ -115,7 +115,7 @@ class SoulGoalDecompositionService {
       console.log('🔍 VERIFYING AI-COACH DEPLOYMENT VERSION...');
       try {
         const versionCheck = await fetch(
-          'https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach',
+          `${supabaseUrl}/functions/v1/ai-coach`,
           { method: 'GET' }
         );
         

@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, supabaseUrl } from '@/integrations/supabase/client';
 
 interface AICoachStreamRequest {
   message: string;
@@ -111,8 +111,6 @@ export class HACSRoutingService {
     console.log('⚠️ HACS Routing: Using fallback ai-coach-stream (no intelligence learning)');
     
     try {
-      // Use the correct Supabase URL construction
-      const supabaseUrl = 'https://qxaajirrqrcnmvtowjbg.supabase.co';
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.access_token) {
