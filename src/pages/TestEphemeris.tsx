@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, supabaseUrl } from '@/integrations/supabase/client';
 
 interface TestResult {
   success: boolean;
@@ -135,7 +135,7 @@ const TestEphemeris = () => {
         </CardHeader>
         <CardContent>
           <div className="bg-gray-100 p-3 rounded font-mono text-sm">
-            https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/test-ephemeris
+            {`${supabaseUrl}/functions/v1/test-ephemeris`}
           </div>
           <p className="text-sm text-muted-foreground mt-2">
             This will return JSON with detailed test results and debug information.
