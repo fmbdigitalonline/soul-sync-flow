@@ -66,13 +66,17 @@ serve(async (req) => {
       .eq('is_active', true)
       .maybeSingle();
 
-    // Get recent conversation data for context
+    // Get recent conversation data for context - THIS IS THE KEY DATA SOURCE
     const { data: recentConversations } = await supabase
       .from('hacs_conversations')
       .select('conversation_data, last_activity')
       .eq('user_id', userId)
       .order('last_activity', { ascending: false })
       .limit(5);
+
+    // CRITICAL FIX: Extract actual user messages from conversations for AI analysis
+    const conversationContext = extractRecentUserMessages(recentConversations || []);
+    console.log('📝 Extracted conversation context:', conversationContext.substring(0, 200) + '...');
 
     if (!activityLogs || activityLogs.length < 2) {
       console.log('Insufficient data for authentic insights');
@@ -90,14 +94,15 @@ serve(async (req) => {
     const behavioralInsights = extractBehavioralInsights(activityLogs, patterns);
     const learningProgress = analyzeLearningProgress(hacsData, activityLogs);
 
-    // Generate authentic insight using OpenAI
+    // Generate authentic insight using OpenAI - NOW WITH CONVERSATION CONTEXT
     const insight = await generateAuthenticInsight(
       patterns,
       behavioralInsights,
       learningProgress,
       blueprint,
       recentConversations,
-      currentContext
+      currentContext,
+      conversationContext // NEW: pass actual user messages
     );
 
     if (!insight) {
@@ -164,6 +169,21 @@ serve(async (req) => {
       },
       confidence_score: insight.confidence
     });
+
+    // CRITICAL FIX: Also write to conversation_insights for frontend to fetch
+    await supabase.from('conversation_insights').insert({
+      user_id: userId,
+      session_id: sessionId || `session_${Date.now()}`,
+      insight_type: 'conversation_pattern',
+      insight_data: {
+        insight_text: insight.insight,
+        module: insight.module,
+        confidence: insight.confidence,
+        evidence: insight.evidence,
+        source: 'hacs_conversations'
+      }
+    });
+    console.log('✅ Wrote insight to conversation_insights table');
 
     // Log the insight generation
     await supabase.from('dream_activity_logs').insert({
@@ -311,7 +331,8 @@ async function generateAuthenticInsight(
   learningProgress: any,
   blueprint: any,
   recentConversations: any[],
-  currentContext: any
+  currentContext: any,
+  conversationContext: string // NEW: actual user messages text
 ): Promise<InsightData | null> {
   
   // Only generate insights if we have sufficient real data
@@ -325,45 +346,56 @@ async function generateAuthenticInsight(
     sunSign: blueprint.archetype_western?.sun_sign || 'Unknown'
   } : null;
 
-  const systemPrompt = `You are HACS (Holistic Adaptive Cognitive System), analyzing real user behavior patterns to generate authentic insights.
+  // Build pattern string safely outside template literal
+  const patternString = patterns.length > 0 
+    ? "USER PATTERNS:\n" + patterns.map(p => `- ${p.activityType} at hour ${p.timeOfDay} (${p.frequency}x)`).join('\n')
+    : '';
 
-REAL DATA ANALYSIS:
+  // Build learning progress string
+  const learningString = learningProgress 
+    ? `- Total Interactions: ${learningProgress.totalInteractions}
+- Learning Efficiency: ${(learningProgress.learningEfficiency * 100).toFixed(1)}%
+- Strongest Modules: ${learningProgress.strongestModules.map((m: any) => `${m.module}(${m.score}%)`).join(', ')}`
+    : 'Limited learning data available';
+
+  // Build personality string
+  const personalityString = personalityContext 
+    ? `${personalityContext.mbti} ${personalityContext.hdType} ${personalityContext.sunSign}`
+    : 'No blueprint data';
+
+  const systemPrompt = `You are HACS (Holistic Adaptive Cognitive System), analyzing REAL USER CONVERSATIONS to generate authentic, conversation-based insights.
+
+PRIORITY 1 - RECENT USER MESSAGES (analyze these first!):
+${conversationContext || 'No recent conversation messages available.'}
+
+PRIORITY 2 - ACTIVITY PATTERNS:
 - Patterns Detected: ${patterns.length}
 - Behavioral Insights: ${behavioralInsights.length}
-- Learning Progress: ${learningProgress ? 'Available' : 'Limited'}
 - Intelligence Level: ${learningProgress?.intelligenceLevel || 0}%
 
-USER PATTERNS:
-${patterns.map(p => `- ${p.activityType} at hour ${p.timeOfDay} (${p.frequency}x)`).join('\n')}
-
-BEHAVIORAL INSIGHTS:
-${behavioralInsights.map(i => `- ${i.type}: ${i.value}`).join('\n')}
+${patternString}
 
 LEARNING PROGRESS:
-${learningProgress ? `
-- Total Interactions: ${learningProgress.totalInteractions}
-- Learning Efficiency: ${(learningProgress.learningEfficiency * 100).toFixed(1)}%
-- Strongest Modules: ${learningProgress.strongestModules.map((m: any) => `${m.module}(${m.score}%)`).join(', ')}
-` : 'Limited learning data available'}
+${learningString}
 
 PERSONALITY CONTEXT:
-${personalityContext ? `${personalityContext.mbti} ${personalityContext.hdType} ${personalityContext.sunSign}` : 'No blueprint data'}
+${personalityString}
 
-GENERATE ONE AUTHENTIC INSIGHT:
-1. Base insight ONLY on the real data provided above
-2. Be specific about patterns you actually observe
-3. Provide actionable guidance based on their actual behavior
-4. Choose the most relevant HACS module based on the insight type
-5. Be personal but not intrusive
+CRITICAL INSTRUCTIONS:
+1. BASE YOUR INSIGHT ON THE USER'S ACTUAL WORDS in "RECENT USER MESSAGES" section
+2. Identify emotional themes, projections, resistances, or limiting beliefs from their messages
+3. Reference what they ACTUALLY SAID in your insight (quote them if relevant)
+4. Do NOT generate generic productivity insights about timestamps
+5. Be specific, personal, and conversationally relevant
 
 RESPONSE FORMAT:
 {
   "type": "productivity|behavioral|growth|learning",
   "module": "PIE|CNR|TMG|DPEM|ACS|VFP|NIK|CPSR|TWS|HFME|BPSC",
-  "insight": "specific insight based on real data",
+  "insight": "specific insight based on user's actual conversation content",
   "confidence": 0.0-1.0,
   "dataPoints": number_of_data_points_used,
-  "evidence": ["specific evidence 1", "specific evidence 2"]
+  "evidence": ["quote or paraphrase from user message 1", "quote from message 2"]
 }`;
 
   const userPrompt = `Current context: ${JSON.stringify(currentContext)}
@@ -409,4 +441,30 @@ Generate an authentic insight based ONLY on the real user data patterns provided
     console.error('Error generating authentic insight:', error);
     return null;
   }
+}
+
+/**
+ * Extract recent user messages from conversation data for AI analysis
+ * This is the CRITICAL helper that turns JSON conversation_data into readable text
+ */
+function extractRecentUserMessages(conversations: any[]): string {
+  if (!conversations || conversations.length === 0) {
+    return "No recent conversation history.";
+  }
+
+  return conversations
+    .map(conv => {
+      const data = conv.conversation_data;
+      // Handle both array format and object format
+      const messages = Array.isArray(data) ? data : (data?.messages || []);
+      
+      // Filter only USER messages, take the last 3 from each session
+      return messages
+        .filter((m: any) => m.role === 'user')
+        .slice(-3) 
+        .map((m: any) => `User said: "${m.content}"`)
+        .join('\n');
+    })
+    .filter(text => text.length > 0) // Remove empty sessions
+    .join('\n---\n'); // Separator between sessions
 }
