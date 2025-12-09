@@ -28,10 +28,7 @@ serve(async (req) => {
     }
     
     // Handle test endpoints FIRST, before any other processing
-    if (url.pathname.includes('/test-astronomia')) {
-      const { default: testAstronomia } = await import('./test-astronomia.ts');
-      return await testAstronomia(req);
-    }
+    // NOTE: test-astronomia endpoint disabled - file renamed to .bak to fix build error
     
     if (url.pathname.includes('/test-moon-minimal')) {
       const { default: testMoonMinimal } = await import('./test-moon-minimal.ts');

@@ -9,22 +9,23 @@ export interface LivePatternResult {
 }
 
 export class RealTimeShadowDetector extends ConversationShadowDetector {
-  private static readonly EMOTIONAL_TRIGGERS = [
+  // Made public to match parent class and allow reuse in edge functions
+  public static readonly EMOTIONAL_TRIGGERS = [
     'overwhelmed', 'frustrated', 'angry', 'annoyed', 'triggered', 'upset',
     'irritated', 'bothered', 'stressed', 'anxious', 'worried', 'concerned'
   ];
 
-  private static readonly PROJECTION_PATTERNS = [
+  public static readonly PROJECTION_PATTERNS = [
     'they always', 'people never', 'everyone does', 'nobody understands',
     'others should', 'why do they', 'those people', 'that person'
   ];
 
-  private static readonly RESISTANCE_PATTERNS = [
+  public static readonly RESISTANCE_PATTERNS = [
     'i should', 'i have to', 'i need to', 'i must', 'supposed to',
     'but i cant', 'its too hard', 'impossible', 'never works'
   ];
 
-  private static readonly LIMITING_BELIEFS = [
+  public static readonly LIMITING_BELIEFS = [
     'im not good', 'i cant do', 'im bad at', 'im terrible', 'i never',
     'i always fail', 'not smart enough', 'not worthy', 'dont deserve'
   ];
