@@ -101,7 +101,12 @@ export const useHACSConversation = () => {
         const conversationData = Array.isArray(companionMemory.messages) 
           ? (companionMemory.messages as unknown as ConversationMessage[])
           : [];
-        setMessages(conversationData);
+        // CRITICAL: Mark all loaded messages as NOT streaming to prevent re-animation on refresh
+        const historicalMessages = conversationData.map(msg => ({
+          ...msg,
+          isStreaming: false
+        }));
+        setMessages(historicalMessages);
         
         // Keep conversationId null - will create new record with session_id
         setConversationId(null);
@@ -137,7 +142,12 @@ export const useHACSConversation = () => {
         setConversationId(conversation.id);
         const conversationData = conversation.conversation_data;
         if (Array.isArray(conversationData)) {
-          setMessages(conversationData as unknown as ConversationMessage[]);
+          // CRITICAL: Mark all loaded messages as NOT streaming to prevent re-animation on refresh
+          const historicalMessages = (conversationData as unknown as ConversationMessage[]).map(msg => ({
+            ...msg,
+            isStreaming: false
+          }));
+          setMessages(historicalMessages);
           console.log('✅ LOADED COMPANION HISTORY: From hacs_conversations fallback', {
             conversationId: conversation.id,
             messageCount: conversationData.length
