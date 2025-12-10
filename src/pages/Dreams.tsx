@@ -17,9 +17,7 @@ import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { BlueprintEnhancementService } from "@/services/blueprint-enhancement-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -41,15 +39,14 @@ import { DreamDecompositionPage } from "@/components/dream/DreamDecompositionPag
 import { DreamSuccessPage } from "@/components/dream/DreamSuccessPage";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { DreamDiscoveryChat } from "@/components/dream/DreamDiscoveryChat";
+import { DreamMenuGrid } from "@/components/dream/DreamMenuGrid";
 import { HomeMenuGrid } from "@/components/home/HomeMenuGrid";
 import { DreamsOverview } from "@/components/dream/DreamsOverview";
 import { AllDreamsList } from "@/components/dream/AllDreamsList";
-import { GoalCard } from "@/components/dream/GoalCard";
 import { useGoals } from "@/hooks/use-goals";
 import { getTaskSessionType } from "@/utils/task-session";
 import type { ResumableTask } from "@/hooks/use-resumable-tasks";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
-import { PageContainer, PageSection } from "@/components/Layout/PageContainer";
 
 type Task = ResumableTask;
 
@@ -82,33 +79,6 @@ const Dreams = () => {
 
   // Principle #2: No Hardcoded Data - Load all goals from database
   const { goals, isLoading: goalsLoading } = useGoals();
-
-  const dreamStats = useMemo(() => {
-    const totalMilestones = goals.reduce((sum, goal) => sum + (goal.milestones?.length || 0), 0);
-    const completedMilestones = goals.reduce(
-      (sum, goal) => sum + (goal.milestones?.filter(m => m.completed).length || 0),
-      0
-    );
-    const averageProgress = goals.length > 0
-      ? Math.round(goals.reduce((sum, goal) => sum + (goal.progress || 0), 0) / goals.length)
-      : 0;
-
-    return {
-      activeDreams: goals.length,
-      blueprintAligned: goals.filter(goal => goal.alignedWith?.length > 0).length,
-      inJourney: goals.filter(goal => goal.milestones?.length > 0).length,
-      totalMilestones,
-      completedMilestones,
-      averageProgress
-    };
-  }, [goals]);
-
-  const completionRate = useMemo(() => {
-    if (dreamStats.totalMilestones === 0) return dreamStats.averageProgress;
-    return Math.round((dreamStats.completedMilestones / dreamStats.totalMilestones) * 100);
-  }, [dreamStats]);
-
-  const mostRecentGoal = useMemo(() => goals[0] || null, [goals]);
 
   const { productivityJourney, refetch: refetchJourneyData } = useJourneyTracking();
 
@@ -1115,270 +1085,134 @@ const Dreams = () => {
     <MainLayout>
       <ErrorBoundary>
         <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
-          <PageContainer maxWidth="saas" className="pt-6 pb-12">
-            <PageSection className="mb-8">
-              <Card className="rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/5 via-background to-card shadow-lg">
-                <div className="p-6 sm:p-8 space-y-6">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="secondary" className="bg-primary/15 text-primary border-primary/20">Dream mode</Badge>
-                        <Badge variant="outline" className="border-soul-purple/30 text-soul-purple">
-                          Blueprint aligned
-                        </Badge>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">Discover, design, and act on the dreams that light you up.</p>
-                        <h1 className="text-3xl sm:text-4xl font-bold font-cormorant text-foreground">My Dreams</h1>
-                        <p className="text-muted-foreground text-sm sm:text-base max-w-3xl">
-                          Start a new dream, pick up your latest milestone, or jump into the tools that keep your journey moving.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-3 justify-start lg:justify-end">
-                      <Button variant="outline" size="lg" className="h-touch" onClick={handleViewAllGoals}>
-                        View all dreams
-                      </Button>
-                      <Button size="lg" className="h-touch" onClick={() => navigate('/dreams/create')}>
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        New Dream
-                      </Button>
-                    </div>
-                  </div>
+          {/* NEW: My Dreams Overview Section - Principle #8: Only Add */}
+          <div className="w-full max-w-5xl mx-auto px-3 pt-4 pb-6">
+            <DreamsOverview
+              onSelectGoal={handleSelectGoal}
+              onCreateNew={() => navigate('/dreams/create')}
+              onViewDetails={handleViewGoalDetails}
+              onViewAllGoals={handleViewAllGoals}
+              onResumeTaskPlan={handleResumeTaskPlan}
+              sessionRefreshKey={sessionRefreshKey}
+            />
+          </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="rounded-2xl border border-border bg-card/70 p-4 shadow-sm">
-                      <p className="text-xs text-muted-foreground">Personalized dreams</p>
-                      <div className="flex items-end justify-between mt-2">
-                        <span className="text-3xl font-semibold text-foreground">{goalsLoading ? '—' : dreamStats.activeDreams}</span>
-                        <Badge variant="outline" className="text-primary border-primary/30">
-                          {goalsLoading ? 'Loading' : `${dreamStats.blueprintAligned} aligned`}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-border bg-card/70 p-4 shadow-sm">
-                      <p className="text-xs text-muted-foreground">Journey in progress</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-3xl font-semibold text-foreground">{goalsLoading ? '—' : dreamStats.inJourney}</span>
-                        <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-700 border-emerald-100">
-                          Active
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-border bg-card/70 p-4 shadow-sm">
-                      <p className="text-xs text-muted-foreground">Milestones completed</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-3xl font-semibold text-foreground">
-                          {goalsLoading ? '—' : dreamStats.completedMilestones}
-                        </span>
-                        <Badge variant="outline" className="border-border text-muted-foreground">
-                          {goalsLoading ? '—' : `${dreamStats.totalMilestones} total`}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-border bg-card/70 p-4 shadow-sm">
-                      <p className="text-xs text-muted-foreground">Average progress</p>
-                      <div className="mt-2 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-3xl font-semibold text-foreground">
-                            {goalsLoading ? '—' : `${completionRate}%`}
-                          </span>
-                          <Badge variant="secondary" className="bg-primary/15 text-primary border-primary/20">
-                            Guided
-                          </Badge>
-                        </div>
-                        <Progress value={goalsLoading ? 0 : completionRate} className="h-2" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </PageSection>
-
-            <PageSection
-              title="Your dream journey"
-              subtitle="See your active dreams, track blueprint alignment, and open the next step."
-              className="mb-10"
-            >
-              <Card className="p-3 sm:p-4 lg:p-6 border-border/80 shadow-sm">
-                <DreamsOverview
-                  onSelectGoal={handleSelectGoal}
-                  onCreateNew={() => navigate('/dreams/create')}
-                  onViewDetails={handleViewGoalDetails}
-                  onViewAllGoals={handleViewAllGoals}
-                  onResumeTaskPlan={handleResumeTaskPlan}
-                  sessionRefreshKey={sessionRefreshKey}
-                />
-              </Card>
-            </PageSection>
-
-            {mostRecentGoal && (
-              <PageSection
-                title="Continue where you left off"
-                subtitle="Jump back into your latest dream milestone or open the full journey map."
-                className="mb-10"
-              >
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="lg:col-span-2">
-                    <GoalCard
-                      goal={mostRecentGoal}
-                      onSelect={handleSelectGoal}
-                      onViewDetails={handleViewGoalDetails}
-                      onResumeTaskPlan={handleResumeTaskPlan}
-                    />
-                  </div>
-                  <Card className="p-5 flex flex-col gap-4 border-border/80 shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-primary" />
-                      <p className="text-sm font-semibold text-foreground">Blueprint-guided focus</p>
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Keep momentum with a guided focus session or pick a new milestone to decompose into tasks.
-                    </p>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Next milestone readiness</span>
-                        <span className="font-semibold text-primary">{goalsLoading ? '—' : `${completionRate}%`}</span>
-                      </div>
-                      <Progress value={goalsLoading ? 0 : completionRate} className="h-2" />
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Button variant="outline" size="sm" onClick={() => navigate('/dreams/journey')}>
-                        <MapPin className="h-4 w-4 mr-2" />
-                        Journey Map
-                      </Button>
-                      <Button size="sm" onClick={() => navigate('/dreams/tasks')}>
-                        <Target className="h-4 w-4 mr-2" />
-                        Open Tasks
-                      </Button>
-                    </div>
-                  </Card>
-                </div>
-              </PageSection>
+          {/* Dream mode starting hub */}
+          <div className="w-full max-w-5xl mx-auto px-3 pt-4 pb-2 border-t border-border">
+            {isMobile ? (
+              <HomeMenuGrid
+                items={[
+                  {
+                    key: 'discover',
+                    title: t('dreams.cards.discoverYourDream.title'),
+                    description: t('dreams.cards.discoverYourDream.description'),
+                    Icon: MessageCircle,
+                    image: '/assets/home/companion.jpg',
+                    to: "/dreams/discover",
+                  },
+                  {
+                    key: 'create',
+                    title: t('dreams.cards.createDecompose.title'),
+                    description: t('dreams.cards.createDecompose.description'),
+                    Icon: Target,
+                    image: '/assets/home/dreams.jpg',
+                    to: "/dreams/create",
+                  },
+                  {
+                    key: 'journey',
+                    title: t('dreams.cards.journeyMap.title'),
+                    description: t('dreams.cards.journeyMap.description'),
+                    Icon: MapPin,
+                    image: '/assets/home/growth.jpg',
+                    to: "/dreams/journey",
+                  },
+                  {
+                    key: 'tasks',
+                    title: t('dreams.cards.yourTasks.title'),
+                    description: t('dreams.cards.yourTasks.description'),
+                    Icon: Target,
+                    image: '/assets/home/tasks.jpg',
+                    to: "/dreams/tasks",
+                  }
+                ]}
+                className="mb-6"
+              />
+            ) : (
+              <DreamMenuGrid
+                items={[
+                  {
+                    key: 'discover',
+                    title: t('dreams.cards.discoverYourDream.title'),
+                    description: t('dreams.cards.discoverYourDream.description'),
+                    Icon: MessageCircle,
+                    image: '/assets/home/companion.jpg',
+                    to: "/dreams/discover",
+                  },
+                  {
+                    key: 'suggestions',
+                    title: t('dreams.cards.blueprintSuggestions.title'),
+                    description: t('dreams.cards.blueprintSuggestions.description'),
+                    Icon: Sparkles,
+                    image: '/assets/home/blueprint.jpg',
+                    to: "/dreams/discover",
+                  },
+                  {
+                    key: 'create',
+                    title: t('dreams.cards.createDecompose.title'),
+                    description: t('dreams.cards.createDecompose.description'),
+                    Icon: Target,
+                    image: '/assets/home/dreams.jpg',
+                    to: "/dreams/create",
+                  },
+                  {
+                    key: 'journey',
+                    title: t('dreams.cards.journeyMap.title'),
+                    description: t('dreams.cards.journeyMap.description'),
+                    Icon: MapPin,
+                    image: '/assets/home/growth.jpg',
+                    to: "/dreams/journey",
+                  },
+                  {
+                    key: 'tasks',
+                    title: t('dreams.cards.yourTasks.title'),
+                    description: t('dreams.cards.yourTasks.description'),
+                    Icon: Target,
+                    image: '/assets/home/tasks.jpg',
+                    to: "/dreams/tasks",
+                  },
+                  {
+                    key: 'focus',
+                    title: t('dreams.cards.focusSession.title'),
+                    description: t('dreams.cards.focusSession.description'),
+                    Icon: Clock,
+                    image: '/assets/home/dashboard.jpg',
+                    to: "/dreams/focus",
+                  },
+                  {
+                    key: 'habits',
+                    title: t('dreams.cards.habits.title'),
+                    description: t('dreams.cards.habits.description'),
+                    Icon: CheckCircle,
+                    image: '/assets/home/growth.jpg',
+                    to: "/dreams/habits",
+                  },
+                  {
+                    key: 'success',
+                    title: t('dreams.cards.successView.title'),
+                    description: t('dreams.cards.successView.description'),
+                    Icon: Sparkles,
+                    image: '/assets/home/dreams.jpg',
+                    onClick: () => {
+                      setCurrentView('all-goals');
+                      navigate('/dreams/all');
+                    }
+                  }
+                ]}
+                className="mb-6"
+              />
             )}
-
-            <PageSection
-              title="Navigate dream mode"
-              subtitle="Move between discovery, creation, and completion using the same tiles as the home and growth hubs."
-              className="mb-0"
-            >
-              <Card className="p-4 sm:p-6 border-border/80 shadow-sm">
-                {isMobile ? (
-                  <HomeMenuGrid
-                    items={[
-                      {
-                        key: 'discover',
-                        title: t('dreams.cards.discoverYourDream.title'),
-                        description: t('dreams.cards.discoverYourDream.description'),
-                        Icon: MessageCircle,
-                        image: '/assets/home/companion.jpg',
-                        to: "/dreams/discover",
-                      },
-                      {
-                        key: 'create',
-                        title: t('dreams.cards.createDecompose.title'),
-                        description: t('dreams.cards.createDecompose.description'),
-                        Icon: Target,
-                        image: '/assets/home/dreams.jpg',
-                        to: "/dreams/create",
-                      },
-                      {
-                        key: 'journey',
-                        title: t('dreams.cards.journeyMap.title'),
-                        description: t('dreams.cards.journeyMap.description'),
-                        Icon: MapPin,
-                        image: '/assets/home/growth.jpg',
-                        to: "/dreams/journey",
-                      },
-                      {
-                        key: 'tasks',
-                        title: t('dreams.cards.yourTasks.title'),
-                        description: t('dreams.cards.yourTasks.description'),
-                        Icon: Target,
-                        image: '/assets/home/tasks.jpg',
-                        to: "/dreams/tasks",
-                      }
-                    ]}
-                    className="mb-2"
-                  />
-                ) : (
-                  <DreamMenuGrid
-                    items={[
-                      {
-                        key: 'discover',
-                        title: t('dreams.cards.discoverYourDream.title'),
-                        description: t('dreams.cards.discoverYourDream.description'),
-                        Icon: MessageCircle,
-                        image: '/assets/home/companion.jpg',
-                        to: "/dreams/discover",
-                      },
-                      {
-                        key: 'suggestions',
-                        title: t('dreams.cards.blueprintSuggestions.title'),
-                        description: t('dreams.cards.blueprintSuggestions.description'),
-                        Icon: Sparkles,
-                        image: '/assets/home/blueprint.jpg',
-                        to: "/dreams/discover",
-                      },
-                      {
-                        key: 'create',
-                        title: t('dreams.cards.createDecompose.title'),
-                        description: t('dreams.cards.createDecompose.description'),
-                        Icon: Target,
-                        image: '/assets/home/dreams.jpg',
-                        to: "/dreams/create",
-                      },
-                      {
-                        key: 'journey',
-                        title: t('dreams.cards.journeyMap.title'),
-                        description: t('dreams.cards.journeyMap.description'),
-                        Icon: MapPin,
-                        image: '/assets/home/growth.jpg',
-                        to: "/dreams/journey",
-                      },
-                      {
-                        key: 'tasks',
-                        title: t('dreams.cards.yourTasks.title'),
-                        description: t('dreams.cards.yourTasks.description'),
-                        Icon: Target,
-                        image: '/assets/home/tasks.jpg',
-                        to: "/dreams/tasks",
-                      },
-                      {
-                        key: 'focus',
-                        title: t('dreams.cards.focusSession.title'),
-                        description: t('dreams.cards.focusSession.description'),
-                        Icon: Clock,
-                        image: '/assets/home/dashboard.jpg',
-                        to: "/dreams/focus",
-                      },
-                      {
-                        key: 'habits',
-                        title: t('dreams.cards.habits.title'),
-                        description: t('dreams.cards.habits.description'),
-                        Icon: CheckCircle,
-                        image: '/assets/home/growth.jpg',
-                        to: "/dreams/habits",
-                      },
-                      {
-                        key: 'success',
-                        title: t('dreams.cards.successView.title'),
-                        description: t('dreams.cards.successView.description'),
-                        Icon: Sparkles,
-                        image: '/assets/home/dreams.jpg',
-                        onClick: () => {
-                          setCurrentView('all-goals');
-                          navigate('/dreams/all');
-                        }
-                      }
-                    ]}
-                    className="mb-2"
-                  />
-                )}
-              </Card>
-            </PageSection>
-          </PageContainer>
-        </div>
+          </div>
+          </div>
       </ErrorBoundary>
     </MainLayout>
   );

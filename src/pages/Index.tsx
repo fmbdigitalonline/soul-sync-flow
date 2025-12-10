@@ -403,15 +403,6 @@ const Index = () => {
                     <Button variant="outline" size="lg" className="h-touch px-6" onClick={() => navigate('/blueprint')}>
                       View blueprint
                     </Button>
-                    <Button
-                      variant="secondary"
-                      size="lg"
-                      className="h-touch px-6"
-                      onClick={() => navigate('/dreams')}
-                    >
-                      <Moon className="h-4 w-4 mr-2" />
-                      Open dreams hub
-                    </Button>
                   </div>
                 </div>
               </div>
