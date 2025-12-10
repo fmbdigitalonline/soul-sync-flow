@@ -226,7 +226,7 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
                     </div>
                   )}
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
                     <div className="text-center bg-soul-purple/5 rounded-3xl p-4">
                       <h4 className={`font-semibold ${getTextSize('text-sm')}`}>Sun Sign</h4>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-lg')}`}>{westernData.sun_sign}</p>
@@ -260,7 +260,7 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
               
               {expandedSections.mbti && (
                 <div className={`mt-4 space-y-4`}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
                       <span className={`font-semibold ${getTextSize('text-sm')}`}>Type</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-lg')}`}>{mbtiData.type}</p>
@@ -298,7 +298,7 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
               
               {expandedSections.humanDesign && (
                 <div className={`mt-4 space-y-4`}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                     <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Type</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{humanDesignData.type}</p>
