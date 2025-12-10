@@ -295,32 +295,32 @@ const Index = () => {
   };
   const moduleCards = [
     {
-      title: "Blueprint",
-      description: "Review or build your SoulSync blueprint.",
+      title: "Quick Focus",
+      description: "2–5 min resets to regain clarity.",
+      image: "/assets/home/dashboard.jpg",
+      action: () => navigate(user ? '/companion' : '/auth'),
+      badge: "In Flow"
+    },
+    {
+      title: "Full Assessment",
+      description: "Capture your current state in depth.",
       image: "/assets/home/growth.jpg",
       action: () => navigate(user ? '/blueprint' : '/auth'),
-      badge: "Core"
+      badge: "10%"
     },
     {
-      title: "Dreams",
-      description: "Capture dream insights and milestones.",
-      image: "/assets/home/dashboard.jpg",
-      action: () => navigate(user ? '/dreams' : '/auth'),
-      badge: "Flow"
-    },
-    {
-      title: "Spiritual Growth",
-      description: "Dive into guided practices and rituals.",
+      title: "Guided Discovery",
+      description: "Structured prompts to unpack insights.",
       image: "/assets/home/companion.jpg",
-      action: () => navigate(user ? '/spiritual-growth' : '/auth'),
-      badge: "Live"
+      action: () => navigate(user ? '/companion' : '/auth'),
+      badge: "New"
     },
     {
-      title: "Companion",
-      description: "Continue the conversation with your guide.",
+      title: "Progressive Journey",
+      description: "Step-by-step roadmap progression.",
       image: "/assets/home/tasks.jpg",
-      action: () => navigate(user ? '/companion' : '/auth'),
-      badge: "On"
+      action: () => navigate(user ? '/tasks' : '/auth'),
+      badge: "42%"
     }
   ];
 
@@ -392,8 +392,8 @@ const Index = () => {
                   </div>
                 </div>
                 <div className="w-full lg:w-auto flex flex-col items-start gap-3">
-                  <div className="text-left text-sm text-muted-foreground max-w-xl">
-                    {currentSubtitle}
+                  <div className="text-left text-sm text-muted-foreground">
+                    {guidanceInsight?.text || 'Tap in for a focused session to keep your momentum today.'}
                   </div>
                   <div className="flex flex-wrap gap-3">
                     <Button size="lg" className="h-touch px-6" onClick={() => navigate(user ? continueItem?.actionPath || '/companion' : '/auth')}>
@@ -460,14 +460,14 @@ const Index = () => {
           </div>
         </PageSection>
 
-        {/* Left menu shortcuts */}
+        {/* Explore Modules */}
         <PageSection className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2 text-primary font-semibold">
               <Compass className="h-5 w-5" />
-              <span>Other Spaces</span>
+              <span>Explore Growth Modules</span>
             </div>
-            <Badge variant="outline" className="text-xs text-muted-foreground border-border/70">Main menu</Badge>
+            <Badge variant="outline" className="text-xs text-muted-foreground border-border/70">Curated</Badge>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {moduleCards.map(card => <div key={card.title} className="group relative overflow-hidden rounded-3xl border border-border/70 shadow-md bg-card">
@@ -479,7 +479,7 @@ const Index = () => {
                   <h3 className="text-lg font-semibold">{card.title}</h3>
                   <p className="text-sm text-muted-foreground">{card.description}</p>
                   <Button variant="ghost" size="sm" className="px-0 text-primary" onClick={card.action}>
-                    Open space
+                    Open module
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
