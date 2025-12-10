@@ -391,7 +391,7 @@ const Index = () => {
           </div>
         </PageSection>
 
-        <PageSection className="mb-8 grid gap-4 md:grid-cols-2">
+        <PageSection className="mb-8 grid gap-4 lg:grid-cols-2">
           <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm flex flex-col gap-3">
             <div className="flex items-center gap-2 text-primary font-semibold">
               <Compass className="h-5 w-5" />
@@ -417,7 +417,7 @@ const Index = () => {
               <span>Smart Shortcuts</span>
             </div>
             <p className="text-sm text-muted-foreground">Jump straight into the three core flows.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
               <Button variant="outline" className="justify-start h-auto py-3" onClick={() => navigate('/companion')}>
                 <MessageCircle className="h-5 w-5 mr-2" />
                 Start a Conversation
