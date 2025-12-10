@@ -41,7 +41,6 @@ import { DreamDecompositionPage } from "@/components/dream/DreamDecompositionPag
 import { DreamSuccessPage } from "@/components/dream/DreamSuccessPage";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { DreamDiscoveryChat } from "@/components/dream/DreamDiscoveryChat";
-import { DreamMenuGrid } from "@/components/dream/DreamMenuGrid";
 import { HomeMenuGrid } from "@/components/home/HomeMenuGrid";
 import { DreamsOverview } from "@/components/dream/DreamsOverview";
 import { AllDreamsList } from "@/components/dream/AllDreamsList";
