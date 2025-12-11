@@ -64,9 +64,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [showRadiantGlow, setShowRadiantGlow] = useState(false);
   const [milestoneGlow, setMilestoneGlow] = useState(false);
   const [dismissalCooldown, setDismissalCooldown] = useState(false);
-  const [isTaskMode] = useState(false);
-  const [centerStageMessage] = useState('Center Stage: Focus Mode');
-  
   // Enhanced feedback system
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackMessageId, setFeedbackMessageId] = useState<string>('');
