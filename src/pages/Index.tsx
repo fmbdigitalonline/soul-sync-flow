@@ -1,23 +1,35 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { safeInterpolateTranslation } from "@/utils/sanitize";
 import MainLayout from "@/components/Layout/MainLayout";
-import { PageContainer, PageSection } from "@/components/Layout/PageContainer";
-import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
+import { PageContainer, PageHeader } from "@/components/Layout/PageContainer";
 import { Button } from "@/components/ui/button";
-import { TutorialModal } from "@/components/tutorial/TutorialModal";
-import PersonalityDemo from "@/components/personality/PersonalityDemo";
-import { useSoulOrb } from "@/contexts/SoulOrbContext";
-import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
-import { useTutorialFlow } from "@/hooks/use-tutorial-flow";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetClose } from "@/components/ui/sheet";
 import { useHACSInsights, type HACSInsight } from "@/hooks/use-hacs-insights";
-import { isAdminUser } from "@/utils/isAdminUser";
+import { useJourneyGoals } from "@/hooks/use-journey-goals";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Flame, Compass, RefreshCw, ChevronRight } from "lucide-react";
+import {
+  Sparkles,
+  MessageCircle,
+  ListChecks,
+  Moon,
+  Lightbulb,
+  Clock,
+  RefreshCw,
+  ChevronRight,
+  Map,
+  Focus,
+  Layers,
+  BookOpen,
+} from "lucide-react";
+
+
 type ActivityType = "conversation" | "dream" | "task" | "insight";
+
 interface ActivityItem {
   id: string;
   type: ActivityType;
@@ -28,227 +40,141 @@ interface ActivityItem {
   actionPath: string;
   progress?: number;
 }
-interface ContinueItem {
-  type: ActivityType;
-  title: string;
-  lastActivity?: string;
-  actionPath: string;
-}
+
 const Index = () => {
-  const {
-    user
-  } = useAuth();
-  const {
-    speak
-  } = useSoulOrb();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [showDemo, setShowDemo] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(false);
-  const {
-    blueprintData,
-    hasBlueprint,
-    loading,
-    getDisplayName
-  } = useOptimizedBlueprintData();
-  const {
-    t,
-    language
-  } = useLanguage();
-  const {
-    tutorialState,
-    startTutorial,
-    continueTutorial,
-    completeTutorial
-  } = useTutorialFlow();
-  const {
-    loadHistoricalInsights,
-    currentInsight,
-    insightQueue
-  } = useHACSInsights();
+  const { loadHistoricalInsights, currentInsight, insightQueue } = useHACSInsights();
+  const { goals, isLoading: goalsLoading } = useJourneyGoals();
+
   const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
-  const [continueItem, setContinueItem] = useState<ContinueItem | null>(null);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
   const [activityLoading, setActivityLoading] = useState(false);
   const [guidanceInsight, setGuidanceInsight] = useState<HACSInsight | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [hasLoadedGuidance, setHasLoadedGuidance] = useState(false);
-  const welcomeMessage = useMemo(() => {
-    if (!user) return null;
-    if (hasBlueprint) {
-      return t("index.welcomeBackReady");
-    } else {
-      return t("index.createToGetStarted");
-    }
-  }, [user, hasBlueprint, t]);
-  const subtitleMessages = useMemo(() => {
-    if (user && hasBlueprint) {
-      return [t("index.subtitle")];
-    }
-    const messages = t("index.rotatingMessages");
-    if (Array.isArray(messages)) {
-      return messages;
-    }
-    return [t("index.subtitle")];
-  }, [t, language, user, hasBlueprint]);
-  const userName = useMemo(() => {
-    return blueprintData?.user_meta?.preferred_name || getDisplayName || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Friend';
-  }, [blueprintData, getDisplayName, user]);
-  const currentSubtitle = useMemo(() => {
-    return subtitleMessages[0] || t("index.subtitle");
-  }, [subtitleMessages, t]);
-  useEffect(() => {
-    if (user && !loading && welcomeMessage) {
-      const timer = setTimeout(() => {
-        speak(welcomeMessage);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [user, loading, welcomeMessage, speak]);
-  const handleTutorialStart = () => {
-    if (!user) {
-      return;
-    }
-    try {
-      startTutorial();
-      setShowTutorial(true);
-    } catch (error) {
-      console.error('🎭 ERROR in handleTutorialStart:', error);
-    }
-  };
+  const [isToolsDrawerOpen, setIsToolsDrawerOpen] = useState(false);
+
+  const friendlyName = useMemo(() => {
+    return user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Feurion";
+  }, [user]);
+
+  const dreamStats = useMemo(() => {
+    const totalMilestones = goals.reduce((sum, goal) => sum + (goal.milestones?.length || 0), 0);
+    const completedMilestones = goals.reduce(
+      (sum, goal) => sum + (goal.milestones?.filter((m) => m.completed).length || 0),
+      0
+    );
+
+    return {
+      activeDreams: goals.length,
+      milestones: totalMilestones,
+      completed: completedMilestones,
+    };
+  }, [goals]);
+
+  const mostRecentGoal = useMemo(() => {
+    if (!goals.length) return null;
+    return goals.find((goal) => (goal.progress ?? 0) < 100) || goals[0];
+  }, [goals]);
+
   const formatRelativeTime = useCallback((dateString?: string | null) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const now = new Date();
     const target = new Date(dateString);
     const diffMs = now.getTime() - target.getTime();
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    if (diffMinutes < 1) return 'just now';
-    if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    if (diffMinutes < 1) return "zojuist";
+    if (diffMinutes < 60) return `${diffMinutes} min geleden`;
     const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    if (diffHours < 24) return `${diffHours} uur geleden`;
     const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    return `${diffDays} dag${diffDays === 1 ? "" : "en"} geleden`;
   }, []);
+
   const mapActivityToItem = useCallback((activity: any): ActivityItem => {
-    const activityType = String(activity.activity_type || '').toLowerCase();
-    const description = activity.activity_data?.summary || activity.activity_data?.message || activity.activity_data?.title || '';
-    let type: ActivityType = 'task';
-    if (activityType.includes('conversation')) {
-      type = 'conversation';
-    } else if (activityType.includes('dream') || activityType.includes('milestone')) {
-      type = 'dream';
-    } else if (activityType.includes('insight') || activityType.includes('blueprint')) {
-      type = 'insight';
+    const activityType = String(activity.activity_type || "").toLowerCase();
+    const description =
+      activity.activity_data?.summary || activity.activity_data?.message || activity.activity_data?.title || "";
+
+    let type: ActivityType = "task";
+    if (activityType.includes("conversation")) {
+      type = "conversation";
+    } else if (activityType.includes("dream") || activityType.includes("milestone")) {
+      type = "dream";
+    } else if (activityType.includes("insight") || activityType.includes("blueprint")) {
+      type = "insight";
     }
+
     const titleByType: Record<ActivityType, string> = {
-      conversation: 'Conversation with Companion',
-      dream: 'Dream Progress',
-      task: 'Task Updated',
-      insight: 'Blueprint Insight Added'
+      conversation: "Gesprek met Metgezel",
+      dream: "Droomvoortgang",
+      task: "Takenlijst",
+      insight: "Blueprint inzicht",
     };
     const actionPathByType: Record<ActivityType, string> = {
-      conversation: '/companion',
-      dream: '/dreams',
-      task: '/tasks',
-      insight: '/blueprint'
+      conversation: "/companion",
+      dream: "/dreams",
+      task: "/tasks",
+      insight: "/blueprint",
     };
     const actionLabelByType: Record<ActivityType, string> = {
-      conversation: 'Open Conversation',
-      dream: 'View Dream',
-      task: 'Open Task',
-      insight: 'View Insight'
+      conversation: "Open gesprek",
+      dream: "Bekijk droom",
+      task: "Open taken",
+      insight: "Bekijk inzicht",
     };
 
-    // Extract progress if available
     const progressValue = activity.activity_data?.progress ?? activity.activity_data?.completion_percentage;
+
     return {
       id: activity.id,
       type,
       title: titleByType[type],
-      description: description,
+      description,
       timestamp: activity.created_at,
       actionLabel: actionLabelByType[type],
       actionPath: actionPathByType[type],
-      progress: typeof progressValue === 'number' ? Math.round(progressValue) : undefined
+      progress: typeof progressValue === "number" ? Math.round(progressValue) : undefined,
     };
   }, []);
-  const deriveContinueItem = useCallback((conversation: any | null, activities: any[]): ContinueItem | null => {
-    const candidates: ContinueItem[] = [];
-    if (conversation) {
-      candidates.push({
-        type: 'conversation',
-        title: `Continue your conversation${conversation.recovery_context?.companionName ? ` with ${conversation.recovery_context.companionName}` : ' with Metgezel'}`,
-        lastActivity: conversation.last_activity,
-        actionPath: '/companion'
-      });
-    }
-    const dreamActivity = activities.find(act => {
-      const actType = String(act.activity_type || '').toLowerCase();
-      return actType.includes('dream') || actType.includes('milestone');
-    });
-    if (dreamActivity) {
-      candidates.push({
-        type: 'dream',
-        title: `Continue Dream Milestone${dreamActivity.activity_data?.title ? `: "${dreamActivity.activity_data.title}"` : ''}`,
-        lastActivity: dreamActivity.created_at,
-        actionPath: '/dreams'
-      });
-    }
-    const taskActivity = activities.find(act => String(act.activity_type || '').toLowerCase().includes('task'));
-    if (taskActivity) {
-      candidates.push({
-        type: 'task',
-        title: taskActivity.activity_data?.title ? `Resume "${taskActivity.activity_data.title}"` : 'Continue your task list',
-        lastActivity: taskActivity.created_at,
-        actionPath: '/tasks'
-      });
-    }
-    if (candidates.length === 0) return null;
-    return candidates.sort((a, b) => {
-      const aTime = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
-      const bTime = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
-      return bTime - aTime;
-    })[0];
-  }, []);
+
   const fetchActivityData = useCallback(async () => {
     if (!user) return;
     setActivityLoading(true);
     try {
-      const {
-        data: activitiesData
-      } = await supabase.from('user_activities').select('id, activity_type, activity_data, created_at').eq('user_id', user.id).order('created_at', {
-        ascending: false
-      }).limit(8);
+      const { data: activitiesData } = await supabase
+        .from("user_activities")
+        .select("id, activity_type, activity_data, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(8);
+
       const mappedActivities = (activitiesData || []).map(mapActivityToItem);
       setRecentActivities(mappedActivities);
       setLastSynced(activitiesData?.[0]?.created_at || null);
-      const {
-        data: conversationData
-      } = await supabase.from('conversation_memory').select('session_id, last_activity, recovery_context').eq('user_id', user.id).eq('conversation_stage', 'active').order('last_activity', {
-        ascending: false
-      }).limit(1);
-      const conversation = conversationData?.[0] || null;
-      const continueCandidate = deriveContinueItem(conversation, activitiesData || []);
-      setContinueItem(continueCandidate);
     } catch (error) {
-      console.error('Error loading activity data', error);
+      console.error("Error loading activity data", error);
     } finally {
       setActivityLoading(false);
     }
-  }, [deriveContinueItem, mapActivityToItem, user]);
+  }, [mapActivityToItem, user]);
+
   useEffect(() => {
     if (!user) {
       setRecentActivities([]);
-      setContinueItem(null);
       return;
     }
     fetchActivityData();
   }, [fetchActivityData, user]);
+
   useEffect(() => {
     if (!user) {
       setGuidanceInsight(null);
       setHasLoadedGuidance(false);
       return;
     }
+
     let isActive = true;
     const syncGuidance = async () => {
       if (!hasLoadedGuidance) {
@@ -269,199 +195,301 @@ const Index = () => {
         }
       }
     };
+
     syncGuidance();
     return () => {
       isActive = false;
     };
   }, [currentInsight, hasLoadedGuidance, insightQueue, loadHistoricalInsights, user]);
-  if (showDemo) {
-    return <MainLayout>
-        <PageContainer>
-          <Button variant="ghost" onClick={() => setShowDemo(false)} className="mb-4">
-            {t("index.backToHome")}
-          </Button>
-          <PersonalityDemo />
-        </PageContainer>
-      </MainLayout>;
-  }
+
   const iconByType: Record<ActivityType, JSX.Element> = {
     conversation: <MessageCircle className="h-5 w-5 text-primary" />,
     dream: <Moon className="h-5 w-5 text-primary" />,
     task: <ListChecks className="h-5 w-5 text-primary" />,
-    insight: <Lightbulb className="h-5 w-5 text-primary" />
+    insight: <Lightbulb className="h-5 w-5 text-primary" />,
   };
-  return <MainLayout>
-      <PageContainer maxWidth="saas" className="sm:min-h-screen flex flex-col justify-start sm:justify-center bg-gradient-to-br from-background via-accent/5 to-primary/5 px-4 sm:px-0">
-        {/* Hero Section */}
-        <PageSection className="mb-6 sm:mb-8">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="space-y-1">
-                
-                <h1 className="text-4xl sm:text-5xl font-bold font-cormorant gradient-text">
-                  {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), {
-                  name: userName
-                })}
-                </h1>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground" title="Last synced from your latest activity">
+
+  const quickActions = [
+    {
+      title: "Creëer & Ontleed",
+      subtitle: "Start een nieuwe droom",
+      icon: <Sparkles className="h-5 w-5" />,
+      action: () => navigate("/dreams/create"),
+    },
+    {
+      title: "Jouw Taken",
+      subtitle: "Zie je volgende stappen",
+      icon: <ListChecks className="h-5 w-5" />,
+      action: () => navigate("/tasks"),
+    },
+    {
+      title: "Reiskaart",
+      subtitle: "Overzicht van mijlpalen",
+      icon: <Map className="h-5 w-5" />,
+      action: () => navigate("/dreams/journey"),
+    },
+    {
+      title: "Focus Sessie",
+      subtitle: "Ga in begeleide focusmodus",
+      icon: <Focus className="h-5 w-5" />,
+      action: () => navigate("/dreams/focus"),
+    },
+  ];
+
+  const pendingMilestones = mostRecentGoal?.milestones?.filter((m) => !m.completed).length || 0;
+  const completedMilestones = mostRecentGoal?.milestones?.filter((m) => m.completed).length || 0;
+  const totalMilestones = mostRecentGoal?.milestones?.length || 0;
+
+  const recentDreamActivity = useMemo(
+    () => recentActivities.find((activity) => activity.type === "dream"),
+    [recentActivities]
+  );
+
+  return (
+    <MainLayout>
+      <PageContainer maxWidth="content" className="py-10 px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <PageHeader
+            title={`${friendlyName}, hier is je droomreis vandaag`}
+            subtitle={`${dreamStats.activeDreams} actieve dromen · ${dreamStats.milestones} mijlpalen · ${dreamStats.completed} afgerond`}
+            actions={
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
-                <span>{lastSynced ? `Last synced ${formatRelativeTime(lastSynced)}` : 'Last synced moments ago'}</span>
+                <span>{lastSynced ? `Bijgewerkt ${formatRelativeTime(lastSynced)}` : "Net gesynchroniseerd"}</span>
+              </div>
+            }
+          />
+
+          <Card className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Actieve dromen</p>
+                <p className="text-3xl font-semibold">{goalsLoading ? "–" : dreamStats.activeDreams}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Mijlpalen</p>
+                <p className="text-3xl font-semibold">{goalsLoading ? "–" : dreamStats.milestones}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Afgerond</p>
+                <p className="text-3xl font-semibold text-primary">{goalsLoading ? "–" : dreamStats.completed}</p>
               </div>
             </div>
+          </Card>
 
-            {/* Quote - no card wrapper */}
-            <div className="mt-2">
-              <p className="text-sm text-muted-foreground mb-1">Your Quote of the Day</p>
-              <PersonalizedQuoteDisplay className="text-xl sm:text-2xl text-foreground/80 font-inter italic" interval={4000} />
+          <Card className="p-6 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2 text-primary font-semibold">
+                <Moon className="h-5 w-5" />
+                <span>Ga verder met je droom</span>
+              </div>
+              {mostRecentGoal && (
+                <Badge variant="secondary" className="uppercase tracking-wide">
+                  {mostRecentGoal.category || "persoonlijk"}
+                </Badge>
+              )}
             </div>
-          </div>
-        </PageSection>
 
-        {user && <PageSection className="mb-8">
-            <div className="rounded-2xl bg-primary/10 border border-primary/20 p-6 sm:p-8 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {mostRecentGoal ? (
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-primary font-semibold">
-                    <Flame className="h-5 w-5" />
-                    <span>Continue Where You Left Off</span>
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">
-                    {continueItem?.title || 'You are all caught up'}
-                  </h2>
+                  <h2 className="text-2xl font-semibold leading-tight">{mostRecentGoal.title}</h2>
                   <p className="text-muted-foreground text-sm">
-                    {continueItem?.lastActivity ? `Last activity ${formatRelativeTime(continueItem.lastActivity)}` : 'Pick a focus to jump back in and keep momentum.'}
+                    {mostRecentGoal.description || "Je droom wacht op de volgende stap."}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Button size="lg" onClick={() => navigate(continueItem?.actionPath || '/companion')} disabled={!continueItem} className="font-inter h-touch px-8">
-                    Resume
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>Voortgang</span>
+                    <span>{mostRecentGoal.progress ?? 0}%</span>
+                  </div>
+                  <Progress value={mostRecentGoal.progress ?? 0} />
+                  <p className="text-sm text-muted-foreground">
+                    {completedMilestones}/{totalMilestones || "?"} mijlpalen afgerond
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-accent/30 border border-accent/60 p-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold">Plannen klaar om te hervatten</p>
+                    <p className="text-sm text-muted-foreground">
+                      {pendingMilestones > 0
+                        ? `${pendingMilestones} open ${pendingMilestones === 1 ? "mijlpaal" : "mijlpalen"} wachten op jou`
+                        : "Alle plannen zijn up-to-date"}
+                    </p>
+                  </div>
+                  <Layers className="h-5 w-5 text-primary" />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                  <Button size="lg" className="h-touch px-6" onClick={() => navigate("/dreams/journey")}>
+                    Plan hervatten
+                  </Button>
+                  <Button variant="outline" className="h-touch px-6" onClick={() => navigate("/tasks")}>
+                    Bekijk alle taken
+                  </Button>
+                  <Button variant="ghost" className="h-touch px-4 text-primary" onClick={() => navigate("/dreams")}> 
+                    Alle dromen
                   </Button>
                 </div>
+                {recentDreamActivity && (
+                  <p className="text-xs text-muted-foreground">
+                    Laatst bijgewerkt {formatRelativeTime(recentDreamActivity.timestamp)}
+                  </p>
+                )}
               </div>
-            </div>
-          </PageSection>}
+            ) : (
+              <div className="space-y-3">
+                <h2 className="text-xl font-semibold">Start je eerste droom</h2>
+                <p className="text-muted-foreground text-sm">
+                  Creëer een droom en wij tonen je voortgang, mijlpalen en volgende stap hier.
+                </p>
+                <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate("/dreams/create")}>
+                  Nieuwe droom starten
+                </Button>
+              </div>
+            )}
+          </Card>
 
-        {/* Recent Activity - Clean List Layout */}
-        <PageSection className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <h3 className="text-xl font-semibold">Recent Activity</h3>
-              {user && <Button variant="ghost" size="sm" onClick={fetchActivityData} disabled={activityLoading} className="h-8 w-8 p-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Card className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-primary font-semibold">
+                  <Sparkles className="h-5 w-5" />
+                  <span>Snelle acties</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {quickActions.map((action) => (
+                    <button
+                      key={action.title}
+                      onClick={action.action}
+                      className="group rounded-2xl border border-border/70 bg-card hover:border-primary/50 hover:shadow-sm transition-all p-3 text-left flex flex-col gap-2 min-h-[120px]"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="rounded-full bg-primary/10 text-primary p-2">{action.icon}</span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{action.title}</p>
+                        <p className="text-xs text-muted-foreground">{action.subtitle}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 bg-accent/40">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Lightbulb className="h-5 w-5" />
+                  <span>Dagelijks inzicht</span>
+                </div>
+                <h3 className="text-lg font-semibold">
+                  {guidanceInsight?.title || "Blijf in beweging"}
+                </h3>
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {guidanceInsight?.text ||
+                    (insightsLoading
+                      ? "We halen je droominzichten op..."
+                      : "We delen hier een gericht inzicht zodra je blueprint- of droomactiviteit hebt.")}
+                </p>
+              </div>
+            </Card>
+          </div>
+
+          <Card className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ListChecks className="h-5 w-5 text-primary" />
+                <h3 className="text-xl font-semibold">Recente activiteit</h3>
+              </div>
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={fetchActivityData}
+                  disabled={activityLoading}
+                  className="h-8 px-2"
+                >
                   <RefreshCw className={cn("h-4 w-4", activityLoading && "animate-spin")} />
-                </Button>}
+                </Button>
+              )}
             </div>
-            {recentActivities.length > 3 && <Button variant="link" size="sm" onClick={() => navigate('/activity')} className="text-primary">
-                View all <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>}
-          </div>
-          
-          <div className="space-y-0">
-            {recentActivities.length > 0 ? recentActivities.slice(0, 3).map((activity, idx) => <div key={activity.id} className={cn("flex items-center gap-4 py-4 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg px-2 -mx-2", idx !== Math.min(2, recentActivities.length - 1) && "border-b border-border/30")} onClick={() => navigate(activity.actionPath)}>
-                {/* Icon */}
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  {iconByType[activity.type]}
-                </div>
-                
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm">{activity.title}</div>
-                  <div className="text-sm text-muted-foreground truncate">
-                    {activity.description || formatRelativeTime(activity.timestamp)}
-                  </div>
-                </div>
-                
-                {/* Progress Bar */}
-                {activity.progress !== undefined && <div className="flex items-center gap-2 shrink-0">
-                    <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary rounded-full transition-all" style={{
-                  width: `${activity.progress}%`
-                }} />
-                    </div>
-                    <span className="text-sm text-muted-foreground w-10 text-right">
-                      {activity.progress}%
-                    </span>
-                  </div>}
-                
-                {/* Arrow */}
-                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-              </div>) : <div className="py-8 text-center text-muted-foreground">
-                {user ? 'No recent activity yet. Start a conversation or set a task to see updates here.' : 'Sign in to see your unified activity stream.'}
-              </div>}
-          </div>
-        </PageSection>
 
-        <PageSection className="mb-8 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-primary font-semibold">
-              <Compass className="h-5 w-5" />
-              <span>Today's Guidance</span>
-            </div>
-            <p className="text-lg font-medium">{guidanceInsight?.text || currentSubtitle}</p>
-            <p className="text-sm text-muted-foreground">
-              {guidanceInsight ? `Source: ${guidanceInsight.module} · ${formatRelativeTime(guidanceInsight.timestamp?.toString())}` : insightsLoading ? 'Gathering your latest insights…' : 'We will surface blueprint insights and conversation highlights here once you engage.'}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigate('/blueprint')} disabled={!guidanceInsight && insightsLoading}>
-                {guidanceInsight ? 'Expand' : 'Blueprint'}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleTutorialStart}>
-                Take tour
-              </Button>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-primary font-semibold">
-              <Sparkles className="h-5 w-5" />
-              <span>Smart Shortcuts</span>
-            </div>
-            <p className="text-sm text-muted-foreground">Jump straight into the three core flows.</p>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              <Button variant="outline" className="justify-start h-auto py-3" onClick={() => navigate('/companion')}>
-                <MessageCircle className="h-5 w-5 mr-2" />
-                Start a Conversation
-              </Button>
-              <Button variant="outline" className="justify-start h-auto py-3" onClick={() => navigate('/blueprint')}>
-                <BookOpen className="h-5 w-5 mr-2" />
-                View Blueprint Highlights
-              </Button>
-              <Button variant="outline" className="justify-start h-auto py-3" onClick={() => navigate('/tasks')}>
-                <ListChecks className="h-5 w-5 mr-2" />
-                Check Growth Tasks
-              </Button>
-            </div>
-          </div>
-        </PageSection>
-
-        {!user && <PageSection className="mb-8 text-center space-y-4">
             <div className="space-y-2">
-              <h3 className="text-2xl font-semibold">Get started with SoulSync</h3>
-              <p className="text-muted-foreground">Create an account to track conversations, dreams, and growth tasks in one hub.</p>
+              {recentActivities.length > 0 ? (
+                recentActivities.slice(0, 3).map((activity) => (
+                  <button
+                    key={activity.id}
+                    onClick={() => navigate(activity.actionPath)}
+                    className="w-full text-left rounded-2xl border border-border/70 hover:border-primary/50 transition-all p-4 flex items-start gap-3"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      {iconByType[activity.type]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{activity.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {activity.description || formatRelativeTime(activity.timestamp)}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  {user
+                    ? "Nog geen activiteit. Maak een droom of voltooi een taak om updates te zien."
+                    : "Meld je aan om je recente droomactiviteiten te volgen."}
+                </p>
+              )}
             </div>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button onClick={() => navigate('/get-started')} size="lg" className="font-inter h-touch px-8">
-                <ArrowRight className="h-5 w-5 mr-2" />
-                {t('index.getStarted')}
-              </Button>
-              <Button asChild variant="outline" size="lg" className="font-inter h-touch px-8">
-                <Link to="/auth">
-                  <LogIn className="h-5 w-5 mr-2" />
-                  {t('auth.signIn')}
-                </Link>
-              </Button>
-            </div>
-          </PageSection>}
+          </Card>
 
-        {user && isAdminUser(user) && <div className="flex justify-center mb-8">
-            <Button onClick={() => setShowDemo(true)} variant="outline" className="font-inter h-touch">
-              <Brain className="h-5 w-5 mr-2" />
-              {t('index.demoButton')}
+          <div className="flex justify-end">
+            <Button variant="link" className="text-primary" onClick={() => setIsToolsDrawerOpen(true)}>
+              Meer droomtools →
             </Button>
-          </div>}
+          </div>
+        </div>
       </PageContainer>
 
-      {showTutorial && <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} tutorialState={tutorialState} onContinue={continueTutorial} onComplete={completeTutorial} />}
-    </MainLayout>;
+      <Sheet open={isToolsDrawerOpen} onOpenChange={setIsToolsDrawerOpen}>
+        <SheetContent className="w-full sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Alle droomtools</SheetTitle>
+            <SheetDescription>Alles wat niet in de snelle acties past, vind je hier.</SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-6 space-y-3">
+            {["Ontdek Je Droom", "Blauwdruk Suggesties", "Gewoontes", "Succes Weergave"].map((tool) => (
+              <div
+                key={tool}
+                className="flex items-center justify-between rounded-xl border border-border/70 p-4 hover:border-primary/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-semibold text-sm">{tool}</p>
+                    <p className="text-xs text-muted-foreground">Onderdeel van je uitgebreidere droomstack</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <SheetClose asChild>
+              <Button variant="ghost">Sluiten</Button>
+            </SheetClose>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </MainLayout>
+  );
 };
+
 export default Index;
