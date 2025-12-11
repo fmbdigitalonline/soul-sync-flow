@@ -36,8 +36,10 @@ export default function Auth() {
 
   const getAppBaseUrl = () => {
     if (import.meta.env.VITE_SITE_URL) return import.meta.env.VITE_SITE_URL as string;
-    if (typeof window !== "undefined") return window.location.origin;
-    return "";
+    if (typeof window !== "undefined" && window.location.origin) return window.location.origin;
+
+    console.warn("No app base URL available for auth redirects");
+    return null;
   };
 
   // Initialize journey tracking
@@ -256,7 +258,19 @@ export default function Auth() {
 
     setIsLoading(true);
     try {
-      const redirectUrl = `${getAppBaseUrl()}/auth?type=recovery`;
+      // Use the app base URL so static hosting can serve the SPA shell before routing to /auth
+      const redirectUrl = getAppBaseUrl();
+
+      if (!redirectUrl?.trim()) {
+        console.warn("Password reset aborted: no base URL available for redirect");
+        toast({
+          title: t('error'),
+          description: t('auth.resetPasswordFailed'),
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       });
