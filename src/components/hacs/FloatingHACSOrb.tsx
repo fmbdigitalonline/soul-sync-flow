@@ -64,6 +64,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [showRadiantGlow, setShowRadiantGlow] = useState(false);
   const [milestoneGlow, setMilestoneGlow] = useState(false);
   const [dismissalCooldown, setDismissalCooldown] = useState(false);
+  const [isTaskMode] = useState(false);
+  const [centerStageMessage] = useState('Center Stage: Focus Mode');
   
   // Enhanced feedback system
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -748,6 +750,29 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               </div>
             )}
           </AnimatePresence>
+
+          {/* Center Stage Overlay for Task Mode */}
+          {isTaskMode && (
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+              <IntelligentSoulOrb
+                layoutId="hacs-steward-soul"
+                size="lg"
+                speaking={true}
+                stage="generating"
+                showProgressRing={true}
+              />
+              <SpeechBubble position="left" isVisible={true}>
+                <div className="text-center text-sm">
+                  {centerStageMessage}
+                  {typeof hermeticJobProgress === 'number'
+                    ? ` (${hermeticJobProgress}%)`
+                    : typeof displayProgress === 'number'
+                      ? ` (${Math.round(displayProgress)}%)`
+                      : ''}
+                </div>
+              </SpeechBubble>
+            </div>
+          )}
 
           {/* Floating Orb */}
           <motion.div
