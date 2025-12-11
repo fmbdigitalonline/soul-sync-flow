@@ -36,8 +36,10 @@ export default function Auth() {
 
   const getAppBaseUrl = () => {
     if (import.meta.env.VITE_SITE_URL) return import.meta.env.VITE_SITE_URL as string;
-    if (typeof window !== "undefined") return window.location.origin;
-    return "";
+    if (typeof window !== "undefined" && window.location.origin) return window.location.origin;
+
+    console.warn("No app base URL available for auth redirects");
+    return null;
   };
 
   // Initialize journey tracking
