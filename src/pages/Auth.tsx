@@ -256,7 +256,8 @@ export default function Auth() {
 
     setIsLoading(true);
     try {
-      const redirectUrl = `${getAppBaseUrl()}/auth?type=recovery`;
+      // Use the app base URL so static hosting can serve the SPA shell before routing to /auth
+      const redirectUrl = `${getAppBaseUrl()}`;
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       });
