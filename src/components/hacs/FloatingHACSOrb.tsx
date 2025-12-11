@@ -751,6 +751,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
           {/* Floating Orb */}
           <motion.div
+            layoutId="hacs-steward-soul"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             className="cursor-pointer"

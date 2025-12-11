@@ -73,6 +73,7 @@ export const HACSChatOverlay: React.FC<HACSChatOverlayProps> = ({
                 <div className="flex items-center space-x-3">
                   <IntelligentSoulOrb
                     size="sm"
+                    layoutId="hacs-steward-soul"
                     intelligenceLevel={intelligenceLevel}
                     showProgressRing={false}
                     pulse={false}
