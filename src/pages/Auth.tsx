@@ -34,6 +34,12 @@ export default function Auth() {
   const { user, loading: authLoading } = useAuth();
   const { t } = useLanguage();
 
+  const getAppBaseUrl = () => {
+    if (import.meta.env.VITE_SITE_URL) return import.meta.env.VITE_SITE_URL as string;
+    if (typeof window !== "undefined") return window.location.origin;
+    return "";
+  };
+
   // Initialize journey tracking
   const {
     startJourney,
@@ -121,7 +127,7 @@ export default function Auth() {
     });
 
     try {
-      const redirectUrl = `${window.location.origin}/onboarding`;
+      const redirectUrl = `${getAppBaseUrl()}/onboarding`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
