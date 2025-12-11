@@ -20,7 +20,6 @@ import DesignAnalysisPage from './pages/DesignAnalysisPage';
 import User360Page from './pages/User360Page';
 import HermeticIntelligenceTest from './pages/HermeticIntelligenceTest';
 import NotFound from './pages/NotFound';
-import Tasks from "./pages/Tasks";
 
 import ReportViewer from './components/ReportViewer';
 import { Toaster } from '@/components/ui/toaster';
@@ -77,7 +76,6 @@ function App() {
                         {/* Legacy redirect from /coach to /companion */}
                         <Route path="/coach" element={<Navigate to="/companion" replace />} />
                         <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
-                        <Route path="/tasks" element={<ProtectedRoute><MainLayout><Tasks /></MainLayout></ProtectedRoute>} />
                         <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
                         <Route path="/user-360" element={<ProtectedRoute><MainLayout><User360Page /></MainLayout></ProtectedRoute>} />
                         <Route path="/auth" element={<Auth />} />
