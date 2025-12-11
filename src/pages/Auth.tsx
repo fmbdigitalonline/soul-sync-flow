@@ -87,52 +87,14 @@ export default function Auth() {
 
   useEffect(() => {
     const typeParam = searchParams.get('type');
-    const codeParam = searchParams.get('code');
-    const errorDescription = searchParams.get('error_description');
-
-    if (errorDescription) {
-      toast({
-        title: t('error'),
-        description: errorDescription,
-        variant: "destructive",
-      });
-    }
-
     if (typeParam === 'recovery') {
       setIsSignUp(false);
       setIsResetMode(false);
       setIsRecoveryMode(true);
-
-      if (codeParam) {
-        const verifyRecovery = async () => {
-          setIsLoading(true);
-          const { error } = await supabase.auth.exchangeCodeForSession(codeParam);
-          setIsLoading(false);
-
-          if (error) {
-            console.error("Recovery verification error:", error);
-            toast({
-              title: t('error'),
-              description: error.message || t('auth.resetLinkInvalid'),
-              variant: "destructive",
-            });
-            setIsRecoveryMode(false);
-            navigate('/auth', { replace: true });
-            return;
-          }
-
-          toast({
-            title: t('auth.resetLinkVerified'),
-            description: t('auth.resetLinkVerifiedDescription'),
-          });
-        };
-
-        verifyRecovery();
-      }
     } else {
       setIsRecoveryMode(false);
     }
-  }, [navigate, searchParams, t, toast]);
+  }, [searchParams]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -294,7 +256,7 @@ export default function Auth() {
 
     setIsLoading(true);
     try {
-      const redirectUrl = `${getAppBaseUrl()}/auth?type=recovery`;
+      const redirectUrl = `${window.location.origin}/auth?type=recovery`;
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       });
