@@ -365,7 +365,7 @@ const Index = () => {
           {/* Hero Section */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h1 className="text-2xl md:text-3xl font-heading font-semibold text-foreground">
+              <h1 className="text-3xl md:text-4xl font-heading font-semibold bg-gradient-to-b from-[#7C7EFF] via-[#6EA4FF] to-[#37C9E9] bg-clip-text text-transparent leading-tight">
                 {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), {
                   name: userName
                 })}
