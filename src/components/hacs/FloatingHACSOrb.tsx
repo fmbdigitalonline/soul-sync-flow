@@ -64,7 +64,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [showRadiantGlow, setShowRadiantGlow] = useState(false);
   const [milestoneGlow, setMilestoneGlow] = useState(false);
   const [dismissalCooldown, setDismissalCooldown] = useState(false);
-  
   // Enhanced feedback system
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackMessageId, setFeedbackMessageId] = useState<string>('');
@@ -245,6 +244,16 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   // BRIDGE FIX: Also check steward introduction's isGeneratingReport for immediate UI response
   const isStewardGeneratingReport = isGeneratingReport; // From steward introduction hook
   const isAnyReportGenerating = isGeneratingHermeticReport || isStewardGeneratingReport;
+
+  const isTaskMode = isGenerating || isGeneratingInsight || isGeneratingReport;
+
+  const centerStageMessage = isGeneratingReport
+    ? "Activating Soul Alchemist... Deep synthesis in progress"
+    : isGenerating
+      ? "Composing Dream..."
+      : isGeneratingInsight
+        ? "Weaving Insights..."
+        : "Processing...";
   
   useEffect(() => {
     console.log('🎯 ORB STAGE UPDATE:', {
@@ -747,138 +756,163 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         )}
 
         {/* Responsive positioning container - mobile aware */}
-        {!showChat && !isTaskMode && (
-          <div className={cn(
+        <div
+          className={cn(
             "fixed z-40 pointer-events-none",
             // Consistent top-right positioning across all screen sizes
             "top-20 right-3 sm:right-4 lg:top-40 lg:right-6",
             className
-          )}>
-            <div className="relative pointer-events-auto">
-              {/* Speech Bubble - responsive positioning */}
-              <AnimatePresence>
-                {showBubble && currentQuestion && (
-                  <div
-                    className={cn(
-                      "mb-3 cursor-pointer hover:scale-105 transition-transform",
-                      // Mobile: position above orb, smaller
-                      "lg:mb-3 mb-2"
-                    )}
-                    onClick={handleBubbleClick}
-                  >
-                    <SpeechBubble
-                      position="left"
-                      isVisible={true}
-                    >
-                      <div className="text-xs sm:text-sm max-w-[200px] sm:max-w-[250px]">
-                        <div className="font-medium text-primary mb-1 text-xs sm:text-sm">
-                          {currentQuestion.module} Learning
-                        </div>
-                        <div className="text-xs sm:text-sm leading-tight">{currentQuestion.text}</div>
-                        <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-                          Tap to answer • Quick session
-                        </div>
-                      </div>
-                    </SpeechBubble>
-                  </div>
-                )}
-              </AnimatePresence>
-
-              {/* Floating Orb */}
-              <motion.div
-                layoutId="hacs-steward-soul"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className="cursor-pointer"
-                animate={chatLoading ? {
-                  scale: [1, 1.05, 1],
-                  opacity: [0.9, 1, 0.9]
-                } : {
-                  scale: 1,
-                  opacity: 1
-                }}
-                transition={chatLoading ? {
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                } : {
-                  duration: 0.3,
-                  ease: "easeOut"
-                }}
-              >
-                <IntelligentSoulOrb
-                  size="sm"
-                  stage={orbStage}
-                  speaking={isGenerating || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport}
-                  xpProgress={displayProgress}
-                  intelligenceLevel={intelligenceLevel}
-                  showProgressRing={displayProgress > 0}
-                  showIntelligenceTooltip={false}
-                  isThinking={isThinking || chatLoading}
-                  activeModule={activeModule}
-                  moduleActivity={moduleActivity || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport}
-                  hermeticProgress={
-                    hasHermeticReport
-                      ? 100
-                      : isGeneratingHermeticReport && hermeticJobProgress > 0
-                        ? hermeticJobProgress
-                        : 40
-                  }
-                  showHermeticProgress={isGeneratingReport || isGeneratingHermeticReport || hasHermeticReport}
-                  showRadiantGlow={hasHermeticReport && showRadiantGlow}
-                  milestoneGlow={milestoneGlow || hermeticMilestoneGlow}
-                  subconsciousMode={subconsciousMode}
-                  patternDetected={patternDetected}
-                  adviceReady={adviceReady || progressInsightReady}
-                  onClick={handleOrbClick}
-                  className="shadow-lg hover:shadow-xl transition-shadow"
-                />
-              </motion.div>
-
-              {/* Blue pulse indicator for questions - clickable */}
-              {currentQuestion && (
-                <motion.div
-                  className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-pointer"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log('🔵 Blue pulse clicked - showing speech bubble');
-                    setShowBubble(true);
-                  }}
-                />
-              )}
-
-              {/* Red exclamation mark for unacknowledged insights OR progress messages - clickable */}
-              {((currentInsight && !currentInsight.acknowledged) || progressInsightReady || adviceReady) && (
-                <motion.div
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
-                  animate={{
-                    scale: [1, 1.15, 1],
-                    boxShadow: [
-                      "0 0 0 0 rgba(239, 68, 68, 0.7)",
-                      "0 0 0 4px rgba(239, 68, 68, 0)",
-                      "0 0 0 0 rgba(239, 68, 68, 0)"
-                    ]
-                  }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (progressInsightReady) {
-                      console.log('🔴 Red exclamation clicked - showing progress insight');
-                      handleOrbClick(); // Will handle progress insight in priority order
-                    } else {
-                      console.log('🔴 Red exclamation clicked - showing insight');
-                      setShowInsightDisplay(true);
-                    }
-                  }}
+          )}
+          data-task-mode={isTaskMode ? 'task' : 'idle'}
+        >
+          <div className="relative pointer-events-auto">
+            <span className="sr-only">{centerStageMessage}</span>
+            {/* Speech Bubble - responsive positioning */}
+            <AnimatePresence>
+              {showBubble && currentQuestion && (
+                <div
+                  className={cn(
+                    "mb-3 cursor-pointer hover:scale-105 transition-transform",
+                    // Mobile: position above orb, smaller
+                    "lg:mb-3 mb-2"
+                  )}
+                  onClick={handleBubbleClick}
                 >
-                  <span className="text-white text-[10px] font-bold leading-none">!</span>
-                </motion.div>
+                  <SpeechBubble
+                    position="left"
+                    isVisible={true}
+                  >
+                    <div className="text-xs sm:text-sm max-w-[200px] sm:max-w-[250px]">
+                      <div className="font-medium text-primary mb-1 text-xs sm:text-sm">
+                        {currentQuestion.module} Learning
+                      </div>
+                      <div className="text-xs sm:text-sm leading-tight">{currentQuestion.text}</div>
+                      <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                        Tap to answer • Quick session
+                      </div>
+                    </div>
+                  </SpeechBubble>
+                </div>
               )}
+            </AnimatePresence>
+
+          {/* Center Stage Overlay for Task Mode */}
+          {isTaskMode && (
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+              <IntelligentSoulOrb
+                layoutId="hacs-steward-soul"
+                size="lg"
+                speaking={true}
+                stage="generating"
+                showProgressRing={true}
+              />
+              <SpeechBubble position="left" isVisible={true}>
+                <div className="text-center text-sm">
+                  {centerStageMessage}
+                  {typeof hermeticJobProgress === 'number'
+                    ? ` (${hermeticJobProgress}%)`
+                    : typeof displayProgress === 'number'
+                      ? ` (${Math.round(displayProgress)}%)`
+                      : ''}
+                </div>
+              </SpeechBubble>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Floating Orb */}
+          <motion.div
+            layoutId="hacs-steward-soul"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="cursor-pointer"
+            animate={chatLoading ? {
+              scale: [1, 1.05, 1],
+              opacity: [0.9, 1, 0.9]
+            } : {
+              scale: 1,
+              opacity: 1
+            }}
+            transition={chatLoading ? {
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            } : {
+              duration: 0.3,
+              ease: "easeOut"
+            }}
+          >
+            <IntelligentSoulOrb
+              size="sm"
+              stage={orbStage}
+              speaking={isGenerating || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport}
+              xpProgress={displayProgress}
+              intelligenceLevel={intelligenceLevel}
+              showProgressRing={displayProgress > 0}
+              showIntelligenceTooltip={false}
+              isThinking={isThinking || chatLoading}
+              activeModule={activeModule}
+              moduleActivity={moduleActivity || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport}
+              hermeticProgress={
+                hasHermeticReport 
+                  ? 100 
+                  : isGeneratingHermeticReport && hermeticJobProgress > 0
+                    ? hermeticJobProgress
+                    : 40
+              }
+              showHermeticProgress={isGeneratingReport || isGeneratingHermeticReport || hasHermeticReport}
+              showRadiantGlow={hasHermeticReport && showRadiantGlow}
+              milestoneGlow={milestoneGlow || hermeticMilestoneGlow}
+              subconsciousMode={subconsciousMode}
+              patternDetected={patternDetected}
+              adviceReady={adviceReady || progressInsightReady}
+              onClick={handleOrbClick}
+              className="shadow-lg hover:shadow-xl transition-shadow"
+            />
+          </motion.div>
+
+           {/* Blue pulse indicator for questions - clickable */}
+           {currentQuestion && (
+             <motion.div
+               className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-pointer"
+               animate={{ scale: [1, 1.2, 1] }}
+               transition={{ duration: 1, repeat: Infinity }}
+               onClick={(e) => {
+                 e.stopPropagation();
+                 console.log('🔵 Blue pulse clicked - showing speech bubble');
+                 setShowBubble(true);
+               }}
+             />
+           )}
+
+          {/* Red exclamation mark for unacknowledged insights OR progress messages - clickable */}
+          {((currentInsight && !currentInsight.acknowledged) || progressInsightReady || adviceReady) && (
+            <motion.div
+              className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
+              animate={{
+                scale: [1, 1.15, 1],
+                boxShadow: [
+                  "0 0 0 0 rgba(239, 68, 68, 0.7)",
+                  "0 0 0 4px rgba(239, 68, 68, 0)",
+                  "0 0 0 0 rgba(239, 68, 68, 0)"
+                ]
+              }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (progressInsightReady) {
+                  console.log('🔴 Red exclamation clicked - showing progress insight');
+                  handleOrbClick(); // Will handle progress insight in priority order
+                } else {
+                  console.log('🔴 Red exclamation clicked - showing insight');
+                  setShowInsightDisplay(true);
+                }
+              }}
+            >
+              <span className="text-white text-[10px] font-bold leading-none">!</span>
+            </motion.div>
+          )}
+        </div>
+      </div>
 
       {/* Background Report Generation Indicator */}
       {isGeneratingReport && (
