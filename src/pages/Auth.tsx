@@ -36,10 +36,8 @@ export default function Auth() {
 
   const getAppBaseUrl = () => {
     if (import.meta.env.VITE_SITE_URL) return import.meta.env.VITE_SITE_URL as string;
-    if (typeof window !== "undefined" && window.location.origin) return window.location.origin;
-
-    console.warn("No app base URL available for auth redirects");
-    return null;
+    if (typeof window !== "undefined") return window.location.origin;
+    return "";
   };
 
   // Initialize journey tracking
@@ -258,8 +256,7 @@ export default function Auth() {
 
     setIsLoading(true);
     try {
-      // Use the app base URL so static hosting can serve the SPA shell before routing to /auth
-      const redirectUrl = `${getAppBaseUrl()}`;
+      const redirectUrl = `${getAppBaseUrl()}/auth?type=recovery`;
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       });
