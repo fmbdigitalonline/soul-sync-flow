@@ -23,12 +23,22 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isResettingSession, setIsResettingSession] = useState(false);
+  const [isResetMode, setIsResetMode] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { t } = useLanguage();
+
+  const getAppBaseUrl = () => {
+    if (import.meta.env.VITE_SITE_URL) return import.meta.env.VITE_SITE_URL as string;
+    if (typeof window !== "undefined") return window.location.origin;
+    return "";
+  };
 
   // Initialize journey tracking
   const {
@@ -75,6 +85,55 @@ export default function Auth() {
     }
   }, [user, authLoading, navigate, from, fromFunnel, funnelData]);
 
+  useEffect(() => {
+    const typeParam = searchParams.get('type');
+    const codeParam = searchParams.get('code');
+    const errorDescription = searchParams.get('error_description');
+
+    if (errorDescription) {
+      toast({
+        title: t('error'),
+        description: errorDescription,
+        variant: "destructive",
+      });
+    }
+
+    if (typeParam === 'recovery') {
+      setIsSignUp(false);
+      setIsResetMode(false);
+      setIsRecoveryMode(true);
+
+      if (codeParam) {
+        const verifyRecovery = async () => {
+          setIsLoading(true);
+          const { error } = await supabase.auth.exchangeCodeForSession(codeParam);
+          setIsLoading(false);
+
+          if (error) {
+            console.error("Recovery verification error:", error);
+            toast({
+              title: t('error'),
+              description: error.message || t('auth.resetLinkInvalid'),
+              variant: "destructive",
+            });
+            setIsRecoveryMode(false);
+            navigate('/auth', { replace: true });
+            return;
+          }
+
+          toast({
+            title: t('auth.resetLinkVerified'),
+            description: t('auth.resetLinkVerifiedDescription'),
+          });
+        };
+
+        verifyRecovery();
+      }
+    } else {
+      setIsRecoveryMode(false);
+    }
+  }, [navigate, searchParams, t, toast]);
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -106,7 +165,7 @@ export default function Auth() {
     });
 
     try {
-      const redirectUrl = `${window.location.origin}/onboarding`;
+      const redirectUrl = `${getAppBaseUrl()}/onboarding`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -221,6 +280,92 @@ export default function Auth() {
     }
   };
 
+  const handlePasswordResetRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email) {
+      toast({
+        title: t('error'),
+        description: t('auth.enterEmail'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const redirectUrl = `${getAppBaseUrl()}/auth?type=recovery`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: t('auth.resetPassword'),
+        description: t('auth.resetEmailSent'),
+      });
+      setIsResetMode(false);
+    } catch (error: any) {
+      console.error("Password reset error:", error);
+      toast({
+        title: t('error'),
+        description: error.message || t('auth.resetPasswordFailed'),
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (newPassword !== confirmNewPassword) {
+      toast({
+        title: t('error'),
+        description: t('auth.passwordsDontMatch'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: t('error'),
+        description: t('auth.passwordTooShort'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+      if (error) throw error;
+
+      toast({
+        title: t('auth.passwordUpdated'),
+        description: t('auth.passwordUpdatedDescription'),
+      });
+
+      setIsRecoveryMode(false);
+      setNewPassword("");
+      setConfirmNewPassword("");
+      navigate('/auth', { replace: true });
+    } catch (error: any) {
+      console.error("Password update error:", error);
+      toast({
+        title: t('error'),
+        description: error.message || t('auth.passwordUpdateFailed'),
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const clearSupabaseAuthTokens = () => {
     try {
       const keys = Object.keys(localStorage);
@@ -261,6 +406,34 @@ export default function Auth() {
     );
   }
 
+  const cardTitle = isRecoveryMode
+    ? t('auth.resetPassword')
+    : isResetMode
+      ? t('auth.resetPassword')
+      : fromFunnel && funnelData && isSignUp
+        ? t('auth.createYourAccount')
+        : isSignUp ? t('auth.createAccount') : t('auth.welcomeBack');
+
+  const cardDescription = isRecoveryMode
+    ? t('auth.resetPasswordDescription')
+    : isResetMode
+      ? t('auth.resetPasswordSubtitle')
+      : fromFunnel && funnelData && isSignUp
+        ? t('auth.accessPersonalizedBlueprint')
+        : isSignUp ? t('auth.startJourney') : t('auth.continueJourney');
+
+  const handleSubmit = isRecoveryMode
+    ? handlePasswordUpdate
+    : isResetMode
+      ? handlePasswordResetRequest
+      : isSignUp ? handleSignUp : handleSignIn;
+
+  const primaryButtonText = isRecoveryMode
+    ? t('auth.updatePassword')
+    : isResetMode
+      ? t('auth.sendResetLink')
+      : isSignUp ? t('auth.createAccount') : t('nav.signIn');
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md bg-card shadow-lg border">
@@ -293,8 +466,8 @@ export default function Auth() {
               </Button>
             </AlertDescription>
           </Alert>
-          
-          {fromFunnel && funnelData && (
+
+          {fromFunnel && funnelData && !isRecoveryMode && !isResetMode && (
             <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4">
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-4 w-4 text-primary" />
@@ -305,69 +478,69 @@ export default function Auth() {
               </p>
             </div>
           )}
-          
+
           <div className="flex justify-center">
             <SoulOrbAvatar size="md" />
           </div>
           <div>
             <CardTitle className="text-2xl font-display">
-              {fromFunnel && funnelData && isSignUp 
-                ? t('auth.createYourAccount')
-                : isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
+              {cardTitle}
             </CardTitle>
             <CardDescription>
-              {fromFunnel && funnelData && isSignUp
-                ? t('auth.accessPersonalizedBlueprint')
-                : isSignUp ? t('auth.startJourney') : t('auth.continueJourney')}
+              {cardDescription}
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">{t('auth.email')}</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t('auth.enterEmail')}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">{t('auth.password')}</Label>
-              <div className="relative">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isRecoveryMode && (
+              <div className="space-y-2">
+                <Label htmlFor="email">{t('auth.email')}</Label>
                 <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t('auth.enterPassword')}
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={t('auth.enterEmail')}
                   required
                   disabled={isLoading}
-                  minLength={6}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
               </div>
-            </div>
+            )}
 
-            {isSignUp && (
+            {!isResetMode && !isRecoveryMode && (
+              <div className="space-y-2">
+                <Label htmlFor="password">{t('auth.password')}</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={t('auth.enterPassword')}
+                    required
+                    disabled={isLoading}
+                    minLength={6}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={isLoading}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {isSignUp && !isResetMode && !isRecoveryMode && (
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
                 <Input
@@ -383,29 +556,92 @@ export default function Auth() {
               </div>
             )}
 
-            <Button 
-              type="submit" 
-              className="w-full bg-soul-purple hover:bg-soul-purple/90" 
+            {isRecoveryMode && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">{t('auth.newPassword')}</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder={t('auth.enterNewPassword')}
+                    required
+                    disabled={isLoading}
+                    minLength={6}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmNewPassword">{t('auth.confirmPassword')}</Label>
+                  <Input
+                    id="confirmNewPassword"
+                    type="password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    placeholder={t('auth.confirmPasswordPlaceholder')}
+                    required
+                    disabled={isLoading}
+                    minLength={6}
+                  />
+                </div>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full bg-soul-purple hover:bg-soul-purple/90"
               disabled={isLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isSignUp ? t('auth.createAccount') : t('nav.signIn')}
+              {primaryButtonText}
             </Button>
           </form>
 
+          {!isResetMode && !isRecoveryMode && (
+            <div className="mt-2 text-right">
+              <Button
+                variant="link"
+                className="text-xs text-soul-purple hover:text-soul-purple/80 px-0"
+                onClick={() => {
+                  setIsResetMode(true);
+                  setIsSignUp(false);
+                }}
+                disabled={isLoading}
+              >
+                {t('auth.forgotPassword')}
+              </Button>
+            </div>
+          )}
+
           <div className="mt-4 text-center">
-            <Button
-              variant="link"
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setPassword("");
-                setConfirmPassword("");
-              }}
-              disabled={isLoading}
-              className="text-soul-purple hover:text-soul-purple/80"
-            >
-              {isSignUp ? t('auth.alreadyHaveAccount') : t('auth.needAccount')}
-            </Button>
+            {isResetMode || isRecoveryMode ? (
+              <Button
+                variant="link"
+                onClick={() => {
+                  setIsResetMode(false);
+                  setIsRecoveryMode(false);
+                  setIsSignUp(false);
+                  navigate('/auth', { replace: true });
+                }}
+                disabled={isLoading}
+                className="text-soul-purple hover:text-soul-purple/80"
+              >
+                {t('auth.backToSignIn')}
+              </Button>
+            ) : (
+              <Button
+                variant="link"
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setPassword("");
+                  setConfirmPassword("");
+                }}
+                disabled={isLoading}
+                className="text-soul-purple hover:text-soul-purple/80"
+              >
+                {isSignUp ? t('auth.alreadyHaveAccount') : t('auth.needAccount')}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
