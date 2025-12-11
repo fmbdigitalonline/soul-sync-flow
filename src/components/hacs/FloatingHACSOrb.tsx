@@ -64,6 +64,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [showRadiantGlow, setShowRadiantGlow] = useState(false);
   const [milestoneGlow, setMilestoneGlow] = useState(false);
   const [dismissalCooldown, setDismissalCooldown] = useState(false);
+  
   // Enhanced feedback system
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackMessageId, setFeedbackMessageId] = useState<string>('');
@@ -230,16 +231,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   // BRIDGE FIX: Also check steward introduction's isGeneratingReport for immediate UI response
   const isStewardGeneratingReport = isGeneratingReport; // From steward introduction hook
   const isAnyReportGenerating = isGeneratingHermeticReport || isStewardGeneratingReport;
-
-  const isTaskMode = isGenerating || isGeneratingInsight || isGeneratingReport;
-
-  const centerStageMessage = isGeneratingReport
-    ? "Activating Soul Alchemist... Deep synthesis in progress"
-    : isGenerating
-      ? "Composing Dream..."
-      : isGeneratingInsight
-        ? "Weaving Insights..."
-        : "Processing...";
   
   useEffect(() => {
     console.log('🎯 ORB STAGE UPDATE:', {
@@ -722,72 +713,44 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     <HACSErrorBoundary source="FloatingHACSOrb-Main">
       <>
         {/* Responsive positioning container - mobile aware */}
-        <div
-          className={cn(
-            "fixed z-40 pointer-events-none",
-            // Consistent top-right positioning across all screen sizes
-            "top-20 right-3 sm:right-4 lg:top-40 lg:right-6",
-            className
-          )}
-          data-task-mode={isTaskMode ? 'task' : 'idle'}
-        >
+        <div className={cn(
+          "fixed z-40 pointer-events-none",
+          // Consistent top-right positioning across all screen sizes
+          "top-20 right-3 sm:right-4 lg:top-40 lg:right-6",
+          className
+        )}>
           <div className="relative pointer-events-auto">
-            <span className="sr-only">{centerStageMessage}</span>
-            {/* Speech Bubble - responsive positioning */}
-            <AnimatePresence>
-              {showBubble && currentQuestion && (
-                <div
-                  className={cn(
-                    "mb-3 cursor-pointer hover:scale-105 transition-transform",
-                    // Mobile: position above orb, smaller
-                    "lg:mb-3 mb-2"
-                  )}
-                  onClick={handleBubbleClick}
+          {/* Speech Bubble - responsive positioning */}
+          <AnimatePresence>
+            {showBubble && currentQuestion && (
+              <div 
+                className={cn(
+                  "mb-3 cursor-pointer hover:scale-105 transition-transform",
+                  // Mobile: position above orb, smaller
+                  "lg:mb-3 mb-2"
+                )}
+                onClick={handleBubbleClick}
+              >
+                <SpeechBubble
+                  position="left"
+                  isVisible={true}
                 >
-                  <SpeechBubble
-                    position="left"
-                    isVisible={true}
-                  >
-                    <div className="text-xs sm:text-sm max-w-[200px] sm:max-w-[250px]">
-                      <div className="font-medium text-primary mb-1 text-xs sm:text-sm">
-                        {currentQuestion.module} Learning
-                      </div>
-                      <div className="text-xs sm:text-sm leading-tight">{currentQuestion.text}</div>
-                      <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-                        Tap to answer • Quick session
-                      </div>
-                    </div>
-                  </SpeechBubble>
+                <div className="text-xs sm:text-sm max-w-[200px] sm:max-w-[250px]">
+                  <div className="font-medium text-primary mb-1 text-xs sm:text-sm">
+                    {currentQuestion.module} Learning
+                  </div>
+                  <div className="text-xs sm:text-sm leading-tight">{currentQuestion.text}</div>
+                  <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                    Tap to answer • Quick session
+                  </div>
                 </div>
-              )}
-            </AnimatePresence>
-
-          {/* Center Stage Overlay for Task Mode */}
-          {isTaskMode && (
-            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
-              <IntelligentSoulOrb
-                layoutId="hacs-steward-soul"
-                size="lg"
-                speaking={true}
-                stage="generating"
-                showProgressRing={true}
-              />
-              <SpeechBubble position="left" isVisible={true}>
-                <div className="text-center text-sm">
-                  {centerStageMessage}
-                  {typeof hermeticJobProgress === 'number'
-                    ? ` (${hermeticJobProgress}%)`
-                    : typeof displayProgress === 'number'
-                      ? ` (${Math.round(displayProgress)}%)`
-                      : ''}
-                </div>
-              </SpeechBubble>
-            </div>
-          )}
+                </SpeechBubble>
+              </div>
+            )}
+          </AnimatePresence>
 
           {/* Floating Orb */}
           <motion.div
-            layoutId="hacs-steward-soul"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             className="cursor-pointer"
