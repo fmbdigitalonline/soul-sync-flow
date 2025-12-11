@@ -18,7 +18,7 @@ import { useHACSInsights, type HACSInsight } from "@/hooks/use-hacs-insights";
 import { isAdminUser } from "@/utils/isAdminUser";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Flame, Compass, RefreshCw, ChevronRight, Play, Layers, Target, ShieldCheck, MapPinned, Bolt } from "lucide-react";
+import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Compass, RefreshCw, ChevronRight, Play, Layers, Target, ShieldCheck, MapPinned, Bolt } from "lucide-react";
 type ActivityType = "conversation" | "dream" | "task" | "insight";
 interface ActivityItem {
   id: string;
@@ -376,33 +376,15 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border/70 bg-white shadow-sm">
-              <div className="flex items-center gap-2 px-4 pt-4 text-sm text-muted-foreground">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span>Today's Growth Focus</span>
-              </div>
-              <div className="space-y-3 p-4 pt-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Flame className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{focusPill}</p>
-                    <p className="text-xs text-muted-foreground">{currentSubtitle}</p>
-                  </div>
-                </div>
-                <div className="rounded-xl border border-primary/10 bg-primary/5 px-4 py-3 text-sm text-foreground shadow-inner">
-                  {guidanceInsight?.text || 'Tap in for a focused session to keep your momentum today.'}
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <Button size="lg" className="h-touch px-6" onClick={() => navigate(user ? continueItem?.actionPath || '/companion' : '/auth')}>
-                    <Play className="h-4 w-4 mr-2" />
-                    Resume now
-                  </Button>
-                  <Button variant="outline" size="lg" className="h-touch px-6" onClick={() => navigate('/blueprint')}>
-                    View blueprint
-                  </Button>
-                </div>
+            <div className="rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
+              <div className="flex flex-wrap gap-3">
+                <Button size="lg" className="h-touch px-6" onClick={() => navigate(user ? continueItem?.actionPath || '/companion' : '/auth')}>
+                  <Play className="h-4 w-4 mr-2" />
+                  Resume now
+                </Button>
+                <Button variant="outline" size="lg" className="h-touch px-6" onClick={() => navigate('/blueprint')}>
+                  View blueprint
+                </Button>
               </div>
             </div>
 
