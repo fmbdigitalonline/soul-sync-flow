@@ -62,7 +62,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    getInitialSession();
+    const handleRecoveryFromUrl = async () => {
+      if (typeof window === "undefined") return;
+
+      const hash = window.location.hash;
+      if (!hash || !hash.includes('type=recovery')) return;
+
+      try {
+        console.log('🔐 AuthProvider: Handling recovery from URL');
+        const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
+
+        if (error) {
+          console.error('🔐 Error handling recovery session:', error);
+          return;
+        }
+
+        if (data.session) {
+          console.log('🔐 Recovery session established for:', data.session.user.email);
+          setSession(data.session);
+          setUser(data.session.user);
+        }
+
+        const url = new URL(window.location.href);
+        url.hash = '';
+        url.pathname = '/auth';
+        url.searchParams.set('type', 'recovery');
+        window.history.replaceState({}, document.title, url.toString());
+      } catch (error) {
+        console.error('🔐 Error processing recovery callback:', error);
+      }
+    };
+
+    const initializeAuth = async () => {
+      await handleRecoveryFromUrl();
+      await getInitialSession();
+    };
+
+    initializeAuth();
 
     return () => {
       console.log('🔐 AuthProvider: Cleaning up auth listener');
