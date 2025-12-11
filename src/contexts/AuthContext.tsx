@@ -65,12 +65,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleRecoveryFromUrl = async () => {
       if (typeof window === "undefined") return;
 
-      const hash = window.location.hash;
-      if (!hash || !hash.includes('type=recovery')) return;
+      const url = new URL(window.location.href);
+      const hash = url.hash;
+      const isHashRecovery = hash && hash.includes('type=recovery');
+      const code = url.searchParams.get('code');
+      const isQueryRecovery = url.searchParams.get('type') === 'recovery' && !!code;
+
+      if (!isHashRecovery && !isQueryRecovery) return;
 
       try {
         console.log('🔐 AuthProvider: Handling recovery from URL');
-        const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
+        const { data, error } = isHashRecovery
+          ? await supabase.auth.getSessionFromUrl({ storeSession: true })
+          : await supabase.auth.exchangeCodeForSession(code!);
 
         if (error) {
           console.error('🔐 Error handling recovery session:', error);
@@ -83,10 +90,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(data.session.user);
         }
 
-        const url = new URL(window.location.href);
         url.hash = '';
         url.pathname = '/auth';
         url.searchParams.set('type', 'recovery');
+        url.searchParams.delete('code');
         window.history.replaceState({}, document.title, url.toString());
       } catch (error) {
         console.error('🔐 Error processing recovery callback:', error);
