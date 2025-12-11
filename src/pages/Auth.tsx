@@ -259,18 +259,7 @@ export default function Auth() {
     setIsLoading(true);
     try {
       // Use the app base URL so static hosting can serve the SPA shell before routing to /auth
-      const redirectUrl = getAppBaseUrl();
-
-      if (!redirectUrl?.trim()) {
-        console.warn("Password reset aborted: no base URL available for redirect");
-        toast({
-          title: t('error'),
-          description: t('auth.resetPasswordFailed'),
-          variant: "destructive",
-        });
-        return;
-      }
-
+      const redirectUrl = `${getAppBaseUrl()}`;
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       });
