@@ -7,8 +7,6 @@ import MainLayout from "@/components/Layout/MainLayout";
 import { PageContainer, PageSection } from "@/components/Layout/PageContainer";
 import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { TutorialModal } from "@/components/tutorial/TutorialModal";
 import PersonalityDemo from "@/components/personality/PersonalityDemo";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
@@ -18,7 +16,7 @@ import { useHACSInsights, type HACSInsight } from "@/hooks/use-hacs-insights";
 import { isAdminUser } from "@/utils/isAdminUser";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Compass, RefreshCw, ChevronRight, Play, Layers, Target, ShieldCheck, MapPinned, Bolt } from "lucide-react";
+import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Flame, Compass, RefreshCw, ChevronRight } from "lucide-react";
 type ActivityType = "conversation" | "dream" | "task" | "insight";
 interface ActivityItem {
   id: string;
@@ -74,7 +72,6 @@ const Index = () => {
   const [guidanceInsight, setGuidanceInsight] = useState<HACSInsight | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [hasLoadedGuidance, setHasLoadedGuidance] = useState(false);
-  const focusPill = guidanceInsight?.module || "Alignment";
   const welcomeMessage = useMemo(() => {
     if (!user) return null;
     if (hasBlueprint) {
@@ -293,302 +290,176 @@ const Index = () => {
     task: <ListChecks className="h-5 w-5 text-primary" />,
     insight: <Lightbulb className="h-5 w-5 text-primary" />
   };
-  const moduleCards = [
-    {
-      title: "Quick Focus",
-      description: "2–5 min resets to regain clarity.",
-      image: "/assets/home/dashboard.jpg",
-      action: () => navigate(user ? '/companion' : '/auth'),
-      badge: "In Flow"
-    },
-    {
-      title: "Full Assessment",
-      description: "Capture your current state in depth.",
-      image: "/assets/home/growth.jpg",
-      action: () => navigate(user ? '/blueprint' : '/auth'),
-      badge: "10%"
-    },
-    {
-      title: "Guided Discovery",
-      description: "Structured prompts to unpack insights.",
-      image: "/assets/home/companion.jpg",
-      action: () => navigate(user ? '/companion' : '/auth'),
-      badge: "New"
-    },
-    {
-      title: "Progressive Journey",
-      description: "Step-by-step roadmap progression.",
-      image: "/assets/home/tasks.jpg",
-      action: () => navigate(user ? '/tasks' : '/auth'),
-      badge: "42%"
-    }
-  ];
-
-  const continueCards = [
-    {
-      title: "Life Operating System",
-      status: continueItem?.type === 'task' ? 'In Progress' : user ? 'Set up next' : 'Preview',
-      description: continueItem?.title || 'Reconnect your routines and priorities.',
-      actionPath: continueItem?.actionPath || '/tasks',
-      icon: <Layers className="h-4 w-4" />,
-      badge: continueItem?.lastActivity ? `Updated ${formatRelativeTime(continueItem.lastActivity)}` : user ? 'Start' : 'Sign in'
-    },
-    {
-      title: "Guided Discovery",
-      status: guidanceInsight ? 'Ongoing' : user ? 'Ready' : 'Preview',
-      description: guidanceInsight?.text || 'Pick up your reflective prompts.',
-      actionPath: '/companion',
-      icon: <Target className="h-4 w-4" />,
-      badge: user ? focusPill : 'Sign in'
-    },
-    {
-      title: "Progressive Journey",
-      status: 'Milestones',
-      description: 'Advance the next milestone in your roadmap.',
-      actionPath: '/blueprint',
-      icon: <MapPinned className="h-4 w-4" />,
-      badge: user ? 'Next step' : 'Sign in'
-    },
-    {
-      title: "Blueprint",
-      status: hasBlueprint ? 'Active' : user ? 'Draft' : 'Preview',
-      description: hasBlueprint ? 'Review your latest blueprint insights.' : 'Create your personal blueprint.',
-      actionPath: '/blueprint',
-      icon: <ShieldCheck className="h-4 w-4" />,
-      badge: user ? hasBlueprint ? 'Synced' : 'Start' : 'Sign in'
-    }
-  ];
-
   return <MainLayout>
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto max-w-4xl px-4 py-10 space-y-8">
-          {/* Hero Section */}
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h1 className="text-3xl md:text-4xl font-heading font-semibold bg-gradient-to-b from-[#7C7EFF] via-[#6EA4FF] to-[#37C9E9] bg-clip-text text-transparent leading-tight">
-                {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), {
+      <PageContainer maxWidth="saas" className="sm:min-h-screen flex flex-col justify-start sm:justify-center bg-gradient-to-br from-background via-accent/5 to-primary/5 px-4 sm:px-0">
+        {/* Hero Section */}
+        <PageSection className="mb-6 sm:mb-8">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="space-y-1">
+                
+                <h1 className="text-4xl sm:text-5xl font-bold font-cormorant gradient-text">
+                  {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), {
                   name: userName
                 })}
-              </h1>
-              <div className="flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                </h1>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground" title="Last synced from your latest activity">
                 <Clock className="h-4 w-4" />
-                <span>Last synced {lastSynced ? formatRelativeTime(lastSynced) : 'just now'}</span>
+                <span>{lastSynced ? `Last synced ${formatRelativeTime(lastSynced)}` : 'Last synced moments ago'}</span>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
-              <div className="flex flex-wrap gap-3">
-                <Button size="lg" className="h-touch px-6" onClick={() => navigate(user ? continueItem?.actionPath || '/companion' : '/auth')}>
-                  <Play className="h-4 w-4 mr-2" />
-                  Resume now
-                </Button>
-                <Button variant="outline" size="lg" className="h-touch px-6" onClick={() => navigate('/blueprint')}>
-                  View blueprint
-                </Button>
-              </div>
+            {/* Quote - no card wrapper */}
+            <div className="mt-2">
+              <p className="text-sm text-muted-foreground mb-1">Your Quote of the Day</p>
+              <PersonalizedQuoteDisplay className="text-xl sm:text-2xl text-foreground/80 font-inter italic" interval={4000} />
             </div>
+          </div>
+        </PageSection>
 
-            <div className="rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="space-y-1">
-                  <p className="text-xs uppercase text-muted-foreground tracking-wide">Today's Quote</p>
-                  <PersonalizedQuoteDisplay className="text-lg sm:text-xl text-foreground/80 font-inter italic" interval={4000} />
+        {user && <PageSection className="mb-8">
+            <div className="rounded-2xl bg-primary/10 border border-primary/20 p-6 sm:p-8 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-primary font-semibold">
+                    <Flame className="h-5 w-5" />
+                    <span>Continue Where You Left Off</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">
+                    {continueItem?.title || 'You are all caught up'}
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    {continueItem?.lastActivity ? `Last activity ${formatRelativeTime(continueItem.lastActivity)}` : 'Pick a focus to jump back in and keep momentum.'}
+                  </p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={handleTutorialStart}>
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Guided tour
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Button size="lg" onClick={() => navigate(continueItem?.actionPath || '/companion')} disabled={!continueItem} className="font-inter h-touch px-8">
+                    Resume
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          </PageSection>}
 
-          {/* Continue Where You Left Off */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Continue Where You Left Off</h3>
-              <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Multi-track</span>
-            </div>
-            <div className="grid gap-3 lg:grid-cols-2">
-              {continueCards.map(card => (
-                <button
-                  key={card.title}
-                  onClick={() => navigate(user ? card.actionPath : '/auth')}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-white px-4 py-3 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-primary">
-                      {card.icon}
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-semibold text-foreground">{card.title}</p>
-                      <p className="text-xs text-muted-foreground">{card.description}</p>
-                    </div>
-                  </div>
-                  <span className="whitespace-nowrap rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
-                    {card.badge}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Explore Modules */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-foreground">Explore Growth Modules</h3>
-            <div className="grid gap-3 lg:grid-cols-4">
-              {moduleCards.map(card => (
-                <button
-                  key={card.title}
-                  onClick={card.action}
-                  className="group rounded-2xl border border-border/70 bg-white p-2 shadow-sm transition hover:border-primary/40 hover:shadow-md"
-                >
-                  <div className="overflow-hidden rounded-xl">
-                    <img
-                      src={card.image}
-                      alt={card.title}
-                      className="h-32 w-full object-cover transition duration-300 group-hover:scale-105"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </div>
-                  <p className="mt-3 text-center text-sm font-semibold text-foreground">{card.title}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="space-y-4 rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Clock className="h-4 w-4 text-primary" />
-                <span>Recent Activity</span>
-                {user && <Button variant="ghost" size="icon" onClick={fetchActivityData} disabled={activityLoading} className="h-8 w-8 ml-2">
-                    <RefreshCw className={cn("h-4 w-4", activityLoading && "animate-spin")} />
-                  </Button>}
-              </div>
-              {recentActivities.length > 3 && <Button variant="link" size="sm" onClick={() => navigate('/activity')} className="text-primary">
-                  View all <ChevronRight className="h-4 w-4 ml-1" />
+        {/* Recent Activity - Clean List Layout */}
+        <PageSection className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-semibold">Recent Activity</h3>
+              {user && <Button variant="ghost" size="sm" onClick={fetchActivityData} disabled={activityLoading} className="h-8 w-8 p-0">
+                  <RefreshCw className={cn("h-4 w-4", activityLoading && "animate-spin")} />
                 </Button>}
             </div>
-            <div className="space-y-3">
-              {recentActivities.length > 0 ? recentActivities.slice(0, 3).map(activity => (
-                <div 
-                  key={activity.id} 
-                  className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/40 px-3 py-2 cursor-pointer hover:bg-muted/60 transition-colors" 
-                  onClick={() => navigate(activity.actionPath)}
-                >
-                  <div className="mt-2 h-2 w-2 rounded-full bg-primary" />
-                  <div className="flex-1">
-                    <p className="text-sm text-foreground">{activity.title}{activity.description ? `: ${activity.description}` : ''}</p>
-                    <p className="text-xs text-muted-foreground">{activity.timestamp ? formatRelativeTime(activity.timestamp) : ''}</p>
-                  </div>
-                  {activity.progress !== undefined && (
-                    <span className="text-xs text-muted-foreground">{activity.progress}%</span>
-                  )}
-                </div>
-              )) : (
-                <p className="text-sm text-muted-foreground">
-                  {user ? 'No recent activity yet. Start a conversation or set a task to see updates here.' : 'Sign in to see your unified activity stream.'}
-                </p>
-              )}
-            </div>
+            {recentActivities.length > 3 && <Button variant="link" size="sm" onClick={() => navigate('/activity')} className="text-primary">
+                View all <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>}
           </div>
-
-          {/* Guidance Cards Grid */}
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-border/70 bg-white p-4 shadow-sm flex flex-col gap-3">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span>Today's Guidance</span>
-              </div>
-              <p className="text-base font-medium text-foreground">{guidanceInsight?.text || currentSubtitle}</p>
-              <p className="text-xs text-muted-foreground">
-                {guidanceInsight ? `Source: ${guidanceInsight.module} · ${formatRelativeTime(guidanceInsight.timestamp?.toString())}` : insightsLoading ? 'Gathering your latest insights…' : 'We will surface blueprint insights and conversation highlights here once you engage.'}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => navigate('/blueprint')} disabled={!guidanceInsight && insightsLoading}>
-                  {guidanceInsight ? 'Expand' : 'Blueprint'}
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleTutorialStart}>
-                  Take tour
-                </Button>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-border/70 bg-white p-4 shadow-sm flex flex-col gap-3">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <BookOpen className="h-4 w-4 text-primary" />
-                <span>Blueprint Highlights</span>
-              </div>
-              <p className="text-xs text-muted-foreground">Key anchors to revisit today.</p>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/40 px-3 py-2">
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-semibold text-foreground">Values & Focus</p>
-                    <p className="text-xs text-muted-foreground">Stay aligned to your top priority.</p>
-                  </div>
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">Sync</span>
+          
+          <div className="space-y-0">
+            {recentActivities.length > 0 ? recentActivities.slice(0, 3).map((activity, idx) => <div key={activity.id} className={cn("flex items-center gap-4 py-4 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg px-2 -mx-2", idx !== Math.min(2, recentActivities.length - 1) && "border-b border-border/30")} onClick={() => navigate(activity.actionPath)}>
+                {/* Icon */}
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  {iconByType[activity.type]}
                 </div>
-                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/40 px-3 py-2">
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-semibold text-foreground">Active Tasks</p>
-                    <p className="text-xs text-muted-foreground">Continue your current sprint.</p>
+                
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm">{activity.title}</div>
+                  <div className="text-sm text-muted-foreground truncate">
+                    {activity.description || formatRelativeTime(activity.timestamp)}
                   </div>
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">3 open</span>
                 </div>
-                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/40 px-3 py-2">
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-semibold text-foreground">Insights</p>
-                    <p className="text-xs text-muted-foreground">Reflect on the latest takeaway.</p>
-                  </div>
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">New</span>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="ghost" size="sm" onClick={() => navigate('/blueprint')}>
-                  Open Blueprint
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/tasks')}>
-                  View Tasks
-                </Button>
-              </div>
-            </div>
+                
+                {/* Progress Bar */}
+                {activity.progress !== undefined && <div className="flex items-center gap-2 shrink-0">
+                    <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full transition-all" style={{
+                  width: `${activity.progress}%`
+                }} />
+                    </div>
+                    <span className="text-sm text-muted-foreground w-10 text-right">
+                      {activity.progress}%
+                    </span>
+                  </div>}
+                
+                {/* Arrow */}
+                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+              </div>) : <div className="py-8 text-center text-muted-foreground">
+                {user ? 'No recent activity yet. Start a conversation or set a task to see updates here.' : 'Sign in to see your unified activity stream.'}
+              </div>}
           </div>
+        </PageSection>
 
-          {/* Get Started CTA for non-users */}
-          {!user && (
-            <div className="text-center space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-2xl font-semibold text-foreground">Get started with SoulSync</h3>
-                <p className="text-muted-foreground">Create an account to track conversations, dreams, and growth tasks in one hub.</p>
-              </div>
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Button onClick={() => navigate('/get-started')} size="lg" className="font-inter h-touch px-8">
-                  <ArrowRight className="h-5 w-5 mr-2" />
-                  {t('index.getStarted')}
-                </Button>
-                <Button asChild variant="outline" size="lg" className="font-inter h-touch px-8">
-                  <Link to="/auth">
-                    <LogIn className="h-5 w-5 mr-2" />
-                    {t('auth.signIn')}
-                  </Link>
-                </Button>
-              </div>
+        <PageSection className="mb-8 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-primary font-semibold">
+              <Compass className="h-5 w-5" />
+              <span>Today's Guidance</span>
             </div>
-          )}
-
-          {/* Admin Demo Button */}
-          {user && isAdminUser(user) && (
-            <div className="flex justify-center">
-              <Button onClick={() => setShowDemo(true)} variant="outline" className="font-inter h-touch">
-                <Brain className="h-5 w-5 mr-2" />
-                {t('index.demoButton')}
+            <p className="text-lg font-medium">{guidanceInsight?.text || currentSubtitle}</p>
+            <p className="text-sm text-muted-foreground">
+              {guidanceInsight ? `Source: ${guidanceInsight.module} · ${formatRelativeTime(guidanceInsight.timestamp?.toString())}` : insightsLoading ? 'Gathering your latest insights…' : 'We will surface blueprint insights and conversation highlights here once you engage.'}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate('/blueprint')} disabled={!guidanceInsight && insightsLoading}>
+                {guidanceInsight ? 'Expand' : 'Blueprint'}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleTutorialStart}>
+                Take tour
               </Button>
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+
+          <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-primary font-semibold">
+              <Sparkles className="h-5 w-5" />
+              <span>Smart Shortcuts</span>
+            </div>
+            <p className="text-sm text-muted-foreground">Jump straight into the three core flows.</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <Button variant="outline" className="justify-start h-auto py-3" onClick={() => navigate('/companion')}>
+                <MessageCircle className="h-5 w-5 mr-2" />
+                Start a Conversation
+              </Button>
+              <Button variant="outline" className="justify-start h-auto py-3" onClick={() => navigate('/blueprint')}>
+                <BookOpen className="h-5 w-5 mr-2" />
+                View Blueprint Highlights
+              </Button>
+              <Button variant="outline" className="justify-start h-auto py-3" onClick={() => navigate('/tasks')}>
+                <ListChecks className="h-5 w-5 mr-2" />
+                Check Growth Tasks
+              </Button>
+            </div>
+          </div>
+        </PageSection>
+
+        {!user && <PageSection className="mb-8 text-center space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-2xl font-semibold">Get started with SoulSync</h3>
+              <p className="text-muted-foreground">Create an account to track conversations, dreams, and growth tasks in one hub.</p>
+            </div>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button onClick={() => navigate('/get-started')} size="lg" className="font-inter h-touch px-8">
+                <ArrowRight className="h-5 w-5 mr-2" />
+                {t('index.getStarted')}
+              </Button>
+              <Button asChild variant="outline" size="lg" className="font-inter h-touch px-8">
+                <Link to="/auth">
+                  <LogIn className="h-5 w-5 mr-2" />
+                  {t('auth.signIn')}
+                </Link>
+              </Button>
+            </div>
+          </PageSection>}
+
+        {user && isAdminUser(user) && <div className="flex justify-center mb-8">
+            <Button onClick={() => setShowDemo(true)} variant="outline" className="font-inter h-touch">
+              <Brain className="h-5 w-5 mr-2" />
+              {t('index.demoButton')}
+            </Button>
+          </div>}
+      </PageContainer>
 
       {showTutorial && <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} tutorialState={tutorialState} onContinue={continueTutorial} onComplete={completeTutorial} />}
     </MainLayout>;
