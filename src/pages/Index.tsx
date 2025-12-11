@@ -360,139 +360,126 @@ const Index = () => {
   ];
 
   return <MainLayout>
-      <PageContainer maxWidth="saas" className="sm:min-h-screen flex flex-col justify-start sm:justify-center bg-gradient-to-br from-background via-accent/5 to-primary/5 px-4 sm:px-0">
-        {/* Hero Section */}
-        <PageSection className="mb-6 sm:mb-8">
-          <Card className="rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/5 via-background to-card shadow-lg">
-            <div className="p-6 sm:p-8 flex flex-col gap-4">
-              <div className="flex flex-wrap items-center gap-3 justify-between">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Badge variant="outline" className="bg-primary/10 border-primary/20 text-primary">
-                    <Clock className="h-3.5 w-3.5 mr-1" />
-                    {lastSynced ? `Last synced ${formatRelativeTime(lastSynced)}` : 'Synced just now'}
-                  </Badge>
-                  <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-100">Today’s Growth Focus</Badge>
-                </div>
-                <Badge variant="secondary" className="bg-primary text-primary-foreground shadow-sm">
-                  <Flame className="h-4 w-4 mr-1" />
-                  {focusPill}
-                </Badge>
-              </div>
-              <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                <div className="flex-1 space-y-3">
-                  <p className="text-sm text-muted-foreground">Welcome back</p>
-                  <h1 className="text-4xl sm:text-5xl font-bold font-cormorant gradient-text leading-tight">
-                    {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), {
-                    name: userName
-                  })}
-                  </h1>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <Bolt className="h-4 w-4 text-primary" />
-                    <span>{currentSubtitle}</span>
-                  </div>
-                </div>
-                <div className="w-full lg:w-auto flex flex-col items-start gap-3">
-                  <div className="text-left text-sm text-muted-foreground">
-                    {guidanceInsight?.text || 'Tap in for a focused session to keep your momentum today.'}
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    <Button size="lg" className="h-touch px-6" onClick={() => navigate(user ? continueItem?.actionPath || '/companion' : '/auth')}>
-                      <Play className="h-4 w-4 mr-2" />
-                      Resume now
-                    </Button>
-                    <Button variant="outline" size="lg" className="h-touch px-6" onClick={() => navigate('/blueprint')}>
-                      View blueprint
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-card border border-border/70 rounded-2xl p-4 shadow-inner">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="space-y-1">
-                    <p className="text-xs uppercase text-muted-foreground tracking-wide">Today’s Quote</p>
-                    <PersonalizedQuoteDisplay className="text-lg sm:text-xl text-foreground/80 font-inter italic" interval={4000} />
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={handleTutorialStart}>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Guided tour
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </PageSection>
-
-        <PageSection className="mb-8">
-          <div className="rounded-3xl bg-card border border-border/70 p-6 sm:p-7 shadow-sm">
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div className="flex items-center gap-2 text-primary font-semibold">
-                <Flame className="h-5 w-5" />
-                <span>Continue Where You Left Off</span>
-              </div>
-                <Badge variant="outline" className="text-xs text-muted-foreground border-border/70">Multi-track</Badge>
-              </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              {continueCards.map(card => <div key={card.title} className="rounded-2xl border border-border/70 bg-muted/20 p-4 hover:bg-primary/5 transition-colors">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                          {card.icon}
-                        </span>
-                        <div className="space-y-0.5">
-                          <p className="text-xs uppercase tracking-wide text-muted-foreground">{card.status}</p>
-                          <h3 className="text-lg font-semibold text-foreground">{card.title}</h3>
-                        </div>
-                      </div>
-                      <Badge variant="secondary" className="bg-white/80 text-primary border-border/70">{card.badge}</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-3 mb-4">{card.description}</p>
-                    <div className="flex items-center justify-between">
-                      <Button variant="ghost" size="sm" className="px-0 text-primary" onClick={() => navigate(user ? card.actionPath : '/auth')}>
-                        Resume
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
-                      <Button variant="outline" size="sm" className="h-9" onClick={() => navigate(user ? card.actionPath : '/auth')}>
-                        Open track
-                      </Button>
-                    </div>
-                  </div>)}
-            </div>
-          </div>
-        </PageSection>
-
-        {/* Explore Modules */}
-        <PageSection className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 text-primary font-semibold">
-              <Compass className="h-5 w-5" />
-              <span>Explore Growth Modules</span>
-            </div>
-            <Badge variant="outline" className="text-xs text-muted-foreground border-border/70">Curated</Badge>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {moduleCards.map(card => <div key={card.title} className="group relative overflow-hidden rounded-3xl border border-border/70 shadow-md bg-card">
-                <img src={card.image} alt={card.title} className="h-40 w-full object-cover transition duration-500 group-hover:scale-105" />
-                <div className="absolute top-3 right-3">
-                  <Badge className="bg-white/80 text-primary border-border/70 backdrop-blur">{card.badge}</Badge>
-                </div>
-                <div className="p-4 space-y-2">
-                  <h3 className="text-lg font-semibold">{card.title}</h3>
-                  <p className="text-sm text-muted-foreground">{card.description}</p>
-                  <Button variant="ghost" size="sm" className="px-0 text-primary" onClick={card.action}>
-                    Open module
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-              </div>)}
-          </div>
-        </PageSection>
-
-        {/* Recent Activity - Card Digest */}
-        <PageSection className="mb-8">
-          <div className="rounded-3xl border border-border/70 bg-card shadow-sm">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border/70">
-              <div className="flex items-center gap-2 text-primary font-semibold">
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto max-w-4xl px-4 py-10 space-y-8">
+          {/* Hero Section */}
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h1 className="text-2xl md:text-3xl font-heading font-semibold text-foreground">
+                {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), {
+                  name: userName
+                })}
+              </h1>
+              <div className="flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                 <Clock className="h-4 w-4" />
+                <span>Last synced {lastSynced ? formatRelativeTime(lastSynced) : 'just now'}</span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-white shadow-sm">
+              <div className="flex items-center gap-2 px-4 pt-4 text-sm text-muted-foreground">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span>Today's Growth Focus</span>
+              </div>
+              <div className="space-y-3 p-4 pt-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Flame className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{focusPill}</p>
+                    <p className="text-xs text-muted-foreground">{currentSubtitle}</p>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-primary/10 bg-primary/5 px-4 py-3 text-sm text-foreground shadow-inner">
+                  {guidanceInsight?.text || 'Tap in for a focused session to keep your momentum today.'}
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Button size="lg" className="h-touch px-6" onClick={() => navigate(user ? continueItem?.actionPath || '/companion' : '/auth')}>
+                    <Play className="h-4 w-4 mr-2" />
+                    Resume now
+                  </Button>
+                  <Button variant="outline" size="lg" className="h-touch px-6" onClick={() => navigate('/blueprint')}>
+                    View blueprint
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-xs uppercase text-muted-foreground tracking-wide">Today's Quote</p>
+                  <PersonalizedQuoteDisplay className="text-lg sm:text-xl text-foreground/80 font-inter italic" interval={4000} />
+                </div>
+                <Button variant="ghost" size="sm" onClick={handleTutorialStart}>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Guided tour
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Continue Where You Left Off */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground">Continue Where You Left Off</h3>
+              <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Multi-track</span>
+            </div>
+            <div className="grid gap-3 lg:grid-cols-2">
+              {continueCards.map(card => (
+                <button
+                  key={card.title}
+                  onClick={() => navigate(user ? card.actionPath : '/auth')}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-white px-4 py-3 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-primary">
+                      {card.icon}
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-foreground">{card.title}</p>
+                      <p className="text-xs text-muted-foreground">{card.description}</p>
+                    </div>
+                  </div>
+                  <span className="whitespace-nowrap rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
+                    {card.badge}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Explore Modules */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-foreground">Explore Growth Modules</h3>
+            <div className="grid gap-3 lg:grid-cols-4">
+              {moduleCards.map(card => (
+                <button
+                  key={card.title}
+                  onClick={card.action}
+                  className="group rounded-2xl border border-border/70 bg-white p-2 shadow-sm transition hover:border-primary/40 hover:shadow-md"
+                >
+                  <div className="overflow-hidden rounded-xl">
+                    <img
+                      src={card.image}
+                      alt={card.title}
+                      className="h-32 w-full object-cover transition duration-300 group-hover:scale-105"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                  <p className="mt-3 text-center text-sm font-semibold text-foreground">{card.title}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="space-y-4 rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Clock className="h-4 w-4 text-primary" />
                 <span>Recent Activity</span>
                 {user && <Button variant="ghost" size="icon" onClick={fetchActivityData} disabled={activityLoading} className="h-8 w-8 ml-2">
                     <RefreshCw className={cn("h-4 w-4", activityLoading && "animate-spin")} />
@@ -502,120 +489,124 @@ const Index = () => {
                   View all <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>}
             </div>
-            <div className="divide-y divide-border/60">
-              {recentActivities.length > 0 ? recentActivities.slice(0, 3).map(activity => <div key={activity.id} className="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-accent/5 transition-colors" onClick={() => navigate(activity.actionPath)}>
-                    <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
-                      {iconByType[activity.type]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="font-semibold text-sm text-foreground">{activity.title}</div>
-                        <span className="text-xs text-muted-foreground">{activity.timestamp ? formatRelativeTime(activity.timestamp) : ''}</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground truncate">{activity.description || 'Tap to open details'}</div>
-                    </div>
-                    {activity.progress !== undefined && <div className="flex items-center gap-2 shrink-0">
-                        <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-primary rounded-full transition-all" style={{
-                      width: `${activity.progress}%`
-                    }} />
-                        </div>
-                        <span className="text-sm text-muted-foreground w-10 text-right">{activity.progress}%</span>
-                      </div>}
-                    <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-                  </div>) : <div className="py-8 text-center text-muted-foreground">
-                  {user ? 'No recent activity yet. Start a conversation or set a task to see updates here.' : 'Sign in to see your unified activity stream.'}
-                </div>}
-            </div>
-          </div>
-        </PageSection>
-
-        <PageSection className="mb-8 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-primary font-semibold">
-              <Sparkles className="h-5 w-5" />
-              <span>Today's Guidance</span>
-            </div>
-            <p className="text-lg font-medium">{guidanceInsight?.text || currentSubtitle}</p>
-            <p className="text-sm text-muted-foreground">
-              {guidanceInsight ? `Source: ${guidanceInsight.module} · ${formatRelativeTime(guidanceInsight.timestamp?.toString())}` : insightsLoading ? 'Gathering your latest insights…' : 'We will surface blueprint insights and conversation highlights here once you engage.'}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigate('/blueprint')} disabled={!guidanceInsight && insightsLoading}>
-                {guidanceInsight ? 'Expand' : 'Blueprint'}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleTutorialStart}>
-                Take tour
-              </Button>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-primary font-semibold">
-              <BookOpen className="h-5 w-5" />
-              <span>Blueprint Highlights</span>
-            </div>
-            <p className="text-sm text-muted-foreground">Key anchors to revisit today.</p>
             <div className="space-y-3">
-              <div className="flex items-center justify-between rounded-xl border border-border/70 p-3 bg-muted/40">
-                <div className="space-y-0.5">
-                  <p className="text-sm font-semibold">Values & Focus</p>
-                  <p className="text-xs text-muted-foreground">Stay aligned to your top priority.</p>
+              {recentActivities.length > 0 ? recentActivities.slice(0, 3).map(activity => (
+                <div 
+                  key={activity.id} 
+                  className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/40 px-3 py-2 cursor-pointer hover:bg-muted/60 transition-colors" 
+                  onClick={() => navigate(activity.actionPath)}
+                >
+                  <div className="mt-2 h-2 w-2 rounded-full bg-primary" />
+                  <div className="flex-1">
+                    <p className="text-sm text-foreground">{activity.title}{activity.description ? `: ${activity.description}` : ''}</p>
+                    <p className="text-xs text-muted-foreground">{activity.timestamp ? formatRelativeTime(activity.timestamp) : ''}</p>
+                  </div>
+                  {activity.progress !== undefined && (
+                    <span className="text-xs text-muted-foreground">{activity.progress}%</span>
+                  )}
                 </div>
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">Sync</Badge>
-              </div>
-              <div className="flex items-center justify-between rounded-xl border border-border/70 p-3 bg-muted/40">
-                <div className="space-y-0.5">
-                  <p className="text-sm font-semibold">Active Tasks</p>
-                  <p className="text-xs text-muted-foreground">Continue your current sprint.</p>
-                </div>
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">3 open</Badge>
-              </div>
-              <div className="flex items-center justify-between rounded-xl border border-border/70 p-3 bg-muted/40">
-                <div className="space-y-0.5">
-                  <p className="text-sm font-semibold">Insights</p>
-                  <p className="text-xs text-muted-foreground">Reflect on the latest takeaway.</p>
-                </div>
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">New</Badge>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/blueprint')}>
-                Open Blueprint
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate('/tasks')}>
-                View Tasks
-              </Button>
+              )) : (
+                <p className="text-sm text-muted-foreground">
+                  {user ? 'No recent activity yet. Start a conversation or set a task to see updates here.' : 'Sign in to see your unified activity stream.'}
+                </p>
+              )}
             </div>
           </div>
-        </PageSection>
 
-        {!user && <PageSection className="mb-8 text-center space-y-4">
-            <div className="space-y-2">
-              <h3 className="text-2xl font-semibold">Get started with SoulSync</h3>
-              <p className="text-muted-foreground">Create an account to track conversations, dreams, and growth tasks in one hub.</p>
+          {/* Guidance Cards Grid */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-2xl border border-border/70 bg-white p-4 shadow-sm flex flex-col gap-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span>Today's Guidance</span>
+              </div>
+              <p className="text-base font-medium text-foreground">{guidanceInsight?.text || currentSubtitle}</p>
+              <p className="text-xs text-muted-foreground">
+                {guidanceInsight ? `Source: ${guidanceInsight.module} · ${formatRelativeTime(guidanceInsight.timestamp?.toString())}` : insightsLoading ? 'Gathering your latest insights…' : 'We will surface blueprint insights and conversation highlights here once you engage.'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => navigate('/blueprint')} disabled={!guidanceInsight && insightsLoading}>
+                  {guidanceInsight ? 'Expand' : 'Blueprint'}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleTutorialStart}>
+                  Take tour
+                </Button>
+              </div>
             </div>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button onClick={() => navigate('/get-started')} size="lg" className="font-inter h-touch px-8">
-                <ArrowRight className="h-5 w-5 mr-2" />
-                {t('index.getStarted')}
-              </Button>
-              <Button asChild variant="outline" size="lg" className="font-inter h-touch px-8">
-                <Link to="/auth">
-                  <LogIn className="h-5 w-5 mr-2" />
-                  {t('auth.signIn')}
-                </Link>
-              </Button>
-            </div>
-          </PageSection>}
 
-        {user && isAdminUser(user) && <div className="flex justify-center mb-8">
-            <Button onClick={() => setShowDemo(true)} variant="outline" className="font-inter h-touch">
-              <Brain className="h-5 w-5 mr-2" />
-              {t('index.demoButton')}
-            </Button>
-          </div>}
-      </PageContainer>
+            <div className="rounded-2xl border border-border/70 bg-white p-4 shadow-sm flex flex-col gap-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <BookOpen className="h-4 w-4 text-primary" />
+                <span>Blueprint Highlights</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Key anchors to revisit today.</p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/40 px-3 py-2">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-semibold text-foreground">Values & Focus</p>
+                    <p className="text-xs text-muted-foreground">Stay aligned to your top priority.</p>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">Sync</span>
+                </div>
+                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/40 px-3 py-2">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-semibold text-foreground">Active Tasks</p>
+                    <p className="text-xs text-muted-foreground">Continue your current sprint.</p>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">3 open</span>
+                </div>
+                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/40 px-3 py-2">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-semibold text-foreground">Insights</p>
+                    <p className="text-xs text-muted-foreground">Reflect on the latest takeaway.</p>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">New</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/blueprint')}>
+                  Open Blueprint
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/tasks')}>
+                  View Tasks
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Get Started CTA for non-users */}
+          {!user && (
+            <div className="text-center space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-2xl font-semibold text-foreground">Get started with SoulSync</h3>
+                <p className="text-muted-foreground">Create an account to track conversations, dreams, and growth tasks in one hub.</p>
+              </div>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <Button onClick={() => navigate('/get-started')} size="lg" className="font-inter h-touch px-8">
+                  <ArrowRight className="h-5 w-5 mr-2" />
+                  {t('index.getStarted')}
+                </Button>
+                <Button asChild variant="outline" size="lg" className="font-inter h-touch px-8">
+                  <Link to="/auth">
+                    <LogIn className="h-5 w-5 mr-2" />
+                    {t('auth.signIn')}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Admin Demo Button */}
+          {user && isAdminUser(user) && (
+            <div className="flex justify-center">
+              <Button onClick={() => setShowDemo(true)} variant="outline" className="font-inter h-touch">
+                <Brain className="h-5 w-5 mr-2" />
+                {t('index.demoButton')}
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
 
       {showTutorial && <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} tutorialState={tutorialState} onContinue={continueTutorial} onComplete={completeTutorial} />}
     </MainLayout>;
