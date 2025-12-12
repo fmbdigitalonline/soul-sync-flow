@@ -38,6 +38,9 @@ import { EnhancedFeedbackModal } from '@/components/feedback/EnhancedFeedbackMod
 import { useSubconsciousOrb } from '@/hooks/use-subconscious-orb';
 // NEW: Multi-Dimensional XP Progression System
 import { useXPProgression } from '@/hooks/use-xp-progression';
+// NEW: Orb Presence Controller (Singularity Principle)
+import { useOrbPresence } from '@/hooks/use-orb-presence';
+import { Progress } from '@/components/ui/progress';
 // Phase 1: Critical Error Recovery
 import { 
   HACSErrorBoundary, 
@@ -75,6 +78,17 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const { subscribe: subscribeStreaming } = useStreamingSyncState();
   const [chatLoading, setChatLoading] = useState(false);
   const [streamingTiming, setStreamingTiming] = useState(75);
+  
+  // NEW: Orb Presence System (Singularity Principle)
+  const { 
+    mode: orbPresenceMode, 
+    isCenterLoading,
+    loadingMessage,
+    loadingProgress,
+    startLoading: startOrbLoading,
+    completeLoading: completeOrbLoading,
+    setChatOpen
+  } = useOrbPresence();
   
   const { intelligence, loading, refreshIntelligence } = useHacsIntelligence();
   
@@ -231,6 +245,15 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   // BRIDGE FIX: Also check steward introduction's isGeneratingReport for immediate UI response
   const isStewardGeneratingReport = isGeneratingReport; // From steward introduction hook
   const isAnyReportGenerating = isGeneratingHermeticReport || isStewardGeneratingReport;
+  
+  // NEW: Wire hermetic generation to orb presence controller for center loading
+  useEffect(() => {
+    if (isGeneratingHermeticReport) {
+      startOrbLoading('hermetic_generation', hermeticJobProgress || 0);
+    } else {
+      completeOrbLoading('hermetic_generation');
+    }
+  }, [isGeneratingHermeticReport, hermeticJobProgress, startOrbLoading, completeOrbLoading]);
   
   useEffect(() => {
     console.log('🎯 ORB STAGE UPDATE:', {
@@ -706,6 +729,62 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           </div>
         </div>
       </div>
+    );
+  }
+
+  // SINGULARITY PRINCIPLE: When in chat_avatar mode, don't render floating orb
+  // The orb will morph into the chat UI as the responder avatar
+  if (orbPresenceMode === 'chat_avatar') {
+    console.log('🔮 FloatingHACSOrb: Singularity mode - orb morphed into chat avatar');
+    return null;
+  }
+
+  // CENTER LOADING HUB: Orb moves to center with speech bubble during major operations
+  if (isCenterLoading && loadingMessage) {
+    return (
+      <HACSErrorBoundary source="FloatingHACSOrb-CenterLoading">
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="pointer-events-auto"
+          >
+            <div className="relative">
+              <IntelligentSoulOrb
+                size="lg"
+                stage="generating"
+                speaking={true}
+                xpProgress={displayProgress}
+                intelligenceLevel={intelligenceLevel}
+                showProgressRing={true}
+                isThinking={true}
+                moduleActivity={true}
+                hermeticProgress={loadingProgress ?? 50}
+                showHermeticProgress={!!loadingProgress}
+                className="shadow-2xl"
+              />
+              
+              {/* Speech bubble with loading message */}
+              <SpeechBubble
+                position="bottom"
+                isVisible={true}
+                className="absolute top-full mt-4 left-1/2 -translate-x-1/2 w-64"
+              >
+                <div className="text-center">
+                  <div className="text-sm font-medium text-foreground mb-2">
+                    {loadingMessage}
+                  </div>
+                  {loadingProgress !== undefined && loadingProgress > 0 && (
+                    <Progress value={loadingProgress} className="h-2" />
+                  )}
+                </div>
+              </SpeechBubble>
+            </div>
+          </motion.div>
+        </div>
+      </HACSErrorBoundary>
     );
   }
 

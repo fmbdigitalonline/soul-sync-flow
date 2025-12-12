@@ -6,7 +6,6 @@ import { SendHorizontal, Loader2, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConversationMessage } from "@/hooks/use-hacs-conversation";
 import { TypewriterText } from "@/components/coach/TypewriterText";
-import { ThinkingDots } from "./ThinkingDots";
 import { useGlobalChatState } from "@/hooks/use-global-chat-state";
 import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
 import { VFPGraphFeedback } from "@/components/coach/VFPGraphFeedback";
@@ -14,6 +13,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { InteractiveSentenceText } from "@/components/coach/InteractiveSentenceText";
 import { SentenceActionButtons, SentenceAction } from "@/components/coach/SentenceActionButtons";
 import { toast } from "sonner";
+// NEW: Orb Presence System (Singularity Principle)
+import { useOrbPresence } from "@/hooks/use-orb-presence";
+import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
@@ -43,6 +46,24 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { updateChatLoading } = useGlobalChatState();
   const { isMobile } = useIsMobile();
+  
+  // NEW: Orb Presence System - notify when chat is open and thinking
+  const { setChatOpen, startLoading, completeLoading, isChatAvatar } = useOrbPresence();
+  
+  // Track when chat opens/closes
+  useEffect(() => {
+    setChatOpen(true);
+    return () => setChatOpen(false);
+  }, [setChatOpen]);
+  
+  // Track loading state for orb presence
+  useEffect(() => {
+    if (isLoading) {
+      startLoading('chat_thinking');
+    } else {
+      completeLoading('chat_thinking');
+    }
+  }, [isLoading, startLoading, completeLoading]);
 
   // Handle sentence selection toggle
   const handleSentenceSelect = (messageId: string, sentence: string | null) => {
@@ -230,11 +251,30 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             );
           })}
           
-          {isLoading && !isStreamingResponse && (
-            <div className="w-full py-2 text-left">
-              <ThinkingDots className="ml-2" isThinking={isLoading && !isStreamingResponse} />
-            </div>
-          )}
+          {/* SINGULARITY PRINCIPLE: Orb morphs into chat as avatar when thinking */}
+          <AnimatePresence>
+            {isLoading && !isStreamingResponse && (
+              <motion.div 
+                className="w-full py-3 text-left flex items-center gap-3"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <IntelligentSoulOrb
+                  size="sm"
+                  stage="generating"
+                  speaking={true}
+                  isThinking={true}
+                  showProgressRing={false}
+                  className="shadow-md"
+                />
+                <span className="text-sm text-muted-foreground italic animate-pulse">
+                  Channeling wisdom...
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
           
           <div ref={messagesEndRef} />
         </div>
