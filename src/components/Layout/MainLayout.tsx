@@ -240,8 +240,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             </Sheet>}
         </>}
 
-      {/* HACS Floating Orb - Always visible when authenticated */}
-      {user && <FloatingHACSOrb />}
+      {/* HACS Floating Orb - Always visible when authenticated on larger viewports */}
+      {user && !isMobile && <FloatingHACSOrb />}
     </div>;
 };
 // Desktop three-panel layout wrapper (Principle #8: Only Add)
