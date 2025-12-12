@@ -51,9 +51,10 @@ import {
 
 interface FloatingHACSProps {
   className?: string;
+  enablePointerFollow?: boolean;
 }
 
-export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
+export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enablePointerFollow = false }) => {
   const [showBubble, setShowBubble] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showMicroLearning, setShowMicroLearning] = useState(false);
@@ -150,9 +151,13 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   
   // Tutorial flow for completion screen
   const { startTutorial } = useTutorialFlow();
-  
+
   // Mobile responsiveness
   const { isMobile } = useIsMobile();
+
+  // Floating orb cursor follow
+  const [orbPosition, setOrbPosition] = useState({ x: 0, y: 0 });
+  const pointerMoveFrame = useRef<number | null>(null);
   
   // Phase 1: Comprehensive data integration (addresses 60% missing data)
   const { 
@@ -210,7 +215,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     intelligence,
     currentQuestion,
     currentInsight,
-    isGenerating, 
+    isGenerating,
     isGeneratingInsight,
     // Phase 3: Updated logging with database validation
     databaseShouldShow: databaseValidation.shouldShow,
@@ -218,6 +223,46 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     databaseError: databaseValidation.error,
     introductionActive: introductionState.isActive
   });
+
+  const shouldFollowPointer = enablePointerFollow && !isMobile;
+
+  useEffect(() => {
+    if (!shouldFollowPointer) return;
+
+    const setInitialPosition = () => {
+      setOrbPosition({
+        x: window.innerWidth - 120,
+        y: Math.max(window.innerHeight * 0.2, 60)
+      });
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (pointerMoveFrame.current !== null) return;
+
+      pointerMoveFrame.current = requestAnimationFrame(() => {
+        pointerMoveFrame.current = null;
+        setOrbPosition({
+          x: event.clientX + 16,
+          y: event.clientY + 12
+        });
+      });
+    };
+
+    setInitialPosition();
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('resize', setInitialPosition);
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('resize', setInitialPosition);
+
+      if (pointerMoveFrame.current !== null) {
+        cancelAnimationFrame(pointerMoveFrame.current);
+        pointerMoveFrame.current = null;
+      }
+    };
+  }, [shouldFollowPointer]);
 
   useEffect(() => {
     insightQueueRef.current = insightQueue;
@@ -788,181 +833,202 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     );
   }
 
+  const orbContent = (
+    <div className="relative pointer-events-auto">
+      {/* Speech Bubble - responsive positioning */}
+      <AnimatePresence>
+        {showBubble && currentQuestion && (
+          <div
+            className={cn(
+              "mb-3 cursor-pointer hover:scale-105 transition-transform",
+              // Mobile: position above orb, smaller
+              "lg:mb-3 mb-2"
+            )}
+            onClick={handleBubbleClick}
+          >
+            <SpeechBubble
+              position="left"
+              isVisible={true}
+            >
+              <div className="text-xs sm:text-sm max-w-[200px] sm:max-w-[250px]">
+                <div className="font-medium text-primary mb-1 text-xs sm:text-sm">
+                  {currentQuestion.module} Learning
+                </div>
+                <div className="text-xs sm:text-sm leading-tight">{currentQuestion.text}</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                  Tap to answer • Quick session
+                </div>
+              </div>
+            </SpeechBubble>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Orb */}
+      <motion.div
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        className="cursor-pointer"
+        animate={chatLoading ? {
+          scale: [1, 1.05, 1],
+          opacity: [0.9, 1, 0.9]
+        } : {
+          scale: 1,
+          opacity: 1
+        }}
+        transition={chatLoading ? {
+          duration: 2,
+          repeat: Infinity,
+          ease: "easeInOut"
+        } : {
+          duration: 0.3,
+          ease: "easeOut"
+        }}
+      >
+        <IntelligentSoulOrb
+          size="sm"
+          stage={orbStage}
+          speaking={isGenerating || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport}
+          xpProgress={displayProgress}
+          intelligenceLevel={intelligenceLevel}
+          showProgressRing={displayProgress > 0}
+          showIntelligenceTooltip={false}
+          isThinking={isThinking || chatLoading}
+          activeModule={activeModule}
+          moduleActivity={moduleActivity || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport}
+          hermeticProgress={
+            hasHermeticReport
+              ? 100
+              : isGeneratingHermeticReport && hermeticJobProgress > 0
+                ? hermeticJobProgress
+                : 40
+          }
+          showHermeticProgress={isGeneratingReport || isGeneratingHermeticReport || hasHermeticReport}
+          showRadiantGlow={hasHermeticReport && showRadiantGlow}
+          milestoneGlow={milestoneGlow || hermeticMilestoneGlow}
+          subconsciousMode={subconsciousMode}
+          patternDetected={patternDetected}
+          adviceReady={adviceReady || progressInsightReady}
+          onClick={handleOrbClick}
+          className="shadow-lg hover:shadow-xl transition-shadow"
+        />
+      </motion.div>
+
+      {/* Blue pulse indicator for questions - clickable */}
+      {currentQuestion && (
+        <motion.div
+          className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-pointer"
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 1, repeat: Infinity }}
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log('🔵 Blue pulse clicked - showing speech bubble');
+            setShowBubble(true);
+          }}
+        />
+      )}
+
+      {/* Red exclamation mark for unacknowledged insights OR progress messages - clickable */}
+      {((currentInsight && !currentInsight.acknowledged) || progressInsightReady || adviceReady) && (
+        <motion.div
+          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
+          animate={{
+            scale: [1, 1.15, 1],
+            boxShadow: [
+              "0 0 0 0 rgba(239, 68, 68, 0.7)",
+              "0 0 0 4px rgba(239, 68, 68, 0)",
+              "0 0 0 0 rgba(239, 68, 68, 0)"
+            ]
+          }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (progressInsightReady) {
+              console.log('🔴 Red exclamation clicked - showing progress insight');
+              handleOrbClick(); // Will handle progress insight in priority order
+            } else {
+              console.log('🔴 Red exclamation clicked - showing insight');
+              setShowInsightDisplay(true);
+            }
+          }}
+        >
+          <span className="text-white text-[10px] font-bold leading-none">!</span>
+        </motion.div>
+      )}
+    </div>
+  );
+
   return (
     <HACSErrorBoundary source="FloatingHACSOrb-Main">
       <>
         {/* Responsive positioning container - mobile aware */}
-        <div className={cn(
-          "fixed z-40 pointer-events-none",
-          // Consistent top-right positioning across all screen sizes
-          "top-20 right-3 sm:right-4 lg:top-40 lg:right-6",
-          className
-        )}>
-          <div className="relative pointer-events-auto">
-          {/* Speech Bubble - responsive positioning */}
-          <AnimatePresence>
-            {showBubble && currentQuestion && (
-              <div 
-                className={cn(
-                  "mb-3 cursor-pointer hover:scale-105 transition-transform",
-                  // Mobile: position above orb, smaller
-                  "lg:mb-3 mb-2"
-                )}
-                onClick={handleBubbleClick}
-              >
-                <SpeechBubble
-                  position="left"
-                  isVisible={true}
-                >
-                <div className="text-xs sm:text-sm max-w-[200px] sm:max-w-[250px]">
-                  <div className="font-medium text-primary mb-1 text-xs sm:text-sm">
-                    {currentQuestion.module} Learning
-                  </div>
-                  <div className="text-xs sm:text-sm leading-tight">{currentQuestion.text}</div>
-                  <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-                    Tap to answer • Quick session
-                  </div>
-                </div>
-                </SpeechBubble>
-              </div>
-            )}
-          </AnimatePresence>
-
-          {/* Floating Orb */}
+        {shouldFollowPointer ? (
           <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            className="cursor-pointer"
-            animate={chatLoading ? {
-              scale: [1, 1.05, 1],
-              opacity: [0.9, 1, 0.9]
-            } : {
-              scale: 1,
-              opacity: 1
-            }}
-            transition={chatLoading ? {
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            } : {
-              duration: 0.3,
-              ease: "easeOut"
+            className={cn("fixed z-40 pointer-events-none", className)}
+            style={{ top: 0, left: 0 }}
+            animate={{ x: orbPosition.x, y: orbPosition.y }}
+            transition={{
+              type: "spring",
+              stiffness: 220,
+              damping: 22,
+              mass: 0.7,
+              restDelta: 0.01
             }}
           >
-            <IntelligentSoulOrb
-              size="sm"
-              stage={orbStage}
-              speaking={isGenerating || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport}
-              xpProgress={displayProgress}
-              intelligenceLevel={intelligenceLevel}
-              showProgressRing={displayProgress > 0}
-              showIntelligenceTooltip={false}
-              isThinking={isThinking || chatLoading}
-              activeModule={activeModule}
-              moduleActivity={moduleActivity || isGeneratingInsight || isGeneratingReport || isGeneratingHermeticReport}
-              hermeticProgress={
-                hasHermeticReport 
-                  ? 100 
-                  : isGeneratingHermeticReport && hermeticJobProgress > 0
-                    ? hermeticJobProgress
-                    : 40
-              }
-              showHermeticProgress={isGeneratingReport || isGeneratingHermeticReport || hasHermeticReport}
-              showRadiantGlow={hasHermeticReport && showRadiantGlow}
-              milestoneGlow={milestoneGlow || hermeticMilestoneGlow}
-              subconsciousMode={subconsciousMode}
-              patternDetected={patternDetected}
-              adviceReady={adviceReady || progressInsightReady}
-              onClick={handleOrbClick}
-              className="shadow-lg hover:shadow-xl transition-shadow"
-            />
+            {orbContent}
           </motion.div>
-
-           {/* Blue pulse indicator for questions - clickable */}
-           {currentQuestion && (
-             <motion.div
-               className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-pointer"
-               animate={{ scale: [1, 1.2, 1] }}
-               transition={{ duration: 1, repeat: Infinity }}
-               onClick={(e) => {
-                 e.stopPropagation();
-                 console.log('🔵 Blue pulse clicked - showing speech bubble');
-                 setShowBubble(true);
-               }}
-             />
-           )}
-
-          {/* Red exclamation mark for unacknowledged insights OR progress messages - clickable */}
-          {((currentInsight && !currentInsight.acknowledged) || progressInsightReady || adviceReady) && (
-            <motion.div
-              className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
-              animate={{
-                scale: [1, 1.15, 1],
-                boxShadow: [
-                  "0 0 0 0 rgba(239, 68, 68, 0.7)",
-                  "0 0 0 4px rgba(239, 68, 68, 0)",
-                  "0 0 0 0 rgba(239, 68, 68, 0)"
-                ]
-              }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (progressInsightReady) {
-                  console.log('🔴 Red exclamation clicked - showing progress insight');
-                  handleOrbClick(); // Will handle progress insight in priority order
-                } else {
-                  console.log('🔴 Red exclamation clicked - showing insight');
-                  setShowInsightDisplay(true);
-                }
-              }}
-            >
-              <span className="text-white text-[10px] font-bold leading-none">!</span>
-            </motion.div>
-          )}
-        </div>
-      </div>
-
-      {/* Background Report Generation Indicator */}
-      {isGeneratingReport && (
-        <div className="fixed bottom-4 right-4 z-40 bg-card/95 backdrop-blur border border-border rounded-lg p-4 shadow-lg">
-          <div className="flex items-center gap-3">
-          <IntelligentSoulOrb
-            size="sm"
-            stage={isGeneratingReport ? "generating" : "complete"}
-            speaking={isGeneratingReport}
-            xpProgress={displayProgress}
-            intelligenceLevel={intelligenceLevel}
-            showProgressRing={true}
-              className={isGeneratingReport ? "animate-pulse" : ""}
-              hermeticProgress={
-                hasHermeticReport 
-                  ? 100 
-                  : isGeneratingReport && hermeticJobProgress > 0
-                    ? hermeticJobProgress
-                    : 40
-              }
-              showHermeticProgress={isGeneratingReport || hasHermeticReport}
-              showRadiantGlow={showRadiantGlow}
-            />
-            {isGeneratingReport && (
-              <div className="text-sm">
-                <div className="font-medium text-card-foreground">
-                  Soul Alchemist Activating...
-                </div>
-                <div className="text-muted-foreground">
-                  Deep synthesis in progress ({
-                    hasHermeticReport 
-                      ? 100 
-                      : isGeneratingReport && hermeticJobProgress > 0
-                        ? hermeticJobProgress
-                        : 40
-                  }%)
-                </div>
-              </div>
-            )}
+        ) : (
+          <div className={cn(
+            "fixed z-40 pointer-events-none",
+            // Consistent top-right positioning across all screen sizes
+            "top-20 right-3 sm:right-4 lg:top-40 lg:right-6",
+            className
+          )}>
+            {orbContent}
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Background Report Generation Indicator */}
+        {isGeneratingReport && (
+          <div className="fixed bottom-4 right-4 z-40 bg-card/95 backdrop-blur border border-border rounded-lg p-4 shadow-lg">
+            <div className="flex items-center gap-3">
+              <IntelligentSoulOrb
+                size="sm"
+                stage={isGeneratingReport ? "generating" : "complete"}
+                speaking={isGeneratingReport}
+                xpProgress={displayProgress}
+                intelligenceLevel={intelligenceLevel}
+                showProgressRing={true}
+                className={isGeneratingReport ? "animate-pulse" : ""}
+                hermeticProgress={
+                  hasHermeticReport
+                    ? 100
+                    : isGeneratingReport && hermeticJobProgress > 0
+                      ? hermeticJobProgress
+                      : 40
+                }
+                showHermeticProgress={isGeneratingReport || hasHermeticReport}
+                showRadiantGlow={showRadiantGlow}
+              />
+              {isGeneratingReport && (
+                <div className="text-sm">
+                  <div className="font-medium text-card-foreground">
+                    Soul Alchemist Activating...
+                  </div>
+                  <div className="text-muted-foreground">
+                    Deep synthesis in progress ({
+                      hasHermeticReport
+                        ? 100
+                        : isGeneratingReport && hermeticJobProgress > 0
+                          ? hermeticJobProgress
+                          : 40
+                    }%)
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
       {/* Progress Insight Auto-Display - Top Center */}
       {showProgressInsightDisplay && progressInsight && (
