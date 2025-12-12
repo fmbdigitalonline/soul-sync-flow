@@ -66,11 +66,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (typeof window === "undefined") return;
 
       const hash = window.location.hash;
-      if (!hash || !hash.includes('type=recovery')) return;
+      const searchParams = new URLSearchParams(window.location.search);
+      
+      // Check both hash fragment and query params for recovery
+      const isRecoveryFromHash = hash.includes('type=recovery');
+      const isRecoveryFromQuery = searchParams.get('type') === 'recovery';
+      
+      if (!isRecoveryFromHash && !isRecoveryFromQuery) return;
+
+      console.log('🔐 AuthProvider: Detected recovery mode', { isRecoveryFromHash, isRecoveryFromQuery });
 
       try {
-        console.log('🔐 AuthProvider: Handling recovery from URL');
-        // Get session - Supabase v2 handles URL recovery automatically
+        // For hash-based recovery (from email link), Supabase automatically processes the tokens
+        // We just need to get the session that was established
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -84,11 +92,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(data.session.user);
         }
 
-        const url = new URL(window.location.href);
-        url.hash = '';
-        url.pathname = '/auth';
-        url.searchParams.set('type', 'recovery');
-        window.history.replaceState({}, document.title, url.toString());
+        // Clean up the URL - remove hash but preserve type=recovery in query params
+        // so the Auth page knows to show the password reset form
+        if (isRecoveryFromHash) {
+          const url = new URL(window.location.href);
+          url.hash = '';
+          url.pathname = '/auth';
+          url.searchParams.set('type', 'recovery');
+          window.history.replaceState({}, document.title, url.toString());
+          console.log('🔐 AuthProvider: Redirected to clean recovery URL:', url.toString());
+        }
       } catch (error) {
         console.error('🔐 Error processing recovery callback:', error);
       }
