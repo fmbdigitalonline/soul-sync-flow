@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
@@ -46,6 +46,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     isMobile,
     isTablet
   } = useIsMobile();
+
+  // Feature flag: enable desktop orb pointer follow
+  const enableOrbPointerFollow = useMemo(() => {
+    const flag = import.meta.env.VITE_ENABLE_ORB_POINTER_FOLLOW;
+
+    if (flag === undefined) {
+      // Default to enabled so the orb follows the cursor on desktop unless explicitly disabled
+      return true;
+    }
+
+    return flag === "true";
+  }, []);
 
   // Auto-collapse tools panel on tablets
   useEffect(() => {
@@ -241,7 +253,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         </>}
 
       {/* HACS Floating Orb - Always visible when authenticated */}
-      {user && <FloatingHACSOrb />}
+      {user && <FloatingHACSOrb enablePointerFollow={enableOrbPointerFollow} />}
     </div>;
 };
 // Desktop three-panel layout wrapper (Principle #8: Only Add)
