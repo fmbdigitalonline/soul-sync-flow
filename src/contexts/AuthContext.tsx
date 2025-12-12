@@ -70,7 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       try {
         console.log('🔐 AuthProvider: Handling recovery from URL');
-        const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
+        // Get session - Supabase v2 handles URL recovery automatically
+        const { data, error } = await supabase.auth.getSession();
 
         if (error) {
           console.error('🔐 Error handling recovery session:', error);
