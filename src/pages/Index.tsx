@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { TutorialModal } from "@/components/tutorial/TutorialModal";
 import PersonalityDemo from "@/components/personality/PersonalityDemo";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { useTutorialFlow } from "@/hooks/use-tutorial-flow";
 import { useHACSInsights, type HACSInsight } from "@/hooks/use-hacs-insights";
@@ -35,12 +36,8 @@ interface ContinueItem {
   actionPath: string;
 }
 const Index = () => {
-  const {
-    user
-  } = useAuth();
-  const {
-    speak
-  } = useSoulOrb();
+  const { user } = useAuth();
+  const { speak } = useSoulOrb();
   const navigate = useNavigate();
   const [showDemo, setShowDemo] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -74,33 +71,35 @@ const Index = () => {
   const [hasLoadedGuidance, setHasLoadedGuidance] = useState(false);
   const welcomeMessage = useMemo(() => {
     if (!user) return null;
-    if (hasBlueprint) {
-      return t("index.welcomeBackReady");
-    } else {
-      return t("index.createToGetStarted");
-    }
+    return hasBlueprint ? t("index.welcomeBackReady") : t("index.createToGetStarted");
   }, [user, hasBlueprint, t]);
+
   const subtitleMessages = useMemo(() => {
     if (user && hasBlueprint) {
       return [t("index.subtitle")];
     }
     const messages = t("index.rotatingMessages");
-    if (Array.isArray(messages)) {
-      return messages;
-    }
+    if (Array.isArray(messages)) return messages;
     return [t("index.subtitle")];
   }, [t, language, user, hasBlueprint]);
+
   const userName = useMemo(() => {
-    return blueprintData?.user_meta?.preferred_name || getDisplayName || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Friend';
+    return (
+      blueprintData?.user_meta?.preferred_name ||
+      getDisplayName ||
+      user?.user_metadata?.full_name ||
+      user?.user_metadata?.name ||
+      user?.email?.split("@")[0] ||
+      "Friend"
+    );
   }, [blueprintData, getDisplayName, user]);
+
   const currentSubtitle = useMemo(() => {
     return subtitleMessages[0] || t("index.subtitle");
   }, [subtitleMessages, t]);
   useEffect(() => {
     if (user && !loading && welcomeMessage) {
-      const timer = setTimeout(() => {
-        speak(welcomeMessage);
-      }, 1000);
+      const timer = setTimeout(() => speak(welcomeMessage), 1000);
       return () => clearTimeout(timer);
     }
   }, [user, loading, welcomeMessage, speak]);
@@ -108,11 +107,44 @@ const Index = () => {
     if (!user) {
       return;
     }
+
+    if (insights.length > 0) {
+      items.push({
+        id: "blueprint-insight",
+        type: "insight",
+        title: "Blueprint insight added",
+        detail: insights[0].message,
+        timestamp: insights[0].created_at || insights[0].updated_at,
+        actionLabel: "View Insight",
+        href: "/dashboard",
+        icon: <BookOpen className="h-4 w-4 text-indigo-500" />
+      });
+    }
+
+    return items
+      .sort((a, b) => {
+        const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return bTime - aTime;
+      })
+      .slice(0, 5);
+  }, [availableRecoveries, resumableTasksByGoal, productivityJourney?.last_updated, growthJourney, insights]);
+
+  const todaysGuidance = useMemo(() => {
+    if (insights.length > 0) {
+      return insights[0];
+    }
+
+    return fallbackInsight;
+  }, [fallbackInsight, insights]);
+
+  const handleTutorialStart = () => {
+    if (!user) return;
     try {
       startTutorial();
       setShowTutorial(true);
     } catch (error) {
-      console.error('🎭 ERROR in handleTutorialStart:', error);
+      console.error("Error starting tutorial", error);
     }
   };
   const formatRelativeTime = useCallback((dateString?: string | null) => {
@@ -275,14 +307,18 @@ const Index = () => {
     };
   }, [currentInsight, hasLoadedGuidance, insightQueue, loadHistoricalInsights, user]);
   if (showDemo) {
-    return <MainLayout>
+    return (
+      <MainLayout>
         <PageContainer>
           <Button variant="ghost" onClick={() => setShowDemo(false)} className="mb-4">
             {t("index.backToHome")}
           </Button>
-          <PersonalityDemo />
+          <div className="bg-muted/30 rounded-3xl p-6 text-sm text-muted-foreground">
+            Demo mode is currently disabled on this surface.
+          </div>
         </PageContainer>
-      </MainLayout>;
+      </MainLayout>
+    );
   }
   const iconByType: Record<ActivityType, JSX.Element> = {
     conversation: <MessageCircle className="h-5 w-5 text-primary" />,
@@ -315,6 +351,12 @@ const Index = () => {
               <p className="text-sm text-muted-foreground mb-1">Your Quote of the Day</p>
               <PersonalizedQuoteDisplay className="text-xl sm:text-2xl text-foreground/80 font-inter italic" interval={4000} />
             </div>
+            {user && isAdminUser(user) && (
+              <Button onClick={() => setShowDemo(true)} variant="outline" className="font-inter h-touch">
+                <Brain className="h-5 w-5 mr-2" />
+                {t("index.demoButton")}
+              </Button>
+            )}
           </div>
         </PageSection>
 
@@ -461,7 +503,17 @@ const Index = () => {
           </div>}
       </PageContainer>
 
-      {showTutorial && <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} tutorialState={tutorialState} onContinue={continueTutorial} onComplete={completeTutorial} />}
-    </MainLayout>;
+      {showTutorial && (
+        <TutorialModal
+          isOpen={showTutorial}
+          onClose={() => setShowTutorial(false)}
+          tutorialState={tutorialState}
+          onContinue={continueTutorial}
+          onComplete={completeTutorial}
+        />
+      )}
+    </MainLayout>
+  );
 };
+
 export default Index;
