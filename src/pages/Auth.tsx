@@ -74,20 +74,24 @@ export default function Auth() {
     initializeJourney();
   }, []); // Remove dependencies that cause cascade
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      // If user came from funnel and has funnel data, go to onboarding to personalize experience
-      if (fromFunnel && funnelData) {
-        navigate("/onboarding", { replace: true });
-      } else {
-        navigate(from, { replace: true });
-      }
-    }
-  }, [user, authLoading, navigate, from, fromFunnel, funnelData]);
-
+  // Check for recovery mode from URL params OR hash fragment
   useEffect(() => {
     const typeParam = searchParams.get('type');
-    if (typeParam === 'recovery') {
+    const hash = window.location.hash;
+    
+    // Check both query param and hash for recovery indicator
+    const isRecoveryFromParam = typeParam === 'recovery';
+    const isRecoveryFromHash = hash.includes('type=recovery');
+    
+    console.log('🔐 Auth: Checking recovery mode', { 
+      typeParam, 
+      hash: hash.substring(0, 50), 
+      isRecoveryFromParam, 
+      isRecoveryFromHash 
+    });
+    
+    if (isRecoveryFromParam || isRecoveryFromHash) {
+      console.log('🔐 Auth: Entering recovery mode');
       setIsSignUp(false);
       setIsResetMode(false);
       setIsRecoveryMode(true);
@@ -95,6 +99,18 @@ export default function Auth() {
       setIsRecoveryMode(false);
     }
   }, [searchParams]);
+
+  // Handle user redirect - but NOT if in recovery mode (need to reset password first)
+  useEffect(() => {
+    if (!authLoading && user && !isRecoveryMode) {
+      // If user came from funnel and has funnel data, go to onboarding to personalize experience
+      if (fromFunnel && funnelData) {
+        navigate("/onboarding", { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
+    }
+  }, [user, authLoading, navigate, from, fromFunnel, funnelData, isRecoveryMode]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
