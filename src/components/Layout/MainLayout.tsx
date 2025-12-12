@@ -48,16 +48,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   } = useIsMobile();
 
   // Feature flag: enable desktop orb pointer follow
-  const enableOrbPointerFollow = useMemo(() => {
-    const flag = import.meta.env.VITE_ENABLE_ORB_POINTER_FOLLOW;
-
-    if (flag === undefined) {
-      // Default to enabled so the orb follows the cursor on desktop unless explicitly disabled
-      return true;
-    }
-
-    return flag === "true";
-  }, []);
+  const enableOrbPointerFollow = useMemo(
+    () => import.meta.env.VITE_ENABLE_ORB_POINTER_FOLLOW === "true",
+    []
+  );
 
   // Auto-collapse tools panel on tablets
   useEffect(() => {
