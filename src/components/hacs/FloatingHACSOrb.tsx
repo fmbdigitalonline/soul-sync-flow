@@ -54,7 +54,7 @@ interface FloatingHACSProps {
   enablePointerFollow?: boolean;
 }
 
-export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enablePointerFollow = false }) => {
+export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enablePointerFollow = true }) => {
   const [showBubble, setShowBubble] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showMicroLearning, setShowMicroLearning] = useState(false);
@@ -155,9 +155,12 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
   // Mobile responsiveness
   const { isMobile } = useIsMobile();
 
-  // Floating orb cursor follow
+  // Floating orb cursor follow with idle return-to-home
   const [orbPosition, setOrbPosition] = useState({ x: 0, y: 0 });
+  const [isFollowing, setIsFollowing] = useState(false);
   const pointerMoveFrame = useRef<number | null>(null);
+  const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const IDLE_TIMEOUT_MS = 2500; // Return to home after 2.5s idle
   
   // Phase 1: Comprehensive data integration (addresses 60% missing data)
   const { 
@@ -226,43 +229,80 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
 
   const shouldFollowPointer = enablePointerFollow && !isMobile;
 
+  // Calculate home position (top-right corner)
+  const getHomePosition = () => ({
+    x: window.innerWidth - 100,
+    y: 160 // Matches lg:top-40
+  });
+
   useEffect(() => {
     if (!shouldFollowPointer) return;
 
-    const setInitialPosition = () => {
-      setOrbPosition({
-        x: window.innerWidth - 120,
-        y: Math.max(window.innerHeight * 0.2, 60)
-      });
+    // Initialize at home position
+    setOrbPosition(getHomePosition());
+    setIsFollowing(false);
+
+    const returnToHome = () => {
+      setIsFollowing(false);
+      setOrbPosition(getHomePosition());
     };
 
     const handlePointerMove = (event: PointerEvent) => {
+      // Clear any pending idle timeout
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+      }
+
       if (pointerMoveFrame.current !== null) return;
 
       pointerMoveFrame.current = requestAnimationFrame(() => {
         pointerMoveFrame.current = null;
-        setOrbPosition({
-          x: event.clientX + 16,
-          y: event.clientY + 12
-        });
+        setIsFollowing(true);
+        
+        const orbSize = 64;
+        const offsetX = 80;  // Trail behind cursor
+        const offsetY = 60;  // Below cursor
+        
+        // Clamp to viewport boundaries
+        const x = Math.min(
+          Math.max(event.clientX + offsetX, orbSize), 
+          window.innerWidth - orbSize
+        );
+        const y = Math.min(
+          Math.max(event.clientY + offsetY, orbSize), 
+          window.innerHeight - orbSize
+        );
+        
+        setOrbPosition({ x, y });
       });
+
+      // Set idle timeout to return home
+      idleTimeoutRef.current = setTimeout(returnToHome, IDLE_TIMEOUT_MS);
     };
 
-    setInitialPosition();
+    const handleResize = () => {
+      if (!isFollowing) {
+        setOrbPosition(getHomePosition());
+      }
+    };
 
     window.addEventListener('pointermove', handlePointerMove, { passive: true });
-    window.addEventListener('resize', setInitialPosition);
+    window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('resize', setInitialPosition);
+      window.removeEventListener('resize', handleResize);
 
       if (pointerMoveFrame.current !== null) {
         cancelAnimationFrame(pointerMoveFrame.current);
         pointerMoveFrame.current = null;
       }
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+        idleTimeoutRef.current = null;
+      }
     };
-  }, [shouldFollowPointer]);
+  }, [shouldFollowPointer, isFollowing]);
 
   useEffect(() => {
     insightQueueRef.current = insightQueue;
@@ -969,10 +1009,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
             animate={{ x: orbPosition.x, y: orbPosition.y }}
             transition={{
               type: "spring",
-              stiffness: 220,
-              damping: 22,
-              mass: 0.7,
-              restDelta: 0.01
+              stiffness: isFollowing ? 90 : 150,  // Softer when following, snappier returning home
+              damping: isFollowing ? 14 : 20,
+              mass: isFollowing ? 1.4 : 0.8,      // Heavier/lazier when following
+              restDelta: 0.5
             }}
           >
             {orbContent}
