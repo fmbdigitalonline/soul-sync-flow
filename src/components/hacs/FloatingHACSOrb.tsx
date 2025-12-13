@@ -159,6 +159,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
   const [orbPosition, setOrbPosition] = useState({ x: 0, y: 0 });
   const [isFollowing, setIsFollowing] = useState(false);
   const pointerMoveFrame = useRef<number | null>(null);
+  const moveDelayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isHoveringRef = useRef(false);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const IDLE_TIMEOUT_MS = 2500; // Return to home after 2.5s idle
   
@@ -253,27 +255,36 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
         clearTimeout(idleTimeoutRef.current);
       }
 
+      if (isHoveringRef.current) return;
+
       if (pointerMoveFrame.current !== null) return;
 
       pointerMoveFrame.current = requestAnimationFrame(() => {
         pointerMoveFrame.current = null;
-        setIsFollowing(true);
-        
+
         const orbSize = 64;
         const offsetX = 320;  // 4x distance - butterfly trailing effect
-        const offsetY = 240;  // 4x distance - below cursor
-        
+        const offsetY = -120; // Keep orb above cursor arrow
+
         // Clamp to viewport boundaries
         const x = Math.min(
-          Math.max(event.clientX + offsetX, orbSize), 
+          Math.max(event.clientX + offsetX, orbSize),
           window.innerWidth - orbSize
         );
         const y = Math.min(
-          Math.max(event.clientY + offsetY, orbSize), 
+          Math.max(event.clientY + offsetY, orbSize),
           window.innerHeight - orbSize
         );
-        
-        setOrbPosition({ x, y });
+
+        if (moveDelayTimeoutRef.current) {
+          clearTimeout(moveDelayTimeoutRef.current);
+        }
+
+        moveDelayTimeoutRef.current = setTimeout(() => {
+          if (isHoveringRef.current) return;
+          setIsFollowing(true);
+          setOrbPosition({ x, y });
+        }, 1000);
       });
 
       // Set idle timeout to return home
@@ -283,7 +294,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
     // Touch event handler for mobile/tablet - only on finger slide
     const handleTouchMove = (event: TouchEvent) => {
       if (event.touches.length === 0) return;
-      
+
       // Clear any pending idle timeout
       if (idleTimeoutRef.current) {
         clearTimeout(idleTimeoutRef.current);
@@ -293,24 +304,31 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
 
       pointerMoveFrame.current = requestAnimationFrame(() => {
         pointerMoveFrame.current = null;
-        setIsFollowing(true);
-        
+
         const touch = event.touches[0];
         const orbSize = 64;
         const offsetX = 320;  // Same 4x distance as mouse
-        const offsetY = 240;
-        
+        const offsetY = -120;
+
         // Clamp to viewport boundaries
         const x = Math.min(
-          Math.max(touch.clientX + offsetX, orbSize), 
+          Math.max(touch.clientX + offsetX, orbSize),
           window.innerWidth - orbSize
         );
         const y = Math.min(
-          Math.max(touch.clientY + offsetY, orbSize), 
+          Math.max(touch.clientY + offsetY, orbSize),
           window.innerHeight - orbSize
         );
-        
-        setOrbPosition({ x, y });
+
+        if (moveDelayTimeoutRef.current) {
+          clearTimeout(moveDelayTimeoutRef.current);
+        }
+
+        moveDelayTimeoutRef.current = setTimeout(() => {
+          if (isHoveringRef.current) return;
+          setIsFollowing(true);
+          setOrbPosition({ x, y });
+        }, 1000);
       });
 
       // Set idle timeout to return home
@@ -344,6 +362,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
       if (pointerMoveFrame.current !== null) {
         cancelAnimationFrame(pointerMoveFrame.current);
         pointerMoveFrame.current = null;
+      }
+      if (moveDelayTimeoutRef.current) {
+        clearTimeout(moveDelayTimeoutRef.current);
+        moveDelayTimeoutRef.current = null;
       }
       if (idleTimeoutRef.current) {
         clearTimeout(idleTimeoutRef.current);
@@ -957,6 +979,13 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className="cursor-pointer"
+        onMouseEnter={() => {
+          isHoveringRef.current = true;
+          setIsFollowing(false);
+        }}
+        onMouseLeave={() => {
+          isHoveringRef.current = false;
+        }}
         animate={chatLoading ? {
           scale: [1, 1.05, 1],
           opacity: [0.9, 1, 0.9]
