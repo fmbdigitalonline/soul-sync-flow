@@ -260,8 +260,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
         setIsFollowing(true);
         
         const orbSize = 64;
-        const offsetX = 80;  // Trail behind cursor
-        const offsetY = 60;  // Below cursor
+        const offsetX = 320;  // 4x distance - butterfly trailing effect
+        const offsetY = 240;  // 4x distance - below cursor
         
         // Clamp to viewport boundaries
         const x = Math.min(
@@ -1008,9 +1008,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
             animate={{ x: orbPosition.x, y: orbPosition.y }}
             transition={{
               type: "spring",
-              stiffness: isFollowing ? 90 : 150,  // Softer when following, snappier returning home
-              damping: isFollowing ? 14 : 20,
-              mass: isFollowing ? 1.4 : 0.8,      // Heavier/lazier when following
+              stiffness: isFollowing ? 18 : 150,  // 80% slower when following
+              damping: isFollowing ? 8 : 20,
+              mass: isFollowing ? 3.5 : 0.8,      // Much heavier/lazier when following
               restDelta: 0.5
             }}
           >
