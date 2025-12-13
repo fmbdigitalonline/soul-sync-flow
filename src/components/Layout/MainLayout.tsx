@@ -47,9 +47,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     isTablet
   } = useIsMobile();
 
-  // Feature flag: enable desktop orb pointer follow
+  // Feature flag: enable desktop orb pointer follow (enabled by default unless explicitly disabled)
   const enableOrbPointerFollow = useMemo(
-    () => import.meta.env.VITE_ENABLE_ORB_POINTER_FOLLOW === "true",
+    () => import.meta.env.VITE_ENABLE_ORB_POINTER_FOLLOW !== "false",
     []
   );
 
