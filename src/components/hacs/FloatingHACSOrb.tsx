@@ -280,16 +280,65 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
       idleTimeoutRef.current = setTimeout(returnToHome, IDLE_TIMEOUT_MS);
     };
 
+    // Touch event handler for mobile/tablet - only on finger slide
+    const handleTouchMove = (event: TouchEvent) => {
+      if (event.touches.length === 0) return;
+      
+      // Clear any pending idle timeout
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+      }
+
+      if (pointerMoveFrame.current !== null) return;
+
+      pointerMoveFrame.current = requestAnimationFrame(() => {
+        pointerMoveFrame.current = null;
+        setIsFollowing(true);
+        
+        const touch = event.touches[0];
+        const orbSize = 64;
+        const offsetX = 320;  // Same 4x distance as mouse
+        const offsetY = 240;
+        
+        // Clamp to viewport boundaries
+        const x = Math.min(
+          Math.max(touch.clientX + offsetX, orbSize), 
+          window.innerWidth - orbSize
+        );
+        const y = Math.min(
+          Math.max(touch.clientY + offsetY, orbSize), 
+          window.innerHeight - orbSize
+        );
+        
+        setOrbPosition({ x, y });
+      });
+
+      // Set idle timeout to return home
+      idleTimeoutRef.current = setTimeout(returnToHome, IDLE_TIMEOUT_MS);
+    };
+
+    // Return home when touch ends
+    const handleTouchEnd = () => {
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+      }
+      idleTimeoutRef.current = setTimeout(returnToHome, IDLE_TIMEOUT_MS);
+    };
+
     const handleResize = () => {
       // Always snap back to home on resize to avoid weird off-screen states
       setOrbPosition(getHomePosition());
     };
 
     window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('resize', handleResize);
 
       if (pointerMoveFrame.current !== null) {
