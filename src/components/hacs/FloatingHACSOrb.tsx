@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
 import { SpeechBubble } from '@/components/ui/speech-bubble';
@@ -159,6 +159,12 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
   const [orbPosition, setOrbPosition] = useState({ x: 0, y: 0 });
   const [isFollowing, setIsFollowing] = useState(false);
   const pointerMoveFrame = useRef<number | null>(null);
+  const moveDelayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isHoveringRef = useRef(false);
+  const lastPointerPositionRef = useRef<{ x: number; y: number }>({
+    x: typeof window !== 'undefined' ? window.innerWidth - 100 : 0,
+    y: 160
+  });
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const IDLE_TIMEOUT_MS = 2500; // Return to home after 2.5s idle
   
@@ -229,11 +235,55 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
 
   const shouldFollowPointer = enablePointerFollow && !isMobile;
 
+  const queueFollowMove = useCallback((clientX: number, clientY: number) => {
+    if (!shouldFollowPointer) return;
+
+    if (pointerMoveFrame.current !== null) return;
+
+    pointerMoveFrame.current = requestAnimationFrame(() => {
+      pointerMoveFrame.current = null;
+
+      const orbSize = 64;
+      const offsetX = 320;  // 4x distance - butterfly trailing effect
+      const offsetY = -120; // Keep orb above cursor arrow
+
+      const clampedX = Math.min(
+        Math.max(clientX + offsetX, orbSize),
+        window.innerWidth - orbSize
+      );
+      const clampedY = Math.min(
+        Math.max(clientY + offsetY, orbSize),
+        window.innerHeight - orbSize
+      );
+
+      if (moveDelayTimeoutRef.current) {
+        clearTimeout(moveDelayTimeoutRef.current);
+      }
+
+      moveDelayTimeoutRef.current = setTimeout(() => {
+        if (isHoveringRef.current) return;
+        setIsFollowing(true);
+        setOrbPosition({ x: clampedX, y: clampedY });
+      }, 1000);
+    });
+  }, [getHomePosition, queueFollowMove, shouldFollowPointer]);
+
   // Calculate home position (top-right corner)
-  const getHomePosition = () => ({
+  const getHomePosition = useCallback(() => ({
     x: window.innerWidth - 100,
     y: 160 // Matches lg:top-40
-  });
+  }), []);
+
+  const resumeFollowingFromHover = useCallback((clientX?: number, clientY?: number) => {
+    if (!shouldFollowPointer) return;
+
+    const fallback = getHomePosition();
+    const x = clientX ?? lastPointerPositionRef.current.x ?? fallback.x;
+    const y = clientY ?? lastPointerPositionRef.current.y ?? fallback.y;
+
+    isHoveringRef.current = false;
+    queueFollowMove(x, y);
+  }, [getHomePosition, queueFollowMove, shouldFollowPointer]);
 
   useEffect(() => {
     if (!shouldFollowPointer) return;
@@ -247,43 +297,36 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
       setOrbPosition(getHomePosition());
     };
 
+    const resetIdleTimeout = () => {
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+      }
+      idleTimeoutRef.current = setTimeout(returnToHome, IDLE_TIMEOUT_MS);
+    };
+
     const handlePointerMove = (event: PointerEvent) => {
+      lastPointerPositionRef.current = { x: event.clientX, y: event.clientY };
+
       // Clear any pending idle timeout
       if (idleTimeoutRef.current) {
         clearTimeout(idleTimeoutRef.current);
       }
 
-      if (pointerMoveFrame.current !== null) return;
+      if (isHoveringRef.current) return;
 
-      pointerMoveFrame.current = requestAnimationFrame(() => {
-        pointerMoveFrame.current = null;
-        setIsFollowing(true);
-        
-        const orbSize = 64;
-        const offsetX = 320;  // 4x distance - butterfly trailing effect
-        const offsetY = 240;  // 4x distance - below cursor
-        
-        // Clamp to viewport boundaries
-        const x = Math.min(
-          Math.max(event.clientX + offsetX, orbSize), 
-          window.innerWidth - orbSize
-        );
-        const y = Math.min(
-          Math.max(event.clientY + offsetY, orbSize), 
-          window.innerHeight - orbSize
-        );
-        
-        setOrbPosition({ x, y });
-      });
+      queueFollowMove(event.clientX, event.clientY);
 
       // Set idle timeout to return home
-      idleTimeoutRef.current = setTimeout(returnToHome, IDLE_TIMEOUT_MS);
+      resetIdleTimeout();
     };
 
     // Touch event handler for mobile/tablet - only on finger slide
     const handleTouchMove = (event: TouchEvent) => {
       if (event.touches.length === 0) return;
-      
+
+      const touch = event.touches[0];
+      lastPointerPositionRef.current = { x: touch.clientX, y: touch.clientY };
+
       // Clear any pending idle timeout
       if (idleTimeoutRef.current) {
         clearTimeout(idleTimeoutRef.current);
@@ -291,38 +334,15 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
 
       if (pointerMoveFrame.current !== null) return;
 
-      pointerMoveFrame.current = requestAnimationFrame(() => {
-        pointerMoveFrame.current = null;
-        setIsFollowing(true);
-        
-        const touch = event.touches[0];
-        const orbSize = 64;
-        const offsetX = 320;  // Same 4x distance as mouse
-        const offsetY = 240;
-        
-        // Clamp to viewport boundaries
-        const x = Math.min(
-          Math.max(touch.clientX + offsetX, orbSize), 
-          window.innerWidth - orbSize
-        );
-        const y = Math.min(
-          Math.max(touch.clientY + offsetY, orbSize), 
-          window.innerHeight - orbSize
-        );
-        
-        setOrbPosition({ x, y });
-      });
+      queueFollowMove(touch.clientX, touch.clientY);
 
       // Set idle timeout to return home
-      idleTimeoutRef.current = setTimeout(returnToHome, IDLE_TIMEOUT_MS);
+      resetIdleTimeout();
     };
 
     // Return home when touch ends
     const handleTouchEnd = () => {
-      if (idleTimeoutRef.current) {
-        clearTimeout(idleTimeoutRef.current);
-      }
-      idleTimeoutRef.current = setTimeout(returnToHome, IDLE_TIMEOUT_MS);
+      resetIdleTimeout();
     };
 
     const handleResize = () => {
@@ -344,6 +364,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
       if (pointerMoveFrame.current !== null) {
         cancelAnimationFrame(pointerMoveFrame.current);
         pointerMoveFrame.current = null;
+      }
+      if (moveDelayTimeoutRef.current) {
+        clearTimeout(moveDelayTimeoutRef.current);
+        moveDelayTimeoutRef.current = null;
       }
       if (idleTimeoutRef.current) {
         clearTimeout(idleTimeoutRef.current);
@@ -957,6 +981,17 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className="cursor-pointer"
+        onMouseEnter={() => {
+          isHoveringRef.current = true;
+          setIsFollowing(false);
+        }}
+        onMouseLeave={(event) => {
+          resumeFollowingFromHover(event.clientX, event.clientY);
+        }}
+        onClick={(event) => {
+          resumeFollowingFromHover(event.clientX, event.clientY);
+          handleOrbClick();
+        }}
         animate={chatLoading ? {
           scale: [1, 1.05, 1],
           opacity: [0.9, 1, 0.9]
@@ -997,7 +1032,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
           subconsciousMode={subconsciousMode}
           patternDetected={patternDetected}
           adviceReady={adviceReady || progressInsightReady}
-          onClick={handleOrbClick}
           className="shadow-lg hover:shadow-xl transition-shadow"
         />
       </motion.div>
