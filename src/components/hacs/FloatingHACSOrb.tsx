@@ -281,9 +281,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
     };
 
     const handleResize = () => {
-      if (!isFollowing) {
-        setOrbPosition(getHomePosition());
-      }
+      // Always snap back to home on resize to avoid weird off-screen states
+      setOrbPosition(getHomePosition());
     };
 
     window.addEventListener('pointermove', handlePointerMove, { passive: true });
@@ -302,7 +301,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
         idleTimeoutRef.current = null;
       }
     };
-  }, [shouldFollowPointer, isFollowing]);
+  }, [shouldFollowPointer]);
 
   useEffect(() => {
     insightQueueRef.current = insightQueue;
