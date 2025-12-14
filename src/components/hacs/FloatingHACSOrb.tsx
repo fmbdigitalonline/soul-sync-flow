@@ -162,6 +162,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
   const moveDelayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isHoveringRef = useRef(false);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastPointerPositionRef = useRef<{ x: number; y: number } | null>(null);
   const IDLE_TIMEOUT_MS = 2500; // Return to home after 2.5s idle
   
   // Phase 1: Comprehensive data integration (addresses 60% missing data)
@@ -237,6 +238,28 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
     y: 160 // Matches lg:top-40
   });
 
+  // Helper to resume following from last known position
+  const resumeFollowing = () => {
+    if (!shouldFollowPointer || !lastPointerPositionRef.current) return;
+    
+    const orbSize = 64;
+    const offsetX = 320;
+    const offsetY = -120;
+    
+    const x = Math.min(
+      Math.max(lastPointerPositionRef.current.x + offsetX, orbSize),
+      window.innerWidth - orbSize
+    );
+    const y = Math.min(
+      Math.max(lastPointerPositionRef.current.y + offsetY, orbSize),
+      window.innerHeight - orbSize
+    );
+    
+    isHoveringRef.current = false;
+    setIsFollowing(true);
+    setOrbPosition({ x, y });
+  };
+
   useEffect(() => {
     if (!shouldFollowPointer) return;
 
@@ -250,6 +273,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
     };
 
     const handlePointerMove = (event: PointerEvent) => {
+      // Always track last pointer position for resume functionality
+      lastPointerPositionRef.current = { x: event.clientX, y: event.clientY };
+
       // Clear any pending idle timeout
       if (idleTimeoutRef.current) {
         clearTimeout(idleTimeoutRef.current);
@@ -284,7 +310,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
           if (isHoveringRef.current) return;
           setIsFollowing(true);
           setOrbPosition({ x, y });
-        }, 1000);
+        }, 100); // Reduced from 1000ms to 100ms for snappier response
       });
 
       // Set idle timeout to return home
@@ -294,6 +320,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
     // Touch event handler for mobile/tablet - only on finger slide
     const handleTouchMove = (event: TouchEvent) => {
       if (event.touches.length === 0) return;
+
+      const touch = event.touches[0];
+      // Always track last touch position for resume functionality
+      lastPointerPositionRef.current = { x: touch.clientX, y: touch.clientY };
 
       // Clear any pending idle timeout
       if (idleTimeoutRef.current) {
@@ -305,7 +335,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
       pointerMoveFrame.current = requestAnimationFrame(() => {
         pointerMoveFrame.current = null;
 
-        const touch = event.touches[0];
         const orbSize = 64;
         const offsetX = 320;  // Same 4x distance as mouse
         const offsetY = -120;
@@ -328,7 +357,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
           if (isHoveringRef.current) return;
           setIsFollowing(true);
           setOrbPosition({ x, y });
-        }, 1000);
+        }, 100); // Reduced from 1000ms to 100ms for snappier response
       });
 
       // Set idle timeout to return home
@@ -984,7 +1013,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
           setIsFollowing(false);
         }}
         onMouseLeave={() => {
-          isHoveringRef.current = false;
+          // Resume following immediately when mouse leaves the orb
+          resumeFollowing();
         }}
         animate={chatLoading ? {
           scale: [1, 1.05, 1],
@@ -1026,7 +1056,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
           subconsciousMode={subconsciousMode}
           patternDetected={patternDetected}
           adviceReady={adviceReady || progressInsightReady}
-          onClick={handleOrbClick}
+          onClick={() => {
+            handleOrbClick();
+            // Resume following after interaction settles
+            setTimeout(resumeFollowing, 100);
+          }}
           className="shadow-lg hover:shadow-xl transition-shadow"
         />
       </motion.div>
