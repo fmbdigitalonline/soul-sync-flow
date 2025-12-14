@@ -1120,9 +1120,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
             animate={{ x: orbPosition.x, y: orbPosition.y }}
             transition={{
               type: "spring",
-              stiffness: isFollowing ? 18 : 150,  // 80% slower when following
-              damping: isFollowing ? 8 : 20,
-              mass: isFollowing ? 3.5 : 0.8,      // Much heavier/lazier when following
+              stiffness: isFollowing ? 9 : 150,   // 50% slower (was 18)
+              damping: isFollowing ? 6 : 20,
+              mass: isFollowing ? 5 : 0.8,        // Heavier for slower movement
               restDelta: 0.5
             }}
           >
