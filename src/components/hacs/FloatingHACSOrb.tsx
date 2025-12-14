@@ -243,8 +243,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
     if (!shouldFollowPointer || !lastPointerPositionRef.current) return;
     
     const orbSize = 64;
-    const offsetX = 320;
-    const offsetY = -120;
+    const offsetX = 80;  // Close enough to catch
+    const offsetY = -40;
     
     const x = Math.min(
       Math.max(lastPointerPositionRef.current.x + offsetX, orbSize),
@@ -289,8 +289,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
         pointerMoveFrame.current = null;
 
         const orbSize = 64;
-        const offsetX = 320;  // 4x distance - butterfly trailing effect
-        const offsetY = -120; // Keep orb above cursor arrow
+        const offsetX = 80;   // Close enough to catch
+        const offsetY = -40;  // Slightly above cursor
 
         // Clamp to viewport boundaries
         const x = Math.min(
@@ -336,8 +336,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
         pointerMoveFrame.current = null;
 
         const orbSize = 64;
-        const offsetX = 320;  // Same 4x distance as mouse
-        const offsetY = -120;
+        const offsetX = 80;   // Close enough to catch
+        const offsetY = -40;  // Slightly above finger
 
         // Clamp to viewport boundaries
         const x = Math.min(
@@ -839,12 +839,14 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
 
   const handleCloseChat = () => {
     setShowChat(false);
+    resumeFollowing();
   };
 
   const handleCloseMicroLearning = () => {
     setShowMicroLearning(false);
     setShowBubble(false);
     clearCurrentQuestion();
+    resumeFollowing();
   };
 
   const handleLearningComplete = async (growth: number) => {
@@ -1192,6 +1194,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
             const milestone = milestoneMatch ? parseInt(milestoneMatch[1]) : undefined;
             setShowProgressInsightDisplay(false); // Clear display first
             clearProgressInsight(milestone);
+            resumeFollowing();
           }}
           onDismiss={() => {
             console.log('🎯 AUTO-DISPLAY: Dismissing progress insight');
@@ -1200,6 +1203,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
             const milestone = milestoneMatch ? parseInt(milestoneMatch[1]) : undefined;
             setShowProgressInsightDisplay(false); // Clear display first
             clearProgressInsight(milestone);
+            resumeFollowing();
           }}
           position="top-center"
         />
@@ -1213,6 +1217,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
             console.log('🎯 FloatingHACSOrb: Acknowledging insight and clearing display');
             acknowledgeInsight(currentInsight.id);
             setShowInsightDisplay(false);
+            resumeFollowing();
             // CRITICAL FIX: Force clear current insight to enable chat
             setTimeout(() => {
               if (currentInsight && currentInsight.acknowledged) {
@@ -1224,6 +1229,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
             console.log('🎯 FloatingHACSOrb: Dismissing insight and clearing display');
             dismissInsight();
             setShowInsightDisplay(false);
+            resumeFollowing();
             // Add cooldown to prevent immediate reappearance
             setDismissalCooldown(true);
             setTimeout(() => {
