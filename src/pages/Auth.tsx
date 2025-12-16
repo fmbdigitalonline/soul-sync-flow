@@ -287,12 +287,8 @@ export default function Auth() {
 
     setIsLoading(true);
     try {
-      // Use production URL for email links to avoid localhost connection errors
-      const origin = window.location.origin;
-      const baseUrl = origin.includes('localhost') 
-        ? 'https://preview--qxaajirrqrcnmvtowjbg.lovable.dev'
-        : origin;
-      const redirectUrl = `${baseUrl}/auth?type=recovery`;
+      // Use environment-provided site URL or current origin for recovery redirect
+      const redirectUrl = `${getAppBaseUrl()}/auth?type=recovery`;
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       });
