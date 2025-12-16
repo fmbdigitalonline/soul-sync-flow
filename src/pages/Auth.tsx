@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +55,18 @@ export default function Auth() {
   const funnelData = getFunnelData();
   const [isSignUp, setIsSignUp] = useState(fromFunnel && funnelData ? true : false);
 
+  // CRITICAL: Synchronous recovery detection to prevent race condition with redirect
+  // This runs BEFORE any useEffect, blocking premature redirects when recovery tokens are in URL
+  const urlHasRecoveryTokens = useMemo(() => {
+    const hash = window.location.hash;
+    const params = new URLSearchParams(window.location.search);
+    const hasRecovery = hash.includes('type=recovery') || 
+                        hash.includes('access_token') ||
+                        params.get('type') === 'recovery';
+    console.log('🔐 Auth: Synchronous recovery check', { hasRecovery, hash: hash.substring(0, 50) });
+    return hasRecovery;
+  }, []);
+
   // Initialize journey tracking on component mount - using useRef to prevent cascade
   const journeyInitializedRef = React.useRef(false);
   
@@ -101,8 +113,11 @@ export default function Auth() {
   }, [searchParams]);
 
   // Handle user redirect - but NOT if in recovery mode (need to reset password first)
+  // CRITICAL: Also check urlHasRecoveryTokens (synchronous) to prevent race condition
+  // where user state is set before isRecoveryMode async detection completes
   useEffect(() => {
-    if (!authLoading && user && !isRecoveryMode) {
+    if (!authLoading && user && !isRecoveryMode && !urlHasRecoveryTokens) {
+      console.log('🔐 Auth: Redirecting user (not in recovery mode)');
       // If user came from funnel and has funnel data, go to onboarding to personalize experience
       if (fromFunnel && funnelData) {
         navigate("/onboarding", { replace: true });
@@ -110,7 +125,7 @@ export default function Auth() {
         navigate(from, { replace: true });
       }
     }
-  }, [user, authLoading, navigate, from, fromFunnel, funnelData, isRecoveryMode]);
+  }, [user, authLoading, navigate, from, fromFunnel, funnelData, isRecoveryMode, urlHasRecoveryTokens]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -319,6 +334,19 @@ export default function Auth() {
 
     setIsLoading(true);
     try {
+      // Verify we have an active session before attempting password update
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: t('error'),
+          description: 'Session expired. Please request a new password reset link.',
+          variant: "destructive",
+        });
+        setIsRecoveryMode(false);
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({ password: newPassword });
 
       if (error) throw error;
