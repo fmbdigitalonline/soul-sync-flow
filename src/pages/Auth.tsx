@@ -293,7 +293,7 @@ export default function Auth() {
 
     setIsLoading(true);
     try {
-      // Build recovery redirect that matches the Supabase whitelist
+      // Use environment-provided site URL or current origin for recovery redirect
       const redirectUrl = `${getAppBaseUrl()}/auth?type=recovery`;
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
