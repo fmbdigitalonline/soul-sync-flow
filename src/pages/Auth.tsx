@@ -35,9 +35,15 @@ export default function Auth() {
   const { t } = useLanguage();
 
   const getAppBaseUrl = () => {
-    if (import.meta.env.VITE_SITE_URL) return import.meta.env.VITE_SITE_URL as string;
-    if (typeof window !== "undefined") return window.location.origin;
-    return "";
+    // Always use the configured Lovable project URL in production
+    const lovableUrl = "https://6ad301c9-bd02-4f92-acd8-e65629a5efe3.lovableproject.com";
+
+    if (typeof window !== "undefined" && window.location.origin.includes("localhost")) {
+      // Allow localhost during local development so redirects stay on the same host
+      return window.location.origin;
+    }
+
+    return lovableUrl;
   };
 
   // Initialize journey tracking
