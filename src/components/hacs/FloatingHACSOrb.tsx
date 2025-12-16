@@ -411,6 +411,20 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
   const intelligenceLevel = intelligence?.intelligence_level || 0;
   const displayProgress = xpProgress?.percent ?? intelligenceLevel;
 
+  const isTaskMode = isGenerating || isGeneratingInsight || isGeneratingReport;
+
+  const centerStageMessage = isGeneratingReport
+    ? "Activating Soul Alchemist... Deep synthesis in progress"
+    : isGenerating
+      ? "Composing Dream..."
+      : isGeneratingInsight
+        ? "Weaving Insights..."
+        : "Processing...";
+
+  const progressValue = hermeticJobProgress ?? displayProgress;
+  const progressText =
+    progressValue !== undefined && progressValue !== null ? ` (${progressValue}%)` : '';
+
   // Phase 3: Enhanced system readiness check 
   const isSystemReady = !loading && !databaseValidation.loading && !hermeticLoading && !!intelligence;
 
@@ -1114,6 +1128,26 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
   return (
     <HACSErrorBoundary source="FloatingHACSOrb-Main">
       <>
+        {isTaskMode && (
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+            <IntelligentSoulOrb
+              layoutId="hacs-steward-soul"
+              size="lg"
+              speaking={true}
+              stage="generating"
+              showProgressRing={true}
+            />
+            <SpeechBubble
+              position="top"
+              isVisible={true}
+              className="mt-6 max-w-xl text-center"
+            >
+              {centerStageMessage}
+              {progressText}
+            </SpeechBubble>
+          </div>
+        )}
+
         {/* Responsive positioning container - mobile aware */}
         {shouldFollowPointer ? (
           <motion.div
