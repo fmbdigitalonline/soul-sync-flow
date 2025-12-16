@@ -46,6 +46,11 @@ export default function Auth() {
     return lovableUrl;
   };
 
+  const recoveryRedirectUrl = useMemo(
+    () => `${getAppBaseUrl()}/auth?type=recovery`,
+    []
+  );
+
   // Initialize journey tracking
   const {
     startJourney,
@@ -296,7 +301,7 @@ export default function Auth() {
       // Use environment-provided site URL or current origin for recovery redirect
       const redirectUrl = `${getAppBaseUrl()}/auth?type=recovery`;
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl
+        redirectTo: recoveryRedirectUrl
       });
 
       if (error) throw error;
