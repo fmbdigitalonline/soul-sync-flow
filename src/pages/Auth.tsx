@@ -298,6 +298,8 @@ export default function Auth() {
 
     setIsLoading(true);
     try {
+      // Use environment-provided site URL or current origin for recovery redirect
+      const redirectUrl = `${getAppBaseUrl()}/auth?type=recovery`;
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: recoveryRedirectUrl
       });
