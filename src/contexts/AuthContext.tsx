@@ -77,23 +77,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🔐 AuthProvider: Detected recovery mode', { isRecoveryFromHash, isRecoveryFromQuery });
 
       try {
-        // For hash-based recovery (from email link), Supabase automatically processes the tokens
-        // We just need to get the session that was established
-        const { data, error } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error('🔐 Error handling recovery session:', error);
-          return;
+        // CRITICAL: Extract tokens from hash BEFORE cleaning URL
+        if (hash.includes('access_token')) {
+          const hashParams = new URLSearchParams(hash.substring(1)); // Remove the #
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+          
+          console.log('🔐 Found tokens in hash, attempting to set session explicitly');
+          
+          if (accessToken && refreshToken) {
+            // Explicitly set the session with the extracted tokens
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            
+            if (error) {
+              console.error('🔐 Error setting recovery session:', error);
+            } else if (data.session) {
+              console.log('🔐 Recovery session established via setSession:', data.session.user.email);
+              setSession(data.session);
+              setUser(data.session.user);
+            }
+          }
+        } else {
+          // Fallback: try to get existing session
+          const { data, error } = await supabase.auth.getSession();
+          if (error) {
+            console.error('🔐 Error getting recovery session:', error);
+          } else if (data.session) {
+            console.log('🔐 Recovery session found via getSession:', data.session.user.email);
+            setSession(data.session);
+            setUser(data.session.user);
+          }
         }
 
-        if (data.session) {
-          console.log('🔐 Recovery session established for:', data.session.user.email);
-          setSession(data.session);
-          setUser(data.session.user);
-        }
-
-        // Clean up the URL - remove hash but preserve type=recovery in query params
-        // so the Auth page knows to show the password reset form
+        // Clean up the URL AFTER tokens are processed
         if (isRecoveryFromHash) {
           const url = new URL(window.location.href);
           url.hash = '';
