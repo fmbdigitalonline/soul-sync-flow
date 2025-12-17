@@ -66,15 +66,31 @@ export default function Auth() {
   const funnelData = getFunnelData();
   const [isSignUp, setIsSignUp] = useState(fromFunnel && funnelData ? true : false);
 
-  // CRITICAL: Synchronous recovery detection to prevent race condition with redirect
-  // This runs BEFORE any useEffect, blocking premature redirects when recovery tokens are in URL
+  // CRITICAL: Synchronous recovery detection using sessionStorage to survive URL cleanup
+  // AuthContext cleans the hash before useSearchParams updates, so we need persistent storage
   const urlHasRecoveryTokens = useMemo(() => {
     const hash = window.location.hash;
     const params = new URLSearchParams(window.location.search);
-    const hasRecovery = hash.includes('type=recovery') || 
-                        hash.includes('access_token') ||
-                        params.get('type') === 'recovery';
-    console.log('🔐 Auth: Synchronous recovery check', { hasRecovery, hash: hash.substring(0, 50) });
+    const hasRecoveryInUrl = hash.includes('type=recovery') || 
+                              hash.includes('access_token') ||
+                              params.get('type') === 'recovery';
+    
+    // If we detect recovery in URL, store it in sessionStorage
+    if (hasRecoveryInUrl) {
+      sessionStorage.setItem('soul_sync_recovery_mode', 'true');
+      console.log('🔐 Auth: Recovery mode detected, storing in sessionStorage');
+    }
+    
+    // Check both URL and sessionStorage
+    const hasRecoveryInStorage = sessionStorage.getItem('soul_sync_recovery_mode') === 'true';
+    const hasRecovery = hasRecoveryInUrl || hasRecoveryInStorage;
+    
+    console.log('🔐 Auth: Synchronous recovery check', { 
+      hasRecoveryInUrl, 
+      hasRecoveryInStorage, 
+      hasRecovery,
+      hash: hash.substring(0, 50) 
+    });
     return hasRecovery;
   }, []);
 
@@ -97,23 +113,27 @@ export default function Auth() {
     initializeJourney();
   }, []); // Remove dependencies that cause cascade
 
-  // Check for recovery mode from URL params OR hash fragment
+  // Check for recovery mode from URL params, hash fragment, OR sessionStorage
   useEffect(() => {
     const typeParam = searchParams.get('type');
     const hash = window.location.hash;
+    const hasRecoveryInStorage = sessionStorage.getItem('soul_sync_recovery_mode') === 'true';
     
-    // Check both query param and hash for recovery indicator
+    // Check query param, hash, AND sessionStorage for recovery indicator
     const isRecoveryFromParam = typeParam === 'recovery';
     const isRecoveryFromHash = hash.includes('type=recovery');
+    const shouldBeInRecoveryMode = isRecoveryFromParam || isRecoveryFromHash || hasRecoveryInStorage;
     
     console.log('🔐 Auth: Checking recovery mode', { 
       typeParam, 
       hash: hash.substring(0, 50), 
+      hasRecoveryInStorage,
       isRecoveryFromParam, 
-      isRecoveryFromHash 
+      isRecoveryFromHash,
+      shouldBeInRecoveryMode
     });
     
-    if (isRecoveryFromParam || isRecoveryFromHash) {
+    if (shouldBeInRecoveryMode) {
       console.log('🔐 Auth: Entering recovery mode');
       setIsSignUp(false);
       setIsResetMode(false);
@@ -368,6 +388,9 @@ export default function Auth() {
         description: t('auth.passwordUpdatedDescription'),
       });
 
+      // Clear recovery mode flag from sessionStorage
+      sessionStorage.removeItem('soul_sync_recovery_mode');
+      
       setIsRecoveryMode(false);
       setNewPassword("");
       setConfirmNewPassword("");
