@@ -36,7 +36,7 @@ export default function Auth() {
 
   const getAppBaseUrl = () => {
     // Always use the configured Lovable project URL in production
-    const lovableUrl = "https://6ad301c9-bd02-4f92-acd8-e65629a5efe3.lovableproject.com";
+    const lovableUrl = "https://f5c26e06-9b0d-480a-b195-919d6cbffd25.lovableproject.com";
 
     if (typeof window !== "undefined" && window.location.origin.includes("localhost")) {
       // Allow localhost during local development so redirects stay on the same host
