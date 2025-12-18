@@ -68,84 +68,111 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const hash = window.location.hash;
       const searchParams = new URLSearchParams(window.location.search);
       
-      // Check both hash fragment and query params for recovery
+      // Check both hash fragment, query params, AND sessionStorage for recovery
       const isRecoveryFromHash = hash.includes('type=recovery') || hash.includes('access_token');
       const isRecoveryFromQuery = searchParams.get('type') === 'recovery';
+      const isRecoveryFromStorage = sessionStorage.getItem('soul_sync_recovery_mode') === 'true';
+      const storedTokensRaw = sessionStorage.getItem('soul_sync_recovery_tokens');
       
-      if (!isRecoveryFromHash && !isRecoveryFromQuery) return;
+      if (!isRecoveryFromHash && !isRecoveryFromQuery && !isRecoveryFromStorage) return;
 
-      console.log('🔐 AuthProvider: Detected recovery mode', { isRecoveryFromHash, isRecoveryFromQuery, hash: hash.substring(0, 100) });
+      console.log('🔐 AuthProvider: Detected recovery mode', { 
+        isRecoveryFromHash, 
+        isRecoveryFromQuery, 
+        isRecoveryFromStorage,
+        hasStoredTokens: !!storedTokensRaw,
+        hash: hash.substring(0, 50) 
+      });
 
-      // CRITICAL: Set sessionStorage flag IMMEDIATELY to survive URL cleanup race condition
+      // CRITICAL: Set sessionStorage flag IMMEDIATELY
       sessionStorage.setItem('soul_sync_recovery_mode', 'true');
 
       try {
-        // CRITICAL: Extract tokens from hash BEFORE any cleanup
-        if (hash.includes('access_token')) {
-          const hashParams = new URLSearchParams(hash.substring(1)); // Remove the #
-          const accessToken = hashParams.get('access_token');
-          const refreshToken = hashParams.get('refresh_token');
-          
-          console.log('🔐 Found tokens in hash:', { 
-            hasAccessToken: !!accessToken, 
-            hasRefreshToken: !!refreshToken,
-            accessTokenPrefix: accessToken?.substring(0, 20) 
-          });
-          
-          if (accessToken && refreshToken) {
-            // CRITICAL: Store tokens in sessionStorage for fallback recovery
-            sessionStorage.setItem('soul_sync_recovery_tokens', JSON.stringify({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-              stored_at: Date.now()
-            }));
-            console.log('🔐 Tokens stored in sessionStorage for fallback');
+        let accessToken: string | null = null;
+        let refreshToken: string | null = null;
+
+        // PRIORITY 1: Check sessionStorage first (captured by early capture in main.tsx)
+        if (storedTokensRaw) {
+          try {
+            const storedTokens = JSON.parse(storedTokensRaw);
+            const tokenAge = Date.now() - (storedTokens.stored_at || 0);
+            const TOKEN_EXPIRY = 10 * 60 * 1000; // 10 minutes
             
-            // Explicitly set the session with the extracted tokens
-            const { data, error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            
-            if (error) {
-              console.error('🔐 Error setting recovery session:', error);
-            } else if (data.session) {
-              console.log('🔐 Recovery session established via setSession:', data.session.user.email);
-              setSession(data.session);
-              setUser(data.session.user);
-              
-              // Verify session was actually established
-              const { data: verifyData } = await supabase.auth.getSession();
-              if (verifyData.session) {
-                console.log('🔐 Session verified after setSession:', verifyData.session.user.email);
-              } else {
-                console.error('🔐 Session verification failed - session not persisted!');
-              }
+            if (tokenAge < TOKEN_EXPIRY) {
+              accessToken = storedTokens.access_token;
+              refreshToken = storedTokens.refresh_token;
+              console.log('🔐 Retrieved tokens from sessionStorage (early capture)', {
+                tokenAge: Math.round(tokenAge / 1000) + 's',
+                tokenPrefix: accessToken?.substring(0, 20)
+              });
+            } else {
+              console.log('🔐 Stored tokens expired, clearing');
+              sessionStorage.removeItem('soul_sync_recovery_tokens');
             }
-          }
-        } else {
-          // Fallback: try to get existing session
-          const { data, error } = await supabase.auth.getSession();
-          if (error) {
-            console.error('🔐 Error getting recovery session:', error);
-          } else if (data.session) {
-            console.log('🔐 Recovery session found via getSession:', data.session.user.email);
-            setSession(data.session);
-            setUser(data.session.user);
+          } catch (e) {
+            console.error('🔐 Error parsing stored tokens:', e);
           }
         }
 
-        // Clean up the URL AFTER tokens are processed and session is verified
+        // PRIORITY 2: Extract tokens from hash (fallback if early capture missed)
+        if (!accessToken && hash.includes('access_token')) {
+          const hashParams = new URLSearchParams(hash.substring(1));
+          accessToken = hashParams.get('access_token');
+          refreshToken = hashParams.get('refresh_token');
+          console.log('🔐 Extracted tokens from URL hash (fallback)', {
+            hasAccessToken: !!accessToken,
+            hasRefreshToken: !!refreshToken
+          });
+        }
+
+        // Establish session with tokens
+        if (accessToken && refreshToken) {
+          console.log('🔐 Attempting to set session with tokens...');
+          
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          
+          if (error) {
+            console.error('🔐 Error setting recovery session:', error);
+          } else if (data.session) {
+            console.log('🔐 Recovery session established:', data.session.user.email);
+            setSession(data.session);
+            setUser(data.session.user);
+            
+            // Verify session persistence
+            const { data: verifyData } = await supabase.auth.getSession();
+            if (verifyData.session) {
+              console.log('🔐 Session verified successfully');
+            } else {
+              console.error('🔐 Session verification failed!');
+            }
+          }
+        } else if (isRecoveryFromQuery || isRecoveryFromStorage) {
+          // No tokens but in recovery mode - try getting existing session
+          console.log('🔐 No tokens found, checking for existing session...');
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            console.log('🔐 Existing session found:', data.session.user.email);
+            setSession(data.session);
+            setUser(data.session.user);
+          } else {
+            console.log('🔐 No existing session found');
+          }
+        }
+
+        // Clean up URL hash if present
         if (isRecoveryFromHash) {
           const url = new URL(window.location.href);
           url.hash = '';
           url.pathname = '/auth';
           url.searchParams.set('type', 'recovery');
           window.history.replaceState({}, document.title, url.toString());
-          console.log('🔐 AuthProvider: Redirected to clean recovery URL:', url.toString());
+          console.log('🔐 Cleaned up URL to:', url.toString());
         }
       } catch (error) {
-        console.error('🔐 Error processing recovery callback:', error);
+        console.error('🔐 Error processing recovery:', error);
       }
     };
 
