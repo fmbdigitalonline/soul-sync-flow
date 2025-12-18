@@ -22,6 +22,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    // CRITICAL: Disable auto-detection to prevent Supabase from consuming hash tokens
+    // before our custom recovery handling can process them
+    detectSessionInUrl: false,
   },
 });
 

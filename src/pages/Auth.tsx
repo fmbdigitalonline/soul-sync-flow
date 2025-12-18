@@ -367,18 +367,59 @@ export default function Auth() {
     setIsLoading(true);
     try {
       // Verify we have an active session before attempting password update
-      const { data: { session } } = await supabase.auth.getSession();
+      let { data: { session } } = await supabase.auth.getSession();
+      console.log('🔐 handlePasswordUpdate: Initial session check', { hasSession: !!session });
+      
+      // FALLBACK: If no session, try to recover from stored tokens
       if (!session) {
+        console.log('🔐 handlePasswordUpdate: No session found, attempting token recovery from sessionStorage');
+        const storedTokensJson = sessionStorage.getItem('soul_sync_recovery_tokens');
+        
+        if (storedTokensJson) {
+          try {
+            const storedTokens = JSON.parse(storedTokensJson);
+            const tokenAge = Date.now() - storedTokens.stored_at;
+            
+            // Only use tokens if they're less than 10 minutes old
+            if (tokenAge < 10 * 60 * 1000) {
+              console.log('🔐 handlePasswordUpdate: Found valid stored tokens, attempting setSession');
+              
+              const { data: recoveryData, error: recoveryError } = await supabase.auth.setSession({
+                access_token: storedTokens.access_token,
+                refresh_token: storedTokens.refresh_token,
+              });
+              
+              if (recoveryError) {
+                console.error('🔐 handlePasswordUpdate: Token recovery failed:', recoveryError);
+              } else if (recoveryData.session) {
+                console.log('🔐 handlePasswordUpdate: Session recovered from stored tokens:', recoveryData.session.user.email);
+                session = recoveryData.session;
+              }
+            } else {
+              console.log('🔐 handlePasswordUpdate: Stored tokens expired (age:', tokenAge, 'ms)');
+            }
+          } catch (parseError) {
+            console.error('🔐 handlePasswordUpdate: Error parsing stored tokens:', parseError);
+          }
+        }
+      }
+      
+      if (!session) {
+        console.error('🔐 handlePasswordUpdate: No session after recovery attempts');
         toast({
           title: t('error'),
           description: 'Session expired. Please request a new password reset link.',
           variant: "destructive",
         });
+        // Clean up recovery state
+        sessionStorage.removeItem('soul_sync_recovery_mode');
+        sessionStorage.removeItem('soul_sync_recovery_tokens');
         setIsRecoveryMode(false);
         setIsLoading(false);
         return;
       }
 
+      console.log('🔐 handlePasswordUpdate: Updating password for user:', session.user.email);
       const { error } = await supabase.auth.updateUser({ password: newPassword });
 
       if (error) throw error;
@@ -388,8 +429,9 @@ export default function Auth() {
         description: t('auth.passwordUpdatedDescription'),
       });
 
-      // Clear recovery mode flag from sessionStorage
+      // Clear all recovery state from sessionStorage
       sessionStorage.removeItem('soul_sync_recovery_mode');
+      sessionStorage.removeItem('soul_sync_recovery_tokens');
       
       setIsRecoveryMode(false);
       setNewPassword("");

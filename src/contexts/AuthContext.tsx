@@ -69,23 +69,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const searchParams = new URLSearchParams(window.location.search);
       
       // Check both hash fragment and query params for recovery
-      const isRecoveryFromHash = hash.includes('type=recovery');
+      const isRecoveryFromHash = hash.includes('type=recovery') || hash.includes('access_token');
       const isRecoveryFromQuery = searchParams.get('type') === 'recovery';
       
       if (!isRecoveryFromHash && !isRecoveryFromQuery) return;
 
-      console.log('🔐 AuthProvider: Detected recovery mode', { isRecoveryFromHash, isRecoveryFromQuery });
+      console.log('🔐 AuthProvider: Detected recovery mode', { isRecoveryFromHash, isRecoveryFromQuery, hash: hash.substring(0, 100) });
+
+      // CRITICAL: Set sessionStorage flag IMMEDIATELY to survive URL cleanup race condition
+      sessionStorage.setItem('soul_sync_recovery_mode', 'true');
 
       try {
-        // CRITICAL: Extract tokens from hash BEFORE cleaning URL
+        // CRITICAL: Extract tokens from hash BEFORE any cleanup
         if (hash.includes('access_token')) {
           const hashParams = new URLSearchParams(hash.substring(1)); // Remove the #
           const accessToken = hashParams.get('access_token');
           const refreshToken = hashParams.get('refresh_token');
           
-          console.log('🔐 Found tokens in hash, attempting to set session explicitly');
+          console.log('🔐 Found tokens in hash:', { 
+            hasAccessToken: !!accessToken, 
+            hasRefreshToken: !!refreshToken,
+            accessTokenPrefix: accessToken?.substring(0, 20) 
+          });
           
           if (accessToken && refreshToken) {
+            // CRITICAL: Store tokens in sessionStorage for fallback recovery
+            sessionStorage.setItem('soul_sync_recovery_tokens', JSON.stringify({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+              stored_at: Date.now()
+            }));
+            console.log('🔐 Tokens stored in sessionStorage for fallback');
+            
             // Explicitly set the session with the extracted tokens
             const { data, error } = await supabase.auth.setSession({
               access_token: accessToken,
@@ -98,6 +113,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               console.log('🔐 Recovery session established via setSession:', data.session.user.email);
               setSession(data.session);
               setUser(data.session.user);
+              
+              // Verify session was actually established
+              const { data: verifyData } = await supabase.auth.getSession();
+              if (verifyData.session) {
+                console.log('🔐 Session verified after setSession:', verifyData.session.user.email);
+              } else {
+                console.error('🔐 Session verification failed - session not persisted!');
+              }
             }
           }
         } else {
@@ -112,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // Clean up the URL AFTER tokens are processed
+        // Clean up the URL AFTER tokens are processed and session is verified
         if (isRecoveryFromHash) {
           const url = new URL(window.location.href);
           url.hash = '';
