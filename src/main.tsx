@@ -1,3 +1,45 @@
+// ============================================================================
+// CRITICAL: Early URL Token Capture - MUST run BEFORE any React/Router code
+// This captures recovery tokens from URL hash before they get stripped by router
+// ============================================================================
+(function earlyTokenCapture() {
+  if (typeof window === 'undefined') return;
+  
+  const hash = window.location.hash;
+  if (!hash || !hash.includes('access_token')) return;
+  
+  console.log('🔐 EARLY CAPTURE: Detected tokens in URL hash');
+  
+  try {
+    const hashParams = new URLSearchParams(hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
+    const type = hashParams.get('type');
+    
+    if (accessToken && refreshToken) {
+      console.log('🔐 EARLY CAPTURE: Storing tokens in sessionStorage', {
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+        type,
+        tokenPrefix: accessToken.substring(0, 20)
+      });
+      
+      sessionStorage.setItem('soul_sync_recovery_tokens', JSON.stringify({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        type: type || 'recovery',
+        stored_at: Date.now()
+      }));
+      
+      if (type === 'recovery') {
+        sessionStorage.setItem('soul_sync_recovery_mode', 'true');
+      }
+    }
+  } catch (error) {
+    console.error('🔐 EARLY CAPTURE: Error storing tokens:', error);
+  }
+})();
+// ============================================================================
 
 import React from "react";
 import ReactDOM from "react-dom/client";
