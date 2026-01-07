@@ -166,15 +166,15 @@ const Index = () => {
       insight: 'View Insight'
     };
 
-    const taskId = activity.activity_data?.task_id
+    const resolvedTaskId = activity.activity_data?.task_id
       || activity.activity_data?.taskId
       || activity.activity_data?.task?.id
       || activity.task_id;
-    const goalId = activity.activity_data?.goal_id
+    const resolvedGoalId = activity.activity_data?.goal_id
       || activity.activity_data?.goalId
       || activity.activity_data?.goal?.id
       || activity.goal_id;
-    const taskActionPath = taskId ? '/dreams/journey' : actionPathByType.task;
+    const taskActionPath = resolvedTaskId ? '/dreams/journey' : actionPathByType.task;
 
     // Extract progress if available
     const progressValue = activity.activity_data?.progress ?? activity.activity_data?.completion_percentage;
@@ -186,9 +186,9 @@ const Index = () => {
       timestamp: activity.created_at,
       actionLabel: actionLabelByType[type],
       actionPath: type === 'task' ? taskActionPath : actionPathByType[type],
-      actionState: type === 'task' && taskId ? {
-        resumeTaskId: String(taskId),
-        resumeGoalId: goalId ? String(goalId) : undefined
+      actionState: type === 'task' && resolvedTaskId ? {
+        resumeTaskId: String(resolvedTaskId),
+        resumeGoalId: resolvedGoalId ? String(resolvedGoalId) : undefined
       } : undefined,
       progress: typeof progressValue === 'number' ? Math.round(progressValue) : undefined
     };
