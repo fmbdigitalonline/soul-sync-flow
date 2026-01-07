@@ -266,6 +266,11 @@ const Dreams = () => {
   }, [location.state]);
 
   const normalizeResumedTask = useCallback((goal: any, rawTask: any, fallbackTaskId: string, fallbackTitle?: string, fallbackDescription?: string): Task => {
+    const state = location.state as { resumeTaskId?: string; resumeGoalId?: string } | null;
+    return state ?? null;
+  }, [location.state]);
+
+  const normalizeResumedTask = useCallback((goal: any, rawTask: any, fallbackTaskId: string): Task => {
     const id = rawTask?.id ?? rawTask?.task_id ?? rawTask?.uuid ?? fallbackTaskId;
     const status = rawTask?.completed ? 'completed' : (rawTask?.status ?? 'todo');
 
@@ -276,6 +281,9 @@ const Dreams = () => {
         ? rawTask.description
         : (rawTask?.short_description || fallbackDescription),
       short_description: typeof rawTask?.short_description === 'string' ? rawTask.short_description : fallbackDescription,
+      title: typeof rawTask?.title === 'string' ? rawTask.title : 'Untitled Task',
+      description: typeof rawTask?.description === 'string' ? rawTask.description : rawTask?.short_description,
+      short_description: typeof rawTask?.short_description === 'string' ? rawTask.short_description : undefined,
       status,
       due_date: typeof rawTask?.due_date === 'string' ? rawTask.due_date : undefined,
       estimated_duration: typeof rawTask?.estimated_duration === 'string' ? rawTask.estimated_duration : '30 min',
@@ -361,6 +369,25 @@ const Dreams = () => {
 
     resumeTask();
   }, [findTaskInJourneyGoals, location.pathname, navigate, normalizeResumedTask, resumeRequest]);
+    if (journeyGoals.length === 0) return;
+
+    const match = findTaskInJourneyGoals(resumeRequest.resumeTaskId, resumeRequest.resumeGoalId);
+    if (!match) {
+      return;
+    }
+
+    resumeRequestRef.current = resumeRequest.resumeTaskId;
+    const goalId = match.goal?.id ?? match.goal?.goal_id;
+    if (goalId) {
+      setActiveGoalId(String(goalId));
+      setSelectedGoalId(String(goalId));
+      localStorage.setItem('activeGoalId', String(goalId));
+    }
+
+    setSelectedTask(normalizeResumedTask(match.goal, match.task, resumeRequest.resumeTaskId));
+    setCurrentView('task-coach');
+    navigate(location.pathname, { replace: true, state: null });
+  }, [findTaskInJourneyGoals, journeyGoals.length, location.pathname, navigate, normalizeResumedTask, resumeRequest]);
 
   const handleSuccessViewJourney = useCallback(() => {
     console.log('📍 Dreams: Navigating from success to journey, tracking breadcrumb');
