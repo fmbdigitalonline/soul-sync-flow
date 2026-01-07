@@ -47,6 +47,7 @@ import { useGoals } from "@/hooks/use-goals";
 import { getTaskSessionType } from "@/utils/task-session";
 import type { ResumableTask } from "@/hooks/use-resumable-tasks";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
+import { workingInstructionsPersistenceService } from "@/services/working-instructions-persistence-service";
 
 type Task = ResumableTask;
 
@@ -255,6 +256,16 @@ const Dreams = () => {
   const location = useLocation();
   const resumeRequestRef = useRef<string | null>(null);
   const resumeRequest = useMemo(() => {
+    const state = location.state as {
+      resumeTaskId?: string;
+      resumeGoalId?: string;
+      resumeTaskTitle?: string;
+      resumeTaskDescription?: string;
+    } | null;
+    return state ?? null;
+  }, [location.state]);
+
+  const normalizeResumedTask = useCallback((goal: any, rawTask: any, fallbackTaskId: string, fallbackTitle?: string, fallbackDescription?: string): Task => {
     const state = location.state as { resumeTaskId?: string; resumeGoalId?: string } | null;
     return state ?? null;
   }, [location.state]);
@@ -265,6 +276,11 @@ const Dreams = () => {
 
     return {
       id: String(id),
+      title: typeof rawTask?.title === 'string' ? rawTask.title : (fallbackTitle || 'Untitled Task'),
+      description: typeof rawTask?.description === 'string'
+        ? rawTask.description
+        : (rawTask?.short_description || fallbackDescription),
+      short_description: typeof rawTask?.short_description === 'string' ? rawTask.short_description : fallbackDescription,
       title: typeof rawTask?.title === 'string' ? rawTask.title : 'Untitled Task',
       description: typeof rawTask?.description === 'string' ? rawTask.description : rawTask?.short_description,
       short_description: typeof rawTask?.short_description === 'string' ? rawTask.short_description : undefined,
@@ -307,6 +323,52 @@ const Dreams = () => {
   useEffect(() => {
     if (!resumeRequest?.resumeTaskId) return;
     if (resumeRequestRef.current === resumeRequest.resumeTaskId) return;
+
+    const resumeTask = async () => {
+      const match = findTaskInJourneyGoals(resumeRequest.resumeTaskId, resumeRequest.resumeGoalId);
+      const contextGoalId = match?.goal?.id ?? match?.goal?.goal_id ?? resumeRequest.resumeGoalId;
+      const resolvedContext = contextGoalId
+        ? { taskId: resumeRequest.resumeTaskId, goalId: String(contextGoalId) }
+        : await workingInstructionsPersistenceService.getInstructionContextForTask(resumeRequest.resumeTaskId).catch(error => {
+            console.error('Error loading instruction context for task', error);
+            return null;
+          });
+
+      if (!match && !resolvedContext) {
+        return;
+      }
+
+      resumeRequestRef.current = resumeRequest.resumeTaskId;
+      const resolvedGoalId = resolvedContext?.goalId;
+      if (resolvedGoalId) {
+        setActiveGoalId(String(resolvedGoalId));
+        setSelectedGoalId(String(resolvedGoalId));
+        localStorage.setItem('activeGoalId', String(resolvedGoalId));
+      }
+
+      const taskToResume = match
+        ? normalizeResumedTask(
+            match.goal,
+            match.task,
+            resumeRequest.resumeTaskId,
+            resumeRequest.resumeTaskTitle,
+            resumeRequest.resumeTaskDescription
+          )
+        : normalizeResumedTask(
+            { id: resolvedGoalId },
+            null,
+            resumeRequest.resumeTaskId,
+            resumeRequest.resumeTaskTitle,
+            resumeRequest.resumeTaskDescription
+          );
+
+      setSelectedTask(taskToResume);
+      setCurrentView('task-coach');
+      navigate(location.pathname, { replace: true, state: null });
+    };
+
+    resumeTask();
+  }, [findTaskInJourneyGoals, location.pathname, navigate, normalizeResumedTask, resumeRequest]);
     if (journeyGoals.length === 0) return;
 
     const match = findTaskInJourneyGoals(resumeRequest.resumeTaskId, resumeRequest.resumeGoalId);

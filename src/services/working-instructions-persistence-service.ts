@@ -227,6 +227,73 @@ class WorkingInstructionsPersistenceService {
     const taskIds = [...new Set(data?.map(row => row.task_id) || [])];
     return taskIds;
   }
+
+  /**
+   * Get the most recently updated task instructions context.
+   */
+  async getMostRecentInstructionContext(): Promise<{ taskId: string; goalId: string } | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error("User must be authenticated to get instruction context");
+    }
+
+    const { data, error } = await supabase
+      .from('task_working_instructions')
+      .select('task_id, goal_id, updated_at')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("❌ Failed to get most recent instruction context:", error);
+      throw new Error(`Failed to get most recent instruction context: ${error.message}`);
+    }
+
+    if (!data?.task_id || !data?.goal_id) {
+      return null;
+    }
+
+    return {
+      taskId: String(data.task_id),
+      goalId: String(data.goal_id)
+    };
+  }
+
+  /**
+   * Get goal context for a task if instructions exist.
+   */
+  async getInstructionContextForTask(taskId: string): Promise<{ taskId: string; goalId: string } | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error("User must be authenticated to get instruction context");
+    }
+
+    const { data, error } = await supabase
+      .from('task_working_instructions')
+      .select('task_id, goal_id, updated_at')
+      .eq('user_id', user.id)
+      .eq('task_id', taskId)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("❌ Failed to get instruction context for task:", error);
+      throw new Error(`Failed to get instruction context for task: ${error.message}`);
+    }
+
+    if (!data?.task_id || !data?.goal_id) {
+      return null;
+    }
+
+    return {
+      taskId: String(data.task_id),
+      goalId: String(data.goal_id)
+    };
+  }
 }
 
 export const workingInstructionsPersistenceService = new WorkingInstructionsPersistenceService();
