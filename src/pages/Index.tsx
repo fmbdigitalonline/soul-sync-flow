@@ -26,6 +26,10 @@ interface ActivityItem {
   timestamp?: string;
   actionLabel: string;
   actionPath: string;
+  actionState?: {
+    resumeTaskId?: string;
+    resumeGoalId?: string;
+  };
   progress?: number;
 }
 interface ContinueItem {
@@ -33,6 +37,10 @@ interface ContinueItem {
   title: string;
   lastActivity?: string;
   actionPath: string;
+  actionState?: {
+    resumeTaskId?: string;
+    resumeGoalId?: string;
+  };
 }
 const Index = () => {
   const {
@@ -158,6 +166,16 @@ const Index = () => {
       insight: 'View Insight'
     };
 
+    const taskId = activity.activity_data?.task_id
+      || activity.activity_data?.taskId
+      || activity.activity_data?.task?.id
+      || activity.task_id;
+    const goalId = activity.activity_data?.goal_id
+      || activity.activity_data?.goalId
+      || activity.activity_data?.goal?.id
+      || activity.goal_id;
+    const taskActionPath = taskId ? '/dreams/journey' : actionPathByType.task;
+
     // Extract progress if available
     const progressValue = activity.activity_data?.progress ?? activity.activity_data?.completion_percentage;
     return {
@@ -167,7 +185,11 @@ const Index = () => {
       description: description,
       timestamp: activity.created_at,
       actionLabel: actionLabelByType[type],
-      actionPath: actionPathByType[type],
+      actionPath: type === 'task' ? taskActionPath : actionPathByType[type],
+      actionState: type === 'task' && taskId ? {
+        resumeTaskId: String(taskId),
+        resumeGoalId: goalId ? String(goalId) : undefined
+      } : undefined,
       progress: typeof progressValue === 'number' ? Math.round(progressValue) : undefined
     };
   }, []);
@@ -195,11 +217,23 @@ const Index = () => {
     }
     const taskActivity = activities.find(act => String(act.activity_type || '').toLowerCase().includes('task'));
     if (taskActivity) {
+      const taskId = taskActivity.activity_data?.task_id
+        || taskActivity.activity_data?.taskId
+        || taskActivity.activity_data?.task?.id
+        || taskActivity.task_id;
+      const goalId = taskActivity.activity_data?.goal_id
+        || taskActivity.activity_data?.goalId
+        || taskActivity.activity_data?.goal?.id
+        || taskActivity.goal_id;
       candidates.push({
         type: 'task',
         title: taskActivity.activity_data?.title ? `Resume "${taskActivity.activity_data.title}"` : 'Continue your task list',
         lastActivity: taskActivity.created_at,
-        actionPath: '/tasks'
+        actionPath: taskId ? '/dreams/journey' : '/tasks',
+        actionState: taskId ? {
+          resumeTaskId: String(taskId),
+          resumeGoalId: goalId ? String(goalId) : undefined
+        } : undefined
       });
     }
     if (candidates.length === 0) return null;
@@ -334,7 +368,18 @@ const Index = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button size="lg" onClick={() => navigate(continueItem?.actionPath || '/companion')} disabled={!continueItem} className="font-inter h-touch px-8">
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      if (!continueItem) return;
+                      navigate(
+                        continueItem.actionPath,
+                        continueItem.actionState ? { state: continueItem.actionState } : undefined
+                      );
+                    }}
+                    disabled={!continueItem}
+                    className="font-inter h-touch px-8"
+                  >
                     Resume
                   </Button>
                 </div>
@@ -357,7 +402,13 @@ const Index = () => {
           </div>
           
           <div className="space-y-0">
-            {recentActivities.length > 0 ? recentActivities.slice(0, 3).map((activity, idx) => <div key={activity.id} className={cn("flex items-center gap-4 py-4 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg px-2 -mx-2", idx !== Math.min(2, recentActivities.length - 1) && "border-b border-border/30")} onClick={() => navigate(activity.actionPath)}>
+            {recentActivities.length > 0 ? recentActivities.slice(0, 3).map((activity, idx) => <div
+                key={activity.id}
+                className={cn("flex items-center gap-4 py-4 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg px-2 -mx-2", idx !== Math.min(2, recentActivities.length - 1) && "border-b border-border/30")}
+                onClick={() => navigate(activity.actionPath, activity.actionState ? {
+                state: activity.actionState
+              } : undefined)}
+              >
                 {/* Icon */}
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   {iconByType[activity.type]}

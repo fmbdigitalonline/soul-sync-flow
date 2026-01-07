@@ -253,6 +253,79 @@ const Dreams = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const resumeRequestRef = useRef<string | null>(null);
+  const resumeRequest = useMemo(() => {
+    const state = location.state as { resumeTaskId?: string; resumeGoalId?: string } | null;
+    return state ?? null;
+  }, [location.state]);
+
+  const normalizeResumedTask = useCallback((goal: any, rawTask: any, fallbackTaskId: string): Task => {
+    const id = rawTask?.id ?? rawTask?.task_id ?? rawTask?.uuid ?? fallbackTaskId;
+    const status = rawTask?.completed ? 'completed' : (rawTask?.status ?? 'todo');
+
+    return {
+      id: String(id),
+      title: typeof rawTask?.title === 'string' ? rawTask.title : 'Untitled Task',
+      description: typeof rawTask?.description === 'string' ? rawTask.description : rawTask?.short_description,
+      short_description: typeof rawTask?.short_description === 'string' ? rawTask.short_description : undefined,
+      status,
+      due_date: typeof rawTask?.due_date === 'string' ? rawTask.due_date : undefined,
+      estimated_duration: typeof rawTask?.estimated_duration === 'string' ? rawTask.estimated_duration : '30 min',
+      energy_level_required: typeof rawTask?.energy_level_required === 'string' ? rawTask.energy_level_required : 'medium',
+      category: typeof rawTask?.category === 'string' ? rawTask.category : 'execution',
+      optimal_time_of_day: Array.isArray(rawTask?.optimal_time_of_day) && rawTask.optimal_time_of_day.length > 0
+        ? rawTask.optimal_time_of_day
+        : ['morning'],
+      goal_id: goal?.id ? String(goal.id) : goal?.goal_id ? String(goal.goal_id) : undefined,
+      completed: Boolean(rawTask?.completed)
+    };
+  }, []);
+
+  const findTaskInJourneyGoals = useCallback((taskId: string, goalId?: string | null) => {
+    const goalsToSearch = goalId
+      ? journeyGoals.filter(goal => {
+          const candidateId = goal?.id ?? goal?.goal_id;
+          return candidateId ? String(candidateId) === String(goalId) : false;
+        })
+      : journeyGoals;
+
+    for (const goal of goalsToSearch) {
+      const tasks = Array.isArray(goal?.tasks) ? goal.tasks : [];
+      const matched = tasks.find((task: any) => {
+        const candidateTaskId = task?.id ?? task?.task_id ?? task?.uuid;
+        return candidateTaskId ? String(candidateTaskId) === String(taskId) : false;
+      });
+
+      if (matched) {
+        return { goal, task: matched };
+      }
+    }
+
+    return null;
+  }, [journeyGoals]);
+
+  useEffect(() => {
+    if (!resumeRequest?.resumeTaskId) return;
+    if (resumeRequestRef.current === resumeRequest.resumeTaskId) return;
+    if (journeyGoals.length === 0) return;
+
+    const match = findTaskInJourneyGoals(resumeRequest.resumeTaskId, resumeRequest.resumeGoalId);
+    if (!match) {
+      return;
+    }
+
+    resumeRequestRef.current = resumeRequest.resumeTaskId;
+    const goalId = match.goal?.id ?? match.goal?.goal_id;
+    if (goalId) {
+      setActiveGoalId(String(goalId));
+      setSelectedGoalId(String(goalId));
+      localStorage.setItem('activeGoalId', String(goalId));
+    }
+
+    setSelectedTask(normalizeResumedTask(match.goal, match.task, resumeRequest.resumeTaskId));
+    setCurrentView('task-coach');
+    navigate(location.pathname, { replace: true, state: null });
+  }, [findTaskInJourneyGoals, journeyGoals.length, location.pathname, navigate, normalizeResumedTask, resumeRequest]);
 
   const handleSuccessViewJourney = useCallback(() => {
     console.log('📍 Dreams: Navigating from success to journey, tracking breadcrumb');
