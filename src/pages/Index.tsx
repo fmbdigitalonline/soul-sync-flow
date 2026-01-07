@@ -15,6 +15,7 @@ import { useTutorialFlow } from "@/hooks/use-tutorial-flow";
 import { useHACSInsights, type HACSInsight } from "@/hooks/use-hacs-insights";
 import { isAdminUser } from "@/utils/isAdminUser";
 import { supabase } from "@/integrations/supabase/client";
+import { workingInstructionsPersistenceService } from "@/services/working-instructions-persistence-service";
 import { cn } from "@/lib/utils";
 import { Sparkles, Brain, BookOpen, ArrowRight, LogIn, MessageCircle, ListChecks, Moon, Lightbulb, Clock, Flame, Compass, RefreshCw, ChevronRight } from "lucide-react";
 type ActivityType = "conversation" | "dream" | "task" | "insight";
@@ -26,6 +27,12 @@ interface ActivityItem {
   timestamp?: string;
   actionLabel: string;
   actionPath: string;
+  actionState?: {
+    resumeTaskId?: string;
+    resumeGoalId?: string;
+    resumeTaskTitle?: string;
+    resumeTaskDescription?: string;
+  };
   progress?: number;
 }
 interface ContinueItem {
@@ -33,6 +40,12 @@ interface ContinueItem {
   title: string;
   lastActivity?: string;
   actionPath: string;
+  actionState?: {
+    resumeTaskId?: string;
+    resumeGoalId?: string;
+    resumeTaskTitle?: string;
+    resumeTaskDescription?: string;
+  };
 }
 const Index = () => {
   const {
@@ -128,7 +141,7 @@ const Index = () => {
     const diffDays = Math.floor(diffHours / 24);
     return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
   }, []);
-  const mapActivityToItem = useCallback((activity: any): ActivityItem => {
+  const mapActivityToItem = useCallback((activity: any, fallbackContext?: { taskId: string; goalId: string } | null): ActivityItem => {
     const activityType = String(activity.activity_type || '').toLowerCase();
     const description = activity.activity_data?.summary || activity.activity_data?.message || activity.activity_data?.title || '';
     let type: ActivityType = 'task';
@@ -158,6 +171,18 @@ const Index = () => {
       insight: 'View Insight'
     };
 
+    const taskId = activity.activity_data?.task_id
+      || activity.activity_data?.taskId
+      || activity.activity_data?.task?.id
+      || activity.task_id;
+    const goalId = activity.activity_data?.goal_id
+      || activity.activity_data?.goalId
+      || activity.activity_data?.goal?.id
+      || activity.goal_id;
+    const resolvedTaskId = taskId || fallbackContext?.taskId;
+    const resolvedGoalId = goalId || fallbackContext?.goalId;
+    const taskActionPath = resolvedTaskId ? '/dreams/journey' : actionPathByType.task;
+
     // Extract progress if available
     const progressValue = activity.activity_data?.progress ?? activity.activity_data?.completion_percentage;
     return {
@@ -167,11 +192,17 @@ const Index = () => {
       description: description,
       timestamp: activity.created_at,
       actionLabel: actionLabelByType[type],
-      actionPath: actionPathByType[type],
+      actionPath: type === 'task' ? taskActionPath : actionPathByType[type],
+      actionState: type === 'task' && resolvedTaskId ? {
+        resumeTaskId: String(resolvedTaskId),
+        resumeGoalId: resolvedGoalId ? String(resolvedGoalId) : undefined,
+        resumeTaskTitle: activity.activity_data?.title || activity.activity_data?.task?.title,
+        resumeTaskDescription: activity.activity_data?.description || activity.activity_data?.task?.description
+      } : undefined,
       progress: typeof progressValue === 'number' ? Math.round(progressValue) : undefined
     };
   }, []);
-  const deriveContinueItem = useCallback((conversation: any | null, activities: any[]): ContinueItem | null => {
+  const deriveContinueItem = useCallback((conversation: any | null, activities: any[], fallbackContext?: { taskId: string; goalId: string } | null): ContinueItem | null => {
     const candidates: ContinueItem[] = [];
     if (conversation) {
       candidates.push({
@@ -195,11 +226,27 @@ const Index = () => {
     }
     const taskActivity = activities.find(act => String(act.activity_type || '').toLowerCase().includes('task'));
     if (taskActivity) {
+      const taskId = taskActivity.activity_data?.task_id
+        || taskActivity.activity_data?.taskId
+        || taskActivity.activity_data?.task?.id
+        || taskActivity.task_id;
+      const goalId = taskActivity.activity_data?.goal_id
+        || taskActivity.activity_data?.goalId
+        || taskActivity.activity_data?.goal?.id
+        || taskActivity.goal_id;
+      const resolvedTaskId = taskId || fallbackContext?.taskId;
+      const resolvedGoalId = goalId || fallbackContext?.goalId;
       candidates.push({
         type: 'task',
         title: taskActivity.activity_data?.title ? `Resume "${taskActivity.activity_data.title}"` : 'Continue your task list',
         lastActivity: taskActivity.created_at,
-        actionPath: '/tasks'
+        actionPath: resolvedTaskId ? '/dreams/journey' : '/tasks',
+        actionState: resolvedTaskId ? {
+          resumeTaskId: String(resolvedTaskId),
+          resumeGoalId: resolvedGoalId ? String(resolvedGoalId) : undefined,
+          resumeTaskTitle: taskActivity.activity_data?.title || taskActivity.activity_data?.task?.title,
+          resumeTaskDescription: taskActivity.activity_data?.description || taskActivity.activity_data?.task?.description
+        } : undefined
       });
     }
     if (candidates.length === 0) return null;
@@ -213,12 +260,16 @@ const Index = () => {
     if (!user) return;
     setActivityLoading(true);
     try {
+      const fallbackContext = await workingInstructionsPersistenceService.getMostRecentInstructionContext().catch(error => {
+        console.error('Error loading instruction fallback context', error);
+        return null;
+      });
       const {
         data: activitiesData
       } = await supabase.from('user_activities').select('id, activity_type, activity_data, created_at').eq('user_id', user.id).order('created_at', {
         ascending: false
       }).limit(8);
-      const mappedActivities = (activitiesData || []).map(mapActivityToItem);
+      const mappedActivities = (activitiesData || []).map(activity => mapActivityToItem(activity, fallbackContext));
       setRecentActivities(mappedActivities);
       setLastSynced(activitiesData?.[0]?.created_at || null);
       const {
@@ -227,7 +278,7 @@ const Index = () => {
         ascending: false
       }).limit(1);
       const conversation = conversationData?.[0] || null;
-      const continueCandidate = deriveContinueItem(conversation, activitiesData || []);
+      const continueCandidate = deriveContinueItem(conversation, activitiesData || [], fallbackContext);
       setContinueItem(continueCandidate);
     } catch (error) {
       console.error('Error loading activity data', error);
@@ -334,7 +385,18 @@ const Index = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button size="lg" onClick={() => navigate(continueItem?.actionPath || '/companion')} disabled={!continueItem} className="font-inter h-touch px-8">
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      if (!continueItem) return;
+                      navigate(
+                        continueItem.actionPath,
+                        continueItem.actionState ? { state: continueItem.actionState } : undefined
+                      );
+                    }}
+                    disabled={!continueItem}
+                    className="font-inter h-touch px-8"
+                  >
                     Resume
                   </Button>
                 </div>
@@ -357,7 +419,13 @@ const Index = () => {
           </div>
           
           <div className="space-y-0">
-            {recentActivities.length > 0 ? recentActivities.slice(0, 3).map((activity, idx) => <div key={activity.id} className={cn("flex items-center gap-4 py-4 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg px-2 -mx-2", idx !== Math.min(2, recentActivities.length - 1) && "border-b border-border/30")} onClick={() => navigate(activity.actionPath)}>
+            {recentActivities.length > 0 ? recentActivities.slice(0, 3).map((activity, idx) => <div
+                key={activity.id}
+                className={cn("flex items-center gap-4 py-4 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg px-2 -mx-2", idx !== Math.min(2, recentActivities.length - 1) && "border-b border-border/30")}
+                onClick={() => navigate(activity.actionPath, activity.actionState ? {
+                state: activity.actionState
+              } : undefined)}
+              >
                 {/* Icon */}
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   {iconByType[activity.type]}
