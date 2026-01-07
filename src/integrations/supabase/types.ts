@@ -3934,6 +3934,21 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_webhook_events: {
+        Row: {
+          event_id: string
+          processed_at: string | null
+        }
+        Insert: {
+          event_id: string
+          processed_at?: string | null
+        }
+        Update: {
+          event_id?: string
+          processed_at?: string | null
+        }
+        Relationships: []
+      }
       task_assistance_responses: {
         Row: {
           actionable_steps: string[]

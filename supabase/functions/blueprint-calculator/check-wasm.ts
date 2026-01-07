@@ -17,7 +17,7 @@ serve(async (req) => {
     console.log("Checking WASM configuration...");
     
     // Check if WASI is supported in this Deno environment
-    const wasiSupported = typeof Deno.Wasi === 'function';
+    const wasiSupported = typeof (Deno as any).Wasi === 'function';
     console.log(`WASI support detected: ${wasiSupported ? 'Yes' : 'No'}`);
     
     // Gather environment info
@@ -85,7 +85,7 @@ serve(async (req) => {
     } catch (fetchError) {
       console.error("Error fetching WASM file:", fetchError);
       wasmStatus = "fetch_error";
-      errorDetails = fetchError.message;
+      errorDetails = (fetchError as Error).message;
     }
     
     // Check custom URL too
@@ -124,7 +124,7 @@ serve(async (req) => {
     } catch (fetchError) {
       console.error("Error fetching custom WASM URL:", fetchError);
       customUrlStatus = "fetch_error";
-      customErrorDetails = fetchError.message;
+      customErrorDetails = (fetchError as Error).message;
     }
     
     // Also check local paths for completeness
@@ -213,14 +213,15 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error checking WASM configuration:", error);
+    const err = error as Error;
+    console.error("Error checking WASM configuration:", err);
     
     return new Response(
       JSON.stringify({
         error: 'WASM check failed',
-        details: error.message,
-        stack: error.stack,
-        wasi_supported: typeof Deno.Wasi === 'function',
+        details: err.message,
+        stack: err.stack,
+        wasi_supported: typeof (Deno as any).Wasi === 'function',
         deno_version: Deno.version
       }),
       {
