@@ -78,8 +78,8 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (customUrlError) {
-        console.warn(`❌ Custom URL failed: ${customUrlError.message}, trying next source...`);
-        error = customUrlError;
+        console.warn(`❌ Custom URL failed: ${(customUrlError as Error).message}, trying next source...`);
+        error = customUrlError as Error;
       }
       
       // 1. Then try default storage bucket
@@ -112,8 +112,8 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (storageError) {
-        console.warn(`❌ Storage bucket failed: ${storageError.message}, trying next source...`);
-        error = storageError;
+        console.warn(`❌ Storage bucket failed: ${(storageError as Error).message}, trying next source...`);
+        error = storageError as Error;
       }
       
       // 2. Try local file (for development environments)
@@ -134,8 +134,8 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBinary);
         return wasmModule;
       } catch (localError) {
-        console.warn(`❌ Local WASM failed: ${localError.message}, trying next source...`);
-        error = localError;
+        console.warn(`❌ Local WASM failed: ${(localError as Error).message}, trying next source...`);
+        error = localError as Error;
       }
       
       // 3. Try shared folder
@@ -155,8 +155,8 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBinary);
         return wasmModule;
       } catch (sharedError) {
-        console.warn(`❌ Shared WASM failed: ${sharedError.message}, trying next source...`);
-        error = sharedError;
+        console.warn(`❌ Shared WASM failed: ${(sharedError as Error).message}, trying next source...`);
+        error = sharedError as Error;
       }
       
       // 4. Try GitHub CDN
@@ -181,8 +181,8 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (githubError) {
-        console.warn(`❌ GitHub CDN failed: ${githubError.message}, trying last resort...`);
-        error = githubError;
+        console.warn(`❌ GitHub CDN failed: ${(githubError as Error).message}, trying last resort...`);
+        error = githubError as Error;
       }
       
       // 5. Try jsDelivr CDN as last resort
@@ -207,8 +207,8 @@ export async function initializeSwephModule() {
         const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (jsdelivrError) {
-        console.error(`❌ All WASM sources failed. Last error: ${jsdelivrError.message}`);
-        error = new Error(`Failed to load WASM from any source. Last error: ${jsdelivrError.message}`);
+        console.error(`❌ All WASM sources failed. Last error: ${(jsdelivrError as Error).message}`);
+        error = new Error(`Failed to load WASM from any source. Last error: ${(jsdelivrError as Error).message}`);
         throw error;
       }
     })();

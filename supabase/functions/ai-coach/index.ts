@@ -242,7 +242,6 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
     console.log('📤 SENDING TO OPENAI:', {
       model: requestPayload.model,
       max_completion_tokens: requestPayload.max_completion_tokens,
-      temperature: requestPayload.temperature,
       systemPromptLength: requestPayload.messages[0].content.length,
       userMessageLength: requestPayload.messages[1].content.length,
       timestamp: new Date().toISOString()
@@ -344,35 +343,30 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
     );
 
   } catch (error) {
+    const err = error as Error;
     console.error('❌ AI Coach Edge Function Error:', {
-      errorType: error.constructor.name,
-      errorName: error.name,
-      message: error.message,
-      timestamp: new Date().toISOString(),
-      requestContext: {
-        agentType,
-        contextDepth,
-        messageLength: message?.length,
-        userId: userId?.substring(0, 8) + '...'
-      }
+      errorType: err.constructor?.name || 'Unknown',
+      errorName: err.name,
+      message: err.message,
+      timestamp: new Date().toISOString()
     });
 
     // Determine appropriate status code based on error type
     let statusCode = 500;
-    let userMessage = error.message || 'An unexpected error occurred while processing your request.';
-    let errorCode = error.name || 'UNKNOWN_ERROR';
+    let userMessage = err.message || 'An unexpected error occurred while processing your request.';
+    let errorCode = err.name || 'UNKNOWN_ERROR';
 
     // Map error types to status codes
-    if (error.name === 'QUOTA_EXCEEDED' || error.message?.includes('quota')) {
+    if (err.name === 'QUOTA_EXCEEDED' || err.message?.includes('quota')) {
       statusCode = 429;
       errorCode = 'QUOTA_EXCEEDED';
-    } else if (error.name === 'RATE_LIMIT' || error.message?.includes('429')) {
+    } else if (err.name === 'RATE_LIMIT' || err.message?.includes('429')) {
       statusCode = 429;
       errorCode = 'RATE_LIMIT';
-    } else if (error.name === 'AUTH_ERROR' || error.message?.includes('API key') || error.message?.includes('401')) {
+    } else if (err.name === 'AUTH_ERROR' || err.message?.includes('API key') || err.message?.includes('401')) {
       statusCode = 401;
       errorCode = 'AUTH_ERROR';
-    } else if (error.message?.includes('timeout')) {
+    } else if (err.message?.includes('timeout')) {
       statusCode = 504;
       errorCode = 'TIMEOUT';
     }
@@ -381,7 +375,7 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
       JSON.stringify({ 
         error: userMessage,
         errorCode,
-        details: error.message,
+        details: err.message,
         timestamp: new Date().toISOString()
       }),
       {

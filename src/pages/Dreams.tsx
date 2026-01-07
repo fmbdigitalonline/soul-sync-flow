@@ -307,22 +307,54 @@ const Dreams = () => {
   useEffect(() => {
     if (!resumeRequest?.resumeTaskId) return;
     if (resumeRequestRef.current === resumeRequest.resumeTaskId) return;
-    if (journeyGoals.length === 0) return;
 
-    const match = findTaskInJourneyGoals(resumeRequest.resumeTaskId, resumeRequest.resumeGoalId);
-    if (!match) {
-      return;
-    }
+    // Try to find task in journey goals first
+    const match = journeyGoals.length > 0 
+      ? findTaskInJourneyGoals(resumeRequest.resumeTaskId, resumeRequest.resumeGoalId)
+      : null;
 
     resumeRequestRef.current = resumeRequest.resumeTaskId;
-    const goalId = match.goal?.id ?? match.goal?.goal_id;
-    if (goalId) {
-      setActiveGoalId(String(goalId));
-      setSelectedGoalId(String(goalId));
-      localStorage.setItem('activeGoalId', String(goalId));
+
+    if (match) {
+      // Task found in journey goals - use full data
+      const goalId = match.goal?.id ?? match.goal?.goal_id;
+      if (goalId) {
+        setActiveGoalId(String(goalId));
+        setSelectedGoalId(String(goalId));
+        localStorage.setItem('activeGoalId', String(goalId));
+      }
+      setSelectedTask(normalizeResumedTask(match.goal, match.task, resumeRequest.resumeTaskId));
+    } else {
+      // Task not found in journey goals - create minimal task for TaskCoachInterface
+      // TaskCoachInterface will load working instructions from database
+      console.log('⚠️ Dreams: Task not found in journeyGoals, creating minimal task for resume', {
+        taskId: resumeRequest.resumeTaskId,
+        goalId: resumeRequest.resumeGoalId
+      });
+      
+      const minimalTask: Task = {
+        id: String(resumeRequest.resumeTaskId),
+        title: 'Resuming Task...',
+        description: undefined,
+        status: 'in_progress',
+        due_date: undefined,
+        estimated_duration: '30 min',
+        energy_level_required: 'medium',
+        category: 'execution',
+        optimal_time_of_day: ['morning'],
+        goal_id: resumeRequest.resumeGoalId ? String(resumeRequest.resumeGoalId) : undefined,
+        completed: false
+      };
+      
+      if (resumeRequest.resumeGoalId) {
+        setActiveGoalId(String(resumeRequest.resumeGoalId));
+        setSelectedGoalId(String(resumeRequest.resumeGoalId));
+        localStorage.setItem('activeGoalId', String(resumeRequest.resumeGoalId));
+      }
+      
+      setSelectedTask(minimalTask);
     }
 
-    setSelectedTask(normalizeResumedTask(match.goal, match.task, resumeRequest.resumeTaskId));
     setCurrentView('task-coach');
     navigate(location.pathname, { replace: true, state: null });
   }, [findTaskInJourneyGoals, journeyGoals.length, location.pathname, navigate, normalizeResumedTask, resumeRequest]);

@@ -43,10 +43,11 @@ export default async function debugEndpoint(req: Request) {
     });
 
   } catch (error) {
-    console.error("Debug endpoint error:", error);
+    const err = error as Error;
+    console.error("Debug endpoint error:", err);
     return new Response(JSON.stringify({
-      error: error.message,
-      stack: error.stack
+      error: err.message,
+      stack: err.stack
     }), {
       status: 500,
       headers: { 
