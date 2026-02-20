@@ -410,6 +410,57 @@ export type Database = {
         }
         Relationships: []
       }
+      api_partners: {
+        Row: {
+          active: boolean
+          created_at: string | null
+          id: string
+          partner_id: string
+          plan: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string | null
+          id?: string
+          partner_id: string
+          plan?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string | null
+          id?: string
+          partner_id?: string
+          plan?: string
+        }
+        Relationships: []
+      }
+      api_request_logs: {
+        Row: {
+          created_at: string | null
+          endpoint: string
+          id: string
+          method: string
+          partner_id: string
+          status: number
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          method: string
+          partner_id: string
+          status: number
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          method?: string
+          partner_id?: string
+          status?: number
+        }
+        Relationships: []
+      }
       assistance_step_progress: {
         Row: {
           assistance_response_id: string
@@ -619,6 +670,7 @@ export type Database = {
           agent_number: number
           completed_at: string | null
           created_at: string | null
+          dashboard_data: Json | null
           id: string
           job_id: string
           section_content: string
@@ -627,6 +679,7 @@ export type Database = {
           section_type: string
           stage: string
           status: string
+          sub_sections: Json | null
           word_count: number | null
         }
         Insert: {
@@ -634,6 +687,7 @@ export type Database = {
           agent_number: number
           completed_at?: string | null
           created_at?: string | null
+          dashboard_data?: Json | null
           id?: string
           job_id: string
           section_content: string
@@ -642,6 +696,7 @@ export type Database = {
           section_type?: string
           stage: string
           status?: string
+          sub_sections?: Json | null
           word_count?: number | null
         }
         Update: {
@@ -649,6 +704,7 @@ export type Database = {
           agent_number?: number
           completed_at?: string | null
           created_at?: string | null
+          dashboard_data?: Json | null
           id?: string
           job_id?: string
           section_content?: string
@@ -657,6 +713,7 @@ export type Database = {
           section_type?: string
           stage?: string
           status?: string
+          sub_sections?: Json | null
           word_count?: number | null
         }
         Relationships: [
@@ -671,8 +728,10 @@ export type Database = {
       }
       bp_generation_jobs: {
         Row: {
+          batch_completed: number
           business_idea: string
           business_name: string
+          company_logo_url: string | null
           context_data: Json
           created_at: string | null
           current_stage: string
@@ -683,13 +742,18 @@ export type Database = {
           heartbeat_at: string | null
           id: string
           progress_percentage: number
+          purchase_tier: string | null
+          selected_theme: string | null
           status: string
+          tier_content: Json | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          batch_completed?: number
           business_idea: string
           business_name: string
+          company_logo_url?: string | null
           context_data?: Json
           created_at?: string | null
           current_stage?: string
@@ -700,13 +764,18 @@ export type Database = {
           heartbeat_at?: string | null
           id?: string
           progress_percentage?: number
+          purchase_tier?: string | null
+          selected_theme?: string | null
           status?: string
+          tier_content?: Json | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          batch_completed?: number
           business_idea?: string
           business_name?: string
+          company_logo_url?: string | null
           context_data?: Json
           created_at?: string | null
           current_stage?: string
@@ -717,7 +786,10 @@ export type Database = {
           heartbeat_at?: string | null
           id?: string
           progress_percentage?: number
+          purchase_tier?: string | null
+          selected_theme?: string | null
           status?: string
+          tier_content?: Json | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -839,6 +911,42 @@ export type Database = {
           updated_at?: string
           user_id?: string
           user_resolution?: Json | null
+        }
+        Relationships: []
+      }
+      contact_submissions: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          message: string
+          name: string
+          source_url: string | null
+          status: string | null
+          subject: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          message: string
+          name: string
+          source_url?: string | null
+          status?: string | null
+          subject?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          source_url?: string | null
+          status?: string | null
+          subject?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1162,6 +1270,33 @@ export type Database = {
           topic_name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      crisis_escalation_events: {
+        Row: {
+          detected_at: string | null
+          id: string
+          message_excerpt: string | null
+          partner_id: string | null
+          session_id: string | null
+          vertical: string | null
+        }
+        Insert: {
+          detected_at?: string | null
+          id?: string
+          message_excerpt?: string | null
+          partner_id?: string | null
+          session_id?: string | null
+          vertical?: string | null
+        }
+        Update: {
+          detected_at?: string | null
+          id?: string
+          message_excerpt?: string | null
+          partner_id?: string | null
+          session_id?: string | null
+          vertical?: string | null
         }
         Relationships: []
       }
@@ -2854,6 +2989,39 @@ export type Database = {
         }
         Relationships: []
       }
+      interaction_session_state: {
+        Row: {
+          difficulty_level: number | null
+          friction_score: number | null
+          last_strategy: string | null
+          partner_id: string
+          risk_flag: boolean | null
+          session_id: string
+          updated_at: string | null
+          vertical: string
+        }
+        Insert: {
+          difficulty_level?: number | null
+          friction_score?: number | null
+          last_strategy?: string | null
+          partner_id: string
+          risk_flag?: boolean | null
+          session_id: string
+          updated_at?: string | null
+          vertical: string
+        }
+        Update: {
+          difficulty_level?: number | null
+          friction_score?: number | null
+          last_strategy?: string | null
+          partner_id?: string
+          risk_flag?: boolean | null
+          session_id?: string
+          updated_at?: string | null
+          vertical?: string
+        }
+        Relationships: []
+      }
       life_wheel_assessments: {
         Row: {
           assessment_version: number
@@ -3163,6 +3331,30 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      partners: {
+        Row: {
+          active: boolean | null
+          api_key_hash: string | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean | null
+          api_key_hash?: string | null
+          created_at?: string | null
+          id: string
+          name: string
+        }
+        Update: {
+          active?: boolean | null
+          api_key_hash?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -3741,6 +3933,47 @@ export type Database = {
           value?: number
         }
         Relationships: []
+      }
+      plan_purchases: {
+        Row: {
+          claim_token: string | null
+          created_at: string
+          customer_email: string | null
+          id: string
+          job_id: string
+          purchased_at: string
+          stripe_session_id: string
+          tier: string
+        }
+        Insert: {
+          claim_token?: string | null
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          job_id: string
+          purchased_at?: string
+          stripe_session_id: string
+          tier?: string
+        }
+        Update: {
+          claim_token?: string | null
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          job_id?: string
+          purchased_at?: string
+          stripe_session_id?: string
+          tier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_purchases_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "bp_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       productivity_journey: {
         Row: {
@@ -4588,6 +4821,39 @@ export type Database = {
           user_id?: string
           weekly_xp?: number
           xp_total?: number
+        }
+        Relationships: []
+      }
+      vertical_configs: {
+        Row: {
+          created_at: string | null
+          default_difficulty: number | null
+          enable_crisis_intercept: boolean | null
+          enable_difficulty_tracking: boolean | null
+          enable_strategy_selection: boolean | null
+          id: string
+          max_difficulty: number | null
+          vertical: string
+        }
+        Insert: {
+          created_at?: string | null
+          default_difficulty?: number | null
+          enable_crisis_intercept?: boolean | null
+          enable_difficulty_tracking?: boolean | null
+          enable_strategy_selection?: boolean | null
+          id?: string
+          max_difficulty?: number | null
+          vertical: string
+        }
+        Update: {
+          created_at?: string | null
+          default_difficulty?: number | null
+          enable_crisis_intercept?: boolean | null
+          enable_difficulty_tracking?: boolean | null
+          enable_strategy_selection?: boolean | null
+          id?: string
+          max_difficulty?: number | null
+          vertical?: string
         }
         Relationships: []
       }
