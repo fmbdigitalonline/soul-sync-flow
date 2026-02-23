@@ -4377,6 +4377,45 @@ export type Database = {
         }
         Relationships: []
       }
+      tutor_student_profiles: {
+        Row: {
+          age_band: string | null
+          created_at: string
+          first_name: string | null
+          id: string
+          partner_id: string
+          prefs: Json
+          state: Json
+          student_id: string
+          updated_at: string
+          vertical: string
+        }
+        Insert: {
+          age_band?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          partner_id: string
+          prefs?: Json
+          state?: Json
+          student_id: string
+          updated_at?: string
+          vertical: string
+        }
+        Update: {
+          age_band?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          partner_id?: string
+          prefs?: Json
+          state?: Json
+          student_id?: string
+          updated_at?: string
+          vertical?: string
+        }
+        Relationships: []
+      }
       user_360_profiles: {
         Row: {
           created_at: string
