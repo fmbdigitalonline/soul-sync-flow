@@ -155,22 +155,8 @@ serve(async (req) => {
       });
     }
 
-    // Store the authentic insight for learning
-    await supabase.from('hacs_module_insights').insert({
-      user_id: userId,
-      hacs_module: insight.module,
-      insight_type: insight.type,
-      insight_data: {
-        insight_text: insight.insight,
-        confidence_score: insight.confidence,
-        data_points: insight.dataPoints,
-        evidence: insight.evidence,
-        patterns_analyzed: patterns.length
-      },
-      confidence_score: insight.confidence
-    });
-
-    // CRITICAL FIX: Also write to conversation_insights for frontend to fetch
+    // Fix 4: Write ONLY to conversation_insights (canonical table). 
+    // Removed duplicate write to hacs_module_insights to unify insight storage.
     await supabase.from('conversation_insights').insert({
       user_id: userId,
       session_id: sessionId || `session_${Date.now()}`,
@@ -180,10 +166,12 @@ serve(async (req) => {
         module: insight.module,
         confidence: insight.confidence,
         evidence: insight.evidence,
-        source: 'hacs_conversations'
+        source: 'hacs_conversations',
+        data_points: insight.dataPoints,
+        patterns_analyzed: patterns.length
       }
     });
-    console.log('✅ Wrote insight to conversation_insights table');
+    console.log('✅ Wrote insight to conversation_insights (unified canonical table)');
 
     // Log the insight generation
     await supabase.from('dream_activity_logs').insert({

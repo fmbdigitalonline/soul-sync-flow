@@ -2112,6 +2112,34 @@ serve(async (req) => {
       }
     });
 
+    // Fix 5: Dual-write individual messages to conversation_messages
+    try {
+      const conversationId = threadId || `oracle_${sessionId}`;
+      await supabase.from('conversation_messages').insert([
+        {
+          conversation_id: conversationId,
+          client_msg_id: crypto.randomUUID(),
+          user_id: userId,
+          session_id: sessionId,
+          role: 'user',
+          content: message,
+          status: 'delivered'
+        },
+        {
+          conversation_id: conversationId,
+          client_msg_id: crypto.randomUUID(),
+          user_id: userId,
+          session_id: sessionId,
+          role: 'assistant',
+          content: response,
+          status: 'delivered'
+        }
+      ]);
+      console.log('✅ Dual-write: Oracle messages stored in conversation_messages');
+    } catch (dualWriteError) {
+      console.error('⚠️ Dual-write to conversation_messages failed (non-blocking):', dualWriteError);
+    }
+
     // FUSION STEP 3: Prepare immediate response (background tasks will run AFTER this is sent)
     const immediateResponse = new Response(JSON.stringify({
       response,
