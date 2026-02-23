@@ -185,63 +185,9 @@ serve(async (req) => {
       }
       console.log(`[${effectiveProcessingId}] ✅ PHASE 3C: Stored ${shadowPatterns.length} shadow patterns`);
 
-      // PHASE 3D: Update HACS intelligence with Hermetic module learning
-      console.log(`[${effectiveProcessingId}] 📝 PHASE 3D: Updating HACS intelligence from Hermetic processing...`);
-
-      try {
-        // Fetch current intelligence state
-        const { data: currentHACS } = await supabase
-          .from('hacs_intelligence')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        if (!currentHACS) {
-          console.log(`[${effectiveProcessingId}] ⚠️ No HACS intelligence record found - skipping update`);
-        } else {
-          // Map Hermetic results to HACS module improvements
-          const moduleImprovements = mapHermeticToHACS(hermeticResults);
-          
-          // Calculate new module scores
-          const currentModuleScores = currentHACS.module_scores || {};
-          const newModuleScores = { ...currentModuleScores };
-          
-          Object.entries(moduleImprovements).forEach(([module, improvement]) => {
-            const currentScore = newModuleScores[module] || 0;
-            newModuleScores[module] = Math.min(100, currentScore + improvement);
-          });
-
-          // Recalculate overall intelligence level
-          const moduleValues = Object.values(newModuleScores);
-          const newIntelligenceLevel = moduleValues.reduce((sum: number, score: any) => 
-            sum + Number(score), 0
-          ) / moduleValues.length;
-
-          // UPSERT with proper structure (following hacs-intelligent-conversation pattern)
-          const { error: updateError } = await supabase
-            .from('hacs_intelligence')
-            .update({
-              intelligence_level: Math.round(newIntelligenceLevel),
-              module_scores: newModuleScores,
-              interaction_count: (currentHACS.interaction_count || 0) + 1,
-              last_update: new Date().toISOString(),
-              pie_score: newModuleScores.PIE || 0,
-              vfp_score: newModuleScores.VFP || 0,
-              tmg_score: newModuleScores.TMG || 0,
-              updated_at: new Date().toISOString()
-            })
-            .eq('user_id', userId);
-
-          if (updateError) {
-            console.error(`[${effectiveProcessingId}] ⚠️ HACS intelligence update failed:`, updateError);
-          } else {
-            console.log(`[${effectiveProcessingId}] ✅ PHASE 3D: Updated HACS intelligence (${Math.round(newIntelligenceLevel)}%)`);
-            console.log(`[${effectiveProcessingId}]   Module improvements:`, moduleImprovements);
-          }
-        }
-      } catch (hacsError) {
-        console.error(`[${effectiveProcessingId}] ⚠️ PHASE 3D error (non-blocking):`, hacsError);
-      }
+      // PHASE 3D: REMOVED - hacs_intelligence write moved to caller (hacs-intelligent-conversation)
+      // to eliminate dual-write race condition. Module improvements are returned in the response instead.
+      console.log(`[${effectiveProcessingId}] ℹ️ PHASE 3D: Skipped (caller is authoritative writer for hacs_intelligence)`);
 
       // Final verification log
       console.log(`[${effectiveProcessingId}] 🎯 PERSISTENCE SUMMARY:`);
@@ -281,10 +227,14 @@ serve(async (req) => {
       console.error(`[${effectiveProcessingId}] ⚠️ Failed to award XP:`, xpError);
     }
 
+    // Include hermetic module improvements for the caller to merge into its own hacs_intelligence write
+    const hermeticModuleImprovements = mapHermeticToHACS(hermeticResults);
+
     return new Response(JSON.stringify({ 
       response: unifiedResponse,
       hermeticResults: hermeticResults.filter(r => r.processed),
       processedModules: hermeticResults.length,
+      hermeticModuleImprovements,
       brainMetrics: {
         nikProcessed: nikResult.processed,
         memoryStored: tmgResult.processed,
@@ -449,8 +399,33 @@ async function processVFP(supabase: any, userId: string): Promise<HermeticModule
       .single();
 
     const personalityContext = blueprint ? extractPersonalityContext(blueprint.blueprint) : null;
+
+    // Fix 1: Also fetch hermetic_structured_intelligence for deep identity data
+    let hermeticIntelligence = null;
+    try {
+      const { data: hermeticData } = await supabase
+        .from('hermetic_structured_intelligence')
+        .select('identity_constructs, behavioral_triggers, attachment_style, cognitive_functions, shadow_patterns, core_wounds, defense_mechanisms, communication_style')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (hermeticData) {
+        hermeticIntelligence = hermeticData;
+        console.log('🧬 VFP: Merged hermetic_structured_intelligence data');
+      }
+    } catch (hermeticError) {
+      console.warn('🧬 VFP: hermetic_structured_intelligence query failed (non-blocking):', hermeticError);
+    }
     
-    return { module: 'VFP', processed: true, data: { personalityContext, blueprint: !!blueprint } };
+    return { 
+      module: 'VFP', 
+      processed: true, 
+      data: { 
+        personalityContext, 
+        blueprint: !!blueprint,
+        hermeticIntelligence 
+      } 
+    };
   } catch (error) {
     console.error('VFP processing failed:', error);
     return { module: 'VFP', processed: false, error: error.message };
@@ -532,19 +507,32 @@ async function synthesizeUnifiedResponse(
     return acc;
   }, {} as any);
 
+  // Fix 1: Extract hermetic intelligence from VFP module data if available
+  const vfpModule = processedModules.find(r => r.module === 'VFP');
+  const hermeticIntel = vfpModule?.data?.hermeticIntelligence;
+  
+  const hermeticSection = hermeticIntel ? `
+DEEP IDENTITY INTELLIGENCE (from Hermetic Structured Intelligence):
+- Identity Constructs: ${JSON.stringify(hermeticIntel.identity_constructs || 'N/A')}
+- Behavioral Triggers: ${JSON.stringify(hermeticIntel.behavioral_triggers || 'N/A')}
+- Attachment Style: ${JSON.stringify(hermeticIntel.attachment_style || 'N/A')}
+- Cognitive Functions: ${JSON.stringify(hermeticIntel.cognitive_functions || 'N/A')}
+- Communication Style: ${JSON.stringify(hermeticIntel.communication_style || 'N/A')}` : '';
+
   const systemPrompt = `You are HACS (Holistic Adaptive Cognitive System) with unified brain architecture.
 
 PERSONALITY CONTEXT:
 ${personalityContext ? `- Name: ${personalityContext.name || 'User'}
 - MBTI: ${personalityContext.mbti || 'Unknown'}
 - Type: ${personalityContext.hdType || 'Unknown'}` : '- No personality data available'}
+${hermeticSection}
 
 HERMETIC PROCESSING RESULTS:
 ${processedModules.map(r => `- ${r.module}: ${r.processed ? 'Processed' : 'Failed'}`).join('\n')}
 
 AGENT MODE: ${agentMode}
 
-Respond naturally and helpfully, integrating insights from your unified intelligence processing.`;
+Respond naturally and helpfully, integrating insights from your unified intelligence processing. When hermetic intelligence data is available, weave in understanding of the user's identity constructs, triggers, and communication preferences.`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

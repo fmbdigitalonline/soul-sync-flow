@@ -115,21 +115,20 @@ export const useHACSInsights = () => {
     }
   }, [insightQueue, currentInsightIndex]);
 
-  // Step 1: Load Historical Database Insights
+  // Fix 4: Load Historical Insights from conversation_insights (unified canonical table)
   const loadHistoricalInsights = useCallback(async (): Promise<HACSInsight[]> => {
     if (!user) return [];
     
-    console.log('📚 Loading historical insights from database...');
+    console.log('📚 Loading historical insights from conversation_insights (unified)...');
     
     try {
       const { data: historicalInsights, error } = await supabase
-        .from('hacs_module_insights')
+        .from('conversation_insights')
         .select('*')
         .eq('user_id', user.id)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()) // Last 30 days
-        .gte('confidence_score', 0.7) // Only high-confidence insights
-        .order('confidence_score', { ascending: false })
-        .limit(5);
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(10);
 
       if (error) {
         console.error('🚨 Error loading historical insights:', error);
@@ -143,23 +142,22 @@ export const useHACSInsights = () => {
 
       console.log('📚 Historical insights loaded:', historicalInsights.length);
 
-      // Convert database format to HACSInsight format
+      // Convert conversation_insights format to HACSInsight format
       const convertedInsights: HACSInsight[] = historicalInsights.map(dbInsight => {
-        // Parse insight_data as JSON
         const insightData = typeof dbInsight.insight_data === 'string' 
           ? JSON.parse(dbInsight.insight_data) 
           : dbInsight.insight_data;
           
         return {
           id: `historical_${dbInsight.id}`,
-          text: insightData?.insight_text || 'Historical insight',
-          module: dbInsight.hacs_module || 'Historical',
+          text: insightData?.insight_text || insightData?.message || 'Historical insight',
+          module: insightData?.module || 'Historical',
           type: dbInsight.insight_type === 'behavioral' ? 'behavioral' : 'productivity',
-          confidence: dbInsight.confidence_score || 0.8,
+          confidence: insightData?.confidence || 0.8,
           evidence: Array.isArray(insightData?.evidence) ? insightData.evidence : [],
           timestamp: new Date(dbInsight.created_at),
-          acknowledged: false,
-          priority: dbInsight.confidence_score > 0.9 ? 'high' : 'medium'
+          acknowledged: !!dbInsight.viewed_at,
+          priority: (insightData?.confidence || 0) > 0.9 ? 'high' : 'medium'
         };
       });
 

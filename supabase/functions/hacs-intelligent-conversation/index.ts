@@ -307,6 +307,18 @@ serve(async (req) => {
             
             console.log(`✅ Unified Brain processed through ${unifiedData.processedModules}/11 Hermetic components`);
             
+            // Fix 2: Merge hermetic module improvements from unified-brain-processor into our moduleImprovements
+            // so there's a single write to hacs_intelligence (below at line ~405)
+            if (unifiedData.hermeticModuleImprovements) {
+              const hermeticImprovements = unifiedData.hermeticModuleImprovements;
+              Object.entries(hermeticImprovements).forEach(([module, improvement]) => {
+                // These will be merged into moduleImprovements before the single write
+                const currentScore = (intelligenceData.module_scores || {})[module] || 0;
+                intelligenceData.module_scores[module] = Math.min(100, currentScore + Number(improvement));
+              });
+              console.log('✅ Merged hermetic module improvements into caller scores:', Object.keys(hermeticImprovements));
+            }
+            
             // Log successful unified brain processing
             await supabase.from('dream_activity_logs').insert({
               user_id: userId,
@@ -314,7 +326,8 @@ serve(async (req) => {
               activity_data: {
                 processed_modules: unifiedData.processedModules,
                 hermetic_results: unifiedData.hermeticResults?.length || 0,
-                brain_metrics: unifiedData.brainMetrics
+                brain_metrics: unifiedData.brainMetrics,
+                hermeticModuleImprovements: unifiedData.hermeticModuleImprovements
               },
               session_id: sessionId
             });
@@ -377,6 +390,36 @@ serve(async (req) => {
             last_activity: new Date().toISOString()
           })
           .eq('id', conversation.id);
+
+        // Fix 5: Dual-write individual messages to conversation_messages for semantic search
+        try {
+          const userMsgId = crypto.randomUUID();
+          const assistantMsgId = crypto.randomUUID();
+          
+          await supabase.from('conversation_messages').insert([
+            {
+              conversation_id: conversation.id,
+              client_msg_id: userMsgId,
+              user_id: userId,
+              session_id: sessionId,
+              role: 'user',
+              content: userMessage,
+              status: 'delivered'
+            },
+            {
+              conversation_id: conversation.id,
+              client_msg_id: assistantMsgId,
+              user_id: userId,
+              session_id: sessionId,
+              role: 'assistant',
+              content: response,
+              status: 'delivered'
+            }
+          ]);
+          console.log('✅ Dual-write: Messages stored in conversation_messages');
+        } catch (dualWriteError) {
+          console.error('⚠️ Dual-write to conversation_messages failed (non-blocking):', dualWriteError);
+        }
 
         // CRITICAL: Update intelligence from conversation interaction
         const messageQuality = determineConversationQuality(userMessage, response);
