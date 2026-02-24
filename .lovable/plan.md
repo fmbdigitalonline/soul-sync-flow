@@ -1,100 +1,55 @@
 
 
-# Database Size Emergency Fix (120% of 500 MB Quota)
+# Reclaim Bloated Disk Space (~240 MB) via Table Rebuild
 
 ## Problem
-Database is at 559 MB / 500 MB (120%), exceeding the Supabase Free Plan quota. The system risks being restricted from writes.
+The data purge migration succeeded (dead tuples cleared by autovacuum), but PostgreSQL's physical files haven't shrunk. `VACUUM FULL` is unavailable on Supabase (requires superuser). Current state:
 
-## Root Cause
-Three tables consume 367 MB (66% of total DB) with purgeable data:
-- `dream_activity_logs`: 128 MB -- 87,307 of 87,410 rows are older than 7 days (activity telemetry, not critical)
-- `user_360_profiles_archive`: 119 MB -- 560 snapshot rows for only 4 users (redundant archive)
-- `user_360_profiles`: 120 MB -- 121 rows with bloated JSONB (needs VACUUM after cleanup)
-- `memory_metrics`: 6.5 MB -- 39,999 of 40,131 rows older than 7 days (diagnostic telemetry)
+| Table | Rows | Actual Data | Physical Size | Bloat |
+|-------|------|-------------|---------------|-------|
+| dream_activity_logs | 111 | ~1 MB | 121 MB | ~120 MB |
+| user_360_profiles | 121 | ~3 MB | 120 MB | ~117 MB |
 
-## Fix Strategy (Zero Breaking Changes)
+Database total: 423 MB (84% of 500 MB quota). Target: under 200 MB.
 
-### Step 1: Purge stale `dream_activity_logs` (saves ~127 MB)
-Delete rows older than 7 days. This is telemetry/analytics data -- no conversation engine, UI component, or business logic reads historical dream activity logs.
+## Solution: Table Rebuild (VACUUM FULL alternative)
+Since we cannot run `VACUUM FULL`, we use the standard workaround: copy live data into a fresh table, drop the bloated original, rename the new one, and recreate indexes/policies/triggers.
 
-```sql
-DELETE FROM dream_activity_logs WHERE timestamp < now() - interval '7 days';
-```
+This is a single database migration -- no application code changes.
 
-### Step 2: Purge `user_360_profiles_archive` (saves ~119 MB)
-This archive table stores redundant snapshots of `user_360_profiles` for only 4 users. The live `user_360_profiles` table is the source of truth. No edge function or frontend component reads from the archive table.
+## Technical Details
 
-```sql
-TRUNCATE user_360_profiles_archive;
-```
+### Step 1: Rebuild `dream_activity_logs` (~120 MB freed)
+1. Create `dream_activity_logs_new` with identical schema
+2. Copy 111 live rows into it
+3. Drop bloated original (CASCADE not needed -- no dependents)
+4. Rename new table
+5. Recreate: primary key, indexes (user+session, timestamp DESC), FK to auth.users, RLS + 2 policies
 
-### Step 3: Purge old `memory_metrics` (saves ~6 MB)
-Diagnostic metrics older than 7 days. No UI or edge function reads historical metrics beyond recent sessions.
+### Step 2: Rebuild `user_360_profiles` (~117 MB freed)
+1. Create `user_360_profiles_new` with identical schema
+2. Deduplicate: keep only the latest row per user_id (currently some users have up to 33 duplicate rows)
+3. Drop bloated original
+4. Rename new table
+5. Recreate: primary key, indexes (user_id, last_updated, user+updated_at), trigger (update_user_360_profiles_updated_at), RLS + 3 policies
+6. Add UNIQUE constraint on user_id to prevent future duplicates
 
-```sql
-DELETE FROM memory_metrics WHERE created_at < now() - interval '7 days';
-```
+### Projected Result
 
-### Step 4: Purge completed `hermetic_processing_jobs` and `hermetic_sub_jobs` (saves ~25 MB)
-Completed and failed processing jobs are one-time pipeline artifacts. The results are already stored in `hermetic_structured_intelligence`.
+| Metric | Before | After |
+|--------|--------|-------|
+| dream_activity_logs | 121 MB | ~1 MB |
+| user_360_profiles | 120 MB | ~3 MB |
+| Database total | 423 MB | ~185 MB |
+| Quota usage | 84% | ~37% |
 
-```sql
-DELETE FROM hermetic_sub_jobs WHERE status IN ('completed', 'failed');
-DELETE FROM hermetic_processing_jobs WHERE status IN ('completed', 'failed');
-```
+### Safety
+- No FK references from other tables to either table (verified)
+- No application code changes needed -- table names and columns remain identical
+- RLS policies, indexes, triggers all recreated exactly as they were
+- Deduplication keeps only the most recent row per user (preserving the latest profile_data)
 
-### Step 5: VACUUM to reclaim disk space
-After deleting rows, Postgres marks space as reusable but doesn't return it to the OS. VACUUM FULL reclaims actual disk space.
-
-```sql
-VACUUM FULL dream_activity_logs;
-VACUUM FULL user_360_profiles_archive;
-VACUUM FULL memory_metrics;
-VACUUM FULL hermetic_processing_jobs;
-VACUUM FULL hermetic_sub_jobs;
-VACUUM FULL user_360_profiles;
-```
-
-### Step 6: Add retention policies (prevent recurrence)
-Create a scheduled cleanup function that runs daily via pg_cron (already enabled from Fix 3):
-
-```sql
-CREATE OR REPLACE FUNCTION cleanup_stale_telemetry()
-RETURNS void LANGUAGE plpgsql SECURITY DEFINER
-SET search_path TO 'public' AS $$
-BEGIN
-  DELETE FROM dream_activity_logs WHERE timestamp < now() - interval '7 days';
-  DELETE FROM memory_metrics WHERE created_at < now() - interval '7 days';
-  DELETE FROM hermetic_processing_jobs WHERE status IN ('completed','failed') AND updated_at < now() - interval '3 days';
-  DELETE FROM hermetic_sub_jobs WHERE status IN ('completed','failed') AND updated_at < now() - interval '3 days';
-  TRUNCATE user_360_profiles_archive;
-END;
-$$;
-
-SELECT cron.schedule('cleanup-stale-telemetry', '0 3 * * *', $$ SELECT cleanup_stale_telemetry() $$);
-```
-
-## Expected Result
-
-| Action | Space Freed |
-|--------|-------------|
-| dream_activity_logs purge | ~127 MB |
-| user_360_profiles_archive purge | ~119 MB |
-| hermetic jobs purge | ~25 MB |
-| memory_metrics purge | ~6 MB |
-| VACUUM reclaim | additional compaction |
-| **Total** | **~277 MB freed** |
-
-**Projected DB size after cleanup: ~282 MB (56% of quota)** -- well within safe limits.
-
-## Safety Guarantees
-- No edge function, frontend hook, or conversation engine reads from the purged data
-- `dream_activity_logs` is write-only telemetry -- no downstream consumer
-- `user_360_profiles_archive` is never queried by any code path
-- Processing jobs are artifacts; results live in `hermetic_structured_intelligence`
-- Daily cron prevents recurrence
-
-## Files Modified
-- 1 database migration (cleanup SQL + retention cron job)
-- No application code changes required
+### Files Modified
+- 1 database migration (table rebuild SQL)
+- No application code changes
 
