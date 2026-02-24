@@ -5040,6 +5040,7 @@ export type Database = {
       cleanup_expired_hot_memory: { Args: never; Returns: undefined }
       cleanup_old_memories: { Args: never; Returns: undefined }
       cleanup_stale_bp_jobs: { Args: never; Returns: number }
+      cleanup_stale_telemetry: { Args: never; Returns: undefined }
       cleanup_stuck_hermetic_jobs:
         | { Args: never; Returns: number }
         | { Args: { p_user_id?: string }; Returns: number }
