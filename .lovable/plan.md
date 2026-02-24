@@ -1,141 +1,100 @@
 
 
-# Fix Plan: Top 5 Critical Plumbing Issues
+# Database Size Emergency Fix (120% of 500 MB Quota)
 
-## Overview
+## Problem
+Database is at 559 MB / 500 MB (120%), exceeding the Supabase Free Plan quota. The system risks being restricted from writes.
 
-Five surgical fixes to reconnect broken data pipes. Each fix is independent and can be implemented in sequence within a single session. No architectural rewrites -- only wiring existing components together.
+## Root Cause
+Three tables consume 367 MB (66% of total DB) with purgeable data:
+- `dream_activity_logs`: 128 MB -- 87,307 of 87,410 rows are older than 7 days (activity telemetry, not critical)
+- `user_360_profiles_archive`: 119 MB -- 560 snapshot rows for only 4 users (redundant archive)
+- `user_360_profiles`: 120 MB -- 121 rows with bloated JSONB (needs VACUUM after cleanup)
+- `memory_metrics`: 6.5 MB -- 39,999 of 40,131 rows older than 7 days (diagnostic telemetry)
 
----
+## Fix Strategy (Zero Breaking Changes)
 
-## Fix 1: Wire `hermetic_structured_intelligence` Reads into `unified-brain-processor`
+### Step 1: Purge stale `dream_activity_logs` (saves ~127 MB)
+Delete rows older than 7 days. This is telemetry/analytics data -- no conversation engine, UI component, or business logic reads historical dream activity logs.
 
-**Problem:** `extract-hermetic-intelligence` writes 26 intelligence columns (identity constructs, behavioral triggers, attachment style, etc.) for 9 users. No conversation engine ever reads them. The VFP module in `unified-brain-processor` only reads 3 fields from `user_blueprints` (name, MBTI, HD type).
-
-**Fix:** In `unified-brain-processor`, modify the `processVFP` function (line ~439) to also query `hermetic_structured_intelligence` by `userId` and merge the structured intelligence into the personality context passed to `synthesizeUnifiedResponse`.
-
-**Changes:**
-- `supabase/functions/unified-brain-processor/index.ts`:
-  - In `processVFP()`, add a second query: `.from('hermetic_structured_intelligence').select('*').eq('user_id', userId).maybeSingle()`
-  - Merge key fields (identity_constructs, behavioral_triggers, attachment_style, cognitive_functions) into the returned `personalityContext`
-  - In `synthesizeUnifiedResponse()`, expand the `PERSONALITY CONTEXT` section of the system prompt to include hermetic intelligence summary when available
-
-**Data confirmation:** 9 rows exist in `hermetic_structured_intelligence` with 26 columns of deep intelligence data.
-
----
-
-## Fix 2: Eliminate Dual `hacs_intelligence` Write Race Condition
-
-**Problem:** When `useUnifiedBrain = true`, both `hacs-intelligent-conversation` (line 405-419) AND `unified-brain-processor` (line 221-233) write to `hacs_intelligence` for the same user in the same request. They use different scoring formulas, causing score oscillation.
-
-**Fix:** Remove the `hacs_intelligence` write from `unified-brain-processor` (PHASE 3D, lines 188-244). The caller (`hacs-intelligent-conversation`) is the authoritative writer since it has the full conversation context and quality assessment. `unified-brain-processor` should only return its module results -- the caller decides what to persist.
-
-**Changes:**
-- `supabase/functions/unified-brain-processor/index.ts`:
-  - Remove or comment out the entire PHASE 3D block (lines 188-244) that updates `hacs_intelligence`
-  - Instead, include `mapHermeticToHACS(hermeticResults)` data in the response JSON so the caller can incorporate it
-- `supabase/functions/hacs-intelligent-conversation/index.ts`:
-  - In the `useUnifiedBrain` branch (line 281-333), read `unifiedData.hermeticModuleImprovements` and merge into the existing `moduleImprovements` object before the single write at line 405
-
-**Result:** One write per request, one scoring formula, no race.
-
----
-
-## Fix 3: Schedule `hot_memory_cache` Cleanup
-
-**Problem:** 784 of 786 rows are expired. No composite index covers `(user_id, session_id, expires_at)` for filtered lookups. `cleanup_expired_hot_memory()` function exists but is never called. pg_cron is not enabled.
-
-**Fix (3 parts):**
-
-**Part A -- Add composite index (migration):**
 ```sql
-CREATE INDEX CONCURRENTLY idx_hot_memory_active_lookup 
-  ON hot_memory_cache (user_id, session_id, expires_at DESC);
+DELETE FROM dream_activity_logs WHERE timestamp < now() - interval '7 days';
 ```
 
-**Part B -- Enable pg_cron and pg_net, schedule hourly cleanup (migration):**
-```sql
-CREATE EXTENSION IF NOT EXISTS pg_cron;
-CREATE EXTENSION IF NOT EXISTS pg_net;
+### Step 2: Purge `user_360_profiles_archive` (saves ~119 MB)
+This archive table stores redundant snapshots of `user_360_profiles` for only 4 users. The live `user_360_profiles` table is the source of truth. No edge function or frontend component reads from the archive table.
 
-SELECT cron.schedule(
-  'cleanup-expired-hot-memory',
-  '0 * * * *',
-  $$ SELECT cleanup_expired_hot_memory() $$
-);
+```sql
+TRUNCATE user_360_profiles_archive;
 ```
 
-**Part C -- Immediate one-time cleanup (insert tool):**
+### Step 3: Purge old `memory_metrics` (saves ~6 MB)
+Diagnostic metrics older than 7 days. No UI or edge function reads historical metrics beyond recent sessions.
+
 ```sql
-SELECT cleanup_expired_hot_memory();
+DELETE FROM memory_metrics WHERE created_at < now() - interval '7 days';
 ```
 
-**Result:** Table drops from 786 to 2 active rows. Future lookups use index-only scan. Expired rows auto-purge hourly.
+### Step 4: Purge completed `hermetic_processing_jobs` and `hermetic_sub_jobs` (saves ~25 MB)
+Completed and failed processing jobs are one-time pipeline artifacts. The results are already stored in `hermetic_structured_intelligence`.
 
----
+```sql
+DELETE FROM hermetic_sub_jobs WHERE status IN ('completed', 'failed');
+DELETE FROM hermetic_processing_jobs WHERE status IN ('completed', 'failed');
+```
 
-## Fix 4: Unify `conversation_insights` vs `hacs_module_insights`
+### Step 5: VACUUM to reclaim disk space
+After deleting rows, Postgres marks space as reusable but doesn't return it to the OS. VACUUM FULL reclaims actual disk space.
 
-**Problem:** Two parallel insight tables with different writers and readers:
-- `hacs_module_insights`: 159 rows. Written by `hacs-authentic-insights`. Read by `use-hacs-insights.ts` (frontend).
-- `conversation_insights`: 2 rows. Written by `unified-brain-processor`, `companion-oracle-conversation`, `hacs-authentic-insights`. Read by `use-hacs-insights.ts` (frontend) and `pie-scheduling-service.ts`.
+```sql
+VACUUM FULL dream_activity_logs;
+VACUUM FULL user_360_profiles_archive;
+VACUUM FULL memory_metrics;
+VACUUM FULL hermetic_processing_jobs;
+VACUUM FULL hermetic_sub_jobs;
+VACUUM FULL user_360_profiles;
+```
 
-The frontend hook `use-hacs-insights.ts` queries BOTH tables separately, but the insight schemas differ, causing inconsistent rendering.
+### Step 6: Add retention policies (prevent recurrence)
+Create a scheduled cleanup function that runs daily via pg_cron (already enabled from Fix 3):
 
-**Fix:** Normalize writers to always write to `conversation_insights` (the canonical table), and have the frontend query only `conversation_insights`. Keep `hacs_module_insights` as a legacy read-only archive.
+```sql
+CREATE OR REPLACE FUNCTION cleanup_stale_telemetry()
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET search_path TO 'public' AS $$
+BEGIN
+  DELETE FROM dream_activity_logs WHERE timestamp < now() - interval '7 days';
+  DELETE FROM memory_metrics WHERE created_at < now() - interval '7 days';
+  DELETE FROM hermetic_processing_jobs WHERE status IN ('completed','failed') AND updated_at < now() - interval '3 days';
+  DELETE FROM hermetic_sub_jobs WHERE status IN ('completed','failed') AND updated_at < now() - interval '3 days';
+  TRUNCATE user_360_profiles_archive;
+END;
+$$;
 
-**Changes:**
-- `supabase/functions/hacs-authentic-insights/index.ts`:
-  - Change the `hacs_module_insights` insert (line 159) to write to `conversation_insights` instead, mapping fields: `hacs_module` becomes part of `insight_data.module`, `insight_text` becomes `insight_data.insight_text`
-  - Keep the existing `conversation_insights` write (line 174) as-is (it already writes correctly)
-  - Remove the duplicate write -- one insert per insight, not two
-- `src/hooks/use-hacs-insights.ts`:
-  - Remove the `hacs_module_insights` query (line 126)
-  - Use only `conversation_insights` as the single source of truth
-  - Map any legacy `hacs_module_insights` format to the unified format for backward compatibility during transition
+SELECT cron.schedule('cleanup-stale-telemetry', '0 3 * * *', $$ SELECT cleanup_stale_telemetry() $$);
+```
 
-**Result:** Single insight table, single query, no divergent data.
+## Expected Result
 
----
+| Action | Space Freed |
+|--------|-------------|
+| dream_activity_logs purge | ~127 MB |
+| user_360_profiles_archive purge | ~119 MB |
+| hermetic jobs purge | ~25 MB |
+| memory_metrics purge | ~6 MB |
+| VACUUM reclaim | additional compaction |
+| **Total** | **~277 MB freed** |
 
-## Fix 5: Normalize Conversation Storage to `conversation_messages`
+**Projected DB size after cleanup: ~282 MB (56% of quota)** -- well within safe limits.
 
-**Problem:** `conversation_messages` has 0 rows. All 611 conversations are stored as JSON blobs in `hacs_conversations.conversation_data`. This blocks semantic search, per-message embeddings, and standard conversation retrieval.
-
-**Fix:** After each conversation turn, write individual messages to `conversation_messages` in addition to the existing JSON blob (dual-write phase, no breaking changes).
-
-**Changes:**
-- `supabase/functions/hacs-intelligent-conversation/index.ts`:
-  - After the `hacs_conversations` update (line 373-379), add two inserts to `conversation_messages`:
-    1. User message: `{ conversation_id: conversation.id, client_msg_id: uuid(), user_id: userId, session_id: sessionId, role: 'user', content: userMessage }`
-    2. Assistant message: `{ conversation_id: conversation.id, client_msg_id: uuid(), user_id: userId, session_id: sessionId, role: 'assistant', content: response }`
-  - The `conversation_messages` table already has the correct schema (id, conversation_id, client_msg_id, user_id, session_id, role, content, status, created_at, updated_at)
-- `supabase/functions/companion-oracle-conversation/index.ts`:
-  - Apply the same dual-write pattern after each conversation turn
-
-**Result:** `conversation_messages` begins accumulating normalized, queryable messages. JSON blob storage continues unchanged (no regression). Future: semantic search and embeddings can operate on `conversation_messages` directly.
-
----
-
-## Execution Order
-
-| Step | Fix | Effort | Risk |
-|------|-----|--------|------|
-| 1 | Fix 3: Hot memory cleanup + index | 15 min | None (additive SQL only) |
-| 2 | Fix 2: Remove dual hacs_intelligence write | 20 min | Low (removing code) |
-| 3 | Fix 1: Wire hermetic intelligence reads | 25 min | Low (additive read) |
-| 4 | Fix 4: Unify insight tables | 30 min | Medium (writer + reader change) |
-| 5 | Fix 5: Normalize conversation storage | 25 min | Low (additive dual-write) |
-
-Total estimated: ~2 hours
+## Safety Guarantees
+- No edge function, frontend hook, or conversation engine reads from the purged data
+- `dream_activity_logs` is write-only telemetry -- no downstream consumer
+- `user_360_profiles_archive` is never queried by any code path
+- Processing jobs are artifacts; results live in `hermetic_structured_intelligence`
+- Daily cron prevents recurrence
 
 ## Files Modified
-
-- `supabase/functions/unified-brain-processor/index.ts` (Fixes 1, 2)
-- `supabase/functions/hacs-intelligent-conversation/index.ts` (Fixes 2, 5)
-- `supabase/functions/hacs-authentic-insights/index.ts` (Fix 4)
-- `supabase/functions/companion-oracle-conversation/index.ts` (Fix 5)
-- `src/hooks/use-hacs-insights.ts` (Fix 4)
-- 1 database migration (Fix 3: index + pg_cron)
-- 1 data operation (Fix 3: immediate cleanup)
+- 1 database migration (cleanup SQL + retention cron job)
+- No application code changes required
 
