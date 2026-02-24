@@ -4098,6 +4098,81 @@ export type Database = {
         }
         Relationships: []
       }
+      sbi_financial_benchmarks: {
+        Row: {
+          added_value_per_fte: number | null
+          avg_fixed_costs: number | null
+          cash_ratio: number | null
+          cogs_pct: number | null
+          current_ratio: number | null
+          debt_ratio: number | null
+          depreciation_pct: number | null
+          ebitda_margin: number | null
+          gross_margin: number | null
+          housing_pct: number | null
+          last_updated: string | null
+          net_margin: number | null
+          operating_margin: number | null
+          other_costs_pct: number | null
+          personnel_pct: number | null
+          revenue_per_fte: number | null
+          roe: number | null
+          sbi_code: string
+          sbi_label: string
+          solvency_ratio: number | null
+          source: string | null
+          year: number
+        }
+        Insert: {
+          added_value_per_fte?: number | null
+          avg_fixed_costs?: number | null
+          cash_ratio?: number | null
+          cogs_pct?: number | null
+          current_ratio?: number | null
+          debt_ratio?: number | null
+          depreciation_pct?: number | null
+          ebitda_margin?: number | null
+          gross_margin?: number | null
+          housing_pct?: number | null
+          last_updated?: string | null
+          net_margin?: number | null
+          operating_margin?: number | null
+          other_costs_pct?: number | null
+          personnel_pct?: number | null
+          revenue_per_fte?: number | null
+          roe?: number | null
+          sbi_code: string
+          sbi_label: string
+          solvency_ratio?: number | null
+          source?: string | null
+          year?: number
+        }
+        Update: {
+          added_value_per_fte?: number | null
+          avg_fixed_costs?: number | null
+          cash_ratio?: number | null
+          cogs_pct?: number | null
+          current_ratio?: number | null
+          debt_ratio?: number | null
+          depreciation_pct?: number | null
+          ebitda_margin?: number | null
+          gross_margin?: number | null
+          housing_pct?: number | null
+          last_updated?: string | null
+          net_margin?: number | null
+          operating_margin?: number | null
+          other_costs_pct?: number | null
+          personnel_pct?: number | null
+          revenue_per_fte?: number | null
+          roe?: number | null
+          sbi_code?: string
+          sbi_label?: string
+          solvency_ratio?: number | null
+          source?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           action: string
