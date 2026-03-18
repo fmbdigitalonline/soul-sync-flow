@@ -1,55 +1,69 @@
 
 
-# Reclaim Bloated Disk Space (~240 MB) via Table Rebuild
+# Route All AI Calls Through Azure OpenAI
 
-## Problem
-The data purge migration succeeded (dead tuples cleared by autovacuum), but PostgreSQL's physical files haven't shrunk. `VACUUM FULL` is unavailable on Supabase (requires superuser). Current state:
+## Current State
+- **39 edge functions** all call `https://api.openai.com/v1/chat/completions` directly
+- Auth: `Bearer ${OPENAI_API_KEY}` header
+- Models used: `gpt-4.1-mini-2025-04-14`, `text-embedding-3-small`
+- 2 functions use the embeddings endpoint (`/v1/embeddings`)
 
-| Table | Rows | Actual Data | Physical Size | Bloat |
-|-------|------|-------------|---------------|-------|
-| dream_activity_logs | 111 | ~1 MB | 121 MB | ~120 MB |
-| user_360_profiles | 121 | ~3 MB | 120 MB | ~117 MB |
+## What Changes
 
-Database total: 423 MB (84% of 500 MB quota). Target: under 200 MB.
+Azure OpenAI uses a different URL format and auth header:
 
-## Solution: Table Rebuild (VACUUM FULL alternative)
-Since we cannot run `VACUUM FULL`, we use the standard workaround: copy live data into a fresh table, drop the bloated original, rename the new one, and recreate indexes/policies/triggers.
+```text
+OpenAI:  https://api.openai.com/v1/chat/completions
+         Authorization: Bearer <OPENAI_API_KEY>
 
-This is a single database migration -- no application code changes.
+Azure:   https://<RESOURCE>.openai.azure.com/openai/deployments/<DEPLOYMENT>/chat/completions?api-version=2024-10-21
+         api-key: <AZURE_OPENAI_KEY>
+```
 
-## Technical Details
+The response format is identical, so no parsing changes are needed.
 
-### Step 1: Rebuild `dream_activity_logs` (~120 MB freed)
-1. Create `dream_activity_logs_new` with identical schema
-2. Copy 111 live rows into it
-3. Drop bloated original (CASCADE not needed -- no dependents)
-4. Rename new table
-5. Recreate: primary key, indexes (user+session, timestamp DESC), FK to auth.users, RLS + 2 policies
+## Implementation Plan
 
-### Step 2: Rebuild `user_360_profiles` (~117 MB freed)
-1. Create `user_360_profiles_new` with identical schema
-2. Deduplicate: keep only the latest row per user_id (currently some users have up to 33 duplicate rows)
-3. Drop bloated original
-4. Rename new table
-5. Recreate: primary key, indexes (user_id, last_updated, user+updated_at), trigger (update_user_360_profiles_updated_at), RLS + 3 policies
-6. Add UNIQUE constraint on user_id to prevent future duplicates
+### Step 1: Add Azure secrets to Supabase
+Three new secrets needed in Supabase Edge Functions settings:
+- `AZURE_OPENAI_KEY` — your Azure OpenAI API key
+- `AZURE_OPENAI_ENDPOINT` — e.g. `https://your-resource.openai.azure.com`
+- `AZURE_OPENAI_API_VERSION` — e.g. `2024-10-21`
 
-### Projected Result
+### Step 2: Create a shared helper module
+Create `supabase/functions/_shared/azure-openai.ts` with:
+- A function that maps model names (e.g. `gpt-4.1-mini-2025-04-14`) to your Azure deployment names
+- A `callAzureChat(messages, deploymentName, maxTokens)` wrapper
+- A `callAzureEmbeddings(input, deploymentName)` wrapper
+- Falls back to direct OpenAI if Azure vars are not set (safety net)
 
-| Metric | Before | After |
-|--------|--------|-------|
-| dream_activity_logs | 121 MB | ~1 MB |
-| user_360_profiles | 120 MB | ~3 MB |
-| Database total | 423 MB | ~185 MB |
-| Quota usage | 84% | ~37% |
+### Step 3: Update all 39 edge functions
+Replace each direct `fetch('https://api.openai.com/...')` call with the shared helper. The changes per file are mechanical — swap the fetch call, keep everything else identical.
 
-### Safety
-- No FK references from other tables to either table (verified)
-- No application code changes needed -- table names and columns remain identical
-- RLS policies, indexes, triggers all recreated exactly as they were
-- Deduplication keeps only the most recent row per user (preserving the latest profile_data)
+**Chat completions** (37 functions): Replace the fetch URL and auth header.
+**Embeddings** (2 functions: `openai-embeddings`, `semantic-blueprint-search`): Same pattern but with the embeddings deployment.
 
-### Files Modified
-- 1 database migration (table rebuild SQL)
-- No application code changes
+### Step 4: Model deployment mapping
+You'll need these deployments in your Azure OpenAI resource:
+- One for `gpt-4.1-mini-2025-04-14` (chat completions)
+- One for `text-embedding-3-small` (embeddings)
+
+The shared helper will map the OpenAI model name to the Azure deployment name via a simple config object.
+
+## Security Benefits
+- API key stays within your Azure tenant
+- Data not sent to OpenAI directly — stays in your Azure region
+- Azure content filtering and compliance controls apply
+- Can add private endpoints / VNet restrictions later
+
+## What You Need to Provide
+1. Your Azure OpenAI resource endpoint URL
+2. Your Azure OpenAI API key
+3. The deployment names you created for each model
+
+## Files Modified
+- 1 new: `supabase/functions/_shared/azure-openai.ts`
+- ~39 edge functions updated (mechanical find-and-replace of fetch calls)
+- No frontend/client code changes
+- No database changes
 
