@@ -46,6 +46,10 @@ export async function callChatCompletion(options: {
   max_tokens?: number;
   stream?: boolean;
   temperature?: number;
+  tools?: any[];
+  tool_choice?: any;
+  signal?: AbortSignal;
+  [key: string]: unknown;
 }): Promise<Response> {
   const {
     messages,
@@ -53,6 +57,10 @@ export async function callChatCompletion(options: {
     max_tokens = 4000,
     stream = false,
     temperature,
+    tools,
+    tool_choice,
+    signal,
+    ...rest
   } = options;
 
   if (isAzureConfigured()) {
@@ -63,8 +71,11 @@ export async function callChatCompletion(options: {
       messages,
       max_completion_tokens: max_tokens,
       stream,
+      ...rest,
     };
     if (temperature !== undefined) body.temperature = temperature;
+    if (tools) body.tools = tools;
+    if (tool_choice) body.tool_choice = tool_choice;
 
     console.log(`🔷 Azure OpenAI: ${deployment} (${messages.length} messages)`);
 
@@ -75,6 +86,7 @@ export async function callChatCompletion(options: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
+      ...(signal ? { signal } : {}),
     });
   }
 
@@ -90,8 +102,11 @@ export async function callChatCompletion(options: {
     messages,
     max_completion_tokens: max_tokens,
     stream,
+    ...rest,
   };
   if (temperature !== undefined) body.temperature = temperature;
+  if (tools) body.tools = tools;
+  if (tool_choice) body.tool_choice = tool_choice;
 
   return fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -100,6 +115,7 @@ export async function callChatCompletion(options: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
+    ...(signal ? { signal } : {}),
   });
 }
 
