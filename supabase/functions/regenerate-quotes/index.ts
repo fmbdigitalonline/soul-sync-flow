@@ -181,24 +181,17 @@ FORMAT REQUIRED:
 2. "Quote text here" - Category: intuitive_wisdom - Why: Personal connection to their traits
 [Continue for exactly 25 quotes]`;
 
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { 
-            role: 'user', 
-            content: `Generate 25 personalized quotes for ${userName}. Make them deeply personal, empowering, and speak directly to who ${userName} is. Use their name naturally in 40% of quotes.` 
-          }
-        ],
-        temperature: 0.8,
-        max_tokens: 4000,
-      }),
+    const openAIResponse = await callChatCompletion({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { 
+          role: 'user', 
+          content: `Generate 25 personalized quotes for ${userName}. Make them deeply personal, empowering, and speak directly to who ${userName} is. Use their name naturally in 40% of quotes.` 
+        }
+      ],
+      model: 'gpt-4o',
+      max_tokens: 4000,
+      temperature: 0.8,
     });
 
     if (!openAIResponse.ok) {
