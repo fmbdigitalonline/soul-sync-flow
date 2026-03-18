@@ -24,10 +24,14 @@ export const isAzureConfigured = (): boolean => {
  * Update this mapping to match your Azure OpenAI deployments.
  */
 const MODEL_TO_DEPLOYMENT: Record<string, string> = {
-  'gpt-4.1-mini-2025-04-14': 'gpt-4-1-mini',         // Update to your deployment name
-  'gpt-4o-mini': 'gpt-4o-mini',                        // Update if needed
-  'gpt-4o': 'gpt-4o',                                  // Update if needed
-  'text-embedding-3-small': 'text-embedding-3-small',  // Update to your deployment name
+  'gpt-4.1-mini-2025-04-14': 'gpt-4.1-mini',
+  'gpt-4.1-mini': 'gpt-4.1-mini',
+  'gpt-4.1': 'gpt-4.1',
+  'gpt-4.1-nano': 'gpt-4.1-nano',
+  'gpt-4o-mini': 'gpt-4o-mini',
+  'gpt-4o': 'gpt-4o',
+  'text-embedding-3-small': 'text-embedding-3-small',
+  'text-embedding-3-large': 'text-embedding-3-large',
 };
 
 /**
