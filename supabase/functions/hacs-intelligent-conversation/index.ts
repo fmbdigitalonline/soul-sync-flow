@@ -133,9 +133,7 @@ serve(async (req) => {
       throw new Error('userId is required');
     }
 
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key is not configured');
-    }
+    // Azure OpenAI is validated inside callChatCompletion — no separate key check needed
 
     const supabase = createClient(supabaseUrl, supabaseKey);
     console.log('Supabase client created');
