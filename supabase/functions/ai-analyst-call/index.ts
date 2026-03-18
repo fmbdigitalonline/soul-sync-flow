@@ -24,18 +24,10 @@ serve(async (req) => {
 
     console.log(`🤖 AI Analyst Call: ${analyst_type || 'general'} - ${prompt.length} chars`);
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: 'user', content: prompt }],
-        // GPT-4.1 does not support temperature
-        max_completion_tokens: max_tokens,
-      }),
+    const response = await callChatCompletion({
+      messages: [{ role: 'user', content: prompt }],
+      model,
+      max_tokens: max_tokens,
     });
 
     if (!response.ok) {

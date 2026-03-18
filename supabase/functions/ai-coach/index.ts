@@ -244,13 +244,10 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
       timestamp: new Date().toISOString()
     });
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestPayload),
+    const response = await callChatCompletion({
+      messages: requestPayload.messages,
+      model: requestPayload.model,
+      max_tokens: requestPayload.max_completion_tokens,
     });
 
     if (!response.ok) {
