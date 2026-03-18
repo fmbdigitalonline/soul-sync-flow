@@ -1982,13 +1982,10 @@ serve(async (req) => {
       }
     }
 
-    // OPENAI API CALL: Send messages to GPT model
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured')
-    }
+    // OPENAI API CALL: Send messages to GPT model via Azure helper
+    const { callChatCompletion: callChat } = await import('../_shared/azure-openai.ts');
 
-    console.log('🔮 CALLING OPENAI API:', {
+    console.log('🔮 CALLING AI API:', {
       model: completionParams.model,
       messageCount: messagesToSend.length,
       maxTokens: completionParams.max_completion_tokens,
@@ -1996,14 +1993,12 @@ serve(async (req) => {
       hasOracleContext: structuredFacts.length > 0 || semanticChunks.length > 0
     });
 
-    // Call OpenAI for response generation using current model
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(completionParams),
+    // Call AI for response generation using current model
+    const openAIResponse = await callChat({
+      messages: completionParams.messages,
+      model: completionParams.model,
+      max_tokens: completionParams.max_completion_tokens,
+      stream: completionParams.stream,
     });
 
     // Enhanced error handling with full response details

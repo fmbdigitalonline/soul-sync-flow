@@ -75,21 +75,13 @@ Generate a personalized HACS message for this situation.`;
 
     console.log('Generating HACS text:', { hacsModule, interventionType, messageType, userId });
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4.1-mini-2025-04-14',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        // GPT-4.1 does not support temperature
-        max_completion_tokens: Math.min(100, spec.maxWords * 2),
-      }),
+    const response = await callChatCompletion({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      model: 'gpt-4.1-mini-2025-04-14',
+      max_tokens: Math.min(100, spec.maxWords * 2),
     });
 
     const data = await response.json();

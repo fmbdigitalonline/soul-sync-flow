@@ -368,67 +368,66 @@ serve(async (req) => {
     let response: Response;
     try {
       response = await callChat({
-          model: "gpt-4.1-mini-2025-04-14",
-          max_completion_tokens: 2000,
-          messages: [
-            { role: "system", content: systemPrompt },
-            {
-              role: "user",
-              content: `Help me with: ${safeTitle}\n\nContext: ${serializedContext}`
-            }
-          ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "provide_hermetic_task_assistance",
-                description: "Provide deeply personalized task assistance leveraging user's strengths and mitigating shadow patterns",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    content: {
-                      type: "string",
-                      description: "Opening message that acknowledges their strengths and energy state"
-                    },
-                    actionableSteps: {
-                      type: "array",
-                      items: { type: "string" },
-                      description: "3-5 micro-steps (2-5 min each) tailored to their execution style"
-                    },
-                    toolsNeeded: {
-                      type: "array",
-                      items: { type: "string" },
-                      description: "Specific tools required for the task"
-                    },
-                    timeEstimate: {
-                      type: "string",
-                      description: "Total estimated time to complete"
-                    },
-                    successCriteria: {
-                      type: "array",
-                      items: { type: "string" },
-                      description: "Measurable criteria to know they're done"
-                    },
-                    shadowWarning: {
-                      type: "string",
-                      description: "Warning about specific avoidance pattern that might emerge (optional)"
-                    },
-                    recoveryTip: {
-                      type: "string",
-                      description: "How to recover if this triggers stress (optional)"
-                    }
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content: `Help me with: ${safeTitle}\n\nContext: ${JSON.stringify(taskContext ?? {})}`
+          }
+        ],
+        model: "gpt-4.1-mini-2025-04-14",
+        max_tokens: 2000,
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "provide_hermetic_task_assistance",
+              description: "Provide deeply personalized task assistance leveraging user's strengths and mitigating shadow patterns",
+              parameters: {
+                type: "object",
+                properties: {
+                  content: {
+                    type: "string",
+                    description: "Opening message that acknowledges their strengths and energy state"
                   },
-                  required: ["content", "actionableSteps", "toolsNeeded", "successCriteria"],
-                  additionalProperties: false
-                }
+                  actionableSteps: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "3-5 micro-steps (2-5 min each) tailored to their execution style"
+                  },
+                  toolsNeeded: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Specific tools required for the task"
+                  },
+                  timeEstimate: {
+                    type: "string",
+                    description: "Total estimated time to complete"
+                  },
+                  successCriteria: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Measurable criteria to know they're done"
+                  },
+                  shadowWarning: {
+                    type: "string",
+                    description: "Warning about specific avoidance pattern that might emerge (optional)"
+                  },
+                  recoveryTip: {
+                    type: "string",
+                    description: "How to recover if this triggers stress (optional)"
+                  }
+                },
+                required: ["content", "actionableSteps", "toolsNeeded", "successCriteria"],
+                additionalProperties: false
               }
             }
-          ],
-          tool_choice: {
-            type: "function",
-            function: { name: "provide_hermetic_task_assistance" }
           }
-        }),
+        ],
+        tool_choice: {
+          type: "function",
+          function: { name: "provide_hermetic_task_assistance" }
+        },
       });
     } catch (error) {
       console.error('❌ HERMETIC ASSISTANCE: OpenAI fetch failed', error);

@@ -596,13 +596,13 @@ serve(async (req) => {
 
       console.log('📤 Sending request to OpenAI:', JSON.stringify(requestBody));
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
+      const response = await callChatCompletion({
+        messages: conversationMessages,
+        model: requestBody.model,
+        max_tokens: requestBody.max_completion_tokens || requestBody.max_tokens || max_tokens,
+        temperature: requestBody.temperature,
+        tools: requestBody.tools,
+        tool_choice: requestBody.tool_choice,
       });
 
       if (!response.ok) {

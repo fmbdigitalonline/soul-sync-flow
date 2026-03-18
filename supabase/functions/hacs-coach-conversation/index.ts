@@ -493,19 +493,12 @@ Provide actionable, practical productivity advice. Stay focused on productivity 
 
     // Call OpenAI with enhanced productivity coaching setup
     // STREAMING RESPONSE: Mirror Companion Oracle's streaming architecture  
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: messages,
-        max_tokens: maxTokens,
-        temperature: useEnhancedMode ? 0.8 : 0.7,
-        stream: true // Enable streaming for real-time responses
-      }),
+    const openAIResponse = await callChatCompletion({
+      messages: messages,
+      model: selectedModel,
+      max_tokens: maxTokens,
+      temperature: useEnhancedMode ? 0.8 : 0.7,
+      stream: true,
     });
 
     if (!openAIResponse.ok) {
