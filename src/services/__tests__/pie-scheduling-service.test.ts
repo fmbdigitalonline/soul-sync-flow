@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import { pieSchedulingService } from '../pie-scheduling-service';
 import { PIE_CONFIDENCE_THRESHOLD } from '@/types/pie-types';
 

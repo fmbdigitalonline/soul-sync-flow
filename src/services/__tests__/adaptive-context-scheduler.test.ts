@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 
 import { adaptiveContextScheduler } from '../adaptive-context-scheduler';
 import { ACSConfig, DialogueState } from '@/types/acs-types';
