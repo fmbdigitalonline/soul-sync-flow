@@ -6,6 +6,7 @@
 // ==============================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { callChatCompletion } from "../_shared/azure-openai.ts";
 
 const DEPLOYMENT_VERSION = "2.2.0";
 const DEPLOYMENT_TIMESTAMP = "2025-10-06T15:45:00Z"; // Updated to force redeployment
