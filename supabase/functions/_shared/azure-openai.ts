@@ -135,9 +135,10 @@ export async function callEmbeddings(options: {
 
   if (isAzureConfigured()) {
     const deployment = getDeploymentName(model);
-    const url = `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${deployment}/embeddings?api-version=${AZURE_OPENAI_API_VERSION}`;
+    const url = `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${deployment}/embeddings?api-version=${AZURE_OPENAI_EMBEDDINGS_API_VERSION}`;
 
     console.log(`🔷 Azure OpenAI Embeddings: ${deployment}`);
+    console.log(`🔷 Full embeddings URL: ${url}`);
 
     return fetch(url, {
       method: 'POST',
