@@ -535,8 +535,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    if (!Deno.env.get('AZURE_OPENAI_KEY') && !Deno.env.get('OPENAI_API_KEY')) {
+      throw new Error('No AI API key configured');
     }
 
     const { messages, model = 'gpt-4.1-mini-2025-04-14', temperature = 0.7, tools = null, max_tokens = 4000 } = await req.json();
