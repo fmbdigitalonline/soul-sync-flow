@@ -33,10 +33,7 @@ serve(async (req) => {
     
     console.log('Processing conversational assessment for user:', userId);
     
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
+    // Azure/OpenAI routing handled by shared helper
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
