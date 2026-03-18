@@ -1,43 +1,55 @@
 
 
-# Fix Azure OpenAI Invalid URL Errors
+# Reclaim Bloated Disk Space (~240 MB) via Table Rebuild
 
-## Root Cause
+## Problem
+The data purge migration succeeded (dead tuples cleared by autovacuum), but PostgreSQL's physical files haven't shrunk. `VACUUM FULL` is unavailable on Supabase (requires superuser). Current state:
 
-The edge function logs reveal **two distinct bugs** causing both chat and embeddings to fail:
+| Table | Rows | Actual Data | Physical Size | Bloat |
+|-------|------|-------------|---------------|-------|
+| dream_activity_logs | 111 | ~1 MB | 121 MB | ~120 MB |
+| user_360_profiles | 121 | ~3 MB | 120 MB | ~117 MB |
 
-### Bug 1: Quoted Endpoint
-The `AZURE_OPENAI_ENDPOINT` secret was saved **with literal quote characters** around it. The constructed URL becomes:
-```
-"https://info-mmvyk0rc-eastus2.cognitiveservices.azure.com/"/openai/deployments/...
-```
-Note the `"` characters — this is an invalid URL.
+Database total: 423 MB (84% of 500 MB quota). Target: under 200 MB.
 
-### Bug 2: Malformed API Version
-The `AZURE_OPENAI_API_VERSION` secret appears to be set to `AZURE_OPENAI_API_VERSION=v1` (key=value format instead of just the value). The chat URL becomes:
-```
-...?api-version=AZURE_OPENAI_API_VERSION=v1
-```
+## Solution: Table Rebuild (VACUUM FULL alternative)
+Since we cannot run `VACUUM FULL`, we use the standard workaround: copy live data into a fresh table, drop the bloated original, rename the new one, and recreate indexes/policies/triggers.
 
-## Plan
+This is a single database migration -- no application code changes.
 
-### 1. Update secrets (fix at source)
-- Set `AZURE_OPENAI_ENDPOINT` to `https://info-mmvyk0rc-eastus2.cognitiveservices.azure.com` (no quotes, no trailing slash)
-- Set `AZURE_OPENAI_API_VERSION` to `2024-10-21` (just the version string)
+## Technical Details
 
-### 2. Add defensive sanitization in `azure-openai.ts` (prevent recurrence)
-Add a helper that strips surrounding quotes and trailing slashes from the endpoint value at load time:
-```typescript
-const rawEndpoint = Deno.env.get('AZURE_OPENAI_ENDPOINT') || '';
-const AZURE_OPENAI_ENDPOINT = rawEndpoint.replace(/^["']|["']$/g, '').replace(/\/+$/, '');
-```
-Same for API version — strip any `KEY=` prefix if accidentally included.
+### Step 1: Rebuild `dream_activity_logs` (~120 MB freed)
+1. Create `dream_activity_logs_new` with identical schema
+2. Copy 111 live rows into it
+3. Drop bloated original (CASCADE not needed -- no dependents)
+4. Rename new table
+5. Recreate: primary key, indexes (user+session, timestamp DESC), FK to auth.users, RLS + 2 policies
 
-### 3. Fix `hacs-intelligent-conversation` (bonus bug)
-The logs also show `ReferenceError: openAIApiKey is not defined` at line 110. This function still references a removed variable instead of using the shared Azure helper. Will need to update it to use `callChatCompletion` from the shared module.
+### Step 2: Rebuild `user_360_profiles` (~117 MB freed)
+1. Create `user_360_profiles_new` with identical schema
+2. Deduplicate: keep only the latest row per user_id (currently some users have up to 33 duplicate rows)
+3. Drop bloated original
+4. Rename new table
+5. Recreate: primary key, indexes (user_id, last_updated, user+updated_at), trigger (update_user_360_profiles_updated_at), RLS + 3 policies
+6. Add UNIQUE constraint on user_id to prevent future duplicates
 
-## Files Changed
-- `supabase/functions/_shared/azure-openai.ts` — add input sanitization for endpoint and API version
-- `supabase/functions/hacs-intelligent-conversation/index.ts` — fix `openAIApiKey` reference error
-- Update 2 Supabase secrets: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION`
+### Projected Result
+
+| Metric | Before | After |
+|--------|--------|-------|
+| dream_activity_logs | 121 MB | ~1 MB |
+| user_360_profiles | 120 MB | ~3 MB |
+| Database total | 423 MB | ~185 MB |
+| Quota usage | 84% | ~37% |
+
+### Safety
+- No FK references from other tables to either table (verified)
+- No application code changes needed -- table names and columns remain identical
+- RLS policies, indexes, triggers all recreated exactly as they were
+- Deduplication keeps only the most recent row per user (preserving the latest profile_data)
+
+### Files Modified
+- 1 database migration (table rebuild SQL)
+- No application code changes
 

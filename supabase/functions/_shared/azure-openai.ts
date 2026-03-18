@@ -4,11 +4,21 @@
  * falls back to direct OpenAI if Azure env vars are not set.
  */
 
-// Azure environment variables
+// Sanitize helper: strip surrounding quotes, trailing slashes, and accidental KEY= prefixes
+function sanitizeEnv(raw: string | undefined, stripKeyPrefix?: string): string {
+  if (!raw) return '';
+  let val = raw.replace(/^["']|["']$/g, '').replace(/\/+$/, '');
+  if (stripKeyPrefix && val.startsWith(stripKeyPrefix + '=')) {
+    val = val.slice(stripKeyPrefix.length + 1);
+  }
+  return val;
+}
+
+// Azure environment variables (sanitized defensively)
 const AZURE_OPENAI_KEY = Deno.env.get('AZURE_OPENAI_KEY');
-const AZURE_OPENAI_ENDPOINT = Deno.env.get('AZURE_OPENAI_ENDPOINT'); // e.g. https://your-resource.cognitiveservices.azure.com
-const AZURE_OPENAI_API_VERSION = Deno.env.get('AZURE_OPENAI_API_VERSION') || '2024-10-21';
-const AZURE_OPENAI_EMBEDDINGS_API_VERSION = Deno.env.get('AZURE_OPENAI_EMBEDDINGS_API_VERSION') || '2024-02-01';
+const AZURE_OPENAI_ENDPOINT = sanitizeEnv(Deno.env.get('AZURE_OPENAI_ENDPOINT'));
+const AZURE_OPENAI_API_VERSION = sanitizeEnv(Deno.env.get('AZURE_OPENAI_API_VERSION'), 'AZURE_OPENAI_API_VERSION') || '2024-10-21';
+const AZURE_OPENAI_EMBEDDINGS_API_VERSION = sanitizeEnv(Deno.env.get('AZURE_OPENAI_EMBEDDINGS_API_VERSION'), 'AZURE_OPENAI_EMBEDDINGS_API_VERSION') || '2024-02-01';
 
 // Fallback
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
