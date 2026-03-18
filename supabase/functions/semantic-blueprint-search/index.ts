@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { callEmbeddings } from "../_shared/azure-openai.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,27 +35,11 @@ serve(async (req) => {
     );
 
     // Generate embedding for the query
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
-
     console.log('🔮 Generating embedding for query...');
-    const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'text-embedding-3-small',
-        input: query,
-        encoding_format: 'float'
-      }),
-    });
+    const embeddingResponse = await callEmbeddings({ input: query });
 
     if (!embeddingResponse.ok) {
-      throw new Error(`OpenAI API error: ${embeddingResponse.status}`);
+      throw new Error(`Embeddings API error: ${embeddingResponse.status}`);
     }
 
     const embeddingData = await embeddingResponse.json();

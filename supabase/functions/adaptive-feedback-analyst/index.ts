@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { callChatCompletion } from "../_shared/azure-openai.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,20 +34,13 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering learning styles, feedback integration patterns, and adaptive capacity for growth and change.
 `;
 
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4.1-mini-2025-04-14',
-        messages: [
-          { role: 'system', content: 'You are an expert adaptive learning analyst specializing in feedback integration and change adaptation patterns.' },
-          { role: 'user', content: prompt }
-        ],
-        max_completion_tokens: 4000,
-      }),
+    const openAIResponse = await callChatCompletion({
+      messages: [
+        { role: 'system', content: 'You are an expert adaptive learning analyst specializing in feedback integration and change adaptation patterns.' },
+        { role: 'user', content: prompt }
+      ],
+      model: 'gpt-4.1-mini-2025-04-14',
+      max_tokens: 4000,
     });
 
     if (!openAIResponse.ok) {

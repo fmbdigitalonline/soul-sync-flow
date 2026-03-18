@@ -2,6 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { callChatCompletion } from "../_shared/azure-openai.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -122,14 +123,7 @@ serve(async (req) => {
 
     messages.push({ role: 'user', content: message });
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      console.error('❌ AI Coach Stream: OpenAI API key not configured');
-      return new Response(JSON.stringify({ error: 'Service configuration error' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // Azure/OpenAI routing handled by shared helper
 
     // Dynamic parameters - use finalMaxTokens calculated earlier for blueprint requests
     const finalTemperature = selectedModel.includes('gpt-4.1') ? temperature : Math.min(temperature, 0.5);
@@ -141,20 +135,13 @@ serve(async (req) => {
       isFullBlueprint: isFullBlueprintRequest
     });
 
-    console.log('🤖 Making OpenAI streaming API request...');
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: messages,
-        temperature: finalTemperature,
-        max_tokens: finalMaxTokens,
-        stream: true,
-      }),
+    console.log('🤖 Making AI streaming API request...');
+    const openAIResponse = await callChatCompletion({
+      messages: messages,
+      model: selectedModel,
+      max_tokens: finalMaxTokens,
+      temperature: finalTemperature,
+      stream: true,
     });
 
     if (!openAIResponse.ok) {

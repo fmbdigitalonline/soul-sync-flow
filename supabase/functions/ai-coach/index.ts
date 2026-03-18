@@ -6,6 +6,7 @@
 // ==============================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { callChatCompletion } from "../_shared/azure-openai.ts";
 
 const DEPLOYMENT_VERSION = "2.2.0";
 const DEPLOYMENT_TIMESTAMP = "2025-10-06T15:45:00Z"; // Updated to force redeployment
@@ -88,11 +89,7 @@ serve(async (req) => {
       acsMaxTokens: maxTokens
     });
 
-    const openAIKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIKey) {
-      const errorMessage = language === 'nl' ? 'OpenAI API sleutel niet geconfigureerd' : 'OpenAI API key not configured';
-      throw new Error(errorMessage);
-    }
+    // Azure/OpenAI routing handled by shared helper
 
 const selectModel = (
   agentType: string, 
@@ -247,13 +244,10 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
       timestamp: new Date().toISOString()
     });
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestPayload),
+    const response = await callChatCompletion({
+      messages: requestPayload.messages,
+      model: requestPayload.model,
+      max_tokens: requestPayload.max_completion_tokens,
     });
 
     if (!response.ok) {
