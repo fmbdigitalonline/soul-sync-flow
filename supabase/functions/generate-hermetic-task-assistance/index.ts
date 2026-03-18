@@ -363,22 +363,11 @@ serve(async (req) => {
       language: payload?.language || 'en'
     });
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
-      return respondFallback('missing_openai_api_key');
-    }
-
-    const serializedContext = JSON.stringify(taskContext ?? {});
+    const { callChatCompletion: callChat } = await import('../_shared/azure-openai.ts');
 
     let response: Response;
     try {
-      response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      response = await callChat({
           model: "gpt-4.1-mini-2025-04-14",
           max_completion_tokens: 2000,
           messages: [
