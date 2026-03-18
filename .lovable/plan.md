@@ -1,30 +1,55 @@
 
 
-# Fix Azure Embeddings 404 Error
+# Reclaim Bloated Disk Space (~240 MB) via Table Rebuild
 
-## Root Cause
-Your Azure resource endpoint is `https://info-mmvyk0rc-eastus2.cognitiveservices.azure.com/` — this uses the **Cognitive Services** URL format, not the typical `openai.azure.com` format. The deployment name `text-embedding-3-small` and model mapping are correct.
+## Problem
+The data purge migration succeeded (dead tuples cleared by autovacuum), but PostgreSQL's physical files haven't shrunk. `VACUUM FULL` is unavailable on Supabase (requires superuser). Current state:
 
-The 404 is likely caused by one of two issues:
-1. The `AZURE_OPENAI_ENDPOINT` secret may be set to a different URL format
-2. The API version `2024-10-21` may not be supported for embeddings on your resource (your Azure page shows `2024-02-01`)
+| Table | Rows | Actual Data | Physical Size | Bloat |
+|-------|------|-------------|---------------|-------|
+| dream_activity_logs | 111 | ~1 MB | 121 MB | ~120 MB |
+| user_360_profiles | 121 | ~3 MB | 120 MB | ~117 MB |
 
-## Plan
+Database total: 423 MB (84% of 500 MB quota). Target: under 200 MB.
 
-### 1. Update `AZURE_OPENAI_ENDPOINT` secret
-Ensure it is set to exactly: `https://info-mmvyk0rc-eastus2.cognitiveservices.azure.com`
+## Solution: Table Rebuild (VACUUM FULL alternative)
+Since we cannot run `VACUUM FULL`, we use the standard workaround: copy live data into a fresh table, drop the bloated original, rename the new one, and recreate indexes/policies/triggers.
 
-### 2. Support different API versions for embeddings vs chat
-Update `supabase/functions/_shared/azure-openai.ts` to allow a separate API version for embeddings, since Azure often requires different versions for different endpoints:
-- Chat completions: keep using `2024-10-21` (or the configured version)
-- Embeddings: use `2024-02-01` (known working for your resource)
+This is a single database migration -- no application code changes.
 
-Add a constant like `AZURE_OPENAI_EMBEDDINGS_API_VERSION` defaulting to `2024-02-01`, used only in `callEmbeddings()`.
+## Technical Details
 
-### 3. Add debug logging
-Log the full URL being called in `callEmbeddings()` so we can verify the exact request path on next test.
+### Step 1: Rebuild `dream_activity_logs` (~120 MB freed)
+1. Create `dream_activity_logs_new` with identical schema
+2. Copy 111 live rows into it
+3. Drop bloated original (CASCADE not needed -- no dependents)
+4. Rename new table
+5. Recreate: primary key, indexes (user+session, timestamp DESC), FK to auth.users, RLS + 2 policies
 
-## Files Changed
-- `supabase/functions/_shared/azure-openai.ts` — add embeddings API version, add URL logging
-- Update `AZURE_OPENAI_ENDPOINT` secret if needed
+### Step 2: Rebuild `user_360_profiles` (~117 MB freed)
+1. Create `user_360_profiles_new` with identical schema
+2. Deduplicate: keep only the latest row per user_id (currently some users have up to 33 duplicate rows)
+3. Drop bloated original
+4. Rename new table
+5. Recreate: primary key, indexes (user_id, last_updated, user+updated_at), trigger (update_user_360_profiles_updated_at), RLS + 3 policies
+6. Add UNIQUE constraint on user_id to prevent future duplicates
+
+### Projected Result
+
+| Metric | Before | After |
+|--------|--------|-------|
+| dream_activity_logs | 121 MB | ~1 MB |
+| user_360_profiles | 120 MB | ~3 MB |
+| Database total | 423 MB | ~185 MB |
+| Quota usage | 84% | ~37% |
+
+### Safety
+- No FK references from other tables to either table (verified)
+- No application code changes needed -- table names and columns remain identical
+- RLS policies, indexes, triggers all recreated exactly as they were
+- Deduplication keeps only the most recent row per user (preserving the latest profile_data)
+
+### Files Modified
+- 1 database migration (table rebuild SQL)
+- No application code changes
 
