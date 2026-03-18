@@ -1,7 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+import { callChatCompletion } from '../_shared/azure-openai.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -536,8 +535,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    if (!Deno.env.get('AZURE_OPENAI_KEY') && !Deno.env.get('OPENAI_API_KEY')) {
+      throw new Error('No AI API key configured');
     }
 
     const { messages, model = 'gpt-4.1-mini-2025-04-14', temperature = 0.7, tools = null, max_tokens = 4000 } = await req.json();
@@ -597,13 +596,13 @@ serve(async (req) => {
 
       console.log('📤 Sending request to OpenAI:', JSON.stringify(requestBody));
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
+      const response = await callChatCompletion({
+        messages: conversationMessages,
+        model: requestBody.model,
+        max_tokens: requestBody.max_completion_tokens || requestBody.max_tokens || max_tokens,
+        temperature: requestBody.temperature,
+        tools: requestBody.tools,
+        tool_choice: requestBody.tool_choice,
       });
 
       if (!response.ok) {

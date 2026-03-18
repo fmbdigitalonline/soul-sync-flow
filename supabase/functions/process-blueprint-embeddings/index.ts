@@ -1,11 +1,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { callEmbeddings } from '../_shared/azure-openai.ts';
 
 // Version: 3.0.0-async-background-processing-20251016
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -233,22 +233,15 @@ async function processEmbeddingsInBackground(userId: string, forceReprocess: boo
           const chunkIndex = i + batchIndex;
           
           try {
-            const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${openAIApiKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model: 'text-embedding-3-small',
-                input: section.text,
-              }),
+            const embeddingResponse = await callEmbeddings({
+              input: section.text,
+              model: 'text-embedding-3-small',
             });
 
             if (!embeddingResponse.ok) {
               const errorText = await embeddingResponse.text();
-              console.error('OpenAI API error:', errorText);
-              throw new Error(`OpenAI API error: ${embeddingResponse.status}`);
+              console.error('Embeddings API error:', errorText);
+              throw new Error(`Embeddings API error: ${embeddingResponse.status}`);
             }
 
             const embeddingData = await embeddingResponse.json();

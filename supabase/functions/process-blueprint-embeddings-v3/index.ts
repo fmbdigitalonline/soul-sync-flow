@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { callEmbeddings } from '../_shared/azure-openai.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -267,22 +268,15 @@ async function processEmbeddingsInBackground(
           return null;
         }
 
-        const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openaiApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'text-embedding-3-small',
-            input: content,
-          }),
+        const embeddingResponse = await callEmbeddings({
+          input: content,
+          model: 'text-embedding-3-small',
         });
 
         if (!embeddingResponse.ok) {
           const errorBody = await embeddingResponse.text();
-          console.error(`❌ OpenAI API error for facet ${chunk.metadata.facet}: ${embeddingResponse.statusText}`, errorBody);
-          throw new Error(`OpenAI API error: ${embeddingResponse.statusText}`);
+          console.error(`❌ Embeddings API error for facet ${chunk.metadata.facet}: ${embeddingResponse.statusText}`, errorBody);
+          throw new Error(`Embeddings API error: ${embeddingResponse.statusText}`);
         }
 
         const embeddingData = await embeddingResponse.json();
