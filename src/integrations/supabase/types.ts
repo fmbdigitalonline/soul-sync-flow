@@ -1444,6 +1444,36 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_rule_snippets: {
+        Row: {
+          category_id: number | null
+          category_title: string | null
+          created_at: string
+          id: number
+          numbers: Json | null
+          source_doc: string | null
+          text: string
+        }
+        Insert: {
+          category_id?: number | null
+          category_title?: string | null
+          created_at?: string
+          id?: never
+          numbers?: Json | null
+          source_doc?: string | null
+          text: string
+        }
+        Update: {
+          category_id?: number | null
+          category_title?: string | null
+          created_at?: string
+          id?: never
+          numbers?: Json | null
+          source_doc?: string | null
+          text?: string
+        }
+        Relationships: []
+      }
       generation_jobs: {
         Row: {
           completed_at: string | null
@@ -4173,6 +4203,87 @@ export type Database = {
         }
         Relationships: []
       }
+      sector_benchmarks: {
+        Row: {
+          acquisition_multiple_ebitda: number | null
+          break_even_notes: string | null
+          cost_structure: Json | null
+          country: string
+          created_at: string
+          currency: string
+          current_ratio: number | null
+          depreciation_notes: Json | null
+          dscr_min: number | null
+          gross_margin_pct: number | null
+          id: string
+          net_margin_pct: number | null
+          revenue_per_fte_eur: number | null
+          revenue_per_m2_eur: number | null
+          sbi_code: string
+          seasonality_notes: string | null
+          sector_label: string
+          solvability_max: number | null
+          solvability_min: number | null
+          source_doc: string | null
+          sources: Json | null
+          startup_investment_max_eur: number | null
+          startup_investment_min_eur: number | null
+          updated_at: string
+        }
+        Insert: {
+          acquisition_multiple_ebitda?: number | null
+          break_even_notes?: string | null
+          cost_structure?: Json | null
+          country?: string
+          created_at?: string
+          currency?: string
+          current_ratio?: number | null
+          depreciation_notes?: Json | null
+          dscr_min?: number | null
+          gross_margin_pct?: number | null
+          id?: string
+          net_margin_pct?: number | null
+          revenue_per_fte_eur?: number | null
+          revenue_per_m2_eur?: number | null
+          sbi_code: string
+          seasonality_notes?: string | null
+          sector_label: string
+          solvability_max?: number | null
+          solvability_min?: number | null
+          source_doc?: string | null
+          sources?: Json | null
+          startup_investment_max_eur?: number | null
+          startup_investment_min_eur?: number | null
+          updated_at?: string
+        }
+        Update: {
+          acquisition_multiple_ebitda?: number | null
+          break_even_notes?: string | null
+          cost_structure?: Json | null
+          country?: string
+          created_at?: string
+          currency?: string
+          current_ratio?: number | null
+          depreciation_notes?: Json | null
+          dscr_min?: number | null
+          gross_margin_pct?: number | null
+          id?: string
+          net_margin_pct?: number | null
+          revenue_per_fte_eur?: number | null
+          revenue_per_m2_eur?: number | null
+          sbi_code?: string
+          seasonality_notes?: string | null
+          sector_label?: string
+          solvability_max?: number | null
+          solvability_min?: number | null
+          source_doc?: string | null
+          sources?: Json | null
+          startup_investment_max_eur?: number | null
+          startup_investment_min_eur?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           action: string
@@ -4206,6 +4317,66 @@ export type Database = {
           timestamp?: string
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      seo_pages: {
+        Row: {
+          ad_slots: Json | null
+          ai_content: string | null
+          canonical_url: string | null
+          content_overrides: Json | null
+          created_at: string | null
+          faqs: Json | null
+          id: string
+          inline_links: Json | null
+          last_crawled_at: string | null
+          meta_description: string | null
+          page_h1: string | null
+          page_title: string
+          slug: string
+          status: string
+          updated_at: string | null
+          word_count: number | null
+          youtube_embed_url: string | null
+        }
+        Insert: {
+          ad_slots?: Json | null
+          ai_content?: string | null
+          canonical_url?: string | null
+          content_overrides?: Json | null
+          created_at?: string | null
+          faqs?: Json | null
+          id?: string
+          inline_links?: Json | null
+          last_crawled_at?: string | null
+          meta_description?: string | null
+          page_h1?: string | null
+          page_title: string
+          slug: string
+          status?: string
+          updated_at?: string | null
+          word_count?: number | null
+          youtube_embed_url?: string | null
+        }
+        Update: {
+          ad_slots?: Json | null
+          ai_content?: string | null
+          canonical_url?: string | null
+          content_overrides?: Json | null
+          created_at?: string | null
+          faqs?: Json | null
+          id?: string
+          inline_links?: Json | null
+          last_crawled_at?: string | null
+          meta_description?: string | null
+          page_h1?: string | null
+          page_title?: string
+          slug?: string
+          status?: string
+          updated_at?: string | null
+          word_count?: number | null
+          youtube_embed_url?: string | null
         }
         Relationships: []
       }
