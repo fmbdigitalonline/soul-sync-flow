@@ -1,0 +1,153 @@
+/**
+ * Azure OpenAI shared helper module.
+ * Routes all AI calls through Azure OpenAI when configured,
+ * falls back to direct OpenAI if Azure env vars are not set.
+ */
+
+// Azure environment variables
+const AZURE_OPENAI_KEY = Deno.env.get('AZURE_OPENAI_KEY');
+const AZURE_OPENAI_ENDPOINT = Deno.env.get('AZURE_OPENAI_ENDPOINT'); // e.g. https://your-resource.openai.azure.com
+const AZURE_OPENAI_API_VERSION = Deno.env.get('AZURE_OPENAI_API_VERSION') || '2024-10-21';
+
+// Fallback
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+
+/**
+ * Whether Azure OpenAI is fully configured.
+ */
+export const isAzureConfigured = (): boolean => {
+  return !!(AZURE_OPENAI_KEY && AZURE_OPENAI_ENDPOINT);
+};
+
+/**
+ * Map OpenAI model names to Azure deployment names.
+ * Update this mapping to match your Azure OpenAI deployments.
+ */
+const MODEL_TO_DEPLOYMENT: Record<string, string> = {
+  'gpt-4.1-mini-2025-04-14': 'gpt-4-1-mini',         // Update to your deployment name
+  'gpt-4o-mini': 'gpt-4o-mini',                        // Update if needed
+  'gpt-4o': 'gpt-4o',                                  // Update if needed
+  'text-embedding-3-small': 'text-embedding-3-small',  // Update to your deployment name
+};
+
+/**
+ * Resolve a model name to an Azure deployment name.
+ */
+function getDeploymentName(model: string): string {
+  return MODEL_TO_DEPLOYMENT[model] || model;
+}
+
+/**
+ * Call Azure OpenAI chat completions (or fallback to OpenAI direct).
+ */
+export async function callChatCompletion(options: {
+  messages: Array<{ role: string; content: string }>;
+  model?: string;
+  max_tokens?: number;
+  stream?: boolean;
+  temperature?: number;
+}): Promise<Response> {
+  const {
+    messages,
+    model = 'gpt-4.1-mini-2025-04-14',
+    max_tokens = 4000,
+    stream = false,
+    temperature,
+  } = options;
+
+  if (isAzureConfigured()) {
+    const deployment = getDeploymentName(model);
+    const url = `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${deployment}/chat/completions?api-version=${AZURE_OPENAI_API_VERSION}`;
+
+    const body: Record<string, unknown> = {
+      messages,
+      max_completion_tokens: max_tokens,
+      stream,
+    };
+    if (temperature !== undefined) body.temperature = temperature;
+
+    console.log(`🔷 Azure OpenAI: ${deployment} (${messages.length} messages)`);
+
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'api-key': AZURE_OPENAI_KEY!,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+  }
+
+  // Fallback to direct OpenAI
+  if (!OPENAI_API_KEY) {
+    throw new Error('Neither Azure OpenAI nor OpenAI API key is configured');
+  }
+
+  console.log(`⚡ OpenAI Direct (fallback): ${model}`);
+
+  const body: Record<string, unknown> = {
+    model,
+    messages,
+    max_completion_tokens: max_tokens,
+    stream,
+  };
+  if (temperature !== undefined) body.temperature = temperature;
+
+  return fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+/**
+ * Call Azure OpenAI embeddings (or fallback to OpenAI direct).
+ */
+export async function callEmbeddings(options: {
+  input: string;
+  model?: string;
+}): Promise<Response> {
+  const { input, model = 'text-embedding-3-small' } = options;
+
+  if (isAzureConfigured()) {
+    const deployment = getDeploymentName(model);
+    const url = `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${deployment}/embeddings?api-version=${AZURE_OPENAI_API_VERSION}`;
+
+    console.log(`🔷 Azure OpenAI Embeddings: ${deployment}`);
+
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'api-key': AZURE_OPENAI_KEY!,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        input,
+        encoding_format: 'float',
+      }),
+    });
+  }
+
+  // Fallback to direct OpenAI
+  if (!OPENAI_API_KEY) {
+    throw new Error('Neither Azure OpenAI nor OpenAI API key is configured');
+  }
+
+  console.log(`⚡ OpenAI Embeddings Direct (fallback): ${model}`);
+
+  return fetch('https://api.openai.com/v1/embeddings', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      input,
+      encoding_format: 'float',
+    }),
+  });
+}
