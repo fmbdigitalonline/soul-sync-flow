@@ -89,11 +89,7 @@ serve(async (req) => {
       acsMaxTokens: maxTokens
     });
 
-    const openAIKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIKey) {
-      const errorMessage = language === 'nl' ? 'OpenAI API sleutel niet geconfigureerd' : 'OpenAI API key not configured';
-      throw new Error(errorMessage);
-    }
+    // Azure/OpenAI routing handled by shared helper
 
 const selectModel = (
   agentType: string, 
