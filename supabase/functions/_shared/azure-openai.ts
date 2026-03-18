@@ -6,8 +6,9 @@
 
 // Azure environment variables
 const AZURE_OPENAI_KEY = Deno.env.get('AZURE_OPENAI_KEY');
-const AZURE_OPENAI_ENDPOINT = Deno.env.get('AZURE_OPENAI_ENDPOINT'); // e.g. https://your-resource.openai.azure.com
+const AZURE_OPENAI_ENDPOINT = Deno.env.get('AZURE_OPENAI_ENDPOINT'); // e.g. https://your-resource.cognitiveservices.azure.com
 const AZURE_OPENAI_API_VERSION = Deno.env.get('AZURE_OPENAI_API_VERSION') || '2024-10-21';
+const AZURE_OPENAI_EMBEDDINGS_API_VERSION = Deno.env.get('AZURE_OPENAI_EMBEDDINGS_API_VERSION') || '2024-02-01';
 
 // Fallback
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
