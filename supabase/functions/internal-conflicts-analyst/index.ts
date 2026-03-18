@@ -34,20 +34,13 @@ BLUEPRINT CONTEXT: ${JSON.stringify(blueprintContext, null, 2)}
 Generate a comprehensive 3,000-4,000 word analysis covering belief contradictions, emotional double binds, and identity splits that create internal tension and resistance patterns.
 `;
 
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4.1-mini-2025-04-14',
-        messages: [
-          { role: 'system', content: 'You are an expert psychological analyst specializing in internal conflict resolution and psychological tension analysis.' },
-          { role: 'user', content: prompt }
-        ],
-        max_completion_tokens: 4000,
-      }),
+    const openAIResponse = await callChatCompletion({
+      messages: [
+        { role: 'system', content: 'You are an expert psychological analyst specializing in internal conflict resolution and psychological tension analysis.' },
+        { role: 'user', content: prompt }
+      ],
+      model: 'gpt-4.1-mini-2025-04-14',
+      max_tokens: 4000,
     });
 
     if (!openAIResponse.ok) {
