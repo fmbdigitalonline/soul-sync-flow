@@ -34,27 +34,11 @@ serve(async (req) => {
     );
 
     // Generate embedding for the query
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
-
     console.log('🔮 Generating embedding for query...');
-    const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'text-embedding-3-small',
-        input: query,
-        encoding_format: 'float'
-      }),
-    });
+    const embeddingResponse = await callEmbeddings({ input: query });
 
     if (!embeddingResponse.ok) {
-      throw new Error(`OpenAI API error: ${embeddingResponse.status}`);
+      throw new Error(`Embeddings API error: ${embeddingResponse.status}`);
     }
 
     const embeddingData = await embeddingResponse.json();

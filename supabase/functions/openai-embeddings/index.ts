@@ -14,10 +14,6 @@ serve(async (req) => {
   }
 
   try {
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
-
     const { query } = await req.json();
 
     if (!query) {
@@ -26,23 +22,12 @@ serve(async (req) => {
 
     console.log('🔧 Generating embedding for query:', query.substring(0, 100) + '...');
 
-    const response = await fetch('https://api.openai.com/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'text-embedding-3-small',
-        input: query,
-        encoding_format: 'float'
-      }),
-    });
+    const response = await callEmbeddings({ input: query });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ OpenAI API error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+      console.error('❌ Embeddings API error:', response.status, errorText);
+      throw new Error(`Embeddings API error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
