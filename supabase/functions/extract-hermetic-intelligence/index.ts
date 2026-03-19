@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+// AI calls routed through shared azure-openai helper (no direct OpenAI key needed here)
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -20,9 +20,7 @@ serve(async (req) => {
   try {
     console.log('🔥 HERMETIC INTELLIGENCE EXTRACTOR: Starting batch processing...');
 
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
+    // AI key validation handled by shared azure-openai helper
 
     const { userId, forceReprocess = false } = await req.json();
     

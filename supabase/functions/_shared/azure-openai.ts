@@ -15,7 +15,7 @@ function sanitizeEnv(raw: string | undefined, stripKeyPrefix?: string): string {
 }
 
 // Azure environment variables (sanitized defensively)
-const AZURE_OPENAI_KEY = Deno.env.get('AZURE_OPENAI_KEY');
+const AZURE_OPENAI_KEY = sanitizeEnv(Deno.env.get('AZURE_OPENAI_KEY'));
 const AZURE_OPENAI_ENDPOINT = sanitizeEnv(Deno.env.get('AZURE_OPENAI_ENDPOINT'));
 const AZURE_OPENAI_API_VERSION = sanitizeEnv(Deno.env.get('AZURE_OPENAI_API_VERSION'), 'AZURE_OPENAI_API_VERSION') || '2024-10-21';
 const AZURE_OPENAI_EMBEDDINGS_API_VERSION = sanitizeEnv(Deno.env.get('AZURE_OPENAI_EMBEDDINGS_API_VERSION'), 'AZURE_OPENAI_EMBEDDINGS_API_VERSION') || '2024-02-01';
@@ -92,7 +92,7 @@ export async function callChatCompletion(options: {
     if (tools) body.tools = tools;
     if (tool_choice) body.tool_choice = tool_choice;
 
-    console.log(`🔷 Azure OpenAI: ${deployment} (${messages.length} messages)`);
+    console.log(`🔷 Azure OpenAI: ${deployment} (${messages.length} messages), key length=${AZURE_OPENAI_KEY.length}, key=${AZURE_OPENAI_KEY.slice(0,4)}...${AZURE_OPENAI_KEY.slice(-4)}`);
 
     return fetch(url, {
       method: 'POST',
@@ -147,7 +147,7 @@ export async function callEmbeddings(options: {
     const deployment = getDeploymentName(model);
     const url = `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${deployment}/embeddings?api-version=${AZURE_OPENAI_EMBEDDINGS_API_VERSION}`;
 
-    console.log(`🔷 Azure OpenAI Embeddings: ${deployment}`);
+    console.log(`🔷 Azure OpenAI Embeddings: ${deployment}, key length=${AZURE_OPENAI_KEY.length}, key=${AZURE_OPENAI_KEY.slice(0,4)}...${AZURE_OPENAI_KEY.slice(-4)}`);
     console.log(`🔷 Full embeddings URL: ${url}`);
 
     return fetch(url, {
