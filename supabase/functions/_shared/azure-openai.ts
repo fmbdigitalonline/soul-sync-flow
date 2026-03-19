@@ -92,7 +92,7 @@ export async function callChatCompletion(options: {
     if (tools) body.tools = tools;
     if (tool_choice) body.tool_choice = tool_choice;
 
-    console.log(`🔷 Azure OpenAI: ${deployment} (${messages.length} messages)`);
+    console.log(`🔷 Azure OpenAI: ${deployment} (${messages.length} messages), key length=${AZURE_OPENAI_KEY.length}, key=${AZURE_OPENAI_KEY.slice(0,4)}...${AZURE_OPENAI_KEY.slice(-4)}`);
 
     return fetch(url, {
       method: 'POST',
