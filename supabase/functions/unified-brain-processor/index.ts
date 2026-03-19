@@ -497,9 +497,7 @@ async function synthesizeUnifiedResponse(
   hermeticResults: HermeticModuleResult[],
   personalityContext: any
 ): Promise<string> {
-  if (!openAIApiKey) {
-    return "I'm processing your message through my unified intelligence system.";
-  }
+  // Uses shared callChatCompletion helper (Azure or OpenAI fallback)
 
   const processedModules = hermeticResults.filter(r => r.processed);
   const moduleData = processedModules.reduce((acc, result) => {

@@ -20,9 +20,7 @@ serve(async (req) => {
   try {
     console.log('🔥 HERMETIC INTELLIGENCE EXTRACTOR: Starting batch processing...');
 
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
+    // AI key validation handled by shared azure-openai helper
 
     const { userId, forceReprocess = false } = await req.json();
     
