@@ -15,7 +15,7 @@ function sanitizeEnv(raw: string | undefined, stripKeyPrefix?: string): string {
 }
 
 // Azure environment variables (sanitized defensively)
-const AZURE_OPENAI_KEY = Deno.env.get('AZURE_OPENAI_KEY');
+const AZURE_OPENAI_KEY = sanitizeEnv(Deno.env.get('AZURE_OPENAI_KEY'));
 const AZURE_OPENAI_ENDPOINT = sanitizeEnv(Deno.env.get('AZURE_OPENAI_ENDPOINT'));
 const AZURE_OPENAI_API_VERSION = sanitizeEnv(Deno.env.get('AZURE_OPENAI_API_VERSION'), 'AZURE_OPENAI_API_VERSION') || '2024-10-21';
 const AZURE_OPENAI_EMBEDDINGS_API_VERSION = sanitizeEnv(Deno.env.get('AZURE_OPENAI_EMBEDDINGS_API_VERSION'), 'AZURE_OPENAI_EMBEDDINGS_API_VERSION') || '2024-02-01';
