@@ -632,7 +632,8 @@ async function getBehavioralMemoryContext(
       : []; // Principle #3: Real empty state, not crash
     
     const scoredMemories = memories.map(mem => {
-      const content = JSON.stringify(mem.memory_content).toLowerCase();
+      const rawContent = mem?.memory_content != null ? JSON.stringify(mem.memory_content) : '';
+      const content = rawContent.toLowerCase();
       const relevanceScore = messageKeywords.filter(kw => content.includes(kw)).length;
       return { ...mem, relevanceScore };
     });
