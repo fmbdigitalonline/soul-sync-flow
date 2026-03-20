@@ -27,7 +27,8 @@ const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
  * Whether Azure OpenAI is fully configured.
  */
 export const isAzureConfigured = (): boolean => {
-  return !!(AZURE_OPENAI_KEY && AZURE_OPENAI_ENDPOINT);
+  const configured = !!(AZURE_OPENAI_KEY && AZURE_OPENAI_ENDPOINT);
+  return configured;
 };
 
 /**
@@ -44,6 +45,14 @@ const MODEL_TO_DEPLOYMENT: Record<string, string> = {
   'text-embedding-3-small': 'text-embedding-3-small',
   'text-embedding-3-large': 'text-embedding-3-large',
 };
+
+// Boot-time deployment verification log (runs once on module load)
+if (AZURE_OPENAI_KEY && AZURE_OPENAI_ENDPOINT) {
+  console.log(`🔷 Azure OpenAI configured: endpoint=${AZURE_OPENAI_ENDPOINT}, key=${AZURE_OPENAI_KEY.slice(0,4)}...${AZURE_OPENAI_KEY.slice(-4)}, api_version=${AZURE_OPENAI_API_VERSION}, embeddings_api_version=${AZURE_OPENAI_EMBEDDINGS_API_VERSION}`);
+  console.log(`🔷 Available deployment mappings: ${JSON.stringify(Object.keys(MODEL_TO_DEPLOYMENT))}`);
+} else {
+  console.log(`⚡ Azure OpenAI NOT configured, will use direct OpenAI fallback. OPENAI_API_KEY set: ${!!OPENAI_API_KEY}`);
+}
 
 /**
  * Resolve a model name to an Azure deployment name.
