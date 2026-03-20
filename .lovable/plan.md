@@ -1,55 +1,31 @@
 
 
-# Reclaim Bloated Disk Space (~240 MB) via Table Rebuild
+# Fix: AZURE_OPENAI_KEY Contains Wrong Value
 
-## Problem
-The data purge migration succeeded (dead tuples cleared by autovacuum), but PostgreSQL's physical files haven't shrunk. `VACUUM FULL` is unavailable on Supabase (requires superuser). Current state:
+## Root Cause
 
-| Table | Rows | Actual Data | Physical Size | Bloat |
-|-------|------|-------------|---------------|-------|
-| dream_activity_logs | 111 | ~1 MB | 121 MB | ~120 MB |
-| user_360_profiles | 121 | ~3 MB | 120 MB | ~117 MB |
+The edge function logs prove the `AZURE_OPENAI_KEY` Supabase secret holds the endpoint URL instead of the actual API key:
 
-Database total: 423 MB (84% of 500 MB quota). Target: under 200 MB.
+```
+key length=26, key=http....com
+```
 
-## Solution: Table Rebuild (VACUUM FULL alternative)
-Since we cannot run `VACUUM FULL`, we use the standard workaround: copy live data into a fresh table, drop the bloated original, rename the new one, and recreate indexes/policies/triggers.
+An Azure OpenAI API key looks like `a1b2c3d4e5f6...` (32 hex characters). This value is clearly a URL fragment.
 
-This is a single database migration -- no application code changes.
+## Fix
 
-## Technical Details
+### 1. Update the `AZURE_OPENAI_KEY` secret
+Set it to the actual API key from the Azure portal:
+- Go to [Azure AI Foundry](https://ai.azure.com) or the Azure portal
+- Navigate to your resource: `info-mmvyk0rc-eastus2`
+- Under **Keys and Endpoint**, copy **Key 1** or **Key 2**
+- It will be a 32-character hex string
 
-### Step 1: Rebuild `dream_activity_logs` (~120 MB freed)
-1. Create `dream_activity_logs_new` with identical schema
-2. Copy 111 live rows into it
-3. Drop bloated original (CASCADE not needed -- no dependents)
-4. Rename new table
-5. Recreate: primary key, indexes (user+session, timestamp DESC), FK to auth.users, RLS + 2 policies
+We will use the secrets tool to save the correct value.
 
-### Step 2: Rebuild `user_360_profiles` (~117 MB freed)
-1. Create `user_360_profiles_new` with identical schema
-2. Deduplicate: keep only the latest row per user_id (currently some users have up to 33 duplicate rows)
-3. Drop bloated original
-4. Rename new table
-5. Recreate: primary key, indexes (user_id, last_updated, user+updated_at), trigger (update_user_360_profiles_updated_at), RLS + 3 policies
-6. Add UNIQUE constraint on user_id to prevent future duplicates
+### 2. No code changes needed
+The sanitization and logging code is already correct. Once the right key is in the secret, everything will work.
 
-### Projected Result
-
-| Metric | Before | After |
-|--------|--------|-------|
-| dream_activity_logs | 121 MB | ~1 MB |
-| user_360_profiles | 120 MB | ~3 MB |
-| Database total | 423 MB | ~185 MB |
-| Quota usage | 84% | ~37% |
-
-### Safety
-- No FK references from other tables to either table (verified)
-- No application code changes needed -- table names and columns remain identical
-- RLS policies, indexes, triggers all recreated exactly as they were
-- Deduplication keeps only the most recent row per user (preserving the latest profile_data)
-
-### Files Modified
-- 1 database migration (table rebuild SQL)
-- No application code changes
+## Files Changed
+- None (secret update only)
 
