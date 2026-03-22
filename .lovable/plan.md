@@ -1,27 +1,49 @@
 
 
-# Update Azure OpenAI Secrets for New Deployment
+# Root Cause: Two Different Azure Resources
 
-## What's needed
+## The Problem
 
-You've confirmed:
-- **Deployment name**: `gpt-4.1-mini` (matches current mapping, no code change needed)
-- **API Key**: needs updating
-- **Endpoint**: needs updating
+Your screenshots reveal the core issue clearly:
+
+| Deployment | Azure Resource (Host) |
+|---|---|
+| `gpt-4.1-mini` | `multimodalhacsbrain.cognitiveservices.azure.com` |
+| `text-embedding-3-small` | `info-mmvyk0rc-eastus2.cognitiveservices.azure.com` |
+
+The current code has **one single `AZURE_OPENAI_ENDPOINT`** variable used for both chat and embeddings. Whichever endpoint you set, the other deployment returns 404 because it doesn't exist on that resource.
+
+Additionally, the two resources likely have **different API keys** — one key won't work for both.
 
 ## Plan
 
-### Step 1: Update `AZURE_OPENAI_ENDPOINT` secret
-Prompt you to enter the new endpoint URL from your Azure resource.
+### Step 1: Add separate endpoint + key for embeddings
 
-### Step 2: Update `AZURE_OPENAI_KEY` secret
-Prompt you to enter the API key (Key 1 or Key 2) from your Azure resource's "Keys and Endpoint" page.
+In `supabase/functions/_shared/azure-openai.ts`, add support for:
+- `AZURE_OPENAI_EMBEDDINGS_ENDPOINT` (falls back to `AZURE_OPENAI_ENDPOINT` if not set)
+- `AZURE_OPENAI_EMBEDDINGS_KEY` (falls back to `AZURE_OPENAI_KEY` if not set)
 
-### Step 3: Verify
-No code changes required since the deployment name `gpt-4.1-mini` already matches the `MODEL_TO_DEPLOYMENT` mapping in `_shared/azure-openai.ts`.
+The `callEmbeddings()` function will use these dedicated vars, while `callChatCompletion()` continues using the existing ones.
 
-After updating both secrets, you can test by sending a message in the companion chat.
+### Step 2: Add endpoint path sanitization
+
+Strip any `/openai/deployments/...` suffix from endpoint values, since Azure portal shows the full URL and users tend to paste it entirely. This prevents double-path URLs.
+
+### Step 3: Set 4 Supabase secrets
+
+| Secret | Value |
+|---|---|
+| `AZURE_OPENAI_ENDPOINT` | `https://multimodalhacsbrain.cognitiveservices.azure.com` |
+| `AZURE_OPENAI_KEY` | API key from `multimodalhacsbrain` resource |
+| `AZURE_OPENAI_EMBEDDINGS_ENDPOINT` | `https://info-mmvyk0rc-eastus2.cognitiveservices.azure.com` |
+| `AZURE_OPENAI_EMBEDDINGS_KEY` | API key from `info-mmvyk0rc-eastus2` resource |
+
+### Step 4: Fix behavioral memory crash
+
+Fix the null-safe access bug in `companion-oracle-conversation/index.ts` that causes `TypeError: Cannot read properties of undefined`.
 
 ## Files Changed
-- None (secrets update only)
+- `supabase/functions/_shared/azure-openai.ts` — split endpoint/key for embeddings, add path sanitization
+- `supabase/functions/companion-oracle-conversation/index.ts` — null-safe behavioral memory
+- 4 Supabase secrets updated
 
