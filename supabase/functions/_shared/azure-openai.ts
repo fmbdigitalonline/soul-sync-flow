@@ -61,7 +61,7 @@ const MODEL_TO_DEPLOYMENT: Record<string, string> = {
 };
 
 // Boot-time verification log
-if (OR_OPENAI_KEY && AZURE_OPENAI_ENDPOINT) {
+if (AZURE_OPENAI_KEY && AZURE_OPENAI_ENDPOINT) {
   console.log(`🔷 Azure OpenAI CHAT: endpoint=${AZURE_OPENAI_ENDPOINT}, key=${AZURE_OPENAI_KEY.slice(0,4)}...${AZURE_OPENAI_KEY.slice(-4)}, api_version=${AZURE_OPENAI_API_VERSION}`);
 } else {
   console.log(`⚡ Azure OpenAI CHAT NOT configured. OPENAI_API_KEY set: ${!!OPENAI_API_KEY}`);
