@@ -84,7 +84,7 @@ export async function callChatCompletion(options: {
   max_tokens?: number;
   stream?: boolean;
   temperature?: number;
-  tools?: any
+  tools?: any[];
   tool_choice?: any;
   signal?: AbortSignal;
   [key: string]: unknown;
