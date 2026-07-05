@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -1711,6 +1711,114 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gsc_inspections: {
+        Row: {
+          coverage_state: string | null
+          created_at: string
+          google_canonical: string | null
+          id: string
+          indexing_state: string | null
+          inspected_at: string
+          inspection_error: string | null
+          inspection_url: string | null
+          last_crawl_time: string | null
+          page_fetch_state: string | null
+          raw_response: Json | null
+          referring_urls: Json | null
+          robots_txt_state: string | null
+          sitemap: Json | null
+          slug: string
+          updated_at: string
+          user_canonical: string | null
+          verdict: string | null
+        }
+        Insert: {
+          coverage_state?: string | null
+          created_at?: string
+          google_canonical?: string | null
+          id?: string
+          indexing_state?: string | null
+          inspected_at?: string
+          inspection_error?: string | null
+          inspection_url?: string | null
+          last_crawl_time?: string | null
+          page_fetch_state?: string | null
+          raw_response?: Json | null
+          referring_urls?: Json | null
+          robots_txt_state?: string | null
+          sitemap?: Json | null
+          slug: string
+          updated_at?: string
+          user_canonical?: string | null
+          verdict?: string | null
+        }
+        Update: {
+          coverage_state?: string | null
+          created_at?: string
+          google_canonical?: string | null
+          id?: string
+          indexing_state?: string | null
+          inspected_at?: string
+          inspection_error?: string | null
+          inspection_url?: string | null
+          last_crawl_time?: string | null
+          page_fetch_state?: string | null
+          raw_response?: Json | null
+          referring_urls?: Json | null
+          robots_txt_state?: string | null
+          sitemap?: Json | null
+          slug?: string
+          updated_at?: string
+          user_canonical?: string | null
+          verdict?: string | null
+        }
+        Relationships: []
+      }
+      gsc_sync_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_slug: string | null
+          error_count: number
+          error_message: string | null
+          id: string
+          processed_count: number
+          started_at: string | null
+          status: string
+          success_count: number
+          total_count: number
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_slug?: string | null
+          error_count?: number
+          error_message?: string | null
+          id?: string
+          processed_count?: number
+          started_at?: string | null
+          status?: string
+          success_count?: number
+          total_count?: number
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_slug?: string | null
+          error_count?: number
+          error_message?: string | null
+          id?: string
+          processed_count?: number
+          started_at?: string | null
+          status?: string
+          success_count?: number
+          total_count?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       habit_completions: {
         Row: {
@@ -4320,6 +4428,42 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_indexation_status: {
+        Row: {
+          coverage_state: string
+          indexed_at: string | null
+          last_checked: string
+          last_rewritten_at: string | null
+          last_submitted_at: string | null
+          manual_keep: boolean
+          notes: string | null
+          rewrite_attempts: number
+          slug: string
+        }
+        Insert: {
+          coverage_state: string
+          indexed_at?: string | null
+          last_checked?: string
+          last_rewritten_at?: string | null
+          last_submitted_at?: string | null
+          manual_keep?: boolean
+          notes?: string | null
+          rewrite_attempts?: number
+          slug: string
+        }
+        Update: {
+          coverage_state?: string
+          indexed_at?: string | null
+          last_checked?: string
+          last_rewritten_at?: string | null
+          last_submitted_at?: string | null
+          manual_keep?: boolean
+          notes?: string | null
+          rewrite_attempts?: number
+          slug?: string
+        }
+        Relationships: []
+      }
       seo_pages: {
         Row: {
           ad_slots: Json | null
@@ -4377,6 +4521,33 @@ export type Database = {
           updated_at?: string | null
           word_count?: number | null
           youtube_embed_url?: string | null
+        }
+        Relationships: []
+      }
+      seo_similarity_clusters: {
+        Row: {
+          detected_at: string
+          id: string
+          overlapping_phrases: Json | null
+          similar_slug: string
+          similarity_score: number
+          slug: string
+        }
+        Insert: {
+          detected_at?: string
+          id?: string
+          overlapping_phrases?: Json | null
+          similar_slug: string
+          similarity_score: number
+          slug: string
+        }
+        Update: {
+          detected_at?: string
+          id?: string
+          overlapping_phrases?: Json | null
+          similar_slug?: string
+          similarity_score?: number
+          slug?: string
         }
         Relationships: []
       }
