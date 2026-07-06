@@ -35,15 +35,14 @@ export default function Auth() {
   const { t } = useLanguage();
 
   const getAppBaseUrl = () => {
-    // Always use the configured Lovable project URL in production
-    const lovableUrl = "https://f5c26e06-9b0d-480a-b195-919d6cbffd25.lovableproject.com";
-
-    if (typeof window !== "undefined" && window.location.origin.includes("localhost")) {
-      // Allow localhost during local development so redirects stay on the same host
+    // Use whatever origin the user is actually on. Hardcoding the production
+    // Lovable URL sent preview signups' confirmation emails back to the
+    // published site — which is one build behind and served the old wizard.
+    // Falls back to the production URL only when window is unavailable (SSR).
+    if (typeof window !== "undefined" && window.location.origin) {
       return window.location.origin;
     }
-
-    return lovableUrl;
+    return "https://f5c26e06-9b0d-480a-b195-919d6cbffd25.lovableproject.com";
   };
 
   const recoveryRedirectUrl = useMemo(

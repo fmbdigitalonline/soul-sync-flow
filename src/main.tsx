@@ -57,7 +57,7 @@ import Tasks from "./pages/Tasks";
 import Dreams from "./pages/Dreams";
 import SpiritualGrowth from "./pages/SpiritualGrowth";
 import Profile from "./pages/Profile";
-import Onboarding from "./pages/Onboarding";
+import OnboardingFlow from "./pages/OnboardingFlow";
 import HumanDesignDebug from "./pages/HumanDesignDebug";
 import TestEphemeris from "./pages/TestEphemeris";
 import PersonaTest from "./pages/PersonaTest";
@@ -116,7 +116,7 @@ const router = createBrowserRouter([
       { index: true, element: <Index /> },
       { path: "get-started", element: <LifeClarityFunnel /> },
       { path: "auth", element: <Auth /> },
-      { path: "onboarding", element: <ProtectedRoute><Onboarding /></ProtectedRoute> },
+      { path: "onboarding", element: <ProtectedRoute><OnboardingFlow /></ProtectedRoute> },
       { path: "dashboard", element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
       { path: "blueprint", element: <ProtectedRoute><Blueprint /></ProtectedRoute> },
       { path: "companion", element: <ProtectedRoute><Coach /></ProtectedRoute> },
