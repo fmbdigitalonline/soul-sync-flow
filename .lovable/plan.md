@@ -1,66 +1,66 @@
-# Replace floating orb with an ambient PresenceFrame border
+## Scope
+Three coordinated changes: (1) restore first-contact durability across navigation, (2) hide the hermetic report as a user action while keeping it running silently, (3) add idempotency guards on both report services.
 
-UI-only. Services, detection hooks, and edge functions untouched.
+---
 
-## 1. New component: `src/components/companion/PresenceFrame.tsx`
+### 1. Fix 1 — First-contact message surviving navigation
 
-Wrapper that renders `children` inside a rounded container whose border reflects presence.
+`src/hooks/use-hacs-conversation.ts` currently appends the opening turn optimistically via `setMessages`. The edge function already persists the assistant row into `conversation_messages`, but the client uses in-memory state, so leaving `/companion` and returning shows an empty thread until the hydrate query returns (and often shows nothing if the hydrate ran before insert).
 
-- Props: `state: 'idle' | 'thinking' | 'noticed'`, `className?`, `children`.
-- CSS-only animations defined in `src/index.css` (keyframes + utility classes), so nothing runs on the JS thread and `prefers-reduced-motion` disables them via a single `@media` block that collapses each animation to a static border.
-- **idle** — soul-purple border at low opacity with a 5s ease-in-out breath cycling opacity ~0.15 → 0.30. Deliberately near-subliminal.
-- **thinking** — border rendered via `border-image` from a soul-purple → teal linear-gradient, animated by shifting `background-position` on a masked border layer over ~3s linear infinite.
-- **noticed** — single 1.2s soft outer glow (box-shadow keyframe, `animation-iteration-count: 1`, `animation-fill-mode: forwards` to `none`), then the component re-settles to idle on the next render.
-- No badges, dots, counters, click targets, or focus rings added by the frame itself.
+Change (as previously specified):
+- After a successful `initiateFirstContact` response, re-run the existing conversation-history hydrate (same call the adapter uses on mount) instead of only pushing an in-memory message, so the opening comes back from `conversation_messages` on every subsequent mount.
+- Keep the optimistic `setMessages` append for immediate paint, but reconcile by `client_msg_id` / server id when hydrate resolves (dedupe by `id` prefix `oracle_first_` vs server id).
+- Keep the `?from=onboarding` guard in `src/pages/Coach.tsx` — no behavioral change there.
 
-## 2. Wire in `src/pages/Coach.tsx`
+Files: `src/hooks/use-hacs-conversation.ts` only.
 
-- Add `useHermeticReportStatus()` and read `orbState` from the existing `useSubconsciousOrb()` call (already imported).
-- Derive frame state:
-  - `thinking` when `isLoading || isStreamingResponse || hermeticStatus.isGenerating`.
-  - `noticed` for one render-tick when a new insight signal arrives (see step 3); resets to idle after the pulse animation duration (1.2s timer).
-  - otherwise `idle`.
-- Pass `presenceState` into `HACSChatInterface` as a new optional prop; inside `HACSChatInterface` wrap the sticky input bar (`div.flex.items-center.gap-2.bg-card…rounded-full`) with `<PresenceFrame state={presenceState}>`. Leave the conversation container alone for now (the composer is enough presence surface; scope-limits the visual change).
+---
 
-## 3. Reroute insight delivery into the message stream
+### 2. Rapport tab — remove hermetic user action, auto-run standard at onboarding
 
-- In `Coach.tsx`, subscribe to `orbState` changes (via `useEffect` on `orbState.hermeticAdvice` / `orbState.pattern`). When a fresh advice becomes available AND the per-session insight budget is unused:
-  1. Flip presence to `noticed` for 1.2s.
-  2. Append the advice as a normal twin message using the existing `addOptimisticMessage(...)` API — same shape as any other assistant message, plain text, no confidence bar, no accept/dismiss buttons, no special styling.
-  3. Mark the session budget used in a `useRef<boolean>` (session-scoped; resets on hard reload — matches "one unsolicited insight per session"). Further advice events are silently dropped.
-- Nothing inside `use-subconscious-orb.ts`, `subconscious-orb-controller`, shadow detector services, or `use-hermetic-report-status.ts` is modified. We only *consume* their existing outputs.
+`src/components/blueprint/PersonalityReportViewer.tsx`
+- Remove the "Hermetisch Rapport (10.000+ woorden)" button and its two render sites (lines ~501 and ~761), plus the `generateHermeticReport` function (lines 191–244) and the recovery/purge/regenerate buttons that exist only to service that flow (`handleRecoveryAttempt`, the force-regenerate branch at ~378).
+- Keep the "Standaard Rapport" button and `generateReport(...)` untouched — it remains as regenerate/fallback.
+- If `hermeticStatus.isGenerating` (from `useHermeticReportStatus`), render a single passive line ("Deep synthesis in progress…") in muted text. No progress bar, no percentage, no button, no toast. Nothing else surfaces hermetic state in this tab.
+- Leave hermetic viewing code (`hermeticReport` state, `HermeticInsightTester`, etc.) alone — reading an existing hermetic report is not a user *trigger*, so it stays.
 
-## 4. Remove orb + modal UI usage
+`src/pages/OnboardingFlow.tsx` (around line 181)
+- Directly under the existing fire-and-forget `hermeticPersonalityReportService.generateHermeticReport(...)`, add a sibling fire-and-forget call:
+  ```
+  aiPersonalityReportService
+    .generatePersonalityReport(data, language)
+    .catch((e) => console.warn("Standard report generation deferred:", e));
+  ```
+- Import `aiPersonalityReportService` from `@/services/ai-personality-report-service`. No await, no UI change, no toast — same non-blocking pattern as the hermetic call.
 
-- `src/components/Layout/MainLayout.tsx`: remove the `FloatingHACSOrb` import and the `{user && <FloatingHACSOrb … />}` render line. Also drop the now-unused `enableOrbPointerFollow` memo if nothing else references it.
-- Grep-verify no other live route renders `FloatingHACSOrb`, `HACSChatOverlay`, or `HACSInsightDisplay`; unmount any stragglers.
-- **Leave the files on disk** (`FloatingHACSOrb.tsx`, `HACSChatOverlay.tsx`, `HACSInsightDisplay.tsx`, all `use-subconscious-orb*` / detector services). No deletions.
+---
 
-## 5. Verification
+### 3. Idempotency guards on both report services
 
-- `bun run build` passes (also catches unused-import fallout from MainLayout).
-- Open `/companion` in the preview: no floating orb; composer shows the barely-visible breath at idle; gradient sweep while awaiting a reply; single pulse followed by an inline twin message when the shadow detector fires; no insight modal appears; no new console errors.
-- Manually confirm `prefers-reduced-motion: reduce` renders a plain static border.
+**Standard** — `src/services/ai-personality-report-service.ts`, at the top of `generatePersonalityReport`:
+- Resolve `userId` from `blueprint.user_meta?.user_id || blueprint.user_id`.
+- Call the existing `getStoredReport(userId)`; if a report exists AND `generated_at` is within the last 24h, log `⏭️ Standard report skip: fresh report exists (…)` and return `{ success: true, report: existing }`.
+- No in-flight table exists for standard reports (it's a synchronous edge call), so freshness-check is the only guard needed.
 
-## Report back
+**Hermetic** — `supabase/functions/hermetic-job-creator/index.ts` already skips when a `pending`/`processing` job exists for the user. Extend the same guard:
+- Before creating a job, also query `personality_reports` for `user_id = user_id AND blueprint_version <> '1.0'` (hermetic rows) ordered by `generated_at desc limit 1`. If one exists within the last 7 days, log `⏭️ Hermetic job skip: fresh report exists (…)` and return `{ message: 'Fresh report exists', skipped: true }` with 200 — no job created.
+- Keep the existing active-job short-circuit; just add the fresh-report short-circuit above it. Log both skip reasons distinctly.
 
-Which hooks fed which frame state (`isLoading`/`isStreamingResponse` + `useHermeticReportStatus.isGenerating` → `thinking`; `useSubconsciousOrb.orbState.hermeticAdvice` → `noticed` + append), and the exact call site where the insight was pushed into the transcript (`Coach.tsx` `useEffect` → `addOptimisticMessage`).
+No schema changes. No new tables. No new edge functions.
 
-## Also bundled in this session
+---
 
-- `**isStreaming: false` one-liner** — apply the outstanding fix (please confirm the file + call site if it's not obvious in the current tree; otherwise I'll grep `isStreaming:` in the adapter/hook and set the correct default).
-- **Goal-title tool description one-liner** — update the tool schema description for the goal-title tool. I'll locate it under `supabase/functions/*` tool definitions and tighten the `description` field. This is a string-only change, no logic touched.
+### Technical details
 
-Both are shipped in the same turn as the PresenceFrame work. - DEv NOte: The plan is excellent — Lovable read the spec faithfully and improved it in three places worth noticing: CSS-only animations off the JS thread with a proper `prefers-reduced-motion` collapse, the `useRef` session budget for the one-insight rule, and scoping the frame to just the composer instead of the whole container. That last one is genuinely smarter than my spec — one presence surface, minimal visual change, expandable later if it feels right. Approve steps 1–4 as written.
+- `useHermeticReportStatus` already exposes `isGenerating` — reuse verbatim for the passive one-liner; no new state.
+- `aiPersonalityReportService.generatePersonalityReport` returns quickly enough for fire-and-forget in onboarding; failures are logged, never toasted, never blocking.
+- Hermetic-side freshness threshold is 7 days (a 10k-word regeneration is expensive); standard-side is 24h (cheap, but avoid double-dispatch on rapid navigation).
+- No changes to: `use-subconscious-orb`, `PresenceFrame`, edge function `companion-oracle-conversation`, any hermetic orchestrator internals.
 
-Three corrections before you say "go," because two of them will otherwise ship wrong:
+### Verification
 
-**1. The** `isStreaming` **fix — Lovable is about to grep its way into breaking things.** It says it'll "grep `isStreaming:` and set the correct default" — no. There are multiple legitimate `isStreaming: true` sites (normal replies *should* stream). The fix is exactly one line in one function. Reply with: *"For the isStreaming fix: ONLY in* `src/hooks/use-hacs-conversation.ts`*, inside the* `initiateFirstContact` *function, the message object whose id starts with* `oracle_first_` *— change its* `isStreaming: true` *to* `false`*. Do not touch any other isStreaming occurrence anywhere."*
-
-**2. The goal-title fix — it's looking for the wrong thing.** There is no "goal-title tool." Give it: *"In* `supabase/functions/companion-oracle-conversation/index.ts`*, in the* `companionTools` *array, the* `decompose_goal` *function's* `title` *property description — change it to: 'Short goal title using the USER'S OWN stated goal verbatim (e.g. "Earn €1,000,000") — never your reframe or interpretation of what the goal is really about.' String-only change, then redeploy the function."* And remind it: this file is an edge function — the change needs a **deploy**, not just a commit.
-
-**3. One design guard on step 3:** the plan appends the insight as a *plain text* message via `addOptimisticMessage` — good — but optimistic messages sometimes don't persist to the transcript store. Ask it to confirm the insight message survives a page reload (i.e., it's written through the same persistence path as other twin messages, or explicitly accept that unsolicited insights are ephemeral — which is actually defensible, but it should be a decision, not an accident).
-
-Also quietly appreciate what step 2 revealed: `isStreamingResponse` feeding the thinking state means the border will sweep *while the twin types* — the room visibly thinking as words arrive. That's the concept landing exactly as imagined.
-
-&nbsp;
+- Build passes.
+- `/blueprint` Rapport tab: no hermetic button anywhere; standard button present; if hermetic job is running, one muted "Deep synthesis in progress…" line.
+- Fresh onboarding completion → network shows two fire-and-forget invocations (`hermetic-job-creator` and `generate-personality-report`), user is not blocked.
+- Rerunning onboarding within 24h logs the standard skip; within 7 days logs the hermetic skip; no duplicate jobs/rows.
+- Companion first-contact message present after navigating away and back.
