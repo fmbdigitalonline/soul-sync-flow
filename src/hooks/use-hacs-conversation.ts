@@ -947,7 +947,7 @@ export const useHACSConversation = () => {
         module: 'COMPANION_ORACLE',
         content: data?.response || "I've been reading your chart. Where should we begin — you tell me, or shall I?",
         timestamp: new Date().toISOString(),
-        isStreaming: true
+        isStreaming: false
       };
       setMessages(prev => (prev.length === 0 ? [opening] : prev));
     } catch (err) {

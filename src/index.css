@@ -274,3 +274,87 @@
   /* Standardized page container */
   .page-container { @apply container mx-auto max-w-saas w-full px-4 md:px-6 lg:px-8; }
 }
+
+/* =========================================================
+   PresenceFrame — ambient border presence indicator.
+   CSS-only, off the JS thread, honors prefers-reduced-motion.
+   ========================================================= */
+.presence-frame {
+  position: relative;
+  border-radius: 9999px;
+  border: 1px solid hsl(var(--soul-purple) / 0.22);
+  transition: border-color 400ms ease;
+  isolation: isolate;
+}
+
+/* idle — near-subliminal breath */
+.presence-frame[data-presence="idle"] {
+  animation: presence-breath 5s ease-in-out infinite;
+}
+
+@keyframes presence-breath {
+  0%, 100% { border-color: hsl(var(--soul-purple) / 0.15); }
+  50%      { border-color: hsl(var(--soul-purple) / 0.30); }
+}
+
+/* thinking — slow gradient sweep along the border */
+.presence-frame[data-presence="thinking"] {
+  border-color: transparent;
+}
+.presence-frame[data-presence="thinking"]::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--soul-purple) / 0.55),
+    hsl(var(--soul-teal) / 0.55),
+    hsl(var(--soul-purple) / 0.55)
+  );
+  background-size: 200% 100%;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: presence-sweep 3s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes presence-sweep {
+  0%   { background-position:   0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+/* noticed — single soft pulse, then settles */
+.presence-frame[data-presence="noticed"] {
+  animation: presence-pulse 1.2s ease-out 1 forwards;
+}
+
+@keyframes presence-pulse {
+  0%   { box-shadow: 0 0 0 0    hsl(var(--soul-purple) / 0.00);
+         border-color: hsl(var(--soul-purple) / 0.30); }
+  40%  { box-shadow: 0 0 16px 4px hsl(var(--soul-purple) / 0.30);
+         border-color: hsl(var(--soul-purple) / 0.55); }
+  100% { box-shadow: 0 0 0 0    hsl(var(--soul-purple) / 0.00);
+         border-color: hsl(var(--soul-purple) / 0.22); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .presence-frame,
+  .presence-frame[data-presence="idle"],
+  .presence-frame[data-presence="thinking"],
+  .presence-frame[data-presence="noticed"] {
+    animation: none !important;
+    border-color: hsl(var(--soul-purple) / 0.22);
+  }
+  .presence-frame[data-presence="thinking"]::before {
+    animation: none !important;
+    background: linear-gradient(90deg,
+      hsl(var(--soul-purple) / 0.35),
+      hsl(var(--soul-teal) / 0.35));
+  }
+}

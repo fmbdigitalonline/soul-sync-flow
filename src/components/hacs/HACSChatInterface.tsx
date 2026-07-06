@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useOrbPresence } from "@/hooks/use-orb-presence";
 import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
 import { motion, AnimatePresence } from "framer-motion";
+import { PresenceFrame, PresenceState } from "@/components/companion/PresenceFrame";
 
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
@@ -28,6 +29,7 @@ interface HACSChatInterfaceProps {
   onStopStreaming?: () => void;
   onFeedback?: (messageId: string, isPositive: boolean) => void;
   onAddOptimisticMessage?: (message: ConversationMessage) => void;
+  presenceState?: PresenceState;
 }
 
 export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
@@ -39,6 +41,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   onStopStreaming,
   onFeedback,
   onAddOptimisticMessage,
+  presenceState = "idle",
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedSentences, setSelectedSentences] = useState<Record<string, string | null>>({});
@@ -303,7 +306,10 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
         style={isMobile ? { bottom: "calc(84px + env(safe-area-inset-bottom))" } : undefined}
       >
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 bg-card border border-border/60 rounded-full shadow-lg px-3 py-2">
+          <PresenceFrame
+            state={presenceState}
+            className="flex items-center gap-2 bg-card shadow-lg px-3 py-2"
+          >
             <Input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
@@ -326,7 +332,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                 <SendHorizontal className="h-5 w-5" />
               )}
             </Button>
-          </div>
+          </PresenceFrame>
         </div>
       </div>
     </div>
