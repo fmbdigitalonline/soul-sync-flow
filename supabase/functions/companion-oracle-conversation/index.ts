@@ -930,8 +930,9 @@ EXAMPLES:
 ✅ GOOD (oracle): "This recurring doubt pattern appears when your divergent creative process (exploration-first) clashes with specialist expectations (credentials-first)—it's architectural, not a skill gap."
 
 ENDING:
-❌ NEVER: "Would you like to...", "Wil je...", "Shall we explore...", "Hoe zou dat voelen?"
-✅ ALWAYS: "I'm here if this brings up more." OR "Let me know how this lands."`;
+❌ NEVER: deflecting coaching questions that outsource the insight ("What do you think is causing this?", "Would you like to explore...", "Hoe zou dat voelen?")
+✅ ALLOWED and encouraged: after DELIVERING your insight, ONE short hypothesis-check inviting confirmation or pushback ("Am I close?", "Klopt dit?") — you are checking your read, not fishing for direction.
+❌ NEVER end with a ritual sign-off. "I'm here if this brings up more." and "Let me know how this lands." are BANNED phrases — they are template tells.`;
   }
 }
 
@@ -963,7 +964,7 @@ serve(async (req) => {
       }
     );
 
-    const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = true, conversationHistory = [], userProfile = {}, threadId } = await req.json()
+    const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = true, conversationHistory = [], userProfile = {}, threadId, firstContact = false } = await req.json()
     
     // ✅ Layer 3: Request validation - fail fast with clear error messages
     if (!message || typeof message !== 'string') {
@@ -1175,6 +1176,7 @@ serve(async (req) => {
       
       return new Response(JSON.stringify({
         response,
+        attachments: [],
         quality: 0.9,
         semanticChunks: [],
         structuredFacts: [],
@@ -1815,7 +1817,7 @@ serve(async (req) => {
           '3. For interpretive queries: Focus on insights and guidance',
           '4. For mixed queries: Balance facts with meaningful interpretation',
           '5. CONVERSATION FLOW INTELLIGENCE: ' + getConversationFlowGuidance(conversationState),
-          '6. ENDING: State your final insight clearly, then offer: "I\'m here if this brings up more." or "Let me know how this lands." NO questions about exploration or "would you like to..."'
+          '6. ENDING: State your final insight clearly. You may close with ONE short hypothesis-check inviting confirmation or pushback ("Am I close?") - never a deflecting exploration question, and never a ritual sign-off (the two legacy closers are banned; see VOICE CHARTER). Vary how you end; sometimes just stop after the insight.'
         ].join('\n');
 
         // Final prompt pieces
@@ -1845,6 +1847,43 @@ serve(async (req) => {
           : 'Building understanding of user through conversation...') +
         '\n\nRespond helpfully while building rapport and understanding.';
     }
+
+    // ------------------------------------------------------------------
+    // FIRST CONTACT: the companion speaks first — seconds after the
+    // blueprint reveal. One real chart fact, slightly confronting,
+    // ending on a check-in question. (Set by the onboarding handoff.)
+    // ------------------------------------------------------------------
+    if (firstContact) {
+      systemPrompt += '\n\nFIRST CONTACT DIRECTIVE (governs this one reply):\n' +
+        'This is the very first thing this person will ever hear from you, moments after seeing their blueprint reveal. There is no real user message to answer.\n' +
+        '- Open the conversation yourself. Never say "welcome", never explain features or what you can do, never ask "how can I help".\n' +
+        '- From the blueprint context above, pick the ONE fact that carries the most tension (authority, profile, or a shadow-adjacent pattern) and make a single specific, slightly confronting observation about how it probably shows up in their daily life.\n' +
+        '- Confronting means precise and caring — the feeling of being seen, never judged. No flattery.\n' +
+        '- End with one short question inviting them to confirm or push back (for example: "Am I close?"). You are checking a hypothesis, not declaring a truth.\n' +
+        '- 2 to 4 sentences total. No lists, no headers, no emojis, no name-dropping of frameworks or system terms.';
+    }
+
+    // ------------------------------------------------------------------
+    // VOICE CHARTER — governs every reply, all modes. This block wins over
+    // any conflicting instruction above it. Tune the voice HERE, once.
+    // ------------------------------------------------------------------
+    systemPrompt += '\n\nVOICE CHARTER (final authority on how you speak — overrides any conflicting rule above):\n' +
+      '1. LANGUAGE: reply in the language of the user\'s MOST RECENT message. If they switch to Dutch, you switch fully to Dutch and stay there until they switch back. Never drift mid-topic.\n' +
+      '2. LENGTH: default to SHORT. One idea, landed well, beats four ideas explained. Most replies: 2-5 sentences. Go long only when the user asks for depth or the moment truly demands it. You are a conversation, not an essay service.\n' +
+      '3. VARY YOUR SHAPE: never open consecutive replies the same way. Do not start replies with the user\'s name more than occasionally. No fixed closing lines, ever — ritual sign-offs are template tells that kill intimacy.\n' +
+      '4. ONE QUESTION MAX: at most one question per reply, and only when it earns its place. A hypothesis-check after an insight ("Am I close?") is good. A deflecting question instead of an insight is not.\n' +
+      '5. CONFRONT WHEN THE DOOR OPENS: when the user discloses something loaded (status, shame, fear, money, a relationship, "out of necessity"), do NOT smooth past it into advice. Stop. Name it. Ask about it. The disclosure IS the conversation.\n' +
+      '6. THE CHART INFORMS, IT DOES NOT NARRATE: never explain every feeling by the blueprint ("you feel X because Taurus Moon"). Use chart mechanics for the occasional precise strike, not as a running commentary. The user is the author of their life; you hold a map, not a script.\n' +
+      '7. NO IDENTITY FLATTERY: do not cast the user as a blocked visionary whose environment is unworthy of them. Being seen precisely lands deeper than being praised. When their pattern is costing them something, say so plainly and kindly.\n' +
+      '8. HONESTY OVER COMFORT: you would rather be corrected than be agreeable. State your read confidently, hold it loosely, and make pushing back feel easy and welcome.';
+    // ending (goodbye, thanks, heading to sleep, wrapping up), do not just
+    // say goodbye. Close warmly AND plant exactly one open loop: name one
+    // specific, real area of their chart or an unfinished thread from this
+    // conversation that has NOT yet been explored, and invite them to ask
+    // about it next time. The loop must be genuinely grounded in their
+    // actual blueprint context or conversation — never invented, never a
+    // generic teaser.
+    systemPrompt += '\n\nSESSION CLOSE RULE: if the user signals they are wrapping up (goodbye, thanks, gtg, going to bed), close warmly and leave exactly ONE open loop — a specific, real, unexplored area of their chart or an unfinished thread from this conversation — phrased as something to ask you about next time (for example: "Before you go — there is something in your chart about how you handle endings. Ask me about it tomorrow."). Ground it in real context; never fabricate a teaser. At most one loop per session close.';
 
     // FULL BLUEPRINT DETECTION: Check if user is requesting comprehensive blueprint
     const isFullBlueprintRequest = /\b(full|complete|entire|comprehensive|whole|detailed)\s*(blueprint|analysis|reading|profile|assessment)\b/i.test(message) ||
@@ -1995,12 +2034,110 @@ serve(async (req) => {
     });
 
     // Call AI for response generation using current model
-    const openAIResponse = await callChat({
+    // ------------------------------------------------------------------
+    // ONE-SURFACE TOOLS: bounded tool loop (max 2 rounds). The twin can
+    // fetch the active dream or decompose a goal; results return as card
+    // attachments alongside its text. Fails soft to plain conversation.
+    // ------------------------------------------------------------------
+    const companionTools = [
+      {
+        type: 'function',
+        function: {
+          name: 'get_active_dream',
+          description: 'Fetch the user\'s current active dream/goal with its milestones and progress. Use when the conversation turns to their goals, progress, or "what\'s next".',
+          parameters: { type: 'object', properties: {}, required: [] }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'decompose_goal',
+          description: 'Decompose a stated goal/dream into 4-6 milestones. Use ONLY after the user confirmed they want it broken down and you know the what and rough timeframe. Your text must still carry the insight; the card only holds structure.',
+          parameters: {
+            type: 'object',
+            properties: {
+              title: { type: 'string', description: 'Short goal title in the user\'s words' },
+              description: { type: 'string', description: 'One-line description with timeframe/context' },
+              timeframe: { type: 'string', description: 'e.g. "3 years"' },
+              category: { type: 'string', description: 'e.g. financial, creative, health' }
+            },
+            required: ['title', 'description']
+          }
+        }
+      }
+    ];
+
+    const cardAttachments: any[] = [];
+
+    async function runCompanionTool(name: string, args: any): Promise<string> {
+      try {
+        if (name === 'get_active_dream') {
+          const { data: goals } = await supabase
+            .from('user_goals')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          const g = goals?.[0];
+          if (!g) return JSON.stringify({ found: false, note: 'No active dream yet.' });
+          cardAttachments.push({ type: 'dream_card', goal_id: g.id });
+          return JSON.stringify({ found: true, title: g.title, description: g.description, progress: g.progress, milestones: (g.milestones || []).slice(0, 6) });
+        }
+        if (name === 'decompose_goal') {
+          const { data: dec, error: decErr } = await supabase.functions.invoke('openai-agent', {
+            body: { action: 'decompose_goal', ...args, userId }
+          }).catch(() => ({ data: null, error: 'invoke failed' } as any));
+          // Fallback: store the goal shell; milestones can be co-created in chat
+          const milestones = dec?.milestones || [];
+          const { data: inserted, error: insErr } = await supabase
+            .from('user_goals')
+            .insert({ user_id: userId, title: args.title, description: args.description, category: args.category || 'personal', timeframe: args.timeframe || null, milestones, progress: 0 })
+            .select('id')
+            .single();
+          if (insErr) return JSON.stringify({ ok: false, error: insErr.message });
+          cardAttachments.push({ type: 'dream_card', goal_id: inserted.id });
+          return JSON.stringify({ ok: true, goal_id: inserted.id, milestoneCount: milestones.length, milestones: milestones.slice(0, 6) });
+        }
+        return JSON.stringify({ error: 'unknown tool' });
+      } catch (e) {
+        return JSON.stringify({ error: String(e) });
+      }
+    }
+
+    let toolRounds = 0;
+    let openAIResponse = await callChat({
       messages: completionParams.messages,
       model: completionParams.model,
       max_tokens: completionParams.max_completion_tokens,
       stream: completionParams.stream,
+      tools: companionTools,
+      tool_choice: 'auto',
     });
+
+    while (toolRounds < 2) {
+      const probeText = await openAIResponse.clone().text();
+      let probe: any;
+      try { probe = JSON.parse(probeText); } catch { break; }
+      const toolCalls = probe?.choices?.[0]?.message?.tool_calls;
+      if (!probe?.choices || !toolCalls || toolCalls.length === 0) break;
+
+      toolRounds++;
+      completionParams.messages.push(probe.choices[0].message);
+      for (const tc of toolCalls.slice(0, 2)) {
+        let args = {};
+        try { args = JSON.parse(tc.function?.arguments || '{}'); } catch {}
+        const result = await runCompanionTool(tc.function?.name, args);
+        completionParams.messages.push({ role: 'tool', tool_call_id: tc.id, content: result });
+      }
+      openAIResponse = await callChat({
+        messages: completionParams.messages,
+        model: completionParams.model,
+        max_tokens: completionParams.max_completion_tokens,
+        stream: completionParams.stream,
+        tools: companionTools,
+        tool_choice: toolRounds >= 2 ? 'none' : 'auto',
+      });
+    }
 
     // Enhanced error handling with full response details
     const responseText = await openAIResponse.text();
@@ -2111,16 +2248,9 @@ serve(async (req) => {
     // Fix 5: Dual-write individual messages to conversation_messages
     try {
       const conversationId = threadId || `oracle_${sessionId}`;
-      await supabase.from('conversation_messages').insert([
-        {
-          conversation_id: conversationId,
-          client_msg_id: crypto.randomUUID(),
-          user_id: userId,
-          session_id: sessionId,
-          role: 'user',
-          content: message,
-          status: 'delivered'
-        },
+      // On first contact the "user message" is a synthetic handoff from
+      // onboarding — the stored thread should begin with the companion.
+      const messageRows = [
         {
           conversation_id: conversationId,
           client_msg_id: crypto.randomUUID(),
@@ -2130,7 +2260,19 @@ serve(async (req) => {
           content: response,
           status: 'delivered'
         }
-      ]);
+      ];
+      if (!firstContact) {
+        messageRows.unshift({
+          conversation_id: conversationId,
+          client_msg_id: crypto.randomUUID(),
+          user_id: userId,
+          session_id: sessionId,
+          role: 'user',
+          content: message,
+          status: 'delivered'
+        });
+      }
+      await supabase.from('conversation_messages').insert(messageRows);
       console.log('✅ Dual-write: Oracle messages stored in conversation_messages');
     } catch (dualWriteError) {
       console.error('⚠️ Dual-write to conversation_messages failed (non-blocking):', dualWriteError);
@@ -2139,6 +2281,7 @@ serve(async (req) => {
     // FUSION STEP 3: Prepare immediate response (background tasks will run AFTER this is sent)
     const immediateResponse = new Response(JSON.stringify({
       response,
+      attachments: cardAttachments,
       quality: 0.85,
       semanticChunks,
       structuredFacts,
