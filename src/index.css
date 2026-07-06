@@ -282,10 +282,12 @@
 .presence-frame {
   position: relative;
   border-radius: 9999px;
-  border: 1px solid hsl(var(--soul-purple) / 0.22);
+  border: 2px solid hsl(var(--soul-purple) / 0.28);
   transition: border-color 400ms ease;
   isolation: isolate;
 }
+
+
 
 /* idle — near-subliminal breath */
 .presence-frame[data-presence="idle"] {
@@ -293,9 +295,10 @@
 }
 
 @keyframes presence-breath {
-  0%, 100% { border-color: hsl(var(--soul-purple) / 0.15); }
-  50%      { border-color: hsl(var(--soul-purple) / 0.30); }
+  0%, 100% { border-color: hsl(var(--soul-purple) / 0.22); }
+  50%      { border-color: hsl(var(--soul-purple) / 0.42); }
 }
+
 
 /* thinking — slow gradient sweep along the border */
 .presence-frame[data-presence="thinking"] {
@@ -304,9 +307,9 @@
 .presence-frame[data-presence="thinking"]::before {
   content: "";
   position: absolute;
-  inset: -1px;
+  inset: -2px;
   border-radius: inherit;
-  padding: 1px;
+  padding: 2px;
   background: linear-gradient(
     90deg,
     hsl(var(--soul-purple) / 0.55),
@@ -324,6 +327,7 @@
   z-index: 0;
 }
 
+
 @keyframes presence-sweep {
   0%   { background-position:   0% 50%; }
   100% { background-position: 200% 50%; }
@@ -336,12 +340,13 @@
 
 @keyframes presence-pulse {
   0%   { box-shadow: 0 0 0 0    hsl(var(--soul-purple) / 0.00);
-         border-color: hsl(var(--soul-purple) / 0.30); }
-  40%  { box-shadow: 0 0 16px 4px hsl(var(--soul-purple) / 0.30);
-         border-color: hsl(var(--soul-purple) / 0.55); }
+         border-color: hsl(var(--soul-purple) / 0.35); }
+  40%  { box-shadow: 0 0 20px 5px hsl(var(--soul-purple) / 0.35);
+         border-color: hsl(var(--soul-purple) / 0.65); }
   100% { box-shadow: 0 0 0 0    hsl(var(--soul-purple) / 0.00);
-         border-color: hsl(var(--soul-purple) / 0.22); }
+         border-color: hsl(var(--soul-purple) / 0.28); }
 }
+
 
 @media (prefers-reduced-motion: reduce) {
   .presence-frame,
