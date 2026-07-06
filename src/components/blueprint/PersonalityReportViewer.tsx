@@ -188,60 +188,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     }
   };
 
-  const generateHermeticReport = async (forceRegenerate = false) => {
-    if (!user) return;
-    
-    setGenerating(true);
-    setError(null);
-    
-    try {
-      console.log('🌟 Starting Backend Hermetic Report generation...', { forceRegenerate });
-      
-      // First, get the user's blueprint
-      const blueprintResult = await blueprintService.getActiveBlueprintData();
-      
-      if (blueprintResult.error || !blueprintResult.data) {
-        throw new Error('No active blueprint found. Please create your blueprint first.');
-      }
-      
-      console.log('📋 Blueprint found, creating backend job...');
-      
-      // Create backend job instead of client-side generation
-      const { data: jobData, error: jobError } = await supabase.functions.invoke('hermetic-job-creator', {
-        body: {
-          user_id: user.id,
-          blueprint_data: blueprintResult.data,
-          language: language
-        }
-      });
-
-      if (jobError || !jobData?.job_id) {
-        console.error('Failed to create hermetic job:', jobError);
-        throw new Error('Failed to start report generation. Please try again.');
-      }
-
-      const jobId = jobData.job_id;
-      console.log(`🚀 Created backend job: ${jobId}`);
-      
-      toast({
-        title: "Report Generation Started",
-        description: "Watch the floating orb's teal inner ring for real-time progress as your comprehensive hermetic report is being generated.",
-      });
-      
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to generate Hermetic personality report';
-      setError(errorMessage);
-      toast({
-        title: t('report.generationFailed'),
-        description: errorMessage,
-        variant: "destructive"
-      });
-    } finally {
-      // Always reset generating state, even if job creation succeeds
-      // The actual generation progress is tracked separately by the orb
-      setGenerating(false);
-    }
-  };
+  // Hermetic report generation is now auto-triggered at onboarding and is
+  // never a user action. Do not add a hermetic trigger button here.
 
   const handleRecoveryAttempt = async () => {
     try {
