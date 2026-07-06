@@ -1,66 +1,122 @@
-## Scope
-Three coordinated changes: (1) restore first-contact durability across navigation, (2) hide the hermetic report as a user action while keeping it running silently, (3) add idempotency guards on both report services.
+# Phase 1 — Reflex & Hands
+
+Scope: five surgical wirings in `companion-oracle-conversation` + `openai-agent`. No new pages, no new engines, no schema changes. Each item ships independently, verifiable in one fresh-account run.
+
+Order matters — 1 and 2 are the hands (they unblock the DreamCard slice); 3 is the reflex; 4 and 5 are context injections that arm the charters already in the prompt.
 
 ---
 
-### 1. Fix 1 — First-contact message surviving navigation
+## 1. Rewire `decompose_goal` → real `generatePlanBranches`
 
-`src/hooks/use-hacs-conversation.ts` currently appends the opening turn optimistically via `setMessages`. The edge function already persists the assistant row into `conversation_messages`, but the client uses in-memory state, so leaving `/companion` and returning shows an empty thread until the hydrate query returns (and often shows nothing if the hydrate ran before insert).
+**Bug found during exploration:** the oracle currently calls
+```
+supabase.functions.invoke('openai-agent', { body: { action: 'decompose_goal', ... } })
+```
+but `openai-agent/index.ts` (line 531/542) reads only `{ messages, model, temperature, tools, max_tokens }` from the request body — there is no `action` router. The invoke silently returns `null`, `milestones` falls through to `[]`, and every DreamCard is created empty. Separately, `generatePlanBranches` (line 104) currently returns literal placeholder strings ("Branch A", "Step 1A") — a stub, not a real decomposition.
 
-Change (as previously specified):
-- After a successful `initiateFirstContact` response, re-run the existing conversation-history hydrate (same call the adapter uses on mount) instead of only pushing an in-memory message, so the opening comes back from `conversation_messages` on every subsequent mount.
-- Keep the optimistic `setMessages` append for immediate paint, but reconcile by `client_msg_id` / server id when hydrate resolves (dedupe by `id` prefix `oracle_first_` vs server id).
-- Keep the `?from=onboarding` guard in `src/pages/Coach.tsx` — no behavioral change there.
+Fix (both files):
 
-Files: `src/hooks/use-hacs-conversation.ts` only.
+- **`supabase/functions/openai-agent/index.ts`** — add an `action` branch at the top of `serve(...)` before the existing chat-completion path:
+  - If `body.action === 'decompose_goal'`, call a new real implementation `decomposeGoalReal({ title, description, timeframe, category, userId })` that:
+    - Loads the user's blueprint + hermetic structured intelligence (execution_bias, temporal_biology, identity_constructs).
+    - Calls Azure via existing `callChatCompletion` with a strict system prompt: "Return JSON `{ milestones: [{ title, description, target_date_offset_days, order }] }`, 4–6 items, each milestone concrete and time-bounded, sequenced toward the user's stated goal verbatim, personalised by the provided blueprint slice."
+    - Parses JSON, validates shape, returns `{ milestones }`.
+  - Return `{ milestones }` as JSON; keep existing tool-loop path untouched for other callers.
+- **`generatePlanBranches` stub** stays untouched for now (it's used by other tool paths); we do not need multi-branch generation for the Phase 1 slice — one solid decomposition beats two fake ones. Rewiring `generatePlanBranches` to real logic is deferred to Phase 3 (orchestrator plan chain).
+- **`companion-oracle-conversation/index.ts`** — no signature change to the invoke, but add a hard failure path: if `dec?.milestones?.length < 3`, do NOT insert the goal row; instead return a tool result `{ ok: false, reason: 'decomposition_failed' }` so the model narrates a retry rather than creating an empty card.
 
----
-
-### 2. Rapport tab — remove hermetic user action, auto-run standard at onboarding
-
-`src/components/blueprint/PersonalityReportViewer.tsx`
-- Remove the "Hermetisch Rapport (10.000+ woorden)" button and its two render sites (lines ~501 and ~761), plus the `generateHermeticReport` function (lines 191–244) and the recovery/purge/regenerate buttons that exist only to service that flow (`handleRecoveryAttempt`, the force-regenerate branch at ~378).
-- Keep the "Standaard Rapport" button and `generateReport(...)` untouched — it remains as regenerate/fallback.
-- If `hermeticStatus.isGenerating` (from `useHermeticReportStatus`), render a single passive line ("Deep synthesis in progress…") in muted text. No progress bar, no percentage, no button, no toast. Nothing else surfaces hermetic state in this tab.
-- Leave hermetic viewing code (`hermeticReport` state, `HermeticInsightTester`, etc.) alone — reading an existing hermetic report is not a user *trigger*, so it stays.
-
-`src/pages/OnboardingFlow.tsx` (around line 181)
-- Directly under the existing fire-and-forget `hermeticPersonalityReportService.generateHermeticReport(...)`, add a sibling fire-and-forget call:
-  ```
-  aiPersonalityReportService
-    .generatePersonalityReport(data, language)
-    .catch((e) => console.warn("Standard report generation deferred:", e));
-  ```
-- Import `aiPersonalityReportService` from `@/services/ai-personality-report-service`. No await, no UI change, no toast — same non-blocking pattern as the hermetic call.
+Verification: fresh-account "gtg" flow produces a DreamCard whose milestones are real and personalised.
 
 ---
 
-### 3. Idempotency guards on both report services
+## 2. Goal-title fidelity guard
 
-**Standard** — `src/services/ai-personality-report-service.ts`, at the top of `generatePersonalityReport`:
-- Resolve `userId` from `blueprint.user_meta?.user_id || blueprint.user_id`.
-- Call the existing `getStoredReport(userId)`; if a report exists AND `generated_at` is within the last 24h, log `⏭️ Standard report skip: fresh report exists (…)` and return `{ success: true, report: existing }`.
-- No in-flight table exists for standard reports (it's a synchronous edge call), so freshness-check is the only guard needed.
+The `decompose_goal` tool description already says "USER'S OWN stated goal verbatim." Reinforce structurally so the model can't reframe:
 
-**Hermetic** — `supabase/functions/hermetic-job-creator/index.ts` already skips when a `pending`/`processing` job exists for the user. Extend the same guard:
-- Before creating a job, also query `personality_reports` for `user_id = user_id AND blueprint_version <> '1.0'` (hermetic rows) ordered by `generated_at desc limit 1`. If one exists within the last 7 days, log `⏭️ Hermetic job skip: fresh report exists (…)` and return `{ message: 'Fresh report exists', skipped: true }` with 200 — no job created.
-- Keep the existing active-job short-circuit; just add the fresh-report short-circuit above it. Log both skip reasons distinctly.
+- **`companion-oracle-conversation/index.ts`** in `runCompanionTool('decompose_goal', args)`:
+  - Before invoking openai-agent, scan the last 6 user turns (already in scope) for the longest quoted or numeric goal phrase (e.g. "€1,000,000", "earn a million", "quit my job by June").
+  - If `args.title` shares < 60% token overlap with any such phrase and the user's raw text contains a clear goal noun, rewrite `args.title` to the user's phrase and log `⚠️ goal-title repaired: "<model>" → "<user>"`.
+  - Never block; always proceed with the repaired title.
+- Add one line to the tool description in the Voice/Action charter section of the system prompt: "Do not reframe, translate, or abstract the user's stated goal — copy their words."
 
-No schema changes. No new tables. No new edge functions.
+Verification: user says "I want to earn €1,000,000" → DreamCard title is exactly that, not "Achieve financial freedom."
 
 ---
 
-### Technical details
+## 3. ACS confirmation cluster → `tool_choice: 'required'`
 
-- `useHermeticReportStatus` already exposes `isGenerating` — reuse verbatim for the passive one-liner; no new state.
-- `aiPersonalityReportService.generatePersonalityReport` returns quickly enough for fire-and-forget in onboarding; failures are logged, never toasted, never blocking.
-- Hermetic-side freshness threshold is 7 days (a 10k-word regeneration is expensive); standard-side is 24h (cheap, but avoid double-dispatch on rapid navigation).
-- No changes to: `use-subconscious-orb`, `PresenceFrame`, edge function `companion-oracle-conversation`, any hermetic orchestrator internals.
+`detectConversationState(...)` at line 1148 already computes `detectionResult.cluster`. Currently the tool loop always uses `tool_choice: 'auto'`, so the model can keep talking about a goal instead of calling `decompose_goal` even after the user confirms.
 
-### Verification
+- **`companion-oracle-conversation/index.ts`** at line 2114 (initial `callChat`) and 2138 (loop `callChat`):
+  - Compute `const shouldForceTool = conversationState?.detectionResult?.cluster === 'confirmation' && toolRounds === 0;`
+  - First call: `tool_choice: shouldForceTool ? 'required' : 'auto'`.
+  - Loop: keep existing `toolRounds >= 2 ? 'none' : 'auto'` — never re-force after round 0.
+- Log the decision: `🎯 TOOL CHOICE: required (cluster=confirmation)` vs `auto`.
 
-- Build passes.
-- `/blueprint` Rapport tab: no hermetic button anywhere; standard button present; if hermetic job is running, one muted "Deep synthesis in progress…" line.
-- Fresh onboarding completion → network shows two fire-and-forget invocations (`hermetic-job-creator` and `generate-personality-report`), user is not blocked.
-- Rerunning onboarding within 24h logs the standard skip; within 7 days logs the hermetic skip; no duplicate jobs/rows.
-- Companion first-contact message present after navigating away and back.
+Guardrail: only force when a decompose-eligible goal is already in recent context. If no user-stated goal noun appears in the last 4 turns, keep `'auto'` even on confirmation — otherwise "yes" to a non-goal question would misfire the tool.
+
+Verification: user states goal → oracle asks "want me to break this down?" → user "yes" → oracle turn contains the tool call, not another question.
+
+---
+
+## 4. Structured intelligence state spine (≤400 tokens/turn)
+
+`hermetic_structured_intelligence` holds the 13 typed dimensions. Currently the oracle uses the free-form hermetic report but not the structured slice per turn.
+
+- **`companion-oracle-conversation/index.ts`** — new helper `buildStructuredIntelligenceSpine(userId)` called once alongside blueprint fetch (~line 1140):
+  - Select a fixed subset: `execution_bias` (2 fields), `behavioral_triggers.avoidance_patterns` (top 3), `temporal_biology.cognitive_peaks`, `identity_constructs.core_narratives[0]`, `crisis_handling.bounce_back_rituals[0]`.
+  - Serialise as a single system message block ≤ ~350 tokens (hard-cap by trimming arrays), prefixed `USER STATE SPINE (structured):`.
+  - Insert into `completionParams.messages` immediately after the main system prompt and before conversation history — same slot every turn so caching is stable.
+  - Fail-soft: if row missing, skip the block entirely (no fallback text).
+
+Verification: log line `📐 SPINE: ~N tokens injected` on every turn; oracle responses reference concrete personal patterns rather than generic ones.
+
+---
+
+## 5. Shadow-detector cue injection (arms Voice Charter rule 5)
+
+`ConversationShadowDetector` already exists at `supabase/functions/_shared/conversation-shadow-detector.ts` and is used by `openai-agent`. The oracle doesn't call it, so loaded disclosures pass without a confrontation cue.
+
+- **`companion-oracle-conversation/index.ts`** — after `detectConversationState(...)` and before building the final system message:
+  - Import `ConversationShadowDetector` from `_shared/conversation-shadow-detector.ts`.
+  - Call a lightweight synchronous method (add one if only async batch methods exist: `detectFromMessage(message: string): { cue: string } | null`) that pattern-matches the current user turn only — no DB reads, keep < 20ms.
+  - If a projection / limiting-belief / resistance signal fires, append ONE line to the system prompt: `SHADOW CUE (do not name it, respond to it): <cue>` — e.g. "user is externalising blame; confront with care."
+  - Never surface the cue in output; it only re-weights the response. If nothing fires, inject nothing.
+- Reuse existing patterns from `ConversationShadowDetector`; do not duplicate regex.
+
+Verification: user says "everyone always sabotages my plans" → oracle response gently reflects the pattern instead of validating it. Log line `🩶 SHADOW CUE: <type>` when triggered.
+
+---
+
+## Files touched
+
+- `supabase/functions/companion-oracle-conversation/index.ts` — items 1 (fail-path), 2, 3, 4, 5
+- `supabase/functions/openai-agent/index.ts` — item 1 (new `action` branch + `decomposeGoalReal`)
+- `supabase/functions/_shared/conversation-shadow-detector.ts` — item 5 (add `detectFromMessage` sync helper only if missing)
+
+No frontend changes. No schema changes. No new secrets. Both edge functions must be deployed after edit; deploy timestamps will be reported.
+
+---
+
+## Out of scope for Phase 1 (deferred, do not touch)
+
+- `evaluatePlanAlignment` narration wrap around DreamCard (Phase 3, orchestrator chain).
+- Multi-branch decomposition (Phase 3).
+- `start_task_session` tool and FocusCard (Phase 2).
+- Today pin, PIE day-2 proactive message (Phase 2).
+- Anything under `src/` — no UI work this phase.
+
+## Verification recipe (one fresh-account run)
+
+1. Signup → 3-screen onboarding → reveal → first contact fires.
+2. User: "I want to earn €1,000,000 in the next 3 years."
+3. Oracle asks the decompose question.
+4. User: "yes go for it".
+5. Assert (all in one turn):
+   - Console: `🎯 TOOL CHOICE: required (cluster=confirmation)`.
+   - Console: `📐 SPINE: ~N tokens injected`.
+   - Network: `openai-agent` invoked with `action: 'decompose_goal'`, returns ≥ 4 milestones.
+   - DreamCard rendered inline; title reads exactly `Earn €1,000,000`; milestones are concrete and personalised.
+6. User: "gtg" → open loop closes cleanly, one earned question.
+
+If any assertion fails, do not proceed to Phase 2.

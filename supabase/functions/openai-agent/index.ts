@@ -528,6 +528,135 @@ async function generatePracticalApplications(args: any): Promise<any> {
   };
 }
 
+// ------------------------------------------------------------------
+// PHASE 1: Real goal decomposition. Called by companion-oracle-conversation
+// via { action: 'decompose_goal', ... }. Personalises milestones using the
+// user's blueprint + structured intelligence slice. Returns { milestones }.
+// ------------------------------------------------------------------
+async function handleDecomposeGoalAction(args: any): Promise<Response> {
+  const { title, description, timeframe, category, userId } = args || {};
+  console.log('🎯 decompose_goal: start', { userId, title, timeframe });
+
+  try {
+    if (!userId || !title) {
+      return new Response(
+        JSON.stringify({ milestones: [], error: 'missing_userId_or_title' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.7.1');
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    const [bpRes, siRes] = await Promise.all([
+      supabase.from('user_blueprints').select('blueprint').eq('user_id', userId).eq('is_active', true).maybeSingle(),
+      supabase.from('hermetic_structured_intelligence')
+        .select('execution_bias, temporal_biology, identity_constructs, behavioral_triggers')
+        .eq('user_id', userId).maybeSingle(),
+    ]);
+    const bp: any = bpRes?.data?.blueprint || {};
+    const si: any = siRes?.data || {};
+
+    const persona = {
+      mbti: bp?.cognition_mbti?.type || bp?.user_meta?.personality?.likelyType || 'Unknown',
+      hd: bp?.energy_strategy_human_design?.type || 'Unknown',
+      sun: bp?.archetype_western?.sun_sign || 'Unknown',
+      momentum: (si?.execution_bias?.momentum_triggers || []).slice(0, 3),
+      completion: (si?.execution_bias?.completion_patterns || []).slice(0, 2),
+      peaks: (si?.temporal_biology?.cognitive_peaks || []).slice(0, 3),
+      avoidance: (si?.behavioral_triggers?.avoidance_patterns || []).slice(0, 3),
+      narrative: si?.identity_constructs?.core_narratives?.[0] || null,
+    };
+
+    const sys = [
+      'You decompose a user\'s stated goal into 4-6 concrete, sequenced milestones.',
+      'Return ONLY strict JSON of this shape: {"milestones":[{"title":"...","description":"...","target_date_offset_days":N,"order":I}, ...]}',
+      '- title: verb-led, ≤60 chars, concrete outcome (not a task list).',
+      '- description: one sentence, why this milestone unlocks the next.',
+      '- target_date_offset_days: integer days from today, strictly increasing across the sequence, respecting the timeframe.',
+      '- order: 1-based index.',
+      'Personalise sequencing and framing to the provided execution profile.',
+      'Do NOT reframe, translate, or abstract the goal title — treat the user\'s title as verbatim ground truth.',
+      'Do NOT include markdown, prose, or code fences. JSON only.',
+    ].join('\n');
+
+    const userPrompt = [
+      `Goal (verbatim from user): ${title}`,
+      `Description: ${description || '(none)'}`,
+      `Timeframe: ${timeframe || 'unspecified'}`,
+      `Category: ${category || 'personal'}`,
+      '',
+      'Execution profile:',
+      `- MBTI: ${persona.mbti}`,
+      `- Human Design: ${persona.hd}`,
+      `- Sun sign: ${persona.sun}`,
+      `- Momentum triggers: ${persona.momentum.join(', ') || 'unknown'}`,
+      `- Completion patterns: ${persona.completion.join(', ') || 'unknown'}`,
+      `- Cognitive peaks: ${persona.peaks.join(', ') || 'unknown'}`,
+      `- Avoidance patterns: ${persona.avoidance.join(', ') || 'unknown'}`,
+      `- Core narrative: ${persona.narrative || 'unknown'}`,
+      '',
+      'Return 4-6 milestones as strict JSON.',
+    ].join('\n');
+
+    const resp = await callChatCompletion({
+      messages: [
+        { role: 'system', content: sys },
+        { role: 'user', content: userPrompt },
+      ],
+      model: 'gpt-4.1-mini-2025-04-14',
+      max_tokens: 1500,
+    });
+
+    if (!resp.ok) {
+      const errTxt = await resp.text();
+      console.error('❌ decompose_goal: model call failed', resp.status, errTxt.slice(0, 500));
+      return new Response(
+        JSON.stringify({ milestones: [], error: 'model_error', status: resp.status }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const data = await resp.json();
+    let content: string = data?.choices?.[0]?.message?.content || '';
+    content = content.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
+
+    let parsed: any = null;
+    try { parsed = JSON.parse(content); }
+    catch {
+      const m = content.match(/\{[\s\S]*\}/);
+      if (m) { try { parsed = JSON.parse(m[0]); } catch {} }
+    }
+
+    const raw = Array.isArray(parsed?.milestones) ? parsed.milestones : [];
+    const milestones = raw
+      .filter((m: any) => m && typeof m.title === 'string' && m.title.trim().length > 0)
+      .slice(0, 6)
+      .map((m: any, i: number) => ({
+        title: String(m.title).slice(0, 120),
+        description: typeof m.description === 'string' ? m.description.slice(0, 400) : '',
+        target_date_offset_days: Number.isFinite(m.target_date_offset_days) ? Math.max(1, Math.round(m.target_date_offset_days)) : (i + 1) * 30,
+        order: Number.isFinite(m.order) ? m.order : i + 1,
+        completed: false,
+      }));
+
+    console.log(`✅ decompose_goal: produced ${milestones.length} milestones for user ${userId}`);
+    return new Response(
+      JSON.stringify({ milestones }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (e) {
+    console.error('❌ decompose_goal failed:', e);
+    return new Response(
+      JSON.stringify({ milestones: [], error: String(e) }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -539,7 +668,20 @@ serve(async (req) => {
       throw new Error('No AI API key configured');
     }
 
-    const { messages, model = 'gpt-4.1-mini-2025-04-14', temperature = 0.7, tools = null, max_tokens = 4000 } = await req.json();
+    const body = await req.json();
+
+    // ------------------------------------------------------------------
+    // ACTION ROUTER — Phase 1 wiring
+    // Callers (e.g. companion-oracle-conversation) can invoke this fn with
+    // { action: 'decompose_goal', title, description, timeframe, category, userId }
+    // and receive { milestones: [...] }. This bypasses the chat-completion
+    // path below entirely.
+    // ------------------------------------------------------------------
+    if (body && typeof body === 'object' && body.action === 'decompose_goal') {
+      return await handleDecomposeGoalAction(body);
+    }
+
+    const { messages, model = 'gpt-4.1-mini-2025-04-14', temperature = 0.7, tools = null, max_tokens = 4000 } = body;
     
     console.log('🔧 Tools provided:', tools?.length || 0);
     console.log('📝 Messages count:', messages?.length);
