@@ -2008,6 +2008,25 @@ serve(async (req) => {
       }
     ];
 
+    // PHASE 1: structured intelligence state spine (≤ ~350 tokens)
+    const spine = await buildStructuredIntelligenceSpine(supabase, userId);
+    if (spine) {
+      messages.push({ role: 'system', content: spine });
+      console.log(`📐 SPINE: ~${Math.round(spine.length / 4)} tokens injected`);
+    } else {
+      console.log('📐 SPINE: none (no structured intelligence row)');
+    }
+
+    // PHASE 1: per-turn shadow cue (one line, do not surface)
+    const shadowCue = detectShadowCueSync(message);
+    if (shadowCue) {
+      messages.push({
+        role: 'system',
+        content: `SHADOW CUE (do not name it, respond to it): ${shadowCue.cue}`,
+      });
+      console.log(`🩶 SHADOW CUE: ${shadowCue.type}`);
+    }
+
     // Add conversation history if available (last 5 exchanges to stay within token limits)
     if (finalHistory && Array.isArray(finalHistory) && finalHistory.length > 0) {
       const recentHistory = finalHistory.slice(-10); // Last 10 messages (5 exchanges)
