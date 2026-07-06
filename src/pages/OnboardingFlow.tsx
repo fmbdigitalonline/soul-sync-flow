@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { blueprintService, BlueprintData } from "@/services/blueprint-service";
 import { supabase } from "@/integrations/supabase/client";
+import { hermeticPersonalityReportService } from "@/services/hermetic-personality-report-service";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
  * OnboardingFlow — the 90-second path from birth data to first contact.
@@ -45,6 +47,7 @@ const OnboardingFlow: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { language } = useLanguage();
 
   const [phase, setPhase] = useState<Phase>("form");
 
@@ -172,6 +175,12 @@ const OnboardingFlow: React.FC = () => {
             body: { userId: user.id, forceReprocess: true },
           })
           .catch((e) => console.warn("Oracle warm-up deferred:", e));
+
+        // Kick off the hermetic deep-report in the background (same call the
+        // old "Activate Steward" button used).
+        hermeticPersonalityReportService
+          .generateHermeticReport(data, language)
+          .catch((e) => console.warn("Hermetic report generation deferred:", e));
       }
 
       if (isPartial) {
