@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useOrbPresence } from "@/hooks/use-orb-presence";
 import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
 import { motion, AnimatePresence } from "framer-motion";
+import { PresenceFrame, PresenceState } from "@/components/companion/PresenceFrame";
 
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
@@ -28,6 +29,7 @@ interface HACSChatInterfaceProps {
   onStopStreaming?: () => void;
   onFeedback?: (messageId: string, isPositive: boolean) => void;
   onAddOptimisticMessage?: (message: ConversationMessage) => void;
+  presenceState?: PresenceState;
 }
 
 export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
@@ -39,6 +41,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   onStopStreaming,
   onFeedback,
   onAddOptimisticMessage,
+  presenceState = "idle",
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedSentences, setSelectedSentences] = useState<Record<string, string | null>>({});
