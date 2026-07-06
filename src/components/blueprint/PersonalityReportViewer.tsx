@@ -322,11 +322,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   );
 
   const handleRegenerate = () => {
-    if (reportType === 'hermetic') {
-      generateHermeticReport(true);
-    } else {
-      generateReport(true);
-    }
+    // Hermetic is never a user action; only standard is regeneratable here.
+    generateReport(true);
   };
 
   // Helper function to safely render content with smart extraction
@@ -445,25 +442,12 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                     </>
                   )}
                 </Button>
-                <Button 
-                  onClick={() => generateHermeticReport(false)} 
-                  disabled={generating}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white w-full sm:w-auto"
-                  size={isMobile ? "default" : "default"}
-                >
-                  {generating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creating Job...
-                    </>
-                  ) : (
-                    <>
-                      <Star className="h-4 w-4 mr-2" />
-                      {t('report.hermeticReportLong')}
-                    </>
-                  )}
-                </Button>
               </div>
+              {hermeticStatus?.isGenerating && (
+                <p className="text-xs text-muted-foreground text-center italic">
+                  Deep synthesis in progress…
+                </p>
+              )}
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Button onClick={handleRefresh} variant="outline" className="w-full sm:w-auto">
                   <RefreshCw className="h-4 w-4 mr-2" />
@@ -687,53 +671,10 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                 Generate Standard
               </Button>
             )}
-            {!hermeticReport && hasHermeticAccess && (
-              hermeticStatus.hasZombieJob ? (
-                <div className="flex flex-col gap-2">
-                  <div className="text-xs text-warning flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    Stuck job detected
-                  </div>
-                  <Button 
-                    onClick={() => hermeticStatus.cleanupZombieJob?.(hermeticStatus.zombieJobInfo?.id)}
-                    variant="outline"
-                    size="sm"
-                    className="border-warning text-warning hover:bg-warning/10"
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Clean Up
-                  </Button>
-                </div>
-              ) : (
-                <Button 
-                  onClick={() => generateHermeticReport(false)} 
-                  disabled={generating}
-                  variant="outline"
-                  size="sm"
-                  className="border-purple-200 text-purple-600 hover:bg-purple-50"
-                >
-                  {generating ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <Star className="h-4 w-4 mr-2" />
-                  )}
-                  Generate Hermetic
-                </Button>
-              )
-            )}
-            {!hermeticReport && !hasHermeticAccess && (
-              <Button 
-                disabled
-                variant="outline"
-                size="sm"
-                className="opacity-50 cursor-not-allowed border-gray-300 text-gray-400"
-              >
-                <Star className="h-4 w-4 mr-2" />
-                Generate Hermetic
-                <Badge variant="outline" className="ml-2 bg-gray-100 text-gray-500 border-gray-300">
-                  Beperkte Toegang
-                </Badge>
-              </Button>
+            {!hermeticReport && hasHermeticAccess && hermeticStatus?.isGenerating && (
+              <span className="text-xs text-muted-foreground italic self-center">
+                Deep synthesis in progress…
+              </span>
             )}
             
             {/* Standalone Purge Stuck Jobs Button - Dev Only */}
