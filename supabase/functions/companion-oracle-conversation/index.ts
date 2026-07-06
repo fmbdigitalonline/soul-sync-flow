@@ -2282,20 +2282,35 @@ serve(async (req) => {
     const acsDetection = conversationState?.detectionResult;
     const acsConfirmation = acsDetection?.cluster === 'decision' && acsDetection?.subState === 'commitment_signal';
     const shortAffirmative = /^\s*(yes|yeah|yep|yup|sure|ok(ay)?|do it|go for it|please do|break it down|absolutely|definitely|ja|graag|zeker|prima|doe (het|maar)|let'?s (go|do it))[\s!.]*$/i.test(message);
+    const planRequest = /\b(plan|planning|actie(plan)?|stappen|steps?|roadmap|breakdown|break\s+(it|this|that)\s+down|decompose|help\s+me\s+(improve|do|plan|start|begin|verbeteren)|need\s+(a\s+)?plan|geef.*plan|maak.*plan|hoe\s+(begin|start)\s+ik)\b/i.test(message);
     const goalNounRegex = /(€|\$|£)\s?[\d.,]+|\b\d[\d.,]*\s?(k|m|mln|million|miljoen)\b|\b(goal|dream|doel|droom|earn|verdien(en)?|save|sparen|quit|launch|build|become|per\s+(month|maand|year|jaar))\b/i;
+    const abstractGoalRegex = /\b(improve|change|fix|solve|close\s+(this|that|the)\s+chapter|move\s+(on|forward|past)|let\s+go(\s+of)?|stop|start\s+(doing|being)|shift|transform|heal|grow|verbeter(en)?|veranderen|oplossen|loslaten|afronden|verder|beginnen\s+met)\b/i;
     const recentUserTurns = (finalHistory || [])
       .filter((m: any) => m.role === 'user' && typeof m.content === 'string')
       .slice(-4)
       .map((m: any) => m.content as string);
-    const goalInRecentContext = recentUserTurns.some(t => goalNounRegex.test(t));
-    const shouldForceTool = (acsConfirmation || shortAffirmative) && goalInRecentContext;
+    // Also consider the current message itself for goal context (a
+    // plan-request often carries the goal noun in the same turn).
+    const goalContextTexts = [...recentUserTurns, message];
+    const concreteGoalHit = goalContextTexts.some(t => goalNounRegex.test(t));
+    const abstractGoalHit = goalContextTexts.some(t => abstractGoalRegex.test(t));
+    const goalInRecentContext = concreteGoalHit || abstractGoalHit;
+    const shouldForceTool = (acsConfirmation || shortAffirmative || planRequest) && goalInRecentContext;
+    const trigger = acsConfirmation ? 'acsConfirmation'
+                   : planRequest ? 'planRequest'
+                   : shortAffirmative ? 'shortAffirmative'
+                   : 'none';
+    const goalMatch = concreteGoalHit ? 'concrete' : abstractGoalHit ? 'abstract' : 'none';
 
     console.log(shouldForceTool
-      ? '🎯 TOOL CHOICE: required (cluster=confirmation)'
+      ? '🎯 TOOL CHOICE: required'
       : '🎯 TOOL CHOICE: auto', {
+      trigger,
       acsCluster: acsDetection?.cluster || 'none',
       acsSubState: acsDetection?.subState || 'none',
       shortAffirmative,
+      planRequest,
+      goalMatch,
       goalInRecentContext
     });
 
