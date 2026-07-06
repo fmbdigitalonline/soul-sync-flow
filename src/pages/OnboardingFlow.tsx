@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { blueprintService, BlueprintData } from "@/services/blueprint-service";
 import { supabase } from "@/integrations/supabase/client";
 import { hermeticPersonalityReportService } from "@/services/hermetic-personality-report-service";
+import { aiPersonalityReportService } from "@/services/ai-personality-report-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
@@ -181,6 +182,12 @@ const OnboardingFlow: React.FC = () => {
         hermeticPersonalityReportService
           .generateHermeticReport(data, language)
           .catch((e) => console.warn("Hermetic report generation deferred:", e));
+
+        // Also kick off the user-facing standard personality report so the
+        // Rapport tab is typically ready by the time the user gets there.
+        aiPersonalityReportService
+          .generatePersonalityReport(data, language)
+          .catch((e) => console.warn("Standard report generation deferred:", e));
       }
 
       if (isPartial) {
