@@ -306,7 +306,10 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
         style={isMobile ? { bottom: "calc(84px + env(safe-area-inset-bottom))" } : undefined}
       >
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 bg-card border border-border/60 rounded-full shadow-lg px-3 py-2">
+          <PresenceFrame
+            state={presenceState}
+            className="flex items-center gap-2 bg-card shadow-lg px-3 py-2"
+          >
             <Input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
@@ -329,7 +332,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                 <SendHorizontal className="h-5 w-5" />
               )}
             </Button>
-          </div>
+          </PresenceFrame>
         </div>
       </div>
     </div>
