@@ -47,6 +47,7 @@ const OnboardingFlow: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { language } = useLanguage();
 
   const [phase, setPhase] = useState<Phase>("form");
 
