@@ -30,6 +30,27 @@ class AIPersonalityReportService {
   async generatePersonalityReport(blueprint: BlueprintData, language: string = 'en'): Promise<{ success: boolean; report?: PersonalityReport; quotes?: any[]; error?: string }> {
     try {
       console.log('🎭 Generating comprehensive personality report with personalized quotes...');
+
+      // Idempotency guard: if a fresh standard report already exists for this
+      // user (< 24h old), skip dispatch and return the existing report. Prevents
+      // duplicate generations from onboarding auto-trigger + Rapport tab button.
+      const guardUserId = (blueprint as any)?.user_meta?.user_id || (blueprint as any)?.user_id;
+      if (guardUserId) {
+        try {
+          const existing = await this.getStoredReport(guardUserId);
+          if (existing.success && existing.report) {
+            const ageMs = Date.now() - new Date(existing.report.generated_at).getTime();
+            const freshWindowMs = 24 * 60 * 60 * 1000;
+            if (ageMs < freshWindowMs) {
+              console.log(`⏭️ Standard report skip: fresh report exists (age=${Math.round(ageMs / 60000)}m, id=${existing.report.id})`);
+              return { success: true, report: existing.report, quotes: [] };
+            }
+          }
+        } catch (guardErr) {
+          console.warn('Standard report idempotency check failed (continuing):', guardErr);
+        }
+      }
+
       console.log('📋 Blueprint data structure:', {
         blueprintId: blueprint.id,
         hasUserMeta: !!blueprint.user_meta,

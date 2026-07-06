@@ -950,13 +950,21 @@ export const useHACSConversation = () => {
         isStreaming: false
       };
       setMessages(prev => (prev.length === 0 ? [opening] : prev));
+      // Persist the opening turn into conversation_memory so it survives
+      // navigation away from /companion (Fix 1). Edge function only writes
+      // to conversation_messages; the hydrate here reads conversation_memory.
+      try {
+        await saveConversation([opening]);
+      } catch (persistErr) {
+        console.warn('First-contact persist deferred:', persistErr);
+      }
     } catch (err) {
       console.error('First contact error (companion stays silent, user can still type):', err);
       firstContactFiredRef.current = false; // allow retry on next mount
     } finally {
       setIsLoading(false);
     }
-  }, [user, isLoading, currentSessionId]);
+  }, [user, isLoading, currentSessionId, saveConversation]);
 
   return {
     messages,
