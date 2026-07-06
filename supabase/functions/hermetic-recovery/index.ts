@@ -37,7 +37,43 @@ serve(async (req) => {
     if (jobError || !job) {
       throw new Error(`Job not found: ${jobError?.message}`);
     }
-    
+
+    // ── STALLED-JOB RESUMER ────────────────────────────────────────
+    // If the relay chain died mid-flight, hermetic-recovery doubles as
+    // the server-side resumer: re-invoke the orchestrator with the same
+    // job_id. Guarded so we don't stampede a live hop.
+    if (job.status === 'processing' || job.status === 'pending') {
+      const heartbeatMs = job.last_heartbeat ? Date.now() - new Date(job.last_heartbeat).getTime() : Infinity;
+      const LIVE_WINDOW_MS = 30_000;   // another hop wrote a heartbeat recently → skip
+      const STALL_WINDOW_MS = 90_000;  // no heartbeat in 90s → resume
+      if (heartbeatMs < LIVE_WINDOW_MS) {
+        console.log(`⏭️ HERMETIC RECOVERY: job ${jobId} is live (heartbeat ${Math.round(heartbeatMs/1000)}s ago) — skipping resume`);
+        return new Response(JSON.stringify({ success: true, resumed: false, reason: 'live', heartbeatAgeSec: Math.round(heartbeatMs/1000) }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      if (heartbeatMs < STALL_WINDOW_MS) {
+        console.log(`⏸️ HERMETIC RECOVERY: job ${jobId} within stall grace (${Math.round(heartbeatMs/1000)}s) — not yet resuming`);
+        return new Response(JSON.stringify({ success: true, resumed: false, reason: 'grace', heartbeatAgeSec: Math.round(heartbeatMs/1000) }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      console.log(`🔁 HERMETIC RECOVERY: resuming stalled job ${jobId} (last heartbeat ${Math.round(heartbeatMs/1000)}s ago, stage=${job.current_stage}, step=${job.current_step})`);
+      const { error: invokeErr } = await supabase.functions.invoke('hermetic-background-orchestrator', {
+        body: { job_id: jobId }
+      });
+      if (invokeErr) {
+        console.error(`❌ HERMETIC RECOVERY: orchestrator invoke failed for ${jobId}:`, invokeErr);
+        return new Response(JSON.stringify({ success: false, resumed: false, error: invokeErr.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      return new Response(JSON.stringify({ success: true, resumed: true, heartbeatAgeSec: Math.round(heartbeatMs/1000) }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     if (job.status !== 'completed') {
       throw new Error(`Job is not completed (status: ${job.status})`);
     }
