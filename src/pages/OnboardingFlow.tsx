@@ -175,6 +175,12 @@ const OnboardingFlow: React.FC = () => {
             body: { userId: user.id, forceReprocess: true },
           })
           .catch((e) => console.warn("Oracle warm-up deferred:", e));
+
+        // Kick off the hermetic deep-report in the background (same call the
+        // old "Activate Steward" button used).
+        hermeticPersonalityReportService
+          .generateHermeticReport(data, language)
+          .catch((e) => console.warn("Hermetic report generation deferred:", e));
       }
 
       if (isPartial) {
