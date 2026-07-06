@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { blueprintService, BlueprintData } from "@/services/blueprint-service";
 import { supabase } from "@/integrations/supabase/client";
+import { hermeticPersonalityReportService } from "@/services/hermetic-personality-report-service";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
  * OnboardingFlow — the 90-second path from birth data to first contact.
