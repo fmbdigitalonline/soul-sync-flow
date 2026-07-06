@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
@@ -24,8 +25,33 @@ const Coach = () => {
     resetConversation,
     markMessageStreamingComplete,
     recordVFPGraphFeedback,
-    addOptimisticMessage
+    addOptimisticMessage,
+    initiateFirstContact
   } = useHACSConversationAdapter("guide", "companion");
+
+  // First contact: arriving fresh from the onboarding reveal, the companion
+  // speaks first. Guarded so it fires once, only for empty conversations.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const firstContactRequestedRef = useRef(false);
+  useEffect(() => {
+    if (searchParams.get("from") !== "onboarding") return;
+    if (firstContactRequestedRef.current) return;
+    if (messages.length > 0) {
+      // History exists — not actually a first contact; drop the param.
+      firstContactRequestedRef.current = true;
+      setSearchParams({}, { replace: true });
+      return;
+    }
+    // Give history loading a moment to hydrate before speaking first.
+    const t = window.setTimeout(() => {
+      if (messages.length === 0 && !firstContactRequestedRef.current) {
+        firstContactRequestedRef.current = true;
+        setSearchParams({}, { replace: true });
+        initiateFirstContact?.();
+      }
+    }, 1200);
+    return () => window.clearTimeout(t);
+  }, [searchParams, messages.length, initiateFirstContact, setSearchParams]);
 
   // Shadow detection integration - only for message processing
   const {
