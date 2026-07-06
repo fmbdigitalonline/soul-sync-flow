@@ -1027,6 +1027,7 @@ export type Database = {
       }
       conversation_messages: {
         Row: {
+          attachments: Json | null
           client_msg_id: string
           content: string
           conversation_id: string
@@ -1042,6 +1043,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attachments?: Json | null
           client_msg_id: string
           content: string
           conversation_id: string
@@ -1057,6 +1059,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attachments?: Json | null
           client_msg_id?: string
           content?: string
           conversation_id?: string
