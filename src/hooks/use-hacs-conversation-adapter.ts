@@ -540,6 +540,7 @@ export const useHACSConversationAdapter = (
 
   return {
     messages: hacsConversation.messages,
+    initiateFirstContact: hacsConversation.initiateFirstContact,
     isLoading: coordinatedLoading || hacsConversation.isLoading,
     isStreamingResponse: hacsConversation.isStreamingResponse,
     sendMessage,
