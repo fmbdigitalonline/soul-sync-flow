@@ -92,26 +92,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       });
     }
   };
+  // Chat-first navigation: the companion IS the product.
+  // Dreams & growth are absorbed into the conversation (legacy routes redirect).
   const baseNavItems = [{
-    to: "/",
-    icon: Home,
-    label: t('nav.home')
+    to: "/companion",
+    icon: MessageCircle,
+    label: t('nav.companion')
   }, {
     to: "/blueprint",
     icon: Star,
     label: t('nav.blueprint')
-  }, {
-    to: "/dreams",
-    icon: Heart,
-    label: t('nav.dreams')
-  }, {
-    to: "/spiritual-growth",
-    icon: Sparkles,
-    label: t('nav.growth')
-  }, {
-    to: "/companion",
-    icon: MessageCircle,
-    label: t('nav.companion')
   }];
 
   // Add profile to navigation items for authenticated users
@@ -122,7 +112,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   }] : baseNavItems;
 
   // Add Admin Dashboard, Test Environment, and 360° Profile for admin users
-  const navItems = user && isAdminUser(user) ? [...userNavItems, {
+  // (dev builds only — these routes are not registered in production)
+  const navItems = import.meta.env.DEV && user && isAdminUser(user) ? [...userNavItems, {
     to: "/admin",
     icon: Settings,
     label: t('nav.adminDashboard')
