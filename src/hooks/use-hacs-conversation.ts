@@ -24,6 +24,7 @@ export interface ConversationMessage {
   intelligence_bonus?: number;
   mode?: string;
   isStreaming?: boolean;
+  attachments?: Array<{ type: string; goal_id?: string }>;
   client_msg_id?: string;
 }
 
@@ -676,6 +677,7 @@ export const useHACSConversation = () => {
         oracleStatus: response.oracleStatus,
         semanticChunks: response.semanticChunks,
         personalityContext: response.personalityContext,
+        attachments: response.attachments || [],
         isStreaming: true
       };
 
@@ -905,9 +907,61 @@ export const useHACSConversation = () => {
     setCurrentQuestion(null);
   }, []);
 
+  /**
+   * First contact: called once when a user lands in the companion straight
+   * from the onboarding reveal. The companion speaks first — referencing a
+   * real chart fact — so the thread never opens with an empty input staring
+   * back at a brand-new user. The handoff message is synthetic and is NOT
+   * shown or stored as a user message (the edge function skips it when
+   * firstContact is true).
+   */
+  const firstContactFiredRef = useRef(false);
+  const initiateFirstContact = useCallback(async () => {
+    if (!user || firstContactFiredRef.current || isLoading) return;
+    firstContactFiredRef.current = true;
+    setIsLoading(true);
+
+    try {
+      const sessionId = currentSessionId || `companion_${user.id}`;
+      if (!currentSessionId) setCurrentSessionId(sessionId);
+
+      const { data, error } = await supabase.functions.invoke('companion-oracle-conversation', {
+        body: {
+          message:
+            'I just finished my blueprint reveal and opened our conversation for the first time. Begin first contact.',
+          userId: user.id,
+          sessionId,
+          useOracleMode: true,
+          enableBackgroundIntelligence: true,
+          conversationHistory: [],
+          userProfile: {},
+          firstContact: true
+        }
+      });
+
+      if (error) throw new Error(`First contact failed: ${error.message}`);
+
+      const opening: ConversationMessage = {
+        id: `oracle_first_${Date.now()}`,
+        role: 'hacs',
+        module: 'COMPANION_ORACLE',
+        content: data?.response || "I've been reading your chart. Where should we begin — you tell me, or shall I?",
+        timestamp: new Date().toISOString(),
+        isStreaming: true
+      };
+      setMessages(prev => (prev.length === 0 ? [opening] : prev));
+    } catch (err) {
+      console.error('First contact error (companion stays silent, user can still type):', err);
+      firstContactFiredRef.current = false; // allow retry on next mount
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, isLoading, currentSessionId]);
+
   return {
     messages,
     setMessages,
+    initiateFirstContact,
     isLoading,
     setIsLoading,
     isTyping,
