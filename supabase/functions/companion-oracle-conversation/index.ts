@@ -2056,7 +2056,7 @@ serve(async (req) => {
           parameters: {
             type: 'object',
             properties: {
-              title: { type: 'string', description: 'Short goal title in the user\'s words' },
+              title: { type: 'string', description: 'Short goal title using the USER\'S OWN stated goal verbatim (e.g. "Earn €1,000,000") — never your reframe or interpretation of what the goal is really about.' },
               description: { type: 'string', description: 'One-line description with timeframe/context' },
               timeframe: { type: 'string', description: 'e.g. "3 years"' },
               category: { type: 'string', description: 'e.g. financial, creative, health' }
