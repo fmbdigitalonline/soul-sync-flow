@@ -8,95 +8,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { ConversationShadowDetector } from '../_shared/conversation-shadow-detector.ts';
 import { ConversationPhaseTracker } from '../_shared/conversation-phase-tracker.ts';
 
-// ------------------------------------------------------------------
-// PHASE 1 HELPERS
-// ------------------------------------------------------------------
-
-// Structured intelligence "state spine": ≤ ~350 tokens of the user's
-// personalised operating profile, injected as a system message on every
-// turn. Fails soft when the row is missing.
-async function buildStructuredIntelligenceSpine(supabase: any, userId: string): Promise<string | null> {
-  try {
-    const { data } = await supabase
-      .from('hermetic_structured_intelligence')
-      .select('execution_bias, behavioral_triggers, temporal_biology, identity_constructs, crisis_handling')
-      .eq('user_id', userId)
-      .maybeSingle();
-    if (!data) return null;
-    const eb = data.execution_bias || {};
-    const bt = data.behavioral_triggers || {};
-    const tb = data.temporal_biology || {};
-    const ic = data.identity_constructs || {};
-    const ch = data.crisis_handling || {};
-    const parts: string[] = [];
-    if (eb.momentum_triggers?.length) parts.push(`momentum: ${(eb.momentum_triggers || []).slice(0, 3).join(', ')}`);
-    if (eb.completion_patterns?.length) parts.push(`completion: ${(eb.completion_patterns || []).slice(0, 2).join(', ')}`);
-    if (bt.avoidance_patterns?.length) parts.push(`avoidance: ${(bt.avoidance_patterns || []).slice(0, 3).join(', ')}`);
-    if (tb.cognitive_peaks?.length) parts.push(`peaks: ${(tb.cognitive_peaks || []).slice(0, 3).join(', ')}`);
-    if (ic.core_narratives?.length) parts.push(`narrative: ${String(ic.core_narratives[0]).slice(0, 200)}`);
-    if (ch.bounce_back_rituals?.length) parts.push(`recovery: ${String(ch.bounce_back_rituals[0]).slice(0, 200)}`);
-    if (!parts.length) return null;
-    const spine = `USER STATE SPINE (structured; use to personalise, do not quote verbatim):\n- ${parts.join('\n- ')}`;
-    return spine.slice(0, 1400); // hard cap ~350 tokens
-  } catch (e) {
-    console.warn('⚠️ SPINE: fetch failed:', e);
-    return null;
-  }
-}
-
-// Lightweight per-turn shadow cue. Uses the same pattern vocabulary as
-// ConversationShadowDetector but scoped to the current message only —
-// no DB reads, < 5ms. Injects one line so the Voice Charter (rule 5:
-// confront loaded disclosures) has something to respond to.
-function detectShadowCueSync(message: string): { type: string; cue: string } | null {
-  const lower = (message || '').toLowerCase();
-  if (!lower.trim()) return null;
-  const projection = /\b(they always|people never|everyone (does|is)|nobody understands|others should|why do they|those people)\b/;
-  const limitingBelief = /\b(i can'?t|i'?m not (good|smart|worthy|enough)|never works for me|i always fail|don'?t deserve|too late|missed my chance)\b/;
-  const resistance = /\b(yeah but|i know but|tried that|too hard|but what if|already tried|doesn'?t work for me)\b/;
-  if (projection.test(lower)) {
-    return { type: 'projection', cue: 'user is externalising cause; reflect the pattern with care, do not validate the frame.' };
-  }
-  if (limitingBelief.test(lower)) {
-    return { type: 'limiting_belief', cue: 'user is speaking a limiting belief as fact; name it as a belief, do not agree with it.' };
-  }
-  if (resistance.test(lower)) {
-    return { type: 'resistance', cue: 'user is deflecting the next step; name the resistance gently, do not push past it.' };
-  }
-  return null;
-}
-
-// Goal-title fidelity: scan recent user turns for the user's own goal
-// phrasing and repair args.title if the model reframed it. Never blocks.
-function repairGoalTitle(args: any, history: any[], currentMessage: string): any {
-  try {
-    const turns: string[] = [
-      ...(Array.isArray(history) ? history.filter((m: any) => m?.role === 'user').slice(-6).map((m: any) => String(m.content || '')) : []),
-      String(currentMessage || ''),
-    ];
-    const goalPhraseRegex = /((?:earn|make|build|launch|quit|reach|save|write|create|finish|complete|start|become)\s+[^.!?\n]{3,80})|((?:€|\$|£)\s?[\d.,]+\s?(?:k|m|million|thousand)?(?:\s+[^\s.!?\n]{1,20}){0,6})/gi;
-    const candidates: string[] = [];
-    for (const t of turns) {
-      const matches = t.match(goalPhraseRegex);
-      if (matches) candidates.push(...matches);
-    }
-    if (!candidates.length) return args;
-    const longest = candidates.sort((a, b) => b.length - a.length)[0].trim().replace(/\s+/g, ' ');
-    const modelTitle = String(args.title || '');
-    const modelTokens = new Set(modelTitle.toLowerCase().split(/\s+/).filter(Boolean));
-    const userTokens = longest.toLowerCase().split(/\s+/).filter(Boolean);
-    const overlap = userTokens.filter(t => modelTokens.has(t)).length / Math.max(userTokens.length, 1);
-    if (overlap < 0.6 && longest.length >= 4) {
-      const repaired = longest.charAt(0).toUpperCase() + longest.slice(1);
-      console.log(`⚠️ goal-title repaired: "${modelTitle}" → "${repaired}" (overlap=${overlap.toFixed(2)})`);
-      args.title = repaired.slice(0, 120);
-    }
-  } catch (e) {
-    console.warn('⚠️ repairGoalTitle failed (soft):', e);
-  }
-  return args;
-}
-
 // Helper function to detect if user wants technical personality details
 function detectTechnicalDetailRequest(message: string): boolean {
   const technicalKeywords = /\b(mbti|human design|personality type|what.*type|technical|specific|sun sign|projector|enfp|intj|generator|manifestor|manifesting generator|reflector)\b/i;
@@ -854,6 +765,74 @@ primer += `═══════════════════════
   return primer;
 }
 
+// ────────────────────────────────────────────────────────────────────
+// PHASE 1 (item 4): STRUCTURED INTELLIGENCE STATE SPINE.
+// Fixed subset of the 13 typed dimensions, serialised to one compact
+// system block (hard-capped ≤ ~350 tokens), injected in the SAME slot
+// every turn (right after the main system prompt, before history) so
+// prompt caching stays stable. Fail-soft: row missing → no block.
+// ────────────────────────────────────────────────────────────────────
+async function buildStructuredIntelligenceSpine(userId: string, supabase: any): Promise<string | null> {
+  try {
+    const { data: hsi, error } = await supabase
+      .from('hermetic_structured_intelligence')
+      .select('execution_bias, behavioral_triggers, temporal_biology, identity_constructs, crisis_handling')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !hsi) {
+      if (error) console.warn('⚠️ SPINE: fetch failed (non-blocking):', error.message);
+      return null;
+    }
+
+    const clip = (v: unknown, max: number): string => {
+      const s = typeof v === 'string' ? v : (v == null ? '' : String(v));
+      return s.length > max ? s.slice(0, max) + '…' : s;
+    };
+
+    const lines: string[] = [];
+    const eb = hsi.execution_bias || {};
+    if (eb.preferred_style) lines.push(`- Execution style: ${clip(eb.preferred_style, 180)}`);
+    if (eb.completion_patterns) lines.push(`- Completion pattern: ${clip(eb.completion_patterns, 180)}`);
+    const avoidance = hsi.behavioral_triggers?.avoidance_patterns;
+    if (Array.isArray(avoidance) && avoidance.length > 0) {
+      lines.push(`- Avoidance patterns: ${avoidance.slice(0, 3).map((a: any) => clip(a, 90)).join(' | ')}`);
+    }
+    const peaks = hsi.temporal_biology?.cognitive_peaks;
+    if (Array.isArray(peaks) && peaks.length > 0) {
+      lines.push(`- Cognitive peaks: ${peaks.slice(0, 3).map((p: any) => clip(p, 70)).join(' | ')}`);
+    }
+    const narratives = hsi.identity_constructs?.core_narratives;
+    if (Array.isArray(narratives) && narratives.length > 0) {
+      lines.push(`- Core narrative: ${clip(narratives[0], 200)}`);
+    }
+    const rituals = hsi.crisis_handling?.bounce_back_rituals;
+    if (Array.isArray(rituals) && rituals.length > 0) {
+      lines.push(`- Bounce-back ritual: ${clip(rituals[0], 140)}`);
+    }
+
+    if (lines.length === 0) return null;
+
+    let block = 'USER STATE SPINE (structured): ground your read and any plan in these verified patterns. Do not recite them; let them shape word choice, pacing, and what you push on.\n' + lines.join('\n');
+
+    // Hard cap ≈ 350 tokens (~1400 chars): trim trailing lines until under cap.
+    const CHAR_CAP = 1400;
+    while (block.length > CHAR_CAP && lines.length > 1) {
+      lines.pop();
+      block = 'USER STATE SPINE (structured): ground your read and any plan in these verified patterns. Do not recite them; let them shape word choice, pacing, and what you push on.\n' + lines.join('\n');
+    }
+    if (block.length > CHAR_CAP) block = block.slice(0, CHAR_CAP);
+
+    console.log(`📐 SPINE: ~${Math.ceil(block.length / 4)} tokens injected`, { lines: lines.length });
+    return block;
+  } catch (e) {
+    console.warn('⚠️ SPINE: build failed (non-blocking):', e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
 // Helper function to generate voice style based on personality
 function generateVoiceStyle(mbti: string, hd: string, sun: string): string {
   let style = "- Speak conversationally and warmly\n";
@@ -1277,6 +1256,26 @@ serve(async (req) => {
       }), { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // PHASE 1 (item 4): fetch the state spine once per turn (after the
+    // closure gate so closure turns pay no DB cost). Injected into the
+    // messages array below — same slot every turn.
+    // ────────────────────────────────────────────────────────────────
+    const structuredSpine = await buildStructuredIntelligenceSpine(userId, supabase);
+
+    // ────────────────────────────────────────────────────────────────
+    // PHASE 1 (item 5): shadow-detector cue — synchronous, current turn
+    // only, no DB reads. Arms Voice Charter rule 5; appended to the
+    // system prompt below. Never surfaced in output.
+    // ────────────────────────────────────────────────────────────────
+    let shadowCue: { type: string; cue: string } | null = null;
+    try {
+      shadowCue = ConversationShadowDetector.detectFromMessage(message);
+      if (shadowCue) console.log('🩶 SHADOW CUE:', shadowCue.type);
+    } catch (e) {
+      console.warn('⚠️ SHADOW CUE: detection failed (non-blocking):', e instanceof Error ? e.message : e);
     }
 
     // ENHANCED ORACLE PIPELINE: Hybrid retrieval with facts + narrative
@@ -1965,6 +1964,18 @@ serve(async (req) => {
       '6. THE CHART INFORMS, IT DOES NOT NARRATE: never explain every feeling by the blueprint ("you feel X because Taurus Moon"). Use chart mechanics for the occasional precise strike, not as a running commentary. The user is the author of their life; you hold a map, not a script.\n' +
       '7. NO IDENTITY FLATTERY: do not cast the user as a blocked visionary whose environment is unworthy of them. Being seen precisely lands deeper than being praised. When their pattern is costing them something, say so plainly and kindly.\n' +
       '8. HONESTY OVER COMFORT: you would rather be corrected than be agreeable. State your read confidently, hold it loosely, and make pushing back feel easy and welcome.';
+
+    // ------------------------------------------------------------------
+    // ACTION CHARTER — governs when you USE YOUR HANDS (tools). Sibling of
+    // the Voice Charter: Voice rules how you speak, this rules when you act.
+    // Tune the tool reflex HERE, once.
+    // ------------------------------------------------------------------
+    systemPrompt += '\n\nACTION CHARTER (final authority on when you act — you have hands, use them):\n' +
+      '1. YOU HAVE HANDS: get_active_dream and decompose_goal are yours to call within this very turn. NEVER describe, promise, or narrate what a tool would produce instead of calling it — "I could break this down for you" followed by no call is a violation.\n' +
+      '2. CONFIRMED = CALL NOW: once the user has confirmed they want a goal broken down and you know the what plus a rough timeframe, you MUST call decompose_goal in THIS turn. Deferring a confirmed decomposition to a future turn is a violation. Do not reframe, translate, or abstract the user\'s stated goal — copy their words.\n' +
+      '3. CONSULT BEFORE COUNSEL: before advising on goals, progress, or "what\'s next", call get_active_dream so your counsel is grounded in what actually exists — never advise on a dream from memory alone.\n' +
+      '4. OFFER ONCE: when the user states a goal, offer decomposition exactly once. If they decline or let it pass, drop it for the rest of the session — no nagging.\n' +
+      '5. TOOLS ACCOMPANY INSIGHT, NEVER REPLACE IT: your text must still carry the observation, the confrontation, or the read. The card only holds structure. A tool call wrapped in a hollow message is a violation.';
     // ending (goodbye, thanks, heading to sleep, wrapping up), do not just
     // say goodbye. Close warmly AND plant exactly one open loop: name one
     // specific, real area of their chart or an unfinished thread from this
@@ -1973,6 +1984,11 @@ serve(async (req) => {
     // actual blueprint context or conversation — never invented, never a
     // generic teaser.
     systemPrompt += '\n\nSESSION CLOSE RULE: if the user signals they are wrapping up (goodbye, thanks, gtg, going to bed), close warmly and leave exactly ONE open loop — a specific, real, unexplored area of their chart or an unfinished thread from this conversation — phrased as something to ask you about next time (for example: "Before you go — there is something in your chart about how you handle endings. Ask me about it tomorrow."). Ground it in real context; never fabricate a teaser. At most one loop per session close.';
+
+    // PHASE 1 (item 5): one-line shadow cue arms Voice Charter rule 5.
+    if (shadowCue) {
+      systemPrompt += '\n\nSHADOW CUE (do not name it, respond to it): ' + shadowCue.cue;
+    }
 
     // FULL BLUEPRINT DETECTION: Check if user is requesting comprehensive blueprint
     const isFullBlueprintRequest = /\b(full|complete|entire|comprehensive|whole|detailed)\s*(blueprint|analysis|reading|profile|assessment)\b/i.test(message) ||
@@ -2008,23 +2024,10 @@ serve(async (req) => {
       }
     ];
 
-    // PHASE 1: structured intelligence state spine (≤ ~350 tokens)
-    const spine = await buildStructuredIntelligenceSpine(supabase, userId);
-    if (spine) {
-      messages.push({ role: 'system', content: spine });
-      console.log(`📐 SPINE: ~${Math.round(spine.length / 4)} tokens injected`);
-    } else {
-      console.log('📐 SPINE: none (no structured intelligence row)');
-    }
-
-    // PHASE 1: per-turn shadow cue (one line, do not surface)
-    const shadowCue = detectShadowCueSync(message);
-    if (shadowCue) {
-      messages.push({
-        role: 'system',
-        content: `SHADOW CUE (do not name it, respond to it): ${shadowCue.cue}`,
-      });
-      console.log(`🩶 SHADOW CUE: ${shadowCue.type}`);
+    // PHASE 1 (item 4): state spine — same slot every turn (right after the
+    // main system prompt, before conversation history) for cache stability.
+    if (structuredSpine) {
+      messages.push({ role: 'system', content: structuredSpine });
     }
 
     // Add conversation history if available (last 5 exchanges to stay within token limits)
@@ -2160,7 +2163,7 @@ serve(async (req) => {
         type: 'function',
         function: {
           name: 'decompose_goal',
-          description: 'Decompose a stated goal/dream into 4-6 milestones. Use ONLY after the user confirmed they want it broken down and you know the what and rough timeframe. Your text must still carry the insight; the card only holds structure. Do NOT reframe, translate, or abstract the user\'s stated goal — copy their words into the title verbatim.',
+          description: 'Decompose a stated goal/dream into 4-6 milestones. Use ONLY after the user confirmed they want it broken down and you know the what and rough timeframe. Your text must still carry the insight; the card only holds structure.',
           parameters: {
             type: 'object',
             properties: {
@@ -2192,23 +2195,63 @@ serve(async (req) => {
           return JSON.stringify({ found: true, title: g.title, description: g.description, progress: g.progress, milestones: (g.milestones || []).slice(0, 6) });
         }
         if (name === 'decompose_goal') {
-          // PHASE 1: goal-title fidelity guard — repair if the model reframed
-          args = repairGoalTitle(args, finalHistory || [], message);
+          // PHASE 1 (item 2): GOAL-TITLE FIDELITY GUARD — the card must carry
+          // the user's words, never the model's reframe. Scan recent user
+          // turns for their stated goal phrase; if the model's title drifted
+          // (< 60% token overlap), repair it. Never block, always proceed.
+          try {
+            const recentUserTexts = (finalHistory || [])
+              .filter((m: any) => m.role === 'user' && typeof m.content === 'string')
+              .slice(-6)
+              .map((m: any) => m.content as string)
+              .concat([message]);
+            const goalPhraseRegex = /(?:"([^"]{4,80})")|((?:[^.!?\n]{0,40})(?:(?:€|\$|£)\s?[\d.,]+\s?\w*|\b\d[\d.,]*\s?(?:k|m|mln|million|miljoen)\b|\b(?:earn|make|save|quit|launch|build|start|become|lose|run|verdien(?:en)?|sparen|stoppen|beginnen|worden)\b[^.!?\n]{0,50}))/gi;
+            const candidates: string[] = [];
+            for (const text of recentUserTexts) {
+              let match: RegExpExecArray | null;
+              goalPhraseRegex.lastIndex = 0;
+              while ((match = goalPhraseRegex.exec(text)) !== null) {
+                const phrase = (match[1] || match[2] || '').trim();
+                if (phrase.length >= 4) candidates.push(phrase);
+              }
+            }
+            if (candidates.length > 0 && typeof args.title === 'string') {
+              const tokenize = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}€$£]+/gu, ' ').split(/\s+/).filter(w => w.length > 1);
+              const titleTokens = tokenize(args.title);
+              const overlapWith = (phrase: string) => {
+                const phraseTokens = new Set(tokenize(phrase));
+                if (titleTokens.length === 0) return 0;
+                return titleTokens.filter(t => phraseTokens.has(t)).length / titleTokens.length;
+              };
+              const bestCandidate = candidates.sort((a, b) => b.length - a.length)[0];
+              const bestOverlap = Math.max(...candidates.map(overlapWith));
+              if (bestOverlap < 0.6) {
+                const repaired = bestCandidate.replace(/\s+/g, ' ').trim().slice(0, 80);
+                console.log(`⚠️ goal-title repaired: "${args.title}" → "${repaired}"`, { overlap: bestOverlap.toFixed(2) });
+                args.title = repaired.charAt(0).toUpperCase() + repaired.slice(1);
+              }
+            }
+          } catch (guardErr) {
+            console.warn('⚠️ goal-title guard failed (non-blocking):', guardErr instanceof Error ? guardErr.message : guardErr);
+          }
 
           const { data: dec, error: decErr } = await supabase.functions.invoke('openai-agent', {
             body: { action: 'decompose_goal', ...args, userId }
           }).catch(() => ({ data: null, error: 'invoke failed' } as any));
-          if (decErr) console.warn('⚠️ decompose_goal: invoke error:', decErr);
-          const milestones = Array.isArray(dec?.milestones) ? dec.milestones : [];
 
-          // PHASE 1: hard fail-path — refuse to create empty/thin DreamCards
+          // PHASE 1 (item 1): HARD FAIL-PATH — a DreamCard with hollow
+          // milestones is worse than no card. If decomposition came back
+          // thin, do NOT insert a goal row; let the model narrate a retry.
+          const milestones = dec?.milestones || [];
           if (milestones.length < 3) {
-            console.warn(`⚠️ decompose_goal: insufficient milestones (${milestones.length}), skipping goal insert`);
+            console.warn('⚠️ DECOMPOSE: decomposition failed or too thin — no card created', {
+              milestoneCount: milestones.length,
+              invokeError: decErr || dec?.error || null
+            });
             return JSON.stringify({
               ok: false,
               reason: 'decomposition_failed',
-              milestoneCount: milestones.length,
-              note: 'Decomposition returned too few milestones; tell the user briefly and offer to try once more.',
+              note: 'The breakdown did not come through. Tell the user plainly it hiccuped and offer to retry — do not present or promise a card.'
             });
           }
 
@@ -2227,28 +2270,43 @@ serve(async (req) => {
       }
     }
 
+    // ────────────────────────────────────────────────────────────────
+    // PHASE 1 (item 3): ACS CONFIRMATION → FORCE THE HANDS.
+    // Ground-truth note: the ACS taxonomy has no 'confirmation' cluster —
+    // confirmation lives in decision/commitment_signal, and a bare "yes"
+    // matches no ACS signal at all. So: ACS commitment signal OR a short
+    // affirmative message, gated by a decompose-eligible goal in the last
+    // 4 user turns (a "yes" to a non-goal question must not misfire).
+    // First call only; the loop's own tool_choice logic is untouched.
+    // ────────────────────────────────────────────────────────────────
+    const acsDetection = conversationState?.detectionResult;
+    const acsConfirmation = acsDetection?.cluster === 'decision' && acsDetection?.subState === 'commitment_signal';
+    const shortAffirmative = /^\s*(yes|yeah|yep|yup|sure|ok(ay)?|do it|go for it|please do|break it down|absolutely|definitely|ja|graag|zeker|prima|doe (het|maar)|let'?s (go|do it))[\s!.]*$/i.test(message);
+    const goalNounRegex = /(€|\$|£)\s?[\d.,]+|\b\d[\d.,]*\s?(k|m|mln|million|miljoen)\b|\b(goal|dream|doel|droom|earn|verdien(en)?|save|sparen|quit|launch|build|become|per\s+(month|maand|year|jaar))\b/i;
+    const recentUserTurns = (finalHistory || [])
+      .filter((m: any) => m.role === 'user' && typeof m.content === 'string')
+      .slice(-4)
+      .map((m: any) => m.content as string);
+    const goalInRecentContext = recentUserTurns.some(t => goalNounRegex.test(t));
+    const shouldForceTool = (acsConfirmation || shortAffirmative) && goalInRecentContext;
+
+    console.log(shouldForceTool
+      ? '🎯 TOOL CHOICE: required (cluster=confirmation)'
+      : '🎯 TOOL CHOICE: auto', {
+      acsCluster: acsDetection?.cluster || 'none',
+      acsSubState: acsDetection?.subState || 'none',
+      shortAffirmative,
+      goalInRecentContext
+    });
+
     let toolRounds = 0;
-
-    // PHASE 1: ACS confirmation → tool_choice: 'required' (round 0 only).
-    // Guarded by a goal-noun check in recent context so a "yes" to a
-    // non-goal question doesn't misfire the tool.
-    const recentUserText = [
-      ...(Array.isArray(finalHistory) ? finalHistory.filter((m: any) => m?.role === 'user').slice(-4).map((m: any) => String(m.content || '')) : []),
-      message,
-    ].join(' ').toLowerCase();
-    const hasGoalNoun = /\b(goal|dream|want to|would like to|earn|build|launch|quit|start|finish|write|create|reach|achieve|save|become|million|thousand)\b|(€|\$|£)\s?[\d.,]+/.test(recentUserText);
-    const confirmationCluster = conversationState?.detectionResult?.cluster === 'confirmation';
-    const shouldForceTool = confirmationCluster && hasGoalNoun;
-    const initialToolChoice = shouldForceTool ? 'required' : 'auto';
-    console.log(`🎯 TOOL CHOICE: ${initialToolChoice}${shouldForceTool ? ' (cluster=confirmation, goal-noun=true)' : ''}`);
-
     let openAIResponse = await callChat({
       messages: completionParams.messages,
       model: completionParams.model,
       max_tokens: completionParams.max_completion_tokens,
       stream: completionParams.stream,
       tools: companionTools,
-      tool_choice: initialToolChoice,
+      tool_choice: shouldForceTool ? 'required' : 'auto',
     });
 
     while (toolRounds < 2) {

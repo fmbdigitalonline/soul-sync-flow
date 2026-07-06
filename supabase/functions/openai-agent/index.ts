@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { callChatCompletion } from '../_shared/azure-openai.ts';
 
 const corsHeaders = {
@@ -528,132 +529,163 @@ async function generatePracticalApplications(args: any): Promise<any> {
   };
 }
 
-// ------------------------------------------------------------------
-// PHASE 1: Real goal decomposition. Called by companion-oracle-conversation
-// via { action: 'decompose_goal', ... }. Personalises milestones using the
-// user's blueprint + structured intelligence slice. Returns { milestones }.
-// ------------------------------------------------------------------
-async function handleDecomposeGoalAction(args: any): Promise<Response> {
-  const { title, description, timeframe, category, userId } = args || {};
-  console.log('🎯 decompose_goal: start', { userId, title, timeframe });
+// ────────────────────────────────────────────────────────────────────
+// PHASE 1 (item 1): REAL goal decomposition. Loads the user's blueprint
+// slice + hermetic structured intelligence, asks the model for 4-6
+// concrete, time-bounded, personalised milestones as strict JSON.
+// NOTE: generatePlanBranches remains an untouched stub — multi-branch
+// generation is deferred to Phase 3 (orchestrator plan chain).
+// ────────────────────────────────────────────────────────────────────
+function trimStr(v: unknown, max: number): string {
+  const s = typeof v === 'string' ? v : (v == null ? '' : String(v));
+  return s.length > max ? s.slice(0, max) + '…' : s;
+}
 
+async function decomposeGoalReal(params: {
+  title: string;
+  description?: string;
+  timeframe?: string;
+  category?: string;
+  userId: string;
+}): Promise<{ milestones: any[] }> {
+  const { title, description = '', timeframe = '', category = '', userId } = params;
+  if (!title || !userId) throw new Error('decompose_goal requires title and userId');
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+
+  // 1. Blueprint + structured-intelligence slice (fail-soft: decomposition
+  //    still runs unpersonalised if either row is missing).
+  const [hsiRes, bpRes] = await Promise.all([
+    supabase
+      .from('hermetic_structured_intelligence')
+      .select('execution_bias, temporal_biology, identity_constructs')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('user_blueprints')
+      .select('blueprint')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .maybeSingle()
+  ]);
+
+  const hsi = hsiRes?.data || null;
+  const bp = bpRes?.data?.blueprint || null;
+
+  const sliceLines: string[] = [];
+  if (bp) {
+    const mbti = bp.user_meta?.personality?.likelyType || bp.cognition_mbti?.type;
+    const hd = bp.energy_strategy_human_design?.type;
+    if (mbti) sliceLines.push(`- Thinking style (MBTI): ${trimStr(mbti, 40)}`);
+    if (hd) sliceLines.push(`- Energy strategy (Human Design): ${trimStr(hd, 40)}`);
+  }
+  if (hsi) {
+    const eb = hsi.execution_bias || {};
+    if (eb.preferred_style) sliceLines.push(`- Execution style: ${trimStr(eb.preferred_style, 160)}`);
+    if (eb.completion_patterns) sliceLines.push(`- Completion pattern: ${trimStr(eb.completion_patterns, 160)}`);
+    const peaks = hsi.temporal_biology?.cognitive_peaks;
+    if (Array.isArray(peaks) && peaks.length > 0) sliceLines.push(`- Cognitive peaks: ${trimStr(peaks.slice(0, 3).join('; '), 160)}`);
+    const narratives = hsi.identity_constructs?.core_narratives;
+    if (Array.isArray(narratives) && narratives.length > 0) sliceLines.push(`- Core narrative: ${trimStr(narratives[0], 160)}`);
+  }
+  const blueprintSlice = sliceLines.length > 0 ? sliceLines.join('\n') : '(no blueprint slice available — decompose generically but concretely)';
+
+  console.log('🧩 DECOMPOSE_GOAL: Inputs ready', {
+    userId: userId.substring(0, 8),
+    title: title.substring(0, 60),
+    hasHsi: !!hsi,
+    hasBlueprint: !!bp,
+    sliceLines: sliceLines.length
+  });
+
+  // 2. Strict-JSON decomposition call via the shared Azure helper.
+  const systemPrompt =
+    'You are a goal decomposition engine. Return ONLY valid JSON — no markdown fences, no commentary — with this exact shape:\n' +
+    '{"milestones":[{"title":"string","description":"string","target_date_offset_days":number,"order":number}]}\n' +
+    'Rules:\n' +
+    '- 4 to 6 milestones, ordered 1..n, sequenced toward the user\'s stated goal VERBATIM (never rename or reframe the goal).\n' +
+    '- Each milestone concrete and time-bounded: target_date_offset_days is days from today, consistent with the stated timeframe.\n' +
+    '- Personalise HOW each milestone is approached using the blueprint slice provided (execution style, energy strategy, cognitive peaks) — the WHAT stays true to the goal.\n' +
+    '- Milestone titles: max 8 words, action-first. Descriptions: one sentence, specific and measurable.';
+
+  const userPrompt =
+    `GOAL (verbatim, do not alter): ${title}\n` +
+    (description ? `DESCRIPTION: ${description}\n` : '') +
+    (timeframe ? `TIMEFRAME: ${timeframe}\n` : '') +
+    (category ? `CATEGORY: ${category}\n` : '') +
+    `BLUEPRINT SLICE:\n${blueprintSlice}`;
+
+  const resp = await callChatCompletion({
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ],
+    model: 'gpt-4.1-mini-2025-04-14',
+    max_tokens: 1200
+  });
+
+  const respText = await resp.text();
+  if (!resp.ok) {
+    throw new Error(`decompose_goal AI call failed: HTTP ${resp.status} — ${respText.substring(0, 300)}`);
+  }
+
+  const raw = JSON.parse(respText)?.choices?.[0]?.message?.content || '';
+  const cleaned = raw.replace(/```json|```/g, '').trim();
+  let parsed: any;
   try {
-    if (!userId || !title) {
-      return new Response(
-        JSON.stringify({ milestones: [], error: 'missing_userId_or_title' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.7.1');
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
-
-    const [bpRes, siRes] = await Promise.all([
-      supabase.from('user_blueprints').select('blueprint').eq('user_id', userId).eq('is_active', true).maybeSingle(),
-      supabase.from('hermetic_structured_intelligence')
-        .select('execution_bias, temporal_biology, identity_constructs, behavioral_triggers')
-        .eq('user_id', userId).maybeSingle(),
-    ]);
-    const bp: any = bpRes?.data?.blueprint || {};
-    const si: any = siRes?.data || {};
-
-    const persona = {
-      mbti: bp?.cognition_mbti?.type || bp?.user_meta?.personality?.likelyType || 'Unknown',
-      hd: bp?.energy_strategy_human_design?.type || 'Unknown',
-      sun: bp?.archetype_western?.sun_sign || 'Unknown',
-      momentum: (si?.execution_bias?.momentum_triggers || []).slice(0, 3),
-      completion: (si?.execution_bias?.completion_patterns || []).slice(0, 2),
-      peaks: (si?.temporal_biology?.cognitive_peaks || []).slice(0, 3),
-      avoidance: (si?.behavioral_triggers?.avoidance_patterns || []).slice(0, 3),
-      narrative: si?.identity_constructs?.core_narratives?.[0] || null,
-    };
-
-    const sys = [
-      'You decompose a user\'s stated goal into 4-6 concrete, sequenced milestones.',
-      'Return ONLY strict JSON of this shape: {"milestones":[{"title":"...","description":"...","target_date_offset_days":N,"order":I}, ...]}',
-      '- title: verb-led, ≤60 chars, concrete outcome (not a task list).',
-      '- description: one sentence, why this milestone unlocks the next.',
-      '- target_date_offset_days: integer days from today, strictly increasing across the sequence, respecting the timeframe.',
-      '- order: 1-based index.',
-      'Personalise sequencing and framing to the provided execution profile.',
-      'Do NOT reframe, translate, or abstract the goal title — treat the user\'s title as verbatim ground truth.',
-      'Do NOT include markdown, prose, or code fences. JSON only.',
-    ].join('\n');
-
-    const userPrompt = [
-      `Goal (verbatim from user): ${title}`,
-      `Description: ${description || '(none)'}`,
-      `Timeframe: ${timeframe || 'unspecified'}`,
-      `Category: ${category || 'personal'}`,
-      '',
-      'Execution profile:',
-      `- MBTI: ${persona.mbti}`,
-      `- Human Design: ${persona.hd}`,
-      `- Sun sign: ${persona.sun}`,
-      `- Momentum triggers: ${persona.momentum.join(', ') || 'unknown'}`,
-      `- Completion patterns: ${persona.completion.join(', ') || 'unknown'}`,
-      `- Cognitive peaks: ${persona.peaks.join(', ') || 'unknown'}`,
-      `- Avoidance patterns: ${persona.avoidance.join(', ') || 'unknown'}`,
-      `- Core narrative: ${persona.narrative || 'unknown'}`,
-      '',
-      'Return 4-6 milestones as strict JSON.',
-    ].join('\n');
-
-    const resp = await callChatCompletion({
-      messages: [
-        { role: 'system', content: sys },
-        { role: 'user', content: userPrompt },
-      ],
-      model: 'gpt-4.1-mini-2025-04-14',
-      max_tokens: 1500,
-    });
-
-    if (!resp.ok) {
-      const errTxt = await resp.text();
-      console.error('❌ decompose_goal: model call failed', resp.status, errTxt.slice(0, 500));
-      return new Response(
-        JSON.stringify({ milestones: [], error: 'model_error', status: resp.status }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const data = await resp.json();
-    let content: string = data?.choices?.[0]?.message?.content || '';
-    content = content.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
-
-    let parsed: any = null;
-    try { parsed = JSON.parse(content); }
-    catch {
-      const m = content.match(/\{[\s\S]*\}/);
-      if (m) { try { parsed = JSON.parse(m[0]); } catch {} }
-    }
-
-    const raw = Array.isArray(parsed?.milestones) ? parsed.milestones : [];
-    const milestones = raw
-      .filter((m: any) => m && typeof m.title === 'string' && m.title.trim().length > 0)
-      .slice(0, 6)
-      .map((m: any, i: number) => ({
-        title: String(m.title).slice(0, 120),
-        description: typeof m.description === 'string' ? m.description.slice(0, 400) : '',
-        target_date_offset_days: Number.isFinite(m.target_date_offset_days) ? Math.max(1, Math.round(m.target_date_offset_days)) : (i + 1) * 30,
-        order: Number.isFinite(m.order) ? m.order : i + 1,
-        completed: false,
-      }));
-
-    console.log(`✅ decompose_goal: produced ${milestones.length} milestones for user ${userId}`);
-    return new Response(
-      JSON.stringify({ milestones }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    parsed = JSON.parse(cleaned);
   } catch (e) {
-    console.error('❌ decompose_goal failed:', e);
-    return new Response(
-      JSON.stringify({ milestones: [], error: String(e) }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    throw new Error('decompose_goal returned non-JSON content: ' + cleaned.substring(0, 200));
+  }
+
+  // 3. Shape validation — surface failure, never fabricate.
+  const milestones = Array.isArray(parsed?.milestones) ? parsed.milestones : [];
+  const valid = milestones
+    .filter((m: any) => m && typeof m.title === 'string' && m.title.trim().length > 0)
+    .slice(0, 6)
+    .map((m: any, i: number) => ({
+      title: trimStr(m.title, 120),
+      description: trimStr(m.description || '', 240),
+      target_date_offset_days: Number.isFinite(Number(m.target_date_offset_days)) ? Math.max(1, Math.round(Number(m.target_date_offset_days))) : (i + 1) * 30,
+      order: Number.isFinite(Number(m.order)) ? Number(m.order) : i + 1,
+      completed: false
+    }));
+
+  console.log('🧩 DECOMPOSE_GOAL: Decomposition complete', {
+    requested: milestones.length,
+    valid: valid.length,
+    titles: valid.map((m: any) => m.title.substring(0, 40))
+  });
+
+  return { milestones: valid };
+}
+
+async function handleDecomposeGoal(body: any): Promise<Response> {
+  const startTime = Date.now();
+  try {
+    const result = await decomposeGoalReal({
+      title: body.title,
+      description: body.description,
+      timeframe: body.timeframe,
+      category: body.category,
+      userId: body.userId
+    });
+    console.log('✅ DECOMPOSE_GOAL: Returning', { milestoneCount: result.milestones.length, ms: Date.now() - startTime });
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    // Return 200 with empty milestones + error so the oracle's fail-path
+    // (milestones.length < 3 → no card) handles it without an invoke throw.
+    console.error('❌ DECOMPOSE_GOAL failed:', error instanceof Error ? error.message : error);
+    return new Response(JSON.stringify({ milestones: [], error: error instanceof Error ? error.message : String(error) }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 }
 
@@ -670,15 +702,13 @@ serve(async (req) => {
 
     const body = await req.json();
 
-    // ------------------------------------------------------------------
-    // ACTION ROUTER — Phase 1 wiring
-    // Callers (e.g. companion-oracle-conversation) can invoke this fn with
-    // { action: 'decompose_goal', title, description, timeframe, category, userId }
-    // and receive { milestones: [...] }. This bypasses the chat-completion
-    // path below entirely.
-    // ------------------------------------------------------------------
-    if (body && typeof body === 'object' && body.action === 'decompose_goal') {
-      return await handleDecomposeGoalAction(body);
+    // ── PHASE 1 ACTION ROUTER: direct actions bypass the chat-completion path.
+    // The companion oracle invokes { action: 'decompose_goal', ... }; before
+    // this branch existed the destructure below silently ignored it and the
+    // caller received null → empty DreamCards. Existing chat-completion
+    // callers are untouched: no `action` field → falls through unchanged.
+    if (body?.action === 'decompose_goal') {
+      return await handleDecomposeGoal(body);
     }
 
     const { messages, model = 'gpt-4.1-mini-2025-04-14', temperature = 0.7, tools = null, max_tokens = 4000 } = body;

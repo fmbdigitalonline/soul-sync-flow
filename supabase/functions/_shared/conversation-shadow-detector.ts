@@ -55,6 +55,38 @@ export class ConversationShadowDetector {
     'but what if', 'but i', 'already tried'
   ];
 
+  /**
+   * PHASE 1 (item 5): lightweight synchronous single-message detector.
+   * No DB reads, current user turn only, < 20ms. Returns a one-line cue
+   * that arms Voice Charter rule 5, or null when nothing fires.
+   * Reuses the class's existing pattern arrays — no duplicated regex.
+   */
+  static detectFromMessage(message: string): { type: 'projection' | 'limiting_belief' | 'resistance'; cue: string } | null {
+    if (!message || typeof message !== 'string') return null;
+    const normalized = message.toLowerCase().replace(/['’]/g, '');
+    const hit = (patterns: string[]) => patterns.some(p => normalized.includes(p));
+
+    if (hit(this.PROJECTION_PATTERNS)) {
+      return {
+        type: 'projection',
+        cue: 'user is externalising blame onto others; confront the projection with care — ask what their own hand in it is.'
+      };
+    }
+    if (hit(this.LIMITING_BELIEFS)) {
+      return {
+        type: 'limiting_belief',
+        cue: 'user just stated a limiting self-belief as if it were fact; do not validate it — name what holding this belief is costing them.'
+      };
+    }
+    if (hit(this.RESISTANCE_PATTERNS) || hit(this.INFORMAL_RESISTANCE)) {
+      return {
+        type: 'resistance',
+        cue: 'user is deflecting with obligation or impossibility language; slow down and confront the resistance itself, not the task.'
+      };
+    }
+    return null;
+  }
+
   static async detectShadowPatterns(userId: string): Promise<ConversationInsight[]> {
     // Create edge-compatible Supabase client
     const supabase = createClient(
