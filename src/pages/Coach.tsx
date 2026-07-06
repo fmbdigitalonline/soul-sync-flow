@@ -63,7 +63,7 @@ const Coach = () => {
   } = useSubconsciousOrb();
 
   // Background deep-report generation state — feeds "thinking" border.
-  const { status: hermeticStatus } = useHermeticReportStatus();
+  const hermeticStatus = useHermeticReportStatus();
 
   // Presence state: idle | thinking | noticed.
   const [presenceState, setPresenceState] = useState<PresenceState>("idle");
