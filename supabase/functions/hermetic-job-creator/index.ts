@@ -31,7 +31,38 @@ serve(async (req) => {
     }
 
     console.log(`📋 Creating hermetic job for user ${user_id}`);
-    
+
+    // Idempotency guard: if a fresh hermetic report already exists for this
+    // user (< 7 days old), skip dispatch entirely. Hermetic generation is
+    // expensive (10k+ words); avoid regenerating from the onboarding auto-trigger
+    // when the user already has a recent one.
+    try {
+      const { data: freshReports } = await supabase
+        .from('personality_reports')
+        .select('id, generated_at, blueprint_version')
+        .eq('user_id', user_id)
+        .neq('blueprint_version', '1.0')
+        .order('generated_at', { ascending: false })
+        .limit(1);
+
+      if (freshReports && freshReports.length > 0) {
+        const ageMs = Date.now() - new Date(freshReports[0].generated_at).getTime();
+        const freshWindowMs = 7 * 24 * 60 * 60 * 1000;
+        if (ageMs < freshWindowMs) {
+          console.log(`⏭️ Hermetic job skip: fresh report exists (age=${Math.round(ageMs / 3600000)}h, id=${freshReports[0].id})`);
+          return new Response(JSON.stringify({
+            message: 'Fresh hermetic report exists',
+            skipped: true,
+            reason: 'fresh_report'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+    } catch (freshCheckErr) {
+      console.warn('⚠️ Hermetic freshness check failed (continuing):', freshCheckErr);
+    }
+
     // Check if user has existing active job
     const { data: existingJobs } = await supabase
       .from('hermetic_processing_jobs')
@@ -41,10 +72,12 @@ serve(async (req) => {
       .order('created_at', { ascending: false });
     
     if (existingJobs && existingJobs.length > 0) {
-      console.log(`⚠️ User ${user_id} already has active job: ${existingJobs[0].id}`);
+      console.log(`⏭️ Hermetic job skip: active job exists (id=${existingJobs[0].id}, status=${existingJobs[0].status})`);
       return new Response(JSON.stringify({ 
         job_id: existingJobs[0].id,
-        message: 'Existing job found' 
+        message: 'Existing job found',
+        skipped: true,
+        reason: 'active_job'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
