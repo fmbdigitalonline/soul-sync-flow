@@ -36,6 +36,7 @@ export interface HACSConversationAdapter {
   userName: string;
   markMessageStreamingComplete: (messageId: string) => void;
   addOptimisticMessage: (message: ConversationMessage) => void;
+  initiateFirstContact?: () => Promise<void> | void;
 }
 
 export const useHACSConversationAdapter = (
