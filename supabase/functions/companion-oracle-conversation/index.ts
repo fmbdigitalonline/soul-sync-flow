@@ -2228,13 +2228,27 @@ serve(async (req) => {
     }
 
     let toolRounds = 0;
+
+    // PHASE 1: ACS confirmation → tool_choice: 'required' (round 0 only).
+    // Guarded by a goal-noun check in recent context so a "yes" to a
+    // non-goal question doesn't misfire the tool.
+    const recentUserText = [
+      ...(Array.isArray(finalHistory) ? finalHistory.filter((m: any) => m?.role === 'user').slice(-4).map((m: any) => String(m.content || '')) : []),
+      message,
+    ].join(' ').toLowerCase();
+    const hasGoalNoun = /\b(goal|dream|want to|would like to|earn|build|launch|quit|start|finish|write|create|reach|achieve|save|become|million|thousand)\b|(€|\$|£)\s?[\d.,]+/.test(recentUserText);
+    const confirmationCluster = conversationState?.detectionResult?.cluster === 'confirmation';
+    const shouldForceTool = confirmationCluster && hasGoalNoun;
+    const initialToolChoice = shouldForceTool ? 'required' : 'auto';
+    console.log(`🎯 TOOL CHOICE: ${initialToolChoice}${shouldForceTool ? ' (cluster=confirmation, goal-noun=true)' : ''}`);
+
     let openAIResponse = await callChat({
       messages: completionParams.messages,
       model: completionParams.model,
       max_tokens: completionParams.max_completion_tokens,
       stream: completionParams.stream,
       tools: companionTools,
-      tool_choice: 'auto',
+      tool_choice: initialToolChoice,
     });
 
     while (toolRounds < 2) {
