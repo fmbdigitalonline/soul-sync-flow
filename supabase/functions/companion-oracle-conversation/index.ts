@@ -8,6 +8,95 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { ConversationShadowDetector } from '../_shared/conversation-shadow-detector.ts';
 import { ConversationPhaseTracker } from '../_shared/conversation-phase-tracker.ts';
 
+// ------------------------------------------------------------------
+// PHASE 1 HELPERS
+// ------------------------------------------------------------------
+
+// Structured intelligence "state spine": ≤ ~350 tokens of the user's
+// personalised operating profile, injected as a system message on every
+// turn. Fails soft when the row is missing.
+async function buildStructuredIntelligenceSpine(supabase: any, userId: string): Promise<string | null> {
+  try {
+    const { data } = await supabase
+      .from('hermetic_structured_intelligence')
+      .select('execution_bias, behavioral_triggers, temporal_biology, identity_constructs, crisis_handling')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!data) return null;
+    const eb = data.execution_bias || {};
+    const bt = data.behavioral_triggers || {};
+    const tb = data.temporal_biology || {};
+    const ic = data.identity_constructs || {};
+    const ch = data.crisis_handling || {};
+    const parts: string[] = [];
+    if (eb.momentum_triggers?.length) parts.push(`momentum: ${(eb.momentum_triggers || []).slice(0, 3).join(', ')}`);
+    if (eb.completion_patterns?.length) parts.push(`completion: ${(eb.completion_patterns || []).slice(0, 2).join(', ')}`);
+    if (bt.avoidance_patterns?.length) parts.push(`avoidance: ${(bt.avoidance_patterns || []).slice(0, 3).join(', ')}`);
+    if (tb.cognitive_peaks?.length) parts.push(`peaks: ${(tb.cognitive_peaks || []).slice(0, 3).join(', ')}`);
+    if (ic.core_narratives?.length) parts.push(`narrative: ${String(ic.core_narratives[0]).slice(0, 200)}`);
+    if (ch.bounce_back_rituals?.length) parts.push(`recovery: ${String(ch.bounce_back_rituals[0]).slice(0, 200)}`);
+    if (!parts.length) return null;
+    const spine = `USER STATE SPINE (structured; use to personalise, do not quote verbatim):\n- ${parts.join('\n- ')}`;
+    return spine.slice(0, 1400); // hard cap ~350 tokens
+  } catch (e) {
+    console.warn('⚠️ SPINE: fetch failed:', e);
+    return null;
+  }
+}
+
+// Lightweight per-turn shadow cue. Uses the same pattern vocabulary as
+// ConversationShadowDetector but scoped to the current message only —
+// no DB reads, < 5ms. Injects one line so the Voice Charter (rule 5:
+// confront loaded disclosures) has something to respond to.
+function detectShadowCueSync(message: string): { type: string; cue: string } | null {
+  const lower = (message || '').toLowerCase();
+  if (!lower.trim()) return null;
+  const projection = /\b(they always|people never|everyone (does|is)|nobody understands|others should|why do they|those people)\b/;
+  const limitingBelief = /\b(i can'?t|i'?m not (good|smart|worthy|enough)|never works for me|i always fail|don'?t deserve|too late|missed my chance)\b/;
+  const resistance = /\b(yeah but|i know but|tried that|too hard|but what if|already tried|doesn'?t work for me)\b/;
+  if (projection.test(lower)) {
+    return { type: 'projection', cue: 'user is externalising cause; reflect the pattern with care, do not validate the frame.' };
+  }
+  if (limitingBelief.test(lower)) {
+    return { type: 'limiting_belief', cue: 'user is speaking a limiting belief as fact; name it as a belief, do not agree with it.' };
+  }
+  if (resistance.test(lower)) {
+    return { type: 'resistance', cue: 'user is deflecting the next step; name the resistance gently, do not push past it.' };
+  }
+  return null;
+}
+
+// Goal-title fidelity: scan recent user turns for the user's own goal
+// phrasing and repair args.title if the model reframed it. Never blocks.
+function repairGoalTitle(args: any, history: any[], currentMessage: string): any {
+  try {
+    const turns: string[] = [
+      ...(Array.isArray(history) ? history.filter((m: any) => m?.role === 'user').slice(-6).map((m: any) => String(m.content || '')) : []),
+      String(currentMessage || ''),
+    ];
+    const goalPhraseRegex = /((?:earn|make|build|launch|quit|reach|save|write|create|finish|complete|start|become)\s+[^.!?\n]{3,80})|((?:€|\$|£)\s?[\d.,]+\s?(?:k|m|million|thousand)?(?:\s+[^\s.!?\n]{1,20}){0,6})/gi;
+    const candidates: string[] = [];
+    for (const t of turns) {
+      const matches = t.match(goalPhraseRegex);
+      if (matches) candidates.push(...matches);
+    }
+    if (!candidates.length) return args;
+    const longest = candidates.sort((a, b) => b.length - a.length)[0].trim().replace(/\s+/g, ' ');
+    const modelTitle = String(args.title || '');
+    const modelTokens = new Set(modelTitle.toLowerCase().split(/\s+/).filter(Boolean));
+    const userTokens = longest.toLowerCase().split(/\s+/).filter(Boolean);
+    const overlap = userTokens.filter(t => modelTokens.has(t)).length / Math.max(userTokens.length, 1);
+    if (overlap < 0.6 && longest.length >= 4) {
+      const repaired = longest.charAt(0).toUpperCase() + longest.slice(1);
+      console.log(`⚠️ goal-title repaired: "${modelTitle}" → "${repaired}" (overlap=${overlap.toFixed(2)})`);
+      args.title = repaired.slice(0, 120);
+    }
+  } catch (e) {
+    console.warn('⚠️ repairGoalTitle failed (soft):', e);
+  }
+  return args;
+}
+
 // Helper function to detect if user wants technical personality details
 function detectTechnicalDetailRequest(message: string): boolean {
   const technicalKeywords = /\b(mbti|human design|personality type|what.*type|technical|specific|sun sign|projector|enfp|intj|generator|manifestor|manifesting generator|reflector)\b/i;
