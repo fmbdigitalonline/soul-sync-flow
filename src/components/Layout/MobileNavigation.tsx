@@ -16,12 +16,12 @@ const MobileNavigation: React.FC = () => {
   const { t } = useLanguage();
   const location = useLocation();
 
+  // Chat-first navigation: companion is home. Dreams & growth are absorbed
+  // into the conversation (their legacy routes redirect to /companion).
   const navItems = [
-    { to: "/", icon: Home, label: t('nav.home') },
-    { to: "/blueprint", icon: Star, label: t('nav.blueprint') },
-    { to: "/dreams", icon: Heart, label: t('nav.dreams') },
-    { to: "/spiritual-growth", icon: Sparkles, label: t('nav.growth') },
     { to: "/companion", icon: MessageCircle, label: t('nav.companion') },
+    { to: "/blueprint", icon: Star, label: t('nav.blueprint') },
+    { to: "/profile", icon: User, label: t('nav.profile') },
   ];
 
   const isActive = (path: string) => {
