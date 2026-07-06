@@ -11,6 +11,7 @@ import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapte
 import { VFPGraphFeedback } from "@/components/coach/VFPGraphFeedback";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { InteractiveSentenceText } from "@/components/coach/InteractiveSentenceText";
+import { DreamCard } from "@/components/companion/message-parts/DreamCard";
 import { SentenceActionButtons, SentenceAction } from "@/components/coach/SentenceActionButtons";
 import { toast } from "sonner";
 // NEW: Orb Presence System (Singularity Principle)
@@ -221,6 +222,17 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                       )}
                     </div>
                     
+                    {/* One-surface message parts: cards the twin attached */}
+                    {(message as any).attachments?.map((att: any, i: number) =>
+                      att?.type === "dream_card" && att.goal_id ? (
+                        <DreamCard
+                          key={`${message.id}_att_${i}`}
+                          goalId={att.goal_id}
+                          onSpeak={(text) => onSendMessage(text)}
+                        />
+                      ) : null
+                    )}
+
                     {/* Inline action buttons when sentence is selected */}
                     {selectedSentences[message.id] && (
                       <div className="mt-3 pt-2 border-t border-border/30">
