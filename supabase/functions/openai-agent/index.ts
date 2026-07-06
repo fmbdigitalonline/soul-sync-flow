@@ -539,7 +539,20 @@ serve(async (req) => {
       throw new Error('No AI API key configured');
     }
 
-    const { messages, model = 'gpt-4.1-mini-2025-04-14', temperature = 0.7, tools = null, max_tokens = 4000 } = await req.json();
+    const body = await req.json();
+
+    // ------------------------------------------------------------------
+    // ACTION ROUTER — Phase 1 wiring
+    // Callers (e.g. companion-oracle-conversation) can invoke this fn with
+    // { action: 'decompose_goal', title, description, timeframe, category, userId }
+    // and receive { milestones: [...] }. This bypasses the chat-completion
+    // path below entirely.
+    // ------------------------------------------------------------------
+    if (body && typeof body === 'object' && body.action === 'decompose_goal') {
+      return await handleDecomposeGoalAction(body);
+    }
+
+    const { messages, model = 'gpt-4.1-mini-2025-04-14', temperature = 0.7, tools = null, max_tokens = 4000 } = body;
     
     console.log('🔧 Tools provided:', tools?.length || 0);
     console.log('📝 Messages count:', messages?.length);
