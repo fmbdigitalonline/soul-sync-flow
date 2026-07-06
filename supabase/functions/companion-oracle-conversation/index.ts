@@ -2160,7 +2160,7 @@ serve(async (req) => {
         type: 'function',
         function: {
           name: 'decompose_goal',
-          description: 'Decompose a stated goal/dream into 4-6 milestones. Use ONLY after the user confirmed they want it broken down and you know the what and rough timeframe. Your text must still carry the insight; the card only holds structure.',
+          description: 'Decompose a stated goal/dream into 4-6 milestones. Use ONLY after the user confirmed they want it broken down and you know the what and rough timeframe. Your text must still carry the insight; the card only holds structure. Do NOT reframe, translate, or abstract the user\'s stated goal — copy their words into the title verbatim.',
           parameters: {
             type: 'object',
             properties: {
@@ -2192,11 +2192,26 @@ serve(async (req) => {
           return JSON.stringify({ found: true, title: g.title, description: g.description, progress: g.progress, milestones: (g.milestones || []).slice(0, 6) });
         }
         if (name === 'decompose_goal') {
+          // PHASE 1: goal-title fidelity guard — repair if the model reframed
+          args = repairGoalTitle(args, finalHistory || [], message);
+
           const { data: dec, error: decErr } = await supabase.functions.invoke('openai-agent', {
             body: { action: 'decompose_goal', ...args, userId }
           }).catch(() => ({ data: null, error: 'invoke failed' } as any));
-          // Fallback: store the goal shell; milestones can be co-created in chat
-          const milestones = dec?.milestones || [];
+          if (decErr) console.warn('⚠️ decompose_goal: invoke error:', decErr);
+          const milestones = Array.isArray(dec?.milestones) ? dec.milestones : [];
+
+          // PHASE 1: hard fail-path — refuse to create empty/thin DreamCards
+          if (milestones.length < 3) {
+            console.warn(`⚠️ decompose_goal: insufficient milestones (${milestones.length}), skipping goal insert`);
+            return JSON.stringify({
+              ok: false,
+              reason: 'decomposition_failed',
+              milestoneCount: milestones.length,
+              note: 'Decomposition returned too few milestones; tell the user briefly and offer to try once more.',
+            });
+          }
+
           const { data: inserted, error: insErr } = await supabase
             .from('user_goals')
             .insert({ user_id: userId, title: args.title, description: args.description, category: args.category || 'personal', timeframe: args.timeframe || null, milestones, progress: 0 })
