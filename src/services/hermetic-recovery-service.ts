@@ -11,6 +11,24 @@ export class HermeticRecoveryService {
   async recoverHermeticReport(jobId: string): Promise<HermeticRecoveryResponse> {
     try {
       console.log(`[HermeticRecoveryService] Starting recovery for job: ${jobId}`);
+
+      // Guard: verify the job id exists before invoking the edge function.
+      // Prevents a 500 "Job not found" from a stale client-side reference.
+      if (!jobId) {
+        return { success: false, error: "No job id provided" };
+      }
+      const { data: jobRow, error: lookupErr } = await supabase
+        .from('hermetic_processing_jobs')
+        .select('id, status')
+        .eq('id', jobId)
+        .maybeSingle();
+      if (lookupErr) {
+        console.warn(`[HermeticRecoveryService] Job lookup failed:`, lookupErr);
+      }
+      if (!jobRow) {
+        console.warn(`[HermeticRecoveryService] Stale job id, skipping invoke: ${jobId}`);
+        return { success: false, error: "No active job to recover (stale reference)" };
+      }
       
       const { data, error } = await supabase.functions.invoke('hermetic-recovery', {
         body: { job_id: jobId }

@@ -185,9 +185,28 @@ const OnboardingFlow: React.FC = () => {
 
         // Also kick off the user-facing standard personality report so the
         // Rapport tab is typically ready by the time the user gets there.
-        aiPersonalityReportService
-          .generatePersonalityReport(data, language)
-          .catch((e) => console.warn("Standard report generation deferred:", e));
+        // Non-blocking, but with a single retry on failure so a transient
+        // gateway hiccup doesn't leave the user with no v1.0 report.
+        (async () => {
+          for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+              const res = await aiPersonalityReportService.generatePersonalityReport(data, language);
+              if (res.success) {
+                console.log(`✅ Standard report kicked (attempt ${attempt})`);
+                localStorage.removeItem(`standard_report_pending_${user.id}`);
+                return;
+              }
+              console.warn(`Standard report attempt ${attempt} failed:`, res.error);
+            } catch (e) {
+              console.warn(`Standard report attempt ${attempt} threw:`, e);
+            }
+            if (attempt === 1) await new Promise((r) => setTimeout(r, 5000));
+          }
+          // Both attempts failed — leave a marker so the /blueprint backfill
+          // hook picks it up next time the user lands on that page.
+          localStorage.setItem(`standard_report_pending_${user.id}`, String(Date.now()));
+          console.error("❌ Standard report generation failed twice; deferred to backfill hook");
+        })();
       }
 
       if (isPartial) {

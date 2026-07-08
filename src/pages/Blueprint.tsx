@@ -20,9 +20,12 @@ import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { isAdminUser } from "@/utils/isAdminUser";
 import { supabase } from "@/integrations/supabase/client";
 import { hermeticPersonalityReportService } from "@/services/hermetic-personality-report-service";
+import { useStandardReportBackfill } from "@/hooks/use-standard-report-backfill";
 const Blueprint = () => {
   const [activeTab, setActiveTab] = useState("view");
   const [isGenerating, setIsGenerating] = useState(false);
+  // Auto-backfill the v1.0 standard report if it went missing (silent onboarding failure).
+  useStandardReportBackfill();
   const {
     toast
   } = useToast();
