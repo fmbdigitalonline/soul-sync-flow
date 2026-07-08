@@ -2187,6 +2187,13 @@ serve(async (req) => {
     const cardAttachments: any[] = [];
 
     async function runCompanionTool(name: string, args: any): Promise<string> {
+      console.log(`🛠️ TOOL LOOP: calling ${name}`, { args: JSON.stringify(args).slice(0, 300) });
+      const result = await _runCompanionToolInner(name, args);
+      console.log(`🛠️ TOOL LOOP: ${name} returned`, { preview: String(result).slice(0, 300) });
+      return result;
+    }
+
+    async function _runCompanionToolInner(name: string, args: any): Promise<string> {
       try {
         if (name === 'get_active_dream') {
           const { data: goals } = await supabase
@@ -2196,7 +2203,14 @@ serve(async (req) => {
             .order('created_at', { ascending: false })
             .limit(1);
           const g = goals?.[0];
-          if (!g) return JSON.stringify({ found: false, note: 'No active dream yet.' });
+          if (!g) {
+            return JSON.stringify({
+              found: false,
+              note: 'No active dream yet.',
+              instruction: 'The user has no active dream. In ONE short line, offer to break their stated goal down into concrete milestones — do NOT decompose or call decompose_goal until they explicitly say yes (ja/oké/graag/go/do it). Do not narrate what decomposition would look like.',
+              user_stated_goal_hint: (typeof message === 'string' ? message : '').slice(0, 200),
+            });
+          }
           cardAttachments.push({ type: 'dream_card', goal_id: g.id });
           return JSON.stringify({ found: true, title: g.title, description: g.description, progress: g.progress, milestones: (g.milestones || []).slice(0, 6) });
         }
