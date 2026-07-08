@@ -2378,6 +2378,13 @@ serve(async (req) => {
       });
     }
 
+    if (shouldForceTool && toolRounds === 0) {
+      console.warn('⚠️ REQUIRED IGNORED: tool_choice=required but the model returned zero tool calls', {
+        trigger,
+        message: (typeof message === 'string' ? message : '').slice(0, 200),
+      });
+    }
+
     // Enhanced error handling with full response details
     const responseText = await openAIResponse.text();
     if (!openAIResponse.ok) {
