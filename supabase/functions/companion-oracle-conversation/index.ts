@@ -1213,7 +1213,13 @@ serve(async (req) => {
     }
 
     // PHASE 4: CONVERSATION STATE DETECTION
-    const conversationState = detectConversationState(message, finalHistory);
+    // On first contact there is no real user message — the "message" is a
+    // synthetic handoff from onboarding. Running detectConversationState on
+    // that misclassifies as "finished"/frustration/venting and poisons the
+    // opening. Skip classification entirely on first contact.
+    const conversationState = firstContact
+      ? { detectionResult: null, note: 'first contact — classification skipped' }
+      : detectConversationState(message, finalHistory);
     console.log('🎯 CONVERSATION STATE:', conversationState);
 
     // PERSISTENCE ADDON: Store state in database (SoulSync - non-blocking)
