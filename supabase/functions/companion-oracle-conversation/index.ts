@@ -2413,6 +2413,13 @@ serve(async (req) => {
     }
     
     const aiResponse = JSON.parse(responseText);
+    const finishReason = aiResponse.choices?.[0]?.finish_reason || 'unknown';
+    if (finishReason === 'length') {
+      console.warn('✂️ TRUNCATION: response cut off (finish_reason=length) — model ran out of tokens mid-reply', {
+        model: selectedModel,
+        max_tokens: completionParams.max_completion_tokens,
+      });
+    }
     let response = aiResponse.choices[0]?.message?.content || 'I sense a disturbance in our connection. Please try reaching out again.'
 
     // Build lightweight reference array for recent conversational context (exclude system prompts)
@@ -2481,6 +2488,7 @@ serve(async (req) => {
       backgroundFusion: enableBackgroundIntelligence,
       tokens: tokenUsage,
       responseLength: response.length,
+      finishReason,
       qualityValidation: {
         passed: (!qualityCheck.hasContradiction || qualityCheck.addressedContradiction) && 
                 !qualityCheck.excessiveMetaphors && 
