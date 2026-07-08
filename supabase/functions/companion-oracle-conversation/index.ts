@@ -2225,7 +2225,7 @@ serve(async (req) => {
               .slice(-6)
               .map((m: any) => m.content as string)
               .concat([message]);
-            const goalPhraseRegex = /(?:"([^"]{4,80})")|((?:[^.!?\n]{0,40})(?:(?:€|\$|£)\s?[\d.,]+\s?\w*|\b\d[\d.,]*\s?(?:k|m|mln|million|miljoen)\b|\b(?:earn|make|save|quit|launch|build|start|become|lose|run|verdien(?:en)?|sparen|stoppen|beginnen|worden)\b[^.!?\n]{0,50}))/gi;
+            const goalPhraseRegex = /(?:"([^"]{4,80})")|((?:[^.!?\n]{0,40})(?:(?:€|\$|£)\s?[\d.,]+\s?\w*|\b\d[\d.,]*\s?(?:k|m|mln|mil{1,2}[ij]?oe?n)\b|\b(?:earn|make|save|quit|launch|build|start|become|lose|run|verdien(?:en)?|sparen|stoppen|beginnen|worden)\b[^.!?\n]{0,50}))/gi;
             const candidates: string[] = [];
             for (const text of recentUserTexts) {
               let match: RegExpExecArray | null;
@@ -2301,9 +2301,12 @@ serve(async (req) => {
     // ────────────────────────────────────────────────────────────────
     const acsDetection = conversationState?.detectionResult;
     const acsConfirmation = acsDetection?.cluster === 'decision' && acsDetection?.subState === 'commitment_signal';
-    const shortAffirmative = /^\s*(yes|yeah|yep|yup|sure|ok(ay)?|do it|go for it|please do|break it down|absolutely|definitely|ja|graag|zeker|prima|doe (het|maar)|let'?s (go|do it))[\s!.]*$/i.test(message);
+    // Repeated-token form so multi-word affirmatives ("yes go for it", "ja doe maar") match.
+    const shortAffirmative = /^\s*((yes|yeah|yep|yup|sure|ok(ay)?|do it|go for it|please do|break it down|absolutely|definitely|ja|graag|zeker|prima|doe (het|maar)|let'?s (go|do it))[\s,!.]*)+$/i.test(message);
     const planRequest = /\b(plan|planning|actie(plan)?|stappen|steps?|roadmap|breakdown|break\s+(it|this|that)\s+down|decompose|help\s+me\s+(improve|do|plan|start|begin|verbeteren)|need\s+(a\s+)?plan|geef.*plan|maak.*plan|hoe\s+(begin|start)\s+ik)\b/i.test(message);
-    const goalNounRegex = /(€|\$|£)\s?[\d.,]+|\b\d[\d.,]*\s?(k|m|mln|million|miljoen)\b|\b(goal|dream|doel|droom|earn|verdien(en)?|save|sparen|quit|launch|build|become|per\s+(month|maand|year|jaar))\b/i;
+    const goalNounRegex = /(€|\$|£)\s?[\d.,]+|\b\d[\d.,]*\s?(k|m|mln|mil{1,2}[ij]?oe?n)\b|\b(goal|dream|doel|droom|earn|verdien(en)?|save|sparen|quit|launch|build|become|per\s+(month|maand|year|jaar))\b/i;
+    // Also match fuzzy million spellings anywhere in text (e.g., "1 milion", "één miljoen").
+    const goalSignal = /\b(mil{1,2}[ij]?oe?n|million|miljoen|mln)\b/i;
     const abstractGoalRegex = /\b(improve|change|fix|solve|close\s+(this|that|the)\s+chapter|move\s+(on|forward|past)|let\s+go(\s+of)?|stop|start\s+(doing|being)|shift|transform|heal|grow|verbeter(en)?|veranderen|oplossen|loslaten|afronden|verder|beginnen\s+met)\b/i;
     const recentUserTurns = (finalHistory || [])
       .filter((m: any) => m.role === 'user' && typeof m.content === 'string')
@@ -2315,10 +2318,15 @@ serve(async (req) => {
     const concreteGoalHit = goalContextTexts.some(t => goalNounRegex.test(t));
     const abstractGoalHit = goalContextTexts.some(t => abstractGoalRegex.test(t));
     const goalInRecentContext = concreteGoalHit || abstractGoalHit;
-    const shouldForceTool = (acsConfirmation || shortAffirmative || planRequest) && goalInRecentContext;
+    // statedGoal: user named a concrete goal in the CURRENT message — force
+    // the consult even without a plan-request or timeframe (the empty-consult
+    // instruction will then steer the offer).
+    const statedGoal = goalNounRegex.test(message) || goalSignal.test(message);
+    const shouldForceTool = (acsConfirmation || shortAffirmative || planRequest || statedGoal) && (goalInRecentContext || statedGoal);
     const trigger = acsConfirmation ? 'acsConfirmation'
                    : planRequest ? 'planRequest'
                    : shortAffirmative ? 'shortAffirmative'
+                   : statedGoal ? 'statedGoal'
                    : 'none';
     const goalMatch = concreteGoalHit ? 'concrete' : abstractGoalHit ? 'abstract' : 'none';
 
@@ -2330,6 +2338,7 @@ serve(async (req) => {
       acsSubState: acsDetection?.subState || 'none',
       shortAffirmative,
       planRequest,
+      statedGoal,
       goalMatch,
       goalInRecentContext
     });
