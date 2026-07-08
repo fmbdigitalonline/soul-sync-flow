@@ -999,7 +999,7 @@ EXAMPLES:
 
 ENDING:
 ❌ NEVER: deflecting coaching questions that outsource the insight ("What do you think is causing this?", "Would you like to explore...", "Hoe zou dat voelen?")
-✅ ALLOWED and encouraged: after DELIVERING your insight, ONE short hypothesis-check inviting confirmation or pushback ("Am I close?", "Klopt dit?") — you are checking your read, not fishing for direction.
+✅ ALLOWED sparingly: after DELIVERING your insight, ONE short hypothesis-check inviting confirmation or pushback ("Am I close?", "Klopt dit?") — you are checking your read, not fishing for direction. This is the EXCEPTION, not the rule.
 ❌ NEVER end with a ritual sign-off. "I'm here if this brings up more." and "Let me know how this lands." are BANNED phrases — they are template tells.`;
   }
 }
@@ -1213,7 +1213,13 @@ serve(async (req) => {
     }
 
     // PHASE 4: CONVERSATION STATE DETECTION
-    const conversationState = detectConversationState(message, finalHistory);
+    // On first contact there is no real user message — the "message" is a
+    // synthetic handoff from onboarding. Running detectConversationState on
+    // that misclassifies as "finished"/frustration/venting and poisons the
+    // opening. Skip classification entirely on first contact.
+    const conversationState = firstContact
+      ? { detectionResult: null, note: 'first contact — classification skipped' }
+      : detectConversationState(message, finalHistory);
     console.log('🎯 CONVERSATION STATE:', conversationState);
 
     // PERSISTENCE ADDON: Store state in database (SoulSync - non-blocking)
@@ -1959,9 +1965,9 @@ serve(async (req) => {
       '1. LANGUAGE: reply in the language of the user\'s MOST RECENT message. If they switch to Dutch, you switch fully to Dutch and stay there until they switch back. Never drift mid-topic.\n' +
       '2. LENGTH: default to SHORT. One idea, landed well, beats four ideas explained. Most replies: 2-5 sentences. Go long only when the user asks for depth or the moment truly demands it. You are a conversation, not an essay service.\n' +
       '3. VARY YOUR SHAPE: never open consecutive replies the same way. Do not start replies with the user\'s name more than occasionally. No fixed closing lines, ever — ritual sign-offs are template tells that kill intimacy.\n' +
-      '4. ONE QUESTION MAX: at most one question per reply, and only when it earns its place. A hypothesis-check after an insight ("Am I close?") is good. A deflecting question instead of an insight is not.\n' +
+      '4. ONE QUESTION MAX: at most one question per reply, and only when it earns its place. A hypothesis-check after an insight ("Am I close?") is the EXCEPTION, not the rule — rationed to one reply in three. A deflecting question instead of an insight is not.\n' +
       '5. CONFRONT WHEN THE DOOR OPENS: when the user discloses something loaded (status, shame, fear, money, a relationship, "out of necessity"), do NOT smooth past it into advice. Stop. Name it. Ask about it. The disclosure IS the conversation.\n' +
-      '6. THE CHART INFORMS, IT DOES NOT NARRATE: never explain every feeling by the blueprint ("you feel X because Taurus Moon"). Use chart mechanics for the occasional precise strike, not as a running commentary. The user is the author of their life; you hold a map, not a script.\n' +
+      '6. THE CHART INFORMS, IT DOES NOT NARRATE: never explain every feeling by the blueprint ("you feel X because Taurus Moon"). Use chart mechanics for the occasional precise strike — rationed to at most ONCE per session — not as a running commentary. The user is the author of their life; you hold a map, not a script.\n' +
       '7. NO IDENTITY FLATTERY: do not cast the user as a blocked visionary whose environment is unworthy of them. Being seen precisely lands deeper than being praised. When their pattern is costing them something, say so plainly and kindly.\n' +
       '8. HONESTY OVER COMFORT: you would rather be corrected than be agreeable. State your read confidently, hold it loosely, and make pushing back feel easy and welcome.';
 
@@ -2181,6 +2187,13 @@ serve(async (req) => {
     const cardAttachments: any[] = [];
 
     async function runCompanionTool(name: string, args: any): Promise<string> {
+      console.log(`🛠️ TOOL LOOP: calling ${name}`, { args: JSON.stringify(args).slice(0, 300) });
+      const result = await _runCompanionToolInner(name, args);
+      console.log(`🛠️ TOOL LOOP: ${name} returned`, { preview: String(result).slice(0, 300) });
+      return result;
+    }
+
+    async function _runCompanionToolInner(name: string, args: any): Promise<string> {
       try {
         if (name === 'get_active_dream') {
           const { data: goals } = await supabase
@@ -2190,7 +2203,14 @@ serve(async (req) => {
             .order('created_at', { ascending: false })
             .limit(1);
           const g = goals?.[0];
-          if (!g) return JSON.stringify({ found: false, note: 'No active dream yet.' });
+          if (!g) {
+            return JSON.stringify({
+              found: false,
+              note: 'No active dream yet.',
+              instruction: 'The user has no active dream. In ONE short line, offer to break their stated goal down into concrete milestones — do NOT decompose or call decompose_goal until they explicitly say yes (ja/oké/graag/go/do it). Do not narrate what decomposition would look like.',
+              user_stated_goal_hint: (typeof message === 'string' ? message : '').slice(0, 200),
+            });
+          }
           cardAttachments.push({ type: 'dream_card', goal_id: g.id });
           return JSON.stringify({ found: true, title: g.title, description: g.description, progress: g.progress, milestones: (g.milestones || []).slice(0, 6) });
         }
@@ -2205,7 +2225,7 @@ serve(async (req) => {
               .slice(-6)
               .map((m: any) => m.content as string)
               .concat([message]);
-            const goalPhraseRegex = /(?:"([^"]{4,80})")|((?:[^.!?\n]{0,40})(?:(?:€|\$|£)\s?[\d.,]+\s?\w*|\b\d[\d.,]*\s?(?:k|m|mln|million|miljoen)\b|\b(?:earn|make|save|quit|launch|build|start|become|lose|run|verdien(?:en)?|sparen|stoppen|beginnen|worden)\b[^.!?\n]{0,50}))/gi;
+            const goalPhraseRegex = /(?:"([^"]{4,80})")|((?:[^.!?\n]{0,40})(?:(?:€|\$|£)\s?[\d.,]+\s?\w*|\b\d[\d.,]*\s?(?:k|m|mln|mil{1,2}[ij]?oe?n)\b|\b(?:earn|make|save|quit|launch|build|start|become|lose|run|verdien(?:en)?|sparen|stoppen|beginnen|worden)\b[^.!?\n]{0,50}))/gi;
             const candidates: string[] = [];
             for (const text of recentUserTexts) {
               let match: RegExpExecArray | null;
@@ -2281,9 +2301,12 @@ serve(async (req) => {
     // ────────────────────────────────────────────────────────────────
     const acsDetection = conversationState?.detectionResult;
     const acsConfirmation = acsDetection?.cluster === 'decision' && acsDetection?.subState === 'commitment_signal';
-    const shortAffirmative = /^\s*(yes|yeah|yep|yup|sure|ok(ay)?|do it|go for it|please do|break it down|absolutely|definitely|ja|graag|zeker|prima|doe (het|maar)|let'?s (go|do it))[\s!.]*$/i.test(message);
+    // Repeated-token form so multi-word affirmatives ("yes go for it", "ja doe maar") match.
+    const shortAffirmative = /^\s*((yes|yeah|yep|yup|sure|ok(ay)?|do it|go for it|please do|break it down|absolutely|definitely|ja|graag|zeker|prima|doe (het|maar)|let'?s (go|do it))[\s,!.]*)+$/i.test(message);
     const planRequest = /\b(plan|planning|actie(plan)?|stappen|steps?|roadmap|breakdown|break\s+(it|this|that)\s+down|decompose|help\s+me\s+(improve|do|plan|start|begin|verbeteren)|need\s+(a\s+)?plan|geef.*plan|maak.*plan|hoe\s+(begin|start)\s+ik)\b/i.test(message);
-    const goalNounRegex = /(€|\$|£)\s?[\d.,]+|\b\d[\d.,]*\s?(k|m|mln|million|miljoen)\b|\b(goal|dream|doel|droom|earn|verdien(en)?|save|sparen|quit|launch|build|become|per\s+(month|maand|year|jaar))\b/i;
+    const goalNounRegex = /(€|\$|£)\s?[\d.,]+|\b\d[\d.,]*\s?(k|m|mln|mil{1,2}[ij]?oe?n)\b|\b(goal|dream|doel|droom|earn|verdien(en)?|save|sparen|quit|launch|build|become|per\s+(month|maand|year|jaar))\b/i;
+    // Also match fuzzy million spellings anywhere in text (e.g., "1 milion", "één miljoen").
+    const goalSignal = /\b(mil{1,2}[ij]?oe?n|million|miljoen|mln)\b/i;
     const abstractGoalRegex = /\b(improve|change|fix|solve|close\s+(this|that|the)\s+chapter|move\s+(on|forward|past)|let\s+go(\s+of)?|stop|start\s+(doing|being)|shift|transform|heal|grow|verbeter(en)?|veranderen|oplossen|loslaten|afronden|verder|beginnen\s+met)\b/i;
     const recentUserTurns = (finalHistory || [])
       .filter((m: any) => m.role === 'user' && typeof m.content === 'string')
@@ -2295,10 +2318,15 @@ serve(async (req) => {
     const concreteGoalHit = goalContextTexts.some(t => goalNounRegex.test(t));
     const abstractGoalHit = goalContextTexts.some(t => abstractGoalRegex.test(t));
     const goalInRecentContext = concreteGoalHit || abstractGoalHit;
-    const shouldForceTool = (acsConfirmation || shortAffirmative || planRequest) && goalInRecentContext;
+    // statedGoal: user named a concrete goal in the CURRENT message — force
+    // the consult even without a plan-request or timeframe (the empty-consult
+    // instruction will then steer the offer).
+    const statedGoal = goalNounRegex.test(message) || goalSignal.test(message);
+    const shouldForceTool = (acsConfirmation || shortAffirmative || planRequest || statedGoal) && (goalInRecentContext || statedGoal);
     const trigger = acsConfirmation ? 'acsConfirmation'
                    : planRequest ? 'planRequest'
                    : shortAffirmative ? 'shortAffirmative'
+                   : statedGoal ? 'statedGoal'
                    : 'none';
     const goalMatch = concreteGoalHit ? 'concrete' : abstractGoalHit ? 'abstract' : 'none';
 
@@ -2310,6 +2338,7 @@ serve(async (req) => {
       acsSubState: acsDetection?.subState || 'none',
       shortAffirmative,
       planRequest,
+      statedGoal,
       goalMatch,
       goalInRecentContext
     });
@@ -2349,6 +2378,13 @@ serve(async (req) => {
       });
     }
 
+    if (shouldForceTool && toolRounds === 0) {
+      console.warn('⚠️ REQUIRED IGNORED: tool_choice=required but the model returned zero tool calls', {
+        trigger,
+        message: (typeof message === 'string' ? message : '').slice(0, 200),
+      });
+    }
+
     // Enhanced error handling with full response details
     const responseText = await openAIResponse.text();
     if (!openAIResponse.ok) {
@@ -2377,6 +2413,13 @@ serve(async (req) => {
     }
     
     const aiResponse = JSON.parse(responseText);
+    const finishReason = aiResponse.choices?.[0]?.finish_reason || 'unknown';
+    if (finishReason === 'length') {
+      console.warn('✂️ TRUNCATION: response cut off (finish_reason=length) — model ran out of tokens mid-reply', {
+        model: selectedModel,
+        max_tokens: completionParams.max_completion_tokens,
+      });
+    }
     let response = aiResponse.choices[0]?.message?.content || 'I sense a disturbance in our connection. Please try reaching out again.'
 
     // Build lightweight reference array for recent conversational context (exclude system prompts)
@@ -2445,6 +2488,7 @@ serve(async (req) => {
       backgroundFusion: enableBackgroundIntelligence,
       tokens: tokenUsage,
       responseLength: response.length,
+      finishReason,
       qualityValidation: {
         passed: (!qualityCheck.hasContradiction || qualityCheck.addressedContradiction) && 
                 !qualityCheck.excessiveMetaphors && 
