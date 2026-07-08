@@ -45,7 +45,7 @@ export function useStandardReportBackfill() {
         if (existing && existing.length > 0) return;
 
         const bpRes = await blueprintService.getActiveBlueprintData();
-        if (!bpRes.success || !bpRes.data) {
+        if (bpRes.error || !bpRes.data) {
           console.warn("Standard report backfill: no active blueprint");
           return;
         }
