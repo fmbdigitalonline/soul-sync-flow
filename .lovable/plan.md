@@ -1,60 +1,45 @@
-## Log verdict — pin worked, insert failed on a schema mismatch
+# Fix: milestone taps spawning duplicate goals
 
-The chain now runs end to end until the very last step:
+## Root cause
+`DreamCard` sends the literal string `Let's work on: <milestone title>` when a user taps a milestone. The oracle treats that like any other user turn — the trigger classifier sees an actionable statement and fires `decompose_goal`, which inserts a new `user_goals` row titled after the milestone (e.g. "Let's work on: Reach $1 Million").
 
-```
-🛠️ TOOL LOOP: calling decompose_goal { title:"Become a millionaire", timeframe:"5 years", category:"financial" }
-🎯 PINNED DECOMPOSE: title journey { in:"Become a millionaire", out:"…", repaired:false }
-🛠️ TOOL LOOP: decompose_goal returned { ok:false, error:"Could not find the 'timeframe' column of 'user_goals' in the schema cache" }
-```
+## Change 1 — `supabase/functions/companion-oracle-conversation/index.ts`
 
-So: `tool_choice` pin worked, `openai-agent` returned enough milestones (the fail-path didn't trigger — we got past `milestones.length < 3`), and the insert *attempted*. PostgREST rejected it because `user_goals` has no `timeframe` column. Verified columns: `id, user_id, title, description, progress, status, aligned_traits, milestones, target_date, category, created_at, updated_at`. No `timeframe`.
-
-That's why no row appears and no `dream_card` attachment ships — `insErr` short-circuits at line 2283 and the tool returns `{ ok:false, error }` instead of pushing the attachment.
-
-### Fix (single link)
-
-In `runCompanionTool` → `decompose_goal` branch (`companion-oracle-conversation/index.ts` ~line 2280), stop trying to insert `timeframe` and instead translate it to the real column, `target_date`. Also drop any other fields not in the schema. Concretely:
+Before the existing trigger/force-tool block that computes `forceDecompose` / `shouldForceTool` / `firstToolChoice`, add a milestone-tap detector on the incoming user message:
 
 ```ts
-const targetDate = (() => {
-  // args.timeframe examples: "5 years", "3 months", "12 weeks", "30 days"
-  const m = /^(\d+)\s*(day|week|month|year)s?$/i.exec(String(args.timeframe || '').trim());
-  if (!m) return null;
-  const n = parseInt(m[1], 10);
-  const unit = m[2].toLowerCase();
-  const d = new Date();
-  if (unit === 'day')   d.setDate(d.getDate() + n);
-  if (unit === 'week')  d.setDate(d.getDate() + n * 7);
-  if (unit === 'month') d.setMonth(d.getMonth() + n);
-  if (unit === 'year')  d.setFullYear(d.getFullYear() + n);
-  return d.toISOString().slice(0, 10); // date column
-})();
-
-const { data: inserted, error: insErr } = await supabase
-  .from('user_goals')
-  .insert({
-    user_id: userId,
-    title: args.title,
-    description: args.description,
-    category: args.category || 'personal',
-    target_date: targetDate,
-    milestones,
-    progress: 0,
-  })
-  .select('id')
-  .single();
+const MILESTONE_TAP_PREFIX = "Let's work on:";
+const isMilestoneTap = typeof userMessage === 'string'
+  && userMessage.trimStart().startsWith(MILESTONE_TAP_PREFIX);
 ```
 
-If `args.timeframe` doesn't parse cleanly, insert `target_date: null` — the column is nullable and the card still renders from `milestones` + `progress`.
+When `isMilestoneTap` is true:
+- Force all decompose/plan/consult triggers off (`forceDecompose = false`, `shouldForceTool = false`, any `trigger` flags cleared for this turn).
+- Pin `firstToolChoice` to `{ type: 'function', function: { name: 'get_active_dream' } }` so the model reads the existing dream instead of creating one.
+- Append one line to the system prompt built for this turn:
+  > "The user tapped a milestone on their existing dream card — coach them into starting this specific milestone; do NOT create or decompose a new goal."
+- Log `🪧 MILESTONE TAP: coaching mode, decompose suppressed` so we can verify in edge logs.
 
-### Scope
+No other branches change. `decompose_goal` remains available for genuine new-goal turns.
 
-- One file, one insert block edited: `supabase/functions/companion-oracle-conversation/index.ts` around line 2278–2282.
-- No schema migration. The `timeframe` column was never there; the caller was guessing.
-- No frontend changes (DreamCard already reads only `title`, `progress`, `milestones`).
-- No `openai-agent` changes.
+## Change 2 — data cleanup
 
-### Verify
+Delete the one bogus row via the insert tool:
 
-Same recipe: new thread → goal → offer → "yes". Expect logs to show `🛠️ TOOL LOOP: decompose_goal returned { ok:true, goal_id:… }`, a new row in `user_goals`, and a `<DreamCard />` under the assistant message. -DEV NOTE-Apply your fix as proposed, with one change: make the timeframe parser tolerant — accept optional leading "in/within/binnen", Dutch units (jaar/jaren, maand/maanden, week/weken, dag/dagen), and decimals, e.g. `/(?:in|within|binnen)?\s*(\d+(?:[.,]\d+)?)\s*(day|dag|week|month|maand|year|jaar)/i` with plural-insensitive matching. Unparseable → `target_date: null` as you specified. Also ensure the model-facing tool description for `description` still says the timeframe belongs in it. Deploy, then the recipe: new thread → goal → offer → "yes".
+```sql
+DELETE FROM public.user_goals
+WHERE title = 'Let''s work on: Reach $1 Million';
+```
+
+(If the milestone title varies, we'll first `SELECT id, title, created_at FROM user_goals WHERE title ILIKE 'Let''s work on:%'` and delete the matching row(s) from today.)
+
+## Verify
+1. Fresh thread → tap a milestone on an existing DreamCard.
+2. Edge logs show `🪧 MILESTONE TAP` and no `🛠️ TOOL LOOP: calling decompose_goal`.
+3. `user_goals` row count unchanged; no new "Let's work on: …" row appears.
+4. Assistant reply coaches the user into starting that milestone.
+
+## Scope
+- One edge function file edited.
+- One (or few) row(s) deleted from `user_goals`.
+- No schema change, no frontend change, no `openai-agent` change.
