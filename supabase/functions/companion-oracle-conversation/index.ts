@@ -2174,8 +2174,8 @@ serve(async (req) => {
             type: 'object',
             properties: {
               title: { type: 'string', description: 'Short goal title using the USER\'S OWN stated goal verbatim (e.g. "Earn €1,000,000") — never your reframe or interpretation of what the goal is really about.' },
-              description: { type: 'string', description: 'One-line description with timeframe/context' },
-              timeframe: { type: 'string', description: 'e.g. "3 years"' },
+              description: { type: 'string', description: 'One-line description — MUST include the timeframe in-line (e.g. "Build wealth to 1M in 5 years") since the timeframe field is only used to compute a target date.' },
+              timeframe: { type: 'string', description: 'e.g. "3 years", "6 months", "3 jaar". Used to derive target_date only.' },
               category: { type: 'string', description: 'e.g. financial, creative, health' }
             },
             required: ['title', 'description']
