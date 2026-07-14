@@ -2174,8 +2174,8 @@ serve(async (req) => {
             type: 'object',
             properties: {
               title: { type: 'string', description: 'Short goal title using the USER\'S OWN stated goal verbatim (e.g. "Earn €1,000,000") — never your reframe or interpretation of what the goal is really about.' },
-              description: { type: 'string', description: 'One-line description with timeframe/context' },
-              timeframe: { type: 'string', description: 'e.g. "3 years"' },
+              description: { type: 'string', description: 'One-line description — MUST include the timeframe in-line (e.g. "Build wealth to 1M in 5 years") since the timeframe field is only used to compute a target date.' },
+              timeframe: { type: 'string', description: 'e.g. "3 years", "6 months", "3 jaar". Used to derive target_date only.' },
               category: { type: 'string', description: 'e.g. financial, creative, health' }
             },
             required: ['title', 'description']
@@ -2281,9 +2281,34 @@ serve(async (req) => {
             });
           }
 
+          // Map args.timeframe → target_date (real column). Tolerant of English + Dutch units.
+          const targetDate = (() => {
+            const raw = String(args.timeframe || '').trim();
+            if (!raw) return null;
+            const m = /(?:in|within|binnen)?\s*(\d+(?:[.,]\d+)?)\s*(day|dag|dagen|week|weken|month|months|maand|maanden|year|years|jaar|jaren)/i.exec(raw);
+            if (!m) return null;
+            const n = parseFloat(m[1].replace(',', '.'));
+            if (!isFinite(n) || n <= 0) return null;
+            const unit = m[2].toLowerCase();
+            const d = new Date();
+            if (unit.startsWith('day') || unit.startsWith('dag')) d.setDate(d.getDate() + Math.round(n));
+            else if (unit.startsWith('week') || unit.startsWith('weke')) d.setDate(d.getDate() + Math.round(n * 7));
+            else if (unit.startsWith('month') || unit.startsWith('maand')) d.setMonth(d.getMonth() + Math.round(n));
+            else if (unit.startsWith('year') || unit.startsWith('jaar') || unit.startsWith('jare')) d.setFullYear(d.getFullYear() + Math.round(n));
+            else return null;
+            return d.toISOString().slice(0, 10);
+          })();
           const { data: inserted, error: insErr } = await supabase
             .from('user_goals')
-            .insert({ user_id: userId, title: args.title, description: args.description, category: args.category || 'personal', timeframe: args.timeframe || null, milestones, progress: 0 })
+            .insert({
+              user_id: userId,
+              title: args.title,
+              description: args.description,
+              category: args.category || 'personal',
+              target_date: targetDate,
+              milestones,
+              progress: 0,
+            })
             .select('id')
             .single();
           if (insErr) return JSON.stringify({ ok: false, error: insErr.message });
