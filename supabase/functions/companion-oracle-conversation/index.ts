@@ -2215,6 +2215,7 @@ serve(async (req) => {
           return JSON.stringify({ found: true, title: g.title, description: g.description, progress: g.progress, milestones: (g.milestones || []).slice(0, 6) });
         }
         if (name === 'decompose_goal') {
+          const _titleIn = typeof args.title === 'string' ? args.title : '';
           // PHASE 1 (item 2): GOAL-TITLE FIDELITY GUARD — the card must carry
           // the user's words, never the model's reframe. Scan recent user
           // turns for their stated goal phrase; if the model's title drifted
@@ -2254,6 +2255,11 @@ serve(async (req) => {
           } catch (guardErr) {
             console.warn('⚠️ goal-title guard failed (non-blocking):', guardErr instanceof Error ? guardErr.message : guardErr);
           }
+          console.log('🎯 PINNED DECOMPOSE: title journey', {
+            in: _titleIn,
+            out: typeof args.title === 'string' ? args.title : '',
+            repaired: _titleIn !== args.title,
+          });
 
           const { data: dec, error: decErr } = await supabase.functions.invoke('openai-agent', {
             body: { action: 'decompose_goal', ...args, userId }
