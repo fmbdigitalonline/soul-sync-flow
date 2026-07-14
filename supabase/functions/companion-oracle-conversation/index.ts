@@ -1869,6 +1869,36 @@ serve(async (req) => {
 
         const roleBlock = getRoleForIntent(intent, userName, hermeticEducationalSections);
 
+        // Truth guard: if no behavioral memory exists, strip BEHAVIORAL EVIDENCE/VALIDATION
+        // steps from the role template so the model can't fabricate memory references.
+        const hasNoMemory =
+          (behavioralContext.patterns?.length ?? 0) === 0 &&
+          (behavioralContext.memories?.length ?? 0) === 0;
+        let effectiveRoleBlock = roleBlock;
+        if (hasNoMemory) {
+          const lines = roleBlock.split('\n').filter(l =>
+            !/^\s*\d+\.\s*BEHAVIORAL (EVIDENCE|VALIDATION)/i.test(l)
+          );
+          // Renumber ordered steps sequentially
+          let n = 0;
+          let inStructure = false;
+          const renumbered = lines.map(l => {
+            const m = l.match(/^(\s*)(\d+)\.\s+(.*)$/);
+            if (m) {
+              n += 1;
+              inStructure = true;
+              return `${m[1]}${n}. ${m[3]}`;
+            }
+            if (inStructure && l.trim() === '') {
+              // Reset numbering when leaving the structure block
+              n = 0;
+              inStructure = false;
+            }
+            return l;
+          });
+          effectiveRoleBlock = renumbered.join('\n');
+        }
+
         // Profile block
         const profileLines = [
           userName + "'S CURRENT PROFILE (Technical Details):",
@@ -1919,7 +1949,7 @@ serve(async (req) => {
           hermeticPrimer,
           phaseGuidance,
           'CRITICAL OPENING INSTRUCTION:\n' + openingRule,
-          'YOUR ROLE IN THIS CONVERSATION:\n' + roleBlock,
+          'YOUR ROLE IN THIS CONVERSATION:\n' + effectiveRoleBlock,
           profileLines.join('\n') + factsSection + narrativeSection,
           'COMMUNICATION GUIDELINES:\n' + [voiceStyle, humorStyle, communicationDepth].filter(Boolean).join('\n'),
           'UNIVERSAL RULES:\n' + universalRules,
@@ -1927,7 +1957,11 @@ serve(async (req) => {
           "Remember: You're " + userName + "'s perceptive AI companion who has access to their detailed blueprint and can provide both specific facts and meaningful guidance through conversation."
         ];
 
-        return blocks.filter(Boolean).join('\n\n');
+        let assembled = blocks.filter(Boolean).join('\n\n');
+        if (hasNoMemory) {
+          assembled += '\n\nMEMORY TRUTH GUARD: This user has NO conversation memory yet. NEVER claim to see patterns "in your memory" or reference past behavior — you have only their chart. Speaking from the chart is enough.';
+        }
+        return assembled;
       };
 
       systemPrompt = await generateHybridPrompt();
@@ -1943,6 +1977,22 @@ serve(async (req) => {
     }
 
     // ------------------------------------------------------------------
+    // QUESTION RATION: if the last 3 assistant messages ended with "?",
+    // force this reply to end with a statement.
+    // ------------------------------------------------------------------
+    {
+      const last3Assistant = (finalHistory || [])
+        .filter((m: any) => m.role === 'assistant')
+        .slice(-3);
+      const endsInQ = last3Assistant.filter((m: any) =>
+        typeof m.content === 'string' && m.content.trim().endsWith('?')
+      ).length;
+      if (endsInQ >= 2) {
+        systemPrompt += '\n\nQUESTION RATION: Your recent replies all ended in questions. End this one with a statement.';
+      }
+    }
+
+    // ------------------------------------------------------------------
     // FIRST CONTACT: the companion speaks first — seconds after the
     // blueprint reveal. One real chart fact, slightly confronting,
     // ending on a check-in question. (Set by the onboarding handoff.)
@@ -1954,7 +2004,7 @@ serve(async (req) => {
         '- From the blueprint context above, pick the ONE fact that carries the most tension (authority, profile, or a shadow-adjacent pattern) and make a single specific, slightly confronting observation about how it probably shows up in their daily life.\n' +
         '- Confronting means precise and caring — the feeling of being seen, never judged. No flattery.\n' +
         '- End with one short question inviting them to confirm or push back (for example: "Am I close?"). You are checking a hypothesis, not declaring a truth.\n' +
-        '- 2 to 4 sentences total. No lists, no headers, no emojis, no name-dropping of frameworks or system terms.';
+        '- HARD LIMIT: 2 to 4 sentences total. No lists, no headers, no emojis, no name-dropping of frameworks or system terms.';
     }
 
     // ------------------------------------------------------------------
