@@ -1,38 +1,20 @@
-One file changes: `supabase/functions/companion-oracle-conversation/index.ts`.
+## Task
 
-## Task 1 — Truth guard for empty behavioral memory
+Commit the SoulSync Developer Constitution v2.1 to the repo root as a single new markdown file.
 
-**Detect empty memory** (right after `behavioralContext` is loaded, ~line 1847):
-```ts
-const hasNoMemory =
-  (behavioralContext.patterns?.length ?? 0) === 0 &&
-  (behavioralContext.memories?.length ?? 0) === 0;
-```
+## File
 
-**(a) Strip "BEHAVIORAL EVIDENCE" from the selected role template.** After `const roleBlock = getRoleForIntent(...)` (~line 1870), when `hasNoMemory` is true, remove any numbered line beginning with "BEHAVIORAL EVIDENCE" (and the equivalent "BEHAVIORAL VALIDATION" line in ALIGNED_ACTION) from `roleBlock`, and renumber the remaining steps (2, 3, 4 → 2, 3). Regex-based, applied only to the returned string — the template functions themselves are untouched so memory-present replies keep the step.
+**Create:** `SOULSYNC_CONSTITUTION.md` at the repo root.
 
-**(b) Append a truth-guard line to the system prompt.** After `systemPrompt = await generateHybridPrompt();` (~line 1933), if `hasNoMemory`:
-```
-systemPrompt += '\n\nMEMORY TRUTH GUARD: This user has NO conversation memory yet. NEVER claim to see patterns "in your memory" or reference past behavior — you have only their chart. Speaking from the chart is enough.';
-```
-
-**FIRST CONTACT hard cap.** In the FIRST CONTACT DIRECTIVE (line ~1957), change:
-- `- 2 to 4 sentences total.` → `- HARD LIMIT: 2 to 4 sentences total.`
-
-## Task 2 — Question-ration counter
-
-Insert after `systemPrompt = await generateHybridPrompt();` (before FIRST CONTACT block) so it runs on every oracle reply:
-```ts
-const last3Assistant = (finalHistory || [])
-  .filter(m => m.role === 'assistant')
-  .slice(-3);
-const endsInQ = last3Assistant.filter(m =>
-  typeof m.content === 'string' && m.content.trim().endsWith('?')
-).length;
-if (endsInQ >= 2) {
-  systemPrompt += '\n\nQUESTION RATION: Your recent replies all ended in questions. End this one with a statement.';
-}
-```
+**Contents:** The full v2.1 document exactly as the user pasted — vision, thought process, three charters + corrected ground truths, current state (Phase 1 shipped / Phase 0 recorded), buried assets → engines, roadmap (Phases 0–4), rules of engagement, open bug tally. No edits, no summarization, no reformatting beyond preserving the markdown as-is.
 
 ## Out of scope
-No frontend changes. No changes to `getRoleForIntent` template definitions themselves (mutation applied to the returned string only, so memory-present flows are unaffected). No DB writes. No new imports.
+
+- No code changes.
+- No edits to `.lovable/plan.md` or any edge function.
+- No deletion or renaming of any existing docs (README, PHASE_3_IMPLEMENTATION.md, docs/*).
+- No deploy step — this is a docs-only commit.
+
+## Verification
+
+`SOULSYNC_CONSTITUTION.md` exists at repo root with the full v2.1 text; nothing else changes.
