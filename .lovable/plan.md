@@ -1,84 +1,68 @@
-# RCA: consult → offer joint is missing in the deployed build
+## Diagnosis (end-to-end trace)
 
-## What the paste proves
+### Evidence gathered
 
-Two console traces from two different builds, neither showing `🛠️ TOOL LOOP` lines. The twin's Dutch reply ("het is slim om concrete financiële doelen op te delen in duidelijke mijlpalen") is a textbook Action Charter clause-1 violation: it **narrated** decomposition instead of **offering** it and then doing it on a yes.
+1. **TOOL LOOP logging is in the source** (`supabase/functions/companion-oracle-conversation/index.ts` lines 2190 & 2192) — so the deployed build should emit it. Recent edge-function logs pulled for `companion-oracle-conversation` show only `shutdown` + background `FUSION` lines; no turn-level oracle logs surfaced in the queried window for the confirmed test users (`bb74faf0…`, `d6f5766e…`). Analytics queries for `TOOL LOOP` / `DECOMPOSE_GOAL` / `REQUIRED IGNORED` markers return empty — this build's turn logs aren't in the retained window, so we can't read the exact tool call from logs on the confirmed turn.
+2. `**decomposeGoalReal` is present and wired** in `openai-agent/index.ts` (line 544, wired 671, `🧩 DECOMPOSE_GOAL` at 598/659/678). No evidence it was invoked in the retained window.
+3. `**user_goals` table — smoking gun.** Querying directly:
+  - `user_id = bb74faf0-0c5c-4abd-b9d1-a26681e3fc30` → **0 rows, ever**.
+  - `user_id = d6f5766e-9ab5-4f31-a215-e831bd32ab28` → **0 rows, ever**.
+  - Newest row in the whole table is `2026-07-06` (a different user). So on every recent "yes" turn, the insert never happened.
+4. **RLS is not the wall.** `user_goals` policies are the standard `auth.uid() = user_id` USING/WITH CHECK set. The oracle client (line 1021–1033) uses the anon key + the caller's `Authorization` header, so `auth.uid()` resolves correctly — same pattern the function already uses for reads that succeed. No RLS-denied signature in logs for this table. `conversation_state_tracking` is a different table and not the same policy shape.
+5. **Frontend renders `attachments` correctly.** `use-hacs-conversation.ts:680` passes `response.attachments || []` onto the oracle message; `HACSChatInterface.tsx` maps `attachments` where `type === "dream_card" && goal_id` into `<DreamCard />`. If a `dream_card` attachment ever reached the client, it would render. The response envelope at line 2538 includes `attachments: cardAttachments`.
 
-## Where the break is (verified against current repo)
+### First broken link
 
-`supabase/functions/companion-oracle-conversation/index.ts` line 2193 — the `get_active_dream` empty branch:
+**The forced tool call on the "yes" turn is unconstrained.**
 
-```ts
-if (!g) return JSON.stringify({ found: false, note: 'No active dream yet.' });
-```
-
-This is a **dead-end tool result**. The model consulted (as instructed by clause-3 "CONSULT BEFORE COUNSEL"), got a bare `note`, and had no next-step instruction embedded in the payload. Tool results steer models far harder than system prompts, so with nothing to steer toward, it fell back to narrating advice about breaking goals into milestones — exactly clause-1's failure mode.
-
-Also confirmed absent in current source:
-
-- No `🛠️ TOOL LOOP` logging anywhere in the file (grep is empty). That's why the paste has no `🛠️` lines — this build never emits them.
-- `decomposeGoalReal` **is** present in `supabase/functions/openai-agent/index.ts:544` and wired at line 671, so the openai-agent chain is fine. The unknown from the paste is resolved: **openai-agent is not the break; companion-oracle-conversation is.**
-
-So the machine state matches the user's read: reflex/`tool_choice: required` is live and proven, but the consult→offer joint and its telemetry are missing from what's deployed.
-
-## Fix (one file, one deploy)
-
-### 1. Turn the empty consult into an instructed dead-end
-
-In `runCompanionTool` → `get_active_dream` empty branch, replace the bare `note` with an instruction the model must obey:
+`companion-oracle-conversation/index.ts:2353`:
 
 ```ts
-if (!g) {
-  return JSON.stringify({
-    found: false,
-    note: 'No active dream yet.',
-    instruction:
-      "The user has no active dream. In ONE short line, offer to break their stated goal down into milestones. Do NOT decompose or call decompose_goal until they say yes (ja/oké/graag/go).",
-    user_stated_goal_hint: message.slice(0, 200),
-  });
-}
+tool_choice: shouldForceTool ? 'required' : 'auto',
 ```
 
-Why this works: it converts the failure signal into a directive tool payload. The model's next token is now steered by the tool result, not by the system prompt it already ignored once.
+`'required'` forces *some* tool to be called, but the tools array still exposes both `get_active_dream` and `decompose_goal`. On confirmation turns the model consistently picks the safer consult (`get_active_dream`), which hits the empty branch (2206–2213) and returns the "offer again, do NOT decompose" instruction. The turn ends with another offer, no `decompose_goal` call, no `user_goals` insert, no `dream_card` attachment. That matches the observed reality: `shortAffirmative` trigger fires, `TOOL LOOP` selects `get_active_dream`, and `user_goals` stays empty.
 
-### 2. Add the `🛠️ TOOL LOOP` telemetry so future traces are diagnosable
+Secondary problem this masks: when the model *does* eventually pick `decompose_goal`, `runCompanionTool` reads `args.title` straight from the model. On a `shortAffirmative` turn ("yes"/"ja"), the model has no goal noun in the current message — the goal-title fidelity guard (2218–2256) will scan the last 6 user turns and repair, but only if `args.title` was populated at all. Pinning the tool by name is a prerequisite to exercising that guard.
 
-Wrap the tool-call dispatch in `runCompanionTool` (and its caller) with:
+### Fix (single link)
+
+In `companion-oracle-conversation/index.ts`, replace the blanket `'required'` with a name-pinned tool choice when the trigger is a confirmation of a prior offer, and leave it as `'auto'` / `'required'` otherwise.
+
+Concretely, near line 2353:
 
 ```ts
-console.log(`🛠️ TOOL LOOP: calling ${name}`, { args: JSON.stringify(args).slice(0, 300) });
-const result = await /* existing body */;
-console.log(`🛠️ TOOL LOOP: ${name} returned`, { preview: String(result).slice(0, 300) });
-return result;
+const forceDecompose = shouldForceTool && (acsConfirmation || shortAffirmative);
+const toolChoice = forceDecompose
+  ? { type: 'function', function: { name: 'decompose_goal' } }
+  : shouldForceTool
+    ? 'required'
+    : 'auto';
 ```
 
-This is what the user's paste was looking for and couldn't find — makes the consult→offer→decompose chain observable in edge logs.
+Then pass `tool_choice: toolChoice` into the first `callChat` call. The while-loop's follow-up call at 2377 stays `'none' | 'auto'` (unchanged) so the model can still narrate the result without being re-forced.
 
-### 3. Deploy
+Nothing else changes. `planRequest` and `statedGoal` still use `'required'` (they may legitimately want the consult first). The instructed dead-end at 2210 stays as the safety net for the *first* time the user names a goal.
 
-Deploy only `companion-oracle-conversation`. `openai-agent` already has `decomposeGoalReal` wired; no change needed there.
+### Verification recipe (after deploy)
 
-### 4. Verify
+1. New thread → user names a goal ("ik wil een miljoen verdienen dit jaar"). Expect: `🛠️ TOOL LOOP: calling get_active_dream` → empty + instruction → single offer line, no card.
+2. User replies "ja". Expect in logs:
+  - `🛠️ TOOL LOOP: calling decompose_goal` with `args.title` present (repaired by the fidelity guard from the prior turn if the model left it blank),
+  - `🧩 DECOMPOSE_GOAL: Decomposition complete { valid: 4..6 }` in `openai-agent`,
+  - `✅ DECOMPOSE_GOAL: Returning { milestoneCount: >=3 }`,
+  - a new row in `user_goals` for this user,
+  - the oracle response envelope carrying `attachments: [{ type: 'dream_card', goal_id: <new id> }]`,
+  - `<DreamCard />` rendered under the assistant message in the UI.
+3. Screenshot the card as final proof.
 
-One turn: send a goal sentence with no existing dream in `user_goals` for the test user. Expect in edge logs:
+### Scope guardrails
 
-```text
-🛠️ TOOL LOOP: calling get_active_dream
-🛠️ TOOL LOOP: get_active_dream returned { found:false, ..., instruction:"...offer... do NOT decompose..." }
-```
-
-And in the reply: a single short offer line (Dutch: "Wil je dat ik dit voor je opdeel in mijlpalen?"), **no** milestone narration, **no** `decompose_goal` call yet. Then reply "ja" → expect a second `🛠️ TOOL LOOP: calling decompose_goal` and a DreamCard attachment.
-
-## Scope guardrails
-
-- One file edited: `supabase/functions/companion-oracle-conversation/index.ts`.
-- No frontend changes. No prompt rewrites beyond the tool-result instruction string. No changes to `openai-agent`, no DB migrations.
-- The existing goal-title fidelity guard (lines 2198–2232) is untouched. -Dev note: **Apply your RCA fix (instructed dead-end + 🛠️ telemetry) as proposed. Additionally, before deploying, verify these markers all exist in** `companion-oracle-conversation/index.ts` **— each is a shipped fix from this Phase 1 session; add any that are missing, changing nothing else:**
-  1. `statedGoal` — trigger const, included in `shouldForceTool` and the log object (goal named in current message forces the consult even without a timeframe)
-  2. `mil{1,2}[ij]?oe?n` — fuzzy million spelling in `goalNounRegex`, `goalSignal`, and the title guard's `goalPhraseRegex` (catches "milion")
-  3. `shortAffirmative` regex ends in `[\s,!.]*)+$` — repeated-token form so "yes go for it" matches (single-token form fails the verification recipe)
-  4. `first contact — classification skipped` — when `firstContact` is true, skip `detectConversationState` entirely and use a neutral state ("finished" misclassifies as frustration/venting and poisons the opening)
-  5. `finishReason` in the Oracle Response Metrics log + a `✂️ TRUNCATION` warn when it equals `length`
-  6. Voice Charter rule 4 contains "EXCEPTION, not the rule" (hypothesis-check rationed to one reply in three); rule 6 contains "rationed to at most ONCE per session"; the oracle-mode role block says "ALLOWED sparingly" not "ALLOWED and encouraged"
-  7. `⚠️ REQUIRED IGNORED` warning after the tool loop when `shouldForceTool` was true but zero tool calls occurred
-  **Deploy** `companion-oracle-conversation` **only. Report which markers were already present vs added.**
+- One file edited: `supabase/functions/companion-oracle-conversation/index.ts` — one const + one arg swap on the first `callChat`.
+- No frontend changes (rendering path already works).
+- No `openai-agent` changes (`decomposeGoalReal` is correct).
+- No DB migration (RLS is not the break).
+- Existing goal-title fidelity guard, instructed dead-end, `⚠️ REQUIRED IGNORED` warn, and TOOL LOOP telemetry all remain in place and become genuinely useful once the model is pinned to `decompose_goal` on confirmations.--DEV NOTE: The fix is right and I endorse it as written: name-pinning via `{ type: 'function', function: { name: 'decompose_goal' } }` is supported by the API version in use (`2024-10-21`), it's surgical, and keeping `planRequest`/`statedGoal` on plain `'required'` is the correct asymmetry — those turns *should* consult first; only a confirmation of a standing offer should go straight to the hands.
+  Two riders for Lovable before it deploys, both cheap:
+  1. **Log the title journey on pinned turns.** On a confirmation turn the model invents `args.title` from history, so the fidelity guard is doing all the work. One log line — `🎯 PINNED DECOMPOSE: title in "<model's>" → out "<final>"` — tells us instantly if the guard's candidates came up empty (which the stale-thread-memory bug from earlier could cause, since the goal statement lives in history).
+  2. **One edge to confirm handled:** if `freshGoalStatement` and a confirmation somehow fire on the same turn (user states goal + yes in one message), the pin would decompose *without* an offer ever existing. Acceptable per charter clause 2 (the "yes" is the confirmation, the what+timeframe is in the same message) — just confirm the precedence is intentional, not accidental.
