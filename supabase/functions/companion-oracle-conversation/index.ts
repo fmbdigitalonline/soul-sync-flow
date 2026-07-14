@@ -2332,6 +2332,18 @@ serve(async (req) => {
     // ────────────────────────────────────────────────────────────────
     const acsDetection = conversationState?.detectionResult;
     const acsConfirmation = acsDetection?.cluster === 'decision' && acsDetection?.subState === 'commitment_signal';
+    // ────────────────────────────────────────────────────────────────
+    // MILESTONE TAP DETECTION: DreamCard emits `Let's work on: <title>`
+    // when the user taps a milestone. That is a coaching request against
+    // an existing dream, NOT a new goal — never let it trigger
+    // decompose_goal (which spawns a duplicate user_goals row titled
+    // after the milestone). Suppress all force-triggers and pin the
+    // consult to get_active_dream so the model reads the existing dream
+    // and coaches into the milestone.
+    // ────────────────────────────────────────────────────────────────
+    const MILESTONE_TAP_PREFIX = "Let's work on:";
+    const isMilestoneTap = typeof message === 'string'
+      && message.trimStart().startsWith(MILESTONE_TAP_PREFIX);
     // Repeated-token form so multi-word affirmatives ("yes go for it", "ja doe maar") match.
     const shortAffirmative = /^\s*((yes|yeah|yep|yup|sure|ok(ay)?|do it|go for it|please do|break it down|absolutely|definitely|ja|graag|zeker|prima|doe (het|maar)|let'?s (go|do it))[\s,!.]*)+$/i.test(message);
     const planRequest = /\b(plan|planning|actie(plan)?|stappen|steps?|roadmap|breakdown|break\s+(it|this|that)\s+down|decompose|help\s+me\s+(improve|do|plan|start|begin|verbeteren)|need\s+(a\s+)?plan|geef.*plan|maak.*plan|hoe\s+(begin|start)\s+ik)\b/i.test(message);
@@ -2352,9 +2364,14 @@ serve(async (req) => {
     // statedGoal: user named a concrete goal in the CURRENT message — force
     // the consult even without a plan-request or timeframe (the empty-consult
     // instruction will then steer the offer).
-    const statedGoal = goalNounRegex.test(message) || goalSignal.test(message);
-    const shouldForceTool = (acsConfirmation || shortAffirmative || planRequest || statedGoal) && (goalInRecentContext || statedGoal);
-    const trigger = acsConfirmation ? 'acsConfirmation'
+    const statedGoalRaw = goalNounRegex.test(message) || goalSignal.test(message);
+    // Milestone tap: force ALL triggers off for this turn.
+    const statedGoal = isMilestoneTap ? false : statedGoalRaw;
+    const shouldForceTool = !isMilestoneTap
+      && (acsConfirmation || shortAffirmative || planRequest || statedGoal)
+      && (goalInRecentContext || statedGoal);
+    const trigger = isMilestoneTap ? 'milestoneTap'
+                   : acsConfirmation ? 'acsConfirmation'
                    : planRequest ? 'planRequest'
                    : shortAffirmative ? 'shortAffirmative'
                    : statedGoal ? 'statedGoal'
@@ -2374,6 +2391,18 @@ serve(async (req) => {
       goalInRecentContext
     });
 
+    if (isMilestoneTap) {
+      console.log('🪧 MILESTONE TAP: coaching mode, decompose suppressed', { message: message.slice(0, 120) });
+      // Append coaching directive to the system prompt so the model
+      // reads the existing dream and coaches into the tapped milestone.
+      const coachingDirective = "\n\nMILESTONE TAP DIRECTIVE (governs this reply): The user tapped a milestone on their existing dream card — coach them into starting this specific milestone; do NOT create or decompose a new goal.";
+      const sys = completionParams.messages[0];
+      if (sys && sys.role === 'system' && typeof sys.content === 'string') {
+        sys.content = sys.content + coachingDirective;
+      } else {
+        completionParams.messages.unshift({ role: 'system', content: coachingDirective });
+      }
+    }
     let toolRounds = 0;
     // Pin the forced tool by name on confirmation turns. 'required' alone
     // lets the model pick the safer consult (get_active_dream), which hits
@@ -2381,11 +2410,13 @@ serve(async (req) => {
     // user_goals empty after "yes". planRequest / statedGoal keep plain
     // 'required' because those turns should still be free to consult first.
     const forceDecompose = shouldForceTool && (acsConfirmation || shortAffirmative);
-    const firstToolChoice: any = forceDecompose
-      ? { type: 'function', function: { name: 'decompose_goal' } }
-      : shouldForceTool
-        ? 'required'
-        : 'auto';
+    const firstToolChoice: any = isMilestoneTap
+      ? { type: 'function', function: { name: 'get_active_dream' } }
+      : forceDecompose
+        ? { type: 'function', function: { name: 'decompose_goal' } }
+        : shouldForceTool
+          ? 'required'
+          : 'auto';
     let openAIResponse = await callChat({
       messages: completionParams.messages,
       model: completionParams.model,
