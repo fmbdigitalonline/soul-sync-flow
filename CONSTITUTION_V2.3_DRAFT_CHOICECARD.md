@@ -104,23 +104,31 @@ route registry with per-route eligibility.
 Chips, ranking, and why-line are produced **jointly** (honesty rule 2b).
 `deal:false` is the common case and costs nothing.
 
-**Why-lines are retrieved before they are generated.** The hermetic report
-(~92k words/user, verified against a real sample Jul 15) already performs
-the per-gate systems fusion in the user's language and the twin's voice,
-and is already chunked for retrieval. When a relevant passage exists, the
-why-line paraphrases it — the narration is literally the soul document
-speaking, which is the moat in its purest form. Plain-language fusion is
-the fallback, not the default.
+**Why-line source ladder (follows data availability).** Generation timing
+is asymmetric (founder, Jul 15): the first-layer blueprint exists within
+seconds of onboarding; the hermetic knowledge base (~92k words, per-gate
+systems fusion in the user's language, chunked for retrieval) takes about
+an hour of background generation. So the why-line source degrades
+gracefully, never claims what isn't there yet:
 
-**Report-time fact fidelity (hard rule, from a Jul 15 finding):** at
-hermetic-report generation, every chart-fact claim in the text (profile,
-moon, authority, numbers) must validate against the first-layer blueprint
-fields — mismatches BLOCK generation, not warn. A drifted claim baked into
-92k words of knowledge base outlives every runtime truth guard: retrieval
-will serve it back with full confidence forever. (Observed risk: a sample
-report describing a 4/3 / Pisces-moon / soul-7 chart alongside a first
-layer reading 3/4 / Gemini-moon / soul-urge-1 — pending founder
-confirmation whether these are two users or one drifted pipeline.)
+1. **Hermetic retrieval** (account ≥ ~1h, passage relevant): paraphrase
+   the user's own document — the narration is literally the soul document
+   speaking, the moat in its purest form.
+2. **First-layer fusion** (fresh account, first session — the most
+   important session of the relationship): plain-language fusion from the
+   raw blueprint (§5b shows the mechanics layer is fully available
+   day-0). Chart-informed, memory-silent.
+3. **Neutral** (data thin or classifier unsure): honest generic doors, or
+   no card.
+
+**Report-time fact fidelity (design rule):** at hermetic-report
+generation, every chart-fact claim in the text (profile, moon, authority,
+numbers) must validate against the first-layer blueprint fields —
+mismatches BLOCK generation, not warn. A drifted claim baked into 92k
+words of knowledge base outlives every runtime truth guard: retrieval
+will serve it back with full confidence forever. (Preventive rule — no
+drift observed; report samples from different users were confirmed by the
+founder to be different users.)
 
 ## 4. Route registry (initial)
 
