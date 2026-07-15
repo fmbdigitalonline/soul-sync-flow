@@ -24,7 +24,7 @@ export interface ConversationMessage {
   intelligence_bonus?: number;
   mode?: string;
   isStreaming?: boolean;
-  attachments?: Array<{ type: string; goal_id?: string }>;
+  attachments?: Array<{ type: string; goal_id?: string; title?: string }>;
   client_msg_id?: string;
 }
 
