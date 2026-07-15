@@ -136,8 +136,17 @@ const Coach = () => {
     };
     checkHermeticStatus();
   }, []);
-  const handleSendMessage = async (message: string) => {
-    await sendMessage(message);
+  const handleSendMessage = async (
+    message: string,
+    options?: { confirmedAction?: { type: "decompose_goal"; title: string } }
+  ) => {
+    // Deterministic confirmation rail (Constitution Phase 2 §1): forward the
+    // OfferCard's confirmedAction to the oracle so it skips detection.
+    await sendMessage(
+      message,
+      true,
+      options?.confirmedAction ? { confirmedAction: options.confirmedAction } : undefined
+    );
 
     // Process message for shadow pattern detection
     if (orbEnabled && message.trim()) {

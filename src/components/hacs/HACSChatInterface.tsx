@@ -12,6 +12,7 @@ import { VFPGraphFeedback } from "@/components/coach/VFPGraphFeedback";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { InteractiveSentenceText } from "@/components/coach/InteractiveSentenceText";
 import { DreamCard } from "@/components/companion/message-parts/DreamCard";
+import { OfferCard } from "@/components/companion/message-parts/OfferCard";
 import { SentenceActionButtons, SentenceAction } from "@/components/coach/SentenceActionButtons";
 import { toast } from "sonner";
 // NEW: Orb Presence System (Singularity Principle)
@@ -20,11 +21,15 @@ import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
 import { motion, AnimatePresence } from "framer-motion";
 import { PresenceFrame, PresenceState } from "@/components/companion/PresenceFrame";
 
+// Deterministic confirmation rail: an OfferCard tap rides a structured flag
+// alongside the visible message so the oracle can skip detection entirely.
+export type ConfirmedAction = { type: "decompose_goal"; title: string };
+
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
   isLoading: boolean;
   isStreamingResponse?: boolean;
-  onSendMessage: (message: string) => Promise<void>;
+  onSendMessage: (message: string, options?: { confirmedAction?: ConfirmedAction }) => Promise<void>;
   onStreamingComplete?: (messageId: string) => void;
   onStopStreaming?: () => void;
   onFeedback?: (messageId: string, isPositive: boolean) => void;
@@ -227,7 +232,17 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                     
                     {/* One-surface message parts: cards the twin attached */}
                     {(message as any).attachments?.map((att: any, i: number) =>
-                      att?.type === "dream_card" && att.goal_id ? (
+                      att?.type === "offer_decomposition" && att.title ? (
+                        <OfferCard
+                          key={`${message.id}_att_${i}`}
+                          title={att.title}
+                          onConfirm={(title) =>
+                            onSendMessage(`Yes — break down "${title}" into milestones.`, {
+                              confirmedAction: { type: "decompose_goal", title },
+                            })
+                          }
+                        />
+                      ) : att?.type === "dream_card" && att.goal_id ? (
                         <DreamCard
                           key={`${message.id}_att_${i}`}
                           goalId={att.goal_id}

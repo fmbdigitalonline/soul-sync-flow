@@ -9,7 +9,9 @@ export const CardShell: React.FC<{
   summary: React.ReactNode;
   children?: React.ReactNode; // expanded content
   fossil?: boolean;           // older instance: quiet one-liner
-}> = ({ summary, children, fossil }) => {
+  onPrimary?: () => void;     // deterministic rail: tapping the summary ACTS
+                              // (e.g. OfferCard confirm) instead of expanding
+}> = ({ summary, children, fossil, onPrimary }) => {
   const [open, setOpen] = useState(false);
   if (fossil) {
     return (
@@ -18,11 +20,15 @@ export const CardShell: React.FC<{
       </div>
     );
   }
+  const handleClick = () => {
+    if (onPrimary) { onPrimary(); return; }
+    if (children) setOpen((v) => !v);
+  };
   return (
     <div className="mt-2 rounded-2xl border border-soul-purple/25 bg-soul-purple/5 overflow-hidden">
       <button
         type="button"
-        onClick={() => children && setOpen((v) => !v)}
+        onClick={handleClick}
         className="w-full text-left px-4 py-3"
       >
         {summary}

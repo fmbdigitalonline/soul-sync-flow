@@ -1032,8 +1032,23 @@ serve(async (req) => {
       }
     );
 
-    const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = true, conversationHistory = [], userProfile = {}, threadId, firstContact = false } = await req.json()
-    
+    const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = true, conversationHistory = [], userProfile = {}, threadId, firstContact = false, confirmedAction = null } = await req.json()
+
+    // DETERMINISTIC CONFIRMATION RAIL (Constitution Phase 2 §1): an OfferCard
+    // tap sends confirmedAction:{type:'decompose_goal', title}. When present,
+    // the user has already confirmed via the rail — the oracle skips ALL
+    // detection and pins decompose_goal with the FROZEN title (frozen from
+    // the user's words at offer time, so the goal can't drift). Computed here
+    // so it is in scope for the tool loop and the trigger stack below.
+    const confirmedDecompose =
+      confirmedAction && confirmedAction.type === 'decompose_goal' &&
+      typeof confirmedAction.title === 'string' && confirmedAction.title.trim()
+        ? {
+            title: confirmedAction.title.trim().slice(0, 80),
+            category: typeof confirmedAction.category === 'string' ? confirmedAction.category : undefined,
+          }
+        : null;
+
     // ✅ Layer 3: Request validation - fail fast with clear error messages
     if (!message || typeof message !== 'string') {
       console.error('❌ INVALID REQUEST: Missing or invalid message field', { 
@@ -2027,10 +2042,10 @@ serve(async (req) => {
     // Tune the tool reflex HERE, once.
     // ------------------------------------------------------------------
     systemPrompt += '\n\nACTION CHARTER (final authority on when you act — you have hands, use them):\n' +
-      '1. YOU HAVE HANDS: get_active_dream and decompose_goal are yours to call within this very turn. NEVER describe, promise, or narrate what a tool would produce instead of calling it — "I could break this down for you" followed by no call is a violation.\n' +
+      '1. YOU HAVE HANDS: get_active_dream, offer_decomposition and decompose_goal are yours to call within this very turn. NEVER describe, promise, or narrate what a tool would produce instead of calling it — "I could break this down for you" followed by no call is a violation.\n' +
       '2. CONFIRMED = CALL NOW: once the user has confirmed they want a goal broken down and you know the what plus a rough timeframe, you MUST call decompose_goal in THIS turn. Deferring a confirmed decomposition to a future turn is a violation. Do not reframe, translate, or abstract the user\'s stated goal — copy their words.\n' +
       '3. CONSULT BEFORE COUNSEL: before advising on goals, progress, or "what\'s next", call get_active_dream so your counsel is grounded in what actually exists — never advise on a dream from memory alone.\n' +
-      '4. OFFER ONCE: when the user states a goal, offer decomposition exactly once. If they decline or let it pass, drop it for the rest of the session — no nagging.\n' +
+      '4. OFFER VIA THE CARD, ONCE: when the user states a concrete goal and has no active dream, call offer_decomposition (VERBATIM title) to deal an OfferCard rather than offering in prose — one tap confirms. Offer exactly once per session; if they decline or let it pass, drop it — no nagging. Do NOT call decompose_goal until they confirm (a tap arrives as a confirmed action, or they type yes/ja/graag/go).\n' +
       '5. TOOLS ACCOMPANY INSIGHT, NEVER REPLACE IT: your text must still carry the observation, the confrontation, or the read. The card only holds structure. A tool call wrapped in a hollow message is a violation.';
     // ending (goodbye, thanks, heading to sleep, wrapping up), do not just
     // say goodbye. Close warmly AND plant exactly one open loop: name one
@@ -2218,6 +2233,21 @@ serve(async (req) => {
       {
         type: 'function',
         function: {
+          name: 'offer_decomposition',
+          description: 'Deal an OfferCard that invites the user to break their stated goal into milestones. SIDE-EFFECT-FREE: this creates NO goal and writes nothing — it only presents a single tappable offer, and the user confirms by tapping it. Use this to offer decomposition instead of offering in prose, when the user has stated a concrete goal and has no active dream yet. Offer exactly once per session. Pass the user\'s goal VERBATIM as the title.',
+          parameters: {
+            type: 'object',
+            properties: {
+              title: { type: 'string', description: 'The user\'s stated goal, VERBATIM in their own words (e.g. "Earn €1,000,000") — never your reframe. This exact title is frozen onto the card and returns unchanged when they tap.' },
+              category: { type: 'string', description: 'e.g. financial, creative, health (optional).' }
+            },
+            required: ['title']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
           name: 'decompose_goal',
           description: 'Decompose a stated goal/dream into 4-6 milestones. Use ONLY after the user confirmed they want it broken down and you know the what and rough timeframe. Your text must still carry the insight; the card only holds structure.',
           parameters: {
@@ -2257,14 +2287,37 @@ serve(async (req) => {
             return JSON.stringify({
               found: false,
               note: 'No active dream yet.',
-              instruction: 'The user has no active dream. In ONE short line, offer to break their stated goal down into concrete milestones — do NOT decompose or call decompose_goal until they explicitly say yes (ja/oké/graag/go/do it). Do not narrate what decomposition would look like.',
+              instruction: 'The user has no active dream. If they have stated a concrete goal, call offer_decomposition with their goal VERBATIM as the title to deal an OfferCard — do NOT offer in prose and do NOT call decompose_goal yet (the card handles confirmation via a tap). If no concrete goal is stated yet, ask ONE short question to surface it. Never narrate what decomposition would look like.',
               user_stated_goal_hint: (typeof message === 'string' ? message : '').slice(0, 200),
             });
           }
           cardAttachments.push({ type: 'dream_card', goal_id: g.id });
           return JSON.stringify({ found: true, title: g.title, description: g.description, progress: g.progress, milestones: (g.milestones || []).slice(0, 6) });
         }
+        if (name === 'offer_decomposition') {
+          // DETERMINISTIC RAIL (Phase 2 §1): deal the OfferCard and STOP.
+          // No DB write, no goal row — the card is side-effect-free. The
+          // title is frozen here; it returns unchanged when the user taps.
+          const offerTitle = (typeof args.title === 'string' ? args.title : '').trim().slice(0, 80);
+          if (!offerTitle) {
+            return JSON.stringify({ offered: false, note: 'No goal title to offer. Ask the user what they want to work on.' });
+          }
+          console.log('🃏 OFFER DEALT: offer_decomposition', { title: offerTitle });
+          cardAttachments.push({ type: 'offer_decomposition', title: offerTitle });
+          return JSON.stringify({
+            offered: true,
+            note: 'OfferCard dealt. Add ONE short line of insight in your own voice, then STOP — do NOT also offer in prose, do NOT narrate what the breakdown would look like, and do NOT call decompose_goal. Wait for the user to tap.'
+          });
+        }
         if (name === 'decompose_goal') {
+          // DETERMINISTIC FREEZE (Phase 2 §1): when the user reached here by
+          // tapping an OfferCard, the confirmed title is authoritative — it
+          // was frozen from their own words at offer time. Override anything
+          // the model produced (stronger than the fidelity guard below).
+          if (confirmedDecompose) {
+            args.title = confirmedDecompose.title;
+            if (confirmedDecompose.category && !args.category) args.category = confirmedDecompose.category;
+          }
           const _titleIn = typeof args.title === 'string' ? args.title : '';
           // PHASE 1 (item 2): GOAL-TITLE FIDELITY GUARD — the card must carry
           // the user's words, never the model's reframe. Scan recent user
@@ -2392,7 +2445,8 @@ serve(async (req) => {
     // and coaches into the milestone.
     // ────────────────────────────────────────────────────────────────
     const MILESTONE_TAP_PREFIX = "Let's work on:";
-    const isMilestoneTap = typeof message === 'string'
+    // confirmedAction wins over every detected signal — skip all detection.
+    const isMilestoneTap = !confirmedDecompose && typeof message === 'string'
       && message.trimStart().startsWith(MILESTONE_TAP_PREFIX);
     // Repeated-token form so multi-word affirmatives ("yes go for it", "ja doe maar") match.
     const shortAffirmative = /^\s*((yes|yeah|yep|yup|sure|ok(ay)?|do it|go for it|please do|break it down|absolutely|definitely|ja|graag|zeker|prima|doe (het|maar)|let'?s (go|do it))[\s,!.]*)+$/i.test(message);
@@ -2417,10 +2471,12 @@ serve(async (req) => {
     const statedGoalRaw = goalNounRegex.test(message) || goalSignal.test(message);
     // Milestone tap: force ALL triggers off for this turn.
     const statedGoal = isMilestoneTap ? false : statedGoalRaw;
-    const shouldForceTool = !isMilestoneTap
+    // confirmedDecompose short-circuits detection: always force the hands.
+    const shouldForceTool = !!confirmedDecompose || (!isMilestoneTap
       && (acsConfirmation || shortAffirmative || planRequest || statedGoal)
-      && (goalInRecentContext || statedGoal);
-    const trigger = isMilestoneTap ? 'milestoneTap'
+      && (goalInRecentContext || statedGoal));
+    const trigger = confirmedDecompose ? 'confirmedAction'
+                   : isMilestoneTap ? 'milestoneTap'
                    : acsConfirmation ? 'acsConfirmation'
                    : planRequest ? 'planRequest'
                    : shortAffirmative ? 'shortAffirmative'
@@ -2459,14 +2515,19 @@ serve(async (req) => {
     // the empty branch and offers again — the exact loop that keeps
     // user_goals empty after "yes". planRequest / statedGoal keep plain
     // 'required' because those turns should still be free to consult first.
-    const forceDecompose = shouldForceTool && (acsConfirmation || shortAffirmative);
-    const firstToolChoice: any = isMilestoneTap
-      ? { type: 'function', function: { name: 'get_active_dream' } }
-      : forceDecompose
-        ? { type: 'function', function: { name: 'decompose_goal' } }
-        : shouldForceTool
-          ? 'required'
-          : 'auto';
+    const forceDecompose = !!confirmedDecompose || (shouldForceTool && (acsConfirmation || shortAffirmative));
+    const firstToolChoice: any = confirmedDecompose
+      ? { type: 'function', function: { name: 'decompose_goal' } }
+      : isMilestoneTap
+        ? { type: 'function', function: { name: 'get_active_dream' } }
+        : forceDecompose
+          ? { type: 'function', function: { name: 'decompose_goal' } }
+          : shouldForceTool
+            ? 'required'
+            : 'auto';
+    if (confirmedDecompose) {
+      console.log('🃏 OFFER CONFIRMED → 🎯 PINNED DECOMPOSE (detection skipped)', { title: confirmedDecompose.title });
+    }
     let openAIResponse = await callChat({
       messages: completionParams.messages,
       model: completionParams.model,

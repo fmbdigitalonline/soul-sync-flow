@@ -350,7 +350,12 @@ export const useHACSConversationAdapter = (
               useOracleMode: true,
               enableBackgroundIntelligence: true,
               conversationHistory: recentMessages,
-              userProfile: userProfile
+              userProfile: userProfile,
+              // Deterministic confirmation rail (Constitution Phase 2 §1): an
+              // OfferCard tap carries confirmedAction:{type:'decompose_goal',
+              // title}. When present the oracle skips ALL detection and pins
+              // decompose with the frozen title.
+              confirmedAction: context?.confirmedAction ?? null
             }
           });
 
