@@ -1,11 +1,15 @@
 /**
- * Azure OpenAI shared helper module.
- * Routes all AI calls through Azure OpenAI when configured,
- * falls back to direct OpenAI if Azure env vars are not set.
+ * OpenAI shared helper module.
  *
- * Supports SEPARATE endpoints/keys for chat vs embeddings deployments
- * (they may live on different Azure resources).
+ * As of 2026-07-15 this project routes ALL AI calls directly to
+ * api.openai.com. The Azure path was retired (see mem://index.md Core rule).
+ * The Azure branches below remain as dead code so we can re-enable Azure
+ * quickly by restoring the AZURE_* secrets and flipping USE_AZURE to true.
  */
+
+// Force direct-OpenAI regardless of any lingering AZURE_* env vars in the
+// runtime. Flip to true (and restore the Azure secrets) to re-enable Azure.
+const USE_AZURE = false;
 
 // Sanitize helper: strip surrounding quotes, trailing slashes, deployment paths, and KEY= prefixes
 function sanitizeEnv(raw: string | undefined, stripKeyPrefix?: string): string {
@@ -43,7 +47,7 @@ const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
  * Whether Azure OpenAI is fully configured (at least chat).
  */
 export const isAzureConfigured = (): boolean => {
-  return !!(AZURE_OPENAI_KEY && AZURE_OPENAI_ENDPOINT);
+  return USE_AZURE && !!(AZURE_OPENAI_KEY && AZURE_OPENAI_ENDPOINT);
 };
 
 /**
@@ -61,15 +65,7 @@ const MODEL_TO_DEPLOYMENT: Record<string, string> = {
 };
 
 // Boot-time verification log
-if (AZURE_OPENAI_KEY && AZURE_OPENAI_ENDPOINT) {
-  console.log(`🔷 Azure OpenAI CHAT: endpoint=${AZURE_OPENAI_ENDPOINT}, key=${AZURE_OPENAI_KEY.slice(0,4)}...${AZURE_OPENAI_KEY.slice(-4)}, api_version=${AZURE_OPENAI_API_VERSION}`);
-} else {
-  console.log(`⚡ Azure OpenAI CHAT NOT configured. OPENAI_API_KEY set: ${!!OPENAI_API_KEY}`);
-}
-if (AZURE_OPENAI_EMBEDDINGS_KEY && AZURE_OPENAI_EMBEDDINGS_ENDPOINT) {
-  const sameAsChat = AZURE_OPENAI_EMBEDDINGS_ENDPOINT === AZURE_OPENAI_ENDPOINT;
-  console.log(`🔷 Azure OpenAI EMBEDDINGS: endpoint=${AZURE_OPENAI_EMBEDDINGS_ENDPOINT}${sameAsChat ? ' (same as chat)' : ''}, key=${AZURE_OPENAI_EMBEDDINGS_KEY.slice(0,4)}...${AZURE_OPENAI_EMBEDDINGS_KEY.slice(-4)}, api_version=${AZURE_OPENAI_EMBEDDINGS_API_VERSION}`);
-}
+console.log(`⚡ OpenAI Direct routing enabled (USE_AZURE=${USE_AZURE}). OPENAI_API_KEY set: ${!!OPENAI_API_KEY}`);
 
 function getDeploymentName(model: string): string {
   return MODEL_TO_DEPLOYMENT[model] || model;
@@ -169,7 +165,7 @@ export async function callEmbeddings(options: {
   const { input, model = 'text-embedding-3-small' } = options;
 
   // Use embeddings-specific credentials
-  const embeddingsConfigured = !!(AZURE_OPENAI_EMBEDDINGS_KEY && AZURE_OPENAI_EMBEDDINGS_ENDPOINT);
+  const embeddingsConfigured = USE_AZURE && !!(AZURE_OPENAI_EMBEDDINGS_KEY && AZURE_OPENAI_EMBEDDINGS_ENDPOINT);
 
   if (embeddingsConfigured) {
     const deployment = getDeploymentName(model);
