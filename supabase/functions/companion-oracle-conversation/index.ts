@@ -2207,6 +2207,86 @@ serve(async (req) => {
     // OPENAI API CALL: Send messages to GPT model via Azure helper
     const { callChatCompletion: callChat } = await import('../_shared/azure-openai.ts');
 
+    // ────────────────────────────────────────────────────────────────
+    // PHASE 2 (item 2): SEMANTIC INTENT LAYER — classifyIntent() on
+    // gpt-4.1-nano is the PRIMARY trigger input; the regex stack below
+    // is demoted to FALLBACK (used only when the classifier fails or
+    // times out). Strict JSON {intent, goal_verbatim, timeframe}; 1s
+    // timeout; fail-soft. Structural fix for ACS misfires ("yes, close,
+    // how do i fix it" read as frustration — seen in production Jul 15).
+    // ────────────────────────────────────────────────────────────────
+    async function classifyIntent(
+      userMessage: string,
+      history: any[]
+    ): Promise<{ intent: string; goal_verbatim: string | null; timeframe: string | null } | null> {
+      const t0 = Date.now();
+      try {
+        const context = (history || [])
+          .filter((m: any) => typeof m?.content === 'string')
+          .slice(-4)
+          .map((m: any) => `${m.role === 'user' ? 'USER' : 'TWIN'}: ${String(m.content).slice(0, 200)}`)
+          .join('\n');
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 1000);
+        const resp = await callChat({
+          model: 'gpt-4.1-nano',
+          temperature: 0,
+          max_tokens: 120,
+          stream: false,
+          signal: controller.signal,
+          response_format: { type: 'json_object' },
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You classify ONE user message from a coaching conversation. Output STRICT JSON: {"intent":"stated_goal"|"plan_request"|"confirm"|"decline"|"other","goal_verbatim":string|null,"timeframe":string|null}.\n' +
+                'intent definitions:\n' +
+                '- stated_goal: THIS message states a concrete personal goal or dream (money, health, career, habit, project).\n' +
+                '- plan_request: asks for a plan, steps, breakdown, roadmap, or how to start/approach something.\n' +
+                '- confirm: agrees to a breakdown/plan OFFER visible in the context (yes/ok/do it/graag — extra words allowed, but the agreement must be about the offer; agreeing with an observation is "other").\n' +
+                '- decline: turns such an offer down or deflects it (not now, later, no).\n' +
+                '- other: everything else (greetings, reflections, questions, venting).\n' +
+                'goal_verbatim: the goal EXACTLY as the user worded it, copied verbatim from user text in this message or the context; null if none. NEVER paraphrase or translate.\n' +
+                'timeframe: verbatim timeframe if stated ("3 years", "6 maanden"); else null.\n' +
+                'Messages may be Dutch or English.'
+            },
+            {
+              role: 'user',
+              content: `CONTEXT (recent turns):\n${context || '(none)'}\n\nMESSAGE TO CLASSIFY:\n${String(userMessage).slice(0, 400)}`
+            }
+          ],
+        });
+        clearTimeout(timer);
+        if (!resp.ok) {
+          console.warn('🧭 INTENT: classifier HTTP error → regex fallback', { status: resp.status, ms: Date.now() - t0 });
+          return null;
+        }
+        const data = await resp.json();
+        const raw = data?.choices?.[0]?.message?.content;
+        const parsed = JSON.parse(typeof raw === 'string' ? raw : '{}');
+        const VALID = ['stated_goal', 'plan_request', 'confirm', 'decline', 'other'];
+        if (!VALID.includes(parsed?.intent)) {
+          console.warn('🧭 INTENT: invalid intent → regex fallback', { got: parsed?.intent, ms: Date.now() - t0 });
+          return null;
+        }
+        const out = {
+          intent: parsed.intent as string,
+          goal_verbatim: typeof parsed.goal_verbatim === 'string' && parsed.goal_verbatim.trim()
+            ? parsed.goal_verbatim.trim().slice(0, 120) : null,
+          timeframe: typeof parsed.timeframe === 'string' && parsed.timeframe.trim()
+            ? parsed.timeframe.trim().slice(0, 40) : null,
+        };
+        console.log('🧭 INTENT:', { ...out, ms: Date.now() - t0 });
+        return out;
+      } catch (e) {
+        console.warn('🧭 INTENT: classifier failed/timeout → regex fallback', {
+          ms: Date.now() - t0,
+          err: e instanceof Error ? e.message : String(e)
+        });
+        return null;
+      }
+    }
+
     console.log('🔮 CALLING AI API:', {
       model: completionParams.model,
       messageCount: messagesToSend.length,
@@ -2277,6 +2357,10 @@ serve(async (req) => {
     //  - rail-confirmed titles never pass through here at all (frozen at
     //    offer time; see decompose_goal handler).
     const RAIL_MESSAGE_PREFIXES = ["Yes — break down", "Let's work on:"];
+    // Set by the semantic intent layer (below) before the tool loop runs;
+    // the classifier's contract is a VERBATIM copy of the user's words, so
+    // it is a legitimate fidelity candidate.
+    let semanticGoalVerbatim: string | null = null;
     function repairTitleToUserWords(titleIn: string, label: string): string {
       try {
         const recentUserTexts = (finalHistory || [])
@@ -2295,6 +2379,7 @@ serve(async (req) => {
             if (phrase.length >= 4) candidates.push(phrase);
           }
         }
+        if (semanticGoalVerbatim && semanticGoalVerbatim.length >= 4) candidates.push(semanticGoalVerbatim);
         if (candidates.length === 0 || !titleIn) return titleIn;
         const tokenize = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}€$£]+/gu, ' ').split(/\s+/).filter(w => w.length > 1);
         const titleTokens = tokenize(titleIn);
@@ -2339,7 +2424,7 @@ serve(async (req) => {
               found: false,
               note: 'No active dream yet.',
               instruction: 'The user has no active dream. If they have stated a concrete goal, call offer_decomposition with their goal VERBATIM as the title to deal an OfferCard — do NOT offer in prose and do NOT call decompose_goal yet (the card handles confirmation via a tap). If no concrete goal is stated yet, ask ONE short question to surface it. Never narrate what decomposition would look like.',
-              user_stated_goal_hint: (typeof message === 'string' ? message : '').slice(0, 200),
+              user_stated_goal_hint: (semanticGoalVerbatim || (typeof message === 'string' ? message : '')).slice(0, 200),
             });
           }
           cardAttachments.push({ type: 'dream_card', goal_id: g.id });
@@ -2473,6 +2558,19 @@ serve(async (req) => {
     // confirmedAction wins over every detected signal — skip all detection.
     const isMilestoneTap = !confirmedDecompose && typeof message === 'string'
       && message.trimStart().startsWith(MILESTONE_TAP_PREFIX);
+    // ────────────────────────────────────────────────────────────────
+    // PHASE 2 (item 2): SEMANTIC INTENT — primary trigger input. Rails
+    // before intelligence: rail turns (confirmedAction, milestone tap)
+    // and synthetic first contact skip classification entirely. On
+    // classifier failure/timeout the regex stack below takes over.
+    // ────────────────────────────────────────────────────────────────
+    let semanticIntent: { intent: string; goal_verbatim: string | null; timeframe: string | null } | null = null;
+    if (!confirmedDecompose && !isMilestoneTap && !firstContact) {
+      semanticIntent = await classifyIntent(message, finalHistory || []);
+      if (semanticIntent?.goal_verbatim) semanticGoalVerbatim = semanticIntent.goal_verbatim;
+    }
+    // REGEX FALLBACK STACK (Phase 1) — consulted only when the semantic
+    // classifier failed; still computed every turn for drift telemetry.
     // Repeated-token form so multi-word affirmatives ("yes go for it", "ja doe maar") match.
     const shortAffirmative = /^\s*((yes|yeah|yep|yup|sure|ok(ay)?|do it|go for it|please do|break it down|absolutely|definitely|ja|graag|zeker|prima|doe (het|maar)|let'?s (go|do it))[\s,!.]*)+$/i.test(message);
     const planRequest = /\b(plan|planning|actie(plan)?|stappen|steps?|roadmap|breakdown|break\s+(it|this|that)\s+down|decompose|help\s+me\s+(improve|do|plan|start|begin|verbeteren)|need\s+(a\s+)?plan|geef.*plan|maak.*plan|hoe\s+(begin|start)\s+ik)\b/i.test(message);
@@ -2496,16 +2594,25 @@ serve(async (req) => {
     const statedGoalRaw = goalNounRegex.test(message) || goalSignal.test(message);
     // Milestone tap: force ALL triggers off for this turn.
     const statedGoal = isMilestoneTap ? false : statedGoalRaw;
+    // PHASE 2 (item 2): semantic verdict is PRIMARY; the regex verdicts
+    // above apply only when the classifier failed (semanticIntent null).
+    // A semantic 'decline' suppresses force-triggers for the turn
+    // (ACTION CHARTER: offer once, no nagging).
+    const semanticOk = !!semanticIntent;
+    const semDecline = semanticIntent?.intent === 'decline';
+    const confirmSignal = semanticOk ? semanticIntent!.intent === 'confirm' : (acsConfirmation || shortAffirmative);
+    const planSignal = semanticOk ? semanticIntent!.intent === 'plan_request' : planRequest;
+    const goalSignalNow = semanticOk ? semanticIntent!.intent === 'stated_goal' : statedGoal;
     // confirmedDecompose short-circuits detection: always force the hands.
-    const shouldForceTool = !!confirmedDecompose || (!isMilestoneTap
-      && (acsConfirmation || shortAffirmative || planRequest || statedGoal)
-      && (goalInRecentContext || statedGoal));
+    const shouldForceTool = !!confirmedDecompose || (!isMilestoneTap && !semDecline
+      && (confirmSignal || planSignal || goalSignalNow)
+      && (goalInRecentContext || goalSignalNow));
     const trigger = confirmedDecompose ? 'confirmedAction'
                    : isMilestoneTap ? 'milestoneTap'
-                   : acsConfirmation ? 'acsConfirmation'
-                   : planRequest ? 'planRequest'
-                   : shortAffirmative ? 'shortAffirmative'
-                   : statedGoal ? 'statedGoal'
+                   : semDecline ? 'semanticDecline'
+                   : confirmSignal ? (semanticOk ? 'semanticConfirm' : acsConfirmation ? 'acsConfirmation' : 'shortAffirmative')
+                   : planSignal ? (semanticOk ? 'semanticPlan' : 'planRequest')
+                   : goalSignalNow ? (semanticOk ? 'semanticGoal' : 'statedGoal')
                    : 'none';
     const goalMatch = concreteGoalHit ? 'concrete' : abstractGoalHit ? 'abstract' : 'none';
 
@@ -2513,6 +2620,11 @@ serve(async (req) => {
       ? '🎯 TOOL CHOICE: required'
       : '🎯 TOOL CHOICE: auto', {
       trigger,
+      intentSource: confirmedDecompose || isMilestoneTap ? 'rail' : semanticOk ? 'semantic' : 'regex-fallback',
+      semanticIntent: semanticIntent?.intent || null,
+      semanticGoalVerbatim: semanticIntent?.goal_verbatim || null,
+      semanticTimeframe: semanticIntent?.timeframe || null,
+      // Regex verdicts stay logged every turn for semantic-vs-regex drift telemetry.
       acsCluster: acsDetection?.cluster || 'none',
       acsSubState: acsDetection?.subState || 'none',
       shortAffirmative,
@@ -2540,7 +2652,7 @@ serve(async (req) => {
     // the empty branch and offers again — the exact loop that keeps
     // user_goals empty after "yes". planRequest / statedGoal keep plain
     // 'required' because those turns should still be free to consult first.
-    const forceDecompose = !!confirmedDecompose || (shouldForceTool && (acsConfirmation || shortAffirmative));
+    const forceDecompose = !!confirmedDecompose || (shouldForceTool && confirmSignal);
     const firstToolChoice: any = confirmedDecompose
       ? { type: 'function', function: { name: 'decompose_goal' } }
       : isMilestoneTap
