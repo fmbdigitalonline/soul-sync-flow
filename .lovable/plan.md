@@ -1,33 +1,64 @@
-## Steps 1–2: complete
+## Goal
 
-**1. Deploy** — `companion-oracle-conversation` redeployed at **2026-07-15 15:0X UTC** (just now, immediately after the read confirming `🃏 FROZEN TITLE: fidelity guard skipped` and `repairTitleToUserWords` are present in the deployed source at `supabase/functions/companion-oracle-conversation/index.ts` lines 2280 / 2359 / 2377–2379). No other functions deployed.
+Retire the Azure OpenAI path for edge functions and route every chat + embeddings call through direct OpenAI (`api.openai.com`), reusing the fallback branch that already exists in `supabase/functions/_shared/azure-openai.ts`.
 
-**2. Cleanup** — deleted 1 row from `user_goals`:
-- id: `f6400bfc-0e2e-4113-8ba0-f8f98b415876`
-- user_id: `d6f5766e-9ab5-4f31-a215-e831bd32ab28`
-- title: `Yes — break down "Reach $1 Million`
-- created_at: `2026-07-15 08:59:48.840+00`
+Side effect this unblocks: the intent classifier (`gpt-4.1-nano`) starts working immediately — no missing-deployment 404 — because OpenAI has that model natively.
 
-Test user has no active dream row again.
+## Preconditions (must resolve before any code/secret change)
 
-## Step 3: awaiting founder action
+`fetch_secrets` shows the project currently has:
 
-Please redo the flow in `/companion`:
-1. State the goal (e.g. type "i want to reach one million").
-2. Wait for the OfferCard to attach.
-3. Tap the confirmation button on the OfferCard.
+- `AZURE_OPENAI_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION`
+- `AZURE_OPENAI_EMBEDDINGS_KEY`, `AZURE_OPENAI_EMBEDDINGS_ENDPOINT`
+- `LOVABLE_API_KEY` (managed)
+- **`OPENAI_API_KEY` is NOT set.**
 
-Once you've done that, I will:
-- Query `user_goals` for the new row for `d6f5766e-…` and report `title`, milestone count from `goal_milestones` (must be ≥3), and `created_at`.
-- Query `conversation_memory` for session `4e67bc72-…` (or the new session id) to reconstruct the turn and report the **offer-time attachment title** (what the OfferCard actually displayed) vs your **original typed message**. That gives us the two side-by-side titles the constitution's rule 9 cares about.
+The helper's fallback throws `"Neither Azure OpenAI nor OpenAI API key is configured"` when Azure is disabled and no `OPENAI_API_KEY` is present. So the switch order matters — if we delete Azure vars first, every AI edge function breaks in the interval before the OpenAI key arrives.
 
-Nominal signal: DreamCard title reads close to your typed words, not "Net Worth Milestone".
+**Order (atomic-ish):**
 
-## Step 4: log-ingestion outage (out of scope for this repo)
+1. `add_secret(["OPENAI_API_KEY"])` — you paste the key into the secure form. I verify with a probe call while Azure is still active (the helper still prefers Azure, so this proves the key lands without changing behavior yet).
+2. Only after the key is confirmed present: delete the five `AZURE_*` secrets (via the secrets UI — I'll flag which ones). At that point `isAzureConfigured()` and the embeddings-configured check both flip to false and the helper's direct-OpenAI branch takes over.
+3. No redeploy needed — the helper reads env at each request.
 
-Confirmed no code-side action available: `function_logs` and `function_edge_logs` project-wide 0 rows for 24h+ while `dream_activity_logs` and `conversation_memory` inserts continue — this is the Supabase log-ingestion pipeline, not the app. To be raised as a Supabase support ticket from the dashboard; no build-mode work needed here.
+## Code changes
 
-## Technical notes
+None required for the switch itself. The fallback path in `azure-openai.ts` already handles both chat (`https://api.openai.com/v1/chat/completions`) and embeddings (`https://api.openai.com/v1/embeddings`).
 
-- Verification for Step 3 uses DB rows and `conversation_memory` reconstruction only (same method used for the prior RCA), since edge stdout markers (`🃏 OFFER CONFIRMED`, `🃏 FROZEN TITLE: fidelity guard skipped`, `🎯 PINNED DECOMPOSE`) are unrecoverable while ingestion is down.
-- No code changes are part of this plan — deploy + verify only, per instructions.
+Two tiny cleanups I'll do in the same PR for hygiene, only after the switch is verified working:
+
+- Remove the boot-time `console.log`s that reference Azure endpoints so they don't produce misleading `NOT configured` lines every cold start.
+- Leave the `MODEL_TO_DEPLOYMENT` map in place — it's a no-op on the direct path (getDeploymentName is only called in the Azure branch), and keeping it means we can flip back to Azure later just by re-adding the secrets.
+
+Explicitly NOT changing:
+- Model IDs in code (`gpt-4.1-mini-2025-04-14`, `gpt-4.1-nano`, `text-embedding-3-small`, `gpt-4.1-mini`) — all are valid on OpenAI direct.
+- The helper's exported surface (`callChatCompletion`, `callEmbeddings`, `isAzureConfigured`) — no caller changes.
+
+## Verification
+
+While log ingestion is up (it is right now — the 15:56:12 probe delivered markers), I'll verify by probing three paths and reading the logs:
+
+1. **Chat** — `POST /companion-oracle-conversation` with a minimal payload; expect `⚡ OpenAI Direct (fallback): gpt-4.1-mini-2025-04-14` in logs and a 200 response.
+2. **Intent classifier** — the same call also triggers `classifyIntent` → expect `🧭 INTENT: { intent: ..., ms: ... }` (success, not the current `HTTP error → regex fallback { status: 404 }`).
+3. **Embeddings** — `POST /openai-embeddings` with a short input; expect `⚡ OpenAI Embeddings Direct (fallback)` and `Successfully generated embedding, length: 1536`.
+
+If any of the three fails, I roll back by re-adding the Azure secrets (values retained by the user out of band; I do NOT store them).
+
+## Non-code follow-ups
+
+- **Memory update.** The Core rule "All AI uses Azure OpenAI. Model names must exactly match Azure deployments" is now false. I'll update `mem://index.md` to say "All AI uses direct OpenAI (api.openai.com). Azure path retired 2026-07-15; helper fallback retained for optional re-enable." Constitution's Directive 5 (expose your work) — I'll paste the diff.
+- **Cost / rate-limit posture.** Direct OpenAI usage is billed on your OpenAI account (not workspace credits), and rate limits are your OpenAI org's tier, not Azure's PTUs. Worth knowing but not blocking.
+- **Azure resource.** I don't touch anything on the `multimodalhacsbrain` Azure resource. If you also want to deprovision it, that's a separate manual step in the Azure portal.
+
+## Not in scope
+
+- Migrating to the Lovable AI Gateway (`ai.gateway.lovable.dev`) — different provider surface entirely; ask separately if you want that path.
+- The `conversation_state_tracking` RLS gap and `blueprint_text_embeddings` missing rows — both pre-existing, unrelated.
+
+## Deliverables
+
+1. `OPENAI_API_KEY` present in project secrets.
+2. Five `AZURE_*` secrets removed.
+3. Three verification log lines (chat, intent, embeddings) pasted into the chat as proof.
+4. Updated `mem://index.md` Core section.
+5. Optional hygiene commit removing the two Azure boot logs from `_shared/azure-openai.ts` (after verification).
