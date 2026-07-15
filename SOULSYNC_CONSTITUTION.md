@@ -1,6 +1,9 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v2.1)
+# SoulSync — Developer Constitution & Wiring Roadmap (v2.2)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v2.2 — rule 7 amended: Claude granted write-and-deploy power alongside
+Lovable (Jul 15, 2026). Supersedes v2.1.*
 
 *v2.1 — Phase 1 shipped + Phase 0 recorded (Jul 14, 2026). Supersedes v1/v2.*
 
@@ -193,11 +196,18 @@ a user-visible demo and a fresh-account test.
    preview + exact files/lines changed.
 6. Never weaken: charters, idempotency guards, one-insight budget,
    prefers-reduced-motion, read-only overviews.
-7. **Single write-and-deploy channel:** Lovable's repo is the only source
-   that edits and deploys edge functions. Claude delivers diagnoses, specs,
-   patches as instructions; Lovable applies. Deployed code and repo: same
-   bytes, same day. Every Claude session starts from a fresh zip. Never two
-   authors on one function.
+7. **Two write channels, one author per change (amended v2.2, Jul 15
+   2026 — founder decision; supersedes the single-channel rule):** Both
+   Lovable and Claude may write and deploy code, including edge
+   functions. Invariants that survive the amendment: (a) deployed code
+   and repo are the same bytes, same day; (b) exactly ONE author owns a
+   given change end-to-end — a function being modified in a Claude
+   branch is not simultaneously edited in Lovable, and vice versa;
+   (c) Claude works on branches and states what was changed and, for
+   edge functions, the deploy timestamp; (d) every Claude session still
+   starts from a fresh zip / fresh clone of the repo as ground truth.
+   Claude may still deliver specs for Lovable to apply when that is the
+   more practical channel for a given change.
 8. **Ground truth over memory:** schema from
    src/integrations/supabase/types.ts, taxonomies from source, deployment
    from logs (emoji markers). Capture logs immediately — retention short.
