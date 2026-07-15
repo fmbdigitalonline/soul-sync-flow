@@ -146,6 +146,55 @@ Worked example — same sentence, "i want to reach one million":
 - Generator / splenic / Aries Sun / ESTJ:
   *"You'll know by doing: [Build the 5-step plan now] [Start one money
   experiment this week]."* No deferral chip, action-first, plan wording.
+- Generator / **emotional** authority / Aries Sun / Gemini Moon / ENFP@0.6
+  (shape taken from a real first-layer blueprint): *"You'll know by
+  responding, not by forcing — and your clarity comes in waves: [Try one
+  money experiment to respond to] [Map the possibilities first]
+  [Let me sit with this]."* **The deferral chip follows AUTHORITY, not
+  type** — a Generator with emotional authority still gets it. Type shapes
+  framing; authority shapes pacing.
+
+### 5b. What the first layer already gives the dealer (verified against a real stored blueprint, Jul 15 2026)
+
+The dealer's v2 does NOT need to wait for hermetic extraction for its
+mechanics layer — the raw blueprint's first layer already carries:
+
+- **HD complete:** type, strategy, authority, profile, definition, centers,
+  gates, and `not_self_theme`. Timing/pacing heuristics and the
+  emotional-authority deferral chip work day-0 from this.
+- **`not_self_theme` as a dealer signal** (missed in §5's first pass): for
+  a Generator, `not_self_theme: "Frustration"` makes detected frustration
+  *diagnostic* — a signal of responding to what isn't theirs, not merely an
+  emotion to soothe. Dealer rule: frustration + Generator → deal the
+  "what are you saying yes to that isn't yours?" door, not the
+  "optimize your plan" door. This turns the old ACS-frustration failure
+  mode into a personalized mechanic.
+- **Astrology:** Sun/Moon with degrees + keywords (rising may be absent —
+  see data findings). **Numerology:** full set incl. master numbers (a
+  life path 33 must be read as Master Teacher, not reduced to 6) and the
+  soul-urge vs expression tension — long-horizon door-weighting material.
+- **MBTI, when old-flow data exists:** `user_meta.personality` holds
+  `mbtiProbabilities`, per-trait Big Five confidence, `userConfidence`,
+  `likelyType`, and `microAnswers` — the intake micro-set output in
+  exactly the storage shape §6 specifies.
+
+### 5c. Data findings from the same real blueprint (report, don't fix — rule 2)
+
+1. **`cognition_mbti` disconnect (bug):** `user_meta.personality.likelyType
+   = "ENFP"` with a full probability distribution, while `cognition_mbti`
+   reads `type: "Unknown"`, functions Unknown. The canonical field is never
+   populated from the fusion output, and dominant/auxiliary functions
+   (ENFP → Ne-Fi) are a pure lookup away. Cheap, high-value join.
+2. **UI placeholder persisted as data (bug):** `rising_sign:
+   "Calculating..."` stored in the blueprint. Anything templating this into
+   speech has the twin claiming a rising sign of "Calculating..." — a
+   truth-guard hazard at rest. Needs null semantics, not a string.
+3. **Schema duplication:** every system stored twice (`astrology` /
+   `archetype_western`, `numerology` / `values_life_path`, `human_design` /
+   `energy_strategy_human_design`) — drift risk between copies.
+4. **Answer to open question 2:** the intake micro-set is the donor's own
+   three micro-questions (`energy_source`, `workspace_style`,
+   `planning_style`) — restore those, unchanged, in OnboardingFlow.
 
 ## 6. The MBTI gap and recovery plan
 
