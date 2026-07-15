@@ -2266,6 +2266,57 @@ serve(async (req) => {
 
     const cardAttachments: any[] = [];
 
+    // GOAL-TITLE FIDELITY (Phase 1 item 2, Phase 2 §1 eligibility rules):
+    // scan recent USER-AUTHORED turns for the stated goal phrase; if a
+    // model-produced title drifted (<60% token overlap), repair it to the
+    // user's words. Eligibility rules (ground truth #6: guards without
+    // eligibility rules copy the wrong thing):
+    //  - machine-spoken rail messages ("Yes — break down …", "Let's work
+    //    on:") are EXCLUDED from the candidate pool — button copy must
+    //    never become a title;
+    //  - rail-confirmed titles never pass through here at all (frozen at
+    //    offer time; see decompose_goal handler).
+    const RAIL_MESSAGE_PREFIXES = ["Yes — break down", "Let's work on:"];
+    function repairTitleToUserWords(titleIn: string, label: string): string {
+      try {
+        const recentUserTexts = (finalHistory || [])
+          .filter((m: any) => m.role === 'user' && typeof m.content === 'string')
+          .slice(-6)
+          .map((m: any) => m.content as string)
+          .concat([typeof message === 'string' ? message : ''])
+          .filter((t: string) => !RAIL_MESSAGE_PREFIXES.some(p => t.trimStart().startsWith(p)));
+        const goalPhraseRegex = /(?:"([^"]{4,80})")|((?:[^.!?\n]{0,40})(?:(?:€|\$|£)\s?[\d.,]+\s?\w*|\b\d[\d.,]*\s?(?:k|m|mln|mil{1,2}[ij]?oe?n)\b|\b(?:earn|make|reach|save|quit|launch|build|start|become|lose|run|verdien(?:en)?|bereik(?:en)?|sparen|stoppen|beginnen|worden)\b[^.!?\n]{0,50}))/gi;
+        const candidates: string[] = [];
+        for (const text of recentUserTexts) {
+          let match: RegExpExecArray | null;
+          goalPhraseRegex.lastIndex = 0;
+          while ((match = goalPhraseRegex.exec(text)) !== null) {
+            const phrase = (match[1] || match[2] || '').trim();
+            if (phrase.length >= 4) candidates.push(phrase);
+          }
+        }
+        if (candidates.length === 0 || !titleIn) return titleIn;
+        const tokenize = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}€$£]+/gu, ' ').split(/\s+/).filter(w => w.length > 1);
+        const titleTokens = tokenize(titleIn);
+        const overlapWith = (phrase: string) => {
+          const phraseTokens = new Set(tokenize(phrase));
+          if (titleTokens.length === 0) return 0;
+          return titleTokens.filter(t => phraseTokens.has(t)).length / titleTokens.length;
+        };
+        const bestCandidate = candidates.sort((a, b) => b.length - a.length)[0];
+        const bestOverlap = Math.max(...candidates.map(overlapWith));
+        if (bestOverlap < 0.6) {
+          const repaired = bestCandidate.replace(/\s+/g, ' ').trim().slice(0, 80);
+          console.log(`⚠️ goal-title repaired (${label}): "${titleIn}" → "${repaired}"`, { overlap: bestOverlap.toFixed(2) });
+          return repaired.charAt(0).toUpperCase() + repaired.slice(1);
+        }
+        return titleIn;
+      } catch (guardErr) {
+        console.warn('⚠️ goal-title guard failed (non-blocking):', guardErr instanceof Error ? guardErr.message : guardErr);
+        return titleIn;
+      }
+    }
+
     async function runCompanionTool(name: string, args: any): Promise<string> {
       console.log(`🛠️ TOOL LOOP: calling ${name}`, { args: JSON.stringify(args).slice(0, 300) });
       const result = await _runCompanionToolInner(name, args);
@@ -2298,10 +2349,14 @@ serve(async (req) => {
           // DETERMINISTIC RAIL (Phase 2 §1): deal the OfferCard and STOP.
           // No DB write, no goal row — the card is side-effect-free. The
           // title is frozen here; it returns unchanged when the user taps.
-          const offerTitle = (typeof args.title === 'string' ? args.title : '').trim().slice(0, 80);
-          if (!offerTitle) {
+          // The fidelity repair runs HERE, at offer time, because this is
+          // the only moment every candidate text is genuinely user-authored
+          // — what gets frozen must be the user's words, not a reframe.
+          const offerTitleRaw = (typeof args.title === 'string' ? args.title : '').trim().slice(0, 80);
+          if (!offerTitleRaw) {
             return JSON.stringify({ offered: false, note: 'No goal title to offer. Ask the user what they want to work on.' });
           }
+          const offerTitle = repairTitleToUserWords(offerTitleRaw, 'offer').slice(0, 80);
           console.log('🃏 OFFER DEALT: offer_decomposition', { title: offerTitle });
           cardAttachments.push({ type: 'offer_decomposition', title: offerTitle });
           return JSON.stringify({
@@ -2310,53 +2365,23 @@ serve(async (req) => {
           });
         }
         if (name === 'decompose_goal') {
-          // DETERMINISTIC FREEZE (Phase 2 §1): when the user reached here by
-          // tapping an OfferCard, the confirmed title is authoritative — it
-          // was frozen from their own words at offer time. Override anything
-          // the model produced (stronger than the fidelity guard below).
+          const _titleIn = typeof args.title === 'string' ? args.title : '';
           if (confirmedDecompose) {
+            // DETERMINISTIC FREEZE (Phase 2 §1): the user reached here by
+            // tapping an OfferCard — the confirmed title is authoritative,
+            // frozen from their own words at offer time. The fidelity guard
+            // MUST NOT run on this turn: the tap message in history is
+            // machine-spoken button copy, and the guard would "repair" the
+            // frozen title into the button string (seen in production,
+            // Jul 15). Eligibility rule, not similarity threshold.
             args.title = confirmedDecompose.title;
             if (confirmedDecompose.category && !args.category) args.category = confirmedDecompose.category;
-          }
-          const _titleIn = typeof args.title === 'string' ? args.title : '';
-          // PHASE 1 (item 2): GOAL-TITLE FIDELITY GUARD — the card must carry
-          // the user's words, never the model's reframe. Scan recent user
-          // turns for their stated goal phrase; if the model's title drifted
-          // (< 60% token overlap), repair it. Never block, always proceed.
-          try {
-            const recentUserTexts = (finalHistory || [])
-              .filter((m: any) => m.role === 'user' && typeof m.content === 'string')
-              .slice(-6)
-              .map((m: any) => m.content as string)
-              .concat([message]);
-            const goalPhraseRegex = /(?:"([^"]{4,80})")|((?:[^.!?\n]{0,40})(?:(?:€|\$|£)\s?[\d.,]+\s?\w*|\b\d[\d.,]*\s?(?:k|m|mln|mil{1,2}[ij]?oe?n)\b|\b(?:earn|make|save|quit|launch|build|start|become|lose|run|verdien(?:en)?|sparen|stoppen|beginnen|worden)\b[^.!?\n]{0,50}))/gi;
-            const candidates: string[] = [];
-            for (const text of recentUserTexts) {
-              let match: RegExpExecArray | null;
-              goalPhraseRegex.lastIndex = 0;
-              while ((match = goalPhraseRegex.exec(text)) !== null) {
-                const phrase = (match[1] || match[2] || '').trim();
-                if (phrase.length >= 4) candidates.push(phrase);
-              }
-            }
-            if (candidates.length > 0 && typeof args.title === 'string') {
-              const tokenize = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}€$£]+/gu, ' ').split(/\s+/).filter(w => w.length > 1);
-              const titleTokens = tokenize(args.title);
-              const overlapWith = (phrase: string) => {
-                const phraseTokens = new Set(tokenize(phrase));
-                if (titleTokens.length === 0) return 0;
-                return titleTokens.filter(t => phraseTokens.has(t)).length / titleTokens.length;
-              };
-              const bestCandidate = candidates.sort((a, b) => b.length - a.length)[0];
-              const bestOverlap = Math.max(...candidates.map(overlapWith));
-              if (bestOverlap < 0.6) {
-                const repaired = bestCandidate.replace(/\s+/g, ' ').trim().slice(0, 80);
-                console.log(`⚠️ goal-title repaired: "${args.title}" → "${repaired}"`, { overlap: bestOverlap.toFixed(2) });
-                args.title = repaired.charAt(0).toUpperCase() + repaired.slice(1);
-              }
-            }
-          } catch (guardErr) {
-            console.warn('⚠️ goal-title guard failed (non-blocking):', guardErr instanceof Error ? guardErr.message : guardErr);
+            console.log('🃏 FROZEN TITLE: fidelity guard skipped (confirmedAction)', { title: args.title });
+          } else if (typeof args.title === 'string') {
+            // PHASE 1 (item 2): GOAL-TITLE FIDELITY GUARD — detection-path
+            // turns only. The card must carry the user's words, never the
+            // model's reframe; drifted titles (<60% overlap) get repaired.
+            args.title = repairTitleToUserWords(args.title, 'decompose');
           }
           console.log('🎯 PINNED DECOMPOSE: title journey', {
             in: _titleIn,
