@@ -78,7 +78,29 @@ class MBTIDataRepairService {
       };
     }
   }
-  
+
+  /**
+   * Pure derivation of a cognition_mbti structure from an assembled (or
+   * partial) blueprint's personality data. Runs at blueprint ASSEMBLY time
+   * so cognition_mbti is populated from the start rather than hardcoded
+   * "Unknown" and lazily repaired later. Reuses the same source-priority
+   * extractor and function map as the repair path — single source of truth.
+   * Degrades with the data: returns the Unknown default (no fabrication)
+   * when no assessment exists.
+   */
+  deriveCognitionMbti(blueprint: any) {
+    const personalityData = this.extractPersonalityData(blueprint);
+    if (!personalityData.mbtiType || personalityData.mbtiType === 'Unknown') {
+      return {
+        type: 'Unknown',
+        core_keywords: [],
+        dominant_function: 'Unknown',
+        auxiliary_function: 'Unknown'
+      };
+    }
+    return this.buildMBTIStructure(personalityData);
+  }
+
   /**
    * Extracts personality data from multiple possible sources in the blueprint
    */
