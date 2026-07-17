@@ -2491,10 +2491,14 @@ serve(async (req) => {
     async function _runCompanionToolInner(name: string, args: any): Promise<string> {
       try {
         if (name === 'get_active_dream') {
+          // status filter matches every Dreams-page query (use-goals.ts):
+          // delete is a soft delete (status='inactive') — a deleted dream
+          // must never be served as "the active dream".
           const { data: goals } = await supabase
             .from('user_goals')
             .select('*')
             .eq('user_id', userId)
+            .eq('status', 'active')
             .order('created_at', { ascending: false })
             .limit(1);
           const g = goals?.[0];
@@ -2739,10 +2743,13 @@ serve(async (req) => {
         && semanticOk && goalSignalNow
         && typeof semanticGoalVerbatim === 'string' && semanticGoalVerbatim.trim().length >= 4) {
       try {
+        // status filter matches the Dreams pages: soft-deleted dreams
+        // (status='inactive') must not block the dealer.
         const { data: railGoals } = await supabase
           .from('user_goals')
           .select('id')
           .eq('user_id', userId)
+          .eq('status', 'active')
           .limit(1);
         if (!railGoals || railGoals.length === 0) {
           const railTitle = repairTitleToUserWords(semanticGoalVerbatim.trim().slice(0, 80), 'rail-deal').slice(0, 80);
