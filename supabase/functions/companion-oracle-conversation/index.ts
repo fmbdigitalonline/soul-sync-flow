@@ -1362,6 +1362,7 @@ serve(async (req) => {
     // messages array below — same slot every turn.
     // ────────────────────────────────────────────────────────────────
     const structuredSpine = await buildStructuredIntelligenceSpine(userId, supabase);
+    console.log('🧭 SPINE EXIT:', { hasSpine: !!structuredSpine, len: structuredSpine?.length ?? 0 });
 
     // ────────────────────────────────────────────────────────────────
     // PHASE 1 (item 5): shadow-detector cue — synchronous, current turn
