@@ -774,43 +774,120 @@ primer += `═══════════════════════
 // ────────────────────────────────────────────────────────────────────
 async function buildStructuredIntelligenceSpine(userId: string, supabase: any): Promise<string | null> {
   try {
-    const { data: hsi, error } = await supabase
-      .from('hermetic_structured_intelligence')
-      .select('execution_bias, behavioral_triggers, temporal_biology, identity_constructs, crisis_handling')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error || !hsi) {
-      if (error) console.warn('⚠️ SPINE: fetch failed (non-blocking):', error.message);
-      return null;
-    }
-
+    // Source-of-truth: personality_reports blob. The typed table
+    // hermetic_structured_intelligence is a lossy derived cache and, for
+    // ~half of existing rows, holds scalar strings instead of objects,
+    // which caused a silent-spine for those users. We now read the blob
+    // (column first, nested fallback) and only fall back to the typed
+    // table if the blob is missing.
     const clip = (v: unknown, max: number): string => {
       const s = typeof v === 'string' ? v : (v == null ? '' : String(v));
       return s.length > max ? s.slice(0, max) + '…' : s;
     };
 
+    let hsi: any = null;
+    let source: 'blob_column' | 'blob_nested' | 'typed_table' | null = null;
+
+    const { data: report, error: reportErr } = await supabase
+      .from('personality_reports')
+      .select('structured_intelligence, report_content')
+      .eq('user_id', userId)
+      .not('report_content', 'is', null)
+      .order('generated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (reportErr) {
+      console.warn('⚠️ SPINE: personality_reports fetch failed:', reportErr.message);
+    }
+
+    if (report) {
+      const parseMaybe = (v: any) => (typeof v === 'string' ? (() => { try { return JSON.parse(v); } catch { return null; } })() : v);
+      const siCol = parseMaybe((report as any).structured_intelligence);
+      const siNested = parseMaybe((report as any).report_content?.structured_intelligence);
+      if (siCol && typeof siCol === 'object') { hsi = siCol; source = 'blob_column'; }
+      else if (siNested && typeof siNested === 'object') { hsi = siNested; source = 'blob_nested'; }
+    }
+
+    if (!hsi) {
+      const { data: tbl, error: tblErr } = await supabase
+        .from('hermetic_structured_intelligence')
+        .select('execution_bias, behavioral_triggers, temporal_biology, identity_constructs, crisis_handling')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (tblErr) console.warn('⚠️ SPINE: typed-table fallback failed:', tblErr.message);
+      if (tbl) { hsi = tbl; source = 'typed_table'; }
+    }
+
+    if (!hsi) return null;
+
+    // Shape-agnostic dimension reader. Blob rows are `{analysis: "prose"}`
+    // per dimension; typed-table rows are `{preferred_style, ...}` or a
+    // scalar string on broken rows. Returns the best available prose.
+    const dimProse = (dim: any): string => {
+      if (!dim) return '';
+      if (typeof dim === 'string') return dim;              // broken-row scalar
+      if (typeof dim !== 'object') return '';
+      if (typeof dim.analysis === 'string') return dim.analysis; // blob shape
+      return '';
+    };
+    const dimField = (dim: any, key: string): any => {
+      return dim && typeof dim === 'object' && !Array.isArray(dim) ? dim[key] : undefined;
+    };
+
     const lines: string[] = [];
-    const eb = hsi.execution_bias || {};
-    if (eb.preferred_style) lines.push(`- Execution style: ${clip(eb.preferred_style, 180)}`);
-    if (eb.completion_patterns) lines.push(`- Completion pattern: ${clip(eb.completion_patterns, 180)}`);
-    const avoidance = hsi.behavioral_triggers?.avoidance_patterns;
+
+    // Execution bias — prefer typed sub-keys, else prose analysis.
+    const eb = hsi.execution_bias;
+    const ebStyle = dimField(eb, 'preferred_style');
+    const ebCompletion = dimField(eb, 'completion_patterns');
+    if (ebStyle) lines.push(`- Execution style: ${clip(ebStyle, 180)}`);
+    if (ebCompletion) lines.push(`- Completion pattern: ${clip(ebCompletion, 180)}`);
+    if (!ebStyle && !ebCompletion) {
+      const prose = dimProse(eb);
+      if (prose) lines.push(`- Execution bias: ${clip(prose, 260)}`);
+    }
+
+    // Behavioral triggers — avoidance list, else prose.
+    const bt = hsi.behavioral_triggers;
+    const avoidance = dimField(bt, 'avoidance_patterns');
     if (Array.isArray(avoidance) && avoidance.length > 0) {
       lines.push(`- Avoidance patterns: ${avoidance.slice(0, 3).map((a: any) => clip(a, 90)).join(' | ')}`);
+    } else {
+      const prose = dimProse(bt);
+      if (prose) lines.push(`- Behavioral triggers: ${clip(prose, 220)}`);
     }
-    const peaks = hsi.temporal_biology?.cognitive_peaks;
+
+    // Temporal biology — peaks list, else prose.
+    const tb = hsi.temporal_biology;
+    const peaks = dimField(tb, 'cognitive_peaks');
     if (Array.isArray(peaks) && peaks.length > 0) {
       lines.push(`- Cognitive peaks: ${peaks.slice(0, 3).map((p: any) => clip(p, 70)).join(' | ')}`);
+    } else {
+      const prose = dimProse(tb);
+      if (prose) lines.push(`- Temporal biology: ${clip(prose, 200)}`);
     }
-    const narratives = hsi.identity_constructs?.core_narratives;
+
+    // Identity constructs — first core narrative, else prose.
+    const ic = hsi.identity_constructs;
+    const narratives = dimField(ic, 'core_narratives');
     if (Array.isArray(narratives) && narratives.length > 0) {
       lines.push(`- Core narrative: ${clip(narratives[0], 200)}`);
+    } else {
+      const prose = dimProse(ic);
+      if (prose) lines.push(`- Identity constructs: ${clip(prose, 220)}`);
     }
-    const rituals = hsi.crisis_handling?.bounce_back_rituals;
+
+    // Crisis handling — first bounce-back ritual, else prose.
+    const ch = hsi.crisis_handling;
+    const rituals = dimField(ch, 'bounce_back_rituals');
     if (Array.isArray(rituals) && rituals.length > 0) {
       lines.push(`- Bounce-back ritual: ${clip(rituals[0], 140)}`);
+    } else {
+      const prose = dimProse(ch);
+      if (prose) lines.push(`- Crisis handling: ${clip(prose, 200)}`);
     }
 
     if (lines.length === 0) return null;
@@ -825,7 +902,7 @@ async function buildStructuredIntelligenceSpine(userId: string, supabase: any): 
     }
     if (block.length > CHAR_CAP) block = block.slice(0, CHAR_CAP);
 
-    console.log(`📐 SPINE: ~${Math.ceil(block.length / 4)} tokens injected`, { lines: lines.length });
+    console.log(`📐 SPINE: ~${Math.ceil(block.length / 4)} tokens injected`, { lines: lines.length, source });
     return block;
   } catch (e) {
     console.warn('⚠️ SPINE: build failed (non-blocking):', e instanceof Error ? e.message : e);
