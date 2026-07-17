@@ -2510,6 +2510,15 @@ serve(async (req) => {
           return JSON.stringify({ found: true, title: g.title, description: g.description, progress: g.progress, milestones: (g.milestones || []).slice(0, 6) });
         }
         if (name === 'offer_decomposition') {
+          // Dedupe (Slice 1): if the deal rail (or an earlier call this
+          // turn) already put an offer on the table, never deal a second.
+          if (cardAttachments.some((a: any) => a?.type === 'offer_decomposition')) {
+            console.log('🃏 OFFER DEDUPE: offer already dealt this turn, second deal suppressed');
+            return JSON.stringify({
+              offered: true,
+              note: 'An OfferCard is ALREADY on the table this turn. Add ONE short line in your own voice and STOP — do not offer again, do not call decompose_goal.'
+            });
+          }
           // DETERMINISTIC RAIL (Phase 2 §1): deal the OfferCard and STOP.
           // No DB write, no goal row — the card is side-effect-free. The
           // title is frozen here; it returns unchanged when the user taps.
@@ -2713,6 +2722,46 @@ serve(async (req) => {
       goalInRecentContext
     });
 
+    // ────────────────────────────────────────────────────────────────
+    // PHASE 2 ChoiceCard Slice 1 (bug 15): DETERMINISTIC DEAL RAIL.
+    // On a semantic stated_goal turn the deal is a rail, not a model
+    // choice: code deals the OfferCard itself, then tells the model the
+    // card is already on the table. Rails before intelligence — the
+    // model can no longer consult-and-forget the offer.
+    // Guards: semantic verdict only (regex-fallback turns keep the old
+    // model-choice path — no rail without a classifier-verbatim title
+    // to freeze); normal turn (no confirmedAction / milestone tap /
+    // decline / confirm); user has no dream yet (same emptiness test
+    // get_active_dream uses).
+    // ────────────────────────────────────────────────────────────────
+    let railDealt = false;
+    if (!confirmedDecompose && !isMilestoneTap && !semDecline && !confirmSignal
+        && semanticOk && goalSignalNow
+        && typeof semanticGoalVerbatim === 'string' && semanticGoalVerbatim.trim().length >= 4) {
+      try {
+        const { data: railGoals } = await supabase
+          .from('user_goals')
+          .select('id')
+          .eq('user_id', userId)
+          .limit(1);
+        if (!railGoals || railGoals.length === 0) {
+          const railTitle = repairTitleToUserWords(semanticGoalVerbatim.trim().slice(0, 80), 'rail-deal').slice(0, 80);
+          cardAttachments.push({ type: 'offer_decomposition', title: railTitle });
+          railDealt = true;
+          console.log('🃏 RAIL DEAL: offer dealt by code, not model choice', { title: railTitle });
+          const railDirective = `\n\nOFFER ALREADY DEALT (governs this reply): An OfferCard proposing to break down "${railTitle}" is already on the table this turn. Add ONE short line of insight in your own voice, then STOP — do NOT offer in prose, do NOT narrate the breakdown, do NOT call offer_decomposition or decompose_goal. Wait for the tap.`;
+          const railSys = completionParams.messages[0];
+          if (railSys && railSys.role === 'system' && typeof railSys.content === 'string') {
+            railSys.content = railSys.content + railDirective;
+          } else {
+            completionParams.messages.unshift({ role: 'system', content: railDirective });
+          }
+        }
+      } catch (railErr) {
+        console.warn('⚠️ RAIL DEAL failed (non-blocking, falls back to model choice):', railErr instanceof Error ? railErr.message : railErr);
+      }
+    }
+
     if (isMilestoneTap) {
       console.log('🪧 MILESTONE TAP: coaching mode, decompose suppressed', { message: message.slice(0, 120) });
       // Append coaching directive to the system prompt so the model
@@ -2732,15 +2781,20 @@ serve(async (req) => {
     // user_goals empty after "yes". planRequest / statedGoal keep plain
     // 'required' because those turns should still be free to consult first.
     const forceDecompose = !!confirmedDecompose || (shouldForceTool && confirmSignal);
+    // railDealt: the offer is already on the table — never force a tool
+    // round on top of it (a forced consult re-offers; the exact double-deal
+    // the rail exists to prevent). 'auto' still allows a genuine consult.
     const firstToolChoice: any = confirmedDecompose
       ? { type: 'function', function: { name: 'decompose_goal' } }
       : isMilestoneTap
         ? { type: 'function', function: { name: 'get_active_dream' } }
         : forceDecompose
           ? { type: 'function', function: { name: 'decompose_goal' } }
-          : shouldForceTool
-            ? 'required'
-            : 'auto';
+          : railDealt
+            ? 'auto'
+            : shouldForceTool
+              ? 'required'
+              : 'auto';
     if (confirmedDecompose) {
       console.log('🃏 OFFER CONFIRMED → 🎯 PINNED DECOMPOSE (detection skipped)', { title: confirmedDecompose.title });
     }
