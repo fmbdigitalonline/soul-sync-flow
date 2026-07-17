@@ -2746,10 +2746,59 @@ serve(async (req) => {
           .limit(1);
         if (!railGoals || railGoals.length === 0) {
           const railTitle = repairTitleToUserWords(semanticGoalVerbatim.trim().slice(0, 80), 'rail-deal').slice(0, 80);
-          cardAttachments.push({ type: 'offer_decomposition', title: railTitle });
+          // ── Slice 2: the blueprint informs the deal (v2.3 dealer table).
+          // Server-side blueprint fetch — the client userProfile carries no
+          // HD authority, and the deferral chip follows AUTHORITY, not type.
+          // Every field fail-soft: missing blueprint → plain Slice-1 card.
+          let railAuthority = '', railHdType = '', railMbti = '';
+          try {
+            const { data: railBp } = await supabase
+              .from('user_blueprints')
+              .select('blueprint')
+              .eq('user_id', userId)
+              .eq('is_active', true)
+              .maybeSingle();
+            const bp = railBp?.blueprint || {};
+            const hd = bp.energy_strategy_human_design || {};
+            railAuthority = String(hd.authority || '');
+            railHdType = String(hd.type || '');
+            railMbti = String(bp.user_meta?.personality?.likelyType || bp.cognition_mbti?.type || '');
+          } catch (bpErr) {
+            console.warn('⚠️ RAIL DEAL: blueprint fetch failed (dealing plain card):', bpErr instanceof Error ? bpErr.message : bpErr);
+          }
+          // WHEN/pacing — HD authority. Emotional authority ALWAYS gets the
+          // defer_choice chip ("let me sit with this" is their decision
+          // mechanic, honored structurally); splenic never sees it; other
+          // authorities get no chip in this slice.
+          const railDeferChip = /emotional/i.test(railAuthority);
+          // HOW — MBTI words the door. Same route (decompose into
+          // milestones), different label; every variant honestly describes
+          // what the tap does (truth-guard). Unknown MBTI → no frame, the
+          // client falls back to the fixed copy (framing degrades with
+          // confidence, v2.3 §6).
+          const mbtiUp = railMbti.toUpperCase();
+          const railFrame = !/^[EI][NS][TF][JP]$/.test(mbtiUp) ? undefined
+            : mbtiUp[2] === 'T' && mbtiUp[3] === 'J' ? 'Build the milestone plan →'
+            : mbtiUp[2] === 'T' && mbtiUp[3] === 'P' ? 'Map the milestones →'
+            : mbtiUp[2] === 'F' && mbtiUp[3] === 'J' ? 'Lay out the path, step by step →'
+            : 'Shape it into doable steps →'; // F-P
+          const railCard: any = { type: 'offer_decomposition', title: railTitle };
+          if (railFrame) railCard.frame = railFrame;
+          if (railDeferChip) railCard.defer_chip = true;
+          cardAttachments.push(railCard);
           railDealt = true;
-          console.log('🃏 RAIL DEAL: offer dealt by code, not model choice', { title: railTitle });
-          const railDirective = `\n\nOFFER ALREADY DEALT (governs this reply): An OfferCard proposing to break down "${railTitle}" is already on the table this turn. Add ONE short line of insight in your own voice, then STOP — do NOT offer in prose, do NOT narrate the breakdown, do NOT call offer_decomposition or decompose_goal. Wait for the tap.`;
+          console.log('🃏 RAIL DEAL: blueprint-informed offer dealt by code', {
+            title: railTitle, authority: railAuthority || 'unknown', mbti: mbtiUp || 'unknown',
+            deferChip: railDeferChip, framed: !!railFrame
+          });
+          // WHY-line — the one line the twin speaks IS the why-line: it must
+          // ground in the real chart facts fed here, never invented ones.
+          const railFacts = [
+            railHdType && `HD type: ${railHdType}`,
+            railAuthority && `authority: ${railAuthority}`,
+            mbtiUp && `MBTI: ${mbtiUp}`,
+          ].filter(Boolean).join(', ');
+          const railDirective = `\n\nOFFER ALREADY DEALT (governs this reply): An OfferCard proposing to break down "${railTitle}" is already on the table this turn. Your ONE short line is the why-line: say why this door fits THEM right now, grounded ONLY in these chart facts — ${railFacts || 'no chart facts available; keep the line neutral'}. Never cite a chart fact not listed here. Then STOP — do NOT offer in prose, do NOT narrate the breakdown, do NOT call offer_decomposition or decompose_goal.${railDeferChip ? ' The card also carries a "Let me sit with this" chip because their emotional authority needs the wave to settle — do not pressure an immediate yes.' : ''} Wait for the tap.`;
           const railSys = completionParams.messages[0];
           if (railSys && railSys.role === 'system' && typeof railSys.content === 'string') {
             railSys.content = railSys.content + railDirective;
