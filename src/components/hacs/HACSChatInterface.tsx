@@ -23,7 +23,14 @@ import { PresenceFrame, PresenceState } from "@/components/companion/PresenceFra
 
 // Deterministic confirmation rail: an OfferCard tap rides a structured flag
 // alongside the visible message so the oracle can skip detection entirely.
-export type ConfirmedAction = { type: "decompose_goal"; title: string };
+// Intake fields (category/timeframe) ride the same freeze — what the card
+// showed is what the dream gets.
+export type ConfirmedAction = {
+  type: "decompose_goal";
+  title: string;
+  category?: string;
+  timeframe?: string;
+};
 
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
@@ -52,6 +59,9 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   const [selectedSentences, setSelectedSentences] = useState<Record<string, string | null>>({});
   const [isProcessingAction, setIsProcessingAction] = useState(false);
   const [loadingAction, setLoadingAction] = useState<SentenceAction | null>(null);
+  // "Dream this" sentence action: the selected words become an intake card
+  // draft rendered under that message — fully client-side, no model call.
+  const [dreamDraft, setDreamDraft] = useState<{ messageId: string; title: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { updateChatLoading } = useGlobalChatState();
   const { isMobile } = useIsMobile();
@@ -93,6 +103,18 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     
     if (action === "save_insight") {
       toast.success("Insight saved!");
+      setSelectedSentences({});
+      return;
+    }
+
+    if (action === "dream_this") {
+      // Deterministic intake: the selected words ARE the dream title —
+      // deal the intake card locally, prefilled, no server round-trip.
+      const selectedEntry = Object.entries(selectedSentences).find(([, s]) => s === sentence);
+      const messageId = selectedEntry?.[0];
+      if (messageId) {
+        setDreamDraft({ messageId, title: sentence.trim().slice(0, 80) });
+      }
       setSelectedSentences({});
       return;
     }
@@ -238,9 +260,16 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                           title={att.title}
                           frame={att.frame}
                           deferChip={att.defer_chip}
+                          category={att.category}
+                          timeframe={att.timeframe}
                           onConfirm={(title) =>
                             onSendMessage(`Yes — break down "${title}" into milestones.`, {
-                              confirmedAction: { type: "decompose_goal", title },
+                              confirmedAction: {
+                                type: "decompose_goal",
+                                title,
+                                category: att.category,
+                                timeframe: att.timeframe,
+                              },
                             })
                           }
                           onDefer={() => onSendMessage("Let me sit with this.")}
@@ -252,6 +281,30 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                           onSpeak={(text) => onSendMessage(text)}
                         />
                       ) : null
+                    )}
+
+                    {/* "Dream this" draft: intake card dealt from a selected
+                        sentence — page-form defaults, one confirm tap */}
+                    {dreamDraft?.messageId === message.id && (
+                      <OfferCard
+                        key={`${message.id}_dream_draft`}
+                        title={dreamDraft.title}
+                        category="personal_growth"
+                        timeframe="3 months"
+                        onConfirm={(title) => {
+                          setDreamDraft(null);
+                          onSendMessage(`Yes — break down "${title}" into milestones.`, {
+                            confirmedAction: {
+                              type: "decompose_goal",
+                              title,
+                              category: "personal_growth",
+                              timeframe: "3 months",
+                            },
+                          });
+                        }}
+                        onDefer={() => setDreamDraft(null)}
+                        deferChip
+                      />
                     )}
 
                     {/* Inline action buttons when sentence is selected */}

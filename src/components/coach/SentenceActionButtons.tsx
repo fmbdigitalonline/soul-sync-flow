@@ -1,9 +1,9 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { Layers, Footprints, HelpCircle, Bookmark, Loader2 } from "lucide-react";
+import { Layers, Footprints, HelpCircle, Bookmark, Loader2, Sprout } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type SentenceAction = "go_deeper" | "next_action" | "challenge" | "save_insight";
+export type SentenceAction = "go_deeper" | "next_action" | "challenge" | "save_insight" | "dream_this";
 
 interface SentenceActionButtonsProps {
   selectedSentence: string;
@@ -41,6 +41,14 @@ const actionConfig: Array<{
     label: "Save Insight",
     icon: Bookmark,
     colorClass: "text-green-500",
+  },
+  {
+    // Compression pivot: the selected words become a dream — deals the
+    // intake card prefilled with this exact sentence. No model involved.
+    action: "dream_this",
+    label: "Dream This",
+    icon: Sprout,
+    colorClass: "text-emerald-600",
   },
 ];
 
