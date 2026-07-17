@@ -1361,6 +1361,7 @@ serve(async (req) => {
     // closure gate so closure turns pay no DB cost). Injected into the
     // messages array below — same slot every turn.
     // ────────────────────────────────────────────────────────────────
+    console.log('🧭 SPINE ENTRY: calling buildStructuredIntelligenceSpine', { userId: userId?.slice(0, 8) });
     const structuredSpine = await buildStructuredIntelligenceSpine(userId, supabase);
     console.log('🧭 SPINE EXIT:', { hasSpine: !!structuredSpine, len: structuredSpine?.length ?? 0 });
 
