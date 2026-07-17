@@ -2510,6 +2510,15 @@ serve(async (req) => {
           return JSON.stringify({ found: true, title: g.title, description: g.description, progress: g.progress, milestones: (g.milestones || []).slice(0, 6) });
         }
         if (name === 'offer_decomposition') {
+          // Dedupe (Slice 1): if the deal rail (or an earlier call this
+          // turn) already put an offer on the table, never deal a second.
+          if (cardAttachments.some((a: any) => a?.type === 'offer_decomposition')) {
+            console.log('🃏 OFFER DEDUPE: offer already dealt this turn, second deal suppressed');
+            return JSON.stringify({
+              offered: true,
+              note: 'An OfferCard is ALREADY on the table this turn. Add ONE short line in your own voice and STOP — do not offer again, do not call decompose_goal.'
+            });
+          }
           // DETERMINISTIC RAIL (Phase 2 §1): deal the OfferCard and STOP.
           // No DB write, no goal row — the card is side-effect-free. The
           // title is frozen here; it returns unchanged when the user taps.
@@ -2713,6 +2722,95 @@ serve(async (req) => {
       goalInRecentContext
     });
 
+    // ────────────────────────────────────────────────────────────────
+    // PHASE 2 ChoiceCard Slice 1 (bug 15): DETERMINISTIC DEAL RAIL.
+    // On a semantic stated_goal turn the deal is a rail, not a model
+    // choice: code deals the OfferCard itself, then tells the model the
+    // card is already on the table. Rails before intelligence — the
+    // model can no longer consult-and-forget the offer.
+    // Guards: semantic verdict only (regex-fallback turns keep the old
+    // model-choice path — no rail without a classifier-verbatim title
+    // to freeze); normal turn (no confirmedAction / milestone tap /
+    // decline / confirm); user has no dream yet (same emptiness test
+    // get_active_dream uses).
+    // ────────────────────────────────────────────────────────────────
+    let railDealt = false;
+    if (!confirmedDecompose && !isMilestoneTap && !semDecline && !confirmSignal
+        && semanticOk && goalSignalNow
+        && typeof semanticGoalVerbatim === 'string' && semanticGoalVerbatim.trim().length >= 4) {
+      try {
+        const { data: railGoals } = await supabase
+          .from('user_goals')
+          .select('id')
+          .eq('user_id', userId)
+          .limit(1);
+        if (!railGoals || railGoals.length === 0) {
+          const railTitle = repairTitleToUserWords(semanticGoalVerbatim.trim().slice(0, 80), 'rail-deal').slice(0, 80);
+          // ── Slice 2: the blueprint informs the deal (v2.3 dealer table).
+          // Server-side blueprint fetch — the client userProfile carries no
+          // HD authority, and the deferral chip follows AUTHORITY, not type.
+          // Every field fail-soft: missing blueprint → plain Slice-1 card.
+          let railAuthority = '', railHdType = '', railMbti = '';
+          try {
+            const { data: railBp } = await supabase
+              .from('user_blueprints')
+              .select('blueprint')
+              .eq('user_id', userId)
+              .eq('is_active', true)
+              .maybeSingle();
+            const bp = railBp?.blueprint || {};
+            const hd = bp.energy_strategy_human_design || {};
+            railAuthority = String(hd.authority || '');
+            railHdType = String(hd.type || '');
+            railMbti = String(bp.user_meta?.personality?.likelyType || bp.cognition_mbti?.type || '');
+          } catch (bpErr) {
+            console.warn('⚠️ RAIL DEAL: blueprint fetch failed (dealing plain card):', bpErr instanceof Error ? bpErr.message : bpErr);
+          }
+          // WHEN/pacing — HD authority. Emotional authority ALWAYS gets the
+          // defer_choice chip ("let me sit with this" is their decision
+          // mechanic, honored structurally); splenic never sees it; other
+          // authorities get no chip in this slice.
+          const railDeferChip = /emotional/i.test(railAuthority);
+          // HOW — MBTI words the door. Same route (decompose into
+          // milestones), different label; every variant honestly describes
+          // what the tap does (truth-guard). Unknown MBTI → no frame, the
+          // client falls back to the fixed copy (framing degrades with
+          // confidence, v2.3 §6).
+          const mbtiUp = railMbti.toUpperCase();
+          const railFrame = !/^[EI][NS][TF][JP]$/.test(mbtiUp) ? undefined
+            : mbtiUp[2] === 'T' && mbtiUp[3] === 'J' ? 'Build the milestone plan →'
+            : mbtiUp[2] === 'T' && mbtiUp[3] === 'P' ? 'Map the milestones →'
+            : mbtiUp[2] === 'F' && mbtiUp[3] === 'J' ? 'Lay out the path, step by step →'
+            : 'Shape it into doable steps →'; // F-P
+          const railCard: any = { type: 'offer_decomposition', title: railTitle };
+          if (railFrame) railCard.frame = railFrame;
+          if (railDeferChip) railCard.defer_chip = true;
+          cardAttachments.push(railCard);
+          railDealt = true;
+          console.log('🃏 RAIL DEAL: blueprint-informed offer dealt by code', {
+            title: railTitle, authority: railAuthority || 'unknown', mbti: mbtiUp || 'unknown',
+            deferChip: railDeferChip, framed: !!railFrame
+          });
+          // WHY-line — the one line the twin speaks IS the why-line: it must
+          // ground in the real chart facts fed here, never invented ones.
+          const railFacts = [
+            railHdType && `HD type: ${railHdType}`,
+            railAuthority && `authority: ${railAuthority}`,
+            mbtiUp && `MBTI: ${mbtiUp}`,
+          ].filter(Boolean).join(', ');
+          const railDirective = `\n\nOFFER ALREADY DEALT (governs this reply): An OfferCard proposing to break down "${railTitle}" is already on the table this turn. Your ONE short line is the why-line: say why this door fits THEM right now, grounded ONLY in these chart facts — ${railFacts || 'no chart facts available; keep the line neutral'}. Never cite a chart fact not listed here. Then STOP — do NOT offer in prose, do NOT narrate the breakdown, do NOT call offer_decomposition or decompose_goal.${railDeferChip ? ' The card also carries a "Let me sit with this" chip because their emotional authority needs the wave to settle — do not pressure an immediate yes.' : ''} Wait for the tap.`;
+          const railSys = completionParams.messages[0];
+          if (railSys && railSys.role === 'system' && typeof railSys.content === 'string') {
+            railSys.content = railSys.content + railDirective;
+          } else {
+            completionParams.messages.unshift({ role: 'system', content: railDirective });
+          }
+        }
+      } catch (railErr) {
+        console.warn('⚠️ RAIL DEAL failed (non-blocking, falls back to model choice):', railErr instanceof Error ? railErr.message : railErr);
+      }
+    }
+
     if (isMilestoneTap) {
       console.log('🪧 MILESTONE TAP: coaching mode, decompose suppressed', { message: message.slice(0, 120) });
       // Append coaching directive to the system prompt so the model
@@ -2732,15 +2830,20 @@ serve(async (req) => {
     // user_goals empty after "yes". planRequest / statedGoal keep plain
     // 'required' because those turns should still be free to consult first.
     const forceDecompose = !!confirmedDecompose || (shouldForceTool && confirmSignal);
+    // railDealt: the offer is already on the table — never force a tool
+    // round on top of it (a forced consult re-offers; the exact double-deal
+    // the rail exists to prevent). 'auto' still allows a genuine consult.
     const firstToolChoice: any = confirmedDecompose
       ? { type: 'function', function: { name: 'decompose_goal' } }
       : isMilestoneTap
         ? { type: 'function', function: { name: 'get_active_dream' } }
         : forceDecompose
           ? { type: 'function', function: { name: 'decompose_goal' } }
-          : shouldForceTool
-            ? 'required'
-            : 'auto';
+          : railDealt
+            ? 'auto'
+            : shouldForceTool
+              ? 'required'
+              : 'auto';
     if (confirmedDecompose) {
       console.log('🃏 OFFER CONFIRMED → 🎯 PINNED DECOMPOSE (detection skipped)', { title: confirmedDecompose.title });
     }

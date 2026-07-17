@@ -236,11 +236,14 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                         <OfferCard
                           key={`${message.id}_att_${i}`}
                           title={att.title}
+                          frame={att.frame}
+                          deferChip={att.defer_chip}
                           onConfirm={(title) =>
                             onSendMessage(`Yes — break down "${title}" into milestones.`, {
                               confirmedAction: { type: "decompose_goal", title },
                             })
                           }
+                          onDefer={() => onSendMessage("Let me sit with this.")}
                         />
                       ) : att?.type === "dream_card" && att.goal_id ? (
                         <DreamCard

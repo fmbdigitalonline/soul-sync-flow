@@ -1,6 +1,14 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v2.2)
+# SoulSync — Developer Constitution & Wiring Roadmap (v2.3)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v2.3 — ChoiceCard grammar ratified: the twin deals blueprint-chosen option
+cards at forks and says why; taps are deterministic; detection is demoted to
+timing + typed-text fallback. Consult-before-building rule added (rule 10).
+Memory model recorded as tiered/both. Design detail lives in
+CONSTITUTION_V2.3_DRAFT_CHOICECARD.md and the two wiring maps
+(PHASE2_WIRING_MAP.md, INTELLIGENCE_WIRING_MAP.md). (Jul 16, 2026.)
+Supersedes v2.2.*
 
 *v2.2 — rule 7 amended: Claude granted write-and-deploy power alongside
 Lovable (Jul 15, 2026). Supersedes v2.1.*
@@ -35,6 +43,22 @@ this in the oracle).
   with a known prefix, a confirmedAction flag), build the rail. Intelligence
   handles only the residue: rail → semantic classifier → regex fallback.
   (Learned in Phase 1: two weeks of regex patches vs. one tap.)
+- **Forks are dealt, never guessed (ChoiceCard, v2.3).** Where the twin's
+  possible actions genuinely fork (the same user sentence could open
+  different engines), it deals ONE ChoiceCard with 2–3 blueprint-chosen
+  doors and says in one line why *these* doors for *this* person — the
+  why-line is the moat made visible. It never silently guesses between
+  routes. Detection exists only to (a) time the deal and (b) catch users
+  who type instead of tap — never to pick the route when a card could ask.
+  No card is the default: most turns are conversation; forks are earned.
+  OfferCard is the n=1 special case. The blueprint decides which doors and
+  their framing (per-system heuristics live in the v2.3 draft); the dealer
+  is fail-soft (no card → plain talk, never a broken fork).
+- **Memory is tiered, and it is both (recorded v2.3).** The intended model
+  is not thread-isolated OR continuous — it is the tiered graph as designed:
+  hot (session/recent), warm/cold (longitudinal), thread-scoped AND
+  cross-thread. Bugs here are "finish what's built," never "pick one." (Audit
+  status: hot tier live; warm/cold writeback stubbed — see INTELLIGENCE map.)
 - **Engine/surface separation, three channels.** Pre-rebuild flows (Dreams,
   journey, tasks, orchestrator) are headless engines: logic preserved and
   invoked via the twin's tools, screens permanently unrouted as donors. The
@@ -75,7 +99,14 @@ this in the oracle).
   one per turn, collapsed first, text streams before the card mounts,
   live-then-fossil (only newest instance live), every interaction speaks
   into the stream, payloads hydrated live, recurring state lives in ONE
-  Today pin, quiet bubble-native visuals.
+  Today pin, quiet bubble-native visuals. **Chip rules (v2.3):** a chip is
+  a claim — the truth guard applies to it (chips degrade with the data;
+  never a chip referencing memory or an engine that doesn't exist). Chips
+  come only from the closed route registry (the model selects/ranks/frames;
+  it never invents a door). The why-line must be the actual why (chips,
+  ranking, why-line produced jointly — no post-hoc flattery). Forks stay
+  shallow: one level, then the twin speaks. Card envelopes must persist so
+  live-then-fossil survives reload.
 
 ### Corrected ground truths (expensively learned; do not re-learn)
 
@@ -213,11 +244,24 @@ a user-visible demo and a fresh-account test.
    from logs (emoji markers). Capture logs immediately — retention short.
 9. **Diagnose before patching:** reduce every "didn't work" to a numbered
    list of possible broken links; evidence picks one; fix only that link.
+10. **Consult before building (v2.3):** any new classifier, model call,
+   engine, store, or scheduler must name — in the PR description — which
+   assets in the wiring maps (PHASE2_WIRING_MAP.md §5-6,
+   INTELLIGENCE_WIRING_MAP.md §5-6) were considered and why each doesn't
+   fit. Bypassing a live organ is a decision with a stated reason, never
+   an accident. And: a static audit is a document, not ground truth (rule
+   8) — verify its "dead"/"empty" claims against DB rows and edge-function
+   invocation logs before any irreversible action (delete, drop). Reuse
+   recommendations are safe on an unverified audit; removals are not.
 
 ## 8. Open bug tally (found, not fixed)
 
-1. Thread memory not persisting per thread (SERIOUS): threadId with no
-   conversation_memory row; fallback loaded a 6-day-old conversation.
+1. Thread memory (SERIOUS) — ROOT-CAUSED (Jul 16, INTELLIGENCE map §4.1):
+   writer omits `mode` → rows default `'guide'`; oracle STEP 1 filters
+   `mode='companion'` → misses every turn; STEP 2 grabs newest companion
+   row of any age (the 6-day-old context); client sends empty history
+   (getProgressiveIntelligentContext stub). Fix serves the tiered/both
+   memory model (§2), spans the oracle → needs deploy + live verify.
 2. conversation_state_tracking RLS: insert fails every turn.
 3. ACS frustration misfires → fixed structurally by Phase 2 item 2.
 4. Number drift in twin speech ("3 years" → "5-year" → "3-step").
@@ -230,3 +274,37 @@ a user-visible demo and a fresh-account test.
 9. First-contact threadId undefined (once; re-verify with bug 1).
 10. First-contact quality on thin data: use hermetic_structured_intelligence
     for first-contact fact selection (asset exists, §5).
+11. cognition_mbti hardcoded "Unknown" → FIXED Jul 16 (derive at blueprint
+    assembly from user_meta.personality.likelyType). Existing rows still
+    need a backfill; repair service reads wrong table (blueprints vs
+    user_blueprints). (INTELLIGENCE map §4.3.)
+12. Structured-intelligence prose fracture → FIXED Jul 17 (verified in
+    production logs: `📐 SPINE: ~345 tokens, source: blob_column`). DB
+    verification reframed the bug: personality_reports.structured_intelligence
+    ({analysis: prose} per dimension, intact for every report) is the source
+    of truth; the HSI table is a lossy derived copy (some rows hold scalar
+    error strings). Fix (authored by Lovable on main, per rule 7): spine
+    reads the blob first (column → nested → typed-table fallback). Two
+    residues stay open: extract-hermetic-intelligence still corrupts the
+    HSI table on sub-agent error (write-side guard pending), and nothing
+    else should adopt the HSI table as a source. Lesson banked in rule 10:
+    the three "failed" verification rounds were a stale edge deploy plus
+    silent no-log code paths — silence in logs is not evidence of which
+    build is running; only an unconditional entry breadcrumb is.
+13. HSI column drift (DB-confirmed Jul 15): DB has `compatibility` /
+    `financial_archetype`; code uses `interpersonal_compatibility` /
+    `financial_archetypes` → those two dimensions silently dropped on
+    TS-named writes. Align code→DB names.
+14. Card envelopes not persisted: no write path stores attachments
+    (conversation_memory strips them in validateMessage; conversation_messages
+    has no attachments column) → cards vanish on reload, breaking
+    live-then-fossil. Needs a persisted card-part column.
+15. OfferCard deal is non-deterministic: on a stated-goal turn the offer is
+    dealt only if the model chooses to call offer_decomposition on the
+    round-2 'auto' pass — so a goal statement can yield prose and no card
+    (observed in production Jul 15, turn 181). v2.3 ChoiceCard must make
+    *dealing* a rail, not a model choice.
+16. search-similar-messages broken (invalid vector syntax) → message
+    embeddings written every turn, never readable. hacs-coach-conversation
+    can't boot (duplicate const). Oracle behavioral scorer reads nonexistent
+    column (memory_content) → relevance always 0. (§4.4-4.6.)

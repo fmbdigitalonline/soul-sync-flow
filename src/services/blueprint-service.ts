@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { personalityFusionService } from "./personality-fusion-service";
 import { PersonalityProfile } from "@/types/personality-fusion";
 import { BlueprintHealthChecker } from "./blueprint-health-checker";
+import { mbtiRepairService } from "./mbti-data-repair-service";
 
 export interface UserProfile {
   full_name: string;
@@ -348,12 +349,11 @@ class BlueprintService {
           numerology: blueprintResult.data.numerology || {},
           mbti: {},
           goal_stack: {},
-          cognition_mbti: {
-            type: "Unknown",
-            core_keywords: [],
-            dominant_function: "Unknown",
-            auxiliary_function: "Unknown"
-          },
+          // Derive cognition_mbti from the onboarding personality assessment
+          // (user_meta.personality.likelyType) at assembly time instead of
+          // hardcoding "Unknown". Degrades to the Unknown default when no
+          // assessment exists — never fabricates a type.
+          cognition_mbti: mbtiRepairService.deriveCognitionMbti({ user_meta: profileWithDefaults }),
           bashar_suite: {
             excitement_compass: { principle: "Follow your highest excitement" },
             belief_interface: { principle: "Beliefs create reality", reframe_prompt: "What would I rather believe?" },
