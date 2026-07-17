@@ -278,10 +278,19 @@ a user-visible demo and a fresh-account test.
     assembly from user_meta.personality.likelyType). Existing rows still
     need a backfill; repair service reads wrong table (blueprints vs
     user_blueprints). (INTELLIGENCE map §4.3.)
-12. Structured-intelligence prose fracture: orchestrator requests prose,
-    JSON.parse fails → {analysis: prose} blobs, so the oracle spine's typed
-    reads only work on legacy rows; extract-hermetic-intelligence (fills the
-    HSI table) is manual-only, never wired into finalize. (§4.2.)
+12. Structured-intelligence prose fracture → FIXED Jul 17 (verified in
+    production logs: `📐 SPINE: ~345 tokens, source: blob_column`). DB
+    verification reframed the bug: personality_reports.structured_intelligence
+    ({analysis: prose} per dimension, intact for every report) is the source
+    of truth; the HSI table is a lossy derived copy (some rows hold scalar
+    error strings). Fix (authored by Lovable on main, per rule 7): spine
+    reads the blob first (column → nested → typed-table fallback). Two
+    residues stay open: extract-hermetic-intelligence still corrupts the
+    HSI table on sub-agent error (write-side guard pending), and nothing
+    else should adopt the HSI table as a source. Lesson banked in rule 10:
+    the three "failed" verification rounds were a stale edge deploy plus
+    silent no-log code paths — silence in logs is not evidence of which
+    build is running; only an unconditional entry breadcrumb is.
 13. HSI column drift (DB-confirmed Jul 15): DB has `compatibility` /
     `financial_archetype`; code uses `interpersonal_compatibility` /
     `financial_archetypes` → those two dimensions silently dropped on
