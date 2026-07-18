@@ -263,14 +263,17 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                           category={att.category}
                           timeframe={att.timeframe}
                           onConfirm={(title) =>
-                            onSendMessage(`Yes — break down "${title}" into milestones.`, {
+                            {
+                              emitCoachOpen({ section: 'actions', reason: 'decompose_goal_offer' });
+                              return onSendMessage(`Yes — break down "${title}" into milestones.`, {
                               confirmedAction: {
                                 type: "decompose_goal",
                                 title,
                                 category: att.category,
                                 timeframe: att.timeframe,
                               },
-                            })
+                            });
+                            }
                           }
                           onDefer={() => onSendMessage("Let me sit with this.")}
                         />
@@ -293,6 +296,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                         timeframe="3 months"
                         onConfirm={(title) => {
                           setDreamDraft(null);
+                          emitCoachOpen({ section: 'actions', reason: 'decompose_goal_dream' });
                           onSendMessage(`Yes — break down "${title}" into milestones.`, {
                             confirmedAction: {
                               type: "decompose_goal",
