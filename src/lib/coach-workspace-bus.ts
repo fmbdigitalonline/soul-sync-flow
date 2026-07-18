@@ -13,26 +13,57 @@
 
 export type CoachSectionId = 'actions' | 'insights' | 'memories' | 'tools' | 'history';
 
+/** Panel-local views navigated inside a section (Slice J). */
+export type CoachPanelView =
+  | 'kanban'
+  | 'roadmap'
+  | 'milestone'
+  | 'decomposition';
+
 export interface CoachOpenDetail {
-  /** Which section to auto-expand once the panel is open. */
   section?: CoachSectionId;
-  /** Optional origin marker for debugging (e.g. 'decompose_goal'). */
+  view?: CoachPanelView;
+  goalId?: string;
+  milestoneId?: string;
   reason?: string;
 }
 
-const EVENT = 'coach-workspace:open';
+export type CoachDecompositionPhase = 'start' | 'complete' | 'error';
+
+export interface CoachDecompositionDetail {
+  phase: CoachDecompositionPhase;
+  dreamTitle: string;
+  error?: string;
+}
+
+const OPEN_EVENT = 'coach-workspace:open';
+const DECOMP_EVENT = 'coach-workspace:decomposition';
 
 export function emitCoachOpen(detail: CoachOpenDetail = {}): void {
   if (typeof window === 'undefined') return;
-  window.dispatchEvent(new CustomEvent<CoachOpenDetail>(EVENT, { detail }));
+  window.dispatchEvent(new CustomEvent<CoachOpenDetail>(OPEN_EVENT, { detail }));
 }
 
 export function onCoachOpen(cb: (detail: CoachOpenDetail) => void): () => void {
   if (typeof window === 'undefined') return () => {};
+  const handler = (e: Event) => cb(((e as CustomEvent<CoachOpenDetail>).detail) ?? {});
+  window.addEventListener(OPEN_EVENT, handler);
+  return () => window.removeEventListener(OPEN_EVENT, handler);
+}
+
+export function emitCoachDecomposition(detail: CoachDecompositionDetail): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent<CoachDecompositionDetail>(DECOMP_EVENT, { detail }));
+}
+
+export function onCoachDecomposition(
+  cb: (detail: CoachDecompositionDetail) => void,
+): () => void {
+  if (typeof window === 'undefined') return () => {};
   const handler = (e: Event) => {
-    const ce = e as CustomEvent<CoachOpenDetail>;
-    cb(ce.detail ?? {});
+    const d = (e as CustomEvent<CoachDecompositionDetail>).detail;
+    if (d) cb(d);
   };
-  window.addEventListener(EVENT, handler);
-  return () => window.removeEventListener(EVENT, handler);
+  window.addEventListener(DECOMP_EVENT, handler);
+  return () => window.removeEventListener(DECOMP_EVENT, handler);
 }
