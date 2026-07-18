@@ -74,6 +74,7 @@ import { BlueprintCacheProvider } from "./contexts/BlueprintCacheContext";
 import { SoulOrbProvider } from "./contexts/SoulOrbContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { ModeProvider } from "./contexts/ModeContext";
+import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
 // Create stable QueryClient instance outside of component to prevent recreation
@@ -96,8 +97,10 @@ const RootLayout = () => {
             <ModeProvider>
               <SoulOrbProvider>
                 <BlueprintCacheProvider>
-                  <Outlet />
-                  <Toaster />
+                  <WorkspaceProvider>
+                    <Outlet />
+                    <Toaster />
+                  </WorkspaceProvider>
                 </BlueprintCacheProvider>
               </SoulOrbProvider>
             </ModeProvider>
