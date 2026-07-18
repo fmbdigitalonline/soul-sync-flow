@@ -18,6 +18,14 @@ export const CelebrationHeader: React.FC<CelebrationHeaderProps> = ({
   const { getTextSize, isFoldDevice } = useResponsiveLayout();
   const { t } = useLanguage();
 
+  // Light ceremony sanitizer — verbatim for stored data, cleaned for
+  // display so celebration copy never quotes user typos back at them.
+  const sanitizedTitle = React.useMemo(() => {
+    const cleaned = (goalTitle || '').replace(/\s+/g, ' ').trim();
+    if (!cleaned) return goalTitle;
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }, [goalTitle]);
+
   return (
     <div className="text-center space-y-4 w-full max-w-full overflow-hidden px-2">
       <div className="w-full">
@@ -25,7 +33,7 @@ export const CelebrationHeader: React.FC<CelebrationHeaderProps> = ({
           {t('celebration.dreamReadyTitle')}
         </h1>
         <p className={`text-gray-600 max-w-2xl mx-auto leading-relaxed break-words ${getTextSize('text-base')} ${isFoldDevice ? getTextSize('text-sm') : ''}`}>
-          {safeInterpolateTranslation(t('celebration.dreamReadyDescription'), { goalTitle })}
+          {safeInterpolateTranslation(t('celebration.dreamReadyDescription'), { goalTitle: sanitizedTitle })}
         </p>
       </div>
     </div>
