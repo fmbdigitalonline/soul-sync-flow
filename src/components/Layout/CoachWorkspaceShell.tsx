@@ -13,7 +13,7 @@
  * rendered inside the collapsed "Tools" section via the `legacyTools` slot.
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, Target, MessageCircle, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +22,16 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useJourneyGoals, type Goal, type GoalMilestone } from '@/hooks/use-journey-goals';
 import { ActionHub } from './ActionHub';
-import { onCoachOpen, type CoachSectionId } from '@/lib/coach-workspace-bus';
+import {
+  onCoachOpen,
+  onCoachDecomposition,
+  emitCoachDecomposition,
+  type CoachSectionId,
+} from '@/lib/coach-workspace-bus';
+import { PanelDecompositionCard } from './panel/PanelDecompositionCard';
+import { PanelMilestoneView } from './panel/PanelMilestoneView';
+import { PanelBreadcrumb } from './panel/PanelBreadcrumb';
+import { useHelpHistory } from '@/hooks/use-help-history';
 
 interface CoachWorkspaceShellProps {
   /** Legacy context tools slot — rendered inside the Tools section drawer. */
@@ -34,9 +43,17 @@ type SectionId = 'actions' | 'insights' | 'memories' | 'tools' | 'history';
 
 const SECTION_ORDER: SectionId[] = ['actions', 'insights', 'memories', 'tools', 'history'];
 
+interface ActionSelection {
+  goalId: string;
+  milestoneId: string;
+}
+
 export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacyTools, className }) => {
   const { t } = useLanguage();
-  const { goals, isLoading } = useJourneyGoals();
+  const { goals, isLoading, reloadGoals } = useJourneyGoals();
+  const [selection, setSelection] = useState<ActionSelection | null>(null);
+  const [decompActive, setDecompActive] = useState(false);
+  const knownGoalIdsRef = useRef<Set<string>>(new Set());
   const [openSections, setOpenSections] = useState<Record<SectionId, boolean>>({
     actions: false,
     insights: false,
@@ -54,11 +71,60 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
     });
   }, []);
 
+  // Track decomposition lifecycle so the shell can auto-complete when a new
+  // goal lands in useJourneyGoals — the actual work happens server-side.
+  useEffect(() => {
+    return onCoachDecomposition((d) => {
+      if (d.phase === 'start') {
+        setDecompActive(true);
+        // Snapshot known goal IDs so we can detect the new one.
+        knownGoalIdsRef.current = new Set(goals.map((g) => g.id));
+        // Poll once shortly to catch fast completions.
+        setTimeout(() => reloadGoals(), 4000);
+        setTimeout(() => reloadGoals(), 10000);
+      } else {
+        setDecompActive(false);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fire complete when a new goal shows up mid-decomposition.
+  useEffect(() => {
+    if (!decompActive) return;
+    const newGoal = goals.find((g) => !knownGoalIdsRef.current.has(g.id));
+    if (newGoal) {
+      emitCoachDecomposition({ phase: 'complete', dreamTitle: newGoal.title });
+      knownGoalIdsRef.current.add(newGoal.id);
+    }
+  }, [goals, decompActive]);
+
   const toggleSection = (id: SectionId) =>
     setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
 
   // Derive Overview data from real state — no mock data (Directive 1).
   const overview = useMemo(() => deriveOverview(goals, isLoading), [goals, isLoading]);
+
+  const selectedGoal = useMemo(
+    () => (selection ? goals.find((g) => g.id === selection.goalId) ?? null : null),
+    [goals, selection],
+  );
+  const selectedMilestone = useMemo(
+    () =>
+      selectedGoal && selection
+        ? selectedGoal.milestones.find((m) => m.id === selection.milestoneId) ?? null
+        : null,
+    [selectedGoal, selection],
+  );
+
+  const askCoach = (prompt: string) => {
+    // Handoff to Twin — post into the conversation input if the page listens.
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('coach-workspace:ask', { detail: { prompt } }));
+    }
+  };
+
+  const helpHistory = useHelpHistory();
 
   const sectionLabels: Record<SectionId, string> = {
     actions: 'Action Hub',
@@ -90,6 +156,7 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
             Overview
           </h4>
         </div>
+        <PanelDecompositionCard />
         <div className="space-y-2">
           <OverviewCard
             icon={Target}
@@ -127,7 +194,32 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
             {id === 'tools' ? (
               legacyTools ?? <EmptySlot label="No tools surfaced for this moment." />
             ) : id === 'actions' ? (
-              <ActionHub goals={goals} isLoading={isLoading} />
+              selectedGoal && selectedMilestone ? (
+                <div className="space-y-2">
+                  <PanelBreadcrumb
+                    crumbs={[{ label: 'Actions', onClick: () => setSelection(null) }]}
+                    current={selectedMilestone.title}
+                  />
+                  <PanelMilestoneView
+                    goal={selectedGoal}
+                    milestone={selectedMilestone}
+                    onSelectMilestone={(mid) =>
+                      setSelection({ goalId: selectedGoal.id, milestoneId: mid })
+                    }
+                    onAskCoach={askCoach}
+                  />
+                </div>
+              ) : (
+                <ActionHub
+                  goals={goals}
+                  isLoading={isLoading}
+                  onSelectMilestone={(goalId, milestoneId) =>
+                    setSelection({ goalId, milestoneId })
+                  }
+                />
+              )
+            ) : id === 'insights' ? (
+              <InsightsList entries={helpHistory} />
             ) : (
               <EmptySlot label={placeholderFor(id)} />
             )}
@@ -275,6 +367,43 @@ const SectionDrawer: React.FC<SectionDrawerProps> = ({ label, isOpen, onToggle, 
 const EmptySlot: React.FC<{ label: string }> = ({ label }) => (
   <p className="text-xs text-muted-foreground italic">{label}</p>
 );
+
+const MAX_INSIGHTS = 3;
+
+const InsightsList: React.FC<{ entries: { id: string; title: string; when: string }[] }> = ({
+  entries,
+}) => {
+  const [expanded, setExpanded] = useState(false);
+  if (entries.length === 0) {
+    return <EmptySlot label="No help history yet." />;
+  }
+  const visible = expanded ? entries : entries.slice(0, MAX_INSIGHTS);
+  const hidden = Math.max(0, entries.length - MAX_INSIGHTS);
+  return (
+    <div className="space-y-1">
+      <ul className="space-y-1">
+        {visible.map((e) => (
+          <li key={e.id} className="pl-2 pr-2 py-1.5 rounded-md hover:bg-muted/40">
+            <p className="text-xs font-medium text-foreground truncate" title={e.title}>
+              {e.title}
+            </p>
+            <p className="text-[10px] text-muted-foreground/70">{e.when}</p>
+          </li>
+        ))}
+      </ul>
+      {hidden > 0 && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setExpanded((v) => !v)}
+          className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+        >
+          {expanded ? 'Show less' : `Show ${hidden} more`}
+        </Button>
+      )}
+    </div>
+  );
+};
 
 function placeholderFor(id: SectionId): string {
   switch (id) {
