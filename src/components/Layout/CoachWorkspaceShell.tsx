@@ -13,7 +13,7 @@
  * rendered inside the collapsed "Tools" section via the `legacyTools` slot.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, Target, MessageCircle, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useJourneyGoals, type Goal, type GoalMilestone } from '@/hooks/use-journey-goals';
 import { ActionHub } from './ActionHub';
+import { onCoachOpen, type CoachSectionId } from '@/lib/coach-workspace-bus';
 
 interface CoachWorkspaceShellProps {
   /** Legacy context tools slot — rendered inside the Tools section drawer. */
@@ -43,6 +44,15 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
     tools: false,
     history: false,
   });
+
+  // Slice C: auto-expand the requested section when the twin dispatches
+  // a handshake event (e.g. decompose_goal confirmed).
+  useEffect(() => {
+    return onCoachOpen((detail) => {
+      const section = (detail.section ?? 'actions') as CoachSectionId;
+      setOpenSections((prev) => ({ ...prev, [section]: true }));
+    });
+  }, []);
 
   const toggleSection = (id: SectionId) =>
     setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
