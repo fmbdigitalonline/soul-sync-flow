@@ -50,30 +50,16 @@ export const DreamCard: React.FC<{
 
   if (fossil) return <CardShell fossil summary={<>🎯 {goal.title} — {pct}%</>} />;
 
+  // v2.5: milestones live in the workspace panel, not in the conversation.
+  // The chat card is a compressed glance — title, progress, and the count —
+  // and the roadmap/details are the panel's job (two surfaces, one brain).
   return (
     <CardShell summary={summary}>
-      <ul className="space-y-1.5">
-        {milestones.slice(0, 6).map((m, i) => (
-          <li key={i}>
-            <button
-              type="button"
-              onClick={() => onSpeak?.(`Let's work on: ${m?.title || `milestone ${i + 1}`}`)}
-              className={`w-full text-left text-xs rounded-lg px-2.5 py-1.5 border transition-colors ${
-                m?.completed
-                  ? "border-muted text-muted-foreground line-through"
-                  : "border-soul-purple/20 hover:bg-soul-purple/10"
-              }`}
-            >
-              {m?.completed ? "✓ " : ""}{m?.title || `Milestone ${i + 1}`}
-            </button>
-          </li>
-        ))}
-        {milestones.length === 0 && (
-          <li className="text-xs text-muted-foreground">
-            No milestones yet — ask your companion to break it down with you.
-          </li>
-        )}
-      </ul>
+      <p className="text-xs text-muted-foreground">
+        {milestones.length > 0
+          ? `${done}/${milestones.length} milestones — open your workspace to see the roadmap.`
+          : "No milestones yet — your workspace builds the roadmap."}
+      </p>
     </CardShell>
   );
 };

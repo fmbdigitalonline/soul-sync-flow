@@ -2125,10 +2125,10 @@ serve(async (req) => {
     // Tune the tool reflex HERE, once.
     // ------------------------------------------------------------------
     systemPrompt += '\n\nACTION CHARTER (final authority on when you act — you have hands, use them):\n' +
-      '1. YOU HAVE HANDS: get_active_dream, offer_decomposition and decompose_goal are yours to call within this very turn. NEVER describe, promise, or narrate what a tool would produce instead of calling it — "I could break this down for you" followed by no call is a violation.\n' +
+      '1. YOU HAVE HANDS: get_active_dream is yours to call within this very turn (decompose_goal fires only on a confirmed tap — never on your own initiative). NEVER describe, promise, or narrate what a tool would produce instead of calling it.\n' +
       '2. CONFIRMED = CALL NOW: once the user has confirmed they want a goal broken down and you know the what plus a rough timeframe, you MUST call decompose_goal in THIS turn. Deferring a confirmed decomposition to a future turn is a violation. Do not reframe, translate, or abstract the user\'s stated goal — copy their words.\n' +
       '3. CONSULT BEFORE COUNSEL: before advising on goals, progress, or "what\'s next", call get_active_dream so your counsel is grounded in what actually exists — never advise on a dream from memory alone.\n' +
-      '4. OFFER VIA THE CARD, ONCE: when the user states a concrete goal and has no active dream, call offer_decomposition (VERBATIM title) to deal an OfferCard rather than offering in prose — one tap confirms. Offer exactly once per session; if they decline or let it pass, drop it — no nagging. Do NOT call decompose_goal until they confirm (a tap arrives as a confirmed action, or they type yes/ja/graag/go).\n' +
+      '4. THE WORKSPACE BUILDS PROGRAMS, NOT YOU (v2.5): you never deal offer cards and never offer decomposition in prose. When the user states a concrete goal, respond to its substance; at most, mention ONCE and in passing that they can select that sentence to open their program builder in the workspace. If they let it pass, drop it — no nagging, no re-offers.\n' +
       '5. TOOLS ACCOMPANY INSIGHT, NEVER REPLACE IT: your text must still carry the observation, the confrontation, or the read. The card only holds structure. A tool call wrapped in a hollow message is a violation.';
     // ending (goodbye, thanks, heading to sleep, wrapping up), do not just
     // say goodbye. Close warmly AND plant exactly one open loop: name one
@@ -2396,21 +2396,6 @@ serve(async (req) => {
       {
         type: 'function',
         function: {
-          name: 'offer_decomposition',
-          description: 'Deal an OfferCard that invites the user to break their stated goal into milestones. SIDE-EFFECT-FREE: this creates NO goal and writes nothing — it only presents a single tappable offer, and the user confirms by tapping it. Use this to offer decomposition instead of offering in prose, when the user has stated a concrete goal and has no active dream yet. Offer exactly once per session. Pass the user\'s goal VERBATIM as the title.',
-          parameters: {
-            type: 'object',
-            properties: {
-              title: { type: 'string', description: 'The user\'s stated goal, VERBATIM in their own words (e.g. "Earn €1,000,000") — never your reframe. This exact title is frozen onto the card and returns unchanged when they tap.' },
-              category: { type: 'string', description: 'e.g. financial, creative, health (optional).' }
-            },
-            required: ['title']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
           name: 'decompose_goal',
           description: 'Decompose a stated goal/dream into 4-6 milestones. Use ONLY after the user confirmed they want it broken down and you know the what and rough timeframe. Your text must still carry the insight; the card only holds structure.',
           parameters: {
@@ -2510,40 +2495,12 @@ serve(async (req) => {
             return JSON.stringify({
               found: false,
               note: 'No active dream yet.',
-              instruction: 'The user has no active dream. If they have stated a concrete goal, call offer_decomposition with their goal VERBATIM as the title to deal an OfferCard — do NOT offer in prose and do NOT call decompose_goal yet (the card handles confirmation via a tap). If no concrete goal is stated yet, ask ONE short question to surface it. Never narrate what decomposition would look like.',
+              instruction: 'The user has no active program. Do NOT offer decomposition (in prose or otherwise) and do NOT call decompose_goal. If they have stated a concrete goal, respond to its substance and mention once, in passing, that selecting that sentence opens their program builder in the workspace. If no concrete goal is stated, ask ONE short question to surface it. Never narrate what decomposition would look like.',
               user_stated_goal_hint: (semanticGoalVerbatim || (typeof message === 'string' ? message : '')).slice(0, 200),
             });
           }
           cardAttachments.push({ type: 'dream_card', goal_id: g.id });
           return JSON.stringify({ found: true, title: g.title, description: g.description, progress: g.progress, milestones: (g.milestones || []).slice(0, 6) });
-        }
-        if (name === 'offer_decomposition') {
-          // Dedupe (Slice 1): if the deal rail (or an earlier call this
-          // turn) already put an offer on the table, never deal a second.
-          if (cardAttachments.some((a: any) => a?.type === 'offer_decomposition')) {
-            console.log('🃏 OFFER DEDUPE: offer already dealt this turn, second deal suppressed');
-            return JSON.stringify({
-              offered: true,
-              note: 'An OfferCard is ALREADY on the table this turn. Add ONE short line in your own voice and STOP — do not offer again, do not call decompose_goal.'
-            });
-          }
-          // DETERMINISTIC RAIL (Phase 2 §1): deal the OfferCard and STOP.
-          // No DB write, no goal row — the card is side-effect-free. The
-          // title is frozen here; it returns unchanged when the user taps.
-          // The fidelity repair runs HERE, at offer time, because this is
-          // the only moment every candidate text is genuinely user-authored
-          // — what gets frozen must be the user's words, not a reframe.
-          const offerTitleRaw = (typeof args.title === 'string' ? args.title : '').trim().slice(0, 80);
-          if (!offerTitleRaw) {
-            return JSON.stringify({ offered: false, note: 'No goal title to offer. Ask the user what they want to work on.' });
-          }
-          const offerTitle = repairTitleToUserWords(offerTitleRaw, 'offer').slice(0, 80);
-          console.log('🃏 OFFER DEALT: offer_decomposition', { title: offerTitle });
-          cardAttachments.push({ type: 'offer_decomposition', title: offerTitle });
-          return JSON.stringify({
-            offered: true,
-            note: 'OfferCard dealt. Add ONE short line of insight in your own voice, then STOP — do NOT also offer in prose, do NOT narrate what the breakdown would look like, and do NOT call decompose_goal. Wait for the user to tap.'
-          });
         }
         if (name === 'decompose_goal') {
           const _titleIn = typeof args.title === 'string' ? args.title : '';
@@ -2735,101 +2692,15 @@ serve(async (req) => {
     });
 
     // ────────────────────────────────────────────────────────────────
-    // PHASE 2 ChoiceCard Slice 1 (bug 15): DETERMINISTIC DEAL RAIL.
-    // On a semantic stated_goal turn the deal is a rail, not a model
-    // choice: code deals the OfferCard itself, then tells the model the
-    // card is already on the table. Rails before intelligence — the
-    // model can no longer consult-and-forget the offer.
-    // Guards: semantic verdict only (regex-fallback turns keep the old
-    // model-choice path — no rail without a classifier-verbatim title
-    // to freeze); normal turn (no confirmedAction / milestone tap /
-    // decline / confirm); user has no dream yet (same emptiness test
-    // get_active_dream uses).
+    // AUTO-DEAL RETIRED (v2.5, founder ruling Jul 18): the conversation
+    // no longer deals offer cards — not by rail, not by model choice.
+    // Program creation has ONE door: sentence selection in the chat →
+    // prefilled offer card → tap opens the workspace panel, where the
+    // existing decomposition flow runs (panel executes; twin triggers).
+    // The confirmedAction freeze below stays: it serves the legacy
+    // client fallback (USE_PANEL_INTAKE=false) and remains the only
+    // conversational path that may create a program.
     // ────────────────────────────────────────────────────────────────
-    let railDealt = false;
-    if (!confirmedDecompose && !isMilestoneTap && !semDecline && !confirmSignal
-        && semanticOk && goalSignalNow
-        && typeof semanticGoalVerbatim === 'string' && semanticGoalVerbatim.trim().length >= 4) {
-      try {
-        // status filter matches the Dreams pages: soft-deleted dreams
-        // (status='inactive') must not block the dealer.
-        const { data: railGoals } = await supabase
-          .from('user_goals')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('status', 'active')
-          .limit(1);
-        if (!railGoals || railGoals.length === 0) {
-          const railTitle = repairTitleToUserWords(semanticGoalVerbatim.trim().slice(0, 80), 'rail-deal').slice(0, 80);
-          // ── Slice 2: the blueprint informs the deal (v2.3 dealer table).
-          // Server-side blueprint fetch — the client userProfile carries no
-          // HD authority, and the deferral chip follows AUTHORITY, not type.
-          // Every field fail-soft: missing blueprint → plain Slice-1 card.
-          let railAuthority = '', railHdType = '', railMbti = '';
-          try {
-            const { data: railBp } = await supabase
-              .from('user_blueprints')
-              .select('blueprint')
-              .eq('user_id', userId)
-              .eq('is_active', true)
-              .maybeSingle();
-            const bp = railBp?.blueprint || {};
-            const hd = bp.energy_strategy_human_design || {};
-            railAuthority = String(hd.authority || '');
-            railHdType = String(hd.type || '');
-            railMbti = String(bp.user_meta?.personality?.likelyType || bp.cognition_mbti?.type || '');
-          } catch (bpErr) {
-            console.warn('⚠️ RAIL DEAL: blueprint fetch failed (dealing plain card):', bpErr instanceof Error ? bpErr.message : bpErr);
-          }
-          // WHEN/pacing — HD authority. Emotional authority ALWAYS gets the
-          // defer_choice chip ("let me sit with this" is their decision
-          // mechanic, honored structurally); splenic never sees it; other
-          // authorities get no chip in this slice.
-          const railDeferChip = /emotional/i.test(railAuthority);
-          // HOW — MBTI words the door. Same route (decompose into
-          // milestones), different label; every variant honestly describes
-          // what the tap does (truth-guard). Unknown MBTI → no frame, the
-          // client falls back to the fixed copy (framing degrades with
-          // confidence, v2.3 §6).
-          const mbtiUp = railMbti.toUpperCase();
-          const railFrame = !/^[EI][NS][TF][JP]$/.test(mbtiUp) ? undefined
-            : mbtiUp[2] === 'T' && mbtiUp[3] === 'J' ? 'Build the milestone plan →'
-            : mbtiUp[2] === 'T' && mbtiUp[3] === 'P' ? 'Map the milestones →'
-            : mbtiUp[2] === 'F' && mbtiUp[3] === 'J' ? 'Lay out the path, step by step →'
-            : 'Shape it into doable steps →'; // F-P
-          const railCard: any = { type: 'offer_decomposition', title: railTitle };
-          if (railFrame) railCard.frame = railFrame;
-          if (railDeferChip) railCard.defer_chip = true;
-          // IntakeCard prefill: the classifier's extracted timeframe rides
-          // the card so the user confirms what the dream will actually get.
-          if (semanticIntent?.timeframe && typeof semanticIntent.timeframe === 'string') {
-            railCard.timeframe = semanticIntent.timeframe.slice(0, 40);
-          }
-          cardAttachments.push(railCard);
-          railDealt = true;
-          console.log('🃏 RAIL DEAL: blueprint-informed offer dealt by code', {
-            title: railTitle, authority: railAuthority || 'unknown', mbti: mbtiUp || 'unknown',
-            deferChip: railDeferChip, framed: !!railFrame
-          });
-          // WHY-line — the one line the twin speaks IS the why-line: it must
-          // ground in the real chart facts fed here, never invented ones.
-          const railFacts = [
-            railHdType && `HD type: ${railHdType}`,
-            railAuthority && `authority: ${railAuthority}`,
-            mbtiUp && `MBTI: ${mbtiUp}`,
-          ].filter(Boolean).join(', ');
-          const railDirective = `\n\nOFFER ALREADY DEALT (governs this reply): An OfferCard proposing to break down "${railTitle}" is already on the table this turn. Your ONE short line is the why-line: say why this door fits THEM right now, grounded ONLY in these chart facts — ${railFacts || 'no chart facts available; keep the line neutral'}. Never cite a chart fact not listed here. Then STOP — do NOT offer in prose, do NOT narrate the breakdown, do NOT call offer_decomposition or decompose_goal.${railDeferChip ? ' The card also carries a "Let me sit with this" chip because their emotional authority needs the wave to settle — do not pressure an immediate yes.' : ''} Wait for the tap.`;
-          const railSys = completionParams.messages[0];
-          if (railSys && railSys.role === 'system' && typeof railSys.content === 'string') {
-            railSys.content = railSys.content + railDirective;
-          } else {
-            completionParams.messages.unshift({ role: 'system', content: railDirective });
-          }
-        }
-      } catch (railErr) {
-        console.warn('⚠️ RAIL DEAL failed (non-blocking, falls back to model choice):', railErr instanceof Error ? railErr.message : railErr);
-      }
-    }
 
     if (isMilestoneTap) {
       console.log('🪧 MILESTONE TAP: coaching mode, decompose suppressed', { message: message.slice(0, 120) });
@@ -2849,21 +2720,18 @@ serve(async (req) => {
     // the empty branch and offers again — the exact loop that keeps
     // user_goals empty after "yes". planRequest / statedGoal keep plain
     // 'required' because those turns should still be free to consult first.
-    const forceDecompose = !!confirmedDecompose || (shouldForceTool && confirmSignal);
-    // railDealt: the offer is already on the table — never force a tool
-    // round on top of it (a forced consult re-offers; the exact double-deal
-    // the rail exists to prevent). 'auto' still allows a genuine consult.
+    // v2.5: typed confirmations no longer create programs — decompose is
+    // pinned ONLY by the confirmedAction rail (legacy client fallback).
+    // Goal/plan turns may still force a consult (get_active_dream) so the
+    // twin speaks from real state, but never a creation.
+    const forceDecompose = !!confirmedDecompose;
     const firstToolChoice: any = confirmedDecompose
       ? { type: 'function', function: { name: 'decompose_goal' } }
       : isMilestoneTap
         ? { type: 'function', function: { name: 'get_active_dream' } }
-        : forceDecompose
-          ? { type: 'function', function: { name: 'decompose_goal' } }
-          : railDealt
-            ? 'auto'
-            : shouldForceTool
-              ? 'required'
-              : 'auto';
+        : shouldForceTool
+          ? { type: 'function', function: { name: 'get_active_dream' } }
+          : 'auto';
     if (confirmedDecompose) {
       console.log('🃏 OFFER CONFIRMED → 🎯 PINNED DECOMPOSE (detection skipped)', { title: confirmedDecompose.title });
     }

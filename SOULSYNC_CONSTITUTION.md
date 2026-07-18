@@ -108,6 +108,14 @@ this in the oracle).
   OfferCard is the n=1 special case. The blueprint decides which doors and
   their framing (per-system heuristics live in the v2.3 draft); the dealer
   is fail-soft (no card → plain talk, never a broken fork).
+  **v2.5 amendment (founder, Jul 18): for PROGRAM CREATION the fork is not
+  dealt by detection at all.** Auto-dealing is retired — no rail deal, no
+  model-chosen offer, no prose offers. Sentence selection is the only
+  trigger: select → prefilled offer card below the message → tap opens the
+  workspace panel, where the existing composition flow runs. Milestones
+  render in the panel, never in the conversation (chat DreamCard is a
+  compressed glance: title + progress + count). Detection-based dealing
+  remains lawful for future non-creation forks under the rules above.
 - **Memory is tiered, and it is both (recorded v2.3).** The intended model
   is not thread-isolated OR continuous — it is the tiered graph as designed:
   hot (session/recent), warm/cold (longitudinal), thread-scoped AND
@@ -357,11 +365,12 @@ a user-visible demo and a fresh-account test.
     (conversation_memory strips them in validateMessage; conversation_messages
     has no attachments column) → cards vanish on reload, breaking
     live-then-fossil. Needs a persisted card-part column.
-15. OfferCard deal is non-deterministic: on a stated-goal turn the offer is
-    dealt only if the model chooses to call offer_decomposition on the
-    round-2 'auto' pass — so a goal statement can yield prose and no card
-    (observed in production Jul 15, turn 181). v2.3 ChoiceCard must make
-    *dealing* a rail, not a model choice.
+15. OfferCard deal is non-deterministic → SUPERSEDED Jul 18 (v2.5): the
+    Slice-1 rail fixed determinism, then the founder retired auto-dealing
+    entirely — offer_decomposition tool and deal rail removed from the
+    oracle; sentence selection is the only program-creation trigger and
+    the workspace panel runs the flow. Typed confirmations no longer pin
+    decompose_goal (confirmedAction legacy rail only).
 16. search-similar-messages broken (invalid vector syntax) → message
     embeddings written every turn, never readable. hacs-coach-conversation
     can't boot (duplicate const). Oracle behavioral scorer reads nonexistent
