@@ -34,7 +34,7 @@ const SECTION_ORDER: SectionId[] = ['actions', 'insights', 'memories', 'tools', 
 
 export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacyTools, className }) => {
   const { t } = useLanguage();
-  const { goals, loading } = useJourneyGoals();
+  const { goals, isLoading } = useJourneyGoals();
   const [openSections, setOpenSections] = useState<Record<SectionId, boolean>>({
     actions: false,
     insights: false,
@@ -47,7 +47,7 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
     setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
 
   // Derive Overview data from real state — no mock data (Directive 1).
-  const overview = useMemo(() => deriveOverview(goals, loading), [goals, loading]);
+  const overview = useMemo(() => deriveOverview(goals, isLoading), [goals, isLoading]);
 
   const sectionLabels: Record<SectionId, string> = {
     actions: 'Action Hub',
