@@ -23,6 +23,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { interpolateTranslation } from '@/utils/translation-utils';
+import { CoachWorkspaceShell } from './CoachWorkspaceShell';
 
 interface WorkspaceNote {
   id: string;
@@ -56,25 +57,22 @@ export const ContextualToolsPanel: React.FC<ContextualToolsPanelProps> = ({
   const detectedContext = context || 'journey';
 
   return (
-    <div className={cn("h-full p-6 space-y-6", className)}>
-      {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-subheading font-semibold text-foreground">
-            {t('contextualTools.toolsAndInsights')}
-          </h3>
-          <Badge variant="outline" className="text-xs">
-            {detectedContext}
-          </Badge>
+    <CoachWorkspaceShell
+      className={className}
+      legacyTools={
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t('contextualTools.contextAwareAssistance')}
+            </p>
+            <Badge variant="outline" className="text-[10px]">
+              {detectedContext}
+            </Badge>
+          </div>
+          {renderToolsForContext(detectedContext, { activeGoal, focusedMilestone, selectedTask })}
         </div>
-        <p className="text-caption text-muted-foreground">
-          {t('contextualTools.contextAwareAssistance')}
-        </p>
-      </div>
-
-      {/* Context-specific tools */}
-      {renderToolsForContext(detectedContext, { activeGoal, focusedMilestone, selectedTask })}
-    </div>
+      }
+    />
   );
 };
 
