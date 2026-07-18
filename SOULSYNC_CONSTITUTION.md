@@ -43,30 +43,32 @@ this in the oracle).
 ## 2. Thought process (how we decide anything)
 
 - The relationship is the product → the surface is the conversation.
-- **Two surfaces, one brain (v2.4).** The conversation is the mouth; the
+- **Two surfaces (v2.4).** The conversation is where dialogue happens; the
   contextual workspace panel (ContextualToolsPanel — slide-out, context-aware:
-  journey/task-coach/focus/tasks/milestones/hub/chat/create) is the hands and
-  eyes: acting, seeing, managing, tracking. Grammar: the panel NEVER talks
-  (no messages, no coaching voice — pure workspace); the conversation never
-  becomes a manager (cards stay compressed entry/confirm moments). The
-  HANDSHAKE binds them: chat→panel — a pinned card drives the panel's
-  context + selection; panel→chat — a panel action that deserves the twin's
-  awareness speaks ONE short visible line into the stream (acting is also
-  saying). The task coach's productivity surfaces (session progress,
+  journey/task-coach/focus/tasks/milestones/hub/chat/create) is where acting,
+  seeing, managing, and tracking happen. The panel may carry guidance content
+  (insights, blueprint-focused tips — e.g. the built Inzichten module); what
+  it doesn't do is host a second dialogue. The conversation never becomes a
+  manager (cards stay compressed entry/confirm moments). The HANDSHAKE
+  between surfaces (pinned card → panel context + selection; panel actions
+  surfacing in the stream) is the working default, refined by the founder as
+  it's built. The task coach's productivity surfaces (session progress,
   subtasks, kanban, timers) live in the panel, not in chat.
-- **The coach is an aspect of the twin (v2.4), never a second entity.**
-  One voice, one memory, one relationship. "Coach mode" = the twin with a
-  task or program pinned and tools offered — not a separate chat, agent, or
-  personality.
+- **The coach is an aspect of the twin (v2.4).** One relationship, one
+  memory — but the coach aspect speaks in its own register: the built
+  AgentMode system (coach/guide/blend/dream) with its own prompt directory
+  and communication-style adapter is the intended design, not a violation
+  of oneness. Same twin who knows you; different stance when coaching.
 - **The unit is the coaching program (v2.4).** The product is not
   goal-reaching; it is coaching programs the twin runs with the user —
   goals and milestones are parts of a program, alongside sessions, habits,
   and insights. New surfaces and card copy use program language; existing
   "Dreams" labels are legacy — migrate opportunistically when a surface is
   touched (rule 2: never a mass rename).
-- The twin gets ONE mouth. All system output arrives as twin messages in
-  the stream — never modals or badges; the workspace panel shows state and
-  hosts tools but never speaks.
+- The twin gets ONE mouth for dialogue. All conversational output arrives
+  as twin messages in the stream — never modals or badges; the workspace
+  panel shows state, hosts tools, and may carry guidance content, but
+  dialogue lives only in the stream.
 - **Deterministic rails before intelligent guesses; cards are the rails.**
   Where a moment can be made structural (a tap, a machine-generated message
   with a known prefix, a confirmedAction flag), build the rail. Intelligence
@@ -96,8 +98,9 @@ this in the oracle).
   structure, engine output), **sentence actions** (selection chips — the
   user's precision input on twin text). v2.4 ratifies the fourth channel
   this clause required an amendment for: the **workspace panel**
-  (ContextualToolsPanel — acting/managing, never speaking; see the
-  two-surface law above). Every feature = an engine service expressed
+  (ContextualToolsPanel — acting/managing/guidance content, no second
+  dialogue; see the two-surface law above). Every feature = an engine
+  service expressed
   through these four channels. A fifth channel or re-routing an old
   surface requires amending this constitution first.
 - One attention target at a time: text streams first, cards materialize
