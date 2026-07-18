@@ -14,6 +14,7 @@ import OnboardingFlow from './pages/OnboardingFlow';
 import Blueprint from './pages/Blueprint';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
+import Dreams from './pages/Dreams';
 
 import ReportViewer from './components/ReportViewer';
 import { Toaster } from '@/components/ui/toaster';
