@@ -1,56 +1,62 @@
-# Absorb Journey/Tasks into the Coach side panel
+## Alignment
+Yes — aligned with the other developer's ruling. I own the client/panel additions; they own the server-side removals and chat slimming after my flow is confirmed. Nothing they own is touched here.
 
-The conversation stays the Twin. Everything the user showed in images 2–9 (decomposition loading, journey overview, roadmap milestones, milestone detail, focus mode, task board, task working-instructions, help history) becomes **panel-scoped views** inside `CoachWorkspaceShell`, gated by the Three-Pieces Rule. No new destination pages, no cognitive overload. Existing Dream/Tasks routes stay reachable via redirect (Slice D already did that) so nothing regresses.
+## Guiding rules
+- Additive only. The current `confirmedAction` path stays live until the other author flips it off.
+- One store: extend `WorkspaceContext`, don't create a second.
+- Reuse the existing dream engine (`DreamDecompositionPage`, `decomposition/*`, `success/*`) — no reimplementation.
+- Three-Pieces Rule inside the panel.
+- `/dreams` stays reachable as a fallback during rollout.
 
-## Behavior contract (what the user will see)
+## Scope
 
-Panel auto-opens via `emitCoachOpen({ section })` whenever the Twin commits to an action. Panel is the ONLY surface for these views going forward:
+### 1. WorkspaceContext — intake handoff
+Add to `src/contexts/WorkspaceContext.tsx`:
+- State: `pendingIntake: { title, category, timeframe, source: 'sentence' | 'offer' } | null`
+- Actions: `openPanelWithIntake(intake)`, `clearPendingIntake()`
+- `openPanelWithIntake` also fires `emitCoachOpen({ section: 'actions', view: 'decomposition' })` so the existing bus stays consistent.
 
-1. **User confirms "create journey" in chat** → panel opens to a new **Journey Progress card** in Overview showing live decomposition stages (Analyzing → Creating → Designing → Preparing) — same feedback as image 3, but compact.
-2. **Decomposition succeeds** → Overview's "Today's Focus" auto-binds to the new program's first milestone. A one-line success toast replaces the full "Congratulations" screen (image 4).
-3. **Actions section** (already exists as ActionHub kanban) gains a **Milestone Roadmap drawer**: 3 milestones visible → "Show N more" (image 5 compressed).
-4. **Tap a milestone** → panel swaps Actions section into **Milestone Focus view**: title, target date, blueprint alignment (3 traits max), and 3 tasks max with "Show more" (images 6 + 7 compressed into one card).
-5. **Tap a task** → panel swaps into **Task Working view**: task title, Mark Done, working instructions (3 steps visible), and a scoped "Ask the coach about this task" input that routes back into the main conversation with task context (images 8 + 9 compressed).
-6. **Insights section** absorbs the "Help History" list — 3 recent interactive-help entries, then "Show more".
+### 2. Rewire OfferCard confirms (chat side)
+In `src/components/hacs/HACSChatInterface.tsx`:
+- Both `onConfirm` handlers (attachment `offer_decomposition` card + `dreamDraft` "Dream This" card) call `openPanelWithIntake({...})` instead of `onSendMessage(..., { confirmedAction })`.
+- Keep the old `onSendMessage(confirmedAction)` code path commented-out-guarded behind a feature flag `USE_PANEL_INTAKE = true` for one release, so Claude's server-side removal can land cleanly.
+- No changes to sentence selection, InteractiveSentenceText, or SentenceActionButtons — the trigger grammar is already correct.
 
-Back navigation inside the panel uses a breadcrumb (Overview › Milestone › Task), never a full-page route change.
+### 3. Panel-hosted decomposition flow
+New: `src/components/companion/panel/PanelDreamFlow.tsx` — orchestrator with three phases keyed off `pendingIntake` + local phase state:
+- `phase: 'building'` → renders `DreamDecompositionPage` (reused as-is) with `dreamTitle/category/timeframe` from `pendingIntake`. Per user's answer, we skip the intake form and go straight to staged build.
+- `phase: 'roadmap'` → renders a panel-sized version of `MilestonesRoadmap` from `success/*`, capped to 3 milestones visible + "Show more" (Three-Pieces Rule).
+- `phase: 'first_task'` → renders `RecommendedTask` from `success/*`, single card.
 
-## Slices
+Wire into `CoachWorkspaceShell.tsx` Overview/Actions section: when `pendingIntake` is set OR `PanelDecompositionCard` (Slice F) already active, mount `PanelDreamFlow` in place of the kanban until the user closes it.
 
-**Slice F — Decomposition inside the panel**
-- New `PanelDecompositionCard` (in `src/components/Layout/panel/`) driven by `useDecompositionLogic` events. Renders the 4-stage progress inline (compact version of `EnhancedProgressAnimation`).
-- Wire `HACSChatInterface`'s OfferCard confirm to also `emitCoachOpen({ section: 'actions', view: 'decomposition' })` and pipe the decomposition hook's state through the bus.
-- Kill the full-screen `DreamDecompositionPage` visual for in-panel confirmations. Legacy route still works.
+The decomposition service call is the same one `DreamDecompositionPage` already uses via `useDecompositionLogic` — no service edits.
 
-**Slice G — Journey/Milestones view in Actions**
-- Extend `ActionHub` with a `view` prop: `'kanban' | 'roadmap' | 'milestone'`.
-- `roadmap`: 3 milestones from primary program, "Show N more" reveals rest (compressed image 5).
-- `milestone`: single-milestone panel with 3 blueprint traits + 3 next tasks (compressed images 6+7). Tap-through updates internal panel state, not the router.
+### 4. Cosmetic bugs (in-flight, per other dev's note)
+- `src/components/dream/decomposition/BlueprintInsight.tsx`: `blueprint.insight.personalizing` renders as literal text. Add a fallback: if `t(key) === key`, render a plain English string ("Personalizing for {userType}…"). No changes to the translation loader.
+- `src/components/dream/success/CelebrationHeader.tsx`: celebration copy interpolates `goalTitle` verbatim including typos. Add a light sanitizer for the ceremony line only (trim, capitalize first letter, collapse whitespace) — leave the stored `goalTitle` untouched in data.
 
-**Slice H — Task Working view**
-- New `PanelTaskWorking` component: reuses `use-task-assistant` and existing working-instructions services, but stripped to 3 primary controls (Mark Done, next 3 steps, ask-coach input).
-- Ask-coach input dispatches `emitCoachOpen({ section: null })` (close panel) and posts the message into `use-hacs-conversation` with task context — the twin answers in the main thread.
+### 5. What stays untouched (Claude's half)
+- `supabase/functions/companion-oracle-conversation/*` — no edits.
+- `offer_decomposition` tool definition — no edits.
+- Chat `DreamCard` slimming — no edits.
+- `SOULSYNC_CONSTITUTION.md` — no edits (waiting on their ratification).
+- Auto-deal rail server logic — no edits.
 
-**Slice I — Insights = Help History**
-- Populate the existing Insights drawer in `CoachWorkspaceShell` with the last 3 help-history entries from `assistance-response-persistence-service`, then "Show more".
+## Deliverables
+- `src/contexts/WorkspaceContext.tsx` (extend)
+- `src/components/hacs/HACSChatInterface.tsx` (rewire two `onConfirm` handlers behind `USE_PANEL_INTAKE`)
+- `src/components/companion/panel/PanelDreamFlow.tsx` (new)
+- `src/components/companion/CoachWorkspaceShell.tsx` (mount PanelDreamFlow when intake pending)
+- `src/components/dream/decomposition/BlueprintInsight.tsx` (i18n fallback)
+- `src/components/dream/success/CelebrationHeader.tsx` (ceremony sanitizer)
 
-**Slice J — Bus + breadcrumb plumbing**
-- Extend `coach-workspace-bus` payload: `{ section, view?, milestoneId?, taskId? }`.
-- `CoachWorkspaceShell` holds the panel-local navigation stack and renders a small breadcrumb header when depth > 0.
-- Reset stack when the user changes conversation subject.
+## Verification
+- Send message → select sentence → "Dream this" → OfferCard appears → tap Confirm → panel auto-opens → staged build animates → roadmap (max 3) → first task card.
+- Attachment-driven offer card also opens the panel (not the chat confirm path).
+- `/dreams` route still loads Dreams.tsx (fallback preserved).
+- No i18n keys visible as raw text; celebration line reads cleanly even when title has typos.
+- Old `confirmedAction` code path still compiles; flip is a one-line change when Claude signals.
 
-## What is NOT changing
-
-- No new routes. Dream/Tasks routes remain as legacy redirects to `/companion`.
-- No changes to decomposition edge functions, `use-journey-goals`, `use-task-assistant`, or blueprint alignment logic. This is a presentation refactor.
-- ActionHub kanban stays the default Actions view; roadmap/milestone/task views are progressive.
-- Three-Pieces Rule enforced everywhere: primary + 2 supporting + "Show more".
-
-## Technical notes (for review)
-
-- New files: `src/components/Layout/panel/PanelDecompositionCard.tsx`, `PanelMilestoneView.tsx`, `PanelTaskWorking.tsx`, `PanelBreadcrumb.tsx`.
-- Edited: `CoachWorkspaceShell.tsx` (view stack + breadcrumb), `ActionHub.tsx` (view prop), `coach-workspace-bus.ts` (extended payload), `HACSChatInterface.tsx` (dispatch decomposition view on OfferCard confirm), `Coach.tsx` (surface decomposition state to bus).
-- No DB migrations. No edge-function deploys.
-- Constitution bump to v2.6 recording: "Journey, milestones, tasks, and their live-progress surfaces render inside the Coach panel; the conversation remains the only other screen."
-
-Say the word and I'll ship Slice F first (decomposition-in-panel) so you can see the handshake end-to-end, then G/H/I/J.
+## Handoff signal
+When the panel flow is verified working end-to-end, I'll ping so the other dev can: disable the auto-deal rail + `offer_decomposition` tool server-side, slim the chat DreamCard, remove `USE_PANEL_INTAKE` fallback, and record the ruling in the constitution.
