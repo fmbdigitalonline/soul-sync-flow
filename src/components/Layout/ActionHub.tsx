@@ -23,10 +23,13 @@ import type { Goal, GoalMilestone } from '@/hooks/use-journey-goals';
 interface ActionHubProps {
   goals: Goal[];
   isLoading: boolean;
+  /** When set, milestone rows become buttons dispatching this callback. */
+  onSelectMilestone?: (goalId: string, milestoneId: string) => void;
 }
 
 interface ColumnItem {
   id: string;
+  goalId: string;
   title: string;
   goalTitle: string;
   completed: boolean;
@@ -34,7 +37,7 @@ interface ColumnItem {
 
 const MAX_VISIBLE = 3;
 
-export const ActionHub: React.FC<ActionHubProps> = ({ goals, isLoading }) => {
+export const ActionHub: React.FC<ActionHubProps> = ({ goals, isLoading, onSelectMilestone }) => {
   const { focus, next, done } = useMemo(() => partitionMilestones(goals), [goals]);
 
   if (isLoading) {
@@ -51,9 +54,9 @@ export const ActionHub: React.FC<ActionHubProps> = ({ goals, isLoading }) => {
 
   return (
     <div className="space-y-3">
-      <Column label="Focus" icon={Flag} tone="primary" items={focus} />
-      <Column label="Next" icon={Circle} tone="muted" items={next} />
-      <Column label="Done" icon={CheckCircle2} tone="success" items={done} />
+      <Column label="Focus" icon={Flag} tone="primary" items={focus} onSelect={onSelectMilestone} />
+      <Column label="Next" icon={Circle} tone="muted" items={next} onSelect={onSelectMilestone} />
+      <Column label="Done" icon={CheckCircle2} tone="success" items={done} onSelect={onSelectMilestone} />
     </div>
   );
 };
@@ -63,9 +66,10 @@ interface ColumnProps {
   icon: React.ElementType;
   tone: 'primary' | 'muted' | 'success';
   items: ColumnItem[];
+  onSelect?: (goalId: string, milestoneId: string) => void;
 }
 
-const Column: React.FC<ColumnProps> = ({ label, icon: Icon, tone, items }) => {
+const Column: React.FC<ColumnProps> = ({ label, icon: Icon, tone, items, onSelect }) => {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? items : items.slice(0, MAX_VISIBLE);
   const hidden = Math.max(0, items.length - MAX_VISIBLE);
@@ -90,28 +94,40 @@ const Column: React.FC<ColumnProps> = ({ label, icon: Icon, tone, items }) => {
         <p className="text-xs text-muted-foreground/70 italic pl-5">Nothing here yet.</p>
       ) : (
         <ul className="space-y-1">
-          {visible.map((item) => (
-            <li
-              key={item.id}
-              className="pl-5 pr-2 py-1.5 rounded-md hover:bg-muted/40 transition-colors"
-            >
-              <p
-                className={cn(
-                  'text-xs font-medium truncate',
-                  item.completed ? 'line-through text-muted-foreground' : 'text-foreground',
+          {visible.map((item) => {
+            const clickable = !!onSelect && !item.completed;
+            const inner = (
+              <>
+                <p
+                  className={cn(
+                    'text-xs font-medium truncate',
+                    item.completed ? 'line-through text-muted-foreground' : 'text-foreground',
+                  )}
+                  title={item.title}
+                >
+                  {item.title}
+                </p>
+                <p className="text-[10px] text-muted-foreground/70 truncate" title={item.goalTitle}>
+                  {item.goalTitle}
+                </p>
+              </>
+            );
+            return (
+              <li key={item.id}>
+                {clickable ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelect!(item.goalId, item.id)}
+                    className="w-full text-left pl-5 pr-2 py-1.5 rounded-md hover:bg-muted/40 transition-colors"
+                  >
+                    {inner}
+                  </button>
+                ) : (
+                  <div className="pl-5 pr-2 py-1.5 rounded-md">{inner}</div>
                 )}
-                title={item.title}
-              >
-                {item.title}
-              </p>
-              <p
-                className="text-[10px] text-muted-foreground/70 truncate"
-                title={item.goalTitle}
-              >
-                {item.goalTitle}
-              </p>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
       {hidden > 0 && (
@@ -148,9 +164,9 @@ function partitionMilestones(goals: Goal[]): {
   if (primary) {
     for (const m of sortMilestones(primary.milestones)) {
       if (!m.completed) {
-        focus.push(toItem(m, primary.title));
+        focus.push(toItem(m, primary));
       } else {
-        done.push(toItem(m, primary.title));
+        done.push(toItem(m, primary));
       }
     }
   }
@@ -159,9 +175,9 @@ function partitionMilestones(goals: Goal[]): {
   for (const g of active.slice(1)) {
     for (const m of sortMilestones(g.milestones)) {
       if (!m.completed) {
-        next.push(toItem(m, g.title));
+        next.push(toItem(m, g));
       } else {
-        done.push(toItem(m, g.title));
+        done.push(toItem(m, g));
       }
     }
   }
@@ -169,7 +185,7 @@ function partitionMilestones(goals: Goal[]): {
   // Fully completed goals → all milestones to Done.
   for (const g of completedGoals) {
     for (const m of sortMilestones(g.milestones)) {
-      done.push(toItem(m, g.title));
+      done.push(toItem(m, g));
     }
   }
 
@@ -183,8 +199,8 @@ function sortMilestones(ms: GoalMilestone[]): GoalMilestone[] {
   return [...ms].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
 }
 
-function toItem(m: GoalMilestone, goalTitle: string): ColumnItem {
-  return { id: m.id, title: m.title, goalTitle, completed: m.completed };
+function toItem(m: GoalMilestone, goal: Goal): ColumnItem {
+  return { id: m.id, goalId: goal.id, title: m.title, goalTitle: goal.title, completed: m.completed };
 }
 
 export default ActionHub;
