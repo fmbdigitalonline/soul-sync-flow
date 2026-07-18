@@ -1,6 +1,29 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v2.4)
+# SoulSync — Developer Constitution & Wiring Roadmap (v2.5)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v2.5 — Two-halves-of-one-mind ratified (founder, Jul 18 2026). Vision
+paragraph adopted: **the Twin helps you think, the Coach helps you act,
+the conversation is the bridge.** Six amendments:*
+*(1) The pre-pivot line "only conversation may change state / workspaces
+are not" is struck. The panel executes; the handshake keeps the twin
+aware (panel actions echo into the stream as twin messages).*
+*(2) **Three-Pieces Rule** ratified as UX law for both surfaces: every
+section shows 1 primary + 2 supporting items, then "Show more". Overview
+is always three cards. Never a wall of tiles.*
+*(3) Panel IA target recorded: **Overview · Actions (Action Hub) ·
+Insights · Memories · Tools · History**. Existing tool trees remain, moved
+behind the Tools drawer; nothing deleted (rule 10, don't delete first).*
+*(4) Offer-tap default: **one tap = confirm in stream; a session (multi-
+step tool) = opens the panel with context.** Preserves conversation as
+the bridge, avoids yanking attention for single actions.*
+*(5) "Dreams" → coaching programs (v2.4 already began this). Legacy
+labels and routes migrate opportunistically; **nothing removed yet** per
+founder directive — top/bottom nav and existing entries stay intact.*
+*(6) Vision paragraph amendment: features stop being destinations, become
+capabilities of the Coach. The two surfaces are the mental model; existing
+destinations remain reachable until their replacement lives (rule:
+unroute, don't delete). Supersedes v2.4.*
 
 *v2.4 — Two-surface law ratified (founder, Jul 18 2026): the conversation
 is the mouth; the contextual workspace panel (ContextualToolsPanel, already
