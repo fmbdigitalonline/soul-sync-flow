@@ -20,6 +20,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { SoulOrbProvider } from './contexts/SoulOrbContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BlueprintCacheProvider } from './contexts/BlueprintCacheContext';
+import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { user360Cleanup } from '@/utils/user-360-cleanup';
 
 import { AutomationWrapper } from '@/components/AutomationWrapper';
