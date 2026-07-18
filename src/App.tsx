@@ -14,12 +14,14 @@ import OnboardingFlow from './pages/OnboardingFlow';
 import Blueprint from './pages/Blueprint';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
+import Dreams from './pages/Dreams';
 
 import ReportViewer from './components/ReportViewer';
 import { Toaster } from '@/components/ui/toaster';
 import { SoulOrbProvider } from './contexts/SoulOrbContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BlueprintCacheProvider } from './contexts/BlueprintCacheContext';
+import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { user360Cleanup } from '@/utils/user-360-cleanup';
 
 import { AutomationWrapper } from '@/components/AutomationWrapper';
@@ -61,6 +63,7 @@ function App() {
                 <ModeProvider>
                   <SoulOrbProvider>
                     <BlueprintCacheProvider>
+                      <WorkspaceProvider>
                       <div className="min-h-screen bg-background">
                       <Routes>
                         {/* ------------------------------------------------ */}
@@ -77,6 +80,8 @@ function App() {
                           }
                         />
                         <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
+                        {/* /dreams kept as fallback surface during panel-flow rollout */}
+                        <Route path="/dreams" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
                         <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
                         <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
 
@@ -153,6 +158,7 @@ function App() {
                       </Routes>
                       <Toaster />
                     </div>
+                    </WorkspaceProvider>
                   </BlueprintCacheProvider>
                 </SoulOrbProvider>
               </ModeProvider>

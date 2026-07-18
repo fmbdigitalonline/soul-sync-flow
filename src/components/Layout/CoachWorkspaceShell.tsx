@@ -31,6 +31,8 @@ import {
 import { PanelDecompositionCard } from './panel/PanelDecompositionCard';
 import { PanelMilestoneView } from './panel/PanelMilestoneView';
 import { PanelBreadcrumb } from './panel/PanelBreadcrumb';
+import { PanelDreamFlow } from './panel/PanelDreamFlow';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useHelpHistory } from '@/hooks/use-help-history';
 
 interface CoachWorkspaceShellProps {
@@ -51,6 +53,7 @@ interface ActionSelection {
 export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacyTools, className }) => {
   const { t } = useLanguage();
   const { goals, isLoading, reloadGoals } = useJourneyGoals();
+  const { pendingIntake } = useWorkspace();
   const [selection, setSelection] = useState<ActionSelection | null>(null);
   const [decompActive, setDecompActive] = useState(false);
   const knownGoalIdsRef = useRef<Set<string>>(new Set());
@@ -156,7 +159,7 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
             Overview
           </h4>
         </div>
-        <PanelDecompositionCard />
+        {pendingIntake ? <PanelDreamFlow /> : <PanelDecompositionCard />}
         <div className="space-y-2">
           <OverviewCard
             icon={Target}

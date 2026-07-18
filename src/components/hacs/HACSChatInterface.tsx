@@ -21,6 +21,15 @@ import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
 import { motion, AnimatePresence } from "framer-motion";
 import { PresenceFrame, PresenceState } from "@/components/companion/PresenceFrame";
 import { emitCoachOpen, emitCoachDecomposition } from "@/lib/coach-workspace-bus";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
+
+/**
+ * Feature flag: route OfferCard confirmations into the panel-hosted flow
+ * (WorkspaceContext.openPanelWithIntake) instead of the legacy
+ * confirmedAction rail. The rail is still live server-side; it will be
+ * disabled by the server author once this path is verified.
+ */
+const USE_PANEL_INTAKE = true;
 
 // Deterministic confirmation rail: an OfferCard tap rides a structured flag
 // alongside the visible message so the oracle can skip detection entirely.
@@ -69,6 +78,19 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   
   // NEW: Orb Presence System - notify when chat is open and thinking
   const { setChatOpen, startLoading, completeLoading, isChatAvatar } = useOrbPresence();
+  const { openPanelWithIntake } = useWorkspace();
+
+  const routeConfirmToPanel = (
+    title: string,
+    category: string,
+    timeframe: string,
+    source: 'sentence' | 'offer',
+  ) => {
+    openPanelWithIntake({ title, category, timeframe, source });
+    // Kick the panel-side decomposition card into 'start' phase so the
+    // building animation is visible even before useDecompositionLogic mounts.
+    emitCoachDecomposition({ phase: 'start', dreamTitle: title });
+  };
   
   // Track when chat opens/closes
   useEffect(() => {
@@ -265,16 +287,22 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                           timeframe={att.timeframe}
                           onConfirm={(title) =>
                             {
+                              const category = att.category ?? 'personal_growth';
+                              const timeframe = att.timeframe ?? '3 months';
+                              if (USE_PANEL_INTAKE) {
+                                routeConfirmToPanel(title, category, timeframe, 'offer');
+                                return Promise.resolve();
+                              }
                               emitCoachOpen({ section: 'actions', reason: 'decompose_goal_offer' });
                               emitCoachDecomposition({ phase: 'start', dreamTitle: title });
                               return onSendMessage(`Yes — break down "${title}" into milestones.`, {
-                              confirmedAction: {
-                                type: "decompose_goal",
-                                title,
-                                category: att.category,
-                                timeframe: att.timeframe,
-                              },
-                            });
+                                confirmedAction: {
+                                  type: "decompose_goal",
+                                  title,
+                                  category,
+                                  timeframe,
+                                },
+                              });
                             }
                           }
                           onDefer={() => onSendMessage("Let me sit with this.")}
@@ -298,6 +326,10 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                         timeframe="3 months"
                         onConfirm={(title) => {
                           setDreamDraft(null);
+                          if (USE_PANEL_INTAKE) {
+                            routeConfirmToPanel(title, 'personal_growth', '3 months', 'sentence');
+                            return;
+                          }
                           emitCoachOpen({ section: 'actions', reason: 'decompose_goal_dream' });
                           emitCoachDecomposition({ phase: 'start', dreamTitle: title });
                           onSendMessage(`Yes — break down "${title}" into milestones.`, {
