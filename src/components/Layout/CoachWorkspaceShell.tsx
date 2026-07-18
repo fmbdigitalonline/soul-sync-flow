@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useJourneyGoals, type Goal, type GoalMilestone } from '@/hooks/use-journey-goals';
+import { ActionHub } from './ActionHub';
 
 interface CoachWorkspaceShellProps {
   /** Legacy context tools slot — rendered inside the Tools section drawer. */
@@ -115,6 +116,8 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
           >
             {id === 'tools' ? (
               legacyTools ?? <EmptySlot label="No tools surfaced for this moment." />
+            ) : id === 'actions' ? (
+              <ActionHub goals={goals} isLoading={isLoading} />
             ) : (
               <EmptySlot label={placeholderFor(id)} />
             )}
@@ -172,12 +175,21 @@ function deriveOverview(goals: Goal[], loading: boolean): OverviewData {
         emptyCta: 'Open the companion to start talking.',
       };
 
-  // Suggested Next Action: only surface when the rail has dealt one.
-  // Honest empty state until Slice B wires the rail source.
-  const suggestion: OverviewSlot = {
-    title: 'No suggestion right now',
-    emptyCta: 'The twin will suggest when the moment is right.',
-  };
+  // Suggested Next Action: derived from the next incomplete milestone
+  // across other active programs (not the primary focus). Honest empty
+  // state when nothing queued.
+  const otherActive = goals.filter(
+    (g) => g !== activeGoal && (g.progress ?? 0) < 100 && (g.milestones?.length ?? 0) > 0,
+  );
+  const nextMilestone = otherActive
+    .flatMap((g) => g.milestones.map((m) => ({ m, g })))
+    .find(({ m }) => !m.completed);
+  const suggestion: OverviewSlot = nextMilestone
+    ? { title: nextMilestone.m.title, hint: nextMilestone.g.title }
+    : {
+        title: 'No suggestion right now',
+        emptyCta: 'The twin will suggest when the moment is right.',
+      };
 
   return { focus, thread, suggestion };
 }
