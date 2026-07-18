@@ -1,6 +1,15 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v2.3)
+# SoulSync — Developer Constitution & Wiring Roadmap (v2.4)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v2.4 — Two-surface law ratified (founder, Jul 18 2026): the conversation
+is the mouth; the contextual workspace panel (ContextualToolsPanel, already
+built) is the sanctioned acting surface — the fourth channel §2 required an
+amendment for. The coach is an ASPECT of the twin, not a second entity or
+second chat. Narrative reframe: the unit is the COACHING PROGRAM — goals
+and milestones are parts of a program, not the point; "Dreams" labels are
+legacy, migrated opportunistically (rule 2: no mass rename). Supersedes
+v2.3.*
 
 *v2.3 — ChoiceCard grammar ratified: the twin deals blueprint-chosen option
 cards at forks and says why; taps are deterministic; detection is demoted to
@@ -34,10 +43,30 @@ this in the oracle).
 ## 2. Thought process (how we decide anything)
 
 - The relationship is the product → the surface is the conversation.
-- Navigation may show state; only conversation may change it. Read-only
-  overviews allowed (Reis tab, Today pin). Workspaces are not.
+- **Two surfaces, one brain (v2.4).** The conversation is the mouth; the
+  contextual workspace panel (ContextualToolsPanel — slide-out, context-aware:
+  journey/task-coach/focus/tasks/milestones/hub/chat/create) is the hands and
+  eyes: acting, seeing, managing, tracking. Grammar: the panel NEVER talks
+  (no messages, no coaching voice — pure workspace); the conversation never
+  becomes a manager (cards stay compressed entry/confirm moments). The
+  HANDSHAKE binds them: chat→panel — a pinned card drives the panel's
+  context + selection; panel→chat — a panel action that deserves the twin's
+  awareness speaks ONE short visible line into the stream (acting is also
+  saying). The task coach's productivity surfaces (session progress,
+  subtasks, kanban, timers) live in the panel, not in chat.
+- **The coach is an aspect of the twin (v2.4), never a second entity.**
+  One voice, one memory, one relationship. "Coach mode" = the twin with a
+  task or program pinned and tools offered — not a separate chat, agent, or
+  personality.
+- **The unit is the coaching program (v2.4).** The product is not
+  goal-reaching; it is coaching programs the twin runs with the user —
+  goals and milestones are parts of a program, alongside sessions, habits,
+  and insights. New surfaces and card copy use program language; existing
+  "Dreams" labels are legacy — migrate opportunistically when a surface is
+  touched (rule 2: never a mass rename).
 - The twin gets ONE mouth. All system output arrives as twin messages in
-  the stream — never modals, badges, or panels.
+  the stream — never modals or badges; the workspace panel shows state and
+  hosts tools but never speaks.
 - **Deterministic rails before intelligent guesses; cards are the rails.**
   Where a moment can be made structural (a tap, a machine-generated message
   with a known prefix, a confirmedAction flag), build the rail. Intelligence
@@ -62,11 +91,14 @@ this in the oracle).
 - **Engine/surface separation, three channels.** Pre-rebuild flows (Dreams,
   journey, tasks, orchestrator) are headless engines: logic preserved and
   invoked via the twin's tools, screens permanently unrouted as donors. The
-  conversation is the only surface, with exactly three channels: **text**
-  (the twin's mouth — meaning), **cards** (CardShell message-parts —
+  conversation is the primary surface, with three in-stream channels:
+  **text** (the twin's mouth — meaning), **cards** (CardShell message-parts —
   structure, engine output), **sentence actions** (selection chips — the
-  user's precision input on twin text). Every feature = an engine service
-  expressed through these channels. A fourth channel or re-routing an old
+  user's precision input on twin text). v2.4 ratifies the fourth channel
+  this clause required an amendment for: the **workspace panel**
+  (ContextualToolsPanel — acting/managing, never speaking; see the
+  two-surface law above). Every feature = an engine service expressed
+  through these four channels. A fifth channel or re-routing an old
   surface requires amending this constitution first.
 - One attention target at a time: text streams first, cards materialize
   after; never two surfaces claiming the same moment.
