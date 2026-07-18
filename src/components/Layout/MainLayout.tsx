@@ -16,6 +16,7 @@ import { PageContainer } from "./PageContainer";
 import { ThreePanelLayout } from "./ThreePanelLayout";
 import { ContextualToolsPanel } from "./ContextualToolsPanel";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { onCoachOpen } from "@/lib/coach-workspace-bus";
 
 const TOOLS_PANEL_COLLAPSED_STORAGE_KEY = "threePanelLayout:toolsPanelCollapsed";
 interface MainLayoutProps {
@@ -69,6 +70,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   const toggleToolsPanel = useCallback(() => {
     setIsToolsPanelCollapsed(prev => !prev);
   }, []);
+
+  // Slice C: handshake — when the twin triggers a multi-step tool, open
+  // the Coach panel automatically. Tablet uses the sheet overlay; desktop
+  // uncollapses the resizable third panel.
+  useEffect(() => {
+    return onCoachOpen(() => {
+      if (isTablet) {
+        setIsToolsOpen(true);
+      } else {
+        setIsToolsPanelCollapsed(false);
+      }
+    });
+  }, [isTablet]);
+
   const handleSignOut = async () => {
     try {
       await signOut();

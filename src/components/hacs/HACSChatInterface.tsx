@@ -20,6 +20,7 @@ import { useOrbPresence } from "@/hooks/use-orb-presence";
 import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
 import { motion, AnimatePresence } from "framer-motion";
 import { PresenceFrame, PresenceState } from "@/components/companion/PresenceFrame";
+import { emitCoachOpen } from "@/lib/coach-workspace-bus";
 
 // Deterministic confirmation rail: an OfferCard tap rides a structured flag
 // alongside the visible message so the oracle can skip detection entirely.
@@ -263,14 +264,17 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                           category={att.category}
                           timeframe={att.timeframe}
                           onConfirm={(title) =>
-                            onSendMessage(`Yes — break down "${title}" into milestones.`, {
+                            {
+                              emitCoachOpen({ section: 'actions', reason: 'decompose_goal_offer' });
+                              return onSendMessage(`Yes — break down "${title}" into milestones.`, {
                               confirmedAction: {
                                 type: "decompose_goal",
                                 title,
                                 category: att.category,
                                 timeframe: att.timeframe,
                               },
-                            })
+                            });
+                            }
                           }
                           onDefer={() => onSendMessage("Let me sit with this.")}
                         />
@@ -293,6 +297,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                         timeframe="3 months"
                         onConfirm={(title) => {
                           setDreamDraft(null);
+                          emitCoachOpen({ section: 'actions', reason: 'decompose_goal_dream' });
                           onSendMessage(`Yes — break down "${title}" into milestones.`, {
                             confirmedAction: {
                               type: "decompose_goal",
