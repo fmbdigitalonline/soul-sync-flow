@@ -20,6 +20,7 @@ import { useOrbPresence } from "@/hooks/use-orb-presence";
 import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
 import { motion, AnimatePresence } from "framer-motion";
 import { PresenceFrame, PresenceState } from "@/components/companion/PresenceFrame";
+import { emitCoachOpen } from "@/lib/coach-workspace-bus";
 
 // Deterministic confirmation rail: an OfferCard tap rides a structured flag
 // alongside the visible message so the oracle can skip detection entirely.
