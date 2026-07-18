@@ -63,6 +63,7 @@ function App() {
                 <ModeProvider>
                   <SoulOrbProvider>
                     <BlueprintCacheProvider>
+                      <WorkspaceProvider>
                       <div className="min-h-screen bg-background">
                       <Routes>
                         {/* ------------------------------------------------ */}
@@ -79,6 +80,8 @@ function App() {
                           }
                         />
                         <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
+                        {/* /dreams kept as fallback surface during panel-flow rollout */}
+                        <Route path="/dreams" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
                         <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
                         <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
 
@@ -155,6 +158,7 @@ function App() {
                       </Routes>
                       <Toaster />
                     </div>
+                    </WorkspaceProvider>
                   </BlueprintCacheProvider>
                 </SoulOrbProvider>
               </ModeProvider>
