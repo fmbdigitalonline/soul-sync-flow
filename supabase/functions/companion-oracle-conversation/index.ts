@@ -1123,6 +1123,10 @@ serve(async (req) => {
         ? {
             title: confirmedAction.title.trim().slice(0, 80),
             category: typeof confirmedAction.category === 'string' ? confirmedAction.category : undefined,
+            // IntakeCard fields (compressed intake form): frozen at confirm
+            // time like the title, so the created dream matches the card.
+            timeframe: typeof confirmedAction.timeframe === 'string' ? confirmedAction.timeframe.slice(0, 40) : undefined,
+            description: typeof confirmedAction.description === 'string' ? confirmedAction.description.slice(0, 2000) : undefined,
           }
         : null;
 
@@ -2491,10 +2495,14 @@ serve(async (req) => {
     async function _runCompanionToolInner(name: string, args: any): Promise<string> {
       try {
         if (name === 'get_active_dream') {
+          // status filter matches every Dreams-page query (use-goals.ts):
+          // delete is a soft delete (status='inactive') — a deleted dream
+          // must never be served as "the active dream".
           const { data: goals } = await supabase
             .from('user_goals')
             .select('*')
             .eq('user_id', userId)
+            .eq('status', 'active')
             .order('created_at', { ascending: false })
             .limit(1);
           const g = goals?.[0];
@@ -2549,6 +2557,10 @@ serve(async (req) => {
             // Jul 15). Eligibility rule, not similarity threshold.
             args.title = confirmedDecompose.title;
             if (confirmedDecompose.category && !args.category) args.category = confirmedDecompose.category;
+            // IntakeCard fields ride the same freeze: what the card showed
+            // is what the dream gets.
+            if (confirmedDecompose.timeframe && !args.timeframe) args.timeframe = confirmedDecompose.timeframe;
+            if (confirmedDecompose.description && !args.description) args.description = confirmedDecompose.description;
             console.log('🃏 FROZEN TITLE: fidelity guard skipped (confirmedAction)', { title: args.title });
           } else if (typeof args.title === 'string') {
             // PHASE 1 (item 2): GOAL-TITLE FIDELITY GUARD — detection-path
@@ -2739,10 +2751,13 @@ serve(async (req) => {
         && semanticOk && goalSignalNow
         && typeof semanticGoalVerbatim === 'string' && semanticGoalVerbatim.trim().length >= 4) {
       try {
+        // status filter matches the Dreams pages: soft-deleted dreams
+        // (status='inactive') must not block the dealer.
         const { data: railGoals } = await supabase
           .from('user_goals')
           .select('id')
           .eq('user_id', userId)
+          .eq('status', 'active')
           .limit(1);
         if (!railGoals || railGoals.length === 0) {
           const railTitle = repairTitleToUserWords(semanticGoalVerbatim.trim().slice(0, 80), 'rail-deal').slice(0, 80);
@@ -2785,6 +2800,11 @@ serve(async (req) => {
           const railCard: any = { type: 'offer_decomposition', title: railTitle };
           if (railFrame) railCard.frame = railFrame;
           if (railDeferChip) railCard.defer_chip = true;
+          // IntakeCard prefill: the classifier's extracted timeframe rides
+          // the card so the user confirms what the dream will actually get.
+          if (semanticIntent?.timeframe && typeof semanticIntent.timeframe === 'string') {
+            railCard.timeframe = semanticIntent.timeframe.slice(0, 40);
+          }
           cardAttachments.push(railCard);
           railDealt = true;
           console.log('🃏 RAIL DEAL: blueprint-informed offer dealt by code', {
