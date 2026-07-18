@@ -168,6 +168,23 @@ const Coach = () => {
     });
   };
 
+  // Panel → Twin handoff: when the Coach panel taps "Continue in chat",
+  // it dispatches coach-workspace:ask with a prompt. We forward it into
+  // the conversation so the acting surface never becomes a second chat.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ prompt?: string }>).detail;
+      const prompt = detail?.prompt?.trim();
+      if (!prompt) return;
+      handleSendMessage(prompt).catch((err) =>
+        console.error('coach-workspace:ask forward failed', err),
+      );
+    };
+    window.addEventListener('coach-workspace:ask', handler);
+    return () => window.removeEventListener('coach-workspace:ask', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Removed duplicate authentication check - component is wrapped in ProtectedRoute
 
   // Create the main chat interface component
