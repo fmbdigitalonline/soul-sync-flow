@@ -1,77 +1,56 @@
-# Two-Surface Ratification — Coach OS + Side Panel + Dream absorption
+# Absorb Journey/Tasks into the Coach side panel
 
-Yes — I understand. The vision is already 80% built; this plan ties the last knots so the Coach page (`/companion`) and the side panel (`ContextualToolsPanel`) behave as one mind with two halves, and Dream OS stops being a destination.
+The conversation stays the Twin. Everything the user showed in images 2–9 (decomposition loading, journey overview, roadmap milestones, milestone detail, focus mode, task board, task working-instructions, help history) becomes **panel-scoped views** inside `CoachWorkspaceShell`, gated by the Three-Pieces Rule. No new destination pages, no cognitive overload. Existing Dream/Tasks routes stay reachable via redirect (Slice D already did that) so nothing regresses.
 
-## Vision (what we are locking in)
+## Behavior contract (what the user will see)
 
-- **Screen 1 — The Twin (conversation).** `/companion` is the only place dialogue lives. No dashboards, no widget grids, no forms in the stream. Selected sentences → OfferCards → actions. Nothing else.
-- **Screen 2 — The Coach Workspace (side panel).** `ContextualToolsPanel` becomes the single acting surface. Overview · Action Hub · Insights · Memories · Tools · History — progressive disclosure, never a wall of tiles.
-- **Handshake.** Conversation drives panel context; panel actions surface as twin messages in the stream. Two halves of one mind.
-- **UX Law — Three Pieces Rule.** Every panel section shows 1 primary + 2 supporting, then "Show more". No twelve-widget screens.
-- **Dream OS is absorbed.** "Dreams" becomes a capability of the Coach (a program type), not a destination. Legacy routes redirect to `/companion`; program state lives in the panel's Action Hub.
+Panel auto-opens via `emitCoachOpen({ section })` whenever the Twin commits to an action. Panel is the ONLY surface for these views going forward:
 
-## Constitution amendments (v2.5)
+1. **User confirms "create journey" in chat** → panel opens to a new **Journey Progress card** in Overview showing live decomposition stages (Analyzing → Creating → Designing → Preparing) — same feedback as image 3, but compact.
+2. **Decomposition succeeds** → Overview's "Today's Focus" auto-binds to the new program's first milestone. A one-line success toast replaces the full "Congratulations" screen (image 4).
+3. **Actions section** (already exists as ActionHub kanban) gains a **Milestone Roadmap drawer**: 3 milestones visible → "Show N more" (image 5 compressed).
+4. **Tap a milestone** → panel swaps Actions section into **Milestone Focus view**: title, target date, blueprint alignment (3 traits max), and 3 tasks max with "Show more" (images 6 + 7 compressed into one card).
+5. **Tap a task** → panel swaps into **Task Working view**: task title, Mark Done, working instructions (3 steps visible), and a scoped "Ask the coach about this task" input that routes back into the main conversation with task context (images 8 + 9 compressed).
+6. **Insights section** absorbs the "Help History" list — 3 recent interactive-help entries, then "Show more".
 
-1. Vision paragraph: "The Twin helps you think. The Coach helps you act. The conversation is the bridge."
-2. Strike the pre-pivot line "only conversation may change state / workspaces are not." The panel executes.
-3. Ratify the **Three-Pieces Rule** as UX law for both surfaces.
-4. Record panel IA target: **Overview · Actions · Insights · Memories · Tools · History**.
-5. Offer-tap rule of thumb: one tap = confirm in stream; a session (multi-step tool) = opens the panel.
-6. "Dreams" → programs; legacy label migrated opportunistically, no mass rename.
+Back navigation inside the panel uses a breadcrumb (Overview › Milestone › Task), never a full-page route change.
 
-## Panel redesign — `ContextualToolsPanel`
+## Slices
 
-Target shape (replaces the current 5-tile module grid for the default/`journey`/`hub` context):
+**Slice F — Decomposition inside the panel**
+- New `PanelDecompositionCard` (in `src/components/Layout/panel/`) driven by `useDecompositionLogic` events. Renders the 4-stage progress inline (compact version of `EnhancedProgressAnimation`).
+- Wire `HACSChatInterface`'s OfferCard confirm to also `emitCoachOpen({ section: 'actions', view: 'decomposition' })` and pipe the decomposition hook's state through the bus.
+- Kill the full-screen `DreamDecompositionPage` visual for in-panel confirmations. Legacy route still works.
 
-```text
-┌─ Coach Workspace ────────────────┐
-│  OVERVIEW (3 cards, always)      │
-│   • Today's Focus                │
-│   • Current Conversation Thread  │
-│   • Suggested Next Action        │
-│  [Show more ▾ → full IA]         │
-├──────────────────────────────────┤
-│  ACTION HUB  (compressed kanban) │
-│   Current · Suggested · Done     │
-│   (3 items each, Show more)      │
-├──────────────────────────────────┤
-│  INSIGHTS · MEMORIES · TOOLS ·   │
-│  HISTORY   (collapsed sections)  │
-└──────────────────────────────────┘
-```
+**Slice G — Journey/Milestones view in Actions**
+- Extend `ActionHub` with a `view` prop: `'kanban' | 'roadmap' | 'milestone'`.
+- `roadmap`: 3 milestones from primary program, "Show N more" reveals rest (compressed image 5).
+- `milestone`: single-milestone panel with 3 blueprint traits + 3 next tasks (compressed images 6+7). Tap-through updates internal panel state, not the router.
 
-- **Overview cards** are wired to real signals (active program, last user turn subject, next-best-action derived from the same rail that deals OfferCards). No mock data.
-- **Action Hub** is the existing kanban status machine (`in-progress / todo / completed`) compressed to 3+Show-more per column. No new engine.
-- **Sections below** are collapsed by default (progressive disclosure). Existing widgets (Inzichten, memory tiles, tools) become drawers inside these sections — not deleted, just moved and gated behind Show-more.
-- Current context-specific tool trees (`journey/task-coach/focus/tasks/milestones/hub/chat/create`) stay as internal state; the outer shell is always the same six-section IA so the panel stops feeling like a different screen per context.
+**Slice H — Task Working view**
+- New `PanelTaskWorking` component: reuses `use-task-assistant` and existing working-instructions services, but stripped to 3 primary controls (Mark Done, next 3 steps, ask-coach input).
+- Ask-coach input dispatches `emitCoachOpen({ section: null })` (close panel) and posts the message into `use-hacs-conversation` with task context — the twin answers in the main thread.
 
-## Coach page (`/companion`) — the Twin surface
+**Slice I — Insights = Help History**
+- Populate the existing Insights drawer in `CoachWorkspaceShell` with the last 3 help-history entries from `assistance-response-persistence-service`, then "Show more".
 
-- No visual redesign of the conversation itself (already clean).
-- Confirm the **handshake wiring** both directions:
-  - Sentence selection → OfferCard → single-tap actions confirm in-stream (already works). Multi-step tools (compare-to-HD, journaling session, program planner) set panel context and open the panel with a subtle nudge — no navigation.
-  - Panel actions (complete task, start timer, finish milestone) emit a twin message into the stream so the twin stays aware.
-- Sentence menu stays: Go Deeper · Next Action · Challenge · Save Insight · Dream This. **Save Insight is currently fake (toast only)** — must be wired to real memory writes before it keeps shipping in that menu (tracked as follow-up, not part of this slice).
+**Slice J — Bus + breadcrumb plumbing**
+- Extend `coach-workspace-bus` payload: `{ section, view?, milestoneId?, taskId? }`.
+- `CoachWorkspaceShell` holds the panel-local navigation stack and renders a small breadcrumb header when depth > 0.
+- Reset stack when the user changes conversation subject.
 
-## Dream OS absorption
+## What is NOT changing
 
-- `/dream*` routes → redirect to `/companion` (keep deep-link params so programs open the panel to the right program).
-- Dream discovery/creation flows are already reachable via OfferCards ("Dream This", program intake card). Remove Dream from primary nav if still present; keep the underlying services as headless capabilities the Coach wields.
-- Existing program/milestone data becomes the Action Hub's source of truth — no schema change.
+- No new routes. Dream/Tasks routes remain as legacy redirects to `/companion`.
+- No changes to decomposition edge functions, `use-journey-goals`, `use-task-assistant`, or blueprint alignment logic. This is a presentation refactor.
+- ActionHub kanban stays the default Actions view; roadmap/milestone/task views are progressive.
+- Three-Pieces Rule enforced everywhere: primary + 2 supporting + "Show more".
 
-## Slice order (buildable in this order, each shippable)
+## Technical notes (for review)
 
-1. **Slice A — Panel shell + Overview (Three-Pieces).** Rebuild the panel's default view as the six-section IA with Overview's three real cards. Current tiles move into `Show more`. Read-only wiring first.
-2. **Slice B — Action Hub compressed.** Wire the existing kanban data into the Actions section (3 per column + Show more). Panel-side execute → stream echo.
-3. **Slice C — Handshake polish.** Multi-step OfferCards open the panel with the correct context; sentence-selection actions that belong in the panel route there instead of confirming in-stream.
-4. **Slice D — Dream absorption.** `/dream*` redirects; nav item removed; program intake surfaces only via OfferCards.
-5. **Slice E — Constitution v2.5 written to `SOULSYNC_CONSTITUTION.md**` capturing the six amendments above.
+- New files: `src/components/Layout/panel/PanelDecompositionCard.tsx`, `PanelMilestoneView.tsx`, `PanelTaskWorking.tsx`, `PanelBreadcrumb.tsx`.
+- Edited: `CoachWorkspaceShell.tsx` (view stack + breadcrumb), `ActionHub.tsx` (view prop), `coach-workspace-bus.ts` (extended payload), `HACSChatInterface.tsx` (dispatch decomposition view on OfferCard confirm), `Coach.tsx` (surface decomposition state to bus).
+- No DB migrations. No edge-function deploys.
+- Constitution bump to v2.6 recording: "Journey, milestones, tasks, and their live-progress surfaces render inside the Coach panel; the conversation remains the only other screen."
 
-## Open decisions I need from you before building Slice A
-
-1. **Overview cards content.** Confirm the three: `Today's Focus` (active program milestone) · `Current Thread` (last-turn subject + return-to-chat) · `Suggested Next Action` (rail-dealt). Swap any?
-2. **Offer-tap default.** Ratify "one tap = stream, session = panel" as the rule, or override.
-3. **Dream nav removal.** OK to remove any remaining Dream nav entries and redirect `/dream*` → `/companion` in Slice D? - keep that dont delete anything yet
-4. **Section names.** Keep `Overview · Actions · Insights · Memories · Tools · History`, or rename any (e.g. `Action Hub` vs `Actions`)?
-
-Answer those four and I'll start with Slice A (panel shell + Overview) and the v2.5 amendment in  -De parallel. Dev note keep, top and bodom navnigation bars and items
+Say the word and I'll ship Slice F first (decomposition-in-panel) so you can see the handshake end-to-end, then G/H/I/J.
