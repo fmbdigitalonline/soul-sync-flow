@@ -241,7 +241,12 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
       )}
 
       {/* LEVELS 2-3 live behind ONE "Show more"; navigation auto-reveals. */}
-      {!drawersRevealed ? (
+      {pendingIntake && dreamFlow.momentStage !== 'done' ? (
+        // v2.9 "one moment at a time": while a guided achievement flow is
+        // active, the six-section IA is structurally hidden. Complexity
+        // reappears only when the user finishes the current moment.
+        null
+      ) : !drawersRevealed ? (
         <Button
           variant="ghost"
           size="sm"
