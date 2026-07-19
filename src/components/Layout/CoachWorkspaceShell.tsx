@@ -36,6 +36,9 @@ import { PanelProgramsSection } from './panel/PanelProgramsSection';
 import { PanelTaskBoard } from './panel/PanelTaskBoard';
 import { PanelDiscoveryFlow } from './panel/PanelDiscoveryFlow';
 import { PanelHabits } from './panel/PanelHabits';
+import { PanelJourneyView } from './panel/PanelJourneyView';
+import DreamAchievementDashboard from '@/components/journey/DreamAchievementDashboard';
+import { useJourneyTracking } from '@/hooks/use-journey-tracking';
 import { WeeklySummary } from '@/components/productivity/WeeklySummary';
 import { useXPProgression } from '@/hooks/use-xp-progression';
 import { useWorkspace, type WorkspaceSectionId } from '@/contexts/WorkspaceContext';
@@ -77,6 +80,16 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
   // Wave 2: the discovery door — for the user who doesn't know the goal
   // yet. When open, discovery IS the one primary container.
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
+  // Wave 4: visual journey map/timeline drill-in (raw journey goal).
+  const [journeyViewGoal, setJourneyViewGoal] = useState<any | null>(null);
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const { productivityJourney } = useJourneyTracking();
+  const rawJourneyGoalById = (goalId?: string): any | null => {
+    const rawGoals = productivityJourney?.current_goals;
+    const list: any[] = Array.isArray(rawGoals) ? rawGoals : [];
+    if (!goalId) return list[0] ?? null;
+    return list.find((g) => String(g?.id ?? g?.goal_id ?? '') === goalId) ?? null;
+  };
   // Wave 2: XP surfaced — the ledger existed, invisible until now.
   const { progress: xpProgress } = useXPProgression();
   const { data: transformPrograms = [] } = useQuery({
@@ -233,7 +246,13 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
               }
             }}
             onSeeRoadmap={() => {
-              openWorkspaceSection('programs');
+              const raw = rawJourneyGoalById(journey.goalId);
+              if (raw) {
+                setJourneyViewGoal(raw);
+                openWorkspaceSection('actions');
+              } else {
+                openWorkspaceSection('programs');
+              }
               setDrawersRevealed(true);
             }}
           />
@@ -268,11 +287,32 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
                   setActionSelection({ goalId, milestoneId })
                 }
                 onResumeTask={(goalId, task) => setSelectedTask({ goalId, task })}
+                onOpenMap={(rawGoal) => {
+                  setJourneyViewGoal(rawGoal);
+                  openWorkspaceSection('actions');
+                }}
               />
             ) : id === 'tools' ? (
               legacyTools ?? <EmptySlot label="No tools surfaced for this moment." />
             ) : id === 'actions' ? (
-              selectedGoal && selectedMilestone ? (
+              journeyViewGoal ? (
+                <PanelJourneyView
+                  goal={journeyViewGoal}
+                  onBack={() => setJourneyViewGoal(null)}
+                  onOpenMilestone={(mid) => {
+                    const gid = String(journeyViewGoal?.id ?? journeyViewGoal?.goal_id ?? '');
+                    if (gid) {
+                      setJourneyViewGoal(null);
+                      setActionSelection({ goalId: gid, milestoneId: mid });
+                    }
+                  }}
+                  onOpenTask={(t) => {
+                    const gid = String(journeyViewGoal?.id ?? journeyViewGoal?.goal_id ?? '');
+                    setJourneyViewGoal(null);
+                    setSelectedTask({ goalId: gid || undefined, task: t });
+                  }}
+                />
+              ) : selectedGoal && selectedMilestone ? (
                 <div className="space-y-2">
                   <PanelBreadcrumb
                     crumbs={[{ label: 'Actions', onClick: () => setActionSelection(null) }]}
@@ -315,9 +355,19 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
             ) : id === 'insights' ? (
               <InsightsList entries={helpHistory} />
             ) : id === 'history' ? (
-              <div className="[&_.rounded-2xl]:rounded-lg [&_.shadow-lg]:shadow-none">
+              <div className="space-y-2 [&_.rounded-2xl]:rounded-lg [&_.shadow-lg]:shadow-none">
                 {/* Wave 3: the built weekly retrospective, self-contained */}
                 <WeeklySummary />
+                {/* Wave 4: the built achievement dashboard, one reveal away */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAchievementsOpen((v) => !v)}
+                  className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground w-full justify-start"
+                >
+                  {achievementsOpen ? 'Hide achievements' : 'Show achievements →'}
+                </Button>
+                {achievementsOpen && <DreamAchievementDashboard />}
               </div>
             ) : (
               <EmptySlot label={placeholderFor(id)} />
