@@ -30,9 +30,10 @@ import {
 } from '@/lib/coach-workspace-bus';
 import { PanelDecompositionCard } from './panel/PanelDecompositionCard';
 import { PanelMilestoneView } from './panel/PanelMilestoneView';
+import { PanelTaskView } from './panel/PanelTaskView';
 import { PanelBreadcrumb } from './panel/PanelBreadcrumb';
 import { PanelDreamFlow } from './panel/PanelDreamFlow';
-import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useWorkspace, type WorkspaceSectionId } from '@/contexts/WorkspaceContext';
 import { useHelpHistory } from '@/hooks/use-help-history';
 
 interface CoachWorkspaceShellProps {
@@ -41,38 +42,35 @@ interface CoachWorkspaceShellProps {
   className?: string;
 }
 
-type SectionId = 'actions' | 'insights' | 'memories' | 'tools' | 'history';
+type SectionId = WorkspaceSectionId;
 
 const SECTION_ORDER: SectionId[] = ['actions', 'insights', 'memories', 'tools', 'history'];
-
-interface ActionSelection {
-  goalId: string;
-  milestoneId: string;
-}
 
 export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacyTools, className }) => {
   const { t } = useLanguage();
   const { goals, isLoading, reloadGoals } = useJourneyGoals();
-  const { pendingIntake } = useWorkspace();
-  const [selection, setSelection] = useState<ActionSelection | null>(null);
+  const {
+    pendingIntake,
+    dreamFlow,
+    selection,
+    setActionSelection,
+    selectedTask,
+    setSelectedTask,
+    openSections,
+    openWorkspaceSection,
+    toggleWorkspaceSection,
+  } = useWorkspace();
   const [decompActive, setDecompActive] = useState(false);
   const knownGoalIdsRef = useRef<Set<string>>(new Set());
-  const [openSections, setOpenSections] = useState<Record<SectionId, boolean>>({
-    actions: false,
-    insights: false,
-    memories: false,
-    tools: false,
-    history: false,
-  });
 
   // Slice C: auto-expand the requested section when the twin dispatches
   // a handshake event (e.g. decompose_goal confirmed).
   useEffect(() => {
     return onCoachOpen((detail) => {
       const section = (detail.section ?? 'actions') as CoachSectionId;
-      setOpenSections((prev) => ({ ...prev, [section]: true }));
+      openWorkspaceSection(section as SectionId);
     });
-  }, []);
+  }, [openWorkspaceSection]);
 
   // Track decomposition lifecycle so the shell can auto-complete when a new
   // goal lands in useJourneyGoals — the actual work happens server-side.
@@ -102,15 +100,20 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
     }
   }, [goals, decompActive]);
 
-  const toggleSection = (id: SectionId) =>
-    setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleSection = (id: SectionId) => toggleWorkspaceSection(id);
 
   // Derive Overview data from real state — no mock data (Directive 1).
   const overview = useMemo(() => deriveOverview(goals, isLoading), [goals, isLoading]);
 
   const selectedGoal = useMemo(
-    () => (selection ? goals.find((g) => g.id === selection.goalId) ?? null : null),
-    [goals, selection],
+    () => {
+      if (!selection) return null;
+      const persistedGoal = goals.find((g) => g.id === selection.goalId);
+      if (persistedGoal) return persistedGoal;
+      const panelGoal = dreamFlow.decomposedGoal;
+      return panelGoal && String(panelGoal.id) === selection.goalId ? normalizePanelGoal(panelGoal) : null;
+    },
+    [goals, selection, dreamFlow.decomposedGoal],
   );
   const selectedMilestone = useMemo(
     () =>
@@ -119,6 +122,14 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
         : null,
     [selectedGoal, selection],
   );
+
+  const selectedTaskGoalTitle = useMemo(() => {
+    if (!selectedTask?.goalId) return undefined;
+    const persistedGoal = goals.find((g) => g.id === selectedTask.goalId);
+    if (persistedGoal) return persistedGoal.title;
+    const panelGoal = dreamFlow.decomposedGoal;
+    return panelGoal && String(panelGoal.id) === selectedTask.goalId ? panelGoal.title : undefined;
+  }, [selectedTask?.goalId, goals, dreamFlow.decomposedGoal]);
 
   const askCoach = (prompt: string) => {
     // Handoff to Twin — post into the conversation input if the page listens.
@@ -212,24 +223,31 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
               selectedGoal && selectedMilestone ? (
                 <div className="space-y-2">
                   <PanelBreadcrumb
-                    crumbs={[{ label: 'Actions', onClick: () => setSelection(null) }]}
+                    crumbs={[{ label: 'Actions', onClick: () => setActionSelection(null) }]}
                     current={selectedMilestone.title}
                   />
                   <PanelMilestoneView
                     goal={selectedGoal}
                     milestone={selectedMilestone}
                     onSelectMilestone={(mid) =>
-                      setSelection({ goalId: selectedGoal.id, milestoneId: mid })
+                      setActionSelection({ goalId: selectedGoal.id, milestoneId: mid })
                     }
                     onAskCoach={askCoach}
                   />
                 </div>
+              ) : selectedTask?.task ? (
+                <PanelTaskView
+                  task={selectedTask.task}
+                  goalTitle={selectedTaskGoalTitle}
+                  onBack={() => setSelectedTask(null)}
+                  onAskCoach={askCoach}
+                />
               ) : (
                 <ActionHub
                   goals={goals}
                   isLoading={isLoading}
                   onSelectMilestone={(goalId, milestoneId) =>
-                    setSelection({ goalId, milestoneId })
+                    setActionSelection({ goalId, milestoneId })
                   }
                 />
               )
@@ -334,6 +352,28 @@ function readLastConversationSubject(): { title: string; hint?: string } | null 
   } catch {
     return null;
   }
+}
+
+function normalizePanelGoal(goal: any): Goal {
+  const milestones = Array.isArray(goal?.milestones) ? goal.milestones : [];
+  const completedMilestones = milestones.filter((m: any) => !!m?.completed).length;
+  const progress = milestones.length > 0 ? Math.round((completedMilestones / milestones.length) * 100) : 0;
+
+  return {
+    id: String(goal.id),
+    title: typeof goal.title === 'string' ? goal.title : 'Untitled Goal',
+    description: typeof goal.description === 'string' ? goal.description : '',
+    deadline: goal.target_completion ?? goal.deadline,
+    category: goal.category ?? 'personal',
+    progress: goal.progress ?? progress,
+    alignedWith: Array.isArray(goal.blueprint_insights) ? goal.blueprint_insights : [],
+    milestones: milestones.map((m: any, index: number) => ({
+      id: String(m?.id ?? `milestone-${index}`),
+      title: typeof m?.title === 'string' ? m.title : `Milestone ${index + 1}`,
+      completed: !!m?.completed,
+      order_index: typeof m?.order_index === 'number' ? m.order_index : typeof m?.order === 'number' ? m.order : index,
+    })),
+  };
 }
 
 // ————————————————————————————————————————————————————————————
