@@ -33,7 +33,7 @@ const intentConfig: Array<{
   emoji: string;
   label: string;
 }> = [
-  { action: "understand", emoji: "🧠", label: "Help me understand this better" },
+  { action: "understand", emoji: "🧠", label: "Help me understand this" },
   { action: "change_pattern", emoji: "🌱", label: "Help me change this pattern" },
   { action: "achieve", emoji: "🎯", label: "Help me achieve this" },
   { action: "remember", emoji: "💭", label: "Help me remember this" },
