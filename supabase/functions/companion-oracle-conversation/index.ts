@@ -651,6 +651,16 @@ async function getBehavioralMemoryContext(
       .sort((a, b) => b.relevanceScore - a.relevanceScore)
       .slice(0, maxMemories);
 
+    // Guaranteed slot (v2.6): "Help me remember this" promises don't-let-
+    // this-be-lost — the newest explicitly remembered insight always
+    // surfaces, even when keyword overlap favors older rows.
+    const newestInsight = scoredMemories
+      .filter((m) => m.memory_type === 'insight')
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+    if (newestInsight && topMemories.length > 0 && !topMemories.some((m) => m.id === newestInsight.id)) {
+      topMemories[topMemories.length - 1] = newestInsight;
+    }
+
     // Extract behavioral patterns from memory content
     const patterns = topMemories
       .filter(m => (m.importance_score ?? 0) > 5)
