@@ -17,6 +17,8 @@ import { useTaskBoard, type BoardTaskStatus } from '@/hooks/use-task-board';
 import { SubTaskManager } from '@/components/task/SubTaskManager';
 import { SessionProgress } from '@/components/task/SessionProgress';
 import { JourneyAgenticTools } from '@/services/journey-agentic-tools';
+import { PomodoroTimer } from '@/components/productivity/PomodoroTimer';
+import { Timer } from 'lucide-react';
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
 import { toast } from 'sonner';
 
@@ -333,10 +335,31 @@ export const PanelTaskView: React.FC<PanelTaskViewProps> = ({
         </section>
       )}
 
+      {/* Wave 3: the built Pomodoro — real focus sessions logged to
+          user_activities — behind one quiet toggle (one primary rule) */}
+      <FocusTimerSection focusType={task?.title ?? 'task'} />
+
       {/* Wave 1: the TASK-AWARE coach (was mis-wired to the program-aware
           engine) — with session persistence shared with the Dreams task
           coach and the built quick-action chips. */}
       <PanelTaskCoachDock task={task} goalId={goalId ?? boardTask?.goalId} />
+    </div>
+  );
+};
+
+const FocusTimerSection: React.FC<{ focusType: string }> = ({ focusType }) => {
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return (
+      <Button variant="outline" size="sm" className="w-full h-8 text-xs" onClick={() => setOpen(true)}>
+        <Timer className="h-3.5 w-3.5 mr-1.5" />
+        Start a focus timer
+      </Button>
+    );
+  }
+  return (
+    <div className="[&_.rounded-2xl]:rounded-lg">
+      <PomodoroTimer focusType={focusType} />
     </div>
   );
 };
