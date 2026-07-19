@@ -35,6 +35,10 @@ import { PanelTransformIntake } from './panel/PanelTransformIntake';
 import { PanelProgramsSection } from './panel/PanelProgramsSection';
 import { useWorkspace, type WorkspaceSectionId } from '@/contexts/WorkspaceContext';
 import { useHelpHistory } from '@/hooks/use-help-history';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { DOMAIN_LABELS } from '@/services/transformation-intake-service';
 
 interface CoachWorkspaceShellProps {
   /** Legacy context tools slot — rendered inside the Tools section drawer. */
@@ -61,6 +65,24 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
     toggleWorkspaceSection,
   } = useWorkspace();
   const [decompActive, setDecompActive] = useState(false);
+  const { user } = useAuth();
+  // Progressive workspace (v2.7 rule 2b): drawers hide behind ONE
+  // "Show more"; they auto-reveal when navigation opens a section.
+  const [drawersRevealed, setDrawersRevealed] = useState(false);
+  const { data: transformPrograms = [] } = useQuery({
+    queryKey: ['shell-transform-programs', user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('growth_programs')
+        .select('id, domain, current_week, total_weeks, blueprint_params')
+        .eq('user_id', user!.id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
   const knownGoalIdsRef = useRef<Set<string>>(new Set());
   const sectionRefs = useRef<Record<SectionId, HTMLDivElement | null>>({
     programs: null,
@@ -77,8 +99,13 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
     return onCoachOpen((detail) => {
       const section = (detail.section ?? 'actions') as CoachSectionId;
       openWorkspaceSection(section as SectionId);
+      setDrawersRevealed(true);
     });
   }, [openWorkspaceSection]);
+
+  useEffect(() => {
+    if (selection || selectedTask) setDrawersRevealed(true);
+  }, [selection, selectedTask]);
 
   // Track decomposition lifecycle so the shell can auto-complete when a new
   // goal lands in useJourneyGoals — the actual work happens server-side.
@@ -110,8 +137,12 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
 
   const toggleSection = (id: SectionId) => toggleWorkspaceSection(id);
 
-  // Derive Overview data from real state — no mock data (Directive 1).
-  const overview = useMemo(() => deriveOverview(goals, isLoading), [goals, isLoading]);
+  // Level 1: ONE journey overview — where am I / what matters now / what's
+  // next (v2.7 rule 2b). Real state only (Directive 1).
+  const journey = useMemo(
+    () => deriveJourneyOverview(goals, transformPrograms, isLoading),
+    [goals, transformPrograms, isLoading],
+  );
 
   const selectedGoal = useMemo(
     () => {
@@ -167,64 +198,46 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
         </p>
       </div>
 
-      {/* OVERVIEW — three pieces with real hierarchy: Focus is THE primary
-          card and carries the panel's one action; thread + suggestion are
-          quiet supporting rows (UX deck: one primary action per screen,
-          hierarchy on the data, actionable empty states). */}
-      <section aria-label="Overview" className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Overview
-          </h4>
-        </div>
-        {pendingTransformIntake ? (
-          <PanelTransformIntake />
-        ) : pendingIntake ? (
-          <PanelDreamFlow />
-        ) : (
+      {/* LEVEL 1 (v2.7 rule 2b): during an intake flow that flow IS the one
+          primary container; otherwise the single Journey Overview answers
+          where am I / what matters now / what's next. Nothing competes. */}
+      {pendingTransformIntake ? (
+        <PanelTransformIntake />
+      ) : pendingIntake ? (
+        <PanelDreamFlow />
+      ) : (
+        <>
           <PanelDecompositionCard />
-        )}
-        <div className="space-y-2">
-          <FocusCard
-            title={overview.focus.title}
-            hint={overview.focus.hint}
-            emptyCta={overview.focus.emptyCta}
-            action={
-              overview.focus.goalId && overview.focus.milestoneId
-                ? {
-                    // v2.7: state navigation, never a prompt into the Twin —
-                    // opens the milestone (with its own coach dock) in Actions.
-                    label: 'Work on this',
-                    onClick: () =>
-                      setActionSelection({
-                        goalId: overview.focus.goalId!,
-                        milestoneId: overview.focus.milestoneId!,
-                      }),
-                  }
-                : {
-                    label: 'Open the Action Hub',
-                    onClick: () => openWorkspaceSection('actions'),
-                  }
-            }
+          <JourneyOverviewCard
+            journey={journey}
+            onWorkOnThis={() => {
+              if (journey.goalId && journey.milestoneId) {
+                setActionSelection({ goalId: journey.goalId, milestoneId: journey.milestoneId });
+              } else {
+                openWorkspaceSection(journey.kind === 'transformation' ? 'programs' : 'actions');
+                setDrawersRevealed(true);
+              }
+            }}
+            onSeeRoadmap={() => {
+              openWorkspaceSection('programs');
+              setDrawersRevealed(true);
+            }}
           />
-          <OverviewCard
-            icon={MessageCircle}
-            label="Current Thread"
-            title={overview.thread.title}
-            hint={overview.thread.hint}
-            emptyCta={overview.thread.emptyCta}
-          />
-          <OverviewCard
-            icon={Sparkles}
-            label="Suggested Next Action"
-            title={overview.suggestion.title}
-            hint={overview.suggestion.hint}
-            emptyCta={overview.suggestion.emptyCta}
-          />
-        </div>
-      </section>
+        </>
+      )}
 
-      {/* Six-section IA — collapsed by default, progressive disclosure */}
+      {/* LEVELS 2-3 live behind ONE "Show more"; navigation auto-reveals. */}
+      {!drawersRevealed ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setDrawersRevealed(true)}
+          className="w-full h-8 text-xs text-muted-foreground hover:text-foreground justify-center"
+        >
+          Show more
+          <ChevronDown className="ml-1 h-3.5 w-3.5" />
+        </Button>
+      ) : (
       <div className="space-y-2">
         {SECTION_ORDER.map((id) => (
           <div key={id} ref={(node) => { sectionRefs.current[id] = node; }}>
@@ -282,6 +295,7 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 };
@@ -290,95 +304,73 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
 // Overview data derivation — reads real state, honest empty states.
 // ————————————————————————————————————————————————————————————
 
-interface OverviewSlot {
+// ————————————————————————————————————————————————————————————
+// Level 1: the ONE Journey Overview (v2.7 rule 2b) — where am I /
+// what matters now / what's next. Real state, honest empty state.
+// ————————————————————————————————————————————————————————————
+
+interface JourneyOverview {
+  kind: 'achievement' | 'transformation' | 'empty' | 'loading';
   title: string;
-  hint?: string;
-  emptyCta?: string;
-  /** Set when the slot represents a real milestone the user can act on. */
-  milestoneTitle?: string;
+  /** 0-100 for achievement; week-based for transformation. */
+  progressPct: number | null;
+  progressLabel: string;
+  todayLine: string | null;
+  nextLine: string | null;
   goalId?: string;
   milestoneId?: string;
 }
 
-interface OverviewData {
-  focus: OverviewSlot;
-  thread: OverviewSlot;
-  suggestion: OverviewSlot;
-}
+function deriveJourneyOverview(
+  goals: Goal[],
+  transformPrograms: any[],
+  loading: boolean,
+): JourneyOverview {
+  if (loading && goals.length === 0 && transformPrograms.length === 0) {
+    return { kind: 'loading', title: 'Loading…', progressPct: null, progressLabel: '', todayLine: null, nextLine: null };
+  }
 
-function deriveOverview(goals: Goal[], loading: boolean): OverviewData {
-  if (loading) {
+  // Primary journey: the first active achievement program with open work;
+  // otherwise the newest transformation program.
+  const activeGoal = goals.find((g) => (g.progress ?? 0) < 100 && g.milestones?.length > 0);
+  const activeMilestone: GoalMilestone | undefined = activeGoal?.milestones.find((m) => !m.completed);
+
+  if (activeGoal && activeMilestone) {
+    const idx = activeGoal.milestones.findIndex((m) => m.id === activeMilestone.id);
+    const after = activeGoal.milestones.slice(idx + 1).find((m) => !m.completed);
     return {
-      focus: { title: 'Loading…' },
-      thread: { title: 'Loading…' },
-      suggestion: { title: 'Loading…' },
+      kind: 'achievement',
+      title: activeGoal.title,
+      progressPct: activeGoal.progress ?? 0,
+      progressLabel: `${activeGoal.progress ?? 0}% · step ${idx + 1} of ${activeGoal.milestones.length}`,
+      todayLine: activeMilestone.title,
+      nextLine: after ? after.title : null,
+      goalId: activeGoal.id,
+      milestoneId: activeMilestone.id,
     };
   }
 
-  // Today's Focus: first active program with an incomplete milestone.
-  const activeGoal = goals.find((g) => (g.progress ?? 0) < 100 && g.milestones?.length > 0);
-  const activeMilestone: GoalMilestone | undefined = activeGoal?.milestones.find((m) => !m.completed);
-  // Dynamic personal context (UX deck: "you slept 2 hours longer than
-  // yesterday" beats a static count): step position inside the program.
-  const stepIndex = activeGoal && activeMilestone
-    ? activeGoal.milestones.findIndex((m) => m.id === activeMilestone.id)
-    : -1;
-  const focus: OverviewSlot = activeMilestone
-    ? {
-        title: activeMilestone.title,
-        hint: activeGoal
-          ? `${activeGoal.title}${stepIndex >= 0 ? ` · step ${stepIndex + 1} of ${activeGoal.milestones.length}` : ''}`
-          : undefined,
-        milestoneTitle: activeMilestone.title,
-        goalId: activeGoal?.id,
-        milestoneId: activeMilestone.id,
-      }
-    : {
-        title: 'Nothing on the table yet',
-        emptyCta: 'Select a sentence in the conversation to start a program — or ask below.',
-      };
-
-  // Current Thread: last conversation subject, set by the Coach page.
-  const lastSubject = readLastConversationSubject();
-  const thread: OverviewSlot = lastSubject
-    ? { title: lastSubject.title, hint: lastSubject.hint }
-    : {
-        title: 'No recent conversation',
-        emptyCta: 'Open the companion to start talking.',
-      };
-
-  // Suggested Next Action: derived from the next incomplete milestone
-  // across other active programs (not the primary focus). Honest empty
-  // state when nothing queued.
-  const otherActive = goals.filter(
-    (g) => g !== activeGoal && (g.progress ?? 0) < 100 && (g.milestones?.length ?? 0) > 0,
-  );
-  const nextMilestone = otherActive
-    .flatMap((g) => g.milestones.map((m) => ({ m, g })))
-    .find(({ m }) => !m.completed);
-  const suggestion: OverviewSlot = nextMilestone
-    ? { title: nextMilestone.m.title, hint: nextMilestone.g.title }
-    : {
-        title: 'No suggestion right now',
-        emptyCta: 'The twin will suggest when the moment is right.',
-      };
-
-  return { focus, thread, suggestion };
-}
-
-function readLastConversationSubject(): { title: string; hint?: string } | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = window.localStorage.getItem('coach-workspace:last-thread');
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed.title === 'string' && parsed.title.trim()) {
-      return { title: parsed.title, hint: typeof parsed.hint === 'string' ? parsed.hint : undefined };
-    }
-    return null;
-  } catch {
-    return null;
+  const tp = transformPrograms[0];
+  if (tp) {
+    const pattern = tp.blueprint_params?.pattern_seed as string | undefined;
+    return {
+      kind: 'transformation',
+      title: pattern ? `“${pattern}”` : (DOMAIN_LABELS[tp.domain as keyof typeof DOMAIN_LABELS] ?? tp.domain),
+      progressPct: tp.total_weeks ? Math.round(((tp.current_week - 1) / tp.total_weeks) * 100) : null,
+      progressLabel: `Week ${tp.current_week} of ${tp.total_weeks}`,
+      todayLine: DOMAIN_LABELS[tp.domain as keyof typeof DOMAIN_LABELS] ?? tp.domain,
+      nextLine: null,
+    };
   }
+
+  return {
+    kind: 'empty',
+    title: 'No journey yet',
+    progressPct: null,
+    progressLabel: '',
+    todayLine: null,
+    nextLine: 'Select a sentence in the conversation to start one.',
+  };
 }
 
 function normalizePanelGoal(goal: any): Goal {
@@ -403,75 +395,64 @@ function normalizePanelGoal(goal: any): Goal {
   };
 }
 
-// ————————————————————————————————————————————————————————————
-// Presentational primitives
-// ————————————————————————————————————————————————————————————
+const JourneyOverviewCard: React.FC<{
+  journey: JourneyOverview;
+  onWorkOnThis: () => void;
+  onSeeRoadmap: () => void;
+}> = ({ journey, onWorkOnThis, onSeeRoadmap }) => (
+  <Card className="p-4 border-primary/30 bg-primary/5 space-y-2.5">
+    <div>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/80">
+        {journey.kind === 'transformation' ? '🌱 Journey' : 'Journey'}
+      </p>
+      <p className="text-base font-semibold text-foreground mt-0.5 leading-snug">{journey.title}</p>
+    </div>
 
-interface OverviewCardProps {
-  icon: React.ElementType;
-  label: string;
-  title: string;
-  hint?: string;
-  emptyCta?: string;
-}
-
-/**
- * FocusCard — the Overview's PRIMARY piece. Bigger type on the data (the
- * milestone), tinted surface, and the panel's single action button. Empty
- * state is an invitation with a tap, never dead text.
- */
-const FocusCard: React.FC<{
-  title: string;
-  hint?: string;
-  emptyCta?: string;
-  action: { label: string; onClick: () => void };
-}> = ({ title, hint, emptyCta, action }) => (
-  <Card className="p-4 border-primary/30 bg-primary/5">
-    <div className="flex items-start gap-3">
-      <div className="mt-0.5 h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-        <Target className="h-4.5 w-4.5 text-primary" />
+    {journey.progressPct !== null && (
+      <div className="space-y-1">
+        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full bg-primary transition-all"
+            style={{ width: `${journey.progressPct}%` }}
+          />
+        </div>
+        <p className="text-[11px] text-muted-foreground">{journey.progressLabel}</p>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/80">
-          Today's Focus
-        </p>
-        <p className="text-base font-semibold text-foreground mt-0.5 leading-snug">{title}</p>
-        {hint && <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>}
-        {emptyCta && !hint && (
-          <p className="text-xs text-muted-foreground/80 mt-0.5">{emptyCta}</p>
-        )}
-        <Button
-          size="sm"
-          onClick={action.onClick}
-          className="mt-3 h-8 w-full text-xs font-semibold"
-        >
-          {action.label}
+    )}
+
+    {journey.todayLine && (
+      <p className="text-xs text-foreground">
+        <span className="text-muted-foreground">Today · </span>
+        {journey.todayLine}
+      </p>
+    )}
+    {journey.nextLine && (
+      <p className="text-xs text-muted-foreground">
+        <span>Next · </span>
+        {journey.nextLine}
+      </p>
+    )}
+
+    {journey.kind !== 'loading' && (
+      <div className="flex items-center gap-2 pt-0.5">
+        <Button size="sm" onClick={onWorkOnThis} className="h-8 flex-1 text-xs font-semibold">
+          {journey.kind === 'empty' ? 'Open the workspace' : 'Work on this'}
           <ChevronRight className="ml-1 h-3.5 w-3.5" />
         </Button>
+        {journey.kind !== 'empty' && (
+          <button
+            type="button"
+            onClick={onSeeRoadmap}
+            className="text-[11px] text-muted-foreground hover:text-foreground shrink-0"
+          >
+            Full roadmap →
+          </button>
+        )}
       </div>
-    </div>
+    )}
   </Card>
 );
 
-const OverviewCard: React.FC<OverviewCardProps> = ({ icon: Icon, label, title, hint, emptyCta }) => (
-  <Card className="p-3 border-border/60">
-    <div className="flex items-start gap-3">
-      <div className="mt-0.5 h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-        <Icon className="h-4 w-4 text-primary" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {label}
-        </p>
-        <p className="text-sm font-medium text-foreground mt-0.5 truncate">{title}</p>
-        {hint && <p className="text-xs text-muted-foreground mt-0.5 truncate">{hint}</p>}
-        {emptyCta && !hint && (
-          <p className="text-xs text-muted-foreground/80 mt-0.5">{emptyCta}</p>
-        )}
-      </div>
-    </div>
-  </Card>
-);
 
 interface SectionDrawerProps {
   label: string;

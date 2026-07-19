@@ -83,6 +83,14 @@ aware (panel actions echo into the stream as twin messages).*
 *(2) **Three-Pieces Rule** ratified as UX law for both surfaces: every
 section shows 1 primary + 2 supporting items, then "Show more". Overview
 is always three cards. Never a wall of tiles.*
+*(2b — refined Jul 19, founder): the rule is about COGNITIVE STAGES, not
+card counts. At any moment the user answers exactly three questions —
+Overview: where am I / what matters now / what's next. Task: what am I
+doing / why / start. Active: the exercise / coach guidance / complete.
+The panel is a PROGRESSIVE WORKSPACE, never a scrolling feed: ONE
+primary container per level; every "Show more" reveals ONE additional
+container; every drill-in answers the next natural question. Nothing
+else competes to be "the next thing".*
 *(3) Panel IA target recorded: **Overview · Actions (Action Hub) ·
 Insights · Memories · Tools · History**. Existing tool trees remain, moved
 behind the Tools drawer; nothing deleted (rule 10, don't delete first).*
