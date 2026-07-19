@@ -32,7 +32,7 @@ export interface PendingTransformIntake {
 
 export type DreamFlowPhase = 'building' | 'ready';
 
-export type WorkspaceSectionId = 'actions' | 'insights' | 'memories' | 'tools' | 'history';
+export type WorkspaceSectionId = 'programs' | 'actions' | 'insights' | 'memories' | 'tools' | 'history';
 
 export interface ActionSelection {
   goalId: string;
@@ -59,6 +59,7 @@ const DEFAULT_DREAM_FLOW: DreamFlowState = {
 };
 
 const DEFAULT_OPEN_SECTIONS: Record<WorkspaceSectionId, boolean> = {
+  programs: false,
   actions: false,
   insights: false,
   memories: false,

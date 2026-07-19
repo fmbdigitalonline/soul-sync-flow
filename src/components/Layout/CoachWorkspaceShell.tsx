@@ -32,6 +32,7 @@ import { PanelTaskView } from './panel/PanelTaskView';
 import { PanelBreadcrumb } from './panel/PanelBreadcrumb';
 import { PanelDreamFlow } from './panel/PanelDreamFlow';
 import { PanelTransformIntake } from './panel/PanelTransformIntake';
+import { PanelProgramsSection } from './panel/PanelProgramsSection';
 import { useWorkspace, type WorkspaceSectionId } from '@/contexts/WorkspaceContext';
 import { useHelpHistory } from '@/hooks/use-help-history';
 
@@ -43,7 +44,7 @@ interface CoachWorkspaceShellProps {
 
 type SectionId = WorkspaceSectionId;
 
-const SECTION_ORDER: SectionId[] = ['actions', 'insights', 'memories', 'tools', 'history'];
+const SECTION_ORDER: SectionId[] = ['programs', 'actions', 'insights', 'memories', 'tools', 'history'];
 
 export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacyTools, className }) => {
   const { goals, isLoading, reloadGoals } = useJourneyGoals();
@@ -62,6 +63,7 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
   const [decompActive, setDecompActive] = useState(false);
   const knownGoalIdsRef = useRef<Set<string>>(new Set());
   const sectionRefs = useRef<Record<SectionId, HTMLDivElement | null>>({
+    programs: null,
     actions: null,
     insights: null,
     memories: null,
@@ -147,6 +149,7 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
   const helpHistory = useHelpHistory();
 
   const sectionLabels: Record<SectionId, string> = {
+    programs: 'Programs',
     actions: 'Action Hub',
     insights: 'Insights',
     memories: 'Memories',
@@ -230,7 +233,15 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
               isOpen={openSections[id]}
               onToggle={() => toggleSection(id)}
             >
-            {id === 'tools' ? (
+            {id === 'programs' ? (
+              <PanelProgramsSection
+                goals={goals}
+                isLoading={isLoading}
+                onOpenMilestone={(goalId, milestoneId) =>
+                  setActionSelection({ goalId, milestoneId })
+                }
+              />
+            ) : id === 'tools' ? (
               legacyTools ?? <EmptySlot label="No tools surfaced for this moment." />
             ) : id === 'actions' ? (
               selectedGoal && selectedMilestone ? (
