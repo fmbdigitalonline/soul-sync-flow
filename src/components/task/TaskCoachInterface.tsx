@@ -842,6 +842,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
       <MobileSidebar />
       
       {/* Task Header - Mobile Responsive */}
+      {!compact && (
       <div className="border-b bg-background p-3 md:p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -956,10 +957,28 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
           </div>
         )}
       </div>
+      )}
+
+      {/* Compact mode gets a slim, single-line action bar with just
+          Mark done — the surrounding moment shell shows the title. */}
+      {compact && !taskCompleted && task.status !== 'completed' && (
+        <div className="flex items-center justify-end px-3 pt-2 pb-1">
+          <Button
+            onClick={handleCompleteTask}
+            disabled={isTaskCompleting(task.id)}
+            className="bg-emerald-600 hover:bg-emerald-700 h-8 px-3 text-xs disabled:opacity-50"
+            size="sm"
+          >
+            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+            {t('taskCoach.completeTask')}
+          </Button>
+        </div>
+      )}
 
       {/* Main Content - Mobile Responsive Layout */}
-      <div className="flex-1 flex flex-col md:flex-row gap-4 p-4 min-h-0">
+      <div className={`flex-1 flex flex-col md:flex-row min-h-0 ${compact ? 'gap-0 p-0' : 'gap-4 p-4'}`}>
         {/* Desktop Sidebar - Hidden on Mobile */}
+        {!compact && (
         <div className="hidden md:block w-80 space-y-4 overflow-y-auto">
           <SessionProgress 
             focusTime={focusTime}
@@ -992,6 +1011,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
             </>
           )}
         </div>
+        )}
 
         {/* Main Coach Interface - Full Width on Mobile */}
         <div className="flex-1 flex flex-col min-h-0">
