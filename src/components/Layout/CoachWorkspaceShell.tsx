@@ -16,10 +16,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, Target, MessageCircle, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { useJourneyGoals, type Goal, type GoalMilestone } from '@/hooks/use-journey-goals';
 import { ActionHub } from './ActionHub';
 import {
@@ -47,7 +45,6 @@ type SectionId = WorkspaceSectionId;
 const SECTION_ORDER: SectionId[] = ['actions', 'insights', 'memories', 'tools', 'history'];
 
 export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacyTools, className }) => {
-  const { t } = useLanguage();
   const { goals, isLoading, reloadGoals } = useJourneyGoals();
   const {
     pendingIntake,
