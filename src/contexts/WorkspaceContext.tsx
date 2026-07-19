@@ -19,6 +19,17 @@ export interface PendingIntake {
   source: 'sentence' | 'offer';
 }
 
+/**
+ * v2.6 "Help me change this pattern": the selected passage becomes the
+ * seed of a TRANSFORMATION program (growth engine), routed to the panel
+ * exactly like the achievement intake. Additive — parallel to
+ * pendingIntake; one operational flow is active at a time.
+ */
+export interface PendingTransformIntake {
+  /** The selected passage, verbatim — input and provenance. */
+  pattern: string;
+}
+
 export type DreamFlowPhase = 'building' | 'ready';
 
 export type WorkspaceSectionId = 'actions' | 'insights' | 'memories' | 'tools' | 'history';
@@ -61,6 +72,9 @@ interface WorkspaceContextValue {
   pendingIntake: PendingIntake | null;
   openPanelWithIntake: (intake: PendingIntake) => void;
   clearPendingIntake: () => void;
+  pendingTransformIntake: PendingTransformIntake | null;
+  openPanelWithTransformIntake: (intake: PendingTransformIntake) => void;
+  clearPendingTransformIntake: () => void;
   dreamFlow: DreamFlowState;
   patchDreamFlow: (patch: Partial<DreamFlowState>) => void;
   resetDreamFlow: () => void;
@@ -124,6 +138,18 @@ function loadPersisted(): {
 export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const initial = useMemo(loadPersisted, []);
   const [pendingIntake, setPendingIntake] = useState<PendingIntake | null>(initial.pendingIntake);
+  const [pendingTransformIntake, setPendingTransformIntake] = useState<PendingTransformIntake | null>(
+    typeof window !== 'undefined'
+      ? (() => {
+          try {
+            const raw = window.sessionStorage.getItem(STORAGE_KEY);
+            return raw ? (JSON.parse(raw)?.pendingTransformIntake ?? null) : null;
+          } catch {
+            return null;
+          }
+        })()
+      : null,
+  );
   const [dreamFlow, setDreamFlow] = useState<DreamFlowState>(initial.dreamFlow);
   const [selection, setSelection] = useState<ActionSelection | null>(initial.selection);
   const [selectedTask, setSelectedTaskState] = useState<WorkspaceTaskSelection | null>(initial.selectedTask);
@@ -135,15 +161,16 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       window.sessionStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ pendingIntake, dreamFlow, selection, selectedTask, openSections }),
+        JSON.stringify({ pendingIntake, pendingTransformIntake, dreamFlow, selection, selectedTask, openSections }),
       );
     } catch {
       /* ignore quota errors */
     }
-  }, [pendingIntake, dreamFlow, selection, selectedTask, openSections]);
+  }, [pendingIntake, pendingTransformIntake, dreamFlow, selection, selectedTask, openSections]);
 
   const openPanelWithIntake = useCallback((intake: PendingIntake) => {
     setPendingIntake(intake);
+    setPendingTransformIntake(null);
     // New intake ⇒ fresh build cycle. Preserve until user completes/dismisses.
     setDreamFlow(DEFAULT_DREAM_FLOW);
     setSelection(null);
@@ -159,6 +186,22 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setDreamFlow(DEFAULT_DREAM_FLOW);
     setSelection(null);
     setSelectedTaskState(null);
+  }, []);
+
+  // v2.6: transformation intake — parallel operational flow; opening one
+  // clears the other (one program build at a time in the panel).
+  const openPanelWithTransformIntake = useCallback((intake: PendingTransformIntake) => {
+    setPendingTransformIntake(intake);
+    setPendingIntake(null);
+    setDreamFlow(DEFAULT_DREAM_FLOW);
+    setSelection(null);
+    setSelectedTaskState(null);
+    setOpenSections((prev) => ({ ...prev, actions: true }));
+    emitCoachOpen({ section: 'actions', view: 'transformation', reason: 'intake:sentence' });
+  }, []);
+
+  const clearPendingTransformIntake = useCallback(() => {
+    setPendingTransformIntake(null);
   }, []);
 
   const patchDreamFlow = useCallback(
@@ -192,6 +235,9 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       pendingIntake,
       openPanelWithIntake,
       clearPendingIntake,
+      pendingTransformIntake,
+      openPanelWithTransformIntake,
+      clearPendingTransformIntake,
       dreamFlow,
       patchDreamFlow,
       resetDreamFlow,
@@ -207,6 +253,9 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       pendingIntake,
       openPanelWithIntake,
       clearPendingIntake,
+      pendingTransformIntake,
+      openPanelWithTransformIntake,
+      clearPendingTransformIntake,
       dreamFlow,
       patchDreamFlow,
       resetDreamFlow,

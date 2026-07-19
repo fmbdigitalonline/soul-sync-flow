@@ -18,7 +18,8 @@ export type CoachPanelView =
   | 'kanban'
   | 'roadmap'
   | 'milestone'
-  | 'decomposition';
+  | 'decomposition'
+  | 'transformation';
 
 export interface CoachOpenDetail {
   section?: CoachSectionId;
