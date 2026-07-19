@@ -69,16 +69,13 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   const [selectedSentences, setSelectedSentences] = useState<Record<string, string | null>>({});
   const [isProcessingAction, setIsProcessingAction] = useState(false);
   const [loadingAction, setLoadingAction] = useState<SentenceAction | null>(null);
-  // "Dream this" sentence action: the selected words become an intake card
-  // draft rendered under that message — fully client-side, no model call.
-  const [dreamDraft, setDreamDraft] = useState<{ messageId: string; title: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { updateChatLoading } = useGlobalChatState();
   const { isMobile } = useIsMobile();
-  
+
   // NEW: Orb Presence System - notify when chat is open and thinking
   const { setChatOpen, startLoading, completeLoading, isChatAvatar } = useOrbPresence();
-  const { openPanelWithIntake } = useWorkspace();
+  const { openPanelWithIntake, openPanelWithTransformIntake } = useWorkspace();
 
   const routeConfirmToPanel = (
     title: string,
@@ -115,39 +112,42 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     }));
   };
 
-  // Handle sentence action buttons - sends hidden context prompt
+  // The four-intent card routing (Constitution v2.6). The card asks "How
+  // can I help you with this?" — each intent routes to a different
+  // subsystem, no implementation exposed:
+  //   understand      → the Twin (hidden context prompt, stays in stream)
+  //   change_pattern  → Transformation engine (panel opens with the
+  //                     selected passage as pattern seed)
+  //   achieve         → Achievement engine (panel opens with the selected
+  //                     passage as program intake, page-form defaults)
+  //   remember        → Memory — gated until the real write lands (bug 7).
   const handleSentenceAction = async (action: SentenceAction, sentence: string) => {
-    // These are internal instructions - not shown to user
-    const hiddenPrompts: Record<string, string> = {
-      go_deeper: `[CONTEXT: User selected this sentence for deeper exploration: "${sentence}"] Expand on this insight with more depth and practical understanding.`,
-      next_action: `[CONTEXT: User wants next steps for: "${sentence}"] Provide concrete next actions they can take.`,
-      challenge: `[CONTEXT: User wants to challenge/question: "${sentence}"] Help them examine this from different angles and question assumptions.`,
-    };
-    
-    if (action === "save_insight") {
-      toast.success("Insight saved!");
+    if (action === "change_pattern") {
+      openPanelWithTransformIntake({ pattern: sentence.trim().slice(0, 200) });
       setSelectedSentences({});
       return;
     }
 
-    if (action === "dream_this") {
-      // Deterministic intake: the selected words ARE the dream title —
-      // deal the intake card locally, prefilled, no server round-trip.
-      const selectedEntry = Object.entries(selectedSentences).find(([, s]) => s === sentence);
-      const messageId = selectedEntry?.[0];
-      if (messageId) {
-        setDreamDraft({ messageId, title: sentence.trim().slice(0, 80) });
-      }
+    if (action === "achieve") {
+      // Deterministic intake: the selected words ARE the program title —
+      // straight to the panel, no server round-trip, no model call.
+      routeConfirmToPanel(sentence.trim().slice(0, 80), "personal_growth", "3 months", "sentence");
       setSelectedSentences({});
       return;
     }
-    
-    const hiddenPrompt = hiddenPrompts[action];
-    if (!hiddenPrompt) return;
-    
+
+    if (action === "remember") {
+      // v2.6 law: this chip may not ship pointing at a toast. Unreachable
+      // until the real memory write lands and the chip is rendered.
+      return;
+    }
+
+    // understand → the Twin, grounded in blueprint as always.
+    const hiddenPrompt = `[CONTEXT: User selected this sentence and asks to understand it better: "${sentence}"] Help them understand this more deeply — what it means, where it comes from, and how it shows up in their life. Speak from their blueprint as you always do; do not offer programs or plans on this turn.`;
+
     setIsProcessingAction(true);
     setLoadingAction(action);
-    
+
     try {
       setSelectedSentences({}); // Clear selection
       // Send as hidden context - adapter should handle not displaying this as user message
@@ -316,37 +316,9 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                       ) : null
                     )}
 
-                    {/* "Dream this" draft: intake card dealt from a selected
-                        sentence — page-form defaults, one confirm tap */}
-                    {dreamDraft?.messageId === message.id && (
-                      <OfferCard
-                        key={`${message.id}_dream_draft`}
-                        title={dreamDraft.title}
-                        category="personal_growth"
-                        timeframe="3 months"
-                        onConfirm={(title) => {
-                          setDreamDraft(null);
-                          if (USE_PANEL_INTAKE) {
-                            routeConfirmToPanel(title, 'personal_growth', '3 months', 'sentence');
-                            return;
-                          }
-                          emitCoachOpen({ section: 'actions', reason: 'decompose_goal_dream' });
-                          emitCoachDecomposition({ phase: 'start', dreamTitle: title });
-                          onSendMessage(`Yes — break down "${title}" into milestones.`, {
-                            confirmedAction: {
-                              type: "decompose_goal",
-                              title,
-                              category: "personal_growth",
-                              timeframe: "3 months",
-                            },
-                          });
-                        }}
-                        onDefer={() => setDreamDraft(null)}
-                        deferChip
-                      />
-                    )}
-
-                    {/* Inline action buttons when sentence is selected */}
+                    {/* Four-intent card when a sentence is selected (v2.6):
+                        the card IS the transition — choosing an operational
+                        intent opens the panel directly, no draft card. */}
                     {selectedSentences[message.id] && (
                       <div className="mt-3 pt-2 border-t border-border/30">
                         <SentenceActionButtons

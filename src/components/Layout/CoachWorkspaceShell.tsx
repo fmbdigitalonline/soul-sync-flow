@@ -31,6 +31,7 @@ import { PanelMilestoneView } from './panel/PanelMilestoneView';
 import { PanelTaskView } from './panel/PanelTaskView';
 import { PanelBreadcrumb } from './panel/PanelBreadcrumb';
 import { PanelDreamFlow } from './panel/PanelDreamFlow';
+import { PanelTransformIntake } from './panel/PanelTransformIntake';
 import { useWorkspace, type WorkspaceSectionId } from '@/contexts/WorkspaceContext';
 import { useHelpHistory } from '@/hooks/use-help-history';
 
@@ -48,6 +49,7 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
   const { goals, isLoading, reloadGoals } = useJourneyGoals();
   const {
     pendingIntake,
+    pendingTransformIntake,
     dreamFlow,
     selection,
     setActionSelection,
@@ -179,7 +181,13 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
             Overview
           </h4>
         </div>
-        {pendingIntake ? <PanelDreamFlow /> : <PanelDecompositionCard />}
+        {pendingTransformIntake ? (
+          <PanelTransformIntake />
+        ) : pendingIntake ? (
+          <PanelDreamFlow />
+        ) : (
+          <PanelDecompositionCard />
+        )}
         <div className="space-y-2">
           <FocusCard
             title={overview.focus.title}
