@@ -31,6 +31,9 @@ export const PanelDreamFlow: React.FC = () => {
     clearPendingIntake,
     dreamFlow,
     patchDreamFlow,
+    setActionSelection,
+    setSelectedTask,
+    openWorkspaceSection,
   } = useWorkspace();
   const { blueprintData } = useBlueprintCache();
 
@@ -148,12 +151,16 @@ export const PanelDreamFlow: React.FC = () => {
                   milestones={visibleMilestones}
                   isHighlighted={false}
                   onMilestoneClick={(m) => {
-                    if (typeof window !== 'undefined') {
-                      window.dispatchEvent(
-                        new CustomEvent('coach-workspace:ask', {
-                          detail: { prompt: `Tell me more about the milestone "${m.title}".` },
-                        }),
-                      );
+                    if (decomposedGoal?.id && m?.id) {
+                      setActionSelection({ goalId: String(decomposedGoal.id), milestoneId: String(m.id) });
+                      openWorkspaceSection('actions');
+                      toast.message('Milestone opened in Action Hub', { duration: 1200 });
+                    } else {
+                      console.error('PanelDreamFlow: cannot open milestone without goal and milestone IDs', {
+                        goalId: decomposedGoal?.id,
+                        milestoneId: m?.id,
+                      });
+                      toast.error('Could not open this milestone yet.');
                     }
                   }}
                 />
@@ -178,14 +185,9 @@ export const PanelDreamFlow: React.FC = () => {
                 task={firstTask}
                 isHighlighted={false}
                 onStartTask={(task) => {
-                  toast.success(`Starting "${task.title}"`);
-                  if (typeof window !== 'undefined') {
-                    window.dispatchEvent(
-                      new CustomEvent('coach-workspace:ask', {
-                        detail: { prompt: `Help me start: "${task.title}".` },
-                      }),
-                    );
-                  }
+                  setSelectedTask({ goalId: decomposedGoal?.id ? String(decomposedGoal.id) : undefined, task });
+                  openWorkspaceSection('actions');
+                  toast.success(`Task opened: ${task.title}`);
                 }}
               />
             </div>
