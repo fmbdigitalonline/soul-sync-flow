@@ -69,7 +69,8 @@ export type TransformStage =
   | 'scope_menu'
   | 'scope_domain_focus'
   | 'scope_guided'
-  | 'scope_full';
+  | 'scope_full'
+  | 'scope_interpretation';
 
 export interface TransformFlowState {
   route: TransformRoute;
