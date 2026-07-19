@@ -1,8 +1,6 @@
-
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { MapPin, ChevronRight, Calendar, Target, CheckCircle2 } from 'lucide-react';
+import { MapPin, ChevronRight, Calendar, CheckCircle2 } from 'lucide-react';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -12,37 +10,32 @@ interface MilestonesRoadmapProps {
   onMilestoneClick?: (milestone: any) => void;
 }
 
+/**
+ * Redesigned to the UX-deck laws (Jul 19):
+ * - Readability first: milestone titles never truncate (was "Recogniz…").
+ * - Recognition over recall: numbered steps + phase emoji anchors; the
+ *   current step is visually marked "you are here".
+ * - Eliminate mercilessly: the repeated "milestone" badge, the per-card
+ *   recommendation pill, the "Tap to view" label, and the footer note are
+ *   gone — the whole row is the tap target, a chevron says so.
+ * - Three pieces per row: step + title (primary), one-line description,
+ *   date + criteria meta.
+ */
 export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
   milestones,
   isHighlighted,
   onMilestoneClick
 }) => {
-  const { spacing, getTextSize, touchTargetSize, isFoldDevice, isMobile } = useResponsiveLayout();
+  const { spacing, getTextSize, touchTargetSize, isFoldDevice } = useResponsiveLayout();
   const { t } = useLanguage();
 
-  // Show ALL milestones instead of limiting to 3
-  const displayMilestones = milestones || [];
-
-  useEffect(() => {
-    const normalizedMilestones = Array.isArray(milestones) ? milestones : [];
-    console.log('🛤️ MilestonesRoadmap: milestones data received', {
-      count: normalizedMilestones.length,
-      ids: normalizedMilestones.map(milestone => milestone?.id || milestone?.title)
-    });
-  }, [milestones]);
-
-  const handleMilestoneClick = (milestone: any) => {
-    if (onMilestoneClick) {
-      onMilestoneClick(milestone);
-    }
-  };
+  const displayMilestones = Array.isArray(milestones) ? milestones : [];
+  // "You are here": the first incomplete step.
+  const currentIndex = displayMilestones.findIndex((m: any) => !m?.completed);
 
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric'
-      });
+      return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     } catch {
       return t('milestonesRoadmap.dateTbd');
     }
@@ -66,72 +59,75 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
         <MapPin className={`text-soul-purple flex-shrink-0 ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
         <span className="flex-1 min-w-0 truncate">{t('milestonesRoadmap.title')}</span>
         <Badge className={`bg-soul-purple/10 text-soul-purple border-0 flex-shrink-0 ${getTextSize('text-xs')}`}>
-          {displayMilestones.length}
+          {currentIndex >= 0 ? `${currentIndex + 1}/${displayMilestones.length}` : displayMilestones.length}
         </Badge>
       </h3>
-      
-      <div className="space-y-3 w-full">
-        {displayMilestones.map((milestone: any, index: number) => (
-          <button
-            key={milestone.id || index}
-            onClick={() => handleMilestoneClick(milestone)}
-            className={`flex items-start gap-3 bg-gradient-to-r from-soul-purple/5 to-transparent rounded-xl border border-soul-purple/10 hover:border-soul-purple/30 hover:bg-soul-purple/10 transition-all duration-300 hover:shadow-md active:scale-[0.98] w-full text-left overflow-hidden ${spacing.card} ${touchTargetSize}`}
-          >
-            <div className={`bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${getTextSize('text-sm')} ${isFoldDevice ? 'w-6 h-6' : 'w-8 h-8'}`}>
-              {index + 1}
-            </div>
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="flex-shrink-0">
-                  {getPhaseIcon(milestone.blueprint_alignment?.phase || 'foundation')}
-                </span>
-                <h4 className={`font-semibold text-gray-800 leading-tight flex-1 min-w-0 truncate ${getTextSize('text-sm')}`}>
-                  {milestone.title}
-                </h4>
-                <Badge variant="outline" className={`flex-shrink-0 ${getTextSize('text-xs')}`}>
-                  {milestone.blueprint_alignment?.phase || t('milestonesRoadmap.milestone')}
-                </Badge>
+
+      <div className="space-y-2.5 w-full">
+        {displayMilestones.map((milestone: any, index: number) => {
+          const isCurrent = index === currentIndex;
+          const isDone = !!milestone?.completed;
+          return (
+            <button
+              key={milestone.id || index}
+              onClick={() => onMilestoneClick?.(milestone)}
+              className={`flex items-start gap-3 rounded-xl border transition-all duration-300 active:scale-[0.98] w-full text-left overflow-hidden ${spacing.card} ${touchTargetSize} ${
+                isCurrent
+                  ? 'border-soul-purple/50 bg-soul-purple/10 ring-1 ring-soul-purple/30'
+                  : 'border-soul-purple/10 bg-gradient-to-r from-soul-purple/5 to-transparent hover:border-soul-purple/30 hover:bg-soul-purple/10'
+              }`}
+            >
+              {/* Step anchor: number, or a check when done */}
+              <div className={`rounded-full flex items-center justify-center font-bold flex-shrink-0 ${getTextSize('text-sm')} ${isFoldDevice ? 'w-6 h-6' : 'w-8 h-8'} ${
+                isDone
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-gradient-to-br from-soul-purple to-soul-teal text-white'
+              }`}>
+                {isDone ? <CheckCircle2 className={isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'} /> : index + 1}
               </div>
-              
-              <p className={`text-gray-600 mb-3 leading-relaxed line-clamp-2 ${getTextSize('text-xs')}`}>
-                {milestone.description}
-              </p>
-              
-              {milestone.blueprint_alignment?.recommendations && (
-                <div className="mb-3">
-                  <p className={`text-soul-purple bg-soul-purple/10 rounded-lg px-2 py-1 inline-block leading-tight line-clamp-2 ${getTextSize('text-xs')}`}>
-                    💡 {milestone.blueprint_alignment.recommendations[0] || 'Blueprint optimized for your energy type'}
-                  </p>
-                </div>
-              )}
-              
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="flex items-center gap-1">
-                    <Calendar className={`text-muted-foreground ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
-                    <span className={`text-muted-foreground ${getTextSize('text-xs')}`}>
-                      {formatDate(milestone.target_date)}
-                    </span>
-                  </div>
-                  {milestone.completion_criteria && milestone.completion_criteria.length > 0 && (
-                    <Badge variant="outline" className={getTextSize('text-xs')}>
-                      <Target className={`mr-1 ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
-                      {milestone.completion_criteria.length}
+
+              <div className="flex-1 min-w-0 overflow-hidden">
+                {/* Primary: full title, never truncated */}
+                <div className="flex items-start gap-1.5">
+                  <span className="flex-shrink-0 leading-tight">
+                    {getPhaseIcon(milestone.blueprint_alignment?.phase || 'foundation')}
+                  </span>
+                  <h4 className={`font-semibold leading-tight flex-1 min-w-0 ${getTextSize('text-sm')} ${
+                    isDone ? 'text-muted-foreground line-through' : 'text-gray-800'
+                  }`}>
+                    {milestone.title}
+                  </h4>
+                  {isCurrent && (
+                    <Badge className={`bg-soul-purple text-white border-0 flex-shrink-0 ${getTextSize('text-xs')}`}>
+                      Current
                     </Badge>
                   )}
                 </div>
-                
-                <div className="flex items-center gap-1 text-soul-purple flex-shrink-0">
-                  <span className={`font-medium ${getTextSize('text-xs')}`}>
-                    {isMobile ? t('milestonesRoadmap.tapToView') : t('milestonesRoadmap.clickToView')}
-                  </span>
-                  <ChevronRight className={isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'} />
+
+                {milestone.description && (
+                  <p className={`text-gray-600 mt-1 leading-relaxed line-clamp-1 ${getTextSize('text-xs')}`} title={milestone.description}>
+                    {milestone.description}
+                  </p>
+                )}
+
+                {/* Supporting meta: date · criteria count */}
+                <div className="flex items-center justify-between gap-2 mt-1.5">
+                  <div className={`flex items-center gap-2 text-muted-foreground ${getTextSize('text-xs')}`}>
+                    <span className="flex items-center gap-1">
+                      <Calendar className={isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'} />
+                      {formatDate(milestone.target_date)}
+                    </span>
+                    {milestone.completion_criteria?.length > 0 && (
+                      <span>· {milestone.completion_criteria.length} criteria</span>
+                    )}
+                  </div>
+                  <ChevronRight className={`text-soul-purple flex-shrink-0 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 </div>
               </div>
-            </div>
-          </button>
-        ))}
-        
+            </button>
+          );
+        })}
+
         {displayMilestones.length === 0 && (
           <div className="text-center py-6 text-gray-500">
             <MapPin className={`mx-auto mb-2 opacity-50 ${isFoldDevice ? 'h-6 w-6' : 'h-8 w-8'}`} />
@@ -139,14 +135,6 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
           </div>
         )}
       </div>
-      
-      {displayMilestones.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <p className={`text-center text-gray-500 ${getTextSize('text-xs')}`}>
-            {t('milestonesRoadmap.personalizedNote')}
-          </p>
-        </div>
-      )}
     </div>
   );
 };
