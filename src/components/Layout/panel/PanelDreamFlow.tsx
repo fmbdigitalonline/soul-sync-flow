@@ -16,8 +16,8 @@
  * enforced structurally: this component does not render section drawers.
  */
 
-import React from 'react';
-import { X, ChevronLeft, Clock, Sunrise } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, ChevronLeft, Clock, Sunrise, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
@@ -225,23 +225,14 @@ export const PanelDreamFlow: React.FC = () => {
   // ─── Moment 3 — work together. Real TaskCoachInterface. ─────────
   if (momentStage === 'working') {
     return (
-      <div className="space-y-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 px-2 text-[11px] text-muted-foreground"
-          onClick={() => patchDreamFlow({ momentStage: 'task' })}
-        >
-          <ChevronLeft className="mr-1 h-3.5 w-3.5" />
-          Pause
-        </Button>
-        <PanelTaskView
-          task={firstTask ?? { id: 'unknown', title: firstMilestone?.title ?? pendingIntake.title }}
-          goalId={decomposedGoal?.id ? String(decomposedGoal.id) : undefined}
-          goalTitle={pendingIntake.title}
-          onBack={() => patchDreamFlow({ momentStage: 'done' })}
-        />
-      </div>
+      <WorkingMoment
+        task={firstTask ?? { id: 'unknown', title: firstMilestone?.title ?? pendingIntake.title }}
+        goalId={decomposedGoal?.id ? String(decomposedGoal.id) : undefined}
+        goalTitle={pendingIntake.title}
+        onPause={() => patchDreamFlow({ momentStage: 'task' })}
+        onDone={() => patchDreamFlow({ momentStage: 'done' })}
+        onHide={() => patchDreamFlow({ dismissed: true })}
+      />
     );
   }
 
@@ -318,3 +309,96 @@ const MomentHeader: React.FC<{
 );
 
 export default PanelDreamFlow;
+
+// ─── Working moment — one compact task header + chat only. ─────────
+// Rule: exactly one moment on screen. Title + Mark done live at the top.
+// Duration/time-of-day chips + description sit behind a single
+// "Show details" disclosure (current-moment context only — never the
+// full workspace IA).
+const WorkingMoment: React.FC<{
+  task: any;
+  goalId?: string;
+  goalTitle: string;
+  onPause: () => void;
+  onDone: () => void;
+  onHide: () => void;
+}> = ({ task, goalId, goalTitle, onPause, onDone, onHide }) => {
+  const [showDetails, setShowDetails] = useState(false);
+  const duration = task?.estimated_duration ?? '30 min';
+  const timeOfDay = Array.isArray(task?.optimal_time_of_day)
+    ? task.optimal_time_of_day[0]
+    : task?.optimal_time_of_day;
+
+  return (
+    <Card className="p-3 border-primary/30 bg-primary/5 space-y-2">
+      <div className="flex items-start gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 -ml-1"
+          onClick={onPause}
+          aria-label="Pause"
+          title="Pause (keeps this step)"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Working on
+          </p>
+          <p className="text-sm font-medium text-foreground leading-snug mt-0.5" title={task?.title}>
+            {task?.title}
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={onHide}
+          aria-label="Hide"
+          title="Hide (keeps journey)"
+        >
+          <X className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setShowDetails((v) => !v)}
+        className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ChevronDown
+          className={`h-3 w-3 transition-transform ${showDetails ? '' : '-rotate-90'}`}
+        />
+        {showDetails ? 'Hide details' : 'Show details'}
+      </button>
+      {showDetails && (
+        <div className="space-y-2 pt-1">
+          <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted/50 px-2 py-0.5">
+              <Clock className="h-3 w-3" /> {duration}
+            </span>
+            {timeOfDay && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted/50 px-2 py-0.5 capitalize">
+                <Sunrise className="h-3 w-3" /> {timeOfDay}
+              </span>
+            )}
+          </div>
+          {task?.description && (
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              {task.description}
+            </p>
+          )}
+        </div>
+      )}
+
+      <PanelTaskView
+        task={task}
+        goalId={goalId}
+        goalTitle={goalTitle}
+        onBack={onDone}
+        compact
+      />
+    </Card>
+  );
+};
