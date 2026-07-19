@@ -602,8 +602,10 @@ async function getBehavioralMemoryContext(
     const needsEmotionalPattern = /\b(feel|feeling|mood|emotion|anxiety|fear)\b/i.test(message);
     const needsActionPattern = /\b(do|doing|action|approach|handle|navigate)\b/i.test(message);
     
-    // Build memory type filter
-    let memoryTypes = ['interaction']; // Always include interactions
+    // Build memory type filter. 'insight' rows are what the user
+    // explicitly asked the twin to remember ("Help me remember this",
+    // v2.6) — always included.
+    let memoryTypes = ['interaction', 'insight'];
     if (needsEmotionalPattern) memoryTypes.push('mood');
     if (needsActionPattern) memoryTypes.push('micro_action');
     
@@ -626,28 +628,35 @@ async function getBehavioralMemoryContext(
       return { memories: [], patterns: [] }; // Principle #2: Real empty state
     }
     
-    // Simple relevance scoring based on memory_content keywords
+    // Relevance scoring over memory_data. (Fixed Jul 19: this read the
+    // nonexistent column `memory_content` since inception — relevance was
+    // always 0 and pattern extraction crashed on importance>5 rows, so the
+    // twin never actually used behavioral memory.)
     const messageKeywords = (message && typeof message === 'string')
       ? message.toLowerCase().split(' ').filter(w => w.length > 4)
       : []; // Principle #3: Real empty state, not crash
-    
+
     const scoredMemories = memories.map(mem => {
-      const rawContent = mem?.memory_content != null ? JSON.stringify(mem.memory_content) : '';
+      const rawContent = mem?.memory_data != null ? JSON.stringify(mem.memory_data) : '';
       const content = rawContent.toLowerCase();
-      const relevanceScore = messageKeywords.filter(kw => content.includes(kw)).length;
+      // Explicitly remembered insights get a small prior so a fresh
+      // "remember this" isn't dropped for lacking keyword overlap.
+      const relevanceScore = messageKeywords.filter(kw => content.includes(kw)).length
+        + (mem?.memory_type === 'insight' ? 1 : 0);
       return { ...mem, relevanceScore };
     });
-    
+
     // Take top N by relevance
     const topMemories = scoredMemories
       .sort((a, b) => b.relevanceScore - a.relevanceScore)
       .slice(0, maxMemories);
-    
+
     // Extract behavioral patterns from memory content
     const patterns = topMemories
-      .filter(m => m.importance_score > 5)
+      .filter(m => (m.importance_score ?? 0) > 5)
       .map(m => {
-        const content = m.memory_content;
+        const content = m.memory_data as any;
+        if (!content || typeof content !== 'object') return null;
         if (content.insights) return content.insights;
         if (content.summary) return content.summary;
         return null;

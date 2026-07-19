@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
  * - understand   → the Twin, stays in conversation
  * - change_pattern → Transformation engine, opens the Coach panel
  * - achieve      → Achievement engine, opens the Coach panel
- * - remember     → Memory. NOT rendered yet: v2.6 law — this chip may not
- *   ship pointing at a toast (bug 7). It appears when the real memory
- *   write lands.
+ * - remember     → Memory — a REAL write to user_session_memory
+ *   (insight-memory-service), retrievable by the Twin's behavioral
+ *   memory context. Enabled since the write landed (bug 7 closed).
  */
 export type SentenceAction = "understand" | "change_pattern" | "achieve" | "remember";
 
@@ -36,7 +36,7 @@ const intentConfig: Array<{
   { action: "understand", emoji: "🧠", label: "Help me understand this better" },
   { action: "change_pattern", emoji: "🌱", label: "Help me change this pattern" },
   { action: "achieve", emoji: "🎯", label: "Help me achieve this" },
-  // { action: "remember", emoji: "💭", label: "Help me remember this" } — gated on the real memory write (bug 7).
+  { action: "remember", emoji: "💭", label: "Help me remember this" },
 ];
 
 export const SentenceActionButtons: React.FC<SentenceActionButtonsProps> = ({

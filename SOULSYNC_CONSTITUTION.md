@@ -388,7 +388,11 @@ a user-visible demo and a fresh-account test.
 5. Language drift (Dutch reply to English message, once). Monitor.
 6. Empty retrieval at first contact (facts 0, MBTI Unknown); verify on next
    clean run.
-7. Save Insight chip is fake (toast only) → Phase 2 §5.
+7. Save Insight chip is fake → FIXED Jul 19 (v2.6 Step 2): "Help me
+   remember this" writes user_session_memory (type 'insight',
+   memory_data.summary carries the passage) — the store the oracle's
+   behavioral context reads; oracle now always includes 'insight' rows.
+   Verify in preview after next edge deploy.
 8. Blueprint de-vibe (char-count badges ~899–1105 in
    PersonalityReportViewer, metadata badges, mid-sentence summary) → Ph 2 §5.
 9. First-contact threadId undefined (once; re-verify with bug 1).
@@ -427,5 +431,7 @@ a user-visible demo and a fresh-account test.
     decompose_goal (confirmedAction legacy rail only).
 16. search-similar-messages broken (invalid vector syntax) → message
     embeddings written every turn, never readable. hacs-coach-conversation
-    can't boot (duplicate const). Oracle behavioral scorer reads nonexistent
-    column (memory_content) → relevance always 0. (§4.4-4.6.)
+    can't boot (duplicate const). Oracle behavioral scorer: FIXED Jul 19
+    (read memory_content → memory_data; relevance was always 0 and
+    pattern extraction crashed on importance>5 rows since inception).
+    Remaining items still open. (§4.4-4.6.)

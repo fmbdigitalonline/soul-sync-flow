@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PresenceFrame, PresenceState } from "@/components/companion/PresenceFrame";
 import { emitCoachOpen, emitCoachDecomposition } from "@/lib/coach-workspace-bus";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
+import { saveRememberedInsight } from "@/services/insight-memory-service";
 
 /**
  * Feature flag: route OfferCard confirmations into the panel-hosted flow
@@ -137,8 +138,22 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     }
 
     if (action === "remember") {
-      // v2.6 law: this chip may not ship pointing at a toast. Unreachable
-      // until the real memory write lands and the chip is rendered.
+      // REAL memory write (bug 7 closed): user_session_memory type
+      // 'insight' — the store the oracle's behavioral context reads.
+      setIsProcessingAction(true);
+      setLoadingAction(action);
+      try {
+        const result = await saveRememberedInsight(sentence);
+        if (result.ok) {
+          toast.success("Remembered.");
+        } else {
+          toast.error(result.error || "Couldn't remember this right now.");
+        }
+      } finally {
+        setIsProcessingAction(false);
+        setLoadingAction(null);
+        setSelectedSentences({});
+      }
       return;
     }
 
