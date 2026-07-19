@@ -1,6 +1,60 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v2.5)
+# SoulSync — Developer Constitution & Wiring Roadmap (v2.6)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v2.6 — The four-intent card + two-engine orchestration ratified (founder,
+Jul 19 2026).*
+
+*IDENTITY: a blueprint-driven Personal Development OS with two synergistic
+interfaces. The TWIN is the conversational manifestation of the user's
+integrated blueprint intelligence — it reflects, interprets, explains,
+challenges, connects patterns, explores implications, surfaces
+opportunities ("inner voice" is the emotional metaphor, not the
+definition). The COACH OS (side panel) is an ORCHESTRATION LAYER over
+multiple growth engines: it does not do the work itself — it routes the
+user's intent to the right engine, preserves the selected passage as
+input and provenance, and manages progress across engines.*
+
+*LAW — the Twin speaks from the blueprint. Every Twin reply is already
+informed by the hermetic report, numerology, MBTI, memory, and retrieval.
+No card option may ask the Twin to "use its brain" (a "compare with
+blueprint" chip is an implementation leak and is forbidden).*
+
+*TWO ORTHOGONAL ENGINES (not large-and-small — different questions):*
+*— ACHIEVEMENT engine (dreams/decomposition): "What do I want to
+accomplish?" Goal → milestones → work instructions → microtasks →
+progress. Success = outcomes.*
+*— TRANSFORMATION engine (growth programs, the Spiritual Growth stack):
+"What within me needs to change?" Pattern → beliefs → reflections →
+exercises → micro-actions → integration. Success = inner change (mood,
+reflections, belief shifts). Blueprint-parameterized weekly arcs
+(foundation → belief excavation → blueprint activation → deep dive →
+integration → graduation) across 12 life domains.*
+*BOTH engines run their programs IN THE SIDE PANEL (founder clause,
+ratification condition): "Help me change this pattern" opens the Coach
+OS exactly like "Help me achieve this".*
+
+*THE FOUR-INTENT CARD — on sentence selection the card asks "How can I
+help you with this?" and offers exactly these, relational wording fixed:*
+*🧠 "Help me understand this better" → Twin, stays in conversation.*
+*🌱 "Help me change this pattern" → Transformation engine, panel.*
+*🎯 "Help me achieve this" → Achievement engine, panel.*
+*💭 "Help me remember this" → Memory, REAL write (bug 7 fix is a shipping
+prerequisite of this chip — it may not point at a toast).*
+*The invariant "Help me…" prefix is deliberate: the user asks a mind for
+help, never commands software. Intent, never implementation: no engine
+names, no mechanism words in labels.*
+
+*SUPPORTING LAWS: insight is the originating unit (program creation is
+one transformation among several, never the universal destination);
+verbs at entry points, nouns as destinations (stable panel IA —
+Overview · Programs · Actions · Insights · Memories · Tools · History —
+with dynamic opening state prefilled by the selected passage); PM
+mechanics stay invisible beneath coaching language; the loop closes —
+completed work, reflections, and progress write back into memory so
+future Twin conversations are more informed (finishing the stubbed
+warm/cold writeback is hereby a named obligation, not background noise).
+Supersedes v2.5.*
 
 *v2.5 — Two-halves-of-one-mind ratified (founder, Jul 18 2026). Vision
 paragraph adopted: **the Twin helps you think, the Coach helps you act,
