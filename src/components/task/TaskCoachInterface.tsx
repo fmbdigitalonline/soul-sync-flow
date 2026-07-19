@@ -56,6 +56,14 @@ interface TaskCoachInterfaceProps {
   task: Task;
   onBack: () => void;
   onTaskComplete: (taskId: string) => void;
+  /**
+   * Compact mode — used when the interface is embedded inside the Coach
+   * side panel's "working" moment. It suppresses the internal header,
+   * description, chips, progress bar, timer, sidebar, gate screen and
+   * footer tagline so the surrounding moment shell owns that chrome.
+   * The chat surface (messages + composer + Mark done) is preserved.
+   */
+  compact?: boolean;
 }
 
 // EnhancedCoachInterface's Message type
@@ -73,7 +81,8 @@ interface CoachMessage {
 export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   task,
   onBack,
-  onTaskComplete
+  onTaskComplete,
+  compact = false,
 }) => {
   const { t } = useLanguage();
   const { isMobile, isUltraNarrow, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
