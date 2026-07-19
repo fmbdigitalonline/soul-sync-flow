@@ -59,6 +59,13 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
   } = useWorkspace();
   const [decompActive, setDecompActive] = useState(false);
   const knownGoalIdsRef = useRef<Set<string>>(new Set());
+  const sectionRefs = useRef<Record<SectionId, HTMLDivElement | null>>({
+    actions: null,
+    insights: null,
+    memories: null,
+    tools: null,
+    history: null,
+  });
 
   // Slice C: auto-expand the requested section when the twin dispatches
   // a handshake event (e.g. decompose_goal confirmed).
@@ -127,6 +134,13 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
     const panelGoal = dreamFlow.decomposedGoal;
     return panelGoal && String(panelGoal.id) === selectedTask.goalId ? panelGoal.title : undefined;
   }, [selectedTask?.goalId, goals, dreamFlow.decomposedGoal]);
+
+  useEffect(() => {
+    if (!selection && !selectedTask) return;
+    window.requestAnimationFrame(() => {
+      sectionRefs.current.actions?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [selection, selectedTask]);
 
   const askCoach = (prompt: string) => {
     // Handoff to Twin — post into the conversation input if the page listens.
@@ -208,12 +222,12 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
       {/* Six-section IA — collapsed by default, progressive disclosure */}
       <div className="space-y-2">
         {SECTION_ORDER.map((id) => (
-          <SectionDrawer
-            key={id}
-            label={sectionLabels[id]}
-            isOpen={openSections[id]}
-            onToggle={() => toggleSection(id)}
-          >
+          <div key={id} ref={(node) => { sectionRefs.current[id] = node; }}>
+            <SectionDrawer
+              label={sectionLabels[id]}
+              isOpen={openSections[id]}
+              onToggle={() => toggleSection(id)}
+            >
             {id === 'tools' ? (
               legacyTools ?? <EmptySlot label="No tools surfaced for this moment." />
             ) : id === 'actions' ? (
@@ -253,7 +267,8 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
             ) : (
               <EmptySlot label={placeholderFor(id)} />
             )}
-          </SectionDrawer>
+            </SectionDrawer>
+          </div>
         ))}
       </div>
     </div>
