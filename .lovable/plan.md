@@ -1,368 +1,195 @@
-# Wire Spiritual Growth into the Transformation Flow
+## Goal
 
-Turn "Help me change this pattern" into a single orchestrated journey inside the Coach panel. The existing Spiritual Growth components stay — they become **stages and capabilities** invoked contextually, never destinations the user navigates to.
+Keep the Coach "on stage" through the Pattern Scope route. Insert a Coach interpretation layer before any Life OS dashboard appears, and unify the conversational label voice across Steps 2 and 4.
 
-`/spiritual-growth` remains as a legacy direct-entry page. All sentence-triggered transformation runs entirely inside `PanelTransformIntake` (rebuilt) — no full-page navigation, no tile grids, no tool menus.
+## Scope
 
-## The single decision point
+UI/presentation only. No changes to Life OS services, assessment engines, `useLifeOrchestrator`, or any edge functions. Reuses existing components — adds one new interpretation screen and rewords labels.
 
-After the user picks 🌱 on a sentence, one card appears:
+## Changes
 
-```text
-Help me transform this
-"You often suppress your own needs to avoid disappointing others."
+### 1. New: Coach interpretation screen (Pattern Scope route)
 
-  → Work through this now
-  → Start a transformation program
-  → See the bigger pattern
-```
+New file: `src/components/Layout/panel/transform/TransformScopeInterpretation.tsx`
 
-Three routes. Everything already built lives underneath one of them.
-
-## Route mapping (existing components → transformation stages)
+Renders before the three scope choices (currently in `TransformPatternScope` `chooser`/`scope_menu` stage). Structure:
 
 ```text
-intake ──┬── immediate      ── ReflectiveGrowthInterface + ImmediateGrowthInterface
-         │                     + MoodTracker / ReflectionPrompts / InsightJournal
-         │                       (invoked contextually, never as a "Tools" menu)
-         │
-         ├── program        ── PanelTransformIntake (current confirm/build/ready)
-         │                     + GrowthBeliefDrilling (one question at a time)
-         │                     + RootCauseConfirmation
-         │                     + GrowthProgramGeneration
-         │                     → workspace: EnhancedProgramDisplay / WeekDetailView
-         │                                  / JourneyEngine (compressed to 3 blocks)
-         │
-         └── pattern_scope  ── LifeOperatingSystemDomainFocus  (Check this life area)
-                              ConversationalAssessment         (Explore in conversation)
-                              LifeOperatingSystemDashboard     (Review full Life OS)
-                              + ProgressiveJourneyAssessment as follow-up
+🌱 HELP ME TRANSFORM THIS
+"<verbatim passage>"
+
+Here's what I'm seeing
+This pattern seems to affect a few areas of your life most:
+  • <Domain A>
+  • <Domain B>
+  • <Domain C>            ← max 3, Rule of Three
+
+I'd suggest starting with <Domain A> — it tends to
+strengthen the others.
+
+  [ Yes, start there ]        → routes to scope_domain_focus, seeded with Domain A
+  [ Show me all areas ]       → routes to existing chooser (current 3 options)
+  [ Tell me why ]             → expands a short rationale line, stays on screen
 ```
 
-## New state machine (replaces the old ActiveView)
+Data source (no new services):
 
-Owned by `WorkspaceContext.dreamFlow` extension (add `transformFlow`):
+- Primary domain: `transformFlow.seed.inferredDomain` (already populated by `transformation-intake-service.inferDomains`).
+- Supporting domains: reuse `inferDomains` (already returns ranked list) — take the next 2 after the primary. If fewer than 3 signals, render whatever exists (1 or 2) with no padding, no fallback text.
+- Rationale line: short static template based on the primary domain label (no new AI call). If the primary domain isn't inferable, this screen is skipped and the flow falls straight through to the existing chooser (fail-visible: no fake "Coach says…").
 
-```text
-transform_intake
-  ├── transform_now
-  │     ├── transform_reflection   (ReflectionPrompts)
-  │     ├── transform_exercise     (Reflective/Immediate chat)
-  │     └── transform_micro_action (one small commit → InsightJournal)
-  ├── transform_program_confirm    (Coach's interpretation card)
-  ├── transform_program_belief     (GrowthBeliefDrilling, one Q/screen)
-  ├── transform_program_root       (RootCauseConfirmation)
-  ├── transform_program_generate   (GrowthProgramGeneration)
-  └── transform_program_workspace  (3-block overview)
-  └── transform_pattern_scope
-        ├── transform_domain_focus
-        ├── transform_guided_assessment
-        └── transform_full_overview
+### 2. Wire the interpretation as the default scope entry
+
+Edit `src/components/Layout/panel/transform/TransformPatternScope.tsx`:
+
+- Add a new stage value `scope_interpretation` and make it the default when `stage === 'chooser' || stage === 'scope_menu'` AND at least one inferred domain exists.
+- "Yes, start there" → `patchTransformFlow({ stage: 'scope_domain_focus', seed: { ...seed, inferredDomain: primary } })` so `LifeOperatingSystemDomainFocus` opens pre-scoped.
+- "Show me all areas" → falls back to the current 3-button chooser (unchanged).
+- "Tell me why" → toggles an inline rationale paragraph; no navigation.
+- Back button from `scope_menu` and from the three sub-mounts returns to `scope_interpretation` (not the raw chooser) so the Coach voice frames the return trip too.
+
+Add matching stage type to `WorkspaceContext.transformFlow.stage` union.
+
+### 3. Add a lead-in line above the dashboards (Steps 5–9)
+
+When the user does pick "Show me all areas" and lands in `scope_full` (Life OS Dashboard) or `scope_domain_focus`, prepend one line inside the panel host (in `TransformPatternScope`, above the mounted component):
+
+```
+I looked at this pattern across your Life OS. Here's what I found.
 ```
 
-## Transformation seed (structured context)
+Single sentence, muted styling, no new component. Only rendered when entering from the transform flow (i.e., `transformFlow.route === 'pattern_scope'`).
 
-Extend `PendingTransformIntake` in `WorkspaceContext` from `{ pattern }` to:
+### 4. Label consistency (Step 2 and Step 4)
 
-```ts
-type TransformSeed = {
-  selectedPassage: string;
-  sourceMessageId?: string;
-  conversationContext?: string;
-  inferredDomain?: LifeDomain;      // from transformation-intake-service.inferDomains
-  inferredPattern?: string;         // short label
-  inferredBelief?: string;          // seed for belief drilling
-  blueprintEvidence?: string[];     // 1-2 trait cues (MBTI/HD/Sun)
-  relatedProgramId?: string;        // if an active program already covers this domain
-};
-```
+Sentence intent card (Step 2) — reword the four intents to strip trailing "better" so the four are parallel:
 
-Populate at selection time in `HACSChatInterface` before opening the panel.
+- "Help me understand this better" → **"Help me understand this"**
+- Others already parallel: keep as-is.
 
-## Route 1 — Work through this now (immediate)
+Update in `src/components/hacs/SentenceActionButtons.tsx` (and any i18n keys it reads). Verify no other component hardcodes the old string.
 
-New file: `src/components/Layout/panel/transform/TransformImmediate.tsx`
+Pattern Scope chooser labels (Step 4) — keep current labels but this is the fallback path after "Show me all areas," so leave them; the Coach voice has already spoken on the interpretation screen. (Skipping the more aggressive "Help me see where this affects my life" rewording — it duplicates the interpretation screen's framing and adds no clarity here.)
 
-Container 1 — "What is happening?"
+## Files touched
 
-- Coach reflects the inferred pattern, asks one focused question via `useEnhancedAICoach("coach", "spiritual-growth")` seeded with the passage.
-- Three interactions only: Answer / I'm not sure / Show another question.
+**New**
 
-Container 2 — "What would help now?" (max 3, contextual)
+- `src/components/Layout/panel/transform/TransformScopeInterpretation.tsx`
 
-- Name what you feel → mounts `MoodTracker` inline (writes via `addMoodEntry`)
-- Explore the belief → mounts `ReflectionPrompts` (`addReflectionEntry`)
-- Capture a realization → mounts `InsightJournal` (`addInsightEntry`)
-- Continue conversationally → keeps `ReflectiveGrowthInterface` open
+**Edited**
 
-No "Tools" label anywhere. The Coach picks which of the three to surface based on the last answer.
+- `src/components/Layout/panel/transform/TransformPatternScope.tsx` — insert interpretation as default stage; add lead-in line on dashboard mounts; adjust back navigation.
+- `src/contexts/WorkspaceContext.tsx` — extend `transformFlow.stage` union with `scope_interpretation`.
+- `src/components/hacs/SentenceActionButtons.tsx` — drop "better" from the understand intent label.
 
-## Route 2 — Start a transformation program
+**Untouched (explicit)**
 
-Rebuild `PanelTransformIntake` phases so the sentence seeds the flow:
+- `transformation-intake-service.ts` — inferDomains already returns what we need.
+- All Life OS components (`LifeOperatingSystemDomainFocus`, `ConversationalAssessment`, `LifeOperatingSystemDashboard`, `ProgressiveJourneyAssessment`).
+- `PanelCoachDock`, `PanelTransformIntake` router, program flow, immediate flow.
+- Any edge function.
 
-1. **Confirm interpretation** — replaces the raw domain-chip grid:
+## Guarantees
+
+- No hardcoded fallbacks: if domain inference returns nothing, the interpretation screen is skipped and the original chooser renders — the user still gets a working path, just without the Coach framing (fail-visible per protocol).
+- Panel state persists (uses existing `WorkspaceContext` sessionStorage pattern for `transformFlow`).
+- No new AI calls, no new tables, no schema changes.
+- No regressions to the immediate route, program route, or legacy `/spiritual-growth` page.---DEV NOTE:The developer is **structurally aligned**, but I would not approve this exact version yet. The UX direction is right; two pieces of copy currently claim more intelligence than the proposed data source can support.
+  ## What is aligned
+  The developer correctly understands that:
+  - the Coach interpretation should appear before the dashboards;
+  - the Rule of Three applies to both domains and actions;
+  - the dashboard remains optional rather than becoming the immediate destination;
+  - existing Life OS components should be reused rather than rebuilt;
+  - the user can start with the recommended domain, inspect all areas, or ask for reasoning;
+  - returning from deeper screens should restore the Coach framing;
+  - the change is presentation and orchestration, not a new backend system.
+  The proposed sequence is coherent:
   ```text
-   Here's what I think you want to transform
-   • Pattern: <inferredPattern>
-   • Likely domain: <inferredDomain>
-   • Possible belief: <inferredBelief>
-   [Yes, continue] [Adjust this] [I'm not sure]
+  Selected passage
+  → Help me change this pattern
+  → Coach interpretation
+  → Recommended starting area
+  → Optional Life OS evidence
+
   ```
-   "Adjust this" falls back to the current domain chip picker (all 12, with the Three-Pieces "More…" pattern already implemented).
-2. **Belief exploration** — mount `GrowthBeliefDrilling` but render **one question per screen** (wrap it in a paginating shell that consumes its questions array). Max 3 belief candidates + "Something else".
-3. **Root confirmation** — mount `RootCauseConfirmation` with the drilled belief.
-  - Actions: `Yes, build my program` / `Refine it` / `Work through it without a program` (→ jumps to Route 1 seeded with the refined belief).
-4. **Program generation** — mount `GrowthProgramGeneration` (already wired through `growth-program-generation-service`; keep the current activation + `pattern_seed` provenance from `transformation-intake-service.createTransformationProgram`).
-5. **Workspace** — replace the current weekly-arc list with the 3-block overview (see below).
-
-## Route 3 — See the bigger pattern
-
-New file: `src/components/Layout/panel/transform/TransformPatternScope.tsx`
-
-Entry container (max 3):
-
-- Check this life area → mounts `LifeOperatingSystemDomainFocus` (domain prefilled from seed).
-- Explore it through conversation → mounts `ConversationalAssessment`.
-- Review my full Life OS → mounts `LifeOperatingSystemDashboard`.
-
-`ProgressiveJourneyAssessment` surfaces automatically after "Check this life area" when `useLifeOrchestrator.needsAssessment` says more evidence is needed. Uses existing `useLifeOrchestrator` + `LifeWheelVisualization` + `GapAnalysisDashboard` inside those components (unchanged).
-
-`LifeOperatingSystemChoices` is not used in this path — the Coach picks the right option contextually.
-
-## Transformation workspace (post-start overview)
-
-Once immediate or program is running, the panel Overview switches to a stable hierarchy — **one always-visible block, two collapsible blocks** (Three-Pieces Rule):
-
-```text
-Current transformation      ← program.title or seed pattern
-Where I am                  ← "Week 2 · Belief excavation · 35%"
-What's next                 ← next practice + duration
-[Show more]
-  Journey (max 3)           ← current week / latest insight / next milestone
-  [Show more]
-  Support (max 3)           ← Reflect with Coach / Log how I feel / Review my patterns
-                              (routes to ReflectiveGrowthInterface / MoodTracker / WeeklyInsights)
-```
-
-Coaching itself happens in the existing `PanelCoachDock` with `contextKey = transform_${programId}` (already in place).
-
-## Recent activity feed → progress summary
-
-Replace the raw 10-event list from `user_activities` with a summarized "Recent growth" block (3 lines max):
-
-- Count reflections in the last 7 days
-- Count belief shifts / insights
-- Mood delta across recent check-ins
-
-Details behind a `View activity` disclosure. Types (`reflection_entry`, `insight_entry`, `mood_entry`, `task_completed`, `ritual_completed`, `blueprint_sync`, `growth_task`, `growth_check_in`) stay internal — user sees meaning, not event names.
-
-## Personalization (silent)
-
-Blueprint traits from `useBlueprintCache`/`useBlueprintData` (MBTI, Human Design, Sun sign, preferred_name) already flow into `createTransformationProgram`. Extend that mapping to also modulate:
-
-- tone/verbosity of `useEnhancedAICoach` system prompt for immediate route
-- session length (short vs deep) via a `pace` param passed to `growthProgramGenerationService`
-- reflective vs action-first ordering of the "What would help now?" chips
-
-Never render as a trait list. Optionally a single line: "This approach is shaped around how you process decisions and emotional pressure."
-
-## What changes vs. what stays
-
-**Rebuilt / new**
-
-- `PanelTransformIntake.tsx` — becomes the route splitter (intake → immediate/program/pattern_scope) + program flow host
-- `src/components/Layout/panel/transform/TransformImmediate.tsx` — new
-- `src/components/Layout/panel/transform/TransformPatternScope.tsx` — new
-- `src/components/Layout/panel/transform/TransformWorkspaceOverview.tsx` — new (3-block overview + summarized activity)
-- `WorkspaceContext` — extend `PendingTransformIntake` to full `TransformSeed`; add `transformFlow` state (route + stage) with `sessionStorage` persistence
-- `transformation-intake-service` — expose `inferBelief(passage)` and `pace` mapping helper; keep `createTransformationProgram` and `inferDomains`
-- `HACSChatInterface` — populate the richer `TransformSeed` on 🌱 selection
-
-**Reused unchanged (imported into panel host)**
-
-- `ReflectiveGrowthInterface`, `ImmediateGrowthInterface`
-- `MoodTracker`, `ReflectionPrompts`, `InsightJournal`, `WeeklyInsights`
-- `GrowthBeliefDrilling`, `RootCauseConfirmation`, `GrowthProgramGeneration`
-- `EnhancedProgramDisplay`, `WeekDetailView`, `JourneyEngine`, `LifeAreaSelector`, `ConversationRecoveryBanner`, `TelemetryTracker`
-- `LifeOperatingSystemDomainFocus`, `ConversationalAssessment`, `LifeOperatingSystemDashboard`, `ProgressiveJourneyAssessment`, `LifeWheelVisualization`, `GapAnalysisDashboard`
-- `useEnhancedAICoach`, `useJourneyTracking`, `useLifeOrchestrator`, `useBlueprintData/Cache`, `agentGrowthIntegration`
-
-**Retired from the sentence-triggered path** (kept only on legacy `/spiritual-growth` route)
-
-- `welcome` tile grid
-- `tools` sub-menu
-- `life_os_choices` 4-mode chooser
-- `GrowthProgramOnboardingModal` (dialog) — replaced by the panel-native belief/root/generate chain
-- `GrowthCoachWelcome`, `GrowthProgramPromo`, `GrowthProgramStarter` — no cold entry needed; the sentence is the entry
-
-## Slices (implementation order)
-
-1. **Seed + splitter** — extend `TransformSeed`, populate at selection, replace `PanelTransformIntake` body with the 3-route chooser card. Existing "program" phases stay functional.
-2. **Route 1 (immediate)** — build `TransformImmediate` with the two containers and contextual tool mounts.
-3. **Route 2 (program) refactor** — insert Confirm-interpretation card before domain chips; paginate `GrowthBeliefDrilling`; mount `RootCauseConfirmation` in the panel.
-4. **Route 3 (pattern scope)** — build `TransformPatternScope` with the 3 mounts + progressive follow-up.
-5. **Workspace overview** — 3-block hierarchy + summarized activity feed; hook into program state.
-6. **Personalization pass** — pace/tone modulation, single-line copy note.
-
-## Guarantees preserved
-
-- No hardcoded fallbacks; blueprint + service paths kept.
-- `pattern_seed` provenance and program activation from `transformation-intake-service` unchanged.
-- Panel state persists across sheet close (existing `WorkspaceContext` sessionStorage pattern applies to `transformFlow`).
-- Twin chat stays clean — no `askCoach` handoffs added; all coaching stays in `PanelCoachDock`.
-- Legacy `/spiritual-growth` route remains reachable so nothing regresses.*************
-  -- DEV NOTE: dont create new card for the sentence selection we already have the help me transform or something like that and The core alignment is correct:
-  - Sentence-triggered transformation stays entirely inside the Coach panel.
-  - Existing Spiritual Growth components become contextual stages, not destinations.
-  - There is one entry point with three transformation depths.
-  - The domain and belief flow is seeded by the selected sentence.
-  - Tools are invoked contextually rather than exposed through a Tools menu.
-  - The transformation workspace becomes one primary overview container with progressive disclosure.
-  - The legacy Spiritual Growth page remains available without contaminating the new flow.
-  ## What is especially well aligned
-  ### 1. The developer understood orchestration
-  This sentence is exactly right:
-  > Existing components stay—they become stages and capabilities invoked contextually, never destinations.
-  That is the essential architectural shift. They are not proposing a redesigned Spiritual Growth homepage; they are converting the existing system into an engine behind **Help me transform this**.
-  ### 2. The three routes match the intended transformation model
-  The mapping is clean:
-  - immediate support;
-  - structured transformation program;
-  - wider Life OS pattern assessment.
-  The developer also correctly maps the existing components beneath each route instead of rebuilding them unnecessarily.
-  ### 3. The program path uses the selected sentence intelligently
-  The proposed flow does not ask users to begin with an empty twelve-domain picker. It first infers:
-  - the pattern;
-  - the likely life domain;
-  - the possible underlying belief.
-  Then the user confirms or corrects that interpretation. That is exactly how a blueprint-aware Coach should behave.
-  ### 4. The cognitive-overload solution is correctly represented
-  The workspace becomes:
-  1. Current transformation
-  2. Where I am
-  3. What is next
-  Then **Show more** progressively reveals Journey and Support, each limited to three items. This directly implements the one-container and Rule-of-Three direction.
-  ### 5. The developer understood invisible tools
-  The immediate route uses MoodTracker, ReflectionPrompts, InsightJournal, and coaching conversation contextually. It explicitly says there should be no Tools label and that the Coach should surface only the relevant interventions.
+  That is aligned with the intended experience.
+  ## The main problem: domain inference is not Life OS analysis
+  `inferDomains(passage)` appears to determine which domains are semantically related to the selected sentence.
+  That does **not necessarily establish**:
+  - which areas are actually affected in the user's life;
+  - which area has the greatest gap;
+  - which domain is the highest priority;
+  - whether improving one domain will strengthen the others.
+  Because of that, this copy overstates what happened:
+  > “This pattern seems to affect a few areas of your life most.”
+  And this is even riskier:
+  > “I’d suggest starting with Domain A—it tends to strengthen the others.”
+  The system has inferred topical relevance from the sentence. It has not necessarily analyzed the user's assessment results or calculated cross-domain impact.
+  ### Make the interpretation truthful
+  Use:
+  > **Here’s what I’m seeing**  
+  > This pattern appears most connected to:
+  - Domain A
+  - Domain B
+  - Domain C
+  Then:
+  > I’d suggest starting with Domain A because it appears most closely connected to what you selected.
+  That accurately reflects `inferDomains`.
+  After `useLifeOrchestrator` or the Life OS dashboard has evaluated actual assessment data, the Coach may make stronger statements about gaps, priority, and broader impact.
   ---
-  # Four corrections I would make before ratifying it
-  ## 1. The labels have not actually been flipped to the “Help me…” grammar
-  This is the clearest mismatch.
-  The document uses:
-  - Work through this now
-  - Start a transformation program
-  - See the bigger pattern
-  But you just established that the **help-me statements are the labels**.
-  The card should therefore read:
-  > **What would you like help with?**
-  - **Help me work through this now**
-  - **Help me transform this pattern over time**
-  - **Help me see the bigger pattern**
-  Or, more concise:
-  - **Help me with this now**
-  - **Help me transform this pattern**
-  - **Help me understand the bigger pattern**
-  The implementation document currently uses the right concepts but the previous command-style grammar.
-  I would make this a product-law correction, not a later copy polish.
-  ---
-  ## 2. `transform_micro_action → InsightJournal` is semantically wrong
-  The state machine currently says:
-  > `transform_micro_action` — one small commit → InsightJournal
-  An insight journal records a realization. A micro-action is a behavioral commitment.
-  Those should not be the same object.
-  A micro-action should persist through something like:
-  - a growth action;
-  - a commitment;
-  - a growth task;
-  - a check-in;
-  - or an existing task/action persistence service.
-  After completing the micro-action, the user may optionally record an insight.
-  Better:
-  ```
+  ## The dashboard lead-in also overclaims
+  The proposed sentence is:
+  > “I looked at this pattern across your Life OS. Here’s what I found.”
+  That is only true if the system has actually compared the pattern against Life OS assessment data.
+  If the user has merely opened a dashboard after passage-based domain inference, use:
+  > **Here’s how this pattern connects to your Life OS.**
+  Or:
+  > **Let’s look at the areas of your Life OS that may relate to this pattern.**
+  Once genuine assessment analysis has run, the stronger version becomes valid:
+  > “I compared this pattern with your Life OS results. Here’s what stands out.”
+  This distinction matters because the product's authority depends on never presenting inference as measured evidence.
+  ## One implementation gap
+  The current `TransformSeed` described earlier contains only:
+  ```ts
+  inferredDomain?: LifeDomain;
 
   ```
-  ```
-  transform_micro_action
-  → create micro-action
-  → complete/check in
-  → optional reflection or insight
-  ```
-  Otherwise your data model will quietly turn actions into journal entries and make progress reporting unreliable. 
-  ---
-  ## 3. The workspace overview needs an immediate-route variant
-  The proposed overview assumes there is always:
-  -   
-  a program title;  
-
-  -   
-  a week;  
-
-  -   
-  a completion percentage;  
-
-  -   
-  a next practice.  
-
-  That works for a transformation program but not necessarily for **Help me with this now**.
-  For an immediate intervention, the overview might instead be:
-  ```
+  But the proposed interpretation screen needs a ranked list of up to three domains.
+  The plan says it will “reuse `inferDomains`,” but it should state exactly where those ranked results live.
+  The cleaner option is:
+  ```ts
+  type TransformSeed = {
+    inferredDomain?: LifeDomain;
+    inferredDomains?: LifeDomain[];
+  };
 
   ```
-  ```
-  Current focus
-  What you discovered
-  Your next small action
-  ```
-  For a program:
-  ```
-
-  ```
-  ```
-  Current transformation
-  Where I am
-  What's next
-  ```
-  The same one-container structure can remain, but its three fields should depend on the route. The document currently says the same overview applies once either an immediate session or a program is running. 
-  ---
-  ## 4. Keep `PanelTransformIntake` thin
-  The plan says `PanelTransformIntake` becomes:
-  -   
-  the route splitter;  
-
-  -   
-  the program flow host;  
-
-  -   
-  and the rebuilt orchestration entry.  
-
-  That is workable, but it could easily become another oversized component.
-  I would define it as a thin router:
-  ```
-
-  ```
-  ```
-  PanelTransformIntake
-  ├── TransformRouteChooser
-  ├── TransformImmediate
-  ├── TransformProgramFlow
-  ├── TransformPatternScope
-  └── TransformWorkspaceOverview
-  ```
-  It should own the current transformation route and seed, but each path should own its own stages. The document already proposes separate components for immediate, pattern scope, and workspace overview, so this is mostly a clarification of responsibility. 
-  ---
-  # My alignment verdict
-  **Architecture: aligned.**  
-    
-  **UX hierarchy: aligned.**  
-    
+  Populate the ranked list once when the transformation seed is created. Then the panel reads the preserved result rather than calling inference again and potentially producing a different answer.
+  If changing the seed is out of scope, the screen should display only the one reliably available domain rather than pretending it has three.
+  ## “Tell me why” must explain inference, not invent causality
+  A static rationale is acceptable, but it should describe why the sentence maps to the domain.
+  For example:
+  > This passage concerns how you respond to internal pressure and stuckness, which most directly connects to Personal Growth.
+  It should not say:
+  > Starting with Personal Growth will improve Energy and Relationships.
+  unless that relationship comes from real Life OS data or an explicitly validated ruleset.
+  ## Label alignment
+  Dropping “better” is a good improvement:
+  - Help me understand this
+  - Help me change this pattern
+  - Help me achieve this
+  - Help me remember this
+  They are grammatically parallel and intention-led.
+  The Step 4 labels can remain shorter because they appear beneath a Coach-framed interpretation. That decision is reasonable and avoids repeating “Help me…” on every nested control.
+  ## Verdict
+  **UX architecture: aligned.**  
+  **Navigation and progressive disclosure: aligned.**  
   **Reuse strategy: aligned.**  
-    
-  **Progressive-disclosure model: aligned.**  
-    
-  **Transformation routing: aligned.**  
-    
-  **Final interaction language: not yet aligned.**
-  I would send the developer this correction:
-  > Approved direction. Before ratification, update every sentence-card and route-choice label to the relational “Help me…” grammar. Also separate micro-action persistence from InsightJournal, provide a non-program overview variant for immediate transformation, and keep PanelTransformIntake as a thin orchestrator rather than a combined flow component.
-  &nbsp;
+  **Data-language honesty: needs correction.**
+  I would approve it after changing three things:
+  1. Replace “areas this affects most” with “areas most connected to this passage.”
+  2. Replace “strengthens the others” with a rationale grounded in the passage-to-domain inference.
+  3. Clarify how the ranked domain list is preserved and supplied to the new screen.
+  With those corrections, the developer is fully aligned rather than merely directionally aligned.
