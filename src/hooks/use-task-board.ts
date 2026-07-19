@@ -75,5 +75,29 @@ export function useTaskBoard() {
     [productivityJourney?.current_goals, updateProductivityJourney],
   );
 
-  return { tasks, updateTaskStatus };
+  // Durable subtask writes through the same path — subtask completion was
+  // previously session-local only (Wave 1 round 2).
+  const updateTaskSubtasks = useCallback(
+    async (goalId: string, taskId: string, subTasks: any[]) => {
+      const rawGoals = productivityJourney?.current_goals;
+      const currentGoals: any[] = Array.isArray(rawGoals) ? rawGoals : [];
+      const updatedGoals = currentGoals.map((goal: any) => {
+        const gid = String(goal?.id ?? goal?.goal_id ?? '');
+        if (gid !== goalId) return goal;
+        const goalTasks = Array.isArray(goal?.tasks) ? goal.tasks : [];
+        return {
+          ...goal,
+          tasks: goalTasks.map((task: any) => {
+            const tid = task?.id ? String(task.id) : null;
+            if (tid !== taskId) return task;
+            return { ...task, sub_tasks: subTasks };
+          }),
+        };
+      });
+      return updateProductivityJourney({ current_goals: updatedGoals });
+    },
+    [productivityJourney?.current_goals, updateProductivityJourney],
+  );
+
+  return { tasks, updateTaskStatus, updateTaskSubtasks };
 }
