@@ -31,11 +31,9 @@ export const TransformPatternScope: React.FC = () => {
   // Default landing for this route: interpretation first (if we have
   // signal), else fall straight through to the chooser.
   const effectiveStage =
-    (stage === 'chooser' || stage === 'scope_menu') && hasInterpretation && stage !== 'scope_menu'
-      ? 'scope_interpretation'
-      : stage === 'chooser'
-        ? 'scope_menu'
-        : stage;
+    stage === 'chooser'
+      ? (hasInterpretation ? 'scope_interpretation' : 'scope_menu')
+      : stage;
 
   const LeadIn: React.FC = () => (
     <p className="text-[11px] text-muted-foreground italic">
