@@ -25,7 +25,11 @@ import type { Goal } from '@/hooks/use-journey-goals';
 import { DOMAIN_LABELS } from '@/services/transformation-intake-service';
 import { PanelCoachDock } from './PanelCoachDock';
 import { useResumableTasks, type ResumableTask } from '@/hooks/use-resumable-tasks';
-import { Play } from 'lucide-react';
+import { Play, Info, Map as MapIcon, Trash2 } from 'lucide-react';
+import { useJourneyTracking } from '@/hooks/use-journey-tracking';
+import { useJourneyGoals } from '@/hooks/use-journey-goals';
+import { GoalDetailPopup } from '@/components/productivity/GoalDetailPopup';
+import { toast } from 'sonner';
 
 const MAX = 3;
 
@@ -34,6 +38,8 @@ interface PanelProgramsSectionProps {
   isLoading: boolean;
   onOpenMilestone: (goalId: string, milestoneId: string) => void;
   onResumeTask?: (goalId: string, task: ResumableTask) => void;
+  /** Wave 4: open the visual journey map/timeline for a raw journey goal. */
+  onOpenMap?: (rawGoal: any) => void;
 }
 
 export const PanelProgramsSection: React.FC<PanelProgramsSectionProps> = ({
@@ -41,8 +47,32 @@ export const PanelProgramsSection: React.FC<PanelProgramsSectionProps> = ({
   isLoading,
   onOpenMilestone,
   onResumeTask,
+  onOpenMap,
 }) => {
   const { user } = useAuth();
+  // Wave 4 management: raw journey goals (with tasks) for map/details,
+  // and the built soft-delete (journey entry + user_goals status).
+  const { productivityJourney } = useJourneyTracking();
+  const { deleteGoal: deleteJourneyGoal } = useJourneyGoals();
+  const [detailGoal, setDetailGoal] = useState<any | null>(null);
+  const rawGoalById = (goalId: string): any | null => {
+    const rawGoals = productivityJourney?.current_goals;
+    const list: any[] = Array.isArray(rawGoals) ? rawGoals : [];
+    return list.find((g) => String(g?.id ?? g?.goal_id ?? '') === goalId) ?? null;
+  };
+  const handleDelete = async (g: Goal) => {
+    if (typeof window !== 'undefined' && !window.confirm(`Delete the program "${g.title}"? This removes it from your journey.`)) {
+      return;
+    }
+    try {
+      await deleteJourneyGoal(g.id);
+      // Keep user_goals in sync: same soft delete the Dreams page performs.
+      await supabase.from('user_goals').update({ status: 'inactive' }).eq('id', g.id);
+      toast.success('Program removed.');
+    } catch {
+      toast.error('Could not remove the program.');
+    }
+  };
   // Resume chips (Wave 1 round 2): tasks with a saved coach session get a
   // one-tap way back in — the built resumable-tasks machinery, surfaced.
   const { resumableTasksByGoal } = useResumableTasks();
@@ -112,17 +142,48 @@ export const PanelProgramsSection: React.FC<PanelProgramsSectionProps> = ({
                       {nextMilestone ? ` · next: ${nextMilestone.title}` : ' · complete'}
                     </p>
                   </button>
-                  {resumeTask && onResumeTask && (
+                  <div className="ml-2 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    {resumeTask && onResumeTask && (
+                      <button
+                        type="button"
+                        onClick={() => onResumeTask(g.id, resumeTask)}
+                        className="flex items-center gap-1.5 text-[11px] rounded-md px-2 py-1 border border-primary/25 bg-primary/5 hover:bg-primary/10 transition-colors text-foreground"
+                        title={resumeTask.title}
+                      >
+                        <Play className="h-3 w-3 text-primary" />
+                        <span className="truncate max-w-[160px]">Resume: {resumeTask.title}</span>
+                      </button>
+                    )}
+                    {/* Wave 4 management: map · details · delete */}
+                    {onOpenMap && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenMap(rawGoalById(g.id) ?? g)}
+                        className="flex items-center gap-1 text-[11px] rounded-md px-2 py-1 border border-border/50 hover:bg-muted/40 transition-colors text-muted-foreground hover:text-foreground"
+                        title="Journey map"
+                      >
+                        <MapIcon className="h-3 w-3" />
+                        Map
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => onResumeTask(g.id, resumeTask)}
-                      className="ml-2 mt-0.5 flex items-center gap-1.5 text-[11px] rounded-md px-2 py-1 border border-primary/25 bg-primary/5 hover:bg-primary/10 transition-colors text-foreground"
-                      title={resumeTask.title}
+                      onClick={() => setDetailGoal(rawGoalById(g.id) ?? g)}
+                      className="flex items-center gap-1 text-[11px] rounded-md px-2 py-1 border border-border/50 hover:bg-muted/40 transition-colors text-muted-foreground hover:text-foreground"
+                      title="Details"
                     >
-                      <Play className="h-3 w-3 text-primary" />
-                      <span className="truncate max-w-[200px]">Resume: {resumeTask.title}</span>
+                      <Info className="h-3 w-3" />
+                      Details
                     </button>
-                  )}
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete(g)}
+                      className="flex items-center gap-1 text-[11px] rounded-md px-2 py-1 border border-border/50 hover:bg-destructive/10 hover:border-destructive/30 transition-colors text-muted-foreground hover:text-destructive"
+                      title="Delete program"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
                 </li>
               );
             })}
@@ -201,6 +262,15 @@ export const PanelProgramsSection: React.FC<PanelProgramsSectionProps> = ({
 
       {(isLoading || loadingTransform) && goals.length === 0 && transformPrograms.length === 0 && (
         <p className="text-xs text-muted-foreground">Loading your programs…</p>
+      )}
+
+      {/* Wave 4: the built details dialog, embedded as-is */}
+      {detailGoal && (
+        <GoalDetailPopup
+          goal={detailGoal}
+          isOpen={!!detailGoal}
+          onClose={() => setDetailGoal(null)}
+        />
       )}
     </div>
   );
