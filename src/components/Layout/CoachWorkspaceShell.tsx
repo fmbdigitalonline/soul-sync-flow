@@ -34,6 +34,8 @@ import { PanelDreamFlow } from './panel/PanelDreamFlow';
 import { PanelTransformIntake } from './panel/PanelTransformIntake';
 import { PanelProgramsSection } from './panel/PanelProgramsSection';
 import { PanelTaskBoard } from './panel/PanelTaskBoard';
+import { PanelDiscoveryFlow } from './panel/PanelDiscoveryFlow';
+import { useXPProgression } from '@/hooks/use-xp-progression';
 import { useWorkspace, type WorkspaceSectionId } from '@/contexts/WorkspaceContext';
 import { useHelpHistory } from '@/hooks/use-help-history';
 import { useQuery } from '@tanstack/react-query';
@@ -70,6 +72,11 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
   // Progressive workspace (v2.7 rule 2b): drawers hide behind ONE
   // "Show more"; they auto-reveal when navigation opens a section.
   const [drawersRevealed, setDrawersRevealed] = useState(false);
+  // Wave 2: the discovery door — for the user who doesn't know the goal
+  // yet. When open, discovery IS the one primary container.
+  const [discoveryOpen, setDiscoveryOpen] = useState(false);
+  // Wave 2: XP surfaced — the ledger existed, invisible until now.
+  const { progress: xpProgress } = useXPProgression();
   const { data: transformPrograms = [] } = useQuery({
     queryKey: ['shell-transform-programs', user?.id],
     enabled: !!user,
@@ -206,11 +213,15 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
         <PanelTransformIntake />
       ) : pendingIntake ? (
         <PanelDreamFlow />
+      ) : discoveryOpen ? (
+        <PanelDiscoveryFlow onClose={() => setDiscoveryOpen(false)} />
       ) : (
         <>
           <PanelDecompositionCard />
           <JourneyOverviewCard
             journey={journey}
+            xp={xpProgress}
+            onDiscover={() => setDiscoveryOpen(true)}
             onWorkOnThis={() => {
               if (journey.goalId && journey.milestoneId) {
                 setActionSelection({ goalId: journey.goalId, milestoneId: journey.milestoneId });
@@ -407,9 +418,11 @@ function normalizePanelGoal(goal: any): Goal {
 
 const JourneyOverviewCard: React.FC<{
   journey: JourneyOverview;
+  xp?: { xpTotal: number; nextMilestone: { milestone: number; xpNeeded: number } | null } | null;
+  onDiscover: () => void;
   onWorkOnThis: () => void;
   onSeeRoadmap: () => void;
-}> = ({ journey, onWorkOnThis, onSeeRoadmap }) => (
+}> = ({ journey, xp, onDiscover, onWorkOnThis, onSeeRoadmap }) => (
   <Card className="p-4 border-primary/30 bg-primary/5 space-y-2.5">
     <div>
       <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/80">
@@ -445,10 +458,17 @@ const JourneyOverviewCard: React.FC<{
 
     {journey.kind !== 'loading' && (
       <div className="flex items-center gap-2 pt-0.5">
-        <Button size="sm" onClick={onWorkOnThis} className="h-8 flex-1 text-xs font-semibold">
-          {journey.kind === 'empty' ? 'Open the workspace' : 'Work on this'}
-          <ChevronRight className="ml-1 h-3.5 w-3.5" />
-        </Button>
+        {journey.kind === 'empty' ? (
+          <Button size="sm" onClick={onDiscover} className="h-8 flex-1 text-xs font-semibold">
+            ✨ Discover your dream
+            <ChevronRight className="ml-1 h-3.5 w-3.5" />
+          </Button>
+        ) : (
+          <Button size="sm" onClick={onWorkOnThis} className="h-8 flex-1 text-xs font-semibold">
+            Work on this
+            <ChevronRight className="ml-1 h-3.5 w-3.5" />
+          </Button>
+        )}
         {journey.kind !== 'empty' && (
           <button
             type="button"
@@ -459,6 +479,14 @@ const JourneyOverviewCard: React.FC<{
           </button>
         )}
       </div>
+    )}
+
+    {/* Wave 2: XP surfaced — quiet, one line, real ledger data only */}
+    {xp && xp.xpTotal > 0 && (
+      <p className="text-[11px] text-muted-foreground pt-0.5">
+        ◆ {xp.xpTotal} XP
+        {xp.nextMilestone ? ` · ${xp.nextMilestone.xpNeeded} to milestone ${xp.nextMilestone.milestone}` : ''}
+      </p>
     )}
   </Card>
 );

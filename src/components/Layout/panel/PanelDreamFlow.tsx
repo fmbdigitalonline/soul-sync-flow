@@ -144,6 +144,10 @@ export const PanelDreamFlow: React.FC = () => {
 
       {phase === 'ready' && (
         <div className="space-y-3">
+          {/* Wave 2: the success moment gets its celebration back */}
+          <p className="text-xs text-foreground rounded-md bg-primary/10 px-2.5 py-1.5">
+            🎉 Your journey is designed — {milestones.length} milestones, shaped by your blueprint.
+          </p>
           {milestones.length > 0 && (
             <div className="space-y-2">
               <div className="[&_.rounded-2xl]:rounded-lg [&_.shadow-lg]:shadow-none">
