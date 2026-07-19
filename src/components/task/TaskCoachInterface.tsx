@@ -259,6 +259,16 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     };
   }, [task.id, task.title, task.status, task.estimated_duration, sessionStats]);
 
+  // Compact mode auto-starts the session so the embedded panel skips
+  // the "Ready to Work Together?" gate — the user already tapped
+  // "Start" in the previous moment.
+  useEffect(() => {
+    if (compact && !sessionStarted) {
+      setSessionStarted(true);
+      setIsTimerRunning(true);
+    }
+  }, [compact, sessionStarted]);
+
   // Timer effect with logging
   useEffect(() => {
     let interval: NodeJS.Timeout;
