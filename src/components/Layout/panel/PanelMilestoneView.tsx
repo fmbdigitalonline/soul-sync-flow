@@ -11,17 +11,17 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { Calendar, Sparkles, ArrowRight, MessageCircle } from 'lucide-react';
+import { Calendar, Sparkles, ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Goal, GoalMilestone } from '@/hooks/use-journey-goals';
+import { PanelCoachDock } from './PanelCoachDock';
 
 interface PanelMilestoneViewProps {
   goal: Goal;
   milestone: GoalMilestone;
   onSelectMilestone: (milestoneId: string) => void;
-  onAskCoach: (prompt: string) => void;
 }
 
 const MAX = 3;
@@ -30,7 +30,6 @@ export const PanelMilestoneView: React.FC<PanelMilestoneViewProps> = ({
   goal,
   milestone,
   onSelectMilestone,
-  onAskCoach,
 }) => {
   const [showAllTraits, setShowAllTraits] = useState(false);
   const [showAllNext, setShowAllNext] = useState(false);
@@ -146,18 +145,13 @@ export const PanelMilestoneView: React.FC<PanelMilestoneViewProps> = ({
         )}
       </section>
 
-      {/* Handoff to Twin — the Coach panel never becomes a second chat */}
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full h-8 text-xs"
-        onClick={() =>
-          onAskCoach(`Help me work on the milestone: "${milestone.title}" (part of "${goal.title}").`)
-        }
-      >
-        <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-        Continue in chat
-      </Button>
+      {/* The Coach's own dialogue, in the panel (v2.7: twin chat stays
+          clean — no prompt handoffs to the Twin's stream) */}
+      <PanelCoachDock
+        contextKey={`milestone_${goal.id}_${milestone.id}`}
+        seedPrompt={`I want to work on the milestone "${milestone.title}" (part of "${goal.title}"). Coach me into it.`}
+        placeholder="Talk with your coach about this milestone…"
+      />
     </div>
   );
 };

@@ -11,12 +11,12 @@ import { ArrowLeft, Clock, MessageCircle, Zap, ListChecks } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { PanelCoachDock } from './PanelCoachDock';
 
 interface PanelTaskViewProps {
   task: any;
   goalTitle?: string;
   onBack: () => void;
-  onAskCoach: (prompt: string) => void;
 }
 
 const MAX_ITEMS = 3;
@@ -25,7 +25,6 @@ export const PanelTaskView: React.FC<PanelTaskViewProps> = ({
   task,
   goalTitle,
   onBack,
-  onAskCoach,
 }) => {
   const [showAllPrerequisites, setShowAllPrerequisites] = useState(false);
   const prerequisites = Array.isArray(task?.prerequisites) ? task.prerequisites : [];
@@ -134,15 +133,12 @@ export const PanelTaskView: React.FC<PanelTaskViewProps> = ({
         </section>
       )}
 
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full h-8 text-xs"
-        onClick={() => onAskCoach(`Help me start this task: "${task?.title ?? 'Untitled task'}"${goalTitle ? ` (part of "${goalTitle}")` : ''}.`)}
-      >
-        <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-        Continue in chat
-      </Button>
+      {/* v2.7: the Coach's own dialogue, in the panel */}
+      <PanelCoachDock
+        contextKey={`task_${task?.id ?? 'unknown'}`}
+        seedPrompt={`I want to start this task: "${task?.title ?? 'Untitled task'}"${goalTitle ? ` (part of "${goalTitle}")` : ''}. Coach me through it.`}
+        placeholder="Talk with your coach about this task…"
+      />
     </div>
   );
 };
