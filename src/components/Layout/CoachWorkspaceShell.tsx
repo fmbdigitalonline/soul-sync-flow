@@ -254,6 +254,7 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
                 onOpenMilestone={(goalId, milestoneId) =>
                   setActionSelection({ goalId, milestoneId })
                 }
+                onResumeTask={(goalId, task) => setSelectedTask({ goalId, task })}
               />
             ) : id === 'tools' ? (
               legacyTools ?? <EmptySlot label="No tools surfaced for this moment." />

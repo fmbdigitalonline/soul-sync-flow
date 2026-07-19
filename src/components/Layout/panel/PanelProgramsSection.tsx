@@ -24,6 +24,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { Goal } from '@/hooks/use-journey-goals';
 import { DOMAIN_LABELS } from '@/services/transformation-intake-service';
 import { PanelCoachDock } from './PanelCoachDock';
+import { useResumableTasks, type ResumableTask } from '@/hooks/use-resumable-tasks';
+import { Play } from 'lucide-react';
 
 const MAX = 3;
 
@@ -31,14 +33,19 @@ interface PanelProgramsSectionProps {
   goals: Goal[];
   isLoading: boolean;
   onOpenMilestone: (goalId: string, milestoneId: string) => void;
+  onResumeTask?: (goalId: string, task: ResumableTask) => void;
 }
 
 export const PanelProgramsSection: React.FC<PanelProgramsSectionProps> = ({
   goals,
   isLoading,
   onOpenMilestone,
+  onResumeTask,
 }) => {
   const { user } = useAuth();
+  // Resume chips (Wave 1 round 2): tasks with a saved coach session get a
+  // one-tap way back in — the built resumable-tasks machinery, surfaced.
+  const { resumableTasksByGoal } = useResumableTasks();
   const [showAllAchievement, setShowAllAchievement] = useState(false);
   const [showAllTransformation, setShowAllTransformation] = useState(false);
   const [openTransformId, setOpenTransformId] = useState<string | null>(null);
@@ -86,6 +93,8 @@ export const PanelProgramsSection: React.FC<PanelProgramsSectionProps> = ({
             {visibleGoals.map((g) => {
               const nextMilestone = g.milestones.find((m) => !m.completed);
               const done = g.milestones.filter((m) => m.completed).length;
+              const resumable = resumableTasksByGoal.get(g.id) ?? [];
+              const resumeTask = resumable[0];
               return (
                 <li key={g.id}>
                   <button
@@ -103,6 +112,17 @@ export const PanelProgramsSection: React.FC<PanelProgramsSectionProps> = ({
                       {nextMilestone ? ` · next: ${nextMilestone.title}` : ' · complete'}
                     </p>
                   </button>
+                  {resumeTask && onResumeTask && (
+                    <button
+                      type="button"
+                      onClick={() => onResumeTask(g.id, resumeTask)}
+                      className="ml-2 mt-0.5 flex items-center gap-1.5 text-[11px] rounded-md px-2 py-1 border border-primary/25 bg-primary/5 hover:bg-primary/10 transition-colors text-foreground"
+                      title={resumeTask.title}
+                    >
+                      <Play className="h-3 w-3 text-primary" />
+                      <span className="truncate max-w-[200px]">Resume: {resumeTask.title}</span>
+                    </button>
+                  )}
                 </li>
               );
             })}
