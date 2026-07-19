@@ -168,20 +168,28 @@ const Coach = () => {
     });
   };
 
-  // Panel → Twin handoff: when the Coach panel taps "Continue in chat",
-  // it dispatches coach-workspace:ask with a prompt. We forward it into
-  // the conversation so the acting surface never becomes a second chat.
+  // Panel → Twin handoff: the app-level useCoachAskBridge queues prompts
+  // dispatched by the Coach panel (from any route) into sessionStorage and
+  // navigates here. We drain the queue on mount and whenever the bridge
+  // fires 'coach-workspace:deliver-asks' (same-route dispatches).
   useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<{ prompt?: string }>).detail;
-      const prompt = detail?.prompt?.trim();
-      if (!prompt) return;
-      handleSendMessage(prompt).catch((err) =>
-        console.error('coach-workspace:ask forward failed', err),
-      );
+    const drainAndSend = async () => {
+      const { drainAskQueue } = await import('@/hooks/use-coach-ask-bridge');
+      const prompts = drainAskQueue();
+      for (const prompt of prompts) {
+        try {
+          await handleSendMessage(prompt);
+        } catch (err) {
+          console.error('coach-workspace:ask forward failed', err);
+        }
+      }
     };
-    window.addEventListener('coach-workspace:ask', handler);
-    return () => window.removeEventListener('coach-workspace:ask', handler);
+    drainAndSend();
+    const handler = () => {
+      drainAndSend();
+    };
+    window.addEventListener('coach-workspace:deliver-asks', handler);
+    return () => window.removeEventListener('coach-workspace:deliver-asks', handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
