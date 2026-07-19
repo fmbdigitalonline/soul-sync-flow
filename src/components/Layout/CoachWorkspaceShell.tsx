@@ -37,6 +37,7 @@ import { PanelTaskBoard } from './panel/PanelTaskBoard';
 import { PanelDiscoveryFlow } from './panel/PanelDiscoveryFlow';
 import { PanelHabits } from './panel/PanelHabits';
 import { PanelJourneyView } from './panel/PanelJourneyView';
+import { PanelProactivitySettings } from './panel/PanelProactivitySettings';
 import DreamAchievementDashboard from '@/components/journey/DreamAchievementDashboard';
 import { useJourneyTracking } from '@/hooks/use-journey-tracking';
 import { WeeklySummary } from '@/components/productivity/WeeklySummary';
@@ -298,7 +299,11 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
                 }}
               />
             ) : id === 'tools' ? (
-              legacyTools ?? <EmptySlot label="No tools surfaced for this moment." />
+              <div className="space-y-3">
+                {/* v3.0: the proactive layer's one user-facing control */}
+                <PanelProactivitySettings />
+                {legacyTools ?? null}
+              </div>
             ) : id === 'actions' ? (
               journeyViewGoal ? (
                 <PanelJourneyView

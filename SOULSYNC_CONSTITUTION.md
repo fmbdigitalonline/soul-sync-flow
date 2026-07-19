@@ -1,6 +1,63 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v2.7)
+# SoulSync — Developer Constitution & Wiring Roadmap (v3.0)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v3.0 — THE PROACTIVE INTELLIGENCE LAYER ratified (founder, Jul 19 2026).
+The HACS insight pipeline (shadow detector, pattern buffer, nullification
+advice, brutal-honesty engine, hermetic extractor, authentic-insights fn,
+smart controller, validated-learning judge) is NOT a feature area and
+NEVER becomes an Insights feed. It is the layer above Twin/Coach/engines/
+Memory that decides: is something important enough to surface now, and
+which part of the system handles it — with NO ACTION as the default. A
+proactive system earns trust by being quiet most of the time.*
+
+*INVISIBILITY LAW: users never see the pipeline (no detected shadows,
+queues, confidence scores, frequencies, cooldowns, inventories). The
+entire visible surface is ONE human moment in the conversation — "I've
+noticed something… would it be useful to look at that?" — answered with
+the existing intent grammar (Help me understand this / Help me change
+this pattern / Not now). The intelligence can be 4,500 lines; the
+experience is one sentence.*
+
+*THREE DELIVERY MODES: (1) gentle observation — uncertain phrasing,
+stays in Twin conversation, for early signals; (2) clear pattern
+recognition — recurrence + evidence across turns, offers understand/
+change/remember, Coach opens only on request; (3) coach intervention —
+pattern tied to ACTIVE work, appears inside the current Coach moment and
+adapts the journey ("adjust today's step?"), never as a separate card.*
+
+*COMPONENT DISCIPLINE: the detector produces hypotheses, never diagnoses
+("I wonder whether…" — detection is not diagnosis). PatternBuffer
+enforces recurrence-before-interruption, decay, and dismissal
+suppression. Nullification advice fires only AFTER the user chooses
+change. Brutal honesty is a USER-CONTROLLED style (Gentle/Clear/Direct),
+never a default. The hermetic extractor enriches silently — one relevant
+connection, never seven laws and three gates. Analytics translate into
+coaching meaning, never surface as metrics.*
+
+*THE LEDGER: conversation_insights is the system's insight ledger, not
+the user's inbox — lifecycle states (candidate → validated → eligible →
+delivered → accepted/dismissed → acted_on → resolved → stale) prevent
+eternal resurfacing. SmartInsightController is the GUARDIAN OF
+ATTENTION: every candidate passes five checks — new? useful now? enough
+evidence? appropriate moment (never during vulnerable disclosure, active
+task work, right after another insight, onboarding, or after repeated
+dismissals)? worth more than what the user is doing? Most candidates
+must fail.*
+
+*LEARNING BEFORE MEMORY: observed pattern ≠ confirmed insight ≠
+validated learning ≠ stable memory. The Twin checks hypotheses with the
+user; the user's REFINEMENT is what memory stores ("avoids unproductive
+conflict when mutual listening feels unavailable", never "avoids
+conflict"). Durable intelligence updates only after response analysis
+validates that learning occurred.*
+
+*USER CONTROLS: proactivity (only when I ask / when something important
+repeats / actively observant) and directness (gentle / clear / direct)
+govern thresholds, frequency, confrontation style, and whether proactive
+moments appear at all. The Overview may show at most ONE quiet
+"something worth noticing" line. Supersedes v2.7 (and the in-code
+v2.8/v2.9 flow labels).*
 
 *v2.7 — Twin-chat-clean law: the Coach's dialogue lives in the panel
 (founder, Jul 19 2026). Corrects the v2.5 clause "the panel doesn't host
