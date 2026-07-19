@@ -23,6 +23,11 @@ import { PresenceFrame, PresenceState } from "@/components/companion/PresenceFra
 import { emitCoachOpen, emitCoachDecomposition } from "@/lib/coach-workspace-bus";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { saveRememberedInsight } from "@/services/insight-memory-service";
+import {
+  proactiveInsightGuardian,
+  type ProactiveMomentCandidate,
+} from "@/services/proactive-insight-guardian";
+import { ProactiveMoment } from "./ProactiveMoment";
 
 /**
  * Feature flag: route OfferCard confirmations into the panel-hosted flow
@@ -71,6 +76,10 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   const [isProcessingAction, setIsProcessingAction] = useState(false);
   const [loadingAction, setLoadingAction] = useState<SentenceAction | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Proactive Intelligence Layer (v3.0): at most ONE quiet moment; the
+  // guardian's five checks make no-action the default outcome.
+  const [proactiveMoment, setProactiveMoment] = useState<ProactiveMomentCandidate | null>(null);
+  const proactiveCheckRef = useRef(false);
   const { updateChatLoading } = useGlobalChatState();
   const { isMobile } = useIsMobile();
 
@@ -104,6 +113,38 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       completeLoading('chat_thinking');
     }
   }, [isLoading, startLoading, completeLoading]);
+
+  // Guardian consult: after each completed assistant turn (never during
+  // typing/loading, never twice for the same turn, never while a moment
+  // is already showing). Quiet failure is the correct failure mode.
+  useEffect(() => {
+    if (isLoading || proactiveMoment) return;
+    const last = messages[messages.length - 1];
+    if (!last || (last as any).role === 'user' || (last as any).isUser) return;
+    if (proactiveCheckRef.current) return;
+    proactiveCheckRef.current = true;
+    const lastUser = [...messages].reverse().find((m: any) => m.role === 'user' || m.isUser);
+    const timer = setTimeout(async () => {
+      const cand = await proactiveInsightGuardian.getProactiveMoment({
+        messageCount: messages.length,
+        lastUserMessage: typeof (lastUser as any)?.content === 'string' ? (lastUser as any).content : undefined,
+      });
+      if (cand) {
+        const ledgerId = await proactiveInsightGuardian.recordDelivery(cand);
+        setProactiveMoment({ ...cand, ledgerId: ledgerId ?? undefined });
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length, isLoading]);
+
+  // Re-arm the once-per-turn latch when a new user message arrives.
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (last && ((last as any).role === 'user' || (last as any).isUser)) {
+      proactiveCheckRef.current = false;
+    }
+  }, [messages.length]);
 
   // Handle sentence selection toggle
   const handleSentenceSelect = (messageId: string, sentence: string | null) => {
@@ -388,6 +429,27 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             )}
           </AnimatePresence>
           
+          {proactiveMoment && (
+            <ProactiveMoment
+              observation={proactiveMoment.observation}
+              onUnderstand={() => {
+                void proactiveInsightGuardian.recordOutcome(proactiveMoment.ledgerId, 'accepted');
+                setProactiveMoment(null);
+                void onSendMessage(
+                  `[CONTEXT: The system gently surfaced a possible pattern and the user chose to understand it: "${proactiveMoment.patternCore}"] Explore this hypothesis together — where it may come from and how it shows up. Stay tentative: check whether it feels accurate and invite their refinement; their correction matters more than the detection.`,
+                );
+              }}
+              onChange={() => {
+                void proactiveInsightGuardian.recordOutcome(proactiveMoment.ledgerId, 'acted_on');
+                setProactiveMoment(null);
+                openPanelWithTransformIntake({ pattern: proactiveMoment.patternCore.slice(0, 200) });
+              }}
+              onNotNow={() => {
+                void proactiveInsightGuardian.recordOutcome(proactiveMoment.ledgerId, 'dismissed');
+                setProactiveMoment(null);
+              }}
+            />
+          )}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
