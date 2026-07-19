@@ -18,6 +18,7 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { emitCoachClose } from '@/lib/coach-workspace-bus';
 
 export const ASK_QUEUE_KEY = 'coach-workspace:asks';
 export const DELIVER_EVENT = 'coach-workspace:deliver-asks';
@@ -59,6 +60,7 @@ export const useCoachAskBridge = (): void => {
 
       pushToQueue(prompt);
       toast.message('Sending to your Twin…', { duration: 1200 });
+      emitCoachClose();
 
       const onCompanion = location.pathname.startsWith('/companion') || location.pathname.startsWith('/coach');
       if (!onCompanion) {
@@ -66,7 +68,7 @@ export const useCoachAskBridge = (): void => {
         // Coach.tsx drains on mount, so no explicit deliver dispatch needed.
       } else {
         // Already on the conversation surface — tell it to drain now.
-        window.dispatchEvent(new CustomEvent(DELIVER_EVENT));
+        window.setTimeout(() => window.dispatchEvent(new CustomEvent(DELIVER_EVENT)), 0);
       }
     };
     window.addEventListener('coach-workspace:ask', handler);
