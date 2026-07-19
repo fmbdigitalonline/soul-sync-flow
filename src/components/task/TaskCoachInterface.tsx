@@ -1096,9 +1096,11 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
-                <p className="text-xs text-center text-gray-500 mt-2">
-                  Task-aware coaching with interactive micro-task breakdown
-                </p>
+                {!compact && (
+                  <p className="text-xs text-center text-gray-500 mt-2">
+                    Task-aware coaching with interactive micro-task breakdown
+                  </p>
+                )}
               </div>
             </>
           )}
