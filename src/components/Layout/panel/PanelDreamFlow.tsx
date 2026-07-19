@@ -11,8 +11,8 @@
  * "Show more" affordance so the panel never overwhelms.
  */
 
-import React, { useMemo, useState } from 'react';
-import { X, ChevronRight } from 'lucide-react';
+import React from 'react';
+import { X, ChevronRight, RotateCcw, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
@@ -23,34 +23,63 @@ import { RecommendedTask } from '@/components/dream/success/RecommendedTask';
 import { emitCoachDecomposition } from '@/lib/coach-workspace-bus';
 import { toast } from 'sonner';
 
-type Phase = 'building' | 'ready';
-
 const MAX_ITEMS = 3;
 
 export const PanelDreamFlow: React.FC = () => {
-  const { pendingIntake, clearPendingIntake } = useWorkspace();
+  const {
+    pendingIntake,
+    clearPendingIntake,
+    dreamFlow,
+    patchDreamFlow,
+  } = useWorkspace();
   const { blueprintData } = useBlueprintCache();
-  const [phase, setPhase] = useState<Phase>('building');
-  const [decomposedGoal, setDecomposedGoal] = useState<any>(null);
-  const [showAllMilestones, setShowAllMilestones] = useState(false);
 
   if (!pendingIntake) return null;
 
+  const { phase, decomposedGoal, showAllMilestones, dismissed } = dreamFlow;
+
+  // Non-destructive close: collapse to a chip so the built goal survives.
+  if (dismissed) {
+    return (
+      <Card className="p-2 border-primary/20 bg-primary/5 flex items-center gap-2">
+        <p className="text-[11px] text-muted-foreground flex-1 truncate">
+          Journey card hidden{decomposedGoal ? ` · ${pendingIntake.title}` : ''}
+        </p>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 px-2 text-[11px]"
+          onClick={() => patchDreamFlow({ dismissed: false })}
+        >
+          Reopen
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={() => {
+            clearPendingIntake();
+          }}
+          aria-label="Discard journey"
+          title="Discard and start over"
+        >
+          <X className="h-3.5 w-3.5" />
+        </Button>
+      </Card>
+    );
+  }
+
   const handleComplete = (goal: any) => {
-    setDecomposedGoal(goal);
-    setPhase('ready');
+    patchDreamFlow({ decomposedGoal: goal, phase: 'ready' });
     emitCoachDecomposition({
       phase: 'complete',
       dreamTitle: goal?.title ?? pendingIntake.title,
     });
   };
 
-  const handleDismiss = () => {
-    setDecomposedGoal(null);
-    setPhase('building');
-    setShowAllMilestones(false);
-    clearPendingIntake();
-  };
+  // × collapses the card; state is preserved. "Start a new journey" fully clears.
+  const handleCollapse = () => patchDreamFlow({ dismissed: true });
+  const handleNewJourney = () => clearPendingIntake();
 
   const milestones: any[] = decomposedGoal?.milestones ?? [];
   const tasks: any[] = decomposedGoal?.tasks ?? [];
@@ -72,18 +101,33 @@ export const PanelDreamFlow: React.FC = () => {
             {pendingIntake.title}
           </p>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 flex-shrink-0"
-          onClick={handleDismiss}
-          aria-label="Close dream flow"
-        >
-          <X className="h-3.5 w-3.5" />
-        </Button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {phase === 'ready' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={handleNewJourney}
+              aria-label="Start a new journey"
+              title="Start a new journey"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={handleCollapse}
+            aria-label="Hide journey card"
+            title="Hide (keeps journey)"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
 
-      {phase === 'building' && (
+      {phase === 'building' && !decomposedGoal && (
         <div className="relative rounded-lg overflow-hidden bg-background/60 [&_.min-h-screen]:min-h-0 [&_.min-h-screen]:p-3">
           <DreamDecompositionPage
             dreamTitle={pendingIntake.title}
@@ -104,7 +148,6 @@ export const PanelDreamFlow: React.FC = () => {
                   milestones={visibleMilestones}
                   isHighlighted={false}
                   onMilestoneClick={(m) => {
-                    // Handoff to Twin: ask the coach about this milestone.
                     if (typeof window !== 'undefined') {
                       window.dispatchEvent(
                         new CustomEvent('coach-workspace:ask', {
@@ -119,7 +162,7 @@ export const PanelDreamFlow: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowAllMilestones((v) => !v)}
+                  onClick={() => patchDreamFlow({ showAllMilestones: !showAllMilestones })}
                   className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground w-full justify-start"
                 >
                   {showAllMilestones ? 'Show less' : `Show ${hiddenMilestoneCount} more`}

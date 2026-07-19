@@ -76,6 +76,7 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { ModeProvider } from "./contexts/ModeContext";
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { useCoachAskBridge } from "./hooks/use-coach-ask-bridge";
 
 // Create stable QueryClient instance outside of component to prevent recreation
 const queryClient = new QueryClient({
@@ -88,6 +89,11 @@ const queryClient = new QueryClient({
 });
 
 // Root layout component with consistent provider nesting order
+const CoachAskBridgeMount: React.FC = () => {
+  useCoachAskBridge();
+  return null;
+};
+
 const RootLayout = () => {
   return (
     <div className="min-h-screen bg-background">
@@ -98,6 +104,7 @@ const RootLayout = () => {
               <SoulOrbProvider>
                 <BlueprintCacheProvider>
                   <WorkspaceProvider>
+                    <CoachAskBridgeMount />
                     <Outlet />
                     <Toaster />
                   </WorkspaceProvider>
