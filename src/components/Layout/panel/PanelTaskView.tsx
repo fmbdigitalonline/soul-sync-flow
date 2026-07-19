@@ -11,10 +11,14 @@ import { ArrowLeft, Clock, MessageCircle, Zap, ListChecks } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { PanelCoachDock } from './PanelCoachDock';
+import { PanelTaskCoachDock } from './PanelTaskCoachDock';
+import { TaskStatusSelector } from '@/components/task/TaskStatusSelector';
+import { useTaskBoard, type BoardTaskStatus } from '@/hooks/use-task-board';
+import { toast } from 'sonner';
 
 interface PanelTaskViewProps {
   task: any;
+  goalId?: string;
   goalTitle?: string;
   onBack: () => void;
 }
@@ -23,10 +27,28 @@ const MAX_ITEMS = 3;
 
 export const PanelTaskView: React.FC<PanelTaskViewProps> = ({
   task,
+  goalId,
   goalTitle,
   onBack,
 }) => {
   const [showAllPrerequisites, setShowAllPrerequisites] = useState(false);
+  // Status machine (Wave 1): live status from the board so changes made
+  // here or on the board stay in sync; writes go through the one path.
+  const { tasks: boardTasks, updateTaskStatus } = useTaskBoard();
+  const boardTask = boardTasks.find(
+    (t) => t.id === String(task?.id ?? '') && (!goalId || t.goalId === goalId),
+  );
+  const currentStatus: BoardTaskStatus = boardTask?.status
+    ?? (task?.completed ? 'completed' : ((task?.status as BoardTaskStatus) || 'todo'));
+  const handleStatusChange = async (status: BoardTaskStatus) => {
+    const gid = goalId ?? boardTask?.goalId;
+    if (!gid || !task?.id) {
+      toast.error('This task is not linked to a program yet.');
+      return;
+    }
+    const res = await updateTaskStatus(gid, String(task.id), status);
+    if (res?.success === false) toast.error('Could not update the task status.');
+  };
   const prerequisites = Array.isArray(task?.prerequisites) ? task.prerequisites : [];
   const visiblePrerequisites = showAllPrerequisites
     ? prerequisites
@@ -79,6 +101,14 @@ export const PanelTaskView: React.FC<PanelTaskViewProps> = ({
                 {task.category}
               </Badge>
             )}
+          </div>
+
+          {/* Status machine — one tap, same write path as the kanban */}
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Status
+            </span>
+            <TaskStatusSelector currentStatus={currentStatus} onStatusChange={(s) => void handleStatusChange(s)} />
           </div>
         </div>
       </Card>
@@ -133,12 +163,10 @@ export const PanelTaskView: React.FC<PanelTaskViewProps> = ({
         </section>
       )}
 
-      {/* v2.7: the Coach's own dialogue, in the panel */}
-      <PanelCoachDock
-        contextKey={`task_${task?.id ?? 'unknown'}`}
-        seedPrompt={`I want to start this task: "${task?.title ?? 'Untitled task'}"${goalTitle ? ` (part of "${goalTitle}")` : ''}. Coach me through it.`}
-        placeholder="Talk with your coach about this task…"
-      />
+      {/* Wave 1: the TASK-AWARE coach (was mis-wired to the program-aware
+          engine) — with session persistence shared with the Dreams task
+          coach and the built quick-action chips. */}
+      <PanelTaskCoachDock task={task} goalId={goalId ?? boardTask?.goalId} />
     </div>
   );
 };

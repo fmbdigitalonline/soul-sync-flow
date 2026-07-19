@@ -33,6 +33,7 @@ import { PanelBreadcrumb } from './panel/PanelBreadcrumb';
 import { PanelDreamFlow } from './panel/PanelDreamFlow';
 import { PanelTransformIntake } from './panel/PanelTransformIntake';
 import { PanelProgramsSection } from './panel/PanelProgramsSection';
+import { PanelTaskBoard } from './panel/PanelTaskBoard';
 import { useWorkspace, type WorkspaceSectionId } from '@/contexts/WorkspaceContext';
 import { useHelpHistory } from '@/hooks/use-help-history';
 import { useQuery } from '@tanstack/react-query';
@@ -274,17 +275,25 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
               ) : selectedTask?.task ? (
                 <PanelTaskView
                   task={selectedTask.task}
+                  goalId={selectedTask.goalId}
                   goalTitle={selectedTaskGoalTitle}
                   onBack={() => setSelectedTask(null)}
                 />
               ) : (
-                <ActionHub
-                  goals={goals}
-                  isLoading={isLoading}
-                  onSelectMilestone={(goalId, milestoneId) =>
-                    setActionSelection({ goalId, milestoneId })
-                  }
-                />
+                <div className="space-y-3">
+                  <ActionHub
+                    goals={goals}
+                    isLoading={isLoading}
+                    onSelectMilestone={(goalId, milestoneId) =>
+                      setActionSelection({ goalId, milestoneId })
+                    }
+                  />
+                  {/* Wave 1: the kanban's status machine, compressed —
+                      status changes write through the one existing path. */}
+                  <PanelTaskBoard
+                    onOpenTask={(t) => setSelectedTask({ goalId: t.goalId, task: t.raw ?? t })}
+                  />
+                </div>
               )
             ) : id === 'insights' ? (
               <InsightsList entries={helpHistory} />
