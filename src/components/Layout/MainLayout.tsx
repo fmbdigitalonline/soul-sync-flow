@@ -85,7 +85,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   }, [isTablet]);
 
   useEffect(() => {
-    return onCoachClose(() => setIsToolsOpen(false));
+    return onCoachClose(() => {
+      setIsToolsOpen(false);
+      setIsToolsPanelCollapsed(true);
+    });
   }, []);
 
   const handleSignOut = async () => {
