@@ -29,9 +29,11 @@ interface PanelTaskViewProps {
   goalId?: string;
   goalTitle?: string;
   onBack: () => void;
+  /** When true, render only the chat surface (moment shell owns chrome). */
+  compact?: boolean;
 }
 
-export const PanelTaskView: React.FC<PanelTaskViewProps> = ({ task, goalId, onBack }) => {
+export const PanelTaskView: React.FC<PanelTaskViewProps> = ({ task, goalId, onBack, compact = false }) => {
   const { tasks: boardTasks, updateTaskStatus } = useTaskBoard();
   const boardTask = boardTasks.find(
     (t) => t.id === String(task?.id ?? '') && (!goalId || t.goalId === goalId),
@@ -77,11 +79,12 @@ export const PanelTaskView: React.FC<PanelTaskViewProps> = ({ task, goalId, onBa
   return (
     // The interface is h-full/flex — give it a real height inside the
     // scrolling panel so its own internal scroll areas work.
-    <div className="h-[70vh] min-h-[420px] rounded-lg border border-border/60 overflow-hidden bg-background">
+    <div className={`h-[70vh] min-h-[420px] overflow-hidden bg-background ${compact ? '' : 'rounded-lg border border-border/60'}`}>
       <TaskCoachInterface
         task={coachTask as any}
         onBack={onBack}
         onTaskComplete={(taskId) => void handleComplete(taskId)}
+        compact={compact}
       />
     </div>
   );

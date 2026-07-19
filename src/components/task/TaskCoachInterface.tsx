@@ -56,6 +56,14 @@ interface TaskCoachInterfaceProps {
   task: Task;
   onBack: () => void;
   onTaskComplete: (taskId: string) => void;
+  /**
+   * Compact mode — used when the interface is embedded inside the Coach
+   * side panel's "working" moment. It suppresses the internal header,
+   * description, chips, progress bar, timer, sidebar, gate screen and
+   * footer tagline so the surrounding moment shell owns that chrome.
+   * The chat surface (messages + composer + Mark done) is preserved.
+   */
+  compact?: boolean;
 }
 
 // EnhancedCoachInterface's Message type
@@ -73,7 +81,8 @@ interface CoachMessage {
 export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   task,
   onBack,
-  onTaskComplete
+  onTaskComplete,
+  compact = false,
 }) => {
   const { t } = useLanguage();
   const { isMobile, isUltraNarrow, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
@@ -249,6 +258,16 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       });
     };
   }, [task.id, task.title, task.status, task.estimated_duration, sessionStats]);
+
+  // Compact mode auto-starts the session so the embedded panel skips
+  // the "Ready to Work Together?" gate — the user already tapped
+  // "Start" in the previous moment.
+  useEffect(() => {
+    if (compact && !sessionStarted) {
+      setSessionStarted(true);
+      setIsTimerRunning(true);
+    }
+  }, [compact, sessionStarted]);
 
   // Timer effect with logging
   useEffect(() => {
@@ -823,6 +842,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
       <MobileSidebar />
       
       {/* Task Header - Mobile Responsive */}
+      {!compact && (
       <div className="border-b bg-background p-3 md:p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -937,10 +957,28 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
           </div>
         )}
       </div>
+      )}
+
+      {/* Compact mode gets a slim, single-line action bar with just
+          Mark done — the surrounding moment shell shows the title. */}
+      {compact && !taskCompleted && task.status !== 'completed' && (
+        <div className="flex items-center justify-end px-3 pt-2 pb-1">
+          <Button
+            onClick={handleCompleteTask}
+            disabled={isTaskCompleting(task.id)}
+            className="bg-emerald-600 hover:bg-emerald-700 h-8 px-3 text-xs disabled:opacity-50"
+            size="sm"
+          >
+            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+            {t('taskCoach.completeTask')}
+          </Button>
+        </div>
+      )}
 
       {/* Main Content - Mobile Responsive Layout */}
-      <div className="flex-1 flex flex-col md:flex-row gap-4 p-4 min-h-0">
+      <div className={`flex-1 flex flex-col md:flex-row min-h-0 ${compact ? 'gap-0 p-0' : 'gap-4 p-4'}`}>
         {/* Desktop Sidebar - Hidden on Mobile */}
+        {!compact && (
         <div className="hidden md:block w-80 space-y-4 overflow-y-auto">
           <SessionProgress 
             focusTime={focusTime}
@@ -973,6 +1011,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
             </>
           )}
         </div>
+        )}
 
         {/* Main Coach Interface - Full Width on Mobile */}
         <div className="flex-1 flex flex-col min-h-0">
@@ -1057,9 +1096,11 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
-                <p className="text-xs text-center text-gray-500 mt-2">
-                  Task-aware coaching with interactive micro-task breakdown
-                </p>
+                {!compact && (
+                  <p className="text-xs text-center text-gray-500 mt-2">
+                    Task-aware coaching with interactive micro-task breakdown
+                  </p>
+                )}
               </div>
             </>
           )}
