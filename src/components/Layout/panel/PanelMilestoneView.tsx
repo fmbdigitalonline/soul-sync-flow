@@ -17,11 +17,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Goal, GoalMilestone } from '@/hooks/use-journey-goals';
 import { PanelCoachDock } from './PanelCoachDock';
+import { useTaskBoard, type BoardTask } from '@/hooks/use-task-board';
 
 interface PanelMilestoneViewProps {
   goal: Goal;
   milestone: GoalMilestone;
   onSelectMilestone: (milestoneId: string) => void;
+  onOpenTask?: (task: BoardTask) => void;
 }
 
 const MAX = 3;
@@ -30,9 +32,22 @@ export const PanelMilestoneView: React.FC<PanelMilestoneViewProps> = ({
   goal,
   milestone,
   onSelectMilestone,
+  onOpenTask,
 }) => {
   const [showAllTraits, setShowAllTraits] = useState(false);
   const [showAllNext, setShowAllNext] = useState(false);
+  const [showAllTasks, setShowAllTasks] = useState(false);
+  // Focus mode (Wave 3): the milestone's own tasks, right here.
+  const { tasks: boardTasks } = useTaskBoard();
+  const milestoneTasks = useMemo(
+    () =>
+      boardTasks.filter(
+        (t) => t.goalId === goal.id && (!t.milestone_id || t.milestone_id === milestone.id),
+      ),
+    [boardTasks, goal.id, milestone.id],
+  );
+  const visibleTasks = showAllTasks ? milestoneTasks : milestoneTasks.slice(0, MAX);
+  const hiddenTasks = Math.max(0, milestoneTasks.length - MAX);
 
   const traits = goal.alignedWith ?? [];
   const visibleTraits = showAllTraits ? traits : traits.slice(0, MAX);
@@ -101,6 +116,52 @@ export const PanelMilestoneView: React.FC<PanelMilestoneViewProps> = ({
               className="h-6 px-2 ml-5 text-[10px] text-muted-foreground hover:text-foreground"
             >
               {showAllTraits ? 'Show less' : `Show ${hiddenTraits} more`}
+            </Button>
+          )}
+        </section>
+      )}
+
+      {/* Focus mode (Wave 3): this milestone's tasks, workable in place */}
+      {milestoneTasks.length > 0 && onOpenTask && (
+        <section className="space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            <ArrowRight className="h-3.5 w-3.5 text-primary" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Tasks
+            </span>
+            <span className="text-[10px] text-muted-foreground/70">
+              ({milestoneTasks.filter((t) => t.status === 'completed').length}/{milestoneTasks.length})
+            </span>
+          </div>
+          <ul className="space-y-1">
+            {visibleTasks.map((t) => (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  onClick={() => onOpenTask(t)}
+                  className="w-full text-left pl-5 pr-2 py-1.5 rounded-md hover:bg-muted/40 transition-colors"
+                >
+                  <p
+                    className={
+                      t.status === 'completed'
+                        ? 'text-xs truncate line-through text-muted-foreground'
+                        : 'text-xs text-foreground truncate'
+                    }
+                  >
+                    {t.title}
+                  </p>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {hiddenTasks > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAllTasks((v) => !v)}
+              className="h-6 px-2 ml-5 text-[10px] text-muted-foreground hover:text-foreground"
+            >
+              {showAllTasks ? 'Show less' : `Show ${hiddenTasks} more`}
             </Button>
           )}
         </section>

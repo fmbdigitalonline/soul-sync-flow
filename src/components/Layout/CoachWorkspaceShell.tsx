@@ -35,6 +35,8 @@ import { PanelTransformIntake } from './panel/PanelTransformIntake';
 import { PanelProgramsSection } from './panel/PanelProgramsSection';
 import { PanelTaskBoard } from './panel/PanelTaskBoard';
 import { PanelDiscoveryFlow } from './panel/PanelDiscoveryFlow';
+import { PanelHabits } from './panel/PanelHabits';
+import { WeeklySummary } from '@/components/productivity/WeeklySummary';
 import { useXPProgression } from '@/hooks/use-xp-progression';
 import { useWorkspace, type WorkspaceSectionId } from '@/contexts/WorkspaceContext';
 import { useHelpHistory } from '@/hooks/use-help-history';
@@ -282,6 +284,7 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
                     onSelectMilestone={(mid) =>
                       setActionSelection({ goalId: selectedGoal.id, milestoneId: mid })
                     }
+                    onOpenTask={(t) => setSelectedTask({ goalId: t.goalId, task: t.raw ?? t })}
                   />
                 </div>
               ) : selectedTask?.task ? (
@@ -305,10 +308,17 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
                   <PanelTaskBoard
                     onOpenTask={(t) => setSelectedTask({ goalId: t.goalId, task: t.raw ?? t })}
                   />
+                  {/* Wave 3: the rhythm layer — habits with streaks */}
+                  <PanelHabits />
                 </div>
               )
             ) : id === 'insights' ? (
               <InsightsList entries={helpHistory} />
+            ) : id === 'history' ? (
+              <div className="[&_.rounded-2xl]:rounded-lg [&_.shadow-lg]:shadow-none">
+                {/* Wave 3: the built weekly retrospective, self-contained */}
+                <WeeklySummary />
+              </div>
             ) : (
               <EmptySlot label={placeholderFor(id)} />
             )}

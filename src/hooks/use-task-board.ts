@@ -22,6 +22,7 @@ export interface BoardTask {
   estimated_duration?: string;
   energy_level_required?: string;
   due_date?: string;
+  milestone_id?: string;
   raw: any;
 }
 
@@ -46,6 +47,7 @@ export function useTaskBoard() {
           estimated_duration: task?.estimated_duration,
           energy_level_required: task?.energy_level_required,
           due_date: task?.due_date,
+          milestone_id: task?.milestone_id ? String(task.milestone_id) : undefined,
           raw: task,
         });
       });
