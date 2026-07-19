@@ -16,7 +16,7 @@ import { PageContainer } from "./PageContainer";
 import { ThreePanelLayout } from "./ThreePanelLayout";
 import { ContextualToolsPanel } from "./ContextualToolsPanel";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { onCoachOpen } from "@/lib/coach-workspace-bus";
+import { onCoachClose, onCoachOpen } from "@/lib/coach-workspace-bus";
 
 const TOOLS_PANEL_COLLAPSED_STORAGE_KEY = "threePanelLayout:toolsPanelCollapsed";
 interface MainLayoutProps {
@@ -83,6 +83,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       }
     });
   }, [isTablet]);
+
+  useEffect(() => {
+    return onCoachClose(() => setIsToolsOpen(false));
+  }, []);
 
   const handleSignOut = async () => {
     try {
