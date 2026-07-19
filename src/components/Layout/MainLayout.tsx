@@ -72,17 +72,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   }, []);
 
   // Slice C: handshake — when the twin triggers a multi-step tool, open
-  // the Coach panel automatically. Tablet uses the sheet overlay; desktop
+  // the Coach panel automatically. Mobile/tablet use the sheet overlay; desktop
   // uncollapses the resizable third panel.
   useEffect(() => {
     return onCoachOpen(() => {
-      if (isTablet) {
+      if (isMobile || isTablet) {
         setIsToolsOpen(true);
       } else {
         setIsToolsPanelCollapsed(false);
       }
     });
-  }, [isTablet]);
+  }, [isMobile, isTablet]);
 
   useEffect(() => {
     return onCoachClose(() => {
