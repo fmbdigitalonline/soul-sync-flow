@@ -16,7 +16,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Goal, GoalMilestone } from '@/hooks/use-journey-goals';
-import { PanelCoachDock } from './PanelCoachDock';
 import { useTaskBoard, type BoardTask } from '@/hooks/use-task-board';
 
 interface PanelMilestoneViewProps {
@@ -206,13 +205,10 @@ export const PanelMilestoneView: React.FC<PanelMilestoneViewProps> = ({
         )}
       </section>
 
-      {/* The Coach's own dialogue, in the panel (v2.7: twin chat stays
-          clean — no prompt handoffs to the Twin's stream) */}
-      <PanelCoachDock
-        contextKey={`milestone_${goal.id}_${milestone.id}`}
-        seedPrompt={`I want to work on the milestone "${milestone.title}" (part of "${goal.title}"). Coach me into it.`}
-        placeholder="Talk with your coach about this milestone…"
-      />
+      {/* Founder correction Jul 19: the program-aware (spiritual-growth
+          register) dock was the WRONG coach for achievement contexts and
+          is removed. Coaching happens per task, in the real
+          TaskCoachInterface, one tap away in the Tasks list above. */}
     </div>
   );
 };
