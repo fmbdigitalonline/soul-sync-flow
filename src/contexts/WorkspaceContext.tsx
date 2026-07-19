@@ -45,6 +45,18 @@ export interface PendingTransformIntake {
 export type DreamFlowPhase = 'building' | 'ready';
 
 /**
+ * v2.9 "one moment at a time" — the achievement side-panel is a
+ * linear sequence, not a dashboard. Persisted alongside the rest of
+ * dreamFlow so a Sheet close/reopen resumes on the same moment.
+ *
+ *   milestone → task → working → done
+ *
+ * `showPlan` is a local disclosure: the "See the plan" secondary from
+ * any moment reveals the roadmap without exiting the current moment.
+ */
+export type DreamMomentStage = 'milestone' | 'task' | 'working' | 'done';
+
+/**
  * v2.8 Transformation router. "Help me transform this" is one journey with
  * three depths — the panel decides *route* first, then walks *stage*.
  * Persisted alongside the seed so a Sheet close/reopen resumes exactly.
@@ -99,6 +111,8 @@ export interface DreamFlowState {
   decomposedGoal: any | null;
   showAllMilestones: boolean;
   dismissed: boolean;
+  momentStage: DreamMomentStage;
+  showPlan: boolean;
 }
 
 const DEFAULT_DREAM_FLOW: DreamFlowState = {
@@ -106,6 +120,8 @@ const DEFAULT_DREAM_FLOW: DreamFlowState = {
   decomposedGoal: null,
   showAllMilestones: false,
   dismissed: false,
+  momentStage: 'milestone',
+  showPlan: false,
 };
 
 const DEFAULT_OPEN_SECTIONS: Record<WorkspaceSectionId, boolean> = {
