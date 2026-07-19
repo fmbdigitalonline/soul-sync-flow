@@ -14,16 +14,40 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { LifeOperatingSystemDomainFocus } from '@/components/dashboard/LifeOperatingSystemDomainFocus';
 import { ConversationalAssessment } from '@/components/dashboard/ConversationalAssessment';
 import { LifeOperatingSystemDashboard } from '@/components/dashboard/LifeOperatingSystemDashboard';
+import { TransformScopeInterpretation } from './TransformScopeInterpretation';
+import { inferDomains } from '@/services/transformation-intake-service';
 
 export const TransformPatternScope: React.FC = () => {
-  const { transformFlow, patchTransformFlow } = useWorkspace();
+  const { transformFlow, patchTransformFlow, pendingTransformIntake } = useWorkspace();
   const stage = transformFlow.stage;
+  const pattern = pendingTransformIntake?.pattern ?? '';
+  const hasInterpretation = pattern.length > 0 && inferDomains(pattern).length > 0;
 
-  const back = () => patchTransformFlow({ stage: 'scope_menu' });
+  // Back returns to the Coach interpretation when available so the
+  // conversational frame is preserved; otherwise to the plain chooser.
+  const backTarget = hasInterpretation ? 'scope_interpretation' : 'scope_menu';
+  const back = () => patchTransformFlow({ stage: backTarget });
+
+  // Default landing for this route: interpretation first (if we have
+  // signal), else fall straight through to the chooser.
+  const effectiveStage =
+    stage === 'chooser'
+      ? (hasInterpretation ? 'scope_interpretation' : 'scope_menu')
+      : stage;
+
+  const LeadIn: React.FC = () => (
+    <p className="text-[11px] text-muted-foreground italic">
+      Here's how this pattern connects to your Life OS.
+    </p>
+  );
 
   return (
     <div className="space-y-3">
-      {(stage === 'chooser' || stage === 'scope_menu') && (
+      {effectiveStage === 'scope_interpretation' && (
+        <TransformScopeInterpretation pattern={pattern} />
+      )}
+
+      {effectiveStage === 'scope_menu' && (
         <div className="space-y-2">
           <p className="text-[11px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400 font-semibold">
             See where this pattern appears
@@ -51,30 +75,43 @@ export const TransformPatternScope: React.FC = () => {
               Review my full Life OS
             </button>
           </div>
+          {hasInterpretation && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-full h-7 text-[11px]"
+              onClick={() => patchTransformFlow({ stage: 'scope_interpretation' })}
+            >
+              Back to interpretation
+            </Button>
+          )}
         </div>
       )}
 
-      {stage === 'scope_domain_focus' && (
+      {effectiveStage === 'scope_domain_focus' && (
         <div className="space-y-2">
+          <LeadIn />
           <LifeOperatingSystemDomainFocus
             onBack={back}
-            onComplete={() => patchTransformFlow({ stage: 'scope_menu' })}
+            onComplete={() => patchTransformFlow({ stage: backTarget })}
           />
         </div>
       )}
 
-      {stage === 'scope_guided' && (
+      {effectiveStage === 'scope_guided' && (
         <div className="space-y-2">
+          <LeadIn />
           <ConversationalAssessment
             onBack={back}
-            onComplete={() => patchTransformFlow({ stage: 'scope_menu' })}
+            onComplete={() => patchTransformFlow({ stage: backTarget })}
           />
         </div>
       )}
 
-      {stage === 'scope_full' && (
+      {effectiveStage === 'scope_full' && (
         <div className="space-y-2">
-          <LifeOperatingSystemDashboard onCreateProgram={() => patchTransformFlow({ stage: 'scope_menu' })} />
+          <LeadIn />
+          <LifeOperatingSystemDashboard onCreateProgram={() => patchTransformFlow({ stage: backTarget })} />
           <Button size="sm" variant="ghost" className="w-full h-7 text-[11px]" onClick={back}>
             Back
           </Button>
