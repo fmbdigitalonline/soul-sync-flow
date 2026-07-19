@@ -139,20 +139,18 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
 
   return (
     <div className={cn('h-full p-6 space-y-6 overflow-y-auto', className)}>
-      {/* Header */}
+      {/* Header — no dev badges (eliminate what adds no user value) */}
       <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-foreground">Coach Workspace</h3>
-          <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
-            v2.5
-          </Badge>
-        </div>
+        <h3 className="text-base font-semibold text-foreground">Coach Workspace</h3>
         <p className="text-xs text-muted-foreground">
           What can we do with what was just discussed?
         </p>
       </div>
 
-      {/* OVERVIEW — always three cards (Three-Pieces Rule) */}
+      {/* OVERVIEW — three pieces with real hierarchy: Focus is THE primary
+          card and carries the panel's one action; thread + suggestion are
+          quiet supporting rows (UX deck: one primary action per screen,
+          hierarchy on the data, actionable empty states). */}
       <section aria-label="Overview" className="space-y-2">
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -161,12 +159,26 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
         </div>
         {pendingIntake ? <PanelDreamFlow /> : <PanelDecompositionCard />}
         <div className="space-y-2">
-          <OverviewCard
-            icon={Target}
-            label="Today's Focus"
+          <FocusCard
             title={overview.focus.title}
             hint={overview.focus.hint}
             emptyCta={overview.focus.emptyCta}
+            action={
+              overview.focus.milestoneTitle
+                ? {
+                    label: 'Continue in chat',
+                    onClick: () =>
+                      askCoach(
+                        `Help me work on "${overview.focus.milestoneTitle}"${
+                          overview.focus.hint ? ` (part of "${overview.focus.hint}")` : ''
+                        }.`,
+                      ),
+                  }
+                : {
+                    label: 'Where should I start?',
+                    onClick: () => askCoach('Where should I start today?'),
+                  }
+            }
           />
           <OverviewCard
             icon={MessageCircle}
@@ -241,6 +253,8 @@ interface OverviewSlot {
   title: string;
   hint?: string;
   emptyCta?: string;
+  /** Set when the slot represents a real milestone the user can act on. */
+  milestoneTitle?: string;
 }
 
 interface OverviewData {
@@ -261,14 +275,22 @@ function deriveOverview(goals: Goal[], loading: boolean): OverviewData {
   // Today's Focus: first active program with an incomplete milestone.
   const activeGoal = goals.find((g) => (g.progress ?? 0) < 100 && g.milestones?.length > 0);
   const activeMilestone: GoalMilestone | undefined = activeGoal?.milestones.find((m) => !m.completed);
+  // Dynamic personal context (UX deck: "you slept 2 hours longer than
+  // yesterday" beats a static count): step position inside the program.
+  const stepIndex = activeGoal && activeMilestone
+    ? activeGoal.milestones.findIndex((m) => m.id === activeMilestone.id)
+    : -1;
   const focus: OverviewSlot = activeMilestone
     ? {
         title: activeMilestone.title,
-        hint: activeGoal ? activeGoal.title : undefined,
+        hint: activeGoal
+          ? `${activeGoal.title}${stepIndex >= 0 ? ` · step ${stepIndex + 1} of ${activeGoal.milestones.length}` : ''}`
+          : undefined,
+        milestoneTitle: activeMilestone.title,
       }
     : {
-        title: 'No active program yet',
-        emptyCta: 'Start a coaching program from the conversation.',
+        title: 'Nothing on the table yet',
+        emptyCta: 'Select a sentence in the conversation to start a program — or ask below.',
       };
 
   // Current Thread: last conversation subject, set by the Coach page.
@@ -325,6 +347,44 @@ interface OverviewCardProps {
   hint?: string;
   emptyCta?: string;
 }
+
+/**
+ * FocusCard — the Overview's PRIMARY piece. Bigger type on the data (the
+ * milestone), tinted surface, and the panel's single action button. Empty
+ * state is an invitation with a tap, never dead text.
+ */
+const FocusCard: React.FC<{
+  title: string;
+  hint?: string;
+  emptyCta?: string;
+  action: { label: string; onClick: () => void };
+}> = ({ title, hint, emptyCta, action }) => (
+  <Card className="p-4 border-primary/30 bg-primary/5">
+    <div className="flex items-start gap-3">
+      <div className="mt-0.5 h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+        <Target className="h-4.5 w-4.5 text-primary" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/80">
+          Today's Focus
+        </p>
+        <p className="text-base font-semibold text-foreground mt-0.5 leading-snug">{title}</p>
+        {hint && <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>}
+        {emptyCta && !hint && (
+          <p className="text-xs text-muted-foreground/80 mt-0.5">{emptyCta}</p>
+        )}
+        <Button
+          size="sm"
+          onClick={action.onClick}
+          className="mt-3 h-8 w-full text-xs font-semibold"
+        >
+          {action.label}
+          <ChevronRight className="ml-1 h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
+  </Card>
+);
 
 const OverviewCard: React.FC<OverviewCardProps> = ({ icon: Icon, label, title, hint, emptyCta }) => (
   <Card className="p-3 border-border/60">
