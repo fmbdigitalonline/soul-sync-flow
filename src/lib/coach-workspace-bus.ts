@@ -37,6 +37,7 @@ export interface CoachDecompositionDetail {
 }
 
 const OPEN_EVENT = 'coach-workspace:open';
+const CLOSE_EVENT = 'coach-workspace:close';
 const DECOMP_EVENT = 'coach-workspace:decomposition';
 
 export function emitCoachOpen(detail: CoachOpenDetail = {}): void {
@@ -49,6 +50,17 @@ export function onCoachOpen(cb: (detail: CoachOpenDetail) => void): () => void {
   const handler = (e: Event) => cb(((e as CustomEvent<CoachOpenDetail>).detail) ?? {});
   window.addEventListener(OPEN_EVENT, handler);
   return () => window.removeEventListener(OPEN_EVENT, handler);
+}
+
+export function emitCoachClose(): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(CLOSE_EVENT));
+}
+
+export function onCoachClose(cb: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener(CLOSE_EVENT, cb);
+  return () => window.removeEventListener(CLOSE_EVENT, cb);
 }
 
 export function emitCoachDecomposition(detail: CoachDecompositionDetail): void {

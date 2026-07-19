@@ -16,7 +16,7 @@ import { PageContainer } from "./PageContainer";
 import { ThreePanelLayout } from "./ThreePanelLayout";
 import { ContextualToolsPanel } from "./ContextualToolsPanel";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { onCoachOpen } from "@/lib/coach-workspace-bus";
+import { onCoachClose, onCoachOpen } from "@/lib/coach-workspace-bus";
 
 const TOOLS_PANEL_COLLAPSED_STORAGE_KEY = "threePanelLayout:toolsPanelCollapsed";
 interface MainLayoutProps {
@@ -72,17 +72,24 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   }, []);
 
   // Slice C: handshake — when the twin triggers a multi-step tool, open
-  // the Coach panel automatically. Tablet uses the sheet overlay; desktop
+  // the Coach panel automatically. Mobile/tablet use the sheet overlay; desktop
   // uncollapses the resizable third panel.
   useEffect(() => {
     return onCoachOpen(() => {
-      if (isTablet) {
+      if (isMobile || isTablet) {
         setIsToolsOpen(true);
       } else {
         setIsToolsPanelCollapsed(false);
       }
     });
-  }, [isTablet]);
+  }, [isMobile, isTablet]);
+
+  useEffect(() => {
+    return onCoachClose(() => {
+      setIsToolsOpen(false);
+      setIsToolsPanelCollapsed(true);
+    });
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -166,7 +173,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                         <span className="sr-only">{t('contextualTools.toolsAndInsights')}</span>
                       </Button>
                     </SheetTrigger>
-                    <SheetContent side="right" className="w-full max-w-md p-0">
+                    <SheetContent forceMount side="right" className="w-full max-w-md p-0">
                       <SheetHeader className="px-6 pt-6">
                         <SheetTitle>{t('contextualTools.toolsAndInsights')}</SheetTitle>
                         <SheetDescription>{t('contextualTools.contextAwareAssistance')}</SheetDescription>
@@ -194,23 +201,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               {children}
             </PageContainer>
           </main>
-
-          {/* Contextual Tools access for mobile */}
-          {user && <Sheet open={isToolsOpen} onOpenChange={setIsToolsOpen}>
-              <SheetTrigger asChild>
-                
-              </SheetTrigger>
-              <SheetContent side="right" className="w-full max-w-md p-0">
-                <SheetHeader className="px-6 pt-6">
-                  <SheetTitle>{t('contextualTools.toolsAndInsights')}</SheetTitle>
-                  <SheetDescription>{t('contextualTools.contextAwareAssistance')}</SheetDescription>
-                </SheetHeader>
-                <div className="max-h-[calc(100dvh-8rem)] overflow-y-auto">
-                  <ContextualToolsPanel className="pt-2" />
-                </div>
-              </SheetContent>
-            </Sheet>}
-
           {/* Mobile Bottom Navigation */}
           {user && <MobileNavigation />}
         </> : <>
@@ -233,7 +223,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
           {/* Tools Sheet for Tablets (same as mobile) */}
           {user && isTablet && <Sheet open={isToolsOpen} onOpenChange={setIsToolsOpen}>
-              <SheetContent side="right" className="w-full max-w-md p-0">
+              <SheetContent forceMount side="right" className="w-full max-w-md p-0">
                 <SheetHeader className="px-6 pt-6">
                   <SheetTitle>{t('contextualTools.toolsAndInsights')}</SheetTitle>
                   <SheetDescription>{t('contextualTools.contextAwareAssistance')}</SheetDescription>

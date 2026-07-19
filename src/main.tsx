@@ -48,6 +48,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -107,6 +108,7 @@ const RootLayout = () => {
                     <CoachAskBridgeMount />
                     <Outlet />
                     <Toaster />
+                    <SonnerToaster />
                   </WorkspaceProvider>
                 </BlueprintCacheProvider>
               </SoulOrbProvider>

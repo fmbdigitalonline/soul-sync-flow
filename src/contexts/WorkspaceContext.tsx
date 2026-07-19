@@ -9,8 +9,7 @@
  * Additive only — this does not replace `coach-workspace-bus`; it uses it.
  */
 
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { emitCoachOpen } from '@/lib/coach-workspace-bus';
 
 export interface PendingIntake {
@@ -21,6 +20,18 @@ export interface PendingIntake {
 }
 
 export type DreamFlowPhase = 'building' | 'ready';
+
+export type WorkspaceSectionId = 'actions' | 'insights' | 'memories' | 'tools' | 'history';
+
+export interface ActionSelection {
+  goalId: string;
+  milestoneId: string;
+}
+
+export interface WorkspaceTaskSelection {
+  goalId?: string;
+  task: any;
+}
 
 export interface DreamFlowState {
   phase: DreamFlowPhase;
@@ -36,6 +47,14 @@ const DEFAULT_DREAM_FLOW: DreamFlowState = {
   dismissed: false,
 };
 
+const DEFAULT_OPEN_SECTIONS: Record<WorkspaceSectionId, boolean> = {
+  actions: false,
+  insights: false,
+  memories: false,
+  tools: false,
+  history: false,
+};
+
 const STORAGE_KEY = 'coach-workspace:state:v1';
 
 interface WorkspaceContextValue {
@@ -45,6 +64,13 @@ interface WorkspaceContextValue {
   dreamFlow: DreamFlowState;
   patchDreamFlow: (patch: Partial<DreamFlowState>) => void;
   resetDreamFlow: () => void;
+  selection: ActionSelection | null;
+  setActionSelection: (selection: ActionSelection | null) => void;
+  selectedTask: WorkspaceTaskSelection | null;
+  setSelectedTask: (selection: WorkspaceTaskSelection | null) => void;
+  openSections: Record<WorkspaceSectionId, boolean>;
+  openWorkspaceSection: (id: WorkspaceSectionId) => void;
+  toggleWorkspaceSection: (id: WorkspaceSectionId) => void;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
@@ -52,20 +78,46 @@ const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 function loadPersisted(): {
   pendingIntake: PendingIntake | null;
   dreamFlow: DreamFlowState;
+  selection: ActionSelection | null;
+  selectedTask: WorkspaceTaskSelection | null;
+  openSections: Record<WorkspaceSectionId, boolean>;
 } {
   if (typeof window === 'undefined') {
-    return { pendingIntake: null, dreamFlow: DEFAULT_DREAM_FLOW };
+    return {
+      pendingIntake: null,
+      dreamFlow: DEFAULT_DREAM_FLOW,
+      selection: null,
+      selectedTask: null,
+      openSections: DEFAULT_OPEN_SECTIONS,
+    };
   }
   try {
     const raw = window.sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return { pendingIntake: null, dreamFlow: DEFAULT_DREAM_FLOW };
+    if (!raw) {
+      return {
+        pendingIntake: null,
+        dreamFlow: DEFAULT_DREAM_FLOW,
+        selection: null,
+        selectedTask: null,
+        openSections: DEFAULT_OPEN_SECTIONS,
+      };
+    }
     const parsed = JSON.parse(raw);
     return {
       pendingIntake: parsed?.pendingIntake ?? null,
       dreamFlow: { ...DEFAULT_DREAM_FLOW, ...(parsed?.dreamFlow ?? {}) },
+      selection: parsed?.selection ?? null,
+      selectedTask: parsed?.selectedTask ?? null,
+      openSections: { ...DEFAULT_OPEN_SECTIONS, ...(parsed?.openSections ?? {}) },
     };
   } catch {
-    return { pendingIntake: null, dreamFlow: DEFAULT_DREAM_FLOW };
+    return {
+      pendingIntake: null,
+      dreamFlow: DEFAULT_DREAM_FLOW,
+      selection: null,
+      selectedTask: null,
+      openSections: DEFAULT_OPEN_SECTIONS,
+    };
   }
 }
 
@@ -73,6 +125,9 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const initial = useMemo(loadPersisted, []);
   const [pendingIntake, setPendingIntake] = useState<PendingIntake | null>(initial.pendingIntake);
   const [dreamFlow, setDreamFlow] = useState<DreamFlowState>(initial.dreamFlow);
+  const [selection, setSelection] = useState<ActionSelection | null>(initial.selection);
+  const [selectedTask, setSelectedTaskState] = useState<WorkspaceTaskSelection | null>(initial.selectedTask);
+  const [openSections, setOpenSections] = useState<Record<WorkspaceSectionId, boolean>>(initial.openSections);
 
   // Persist on every change so a Sheet unmount/remount does not lose state.
   useEffect(() => {
@@ -80,17 +135,20 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       window.sessionStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ pendingIntake, dreamFlow }),
+        JSON.stringify({ pendingIntake, dreamFlow, selection, selectedTask, openSections }),
       );
     } catch {
       /* ignore quota errors */
     }
-  }, [pendingIntake, dreamFlow]);
+  }, [pendingIntake, dreamFlow, selection, selectedTask, openSections]);
 
   const openPanelWithIntake = useCallback((intake: PendingIntake) => {
     setPendingIntake(intake);
     // New intake ⇒ fresh build cycle. Preserve until user completes/dismisses.
     setDreamFlow(DEFAULT_DREAM_FLOW);
+    setSelection(null);
+    setSelectedTaskState(null);
+    setOpenSections((prev) => ({ ...prev, actions: true }));
     // Auto-open the Coach panel on the Actions section so the flow lands
     // visibly. Bus is idempotent — safe to call regardless of panel state.
     emitCoachOpen({ section: 'actions', view: 'decomposition', reason: `intake:${intake.source}` });
@@ -99,6 +157,8 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const clearPendingIntake = useCallback(() => {
     setPendingIntake(null);
     setDreamFlow(DEFAULT_DREAM_FLOW);
+    setSelection(null);
+    setSelectedTaskState(null);
   }, []);
 
   const patchDreamFlow = useCallback(
@@ -106,6 +166,26 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [],
   );
   const resetDreamFlow = useCallback(() => setDreamFlow(DEFAULT_DREAM_FLOW), []);
+  const setActionSelection = useCallback((next: ActionSelection | null) => {
+    setSelection(next);
+    if (next) {
+      setSelectedTaskState(null);
+      setOpenSections((prev) => ({ ...prev, actions: true }));
+    }
+  }, []);
+  const setSelectedTask = useCallback((next: WorkspaceTaskSelection | null) => {
+    setSelectedTaskState(next);
+    if (next) {
+      setSelection(null);
+      setOpenSections((prev) => ({ ...prev, actions: true }));
+    }
+  }, []);
+  const openWorkspaceSection = useCallback((id: WorkspaceSectionId) => {
+    setOpenSections((prev) => ({ ...prev, [id]: true }));
+  }, []);
+  const toggleWorkspaceSection = useCallback((id: WorkspaceSectionId) => {
+    setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -115,8 +195,29 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       dreamFlow,
       patchDreamFlow,
       resetDreamFlow,
+      selection,
+      setActionSelection,
+      selectedTask,
+      setSelectedTask,
+      openSections,
+      openWorkspaceSection,
+      toggleWorkspaceSection,
     }),
-    [pendingIntake, openPanelWithIntake, clearPendingIntake, dreamFlow, patchDreamFlow, resetDreamFlow],
+    [
+      pendingIntake,
+      openPanelWithIntake,
+      clearPendingIntake,
+      dreamFlow,
+      patchDreamFlow,
+      resetDreamFlow,
+      selection,
+      setActionSelection,
+      selectedTask,
+      setSelectedTask,
+      openSections,
+      openWorkspaceSection,
+      toggleWorkspaceSection,
+    ],
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
