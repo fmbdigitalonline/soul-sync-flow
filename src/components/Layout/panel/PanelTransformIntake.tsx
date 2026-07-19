@@ -16,10 +16,11 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { X, MessageCircle, ChevronRight, Loader2 } from 'lucide-react';
+import { X, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { PanelCoachDock } from './PanelCoachDock';
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -53,6 +54,7 @@ export const PanelTransformIntake: React.FC = () => {
   const [showAllWeeks, setShowAllWeeks] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [result, setResult] = useState<{ program: GrowthProgram; weeks: ProgramWeek[] } | null>(null);
+  const [coachOpen, setCoachOpen] = useState(false);
 
   const pattern = pendingTransformIntake?.pattern ?? '';
   const guesses = useMemo(() => inferDomains(pattern), [pattern]);
@@ -82,17 +84,12 @@ export const PanelTransformIntake: React.FC = () => {
     }
   };
 
-  const askTwin = (prompt: string) => {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('coach-workspace:ask', { detail: { prompt } }));
-    }
-  };
-
   const handleDismiss = () => {
     setResult(null);
     setPhase('confirm');
     setShowAllDomains(false);
     setShowAllWeeks(false);
+    setCoachOpen(false);
     clearPendingTransformIntake();
   };
 
@@ -192,39 +189,38 @@ export const PanelTransformIntake: React.FC = () => {
             </Button>
           )}
 
-          <Button
-            size="sm"
-            className="w-full h-8 text-xs font-semibold"
-            onClick={() =>
-              askTwin(
-                `I just started a transformation program around this pattern: "${pattern}". Week 1 is ${
-                  firstWeek ? `${THEME_LABELS[firstWeek.theme] ?? firstWeek.theme} — ${firstWeek.focus_area}` : 'Foundation'
-                }. Guide me into it.`,
-              )
-            }
-          >
-            Begin week 1 with your coach
-            <ChevronRight className="ml-1 h-3.5 w-3.5" />
-          </Button>
+          {/* v2.7: the coaching happens HERE — the Coach's own dialogue in
+              the panel; the Twin's stream stays clean. */}
+          {coachOpen ? (
+            <PanelCoachDock
+              contextKey={`transform_${result.program.id}`}
+              seedPrompt={`I just started a transformation program around this pattern: "${pattern}". Week 1 is ${
+                firstWeek ? `${THEME_LABELS[firstWeek.theme] ?? firstWeek.theme} — ${firstWeek.focus_area}` : 'Foundation'
+              }. Guide me into it.`}
+              placeholder="Talk with your coach about week 1…"
+            />
+          ) : (
+            <Button
+              size="sm"
+              className="w-full h-8 text-xs font-semibold"
+              onClick={() => setCoachOpen(true)}
+            >
+              Begin week 1 with your coach
+              <ChevronRight className="ml-1 h-3.5 w-3.5" />
+            </Button>
+          )}
         </div>
       )}
 
       {phase === 'error' && (
         <div className="space-y-2">
           <p className="text-xs text-destructive">{errorMsg}</p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full h-8 text-xs"
-            onClick={() =>
-              askTwin(
-                `Help me work on this pattern: "${pattern}". Where does it come from, and what would changing it ask of me?`,
-              )
-            }
-          >
-            <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-            Work on it in conversation instead
-          </Button>
+          {/* v2.7: even the fallback stays in the panel's own coach */}
+          <PanelCoachDock
+            contextKey={`transform_pattern_${pattern.slice(0, 40)}`}
+            seedPrompt={`Help me work on this pattern: "${pattern}". Where does it come from, and what would changing it ask of me?`}
+            placeholder="Talk with your coach about this pattern…"
+          />
         </div>
       )}
     </Card>

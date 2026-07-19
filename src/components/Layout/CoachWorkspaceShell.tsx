@@ -144,13 +144,6 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
     });
   }, [selection, selectedTask]);
 
-  const askCoach = (prompt: string) => {
-    // Handoff to Twin — post into the conversation input if the page listens.
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('coach-workspace:ask', { detail: { prompt } }));
-    }
-  };
-
   const helpHistory = useHelpHistory();
 
   const sectionLabels: Record<SectionId, string> = {
@@ -194,19 +187,20 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
             hint={overview.focus.hint}
             emptyCta={overview.focus.emptyCta}
             action={
-              overview.focus.milestoneTitle
+              overview.focus.goalId && overview.focus.milestoneId
                 ? {
-                    label: 'Continue in chat',
+                    // v2.7: state navigation, never a prompt into the Twin —
+                    // opens the milestone (with its own coach dock) in Actions.
+                    label: 'Work on this',
                     onClick: () =>
-                      askCoach(
-                        `Help me work on "${overview.focus.milestoneTitle}"${
-                          overview.focus.hint ? ` (part of "${overview.focus.hint}")` : ''
-                        }.`,
-                      ),
+                      setActionSelection({
+                        goalId: overview.focus.goalId!,
+                        milestoneId: overview.focus.milestoneId!,
+                      }),
                   }
                 : {
-                    label: 'Where should I start?',
-                    onClick: () => askCoach('Where should I start today?'),
+                    label: 'Open the Action Hub',
+                    onClick: () => openWorkspaceSection('actions'),
                   }
             }
           />
@@ -251,7 +245,6 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
                     onSelectMilestone={(mid) =>
                       setActionSelection({ goalId: selectedGoal.id, milestoneId: mid })
                     }
-                    onAskCoach={askCoach}
                   />
                 </div>
               ) : selectedTask?.task ? (
@@ -259,7 +252,6 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
                   task={selectedTask.task}
                   goalTitle={selectedTaskGoalTitle}
                   onBack={() => setSelectedTask(null)}
-                  onAskCoach={askCoach}
                 />
               ) : (
                 <ActionHub
@@ -293,6 +285,8 @@ interface OverviewSlot {
   emptyCta?: string;
   /** Set when the slot represents a real milestone the user can act on. */
   milestoneTitle?: string;
+  goalId?: string;
+  milestoneId?: string;
 }
 
 interface OverviewData {
@@ -325,6 +319,8 @@ function deriveOverview(goals: Goal[], loading: boolean): OverviewData {
           ? `${activeGoal.title}${stepIndex >= 0 ? ` · step ${stepIndex + 1} of ${activeGoal.milestones.length}` : ''}`
           : undefined,
         milestoneTitle: activeMilestone.title,
+        goalId: activeGoal?.id,
+        milestoneId: activeMilestone.id,
       }
     : {
         title: 'Nothing on the table yet',

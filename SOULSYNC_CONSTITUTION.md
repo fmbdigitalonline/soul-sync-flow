@@ -1,6 +1,24 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v2.6)
+# SoulSync — Developer Constitution & Wiring Roadmap (v2.7)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v2.7 — Twin-chat-clean law: the Coach's dialogue lives in the panel
+(founder, Jul 19 2026). Corrects the v2.5 clause "the panel doesn't host
+a second dialogue" — written before coach-as-aspect gave the coach its
+own register; the register needs a home, and its home is the panel.*
+*— The TWIN CHAT is the relationship dialogue: understanding, reflection,
+patterns. It stays clean and NEVER receives operational prompts.*
+*— The COACH OS CHAT is the operational dialogue, INSIDE the panel,
+context-bound to what is open (this program's week, this milestone, this
+task), powered by that OS's own coach engine and register (the built
+program-aware / task-aware coach services — using them is the point;
+handing off to the Twin wastes them).*
+*— Every panel→twin prompt handoff ("Continue in chat",
+coach-workspace:ask) is retired. The two dialogues connect through STATE,
+not prompt-pasting: completed work and reflections close the loop via
+memory/insights, and the Twin knows what happened because the loop
+closes — never because a button injected text into its stream.
+Supersedes v2.6.*
 
 *v2.6 — The four-intent card + two-engine orchestration ratified (founder,
 Jul 19 2026).*
