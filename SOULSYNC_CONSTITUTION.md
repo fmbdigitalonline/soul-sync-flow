@@ -1,6 +1,25 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v3.1)
+# SoulSync — Developer Constitution & Wiring Roadmap (v3.2)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v3.2 — CONVERSATION EPISODES ratified (founder, Jul 20 2026, adopting
+the advisor's recommended text). Continuity belongs to the user's
+enduring relationship with the Twin, not to one eternal visible
+transcript. Conversations are bounded episodes. When a user returns
+after a meaningful absence — when the local date has changed and at
+least two hours have passed since the last meaningful interaction, or
+after eight hours of absence regardless of date — the user enters a
+fresh conversational space and the Twin speaks first with a reunion
+grounded in relevant prior context. The boundary is evaluated when the
+user returns, using the application timezone with the device timezone
+as fallback. Users may also start a fresh conversation explicitly at
+any time. Closed episodes remain available to History, memory,
+retrieval, and intelligence rather than accumulating indefinitely in
+the active chat. Existing messages are not rewritten; the current
+eternal thread is treated as one closed legacy episode. Episodes
+receive distinct session IDs. A separate relationship identifier is
+deferred until the product supports more than one relationship per
+user.*
 
 *v3.1 — THE REUNION ratified (founder, Jul 20 2026). The Twin
 conversation is the primary entry experience. Companion is the

@@ -203,6 +203,9 @@ const Coach = () => {
           <RotateCcw className="h-4 w-4 mr-2" />
           {t('companion.resetTitle')}
         </h3>
+        <p className="text-xs text-muted-foreground mb-3">
+          {t('companion.resetReassurance')}
+        </p>
         <Button onClick={handleReset} variant="outline" size="sm" className="w-full">
           {t('companion.clearConversation')}
         </Button>

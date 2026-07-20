@@ -2919,8 +2919,9 @@ Help them transform their dream interest into a specific, actionable goal. Use t
       getStarted: 'Get Started',
       pageTitle: 'Soul Companion',
       pageSubtitle: 'Your integrated Soul companion combining coaching and guidance',
-      resetTitle: 'Reset Chat',
-      clearConversation: 'Clear Conversation',
+      resetTitle: 'Start fresh',
+      clearConversation: 'Start a fresh conversation',
+      resetReassurance: 'Your Twin still remembers what matters from previous conversations.',
       systemStatus: 'System Status',
       resetToast: {
         title: 'Conversation Reset',
@@ -6712,8 +6713,9 @@ Help hen hun droominteresse om te zetten in een specifiek, uitvoerbaar doel. Geb
       getStarted: 'Aan de Slag',
       pageTitle: 'Metgezel',
       pageSubtitle: 'Je geïntegreerde metgezel die coaching en begeleiding combineert',
-      resetTitle: 'Chat resetten',
-      clearConversation: 'Gesprek wissen',
+      resetTitle: 'Opnieuw beginnen',
+      clearConversation: 'Begin een nieuw gesprek',
+      resetReassurance: 'Je Twin onthoudt wat belangrijk is uit eerdere gesprekken.',
       systemStatus: 'Systeemstatus',
       resetToast: {
         title: 'Gesprek gereset',
