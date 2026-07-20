@@ -478,3 +478,9 @@
 .ss-lrow:last-child { border-bottom: 0; }
 .ss-lrow .ss-ic { width: 34px; height: 34px; border-radius: 11px; background: var(--ss-accent-wash); display: grid; place-items: center; color: var(--ss-accent); flex: none; }
 .ss-group-label { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ss-faint); font-weight: 700; margin: 6px 4px 4px; }
+
+/* My Journey mountain hero (Profile) */
+.ss-hero { position: relative; border-radius: var(--ss-radius); overflow: hidden; border: 1px solid var(--ss-line); box-shadow: var(--ss-shadow); padding: 0; background: none; cursor: pointer; width: 100%; }
+.ss-hero-veil { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 38%, rgba(40,28,60,.58)); }
+.ss-hero-cap { position: absolute; left: 18px; right: 18px; bottom: 15px; }
+.ss-hero-open { display: inline-flex; align-items: center; gap: 7px; margin-top: 11px; font-size: 13px; font-weight: 600; color: #fff; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35); padding: 8px 15px; border-radius: 999px; }
