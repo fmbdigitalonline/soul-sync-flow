@@ -39,6 +39,7 @@ import { PanelHabits } from './panel/PanelHabits';
 import { PanelJourneyView } from './panel/PanelJourneyView';
 import { PanelProactivitySettings } from './panel/PanelProactivitySettings';
 import { PanelEpisodeHistory } from './panel/PanelEpisodeHistory';
+import { PanelMyJourney } from './panel/PanelMyJourney';
 import DreamAchievementDashboard from '@/components/journey/DreamAchievementDashboard';
 import { useJourneyTracking } from '@/hooks/use-journey-tracking';
 import { WeeklySummary } from '@/components/productivity/WeeklySummary';
@@ -367,6 +368,9 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
               <InsightsList entries={helpHistory} />
             ) : id === 'history' ? (
               <div className="space-y-2 [&_.rounded-2xl]:rounded-lg [&_.shadow-lg]:shadow-none">
+                {/* v3.4: My Journey — the perspective level, entered
+                    deliberately (collapsed), composed from existing stores */}
+                <PanelMyJourney />
                 {/* v3.2 Slice 2: conversation episodes as the user thinks of
                     them — the first brick of the "My Journey" horizon */}
                 <PanelEpisodeHistory />
