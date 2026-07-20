@@ -49,7 +49,7 @@ import "./index.css";
 
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
-import Index from "./pages/Index";
+import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Blueprint from "./pages/Blueprint";
@@ -123,8 +123,9 @@ const RootLayout = () => {
 // v3.1 The Reunion: the Twin conversation is the primary entry
 // experience. A signed-in user landing on / goes straight into the
 // Companion conversation, where the Twin speaks first. Signed-out
-// visitors keep the Index landing (first-visit mode) until Slice 3
-// retires it — nothing is deleted until its replacement lives.
+// visitors get the small public Landing (Slice 3 — Index retired now
+// that the reunion lives; nothing was lost, its signed-in job moved to
+// the reunion and Coach OS).
 const HomeGate = () => {
   const { user, loading } = useAuth();
   if (loading) {
@@ -134,7 +135,7 @@ const HomeGate = () => {
       </div>
     );
   }
-  return user ? <Navigate to="/companion" replace /> : <Index />;
+  return user ? <Navigate to="/companion" replace /> : <Landing />;
 };
 
 const router = createBrowserRouter([

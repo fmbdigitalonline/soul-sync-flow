@@ -248,6 +248,7 @@ const translations: Record<Language, Translations> = {
       welcomeWithName: 'Welcome to <span class="text-primary">SoulSync</span>, {name}',
       welcomePlain: 'Welcome to SoulSync',
       welcomePlainWithName: 'Welcome to SoulSync, {name}',
+      landingSubtitle: 'A companion that grows to understand you — and journeys with you.',
       subtitle: 'Discover your authentic path through personalized AI guidance and spiritual growth tools.',
       rotatingMessages: [
         'Discover your authentic path through personalized AI guidance and spiritual growth tools.',
@@ -4005,6 +4006,7 @@ Provide 4-6 concrete steps I can start working on immediately.`,
       welcomeWithName: 'Welkom bij <span class="text-primary">SoulSync</span>, {name}',
       welcomePlain: 'Welkom bij SoulSync',
       welcomePlainWithName: 'Welkom bij SoulSync, {name}',
+      landingSubtitle: 'Een metgezel die jou leert begrijpen — en met je meereist.',
       subtitle: 'Ontdek je authentieke pad door gepersonaliseerde AI-begeleiding en spirituele groei-tools.',
       rotatingMessages: [
         'Ontdek je authentieke pad door gepersonaliseerde AI-begeleiding en spirituele groei-tools.',
