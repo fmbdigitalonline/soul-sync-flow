@@ -35,18 +35,17 @@ const MobileNavigation: React.FC = () => {
   };
 
   return (
-    <div 
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg px-2 py-2 shadow-lg safe-area-inset-bottom"
-      style={{ 
+    <div
+      className="md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-lg"
+      style={{
         zIndex: 9999,
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        paddingBottom: 'max(8px, env(safe-area-inset-bottom))'
+        background: 'color-mix(in srgb, var(--ss-surface) 92%, transparent)',
+        borderTop: '1px solid var(--ss-line-2)',
+        paddingTop: '10px',
+        paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
       }}
     >
-      <div className="flex justify-around items-center max-w-md mx-auto">
+      <div className="flex justify-around items-center max-w-md mx-auto px-4">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.to);
@@ -54,21 +53,14 @@ const MobileNavigation: React.FC = () => {
             <Link
               key={item.to}
               to={item.to}
-              className={cn(
-                "flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-150 min-w-[60px] min-h-[56px]",
-                active
-                  ? "bg-primary/10 text-primary border border-primary/20"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              )}
+              className="flex flex-col items-center gap-1 px-3 py-1 min-w-[64px] transition-colors"
+              style={{ color: active ? 'var(--ss-accent)' : 'var(--ss-faint)' }}
             >
-              <Icon className={cn(
-                "h-5 w-5 transition-all duration-200",
-                active ? "scale-110" : ""
-              )} />
-              <span className={cn(
-                "text-xs font-medium transition-all duration-200",
-                active ? "text-primary" : "text-muted-foreground"
-              )}>
+              <Icon className="h-[23px] w-[23px]" strokeWidth={active ? 2 : 1.7} />
+              <span
+                className="text-[11px] font-medium max-w-[76px] truncate"
+                style={{ color: active ? 'var(--ss-accent)' : 'var(--ss-faint)' }}
+              >
                 {item.label}
               </span>
             </Link>
