@@ -31,15 +31,59 @@ export interface TwinReunion {
   reminder?: string;
   /** Unfinished work outside the conversation itself. */
   continueLine?: string;
+  /** Closing "how are you" line, localized. */
+  howAreYou?: string;
   generatedAt: string;
 }
 
 const CACHE_KEY = (userId: string) => `twin-reunion:v1:${userId}`;
 
-function timeGreeting(name?: string): string {
+type Lang = 'en' | 'nl';
+
+function activeLang(): Lang {
+  if (typeof window === 'undefined') return 'en';
+  try {
+    return window.localStorage.getItem('soulsync-language') === 'nl' ? 'nl' : 'en';
+  } catch {
+    return 'en';
+  }
+}
+
+// Copy templates per language — the reunion is the Twin's own voice, so
+// it must speak the user's app language, not a hardcoded English string.
+const COPY: Record<Lang, {
+  greet: (part: string, name?: string) => string;
+  parts: [string, string, string, string]; // night, morning, afternoon, evening
+  remember: (excerpt: string) => string;
+  reminder: (quote: string) => string;
+  continueTitled: (title: string) => string;
+  continueBare: string;
+  howAreYou: string;
+}> = {
+  en: {
+    greet: (part, name) => (name ? `${part}, ${name}.` : `${part}.`),
+    parts: ['Hello', 'Good morning', 'Good afternoon', 'Good evening'],
+    remember: (e) => `Last time, we were exploring: "${e}"`,
+    reminder: (q) => `A reminder from your blueprint: ${q}`,
+    continueTitled: (t) => `When you're ready, "${t}" is still waiting for us in the workspace.`,
+    continueBare: `There's unfinished work waiting for us in the workspace whenever you're ready.`,
+    howAreYou: 'How are you today?',
+  },
+  nl: {
+    greet: (part, name) => (name ? `${part}, ${name}.` : `${part}.`),
+    parts: ['Hallo', 'Goedemorgen', 'Goedemiddag', 'Goedenavond'],
+    remember: (e) => `Vorige keer verkenden we: "${e}"`,
+    reminder: (q) => `Een herinnering uit je blauwdruk: ${q}`,
+    continueTitled: (t) => `Wanneer je er klaar voor bent, wacht "${t}" nog op ons in de werkruimte.`,
+    continueBare: `Er wacht nog werk op ons in de werkruimte wanneer je er klaar voor bent.`,
+    howAreYou: 'Hoe gaat het vandaag met je?',
+  },
+};
+
+function timeGreeting(lang: Lang, name?: string): string {
   const h = new Date().getHours();
-  const part = h < 5 ? 'Hello' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-  return name ? `${part}, ${name}.` : `${part}.`;
+  const idx = h < 5 ? 0 : h < 12 ? 1 : h < 18 ? 2 : 3;
+  return COPY[lang].greet(COPY[lang].parts[idx], name);
 }
 
 function firstName(user: { user_metadata?: Record<string, unknown> } | null | undefined): string | undefined {
@@ -53,8 +97,16 @@ function excerpt(text: string, max = 110): string {
   return clean.length <= max ? clean : `${clean.slice(0, max - 1).replace(/\s+\S*$/, '')}…`;
 }
 
-/** Last user message of the most recent conversation → continuity line. */
-async function rememberLine(userId: string): Promise<string | undefined> {
+// Internal routing prompts (sentence intents, proactive-moment context)
+// are stored as user-role messages but prefixed and hidden from the chat
+// UI. The reunion must apply the SAME filter — quoting "[CONTEXT: …]"
+// back at the user leaks the plumbing and breaks the invisibility law.
+function isHiddenContent(content: string): boolean {
+  return content.trim().startsWith('[CONTEXT:');
+}
+
+/** Last *visible* user message of the most recent conversation → continuity. */
+async function rememberLine(userId: string, lang: Lang): Promise<string | undefined> {
   const { data } = await supabase
     .from('hacs_conversations')
     .select('conversation_data, created_at')
@@ -63,23 +115,31 @@ async function rememberLine(userId: string): Promise<string | undefined> {
     .limit(1);
   const conv = data?.[0];
   const msgs = Array.isArray(conv?.conversation_data) ? (conv!.conversation_data as any[]) : [];
-  const lastUser = [...msgs].reverse().find((m) => m?.role === 'user' && typeof m.content === 'string');
+  const lastUser = [...msgs]
+    .reverse()
+    .find(
+      (m) =>
+        m?.role === 'user' &&
+        typeof m.content === 'string' &&
+        m.content.trim() &&
+        !isHiddenContent(m.content),
+    );
   if (!lastUser) return undefined;
-  return `Last time, we were exploring: "${excerpt(lastUser.content)}"`;
+  return COPY[lang].remember(excerpt(lastUser.content));
 }
 
 /** One rotating blueprint quote, reframed as a personal reminder. */
-async function reminderLine(userId: string): Promise<string | undefined> {
+async function reminderLine(userId: string, lang: Lang): Promise<string | undefined> {
   const result = await personalizedQuotesService.getRotatingQuotes(userId, 1);
   const q = result.success ? result.quotes?.[0]?.quote_text : undefined;
-  return q ? `A reminder from your blueprint: ${q}` : undefined;
+  return q ? COPY[lang].reminder(q) : undefined;
 }
 
 /**
  * Most recent unfinished task/dream activity. Conversation continuity is
  * deliberately excluded — the reunion already IS the conversation.
  */
-async function continueLine(userId: string): Promise<string | undefined> {
+async function continueLine(userId: string, lang: Lang): Promise<string | undefined> {
   const { data } = await supabase
     .from('user_activities')
     .select('activity_type, activity_data, created_at')
@@ -93,8 +153,8 @@ async function continueLine(userId: string): Promise<string | undefined> {
   if (!act) return undefined;
   const title = (act.activity_data as any)?.title;
   return title
-    ? `When you're ready, "${excerpt(String(title), 60)}" is still waiting for us in the workspace.`
-    : `There's unfinished work waiting for us in the workspace whenever you're ready.`;
+    ? COPY[lang].continueTitled(excerpt(String(title), 60))
+    : COPY[lang].continueBare;
 }
 
 export const twinReunionService = {
@@ -130,16 +190,18 @@ export const twinReunionService = {
     const { data: auth } = await supabase.auth.getUser();
     const user = auth?.user;
     if (!user) return null;
+    const lang = activeLang();
     const [remember, reminder, cont] = await Promise.all([
-      rememberLine(user.id).catch(() => undefined),
-      reminderLine(user.id).catch(() => undefined),
-      continueLine(user.id).catch(() => undefined),
+      rememberLine(user.id, lang).catch(() => undefined),
+      reminderLine(user.id, lang).catch(() => undefined),
+      continueLine(user.id, lang).catch(() => undefined),
     ]);
     return {
-      greeting: timeGreeting(firstName(user)),
+      greeting: timeGreeting(lang, firstName(user)),
       remember,
       reminder,
       continueLine: cont,
+      howAreYou: COPY[lang].howAreYou,
       generatedAt: new Date().toISOString(),
     };
   },

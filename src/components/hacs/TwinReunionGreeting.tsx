@@ -17,7 +17,7 @@ export const TwinReunionGreeting: React.FC<{ reunion: TwinReunion }> = ({ reunio
       {reunion.remember && <p className="text-muted-foreground">{reunion.remember}</p>}
       {reunion.reminder && <p className="text-muted-foreground italic">{reunion.reminder}</p>}
       {reunion.continueLine && <p className="text-muted-foreground">{reunion.continueLine}</p>}
-      <p className="text-muted-foreground">How are you today?</p>
+      <p className="text-muted-foreground">{reunion.howAreYou ?? 'How are you today?'}</p>
     </div>
   </div>
 );
