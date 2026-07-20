@@ -191,6 +191,17 @@ export const useHACSConversation = () => {
     }
   }, [user, loadConversationHistory]);
 
+  // Account isolation: the moment authentication drops, the visible
+  // conversation drops with it — no stale transcript may linger while
+  // logged out or bleed into the next login on this device.
+  useEffect(() => {
+    if (!user) {
+      setMessages([]);
+      setConversationId(null);
+      setCurrentSessionId('');
+    }
+  }, [user]);
+
   const saveConversation = useCallback(async (conversationData: ConversationMessage[]) => {
     if (!user || !conversationData.length) return;
 
