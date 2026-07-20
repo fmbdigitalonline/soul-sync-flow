@@ -34,6 +34,9 @@ export const PanelEpisodeHistory: React.FC = () => {
   const [episodes, setEpisodes] = useState<EpisodeSummary[] | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<EpisodeMessage[] | null>(null);
+  // v3.4 enrichment: human titles, cached per episode (first-message title
+  // shows instantly; LLM title replaces it once ready).
+  const [enriched, setEnriched] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -45,6 +48,35 @@ export const PanelEpisodeHistory: React.FC = () => {
       cancelled = true;
     };
   }, [user]);
+
+  // Enrich titles: cached ones immediately, then generate for the most
+  // recent uncached episodes (bounded, skipping the still-growing current
+  // one) so opening History costs at most a few one-time calls.
+  useEffect(() => {
+    if (!episodes || !user) return;
+    let cancelled = false;
+    const cachedNow: Record<string, string> = {};
+    for (const ep of episodes) {
+      const c = conversationEpisodeService.readCachedTitle(ep.sessionId);
+      if (c) cachedNow[ep.sessionId] = c;
+    }
+    if (Object.keys(cachedNow).length) setEnriched((prev) => ({ ...cachedNow, ...prev }));
+
+    (async () => {
+      const toEnrich = episodes
+        .filter((ep) => !ep.isCurrent && ep.messageCount >= 2 && !cachedNow[ep.sessionId])
+        .slice(0, 6);
+      for (const ep of toEnrich) {
+        if (cancelled) return;
+        const title = await conversationEpisodeService.generateTitle(user.id, ep.sessionId, lang);
+        if (cancelled) return;
+        if (title) setEnriched((prev) => ({ ...prev, [ep.sessionId]: title }));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [episodes, user, lang]);
 
   const toggle = async (sessionId: string) => {
     if (open === sessionId) {
@@ -85,7 +117,7 @@ export const PanelEpisodeHistory: React.FC = () => {
           >
             <MessageSquare className="h-3.5 w-3.5 shrink-0 text-soul-purple/70" />
             <span className="min-w-0 flex-1">
-              <span className="block text-xs text-foreground truncate">{ep.title}</span>
+              <span className="block text-xs text-foreground truncate">{enriched[ep.sessionId] || ep.title}</span>
               <span className="block text-[10px] text-muted-foreground">
                 {relativeDay(ep.lastActivity, lang)}
                 {ep.isCurrent && (lang === 'nl' ? ' · huidig' : ' · current')}
