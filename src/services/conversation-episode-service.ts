@@ -143,6 +143,58 @@ export const conversationEpisodeService = {
     }
   },
 
+  /**
+   * Enriched human title for an episode ("Learning to express needs"),
+   * generated once via the deployed ai-analyst-call endpoint and cached by
+   * session id. Returns the cached title synchronously-friendly via
+   * readCachedTitle; generateTitle does the (idempotent) LLM pass. Falls
+   * back to the derived first-message title on any failure — enrichment
+   * is a nicety layered on top of a title that already works.
+   */
+  readCachedTitle(sessionId: string): string | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      return window.localStorage.getItem(`episode-title:v1:${sessionId}`);
+    } catch {
+      return null;
+    }
+  },
+
+  async generateTitle(userId: string, sessionId: string, lang: 'en' | 'nl' = 'en'): Promise<string | null> {
+    const cached = this.readCachedTitle(sessionId);
+    if (cached) return cached;
+    try {
+      const transcript = await this.getEpisodeTranscript(userId, sessionId);
+      if (transcript.length < 2) return null; // too thin to summarise
+      const excerpt = transcript
+        .slice(0, 8)
+        .map((m) => `${m.role === 'user' ? 'User' : 'Twin'}: ${m.content.replace(/\s+/g, ' ').slice(0, 200)}`)
+        .join('\n');
+      const langName = lang === 'nl' ? 'Dutch' : 'English';
+      const prompt = [
+        `Give this conversation a short, human title in ${langName} — 3 to 6 words, no quotes, no punctuation at the end.`,
+        'It should name the theme the way a person would ("Learning to express needs"), not summarise mechanically. Reply with ONLY the title.',
+        '',
+        excerpt,
+      ].join('\n');
+      const { data, error } = await (supabase as any).functions.invoke('ai-analyst-call', {
+        body: { prompt, max_tokens: 24, analyst_type: 'episode_title' },
+      });
+      if (error) return null;
+      const raw: string = data?.content ?? data?.result ?? '';
+      const title = raw.replace(/^["'\s]+|["'.\s]+$/g, '').split('\n')[0].slice(0, 60).trim();
+      if (!title) return null;
+      try {
+        window.localStorage.setItem(`episode-title:v1:${sessionId}`, title);
+      } catch {
+        /* ignore */
+      }
+      return title;
+    } catch {
+      return null;
+    }
+  },
+
   /** Read-only transcript of one episode (hidden routing prompts filtered). */
   async getEpisodeTranscript(userId: string, sessionId: string): Promise<EpisodeMessage[]> {
     try {
