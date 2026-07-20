@@ -120,8 +120,9 @@ export const proactiveInsightGuardian = {
 
       // Cooldown + dismissal fatigue from the ledger.
       const since7d = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
-      // Cast: the generated types predate the ledger migration
-      // (status/pattern_key/delivered_at added in 20260719120000).
+      // Cast: the generated Supabase types don't yet include the ledger
+      // columns (status/pattern_key/delivered_at) — live in the DB via
+      // migration 20260720072347; the cast can drop once types regenerate.
       const { data: recent } = await supabase
         .from('conversation_insights')
         .select('id, status, delivered_at, pattern_key' as any)
