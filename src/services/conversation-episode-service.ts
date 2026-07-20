@@ -34,6 +34,37 @@ export interface EpisodeResolution {
   isFresh: boolean;
 }
 
+export interface EpisodeSummary {
+  sessionId: string;
+  /** Human-ish title derived from the episode's opening (no LLM in Slice 2). */
+  title: string;
+  lastActivity: string;
+  messageCount: number;
+  /** True for the most recent episode (the one still open / resumable). */
+  isCurrent: boolean;
+}
+
+export interface EpisodeMessage {
+  role: 'user' | 'hacs';
+  content: string;
+}
+
+const HIDDEN_PREFIX = '[CONTEXT:';
+
+function deriveTitle(messages: any[]): string {
+  const firstUser = messages.find(
+    (m) =>
+      (m?.role === 'user' || m?.isUser) &&
+      typeof m.content === 'string' &&
+      m.content.trim() &&
+      !m.content.trim().startsWith(HIDDEN_PREFIX),
+  );
+  const source = firstUser?.content ?? messages.find((m) => typeof m?.content === 'string')?.content;
+  if (!source) return 'A conversation';
+  const clean = String(source).replace(/\s+/g, ' ').trim();
+  return clean.length <= 60 ? clean : `${clean.slice(0, 59).replace(/\s+\S*$/, '')}…`;
+}
+
 function newEpisodeId(): string {
   return `episode_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -74,6 +105,68 @@ export const conversationEpisodeService = {
     } catch (e) {
       console.warn('Episode resolution failed — resuming legacy thread:', e);
       return { sessionId: `companion_${userId}`, isFresh: false };
+    }
+  },
+
+  /**
+   * Closed (and current) episodes for the History surface, newest first.
+   * Titles are derived from each episode's own opening — no LLM in Slice 2,
+   * per "validate the fresh-episode feel before investing in generated
+   * summaries". LLM titles/summaries are a later enrichment.
+   */
+  async listEpisodes(userId: string, limit = 30): Promise<EpisodeSummary[]> {
+    try {
+      const { data } = await supabase
+        .from('conversation_memory')
+        .select('session_id, messages, last_activity, created_at')
+        .eq('user_id', userId)
+        .eq('mode', 'companion')
+        .order('last_activity', { ascending: false })
+        .limit(limit);
+      const rows = data ?? [];
+      return rows.map((r, i) => {
+        const msgs = Array.isArray(r.messages) ? (r.messages as any[]) : [];
+        const visible = msgs.filter(
+          (m) => typeof m?.content === 'string' && !m.content.trim().startsWith(HIDDEN_PREFIX),
+        );
+        return {
+          sessionId: r.session_id,
+          title: deriveTitle(msgs),
+          lastActivity: r.last_activity || r.created_at,
+          messageCount: visible.length,
+          isCurrent: i === 0,
+        };
+      });
+    } catch (e) {
+      console.warn('Episode list failed:', e);
+      return [];
+    }
+  },
+
+  /** Read-only transcript of one episode (hidden routing prompts filtered). */
+  async getEpisodeTranscript(userId: string, sessionId: string): Promise<EpisodeMessage[]> {
+    try {
+      const { data } = await supabase
+        .from('conversation_memory')
+        .select('messages')
+        .eq('user_id', userId)
+        .eq('session_id', sessionId)
+        .maybeSingle();
+      const msgs = Array.isArray(data?.messages) ? (data!.messages as any[]) : [];
+      return msgs
+        .filter(
+          (m) =>
+            typeof m?.content === 'string' &&
+            m.content.trim() &&
+            !m.content.trim().startsWith(HIDDEN_PREFIX),
+        )
+        .map((m) => ({
+          role: m.role === 'user' || m.isUser ? 'user' : 'hacs',
+          content: String(m.content),
+        }));
+    } catch (e) {
+      console.warn('Episode transcript failed:', e);
+      return [];
     }
   },
 };
