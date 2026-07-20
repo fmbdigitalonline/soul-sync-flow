@@ -6,7 +6,6 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { CosmicCard } from '@/components/ui/cosmic-card';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Pencil } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -60,14 +59,12 @@ export const TwinNameSettings: React.FC = () => {
   };
 
   return (
-    <CosmicCard className="p-6 rounded-comfort">
-      <div className="flex items-center space-x-3 mb-4">
-        <Sparkles className="h-5 w-5 text-soul-purple" />
-        <h2 className="font-heading font-medium">{t.title}</h2>
-      </div>
-
+    <div className="ss-card">
       {!twinName ? (
-        <p className="text-sm text-muted-foreground">{t.unnamed}</p>
+        <div className="flex items-center gap-3">
+          <span className="ss-ic"><Sparkles className="h-[18px] w-[18px]" /></span>
+          <p className="text-sm" style={{ color: 'var(--ss-muted)' }}>{t.unnamed}</p>
+        </div>
       ) : editing ? (
         <div className="space-y-3">
           <input
@@ -80,40 +77,39 @@ export const TwinNameSettings: React.FC = () => {
             }}
             maxLength={24}
             placeholder={t.placeholder}
-            className="w-full text-base rounded-lg px-3 py-2 bg-background border border-border/60 focus:border-soul-purple/40 outline-none"
+            className="w-full text-base rounded-xl px-3 py-2 outline-none"
+            style={{ background: 'var(--ss-surface)', border: '1px solid var(--ss-line)', color: 'var(--ss-ink)' }}
           />
           <div className="flex gap-2">
-            <Button size="sm" onClick={save} disabled={saving || !value.trim()}>
-              {t.save}
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => setEditing(false)} disabled={saving}>
-              {t.cancel}
-            </Button>
+            <Button size="sm" onClick={save} disabled={saving || !value.trim()}>{t.save}</Button>
+            <Button size="sm" variant="ghost" onClick={() => setEditing(false)} disabled={saving}>{t.cancel}</Button>
           </div>
         </div>
       ) : (
-        <div className="flex items-start justify-between">
-          <div className="min-w-0">
-            <p className="text-lg font-semibold gradient-text">{twinName.name}</p>
-            {twinName.reason && (
-              <p className="text-sm text-muted-foreground mt-0.5">{twinName.reason}</p>
-            )}
-            <p className="text-xs text-muted-foreground/70 mt-1">
-              {twinName.origin === 'user' ? t.ownOrigin : t.origin}
-            </p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0">
+            <span className="ss-ic mt-0.5"><Sparkles className="h-[18px] w-[18px]" /></span>
+            <div className="min-w-0">
+              <div className="text-[15px] font-semibold" style={{ color: 'var(--ss-accent-ink)' }}>{twinName.name}</div>
+              {twinName.reason && (
+                <p className="text-xs mt-0.5" style={{ color: 'var(--ss-muted)' }}>{twinName.reason}</p>
+              )}
+              <p className="text-[11px] mt-1" style={{ color: 'var(--ss-faint)' }}>
+                {twinName.origin === 'user' ? t.ownOrigin : t.origin}
+              </p>
+            </div>
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="shrink-0 interactive-element"
+          <button
             onClick={() => setEditing(true)}
+            className="shrink-0 inline-flex items-center gap-1.5 text-[13px] font-semibold"
+            style={{ color: 'var(--ss-accent-ink)' }}
           >
-            <Pencil className="h-4 w-4 mr-1" />
+            <Pencil className="h-3.5 w-3.5" />
             {t.rename}
-          </Button>
+          </button>
         </div>
       )}
-    </CosmicCard>
+    </div>
   );
 };
 
