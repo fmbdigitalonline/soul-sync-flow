@@ -18,6 +18,7 @@ import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data"
 import { calculateWeeklyInsights, WeeklyInsights } from "@/services/insights-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { TwinNameSettings } from "@/components/profile/TwinNameSettings";
 
 const Profile = () => {
   const { toast } = useToast();
@@ -253,6 +254,8 @@ const Profile = () => {
           </TabsContent>
           
           <TabsContent value="settings" className="space-y-grid-16">
+            <TwinNameSettings />
+
             <CosmicCard className="p-6 rounded-comfort">
               <h2 className="font-heading font-medium mb-4">{t('profile.appSettings')}</h2>
               
