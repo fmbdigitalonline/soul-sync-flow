@@ -186,8 +186,11 @@ export const useHACSConversationAdapter = (
     const initThread = async () => {
       const threadId = await initializeStableThread();
       if (threadId) {
+        // Thread ownership is established server-side on every mount; the
+        // id is deliberately NOT persisted locally — an unscoped localStorage
+        // copy outlived logout and could bleed between accounts on a shared
+        // device (it was also never read back).
         setStableThreadId(threadId);
-        localStorage.setItem('stable_thread_id', threadId);
       } else {
         // Fallback to legacy session ID
         const fallbackId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

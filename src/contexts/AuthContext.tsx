@@ -192,6 +192,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     console.log('🔐 AuthProvider: Signing out user');
     setLoading(true);
+    // Account-isolation hygiene: conversation-adjacent local state must not
+    // survive into the next login on a shared device. The legacy unscoped
+    // stable_thread_id key is purged; user-scoped caches (twin-reunion:*)
+    // are cleared as defense in depth.
+    try {
+      localStorage.removeItem('stable_thread_id');
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith('twin-reunion:'))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch {
+      /* storage unavailable — nothing to clear */
+    }
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
