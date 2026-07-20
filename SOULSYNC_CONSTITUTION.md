@@ -1,6 +1,31 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v3.0)
+# SoulSync — Developer Constitution & Wiring Roadmap (v3.1)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v3.1 — THE REUNION ratified (founder, Jul 20 2026). The Twin
+conversation is the primary entry experience. Companion is the
+navigation destination through which that conversation is accessed.
+Returning users enter directly into the Twin conversation, and the Twin
+speaks first: one composed reunion message drawn from what already
+exists — the last conversation (remember me), a blueprint reminder in
+place of the quote (remind me), unfinished work (continue me), and,
+only on days the guardian approves one, a noticed pattern (surprise
+me). The message is built from whichever ingredients earned their place
+that day; most days carry no pattern.*
+
+*All proactive content flows through one loop: detection → guardian →
+delivery → user response → ledger. The reunion is a DELIVERY MODE, not
+a second detection system — it calls the same guardian and writes the
+same ledger as every other surface, and a delivered row with no
+response is itself an outcome the guardian reads. The reunion is
+precomputed when a conversation closes, so opening the app is instant.*
+
+*Three reunion modes, behavioral not technical: first visit
+(introduction and blueprint creation), returning, and returning with
+unfinished work. Recent activity and history move to the panel's
+History section. Index retires only after the reunion lives at `/` —
+nothing is deleted until its replacement lives. (Founder chose "the
+Twin speaks first" — deliberately not "always speaks first".)*
 
 *v3.0 — THE PROACTIVE INTELLIGENCE LAYER ratified (founder, Jul 19 2026).
 The HACS insight pipeline (shadow detector, pattern buffer, nullification

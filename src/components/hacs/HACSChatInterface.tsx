@@ -28,6 +28,8 @@ import {
   type ProactiveMomentCandidate,
 } from "@/services/proactive-insight-guardian";
 import { ProactiveMoment } from "./ProactiveMoment";
+import { twinReunionService, type TwinReunion } from "@/services/twin-reunion-service";
+import { TwinReunionGreeting } from "./TwinReunionGreeting";
 
 /**
  * Feature flag: route OfferCard confirmations into the panel-hosted flow
@@ -80,6 +82,9 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   // guardian's five checks make no-action the default outcome.
   const [proactiveMoment, setProactiveMoment] = useState<ProactiveMomentCandidate | null>(null);
   const proactiveCheckRef = useRef(false);
+  // The Reunion (v3.1): the Twin speaks first when the conversation is
+  // fresh. Cached read at open (instant), background refresh after.
+  const [reunion, setReunion] = useState<TwinReunion | null>(null);
   const { updateChatLoading } = useGlobalChatState();
   const { isMobile } = useIsMobile();
 
@@ -145,6 +150,34 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       proactiveCheckRef.current = false;
     }
   }, [messages.length]);
+
+  // Reunion at open: cached read first (instant), then a live compose in
+  // the background so a fresh device still gets a greeting.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const cached = await twinReunionService.loadForOpen();
+      if (cached && !cancelled) setReunion(cached);
+      const fresh = await twinReunionService.refresh();
+      if (fresh && !cancelled) setReunion(fresh);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Reunion precompute: an SPA has no reliable close event, so the next
+  // open's reunion is recomputed quietly after each completed assistant
+  // turn. Display state is untouched — this only feeds the cache.
+  useEffect(() => {
+    if (isLoading || messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    if (!last || (last as any).role === 'user' || (last as any).isUser) return;
+    const timer = setTimeout(() => {
+      void twinReunionService.refresh();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [messages.length, isLoading]);
 
   // Handle sentence selection toggle
   const handleSentenceSelect = (messageId: string, sentence: string | null) => {
@@ -279,11 +312,15 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
           "px-3 py-2 space-y-3",
           isMobile ? "pb-32" : "pb-24"
         )}>
-          {messages.length === 0 && (
-            <div className="text-center text-muted-foreground py-4">
-              <p>Start a conversation to begin intelligence learning</p>
-            </div>
-          )}
+          {/* The Twin speaks first (v3.1): reunion replaces the empty state. */}
+          {messages.length === 0 &&
+            (reunion ? (
+              <TwinReunionGreeting reunion={reunion} />
+            ) : (
+              <div className="text-center text-muted-foreground py-4">
+                <p>Start a conversation to begin intelligence learning</p>
+              </div>
+            ))}
           
           {messages.map((message, index) => {
             // Hide messages that start with [CONTEXT: - these are internal action prompts
