@@ -70,7 +70,7 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import HermeticIntelligenceTest from "./pages/HermeticIntelligenceTest";
 import LifeClarityFunnel from "./pages/LifeClarityFunnel";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { BlueprintCacheProvider } from "./contexts/BlueprintCacheContext";
 import { SoulOrbProvider } from "./contexts/SoulOrbContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
@@ -120,12 +120,29 @@ const RootLayout = () => {
   );
 };
 
+// v3.1 The Reunion: the Twin conversation is the primary entry
+// experience. A signed-in user landing on / goes straight into the
+// Companion conversation, where the Twin speaks first. Signed-out
+// visitors keep the Index landing (first-visit mode) until Slice 3
+// retires it — nothing is deleted until its replacement lives.
+const HomeGate = () => {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-soul-purple"></div>
+      </div>
+    );
+  }
+  return user ? <Navigate to="/companion" replace /> : <Index />;
+};
+
 const router = createBrowserRouter([
   {
     path: "/",
     element: <RootLayout />,
     children: [
-      { index: true, element: <Index /> },
+      { index: true, element: <HomeGate /> },
       { path: "get-started", element: <LifeClarityFunnel /> },
       { path: "auth", element: <Auth /> },
       { path: "onboarding", element: <ProtectedRoute><OnboardingFlow /></ProtectedRoute> },
