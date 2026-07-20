@@ -163,11 +163,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                   SoulSync
                 </span>
               </Link>
-              {/* Mobile actions on top right */}
+              {/* Mobile actions on top right — logo · side panel · language.
+                  The hamburger (sign-out only) is retired; sign out lives in
+                  Profile → Settings → Account. */}
               <div className="flex items-center space-x-2">
-                {user && <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)} className="rounded-xl">
-                    {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                  </Button>}
                 {user && <Sheet open={isToolsOpen} onOpenChange={setIsToolsOpen}>
                     <SheetTrigger asChild>
                       <Button variant="ghost" size="icon" className="rounded-xl">
@@ -188,14 +187,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 <LanguageSelector />
               </div>
             </div>
-            
-            {/* Mobile Menu Dropdown */}
-            {isMenuOpen && user && <div className="bg-card/95 backdrop-blur-lg p-4 space-y-2 w-full shadow-sm">
-                <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-muted-foreground rounded-xl text-sm">
-                  <LogOut className="h-4 w-4 mr-3" />
-                  {t('nav.signOut')}
-                </Button>
-              </div>}
           </div>
 
           <main className={cn("flex-1", isMobile ? "pb-4" : "pb-20")}>
