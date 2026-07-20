@@ -30,6 +30,9 @@ import {
 import { ProactiveMoment } from "./ProactiveMoment";
 import { twinReunionService, type TwinReunion } from "@/services/twin-reunion-service";
 import { TwinReunionGreeting } from "./TwinReunionGreeting";
+import { TwinNamingCard } from "./TwinNamingCard";
+import { useTwinName } from "@/hooks/use-twin-name";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
  * Feature flag: route OfferCard confirmations into the panel-hosted flow
@@ -85,6 +88,11 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   // The Reunion (v3.1): the Twin speaks first when the conversation is
   // fresh. Cached read at open (instant), background refresh after.
   const [reunion, setReunion] = useState<TwinReunion | null>(null);
+  // The Naming (v3.3): the ceremony appears once, right after the Twin's
+  // first message, until the Twin has a name.
+  const { twinName, loading: twinNameLoading } = useTwinName();
+  const { language } = useLanguage();
+  const [namingLater, setNamingLater] = useState(false);
   const { updateChatLoading } = useGlobalChatState();
   const { isMobile } = useIsMobile();
 
@@ -298,6 +306,35 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     }
   };
 
+  // Naming ceremony gate (v3.3): only after the Twin's first message, only
+  // while it is still unnamed, only early in the relationship. The proactive
+  // moment requires >=6 messages, so the two never overlap.
+  const userMsgCount = messages.filter((m: any) => m.role === "user" || m.isUser).length;
+  const lastMsg = messages[messages.length - 1];
+  const lastIsCompletedAssistant =
+    !!lastMsg &&
+    !((lastMsg as any).role === "user" || (lastMsg as any).isUser) &&
+    !(lastMsg as any).isStreaming;
+  const showNaming =
+    !twinName &&
+    !twinNameLoading &&
+    !namingLater &&
+    lastIsCompletedAssistant &&
+    userMsgCount <= 1 &&
+    !isLoading;
+
+  const handleNamed = (name: string) => {
+    // The Twin acknowledges in its own voice, as a real chat message.
+    const ack = language === "nl" ? `Mooi — ${name}. Dank je.` : `I like that — ${name}. Thank you.`;
+    onAddOptimisticMessage?.({
+      id: `twin_naming_ack_${Date.now()}`,
+      role: "hacs",
+      content: ack,
+      timestamp: new Date().toISOString(),
+      isStreaming: false,
+    } as ConversationMessage);
+  };
+
   return (
     <div className="flex flex-col h-full relative">
 
@@ -466,6 +503,10 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             )}
           </AnimatePresence>
           
+          {showNaming && (
+            <TwinNamingCard onNamed={handleNamed} onLater={() => setNamingLater(true)} />
+          )}
+
           {proactiveMoment && (
             <ProactiveMoment
               observation={proactiveMoment.observation}

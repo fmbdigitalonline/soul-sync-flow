@@ -16,6 +16,7 @@ import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { OracleInitializationBanner } from "@/components/coach/OracleInitializationBanner";
+import { useTwinName } from "@/hooks/use-twin-name";
 const Coach = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const {
@@ -30,6 +31,7 @@ const Coach = () => {
     addOptimisticMessage,
     initiateFirstContact
   } = useHACSConversationAdapter("guide", "companion");
+  const { twinName } = useTwinName();
 
   // First contact: arriving fresh from the onboarding reveal, the companion
   // speaks first. Guarded so it fires once, only for empty conversations.
@@ -221,7 +223,7 @@ const Coach = () => {
           
           {messages.length === 0 && <div className="text-center mb-6">
               <h1 className="text-3xl font-bold gradient-text mb-2">
-                {t('companion.pageTitle')}
+                {twinName?.name || t('companion.pageTitle')}
               </h1>
               <p className="text-muted-foreground">
                 {t('companion.pageSubtitle')}

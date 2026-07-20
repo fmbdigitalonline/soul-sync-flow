@@ -1,6 +1,36 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v3.2)
+# SoulSync — Developer Constitution & Wiring Roadmap (v3.3)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v3.3 — THE NAMING ratified (founder, Jul 20 2026). "Companion/Metgezel"
+is a pre-pivot label; the product no longer has one entity to brand —
+every user has their own Twin, and the name is not assigned by us, it is
+chosen at the birth of the relationship. TIMING IS THE FEATURE: the Twin
+speaks FIRST (a real, profound first message grounded in the blueprint),
+and the naming comes IMMEDIATELY AFTER that first message — never before.
+Humans name after familiarity: the first message creates the feeling, and
+the name attaches to that voice. Naming a stranger before it speaks is
+"name your dog before you've seen the puppy."*
+
+*The offering is CONVERSATIONAL, not a selection screen: the Twin itself
+asks — "Since we'll be spending time together, I'd like a name. Looking at
+your blueprint, a few came to mind." Then three names, each with a
+one-line reason, plus "I'd rather choose my own." The question is framed
+for RECOGNITION not invention — "What name feels right for me?", never
+"What should I be called?" — because the Twin already has suggestions and
+the user is recognising one. Language law: "Inspired by your Mental
+Blueprint", NEVER "based on your numerology / Life Path 3" — the user
+should feel understood, not computed.*
+
+*The three names are LLM-synthesised from the WHOLE blueprint,
+non-deterministic, with distinct archetypes (reflection / wisdom /
+creativity). No lookup tables (Life Path 3 → always "Echo" feels shallow
+fast). The choice is stored WITH ITS STORY (name, origin, reason,
+chosenBy) so "Why you're called Lumen" survives as continuity. The name
+is NOT locked forever — renameable later in Profile; relationships evolve.
+Why it matters: co-creation creates ownership (the IKEA effect — "Lumen
+remembered me" lands where "Companion remembered me" does not), and it
+dissolves the branding question entirely.*
 
 *v3.2 — CONVERSATION EPISODES ratified (founder, Jul 20 2026, adopting
 the advisor's recommended text). Continuity belongs to the user's
