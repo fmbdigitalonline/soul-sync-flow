@@ -16,6 +16,11 @@ export interface DetectionResult {
   signals: DetectionSignal[];
   openingRule: string;
   allowedNextClusters: ConversationCluster[];
+  // v3.5 Emotional Evidence: for affective clusters, whether there is
+  // evidence from the CURRENT exchange to name the emotion — the current
+  // message expresses it plainly, or it has recurred across the last 3
+  // messages. Undefined for non-affective clusters (they are not gated).
+  emotionEvidence?: boolean;
 }
 
 export interface DetectionSignal {
@@ -228,16 +233,73 @@ export class ConversationPhaseTracker {
     
     // Step 6: Detect sub-state within cluster
     const subState = this.detectSubState(userMessage, winner.cluster);
-    
-    // Step 7: Build result
+
+    // Step 7: v3.5 Emotional Evidence gate — for affective clusters only,
+    // decide whether there is evidence from the current exchange to name
+    // the emotion (plainly expressed now, or recurred across the last 3
+    // messages). Non-affective clusters are not gated.
+    const emotionEvidence = this.EMOTIONAL_CLUSTERS.has(winner.cluster)
+      ? this.hasEmotionEvidence(userMessage, winner.cluster, conversationHistory)
+      : undefined;
+
+    // Step 8: Build result
     return {
       cluster: winner.cluster,
       subState,
       confidence: winner.confidence,
       signals,
       openingRule: this.getOpeningRule(winner.cluster),
-      allowedNextClusters: this.getAllowedNextClusters(winner.cluster)
+      allowedNextClusters: this.getAllowedNextClusters(winner.cluster),
+      emotionEvidence
     };
+  }
+
+  // v3.5: clusters that name a user feeling (as opposed to behavioral/
+  // structural states like closure or clarification) — these are gated.
+  private static EMOTIONAL_CLUSTERS = new Set<ConversationCluster>(['frustration']);
+
+  // Recurrence threshold ratified by the founder (N = 3).
+  private static EMOTION_RECURRENCE_N = 3;
+
+  /** True if any of a cluster's sub-state patterns match the message. */
+  private static clusterMatchesMessage(message: string, clusterId: ConversationCluster): boolean {
+    if (!message || typeof message !== 'string') return false;
+    const cluster = CONVERSATION_STATE_SCHEMA.clusters.find((c: any) => c.id === clusterId);
+    if (!cluster) return false;
+    for (const subState of cluster.sub_states) {
+      for (const pattern of subState.regex) {
+        try {
+          if (new RegExp(pattern, CONVERSATION_STATE_SCHEMA.globals.flags).test(message)) return true;
+        } catch {
+          /* skip malformed pattern */
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Evidence to name an affective cluster: (a) the current message expresses
+   * it plainly, or (b) it recurred across the last N messages. Absent both,
+   * the Twin mirrors the message as it reads rather than assigning a feeling.
+   */
+  private static hasEmotionEvidence(
+    currentMessage: string,
+    clusterId: ConversationCluster,
+    conversationHistory: any[]
+  ): boolean {
+    const currentExplicit = this.clusterMatchesMessage(currentMessage, clusterId);
+    if (currentExplicit) return true; // (a) plainly expressed now
+
+    // (b) recurrence across recent USER messages (current already counted above).
+    const recentUser = (conversationHistory || [])
+      .filter((m) => m && (m.role === 'user' || m.isUser) && typeof m.content === 'string')
+      .slice(-6);
+    let matches = 0;
+    for (const m of recentUser) {
+      if (this.clusterMatchesMessage(m.content, clusterId)) matches++;
+    }
+    return matches >= this.EMOTION_RECURRENCE_N;
   }
   
   private static detectParalinguistic(

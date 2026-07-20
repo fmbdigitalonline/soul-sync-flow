@@ -33,8 +33,15 @@ function getConversationFlowGuidance(conversationState: any): string {
     return `META MODE: User is giving instruction about conversation style (${detection.subState}). Acknowledge and adapt immediately in ≤1 line.`;
   }
   
-  // Priority 3: Frustration cluster
+  // Priority 3: Frustration cluster — v3.5 Emotional Evidence gate.
+  // Only enter FRUSTRATION MODE when there is evidence from the current
+  // exchange (plainly expressed now, or recurred across the last 3
+  // messages). Without it, do NOT assert the feeling — mirror the message
+  // as it actually reads.
   if (detection.cluster === 'frustration') {
+    if (detection.emotionEvidence === false) {
+      return 'Mirror the user\'s actual register for this message without assigning an emotion. If it reads as neutral or even, meet it as such; if you sense something under it, check lightly rather than stating it.';
+    }
     return `FRUSTRATION MODE: User is ${detection.subState}. Acknowledge in 1 line, then give friction-reducing step + quick win.`;
   }
   
