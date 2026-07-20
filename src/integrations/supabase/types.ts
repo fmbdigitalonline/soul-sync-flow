@@ -953,31 +953,40 @@ export type Database = {
       conversation_insights: {
         Row: {
           created_at: string
+          delivered_at: string | null
           dismissed_at: string | null
           id: string
           insight_data: Json
           insight_type: string
+          pattern_key: string | null
           session_id: string
+          status: string
           user_id: string
           viewed_at: string | null
         }
         Insert: {
           created_at?: string
+          delivered_at?: string | null
           dismissed_at?: string | null
           id?: string
           insight_data: Json
           insight_type: string
+          pattern_key?: string | null
           session_id: string
+          status?: string
           user_id: string
           viewed_at?: string | null
         }
         Update: {
           created_at?: string
+          delivered_at?: string | null
           dismissed_at?: string | null
           id?: string
           insight_data?: Json
           insight_type?: string
+          pattern_key?: string | null
           session_id?: string
+          status?: string
           user_id?: string
           viewed_at?: string | null
         }
