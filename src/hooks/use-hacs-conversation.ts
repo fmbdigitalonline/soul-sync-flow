@@ -8,6 +8,7 @@ import { conversationMemoryService } from '@/services/conversation-memory-servic
 import { useXPEventEmitter } from './use-xp-event-emitter';
 import { hermeticIntelligenceBridge } from '@/services/hermetic-intelligence-bridge';
 import { SubconsciousOrbController } from '@/services/subconscious-orb-controller';
+import { conversationEpisodeService } from '@/services/conversation-episode-service';
 
 export interface ConversationMessage {
   id: string;
@@ -69,8 +70,12 @@ export const useHACSConversation = () => {
     if (!user) return;
 
     try {
-      // Generate predictable session ID for companion conversations
-      const sessionId = currentSessionId || `companion_${user.id}`;
+      // v3.2 Conversation Episodes: the boundary is evaluated here, at
+      // return time — resume the current episode or open a fresh room.
+      // (The legacy eternal id `companion_<userId>` is just the episode
+      // this resolves to until the first boundary passes.)
+      const sessionId =
+        currentSessionId || (await conversationEpisodeService.resolveEpisode(user.id)).sessionId;
       if (!currentSessionId) {
         setCurrentSessionId(sessionId);
       }
@@ -912,10 +917,16 @@ export const useHACSConversation = () => {
     completeLoading('oracle');
   }, [completeLoading]);
 
+  // v3.2: the manual "start a fresh conversation" — rotates to a new
+  // episode id so the previous episode stays closed in the stores (and
+  // in History) while the Twin's memory and intelligence carry forward.
+  // Previously this kept the same session id, so the "cleared" thread
+  // silently resurrected on the next load.
   const clearConversation = useCallback(() => {
     setMessages([]);
     setConversationId(null);
     setCurrentQuestion(null);
+    setCurrentSessionId(conversationEpisodeService.newEpisodeId());
   }, []);
 
   /**

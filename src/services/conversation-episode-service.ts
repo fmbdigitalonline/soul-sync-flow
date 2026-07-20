@@ -1,0 +1,79 @@
+/**
+ * conversation-episode-service — Conversation Episodes (Constitution v3.2).
+ *
+ * Continuity belongs to the user's enduring relationship with the Twin,
+ * not to one eternal visible transcript. Conversations are bounded
+ * episodes with distinct session IDs. The boundary is evaluated when
+ * the user RETURNS (chat mount) — never by a background timer:
+ *
+ *   new episode when the local date has changed AND ≥2h have passed
+ *   since the last meaningful interaction, OR after ≥8h of absence
+ *   regardless of date. Local date uses the device timezone (the
+ *   application's current timezone authority).
+ *
+ * Legacy compatibility: existing messages are not rewritten. The old
+ * eternal thread (session_id `companion_<userId>`) is simply the most
+ * recent episode until a boundary passes; after that it is never
+ * resumed again and remains a read-only legacy episode in the stores.
+ *
+ * Relationship note: today every user has exactly one Twin, so the
+ * relationship owner is the userId. Keep episode logic keyed through
+ * this service (not hard-coded to userId semantics) so an explicit
+ * relationship identifier can be introduced if the product ever
+ * supports more than one relationship per user.
+ */
+
+import { supabase } from '@/integrations/supabase/client';
+
+const DATE_CHANGE_MIN_HOURS = 2;
+const ABSENCE_HOURS = 8;
+
+export interface EpisodeResolution {
+  sessionId: string;
+  /** True when a boundary passed and this is a fresh conversational space. */
+  isFresh: boolean;
+}
+
+function newEpisodeId(): string {
+  return `episode_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function isEpisodeBoundary(lastInteraction: number, now: Date = new Date()): boolean {
+  const hoursAway = (now.getTime() - lastInteraction) / 3_600_000;
+  if (hoursAway >= ABSENCE_HOURS) return true;
+  const dateChanged = new Date(lastInteraction).toDateString() !== now.toDateString();
+  return dateChanged && hoursAway >= DATE_CHANGE_MIN_HOURS;
+}
+
+export const conversationEpisodeService = {
+  newEpisodeId,
+  isEpisodeBoundary,
+
+  /**
+   * Return-time resolution: resume the latest episode when the user is
+   * still inside it, otherwise open a fresh one. Errors resolve to the
+   * legacy id — continuity is the safer failure mode than a false
+   * fresh room.
+   */
+  async resolveEpisode(userId: string): Promise<EpisodeResolution> {
+    try {
+      const { data } = await supabase
+        .from('conversation_memory')
+        .select('session_id, last_activity, created_at')
+        .eq('user_id', userId)
+        .eq('mode', 'companion')
+        .order('last_activity', { ascending: false })
+        .limit(1);
+      const latest = data?.[0];
+      if (!latest) return { sessionId: newEpisodeId(), isFresh: true };
+      const lastTs = new Date(latest.last_activity || latest.created_at).getTime();
+      if (!Number.isFinite(lastTs) || isEpisodeBoundary(lastTs)) {
+        return { sessionId: newEpisodeId(), isFresh: true };
+      }
+      return { sessionId: latest.session_id, isFresh: false };
+    } catch (e) {
+      console.warn('Episode resolution failed — resuming legacy thread:', e);
+      return { sessionId: `companion_${userId}`, isFresh: false };
+    }
+  },
+};
