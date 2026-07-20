@@ -36,6 +36,22 @@ export interface MyJourney {
 
 type Lang = 'en' | 'nl';
 
+// Raw goal/program titles sometimes carry generated Hermetic phrasing
+// ("… because your Hermetic blueprint shows a natural avoidance pattern").
+// The invisibility law says the user never sees that language — reduce a
+// raw title to its human core (the clause before the mechanism) and cap it.
+const RAW_MARKERS = /hermetic|blueprint shows|identity constructs|temporal biology|avoidance pattern|cognitive|because your/i;
+function humanizeTitle(raw: string): string {
+  let s = raw.replace(/\s+/g, ' ').trim();
+  if (RAW_MARKERS.test(s)) {
+    // keep the lead clause before the explanatory pivot
+    s = s.split(/\s+(?:because|triggers?|when your|that your|so that|due to)\b/i)[0].trim();
+  }
+  if (s.length > 52) s = `${s.slice(0, 51).replace(/\s+\S*$/, '')}…`;
+  // Sentence-case a bare lowercase lead.
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 function blueprintEssence(bp: any, lang: Lang): string | undefined {
   if (!bp) return undefined;
   const pick = (o: any, keys: string[]) => {
@@ -89,17 +105,26 @@ export const myJourneyService = {
       conversationEpisodeService.listEpisodes(userId, 5).catch(() => []),
     ]);
 
-    const programs: JourneyProgram[] = [
+    const rawPrograms: JourneyProgram[] = [
       ...((growth as any[]) ?? []).map((p) => ({
-        title: String(p.title ?? ''),
+        title: humanizeTitle(String(p.title ?? '')),
         domain: p.domain ? String(p.domain) : undefined,
         kind: 'transformation' as const,
       })),
       ...((goals as any[]) ?? []).map((g) => ({
-        title: String(g.title ?? ''),
+        title: humanizeTitle(String(g.title ?? '')),
         kind: 'achievement' as const,
       })),
     ].filter((p) => p.title);
+    // De-duplicate by humanized title (case-insensitive) — the same goal can
+    // exist as more than one row.
+    const seenTitles = new Set<string>();
+    const programs = rawPrograms.filter((p) => {
+      const k = p.title.toLowerCase();
+      if (seenTitles.has(k)) return false;
+      seenTitles.add(k);
+      return true;
+    });
 
     const domains = Array.from(
       new Set(programs.map((p) => p.domain).filter((d): d is string => !!d)),

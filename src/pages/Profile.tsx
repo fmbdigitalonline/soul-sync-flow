@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { FocusToggle } from "@/components/ui/focus-toggle";
 import {
   Sparkles, Compass, MessageSquare, Bell, Moon, Sun, LogOut,
   ChevronRight, Check, Shield, Pencil, TrendingUp,
@@ -13,6 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { BookOpen } from "lucide-react";
 import { TwinNameSettings } from "@/components/profile/TwinNameSettings";
 import { useTwinName } from "@/hooks/use-twin-name";
 import { myJourneyService, type MyJourney } from "@/services/my-journey-service";
@@ -28,6 +28,9 @@ const Profile = () => {
   const [tab, setTab] = useState<Tab>("journey");
   const [darkMode, setDarkMode] = useState(() =>
     typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
+  );
+  const [focusMode, setFocusMode] = useState(() =>
+    typeof document !== "undefined" && document.body.classList.contains("focus-mode"),
   );
   const [journey, setJourney] = useState<MyJourney | null>(null);
 
@@ -51,6 +54,11 @@ const Profile = () => {
   const toggleDarkMode = (checked: boolean) => {
     setDarkMode(checked);
     document.documentElement.classList.toggle("dark", checked);
+  };
+
+  const toggleFocusMode = (checked: boolean) => {
+    setFocusMode(checked);
+    document.body.classList.toggle("focus-mode", checked);
   };
 
   const handleLogout = async () => {
@@ -77,7 +85,7 @@ const Profile = () => {
   if (loading) {
     return (
       <MainLayout>
-        <div className="ss min-h-screen" style={{ background: "var(--ss-canvas)" }}>
+        <div className="ss ss-page min-h-screen">
           <div className="max-w-md mx-auto p-6 flex flex-col items-center gap-4 pt-16">
             <div className="ss-avatar animate-pulse" style={{ background: "var(--ss-line)" }} />
             <div className="h-5 w-32 rounded-full animate-pulse" style={{ background: "var(--ss-line)" }} />
@@ -95,7 +103,7 @@ const Profile = () => {
 
   return (
     <MainLayout>
-      <div className="ss min-h-screen" style={{ background: "var(--ss-canvas)" }}>
+      <div className="ss ss-page min-h-screen">
         <div className="max-w-md mx-auto px-5 pt-8 pb-16 flex flex-col gap-5">
 
           {/* Identity */}
@@ -239,7 +247,12 @@ const Profile = () => {
                     <Switch checked={darkMode} onCheckedChange={toggleDarkMode} />
                   </div>
                   <div className="ss-lrow">
-                    <FocusToggle />
+                    <span className="ss-ic"><BookOpen className="h-[18px] w-[18px]" /></span>
+                    <div className="flex-1">
+                      <div className="text-[14.5px] font-medium">{nl ? "Focusmodus" : "Focus mode"}</div>
+                      <div className="text-[12.5px]" style={{ color: "var(--ss-muted)" }}>{nl ? "Afleidingsvrij" : "Distraction-free"}</div>
+                    </div>
+                    <Switch checked={focusMode} onCheckedChange={toggleFocusMode} />
                   </div>
                 </div>
               </div>
