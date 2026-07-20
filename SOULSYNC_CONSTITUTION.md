@@ -1,6 +1,37 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v3.3)
+# SoulSync — Developer Constitution & Wiring Roadmap (v3.4)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v3.4 — MY JOURNEY (the perspective level) ratified (founder, Jul 20
+2026). MY JOURNEY IS PERSPECTIVE, NOT INVENTORY. It is the third level of
+awareness within Soul Sync: Conversation (the present moment, daily) →
+Coach OS (the work, when needed) → My Journey (the larger story,
+occasionally). My Journey does not create new understanding; it composes
+existing understanding the system already holds — life domains, recurring
+patterns, programs, turning points, and the trajectory those suggest —
+reflecting the user's life back as one coherent narrative, never a grid of
+widgets, metrics, feeds, or streaks.*
+
+*Its purpose is not to help the user decide what to do next, but to help
+them understand where they are in the larger story of their life.
+"Trajectory" means: given where you've been, this is the direction your
+life appears to be taking — reflection, not prediction. The word "heading"
+is avoided precisely because it sounds predictive; My Journey speaks in
+appears / seems / suggests, never claims. (The "never" absolutes here are
+design laws — statements of intent that keep feeds and dashboards from
+creeping back — not overconfident factual claims; the founder kept them
+deliberately.)*
+
+*CADENCE IS THE DESIGN. My Journey is entered deliberately and rarely —
+weekly, monthly, after completing a program, during reflection — never the
+default surface. Perspective requires distance. Daily is conversation; My
+Journey is reached from the Coach OS, not promoted as a competing landing
+experience (the Twin conversation remains the primary entry experience,
+per v3.1). It builds nothing new — composition over existing understanding,
+no second intelligence, no new store. A fourth level — Legacy ("who am I
+becoming over years": the evolution of the forest, not just the forest) —
+is acknowledged as the natural next horizon but is not built now; the
+episode timeline (v3.2) is its first material.*
 
 *v3.3 — THE NAMING ratified (founder, Jul 20 2026). "Companion/Metgezel"
 is a pre-pivot label; the product no longer has one entity to brand —
