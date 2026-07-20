@@ -6,6 +6,7 @@ import { Home, Heart, MessageCircle, Sparkles, Settings, LogOut, Menu, X, Star, 
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTwinName } from "@/hooks/use-twin-name";
 import { cn } from "@/lib/utils";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { isAdminUser } from "@/utils/isAdminUser";
@@ -31,6 +32,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     user,
     signOut
   } = useAuth();
+  const { twinName } = useTwinName();
   const {
     toast
   } = useToast();
@@ -112,7 +114,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   const baseNavItems = [{
     to: "/companion",
     icon: MessageCircle,
-    label: t('nav.companion')
+    label: twinName?.name || t('nav.companion')
   }, {
     to: "/blueprint",
     icon: Star,

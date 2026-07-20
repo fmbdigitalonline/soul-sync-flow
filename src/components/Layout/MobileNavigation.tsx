@@ -10,16 +10,18 @@ import {
   User
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTwinName } from "@/hooks/use-twin-name";
 import { cn } from "@/lib/utils";
 
 const MobileNavigation: React.FC = () => {
   const { t } = useLanguage();
+  const { twinName } = useTwinName();
   const location = useLocation();
 
   // Chat-first navigation: companion is home. Dreams & growth are absorbed
   // into the conversation (their legacy routes redirect to /companion).
   const navItems = [
-    { to: "/companion", icon: MessageCircle, label: t('nav.companion') },
+    { to: "/companion", icon: MessageCircle, label: twinName?.name || t('nav.companion') },
     { to: "/blueprint", icon: Star, label: t('nav.blueprint') },
     { to: "/profile", icon: User, label: t('nav.profile') },
   ];
