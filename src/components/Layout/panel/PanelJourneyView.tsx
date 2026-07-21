@@ -82,7 +82,7 @@ const ToggleChip: React.FC<{
     className={cn(
       'flex items-center gap-1 text-[11px] rounded-md px-2 py-1 border transition-colors',
       active
-        ? 'border-primary/40 bg-primary/10 text-foreground'
+        ? 'ss-flow text-foreground'
         : 'border-border/50 text-muted-foreground hover:text-foreground',
     )}
   >

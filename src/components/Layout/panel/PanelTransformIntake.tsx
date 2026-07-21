@@ -44,7 +44,7 @@ export const PanelTransformIntake: React.FC = () => {
   const backToChooser = () => patchTransformFlow({ route: 'intake', stage: 'chooser' });
 
   return (
-    <Card className="p-3 border-emerald-500/30 bg-emerald-500/5 space-y-3">
+    <Card className="p-3 ss-flow-green space-y-3">
       {/* Header: provenance — the sentence that started this */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">

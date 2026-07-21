@@ -77,7 +77,7 @@ export const PanelDecompositionCard: React.FC = () => {
   const isDone = state.phase === 'complete';
 
   return (
-    <Card className="p-3 border-primary/30 bg-primary/5">
+    <Card className="p-3 ss-flow">
       <div className="flex items-start gap-3">
         <div
           className={cn(

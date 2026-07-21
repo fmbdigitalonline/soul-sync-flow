@@ -65,7 +65,7 @@ export const PanelMilestoneView: React.FC<PanelMilestoneViewProps> = ({
   return (
     <div className="space-y-3">
       {/* Milestone header */}
-      <Card className="p-3 border-primary/30 bg-primary/5">
+      <Card className="p-3 ss-flow">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/80">

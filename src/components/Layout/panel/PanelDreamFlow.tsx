@@ -43,7 +43,7 @@ export const PanelDreamFlow: React.FC = () => {
   // Non-destructive close: collapse to a chip so the built goal survives.
   if (dismissed) {
     return (
-      <Card className="p-2 border-primary/20 bg-primary/5 flex items-center gap-2">
+      <Card className="p-2 ss-flow flex items-center gap-2">
         <p className="text-[11px] text-muted-foreground flex-1 truncate">
           Journey card hidden{decomposedGoal ? ` · ${pendingIntake.title}` : ''}
         </p>
@@ -83,7 +83,7 @@ export const PanelDreamFlow: React.FC = () => {
   // thinking, and the user needs to know something is happening. ────
   if (phase === 'building' || !decomposedGoal) {
     return (
-      <Card className="p-3 border-primary/30 bg-primary/5 space-y-2">
+      <Card className="p-3 ss-flow space-y-2">
         <MomentHeader
           eyebrow="Creating your plan"
           onClose={() => patchDreamFlow({ dismissed: true })}
@@ -111,7 +111,7 @@ export const PanelDreamFlow: React.FC = () => {
   // context only, not the full workspace IA.
   if (showPlan) {
     return (
-      <Card className="p-3 border-primary/30 bg-primary/5 space-y-3">
+      <Card className="p-3 ss-flow space-y-3">
         <MomentHeader
           eyebrow="Your plan"
           title={pendingIntake.title}
@@ -128,7 +128,7 @@ export const PanelDreamFlow: React.FC = () => {
   // ─── Moment 1 — one recommended starting milestone. ─────────────
   if (momentStage === 'milestone') {
     return (
-      <Card className="p-4 border-primary/30 bg-primary/5 space-y-4">
+      <Card className="p-4 ss-flow space-y-4">
         <MomentHeader
           eyebrow="Here's where I suggest we start"
           onClose={() => patchDreamFlow({ dismissed: true })}
@@ -166,7 +166,7 @@ export const PanelDreamFlow: React.FC = () => {
   if (momentStage === 'task') {
     if (!firstTask) {
       return (
-        <Card className="p-4 border-primary/30 bg-primary/5 space-y-3">
+        <Card className="p-4 ss-flow space-y-3">
           <MomentHeader
             eyebrow="Ready when you are"
             onClose={() => patchDreamFlow({ dismissed: true })}
@@ -183,7 +183,7 @@ export const PanelDreamFlow: React.FC = () => {
       ? firstTask.optimal_time_of_day[0]
       : firstTask.optimal_time_of_day;
     return (
-      <Card className="p-4 border-primary/30 bg-primary/5 space-y-4">
+      <Card className="p-4 ss-flow space-y-4">
         <MomentHeader
           eyebrow="Here's your first step"
           onClose={() => patchDreamFlow({ dismissed: true })}
@@ -238,7 +238,7 @@ export const PanelDreamFlow: React.FC = () => {
 
   // ─── Moment 4 — done. Calm completion; user chooses one destination.
   return (
-    <Card className="p-4 border-primary/30 bg-primary/5 space-y-4">
+    <Card className="p-4 ss-flow space-y-4">
       <MomentHeader
         eyebrow="Nice work"
         onClose={() => patchDreamFlow({ dismissed: true })}
@@ -330,7 +330,7 @@ const WorkingMoment: React.FC<{
     : task?.optimal_time_of_day;
 
   return (
-    <Card className="p-3 border-primary/30 bg-primary/5 space-y-2">
+    <Card className="p-3 ss-flow space-y-2">
       <div className="flex items-start gap-2">
         <Button
           variant="ghost"

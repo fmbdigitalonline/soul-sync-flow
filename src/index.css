@@ -484,3 +484,26 @@
 .ss-hero-veil { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 38%, rgba(40,28,60,.58)); }
 .ss-hero-cap { position: absolute; left: 18px; right: 18px; bottom: 15px; }
 .ss-hero-open { display: inline-flex; align-items: center; gap: 7px; margin-top: 11px; font-size: 13px; font-weight: 600; color: #fff; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35); padding: 8px 15px; border-radius: 999px; }
+
+/* Calm flow-card — the shared container for the "help me change" and
+   "help me achieve" flows and the journey views. Unlayered, so it wins
+   over the Card component's Tailwind utilities without !important. */
+.ss-flow {
+  border: 1px solid var(--ss-line);
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.06), rgba(139, 92, 246, 0.03));
+  border-radius: 20px;
+}
+.dark .ss-flow {
+  background: linear-gradient(180deg, rgba(167, 139, 250, 0.10), rgba(167, 139, 250, 0.05));
+}
+
+/* Calm flow-card, Transformation engine (green register — the two-engine
+   signal from the constitution: achievement=lavender, transformation=green). */
+.ss-flow-green {
+  border: 1px solid var(--ss-line);
+  background: linear-gradient(180deg, rgba(52, 201, 138, 0.08), rgba(52, 201, 138, 0.03));
+  border-radius: 20px;
+}
+.dark .ss-flow-green {
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.12), rgba(52, 211, 153, 0.05));
+}
