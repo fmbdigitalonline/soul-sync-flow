@@ -96,7 +96,7 @@ const Profile = () => {
 
   const segLabels: Record<Tab, string> = {
     journey: nl ? "Mijn Reis" : "My Journey",
-    growth: nl ? "Groei" : "Growth",
+    growth: nl ? "Programma's" : "Programs",
     settings: nl ? "Instellingen" : "Settings",
   };
 
@@ -200,58 +200,47 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* Segmented control */}
+              {/* ── PORTRAIT (persistent above the tabs): who walks beside you,
+                     and where you are — the passport sequence. ── */}
+              <div className="ss-twin">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <span className="ss-eyebrow"><Sparkles className="h-3.5 w-3.5" /> {nl ? "Je Twin" : "Your Twin"}</span>
+                    <div className="text-[30px] font-semibold tracking-tight mt-2.5 mb-1" style={{ color: "var(--ss-accent-ink)" }}>{twinLabel}</div>
+                    <div className="text-sm" style={{ color: "var(--ss-muted)" }}>
+                      {conversations === 0
+                        ? (nl ? "Jullie hebben nog niet gesproken." : "You haven't spoken yet.")
+                        : (nl ? `Jullie deelden ${conversations} gesprekken.` : `You've shared ${conversations} conversations.`)}
+                    </div>
+                  </div>
+                  <div className="ss-orb" />
+                </div>
+                <button onClick={() => setTab("settings")} className="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-semibold rounded-full px-4 py-2 border"
+                  style={{ color: "var(--ss-accent-ink)", background: "var(--ss-card)", borderColor: "var(--ss-line)" }}>
+                  <Pencil className="h-3.5 w-3.5" /> {nl ? "Hernoem je Twin" : "Rename your Twin"}
+                </button>
+              </div>
+
+              {/* Where you are now — the narrative lead (persistent) */}
+              <div className="px-1">
+                <div className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--ss-accent)" }}>
+                  {nl ? "Waar je nu bent" : "Where you are now"}
+                </div>
+                <div className="text-[16px] leading-relaxed" style={{ color: reflection ? "var(--ss-ink)" : "var(--ss-muted)" }}>
+                  {reflection || (nl ? "Je reis begint. Praat met je Twin en het verhaal ontvouwt zich hier." : "Your journey is beginning. Talk with your Twin and the story unfolds here.")}
+                </div>
+              </div>
+
+              {/* Tabs — sub-navigation into detail */}
               <div className="ss-seg">
                 {(["journey", "growth", "settings"] as Tab[]).map((k) => (
                   <button key={k} data-on={tab === k} onClick={() => { setTab(k); setDeep(false); }}>{segLabels[k]}</button>
                 ))}
               </div>
 
-              {/* ---- MY JOURNEY ---- */}
+              {/* ---- MY JOURNEY (details) ---- */}
               {tab === "journey" && (
                 <div className="flex flex-col gap-4">
-                  {/* Twin card */}
-                  <div className="ss-twin">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="min-w-0">
-                        <span className="ss-eyebrow"><Sparkles className="h-3.5 w-3.5" /> {nl ? "Je Twin" : "Your Twin"}</span>
-                        <div className="text-[30px] font-semibold tracking-tight mt-2.5 mb-1" style={{ color: "var(--ss-accent-ink)" }}>{twinLabel}</div>
-                        <div className="text-sm" style={{ color: "var(--ss-muted)" }}>
-                          {conversations === 0
-                            ? (nl ? "Jullie hebben nog niet gesproken." : "You haven't spoken yet.")
-                            : (nl ? `Jullie deelden ${conversations} gesprekken.` : `You've shared ${conversations} conversations.`)}
-                        </div>
-                      </div>
-                      <div className="ss-orb" />
-                    </div>
-                    <button onClick={() => setTab("settings")} className="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-semibold rounded-full px-4 py-2 border"
-                      style={{ color: "var(--ss-accent-ink)", background: "var(--ss-card)", borderColor: "var(--ss-line)" }}>
-                      <Pencil className="h-3.5 w-3.5" /> {nl ? "Hernoem je Twin" : "Rename your Twin"}
-                    </button>
-                  </div>
-
-                  {/* Journey — story before score: the narrative leads, the
-                      numbers follow (emotional hierarchy). */}
-                  <div className="flex items-center justify-between">
-                    <div className="text-[20px] font-semibold tracking-tight">{nl ? "Mijn Reis" : "My Journey"}</div>
-                    <TrendingUp className="h-5 w-5" style={{ color: "var(--ss-accent)" }} />
-                  </div>
-
-                  {reflection ? (
-                    <div className="ss-reflection">
-                      <div className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--ss-accent)" }}>
-                        {nl ? "Waar je nu bent" : "Where you are now"}
-                      </div>
-                      <div className="text-[17px] leading-relaxed" style={{ color: "var(--ss-ink)" }}>{reflection}</div>
-                    </div>
-                  ) : (
-                    <div className="ss-reflection">
-                      <div className="text-[15.5px] leading-relaxed" style={{ color: "var(--ss-muted)" }}>
-                        {nl ? "Je reis begint. Praat met je Twin en het verhaal ontvouwt zich hier." : "Your journey is beginning. Talk with your Twin and the story unfolds here."}
-                      </div>
-                    </div>
-                  )}
-
                   {/* Mountain hero → deep view */}
                   <button onClick={() => { setDeep(true); setDeepTab("overview"); }} className="ss-hero text-left">
                     <svg viewBox="0 0 360 168" preserveAspectRatio="xMidYMid slice" style={{ display: "block", width: "100%", height: 156 }}>
