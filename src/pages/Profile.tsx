@@ -193,7 +193,7 @@ const Profile = () => {
                 <h1 className="text-[25px] font-semibold tracking-tight" style={{ color: "var(--ss-ink)" }}>{displayName}</h1>
                 {traits.length > 0 && (
                   <div className="flex flex-wrap gap-2 justify-center">
-                    {traits.slice(0, 2).map((trait, i) => (
+                    {traits.slice(0, 3).map((trait, i) => (
                       <span key={i} className={i === 0 ? "ss-chip ss-chip--lead" : "ss-chip"}>{trait}</span>
                     ))}
                   </div>
@@ -217,7 +217,9 @@ const Profile = () => {
                         <span className="ss-eyebrow"><Sparkles className="h-3.5 w-3.5" /> {nl ? "Je Twin" : "Your Twin"}</span>
                         <div className="text-[30px] font-semibold tracking-tight mt-2.5 mb-1" style={{ color: "var(--ss-accent-ink)" }}>{twinLabel}</div>
                         <div className="text-sm" style={{ color: "var(--ss-muted)" }}>
-                          {nl ? `Jullie deelden ${conversations} gesprekken.` : `You've shared ${conversations} conversations.`}
+                          {conversations === 0
+                            ? (nl ? "Jullie hebben nog niet gesproken." : "You haven't spoken yet.")
+                            : (nl ? `Jullie deelden ${conversations} gesprekken.` : `You've shared ${conversations} conversations.`)}
                         </div>
                       </div>
                       <div className="ss-orb" />
@@ -228,28 +230,27 @@ const Profile = () => {
                     </button>
                   </div>
 
-                  {/* Journey overview */}
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-[20px] font-semibold tracking-tight">{nl ? "Mijn Reis" : "My Journey"}</div>
-                        <div className="text-sm mt-0.5" style={{ color: "var(--ss-muted)" }}>{nl ? "Je bent op een mooi pad." : "You're on a beautiful path."}</div>
-                      </div>
-                      <TrendingUp className="h-5 w-5" style={{ color: "var(--ss-accent)" }} />
-                    </div>
-                    <div className="ss-quad">
-                      <Stat label={nl ? "Blauwdruk" : "Blueprint"} value={blueprintPct >= 100 ? (nl ? "Compleet" : "Complete") : `${blueprintPct}%`} done={blueprintPct >= 100} />
-                      <Stat label={nl ? "Programma's" : "Programs"} value={String(programCount)} unit={nl ? "actief" : "active"} />
-                      <Stat label={nl ? "Inzichten" : "Insights"} value={String(insightCount)} unit={nl ? "ontdekt" : "discovered"} />
-                      <Stat label={nl ? "Gesprekken" : "Conversations"} value={String(conversations)} unit={nl ? "totaal" : "shared"} />
-                    </div>
-                    {reflection && (
-                      <div className="ss-reflection">
-                        <div className="text-[15.5px] leading-relaxed" style={{ color: "var(--ss-ink)" }}>{reflection}</div>
-                        <div className="text-xs mt-2" style={{ color: "var(--ss-faint)" }}>{nl ? "Een reflectie uit je reis" : "A reflection from your journey"}</div>
-                      </div>
-                    )}
+                  {/* Journey — story before score: the narrative leads, the
+                      numbers follow (emotional hierarchy). */}
+                  <div className="flex items-center justify-between">
+                    <div className="text-[20px] font-semibold tracking-tight">{nl ? "Mijn Reis" : "My Journey"}</div>
+                    <TrendingUp className="h-5 w-5" style={{ color: "var(--ss-accent)" }} />
                   </div>
+
+                  {reflection ? (
+                    <div className="ss-reflection">
+                      <div className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--ss-accent)" }}>
+                        {nl ? "Waar je nu bent" : "Where you are now"}
+                      </div>
+                      <div className="text-[17px] leading-relaxed" style={{ color: "var(--ss-ink)" }}>{reflection}</div>
+                    </div>
+                  ) : (
+                    <div className="ss-reflection">
+                      <div className="text-[15.5px] leading-relaxed" style={{ color: "var(--ss-muted)" }}>
+                        {nl ? "Je reis begint. Praat met je Twin en het verhaal ontvouwt zich hier." : "Your journey is beginning. Talk with your Twin and the story unfolds here."}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Mountain hero → deep view */}
                   <button onClick={() => { setDeep(true); setDeepTab("overview"); }} className="ss-hero text-left">
@@ -272,6 +273,14 @@ const Profile = () => {
                       <span className="ss-hero-open">{nl ? "Open Mijn Reis" : "Open My Journey"} <ArrowRight className="h-3.5 w-3.5" /></span>
                     </div>
                   </button>
+
+                  {/* The numbers — after the story */}
+                  <div className="ss-quad">
+                    <Stat label={nl ? "Blauwdruk" : "Blueprint"} value={blueprintPct >= 100 ? (nl ? "Compleet" : "Complete") : `${blueprintPct}%`} done={blueprintPct >= 100} />
+                    <Stat label={nl ? "Programma's" : "Programs"} value={String(programCount)} unit={nl ? "actief" : "active"} />
+                    <Stat label={nl ? "Inzichten" : "Insights"} value={String(insightCount)} unit={nl ? "ontdekt" : "discovered"} />
+                    <Stat label={nl ? "Gesprekken" : "Conversations"} value={String(conversations)} unit={nl ? "totaal" : "shared"} />
+                  </div>
 
                   {/* This Month */}
                   {weekly && (
