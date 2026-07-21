@@ -215,11 +215,11 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
   };
 
   return (
-    <div className={cn('h-full p-6 space-y-6 overflow-y-auto', className)}>
+    <div className={cn('ss h-full p-5 space-y-5 overflow-y-auto', className)} style={{ background: 'var(--ss-surface)' }}>
       {/* Header — no dev badges (eliminate what adds no user value) */}
       <div className="space-y-1">
-        <h3 className="text-base font-semibold text-foreground">Coach Workspace</h3>
-        <p className="text-xs text-muted-foreground">
+        <h3 className="text-base font-semibold" style={{ color: 'var(--ss-ink)' }}>Coach Workspace</h3>
+        <p className="text-xs" style={{ color: 'var(--ss-muted)' }}>
           What can we do with what was just discussed?
         </p>
       </div>
@@ -501,20 +501,20 @@ const JourneyOverviewCard: React.FC<{
   onWorkOnThis: () => void;
   onSeeRoadmap: () => void;
 }> = ({ journey, xp, onDiscover, onWorkOnThis, onSeeRoadmap }) => (
-  <Card className="p-4 border-primary/30 bg-primary/5 space-y-2.5">
+  <div className="ss-twin space-y-2.5">
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/80">
+      <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--ss-accent)' }}>
         {journey.kind === 'transformation' ? '🌱 Journey' : 'Journey'}
       </p>
-      <p className="text-base font-semibold text-foreground mt-0.5 leading-snug">{journey.title}</p>
+      <p className="text-base font-semibold mt-0.5 leading-snug" style={{ color: 'var(--ss-ink)' }}>{journey.title}</p>
     </div>
 
     {journey.progressPct !== null && (
       <div className="space-y-1">
-        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+        <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: 'var(--ss-line)' }}>
           <div
-            className="h-full rounded-full bg-primary transition-all"
-            style={{ width: `${journey.progressPct}%` }}
+            className="h-full rounded-full transition-all"
+            style={{ width: `${journey.progressPct}%`, background: 'var(--ss-accent)' }}
           />
         </div>
         <p className="text-[11px] text-muted-foreground">{journey.progressLabel}</p>
@@ -566,7 +566,7 @@ const JourneyOverviewCard: React.FC<{
         {xp.nextMilestone ? ` · ${xp.nextMilestone.xpNeeded} to milestone ${xp.nextMilestone.milestone}` : ''}
       </p>
     )}
-  </Card>
+  </div>
 );
 
 
@@ -578,16 +578,17 @@ interface SectionDrawerProps {
 }
 
 const SectionDrawer: React.FC<SectionDrawerProps> = ({ label, isOpen, onToggle, children }) => (
-  <div className="border border-border/60 rounded-lg overflow-hidden bg-card/40">
+  <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--ss-line)', background: 'var(--ss-card)' }}>
     <Button
       variant="ghost"
       onClick={onToggle}
-      className="w-full h-9 px-3 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted/40 rounded-none"
+      className="w-full h-10 px-3.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider rounded-none hover:bg-transparent"
+      style={{ color: 'var(--ss-muted)' }}
     >
       <span>{label}</span>
       {isOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
     </Button>
-    {isOpen && <div className="p-3 border-t border-border/60">{children}</div>}
+    {isOpen && <div className="p-3.5" style={{ borderTop: '1px solid var(--ss-line-2)' }}>{children}</div>}
   </div>
 );
 
