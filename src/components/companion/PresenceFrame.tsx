@@ -6,6 +6,7 @@ export type PresenceState = "idle" | "thinking" | "noticed";
 interface PresenceFrameProps {
   state: PresenceState;
   className?: string;
+  style?: React.CSSProperties;
   children: React.ReactNode;
 }
 
@@ -17,12 +18,14 @@ interface PresenceFrameProps {
 export const PresenceFrame: React.FC<PresenceFrameProps> = ({
   state,
   className,
+  style,
   children,
 }) => {
   return (
     <div
       data-presence={state}
       className={cn("presence-frame", className)}
+      style={style}
     >
       {children}
     </div>

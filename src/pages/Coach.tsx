@@ -109,8 +109,10 @@ const Coach = () => {
     toast
   } = useToast();
   const {
-    t
+    t,
+    language
   } = useLanguage();
+  const nl = language === "nl";
   const {
     isMobile
   } = useIsMobile();
@@ -214,21 +216,19 @@ const Coach = () => {
       </CosmicCard>
     </div>;
   return <MainLayout>
-      <div className="min-h-screen bg-background">
+      <div className="ss ss-page min-h-screen">
         <div className={cn("container mx-auto px-4 max-w-6xl", isMobile ? "py-0" : "py-2")}>
-          
-          {userId && <div className="mb-4">
-              
-            </div>}
-          
-          {messages.length === 0 && <div className="text-center mb-6">
-              <h1 className="text-3xl font-bold gradient-text mb-2">
+
+          {/* echo header — the Twin, calm */}
+          <div className="flex items-center gap-3 py-3">
+            <div className="ss-orb" style={{ width: 42, height: 42 }} />
+            <div>
+              <div className="text-[19px] font-semibold tracking-tight" style={{ color: "var(--ss-accent-ink)" }}>
                 {twinName?.name || t('companion.pageTitle')}
-              </h1>
-              <p className="text-muted-foreground">
-                {t('companion.pageSubtitle')}
-              </p>
-            </div>}
+              </div>
+              <div className="text-xs" style={{ color: "var(--ss-muted)" }}>{nl ? "Je AI Twin" : "Your AI Twin"}</div>
+            </div>
+          </div>
 
           {/* Render different layouts based on screen size */}
           {isMobile ?

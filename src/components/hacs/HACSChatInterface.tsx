@@ -376,7 +376,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                 )}
               >
                 {message.role === "user" ? (
-                  <div className="inline-block bg-primary text-primary-foreground rounded-lg p-3 max-w-[85%] sm:max-w-[70%]">
+                  <div className="ss inline-block rounded-2xl px-4 py-2.5 max-w-[85%] sm:max-w-[70%] text-left" style={{ background: "var(--ss-accent)", color: "#fff" }}>
                     <p className="text-sm">{message.content}</p>
                     {message.isQuestion && (
                       <div className="mt-2 text-xs opacity-70">
@@ -385,26 +385,32 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                     )}
                   </div>
                 ) : (
-                  <div className="w-full">
-                    <div className="text-sm leading-relaxed text-muted-foreground">
-                      {isCurrentlyStreaming ? (
-                        <TypewriterText 
-                          text={message.content} 
-                          isStreaming={true}
-                          speed={45}
-                          messageId={message.id}
-                          onStreamingComplete={onStreamingComplete}
-                        />
-                      ) : (
-                        <InteractiveSentenceText
-                          text={message.content}
-                          selectedSentence={selectedSentences[message.id] || null}
-                          onSentenceSelect={(sentence) => handleSentenceSelect(message.id, sentence)}
-                          disabled={isLoading || isProcessingAction}
-                        />
-                      )}
+                  <div className="ss w-full">
+                    <div className="flex gap-2.5">
+                      <div className="ss-orb shrink-0 mt-0.5" style={{ width: 30, height: 30 }} />
+                      <div
+                        className="rounded-2xl px-4 py-3 text-[14.5px] leading-relaxed max-w-[86%]"
+                        style={{ background: "var(--ss-card)", border: "1px solid var(--ss-line)", color: "var(--ss-ink)" }}
+                      >
+                        {isCurrentlyStreaming ? (
+                          <TypewriterText
+                            text={message.content}
+                            isStreaming={true}
+                            speed={45}
+                            messageId={message.id}
+                            onStreamingComplete={onStreamingComplete}
+                          />
+                        ) : (
+                          <InteractiveSentenceText
+                            text={message.content}
+                            selectedSentence={selectedSentences[message.id] || null}
+                            onSentenceSelect={(sentence) => handleSentenceSelect(message.id, sentence)}
+                            disabled={isLoading || isProcessingAction}
+                          />
+                        )}
+                      </div>
                     </div>
-                    
+
                     {/* One-surface message parts: cards the twin attached */}
                     {(message as any).attachments?.map((att: any, i: number) =>
                       att?.type === "offer_decomposition" && att.title ? (
@@ -545,7 +551,8 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
         <div className="max-w-4xl mx-auto">
           <PresenceFrame
             state={presenceState}
-            className="flex items-center gap-2 bg-card shadow-lg px-3 py-2"
+            className="ss flex items-center gap-2 px-3 py-1.5 rounded-full"
+            style={{ background: "var(--ss-card)", boxShadow: "var(--ss-shadow)" }}
           >
             <Input
               value={inputValue}
