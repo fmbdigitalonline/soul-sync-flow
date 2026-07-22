@@ -289,17 +289,28 @@
 
 
 
-/* idle — no color; the border only lights up when a pipeline is active */
+/* The conversational-presence vocabulary (Constitution v3.8). The input
+   border is the living state of the conversation. Each state carries a
+   distinct, real interaction phase — no fabricated variety. */
+
+/* idle — Still. "I'm here." No colour; the border rests. */
 .presence-frame[data-presence="idle"] {
   border-color: transparent;
 }
 
-
-/* thinking — slow gradient sweep along the border */
-.presence-frame[data-presence="thinking"] {
-  border-color: transparent;
+/* listening — the user is composing; the Twin attends. A soft, barely-there
+   breath — almost imperceptible attention. */
+.presence-frame[data-presence="listening"] {
+  animation: presence-listen 4s ease-in-out infinite;
 }
-.presence-frame[data-presence="thinking"]::before {
+@keyframes presence-listen {
+  0%, 100% { border-color: hsl(var(--soul-purple) / 0.14); }
+  50%      { border-color: hsl(var(--soul-purple) / 0.30); }
+}
+
+/* gathering — after send, before the first token. The most expressive
+   motion: a gradient sweep, as if perspectives are converging. */
+.presence-frame[data-presence="gathering"]::before {
   content: "";
   position: absolute;
   inset: -3px;
@@ -321,42 +332,62 @@
   pointer-events: none;
   z-index: 0;
 }
-
-
 @keyframes presence-sweep {
   0%   { background-position:   0% 50%; }
   100% { background-position: 200% 50%; }
 }
 
-/* noticed — single soft pulse, then settles */
-.presence-frame[data-presence="noticed"] {
-  animation: presence-pulse 1.2s ease-out 1 forwards;
+/* speaking — during streaming. Calm, almost still: a slow breath so the
+   interface stays alive without pretending to still be thinking. */
+.presence-frame[data-presence="speaking"] {
+  animation: presence-speak 3.4s ease-in-out infinite;
+}
+@keyframes presence-speak {
+  0%, 100% { border-color: hsl(var(--soul-purple) / 0.20); }
+  50%      { border-color: hsl(var(--soul-purple) / 0.40); }
 }
 
-@keyframes presence-pulse {
-  0%   { box-shadow: 0 0 0 0    hsl(var(--soul-purple) / 0.00);
-         border-color: hsl(var(--soul-purple) / 0.35); }
-  40%  { box-shadow: 0 0 20px 5px hsl(var(--soul-purple) / 0.35);
-         border-color: hsl(var(--soul-purple) / 0.65); }
-  100% { box-shadow: 0 0 0 0    hsl(var(--soul-purple) / 0.00);
-         border-color: hsl(var(--soul-purple) / 0.28); }
+/* arriving — one gentle settling cue when the last token lands, like the end
+   of a sentence. Not a celebration. */
+.presence-frame[data-presence="arriving"] {
+  animation: presence-settle 0.9s ease-out 1 forwards;
+}
+@keyframes presence-settle {
+  0%   { border-color: hsl(var(--soul-purple) / 0.42); }
+  100% { border-color: hsl(var(--soul-purple) / 0.00); }
 }
 
+/* reaching — the Twin is about to proactively surface something. A slow,
+   warm invitation. Never an alarm, never a badge. */
+.presence-frame[data-presence="reaching"] {
+  animation: presence-reach 2.4s ease-in-out infinite;
+}
+@keyframes presence-reach {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--soul-purple) / 0.00);
+             border-color: hsl(var(--soul-purple) / 0.28); }
+  50%      { box-shadow: 0 0 16px 3px hsl(var(--soul-purple) / 0.22);
+             border-color: hsl(var(--soul-purple) / 0.55); }
+}
 
+/* Accessibility floor: no motion, but each active state keeps a static tint
+   so it stays distinguishable by contrast (essential states also stay legible
+   in language elsewhere in the UI). */
 @media (prefers-reduced-motion: reduce) {
   .presence-frame,
-  .presence-frame[data-presence="idle"],
-  .presence-frame[data-presence="thinking"],
-  .presence-frame[data-presence="noticed"] {
+  .presence-frame[data-presence] {
     animation: none !important;
-    border-color: transparent;
   }
-  .presence-frame[data-presence="thinking"]::before {
+  .presence-frame[data-presence="gathering"]::before {
     animation: none !important;
     background: linear-gradient(90deg,
-      hsl(var(--soul-purple) / 0.35),
-      hsl(var(--soul-teal) / 0.35));
+      hsl(var(--soul-purple) / 0.40),
+      hsl(var(--soul-teal) / 0.40));
   }
+  .presence-frame[data-presence="idle"]     { border-color: transparent; }
+  .presence-frame[data-presence="arriving"] { border-color: transparent; }
+  .presence-frame[data-presence="listening"] { border-color: hsl(var(--soul-purple) / 0.22); }
+  .presence-frame[data-presence="speaking"]  { border-color: hsl(var(--soul-purple) / 0.30); }
+  .presence-frame[data-presence="reaching"]  { border-color: hsl(var(--soul-purple) / 0.45); }
 }
 
 /* =====================================================================

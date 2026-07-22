@@ -7,8 +7,6 @@ import { MessageCircle, RotateCcw, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
 import { useSubconsciousOrb } from "@/hooks/use-subconscious-orb";
-import { useHermeticReportStatus } from "@/hooks/use-hermetic-report-status";
-import type { PresenceState } from "@/components/companion/PresenceFrame";
 import { supabase } from "@/integrations/supabase/client";
 import { HACSChatInterface } from "@/components/hacs/HACSChatInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -64,23 +62,15 @@ const Coach = () => {
     orbState,
   } = useSubconsciousOrb();
 
-  // Background deep-report generation state — feeds "thinking" border.
-  const hermeticStatus = useHermeticReportStatus();
-
-  // Presence state: idle | thinking | noticed.
-  const [presenceState, setPresenceState] = useState<PresenceState>("idle");
+  // v3.8: the conversational lifecycle (listening/gathering/speaking/arriving)
+  // is derived inside the chat from its real signals. Coach only raises the
+  // proactive "reaching" pulse when the Twin surfaces something unprompted.
+  const [reaching, setReaching] = useState(false);
   const insightBudgetUsedRef = useRef(false);
   const lastAdviceRef = useRef<string | null>(null);
 
-  // Derive thinking automatically; noticed pulses take priority for 1.2s.
-  useEffect(() => {
-    if (presenceState === "noticed") return; // let the pulse finish
-    const thinking = isLoading || isStreamingResponse || hermeticStatus?.isGenerating;
-    setPresenceState(thinking ? "thinking" : "idle");
-  }, [isLoading, isStreamingResponse, hermeticStatus?.isGenerating, presenceState]);
-
-  // When the shadow detector surfaces fresh advice, pulse once and append it
-  // as a plain twin message. Max ONE unsolicited insight per session.
+  // When the shadow detector surfaces fresh advice, let the border reach once
+  // and append it as a plain twin message. Max ONE unsolicited insight/session.
   useEffect(() => {
     const advice = orbState?.hermeticAdvice;
     if (!advice) return;
@@ -89,10 +79,10 @@ const Coach = () => {
     if (insightBudgetUsedRef.current) return;
     insightBudgetUsedRef.current = true;
 
-    setPresenceState("noticed");
+    setReaching(true);
     window.setTimeout(() => {
-      setPresenceState("idle");
-    }, 1200);
+      setReaching(false);
+    }, 2400);
 
     addOptimisticMessage?.({
       id: `insight_${Date.now()}`,
@@ -200,7 +190,7 @@ const Coach = () => {
   // Removed duplicate authentication check - component is wrapped in ProtectedRoute
 
   // Create the main chat interface component
-  const chatInterface = <HACSChatInterface messages={messages} isLoading={isLoading} isStreamingResponse={isStreamingResponse} onSendMessage={handleSendMessage} onStreamingComplete={markMessageStreamingComplete} onStopStreaming={handleStopStreaming} onFeedback={handleFeedback} onAddOptimisticMessage={addOptimisticMessage} presenceState={presenceState} />;
+  const chatInterface = <HACSChatInterface messages={messages} isLoading={isLoading} isStreamingResponse={isStreamingResponse} onSendMessage={handleSendMessage} onStreamingComplete={markMessageStreamingComplete} onStopStreaming={handleStopStreaming} onFeedback={handleFeedback} onAddOptimisticMessage={addOptimisticMessage} reaching={reaching} />;
   const remindersContent = <div className="space-y-4 h-full">
       <CosmicCard className="p-4">
         <h3 className="font-semibold mb-3 flex items-center">
