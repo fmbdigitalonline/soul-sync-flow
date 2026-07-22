@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
 import SimplifiedBlueprintViewer from "@/components/blueprint/SimplifiedBlueprintViewer";
+import BlueprintOverview from "@/components/blueprint/BlueprintOverview";
 import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
 import { BlueprintHealthCheck } from "@/components/blueprint/BlueprintHealthCheck";
 import PersonalityReportViewer from "@/components/blueprint/PersonalityReportViewer";
@@ -424,8 +425,15 @@ const Blueprint = () => {
           </TabsList>
           
           <TabsContent value="view" className={`mt-6 w-full max-w-full`}>
-            {blueprintData && <div className="w-full max-w-full overflow-hidden">
-                <SimplifiedBlueprintViewer blueprint={blueprintData} />
+            {blueprintData && <div className="w-full max-w-full overflow-hidden space-y-6">
+                {/* Calm row-list overview (design system) — everyone. */}
+                <BlueprintOverview blueprint={blueprintData} />
+                {/* Admins keep the full grid detail below, nothing lost. */}
+                {isAdmin && (
+                  <div className="pt-2 border-t border-border/40">
+                    <SimplifiedBlueprintViewer blueprint={blueprintData} />
+                  </div>
+                )}
               </div>}
           </TabsContent>
 
