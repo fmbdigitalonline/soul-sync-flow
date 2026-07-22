@@ -221,7 +221,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <div className="grid grid-cols-1 gap-4 w-full max-w-full">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div 
-                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="text-center p-3 bg-[var(--ss-accent-wash)] rounded-3xl cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('mbtiDescriptions', mbtiType);
                     console.log('🔍 Opening MBTI modal with alignment data:', {
@@ -263,7 +263,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   })()}
                 </div>
                 <div 
-                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="text-center p-3 bg-[var(--ss-accent-wash)] rounded-3xl cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('lifePathDescriptions', lifePath);
                     console.log('🔍 Opening Life Path modal with alignment data:', {
@@ -311,7 +311,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   })()}
                 </div>
                 <div 
-                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="text-center p-3 bg-[var(--ss-accent-wash)] rounded-3xl cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('sunSignDescriptions', sunSign);
                     console.log('🔍 Opening Sun Sign modal with alignment data:', {
@@ -356,7 +356,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
                 <div 
-                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="text-center p-3 bg-[var(--ss-accent-wash)] rounded-3xl cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('humanDesignDescriptions', hdType);
                     console.log('🔍 Opening Human Design Type modal with alignment data:', {
@@ -404,7 +404,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   })()}
                 </div>
                 <div 
-                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="text-center p-3 bg-[var(--ss-accent-wash)] rounded-3xl cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('chineseZodiacDescriptions', chineseZodiac);
                     console.log('🔍 Opening Chinese Zodiac modal with alignment data:', {
@@ -471,7 +471,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <div className="space-y-4 w-full max-w-full">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('mbtiDescriptions', mbtiType);
                     openDetailModal({
@@ -507,7 +507,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   })()}
                 </div>
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('cognitiveFunctionDescriptions', dominantFunction.toLowerCase());
                     openDetailModal({
@@ -547,7 +547,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('taskApproachDescriptions', taskApproach);
                     console.log('🔍 Opening Task Approach modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
@@ -564,7 +564,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   })()}
                 </div>
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('communicationDescriptions', communicationStyle);
                     console.log('🔍 Opening Communication modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
@@ -581,7 +581,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   })()}
                 </div>
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('decisionMakingDescriptions', decisionMaking);
                     console.log('🔍 Opening Decision Making modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
@@ -617,7 +617,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <div className="space-y-4 w-full max-w-full">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('humanDesignDescriptions', hdType);
                     openDetailModal({
@@ -653,7 +653,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   })()}
                 </div>
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('authorityDescriptions', authority);
                     openDetailModal({
@@ -692,7 +692,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('strategyDescriptions', strategy);
                     console.log('🔍 Opening Strategy modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
@@ -709,7 +709,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   })()}
                 </div>
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('profileDescriptions', profile);
                     console.log('🔍 Opening Profile modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
@@ -726,7 +726,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   })()}
                 </div>
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('pacingDescriptions', pacing);
                     console.log('🔍 Opening Pacing modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
@@ -762,7 +762,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <div className="grid grid-cols-1 gap-6 w-full max-w-full">
               <div className="space-y-4">
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('lifePathDescriptions', lifePath);
                     openDetailModal({
@@ -799,7 +799,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div 
-                    className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                    className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                     onClick={() => {
                       const desc = getDescription('expressionNumberDescriptions', expressionNumber);
                       openDetailModal({
@@ -835,7 +835,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     })()}
                   </div>
                   <div 
-                    className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                    className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                     onClick={() => {
                       const desc = getDescription('soulUrgeDescriptions', soulUrgeNumber);
                       console.log('🔍 Opening Soul Urge modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
@@ -854,7 +854,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div 
-                    className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                    className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                     onClick={() => {
                       const desc = getDescription('personalityNumberDescriptions', personalityNumber);
                       console.log('🔍 Opening Personality Number modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
@@ -871,7 +871,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                     })()}
                   </div>
                   <div 
-                    className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                    className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                     onClick={() => {
                       const desc = getDescription('birthdayNumberDescriptions', birthdayNumber);
                       console.log('🔍 Opening Birthday Number modal:', { hasThink: !!desc.think, hasAct: !!desc.act, hasReact: !!desc.react });
@@ -913,7 +913,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <div className="space-y-4 w-full max-w-full">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div 
-                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="text-center p-3 bg-[var(--ss-accent-wash)] rounded-3xl cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('sunSignDescriptions', sunSign);
                     openDetailModal({
@@ -949,7 +949,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   })()}
                 </div>
                 <div 
-                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="text-center p-3 bg-[var(--ss-accent-wash)] rounded-3xl cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('moonSignDescriptions', moonSign);
                     console.log('🔍 Opening Moon Sign modal with alignment data:', {
@@ -997,7 +997,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   })()}
                 </div>
                 <div 
-                  className="text-center p-3 bg-soul-purple/5 rounded-3xl cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="text-center p-3 bg-[var(--ss-accent-wash)] rounded-3xl cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('risingSignDescriptions', risingSign);
                     console.log('🔍 Opening Rising Sign modal with alignment data:', {
@@ -1048,7 +1048,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mt-6">
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('socialStyleDescriptions', 'warm');
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.socialStyle'), mainValue: t('blueprint.values.warm'), ...desc, category: 'Astrology' });
@@ -1064,7 +1064,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   })()}
                 </div>
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('publicVibeDescriptions', 'approachable');
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.publicVibe'), mainValue: t('blueprint.values.approachable'), ...desc, category: 'Astrology' });
@@ -1080,7 +1080,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   })()}
                 </div>
                 <div 
-                  className="p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                  className="p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                   onClick={() => {
                     const desc = getDescription('leadershipStyleDescriptions', 'collaborative');
                     openDetailModal({ title: desc.fullTitle, subtitle: t('blueprint.labels.leadershipStyle'), mainValue: t('blueprint.values.collaborative'), ...desc, category: 'Astrology' });
@@ -1098,7 +1098,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               </div>
 
               <div 
-                className="mt-4 p-3 bg-soul-purple/5 rounded-3xl text-center cursor-pointer hover:bg-soul-purple/10 transition-colors active:scale-[0.98]"
+                className="mt-4 p-3 bg-[var(--ss-accent-wash)] rounded-3xl text-center cursor-pointer hover:bg-[var(--ss-accent-wash-2)] transition-colors active:scale-[0.98]"
                 onClick={() => {
                   const desc = getDescription('chineseZodiacDescriptions', chineseZodiac);
                   openDetailModal({
