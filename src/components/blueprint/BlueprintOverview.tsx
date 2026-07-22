@@ -9,7 +9,7 @@
  */
 
 import React, { useState } from "react";
-import { Brain, Hash, Star, Compass, Globe, ChevronRight } from "lucide-react";
+import { Brain, Hash, Star, Compass, Globe, Info } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getPersonalityDescription } from "@/utils/personality-descriptions";
 import PersonalityDetailModal from "./PersonalityDetailModal";
@@ -170,7 +170,7 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
                     <div className="text-[12.5px] leading-relaxed mt-1.5 line-clamp-2" style={{ color: "var(--ss-muted)" }}>{insight}</div>
                   )}
                 </div>
-                <ChevronRight className="h-[18px] w-[18px] shrink-0 mt-0.5" style={{ color: "var(--ss-faint)" }} />
+                <Info className="h-[17px] w-[17px] shrink-0 mt-0.5" style={{ color: "var(--ss-accent)" }} />
               </button>
             );
           })}
