@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TwinNameSettings } from "@/components/profile/TwinNameSettings";
 import { useTwinName } from "@/hooks/use-twin-name";
 import { myJourneyService, type MyJourney } from "@/services/my-journey-service";
+import { LifeWheel } from "@/components/journey/LifeWheel";
 
 type Tab = "journey" | "growth" | "settings";
 type DeepTab = "overview" | "patterns" | "turning";
@@ -125,23 +126,19 @@ const Profile = () => {
 
               {deepTab === "overview" && (
                 <>
-                  <div className="ss-card">
-                    <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {nl ? "Levensdomeinen" : "Life domains"}</span>
-                    <div className="text-sm mt-1" style={{ color: "var(--ss-muted)" }}>
-                      {nl ? "Waar je aandacht nu naartoe gaat." : "Where your attention is going right now."}
-                    </div>
-                    {journey && journey.domains.length > 0 ? (
+                  {/* The honest life-wheel — the user's own balance ratings. */}
+                  <LifeWheel />
+                  {/* Complement: where activity actually is (observed, not rated). */}
+                  {journey && journey.domains.length > 0 && (
+                    <div className="ss-card">
+                      <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {nl ? "Waar je aandacht naartoe gaat" : "Where your attention is going"}</span>
                       <div className="flex flex-wrap gap-1.5 mt-3">
                         {journey.domains.map((d) => (
                           <span key={d} className="ss-chip capitalize">{d.replace(/_/g, " ")}</span>
                         ))}
                       </div>
-                    ) : (
-                      <div className="text-sm mt-3" style={{ color: "var(--ss-faint)" }}>
-                        {nl ? "Nog geen domeinen in beeld." : "No domains in focus yet."}
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                   {journey?.trajectory && (
                     <div className="ss-card">
                       <span className="ss-eyebrow"><TrendingUp className="h-3.5 w-3.5" /> {nl ? "Richting" : "Trajectory"}</span>

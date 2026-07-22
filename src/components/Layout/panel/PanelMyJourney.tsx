@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { myJourneyService, type MyJourney } from '@/services/my-journey-service';
+import { LifeWheel } from '@/components/journey/LifeWheel';
 
 const COPY = {
   en: {
@@ -104,6 +105,8 @@ export const PanelMyJourney: React.FC = () => {
                     <p className="text-xs text-foreground">{journey.essence}</p>
                   </Block>
                 )}
+                {/* The honest life-wheel — the user's own balance ratings. */}
+                <LifeWheel />
                 {journey.domains.length > 0 && (
                   <Block label={t.domains}>
                     <div className="flex flex-wrap gap-1">
