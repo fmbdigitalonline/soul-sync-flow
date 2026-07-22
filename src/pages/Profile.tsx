@@ -22,7 +22,7 @@ import { AlignmentSection } from "@/components/journey/AlignmentSection";
 import { AlignmentDetail } from "@/components/journey/AlignmentDetail";
 
 type Tab = "journey" | "growth" | "settings";
-type DeepTab = "overview" | "patterns" | "turning";
+type DeepTab = "overview" | "patterns";
 
 const Profile = () => {
   const { t, language } = useLanguage();
@@ -126,28 +126,49 @@ const Profile = () => {
                 <span className="ss-chip" style={{ padding: "4px 11px" }}>{displayName}</span>
               </div>
               <div className="ss-seg">
-                {(["overview", "patterns", "turning"] as DeepTab[]).map((k) => (
+                {(["overview", "patterns"] as DeepTab[]).map((k) => (
                   <button key={k} data-on={deepTab === k} onClick={() => setDeepTab(k)}>
-                    {k === "overview" ? (nl ? "Overzicht" : "Overview") : k === "patterns" ? (nl ? "Patronen" : "Patterns") : (nl ? "Keerpunten" : "Turning points")}
+                    {k === "overview" ? (nl ? "Overzicht" : "Overview") : (nl ? "Patronen" : "Patterns")}
                   </button>
                 ))}
               </div>
 
               {deepTab === "overview" && (
                 <>
-                  {/* The honest life-wheel — the user's own balance ratings. */}
+                  {/* Life domains — the honest radar from the user's own balance ratings. */}
                   <LifeWheel />
-                  {/* Complement: where activity actually is (observed, not rated). */}
-                  {journey && journey.domains.length > 0 && (
-                    <div className="ss-card">
-                      <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {nl ? "Waar je aandacht naartoe gaat" : "Where your attention is going"}</span>
-                      <div className="flex flex-wrap gap-1.5 mt-3">
-                        {journey.domains.map((d) => (
-                          <span key={d} className="ss-chip capitalize">{d.replace(/_/g, " ")}</span>
-                        ))}
+
+                  {/* Turning points — moments that shaped you, as a timeline. */}
+                  <div className="ss-card">
+                    <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {nl ? "Keerpunten" : "Turning points"}</span>
+                    <p className="text-[12.5px] mt-0.5" style={{ color: "var(--ss-muted)" }}>{nl ? "Momenten die je vormden." : "Moments that shaped you."}</p>
+                    {journey && journey.turningPoints.length > 0 ? (
+                      <div className="mt-4 flex flex-col">
+                        {journey.turningPoints.map((e, i, arr) => {
+                          const year = new Date(e.lastActivity).getFullYear();
+                          const last = i === arr.length - 1;
+                          return (
+                            <div key={e.sessionId} className="flex gap-3">
+                              <div className="flex flex-col items-center" style={{ width: 12 }}>
+                                <span className="shrink-0 rounded-full" style={{ width: 10, height: 10, marginTop: 4, background: "var(--ss-accent)", boxShadow: "0 0 0 4px var(--ss-accent-wash)" }} />
+                                {!last && <span className="flex-1" style={{ width: 2, marginTop: 2, marginBottom: 2, background: "var(--ss-line)" }} />}
+                              </div>
+                              <div className={last ? "pb-0.5" : "pb-5"}>
+                                <div className="text-[12px] font-semibold tabular-nums" style={{ color: "var(--ss-accent-ink)" }}>{Number.isFinite(year) ? year : ""}</div>
+                                <div className="text-[13.5px] leading-relaxed mt-0.5" style={{ color: "var(--ss-ink)" }}>{e.title}</div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="text-sm mt-3" style={{ color: "var(--ss-faint)" }}>
+                        {nl ? "Je reis is nog pril." : "Your journey is still early."}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Direction — the interpreted trajectory (honest narrative, no score). */}
                   {journey?.trajectory && (
                     <div className="ss-card">
                       <span className="ss-eyebrow"><TrendingUp className="h-3.5 w-3.5" /> {nl ? "Richting" : "Trajectory"}</span>
@@ -174,22 +195,6 @@ const Profile = () => {
                 </div>
               )}
 
-              {deepTab === "turning" && (
-                <div className="ss-card">
-                  <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {nl ? "Keerpunten" : "Turning points"}</span>
-                  {journey && journey.turningPoints.length > 0 ? (
-                    <div className="mt-3 flex flex-col gap-2.5">
-                      {journey.turningPoints.map((e) => (
-                        <div key={e.sessionId} className="text-sm truncate" style={{ color: "var(--ss-muted)" }}>· {e.title}</div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-sm mt-3" style={{ color: "var(--ss-faint)" }}>
-                      {nl ? "Je reis is nog pril." : "Your journey is still early."}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           ) : (
             <>
