@@ -378,7 +378,7 @@ const Blueprint = () => {
   };
   return <MainLayout>
       <TriggerRecovery />
-      <div className={`w-full ${spacing.container} pb-20 mobile-container`}>
+      <div className={`ss ss-page w-full ${spacing.container} pb-20 mobile-container`}>
         {/* Header with proper typography hierarchy */}
         <div className={`flex flex-col ${spacing.gap} mb-6 w-full max-w-full`}>
           <div className="flex items-center justify-between">
@@ -402,7 +402,7 @@ const Blueprint = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 w-full max-w-full">
           {/* Tabs with Inter font */}
-          <TabsList className={`w-full max-w-full h-auto ${spacing.button} grid ${isAdmin ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2'} !rounded-2xl font-inter`}>
+          <TabsList className={`w-full max-w-full h-auto p-1 grid ${isAdmin ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2'} !rounded-2xl font-inter border-none`} style={{ background: 'var(--ss-accent-wash)' }}>
             <TabsTrigger value="view" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl font-medium`}>
               {t('blueprint.tab')}
             </TabsTrigger>
