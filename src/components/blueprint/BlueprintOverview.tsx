@@ -1,69 +1,141 @@
 /**
  * BlueprintOverview — the calm Blauwdruk overview (design system).
- * A clean row-list of the person's core blueprint: one card per facet,
- * icon · label · value · description. Reads the same blueprint shape and
- * description helper the legacy viewer used, so the data is unchanged —
- * only the presentation is the calm mockup.
+ * A grouped row-list of the full blueprint: personality, numerology (all
+ * five numbers), astrology, human design, generational. Every row is
+ * tappable and opens the calm detail modal (light / shadow / insight /
+ * think·act·react). Reads the same blueprint shape and getPersonalityDescription
+ * helper the legacy viewer used, so the data is unchanged — only the
+ * presentation is the calm redesign.
  */
 
-import React from "react";
-import { Brain, Hash, Sparkles, Compass, Sun, Moon, Sunrise, Globe } from "lucide-react";
+import React, { useState } from "react";
+import { Brain, Hash, Star, Compass, Globe, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getPersonalityDescription } from "@/utils/personality-descriptions";
+import PersonalityDetailModal from "./PersonalityDetailModal";
 
-interface Row {
-  icon: React.ReactNode;
+interface Item {
+  category: string;
   label: string;
-  value: string;
-  description?: string;
+  value: string | number;
+  /** lookup value for the description, when it differs from the shown value */
+  descValue?: string | number;
 }
+interface Section {
+  title: string;
+  icon: React.ReactNode;
+  items: Item[];
+}
+
+type ModalData = {
+  isOpen: boolean;
+  title: string;
+  subtitle?: string;
+  mainValue: string;
+  light: string;
+  shadow: string;
+  insight: string;
+  think?: string;
+  act?: string;
+  react?: string;
+  category: string;
+};
 
 const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
   const { t, language } = useLanguage();
-  const desc = (category: string, value: string | number) =>
-    getPersonalityDescription(t, category, value, language);
-  const descText = (category: string, value: string | number): string => {
-    const d = getPersonalityDescription(t, category, value, language);
-    return d?.insight || d?.fullTitle || "";
-  };
+  const nl = language === "nl";
+  const [modal, setModal] = useState<ModalData | null>(null);
+
+  const gd = (category: string, value: string | number) =>
+    getPersonalityDescription(t, category, value, language) as any;
 
   const unknown = t("blueprint.values.unknown");
   const userMeta = blueprint?.user_meta || {};
   const name = userMeta.preferred_name || userMeta.full_name || "You";
 
-  const mbti = blueprint?.cognitiveTemperamental?.mbtiType || unknown;
-  const lifePath = Number(blueprint?.coreValuesNarrative?.lifePath || 0);
-  const expression = blueprint?.coreValuesNarrative?.expressionNumber;
-  const hd = blueprint?.energyDecisionStrategy?.humanDesignType || "Projector";
-  const sun = blueprint?.publicArchetype?.sunSign || unknown;
-  const moon = blueprint?.publicArchetype?.moonSign;
-  const rising = blueprint?.publicArchetype?.risingSign;
-  const chinese = blueprint?.generationalCode?.chineseZodiac;
-  const element = blueprint?.generationalCode?.element;
+  const c = blueprint?.cognitiveTemperamental || {};
+  const e = blueprint?.energyDecisionStrategy || {};
+  const n = blueprint?.coreValuesNarrative || {};
+  const a = blueprint?.publicArchetype || {};
+  const g = blueprint?.generationalCode || {};
 
-  const nl = language === "nl";
-  const iconWrap = (node: React.ReactNode) => (
-    <span
-      className="shrink-0 grid place-items-center"
-      style={{ width: 40, height: 40, borderRadius: 12, background: "var(--ss-accent-wash)", color: "var(--ss-accent)" }}
-    >
-      {node}
-    </span>
-  );
+  const val = (v: any) => (v === undefined || v === null || v === "" ? undefined : v);
+  const num = (v: any) => (val(v) !== undefined && Number(v) > 0 ? Number(v) : undefined);
 
-  const rows: Row[] = [
-    { icon: iconWrap(<Brain className="h-[18px] w-[18px]" />), label: nl ? "MBTI Type" : "MBTI Type", value: mbti, description: mbti !== unknown ? descText("mbtiDescriptions", mbti) : (nl ? "Je hebt unieke gaven die bijdragen aan je pad van zelfontdekking." : "You have unique gifts that contribute to your journey of self-discovery.") },
-    lifePath > 0 && { icon: iconWrap(<Hash className="h-[18px] w-[18px]" />), label: nl ? "Levenspad" : "Life Path", value: String(lifePath), description: descText("lifePathDescriptions", lifePath) },
-    expression && { icon: iconWrap(<Sparkles className="h-[18px] w-[18px]" />), label: nl ? "Expressie" : "Expression", value: String(expression), description: descText("expressionDescriptions", expression) },
-    { icon: iconWrap(<Compass className="h-[18px] w-[18px]" />), label: "Human Design", value: hd, description: descText("humanDesignDescriptions", hd) },
-    sun !== unknown && { icon: iconWrap(<Sun className="h-[18px] w-[18px]" />), label: nl ? "Zonneteken" : "Sun Sign", value: sun, description: descText("sunSignDescriptions", sun) },
-    moon && moon !== unknown && { icon: iconWrap(<Moon className="h-[18px] w-[18px]" />), label: nl ? "Maanteken" : "Moon Sign", value: moon, description: descText("moonSignDescriptions", moon) },
-    rising && rising !== unknown && { icon: iconWrap(<Sunrise className="h-[18px] w-[18px]" />), label: nl ? "Rijzend teken" : "Rising Sign", value: rising, description: descText("risingSignDescriptions", rising) },
-    chinese && chinese !== unknown && { icon: iconWrap(<Globe className="h-[18px] w-[18px]" />), label: nl ? "Chinese dierenriem" : "Chinese Zodiac", value: element ? `${chinese} ${element}` : chinese, description: descText("chineseZodiacDescriptions", chinese) },
-  ].filter(Boolean) as Row[];
+  const sections: Section[] = [
+    {
+      title: nl ? "Persoonlijkheid" : "Personality",
+      icon: <Brain className="h-[16px] w-[16px]" />,
+      items: [
+        { category: "mbtiDescriptions", label: nl ? "MBTI Type" : "MBTI Type", value: val(c.mbtiType) ?? unknown },
+        val(c.dominantFunction) && { category: "cognitiveFunctionDescriptions", label: nl ? "Cognitieve functies" : "Cognitive functions", value: `${c.dominantFunction}${c.auxiliaryFunction ? ` · ${c.auxiliaryFunction}` : ""}`, descValue: String(c.dominantFunction).toLowerCase() },
+        { category: "taskApproachDescriptions", label: nl ? "Taakbenadering" : "Task approach", value: val(c.taskApproach) ?? "systematic" },
+        { category: "communicationDescriptions", label: nl ? "Communicatie" : "Communication", value: val(c.communicationStyle) ?? "clear" },
+        { category: "decisionMakingDescriptions", label: nl ? "Besluitvorming" : "Decision making", value: val(c.decisionMaking) ?? "logical" },
+      ].filter(Boolean) as Item[],
+    },
+    {
+      title: nl ? "Numerologie" : "Numerology",
+      icon: <Hash className="h-[16px] w-[16px]" />,
+      items: [
+        num(n.lifePath) && { category: "lifePathDescriptions", label: nl ? "Levenspad" : "Life Path", value: num(n.lifePath)! },
+        num(n.expressionNumber) && { category: "expressionNumberDescriptions", label: nl ? "Expressie" : "Expression", value: num(n.expressionNumber)! },
+        num(n.soulUrgeNumber) && { category: "soulUrgeDescriptions", label: nl ? "Zieldrang" : "Soul Urge", value: num(n.soulUrgeNumber)! },
+        num(n.personalityNumber) && { category: "personalityNumberDescriptions", label: nl ? "Persoonlijkheid" : "Personality", value: num(n.personalityNumber)! },
+        num(n.birthdayNumber) && { category: "birthdayNumberDescriptions", label: nl ? "Verjaardag" : "Birthday", value: num(n.birthdayNumber)! },
+      ].filter(Boolean) as Item[],
+    },
+    {
+      title: nl ? "Astrologie" : "Astrology",
+      icon: <Star className="h-[16px] w-[16px]" />,
+      items: [
+        val(a.sunSign) && { category: "sunSignDescriptions", label: nl ? "Zonneteken" : "Sun Sign", value: a.sunSign },
+        val(a.moonSign) && { category: "moonSignDescriptions", label: nl ? "Maanteken" : "Moon Sign", value: a.moonSign },
+        val(a.risingSign) && { category: "risingSignDescriptions", label: nl ? "Rijzend teken" : "Rising Sign", value: a.risingSign },
+        val(a.socialStyle) && { category: "socialStyleDescriptions", label: nl ? "Sociale stijl" : "Social style", value: a.socialStyle },
+        val(a.publicVibe) && { category: "publicVibeDescriptions", label: nl ? "Publieke uitstraling" : "Public vibe", value: a.publicVibe },
+        val(a.leadershipStyle) && { category: "leadershipStyleDescriptions", label: nl ? "Leiderschap" : "Leadership", value: a.leadershipStyle },
+      ].filter(Boolean) as Item[],
+    },
+    {
+      title: "Human Design",
+      icon: <Compass className="h-[16px] w-[16px]" />,
+      items: [
+        { category: "humanDesignDescriptions", label: nl ? "Type" : "Type", value: val(e.humanDesignType) ?? "Projector" },
+        val(e.authority) && { category: "authorityDescriptions", label: nl ? "Autoriteit" : "Authority", value: e.authority },
+        val(e.strategy) && { category: "strategyDescriptions", label: nl ? "Strategie" : "Strategy", value: e.strategy },
+        val(e.profile) && { category: "profileDescriptions", label: nl ? "Profiel" : "Profile", value: e.profile },
+        val(e.pacing) && { category: "pacingDescriptions", label: nl ? "Tempo" : "Pacing", value: e.pacing },
+      ].filter(Boolean) as Item[],
+    },
+    {
+      title: nl ? "Generationeel" : "Generational",
+      icon: <Globe className="h-[16px] w-[16px]" />,
+      items: [
+        val(g.chineseZodiac) && { category: "chineseZodiacDescriptions", label: nl ? "Chinese dierenriem" : "Chinese Zodiac", value: g.element ? `${g.chineseZodiac} ${g.element}` : g.chineseZodiac, descValue: g.chineseZodiac },
+      ].filter(Boolean) as Item[],
+    },
+  ].filter((s) => s.items.length > 0);
+
+  const openDetail = (item: Item, sectionTitle: string) => {
+    const d = gd(item.category, item.descValue ?? item.value);
+    setModal({
+      isOpen: true,
+      title: d?.fullTitle || item.label,
+      subtitle: item.label,
+      mainValue: String(item.value),
+      light: d?.light || "",
+      shadow: d?.shadow || "",
+      insight: d?.insight || "",
+      think: d?.think,
+      act: d?.act,
+      react: d?.react,
+      category: sectionTitle,
+    });
+  };
 
   return (
-    <div className="ss flex flex-col gap-4">
+    <div className="ss flex flex-col gap-5">
       {/* Identity */}
       <div className="flex items-center gap-3.5">
         <div className="ss-avatar" style={{ width: 56, height: 56, fontSize: 22 }}>{name.charAt(0).toUpperCase()}</div>
@@ -76,24 +148,51 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
         </div>
       </div>
 
-      <div className="text-[13px] font-semibold uppercase tracking-wider px-1" style={{ color: "var(--ss-faint)" }}>
-        {nl ? "Overzicht" : "Overview"}
-      </div>
-
-      <div className="flex flex-col gap-2.5">
-        {rows.map((r, i) => (
-          <div key={i} className="ss-card flex items-start gap-3.5" style={{ padding: 16 }}>
-            {r.icon}
-            <div className="min-w-0 flex-1">
-              <div className="text-[12px]" style={{ color: "var(--ss-muted)" }}>{r.label}</div>
-              <div className="text-[17px] font-semibold tracking-tight mt-0.5" style={{ color: "var(--ss-accent-ink)" }}>{r.value}</div>
-              {r.description && (
-                <div className="text-[13px] leading-relaxed mt-1.5" style={{ color: "var(--ss-muted)" }}>{r.description}</div>
-              )}
-            </div>
+      {sections.map((section) => (
+        <div key={section.title} className="flex flex-col gap-2.5">
+          <div className="flex items-center gap-1.5 px-1">
+            <span style={{ color: "var(--ss-accent)" }}>{section.icon}</span>
+            <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "var(--ss-faint)" }}>{section.title}</span>
           </div>
-        ))}
-      </div>
+          {section.items.map((item) => {
+            const insight = gd(item.category, item.descValue ?? item.value)?.insight as string | undefined;
+            return (
+              <button
+                key={item.label}
+                onClick={() => openDetail(item, section.title)}
+                className="ss-card flex items-start gap-3 text-left w-full"
+                style={{ padding: 16 }}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="text-[12px]" style={{ color: "var(--ss-muted)" }}>{item.label}</div>
+                  <div className="text-[16px] font-semibold tracking-tight mt-0.5 capitalize" style={{ color: "var(--ss-accent-ink)" }}>{item.value}</div>
+                  {insight && (
+                    <div className="text-[12.5px] leading-relaxed mt-1.5 line-clamp-2" style={{ color: "var(--ss-muted)" }}>{insight}</div>
+                  )}
+                </div>
+                <ChevronRight className="h-[18px] w-[18px] shrink-0 mt-0.5" style={{ color: "var(--ss-faint)" }} />
+              </button>
+            );
+          })}
+        </div>
+      ))}
+
+      {modal && (
+        <PersonalityDetailModal
+          isOpen={modal.isOpen}
+          onClose={() => setModal((m) => (m ? { ...m, isOpen: false } : null))}
+          title={modal.title}
+          subtitle={modal.subtitle}
+          mainValue={modal.mainValue}
+          light={modal.light}
+          shadow={modal.shadow}
+          insight={modal.insight}
+          think={modal.think}
+          act={modal.act}
+          react={modal.react}
+          category={modal.category}
+        />
+      )}
     </div>
   );
 };
