@@ -686,10 +686,10 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 ${spacing.gap} w-full`}>
         <div className="min-w-0 flex-1">
-          <h3 className={`font-bold font-display whitespace-nowrap overflow-hidden text-ellipsis ${getTextSize('text-xl')}`}>
+          <h3 className={`font-bold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis ${getTextSize('text-2xl')}`} style={{ color: 'var(--ss-ink)' }}>
             {reportType === 'hermetic' ? 'Hermetic Blueprint Report' : 'Personality Report'}
           </h3>
-          <p className={`text-muted-foreground break-words ${getTextSize('text-sm')}`}>
+          <p className={`break-words ${getTextSize('text-sm')}`} style={{ color: 'var(--ss-muted)' }}>
             {currentReport && `${t('common.generatedOn')} ${new Date(currentReport.generated_at).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US')}`}
           </p>
         </div>
