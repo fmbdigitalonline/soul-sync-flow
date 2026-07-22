@@ -19,6 +19,7 @@ import { useTwinName } from "@/hooks/use-twin-name";
 import { myJourneyService, type MyJourney } from "@/services/my-journey-service";
 import { LifeWheel } from "@/components/journey/LifeWheel";
 import { AlignmentSection } from "@/components/journey/AlignmentSection";
+import { AlignmentDetail } from "@/components/journey/AlignmentDetail";
 
 type Tab = "journey" | "growth" | "settings";
 type DeepTab = "overview" | "patterns" | "turning";
@@ -33,6 +34,7 @@ const Profile = () => {
 
   const [tab, setTab] = useState<Tab>("journey");
   const [deep, setDeep] = useState(false);
+  const [showAlignment, setShowAlignment] = useState(false);
   const [deepTab, setDeepTab] = useState<DeepTab>("overview");
   const [darkMode, setDarkMode] = useState(() =>
     typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
@@ -108,7 +110,13 @@ const Profile = () => {
         <div className="max-w-md mx-auto px-5 pt-8 pb-16 flex flex-col gap-5">
 
           {/* ============ DEEP VIEW ============ */}
-          {tab === "journey" && deep ? (
+          {showAlignment ? (
+            <AlignmentDetail
+              patterns={journey?.patterns}
+              onBack={() => setShowAlignment(false)}
+              onTalk={() => navigate("/companion")}
+            />
+          ) : tab === "journey" && deep ? (
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <button onClick={() => setDeep(false)} className="inline-flex items-center gap-1 text-sm font-medium" style={{ color: "var(--ss-muted)" }}>
@@ -243,7 +251,7 @@ const Profile = () => {
                       the journey. */}
                   <AlignmentSection
                     patterns={journey?.patterns}
-                    onLearnMore={() => { setDeep(true); setDeepTab("overview"); }}
+                    onLearnMore={() => setShowAlignment(true)}
                   />
                   {/* Mountain hero → deep view */}
                   <button onClick={() => { setDeep(true); setDeepTab("overview"); }} className="ss-hero text-left">
