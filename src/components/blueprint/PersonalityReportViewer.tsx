@@ -18,6 +18,7 @@ import { CosmicCard } from '@/components/ui/cosmic-card';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { supabase } from '@/integrations/supabase/client';
 import ReportModal from '@/components/ReportModal';
+import { ReportSummaryCalm } from './ReportSummaryCalm';
 
 interface PersonalityReportViewerProps {
   className?: string;
@@ -694,7 +695,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto mt-3 sm:mt-0">
           <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
-            <Badge variant="outline" className="bg-soul-purple/10 text-soul-purple border-soul-purple/20">
+            <Badge variant="outline" className="border-transparent" style={{ background: 'var(--ss-accent-wash-2)', color: 'var(--ss-accent-ink)' }}>
               <Sparkles className="h-3 w-3 mr-1 flex-shrink-0" />
               <span className="truncate">{t('common.soulGenerated')}</span>
             </Badge>
@@ -746,6 +747,17 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         </div>
       </div>
 
+      {/* Standard report — the calm redesign: Integrated Summary + Key
+          Themes. The full text is one tap away via "View full report". */}
+      {currentReport && reportType === 'standard' && (
+        <ReportSummaryCalm
+          content={currentReport.report_content as any}
+          sectionTitles={sectionTitles}
+          onViewFull={() => setIsReportModalOpen(true)}
+        />
+      )}
+
+      {reportType === 'hermetic' && (
       <ScrollArea className="h-[600px] w-full">
         <div className={`space-y-4 sm:space-y-6 pr-2 sm:pr-4 w-full max-w-full`}>
           {(() => {
@@ -1117,6 +1129,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           })()}
         </div>
       </ScrollArea>
+      )}
 
       {/* Mobile-Optimized Report Modal */}
       <ReportModal
