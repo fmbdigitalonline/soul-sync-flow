@@ -18,6 +18,7 @@ import { TwinNameSettings } from "@/components/profile/TwinNameSettings";
 import { useTwinName } from "@/hooks/use-twin-name";
 import { myJourneyService, type MyJourney } from "@/services/my-journey-service";
 import { LifeWheel } from "@/components/journey/LifeWheel";
+import { AlignmentSection } from "@/components/journey/AlignmentSection";
 
 type Tab = "journey" | "growth" | "settings";
 type DeepTab = "overview" | "patterns" | "turning";
@@ -238,6 +239,12 @@ const Profile = () => {
               {/* ---- MY JOURNEY (details) ---- */}
               {tab === "journey" && (
                 <div className="flex flex-col gap-4">
+                  {/* Alignment (v3.6) — interpreted, never scored: the lead of
+                      the journey. */}
+                  <AlignmentSection
+                    patterns={journey?.patterns}
+                    onLearnMore={() => { setDeep(true); setDeepTab("overview"); }}
+                  />
                   {/* Mountain hero → deep view */}
                   <button onClick={() => { setDeep(true); setDeepTab("overview"); }} className="ss-hero text-left">
                     <svg viewBox="0 0 360 168" preserveAspectRatio="xMidYMid slice" style={{ display: "block", width: "100%", height: 156 }}>
