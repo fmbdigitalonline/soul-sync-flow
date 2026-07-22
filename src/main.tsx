@@ -76,6 +76,7 @@ import { SoulOrbProvider } from "./contexts/SoulOrbContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { ModeProvider } from "./contexts/ModeContext";
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
+import { SentenceActionProvider } from "./contexts/SentenceActionContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useCoachAskBridge } from "./hooks/use-coach-ask-bridge";
 
@@ -105,10 +106,12 @@ const RootLayout = () => {
               <SoulOrbProvider>
                 <BlueprintCacheProvider>
                   <WorkspaceProvider>
-                    <CoachAskBridgeMount />
-                    <Outlet />
-                    <Toaster />
-                    <SonnerToaster />
+                    <SentenceActionProvider>
+                      <CoachAskBridgeMount />
+                      <Outlet />
+                      <Toaster />
+                      <SonnerToaster />
+                    </SentenceActionProvider>
                   </WorkspaceProvider>
                 </BlueprintCacheProvider>
               </SoulOrbProvider>
