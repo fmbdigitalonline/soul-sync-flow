@@ -328,7 +328,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   // Helper function to safely render content with smart extraction
   const contentCardPadding = isMobile ? 'px-4 py-3' : 'p-3';
-  const contentCardClass = `w-full max-w-full ${contentCardPadding} bg-soul-purple/10 text-soul-purple border border-soul-purple/20 rounded-lg`;
+  const contentCardClass = `ss w-full max-w-full ${contentCardPadding} bg-[var(--ss-accent-wash)] text-[color:var(--ss-ink)] border border-[color:var(--ss-line)] rounded-2xl`;
   const contentTextClass = getTextSize(isMobile ? 'text-base' : 'text-sm');
 
   const renderSafeContent = (content: any, contentType: string = 'Unknown') => {
@@ -381,7 +381,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       
       // If no extractable content, show user-friendly message
       return (
-        <div className={`flex items-center gap-2 ${spacing.card} bg-muted/50 rounded-lg`}>
+        <div className={`flex items-center gap-2 ${spacing.card} bg-[var(--ss-line-2)] rounded-lg`}>
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           <p className={`text-muted-foreground ${getTextSize('text-sm')}`}>
             {language === 'nl' ? 'Inhoud wordt verwerkt...' : 'Content is being processed...'}
@@ -390,7 +390,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       );
     } else {
       return (
-        <div className={`w-full ${contentCardPadding} bg-muted/50 rounded-lg`}>
+        <div className={`w-full ${contentCardPadding} bg-[var(--ss-line-2)] rounded-lg`}>
           <p className={`text-muted-foreground italic ${contentTextClass}`}>
             {language === 'nl' ? 'Inhoud wordt binnenkort beschikbaar' : 'Content will be available soon'}
           </p>
@@ -581,7 +581,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   }) => (
     <button
       onClick={onClick}
-      className={`w-full flex items-center justify-between ${spacing.button} ${getTextSize('text-lg')} font-semibold text-left hover:bg-muted/50 rounded-lg transition-colors`}
+      className={`w-full flex items-center justify-between ${spacing.button} ${getTextSize('text-lg')} font-semibold text-left hover:bg-[var(--ss-accent-wash)] rounded-lg transition-colors`}
     >
       <div className="flex items-center gap-3">
         {Icon && <Icon className="h-5 w-5 text-soul-purple flex-shrink-0" />}
@@ -601,7 +601,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       {/* Report Type Toggle */}
       {(report || hermeticReport) && (
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="flex rounded-lg border p-1 bg-muted/50">
+          <div className="ss flex rounded-xl p-1" style={{ background: 'var(--ss-accent-wash)' }}>
             <Button
               variant={reportType === 'standard' ? 'default' : 'ghost'}
               size="sm"
