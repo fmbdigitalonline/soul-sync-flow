@@ -40,26 +40,20 @@ const PersonalityDetailModal: React.FC<PersonalityDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`
-        ${isMobile ? 'w-full h-[90vh] max-w-full m-0 rounded-t-3xl rounded-b-none' : 'max-w-4xl w-full h-[85vh]'}
-        p-0 gap-0 border-0 bg-background
-      `}>
+      <DialogContent className={`ss ${
+        isMobile ? 'w-full h-[90vh] max-w-full m-0 rounded-t-3xl rounded-b-none' : 'max-w-2xl w-full h-[85vh]'
+      } p-0 gap-0 border-0`} style={{ background: 'var(--ss-surface)' }}>
         {/* Sticky Header */}
-        <DialogHeader className={`
-          sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border
-          ${spacing.card} pb-3
-        `}>
+        <DialogHeader
+          className={`sticky top-0 z-10 backdrop-blur-sm ${spacing.card} pb-3`}
+          style={{ background: 'color-mix(in srgb, var(--ss-surface) 92%, transparent)', borderBottom: '1px solid var(--ss-line-2)' }}
+        >
           <div className="flex items-center justify-between w-full">
-            <DialogTitle className={`${getTextSize('text-lg')} font-semibold text-foreground flex-1 pr-4`}>
+            <DialogTitle className={`${getTextSize('text-lg')} font-semibold flex-1 pr-4`} style={{ color: 'var(--ss-ink)' }}>
               {title}
             </DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-8 w-8 p-0 hover:bg-accent"
-            >
-              <X className="h-4 w-4" />
+            <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
+              <X className="h-4 w-4" style={{ color: 'var(--ss-muted)' }} />
             </Button>
           </div>
         </DialogHeader>
@@ -67,34 +61,32 @@ const PersonalityDetailModal: React.FC<PersonalityDetailModalProps> = ({
         {/* Scrollable Content */}
         <ScrollArea className="flex-1 w-full">
           <div className={`${spacing.container} ${spacing.gap} pb-8`}>
-            <CosmicCard className="w-full border-0 shadow-none bg-transparent">
-              <div className="space-y-6">
-                {/* Main Value Display */}
-                <div className="text-center space-y-2 py-6">
-                  {subtitle && (
-                    <p className={`${getTextSize('text-sm')} font-inter text-muted-foreground uppercase tracking-wide`}>
-                      {subtitle}
-                    </p>
-                  )}
-                  <h2 className={`${getTextSize('text-4xl')} font-semibold text-primary`}>
-                    {mainValue}
-                  </h2>
-                </div>
-
-                {/* Light & Shadow Description */}
-                <div className="bg-accent/10 rounded-3xl p-6">
-                  <PersonalityDescription 
-                    light={light}
-                    shadow={shadow}
-                    insight={insight}
-                    think={think}
-                    act={act}
-                    react={react}
-                    compact={false}
-                  />
-                </div>
+            <div className="w-full space-y-6">
+              {/* Main Value Display */}
+              <div className="text-center space-y-2 py-6">
+                {subtitle && (
+                  <p className={`${getTextSize('text-sm')} uppercase tracking-wide`} style={{ color: 'var(--ss-faint)' }}>
+                    {subtitle}
+                  </p>
+                )}
+                <h2 className={`${getTextSize('text-4xl')} font-semibold capitalize`} style={{ color: 'var(--ss-accent-ink)' }}>
+                  {mainValue}
+                </h2>
               </div>
-            </CosmicCard>
+
+              {/* Light & Shadow Description */}
+              <div className="ss-card" style={{ padding: 20 }}>
+                <PersonalityDescription
+                  light={light}
+                  shadow={shadow}
+                  insight={insight}
+                  think={think}
+                  act={act}
+                  react={react}
+                  compact={false}
+                />
+              </div>
+            </div>
           </div>
         </ScrollArea>
       </DialogContent>
