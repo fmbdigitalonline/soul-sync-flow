@@ -1,6 +1,50 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v3.7)
+# SoulSync — Developer Constitution & Wiring Roadmap (v3.8)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v3.8 — CONVERSATIONAL PRESENCE ratified (founder, Jul 22 2026). THE INPUT
+BORDER IS THE LIVING STATE OF THE CONVERSATION. The floating orb was the AI;
+the input border is the relationship — and the relationship lives exactly
+where people interact. This is the stronger metaphor: instead of animating a
+separate mascot, we animate the interaction itself, so the technology recedes
+rather than finding a new location for the old character.*
+
+*THE LAW. The input border expresses conversational presence through a small,
+legible vocabulary — LISTENING · GATHERING · ARRIVING · REACHING. Distinct
+motion must always correspond to a real interaction state or a verified
+orchestration event; when the system cannot verify a meaningful difference, it
+uses one honest GATHERING state — never fabricated variety. (This is the
+invisibility law and the no-fabrication law applied to motion: the border may
+let the user FEEL that something different is happening, but it never invents
+differences that did not occur — no animation theatre.) The border is ambient
+enrichment, NOT the sole carrier of important information — essential states
+remain available through clear language, sufficient contrast, and honest
+reduced-motion behaviour. It is never a score, badge, urgency device,
+intelligence indicator, or representation of the user's alignment.*
+
+*SCOPE IS CONVERSATION. Other surfaces do not automatically restore the orb
+merely because the component still exists — that is an implementation-led
+conclusion, not a product requirement. The Twin's identity outside
+conversation is carried by name, language, memory and voice, handled
+separately and only where a representation is genuinely needed. There is no
+mandatory visual avatar. The architecture: input border = conversational
+presence and state; name / language / memory / voice = identity.*
+
+*THE RESPONSE LIFECYCLE has three phases, because thinking and speaking are
+different things and the border must not misrepresent which is happening:*
+*• GATHERING — after send, before the first streamed token. The most
+expressive motion: "I'm forming my response" (retrieving memories, consulting
+the blueprint, composing, deciding what to say). This is the moment the user
+most needs a sign the system is actively reflecting.*
+*• SPEAKING — during typewriter streaming. Not a fifth vocabulary item but a
+calm extension of ARRIVING: very subtle, almost still, quietly alive so the
+interface never feels dead. Keeping the GATHERING animation running while text
+streams would subtly lie about what is happening — the Twin is no longer
+thinking, it is speaking; the typewriter itself already signals activity.*
+*• STILL — immediately after the last token, one gentle settling motion, like
+finishing a sentence. Not a celebration; just "I'm here." The animation
+reflects the CONVERSATIONAL PHASE, not "AI busy" — pause to think, speak, then
+become present again.*
 
 *v3.7 — THE ALL-SEEING READ ratified (founder, Jul 22 2026). "The check-in
 sliders are a manual thing, but should be done by the system, that analyses
