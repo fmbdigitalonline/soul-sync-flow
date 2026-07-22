@@ -1,6 +1,35 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v3.5)
+# SoulSync — Developer Constitution & Wiring Roadmap (v3.6)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v3.6 — ALIGNMENT ratified (founder, Jul 20 2026, adopting the advisor's
+design law). ALIGNMENT IS INTERPRETED, NEVER SCORED. No percentage, no
+gauge, no battery, no "82%". The moment alignment becomes a number, self-
+awareness is gamified ("why did I lose 3%? did I fail?") — the opposite of
+the product. Instead: a DIRECTION and a STORY — "am I living closer to my
+Blueprint than before?" Think weather, not exam results. The blueprint
+defines alignment (not success): creative expression, guiding, meaning,
+warmth, independent thinking — living congruent with those. (The "never
+scored" absolute is a design law the founder chose to engrave; it is the
+one sentence that stops SoulSync becoming Duolingo for personal growth.)*
+
+*THE SIGNAL IS THE RELATIONSHIP'S, not the AI's alone — chiefly the user's
+own periodic self-reports ("more like me / about the same / less like me"),
+the honest way (their input, like the life-wheel), plus reflections, how
+goals/programs/milestones FELT (meaningful vs obligation), mood, energy.
+The system ASKS PERMISSION — it offers the weekly reflection and learns
+from the answer; it does not calculate alignment behind the user's back.*
+
+*MY JOURNEY shows an ALIGNMENT NARRATIVE, not a gauge: "Over the past 90
+days, your reflections suggest you're moving closer to living in alignment
+with your Blueprint," followed by evidence ("here's why I'm seeing that" —
+consistent confidence expressing ideas, two meaningful programs, greater
+satisfaction after work conversations, weekly reflections describing
+authenticity over obligation). That is evidence, not judgment. Any visual
+is organic and directional (a trend line with no axis number; Less aligned
+· Neutral · More aligned) — never a circle, gauge, or percentage.
+Alignment is a reflection of how closely daily choices match the person
+the user is becoming.*
 
 *v3.5 — EMOTIONAL EVIDENCE ratified (founder, Jul 20 2026; wording
 softened from an absolute at the founder's request, recurrence N=3). The
