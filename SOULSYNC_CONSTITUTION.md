@@ -1,6 +1,29 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v3.6)
+# SoulSync — Developer Constitution & Wiring Roadmap (v3.7)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v3.7 — THE ALL-SEEING READ ratified (founder, Jul 22 2026). "The check-in
+sliders are a manual thing, but should be done by the system, that analyses
+the data — our all-seeing eye and consciousness." The Life Domains read
+should not wait on the user to move sliders. The system reads where the
+person is across the five domains (Mind · Heart · Purpose · Relationships ·
+Body) from the evidence it already holds — the insight ledger, the active
+programs and goals, the conversation themes, the blueprint — and draws the
+wheel itself. This is the Twin's read of your journey, offered to you.*
+
+*THIS EVOLVES THE HONESTY LAW; IT DOES NOT BREAK IT. Life Domains stays
+INTERPRETED, NEVER FABRICATED. The evolution is only in WHO reads: it moves
+from the user's own sliders to the system's interpretation of real signals.
+The guardrails that keep it honest: (1) every read is grounded in the user's
+own evidence, never invented — no evidence, no number; (2) when a domain is
+thin in the evidence, it rests near the middle rather than guessing a
+flattering high or a dramatic low; (3) the read is transparent — the Twin can
+say WHY it sees each domain the way it does; (4) it is presented as the
+Twin's read of your journey, not a verdict handed down; (5) the user can
+still ADJUST — a manual read is their own and overrides the system's. When
+the journey is still too thin to read honestly, the wheel says it is still
+learning rather than drawing a fabricated shape. Presence and vitality as
+reflected in real signals — an interpretation, not a clinical score.*
 
 *v3.6 — ALIGNMENT ratified (founder, Jul 20 2026, adopting the advisor's
 design law). ALIGNMENT IS INTERPRETED, NEVER SCORED. No percentage, no

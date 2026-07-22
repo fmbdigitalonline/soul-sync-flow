@@ -1,15 +1,17 @@
 /**
- * LifeWheel — the honest life-wheel (Constitution v3.4). Draws a radar from
- * the user's OWN domain ratings (never fabricated). When there are no
- * ratings yet, it invites a short check-in; the radar appears once the user
- * has spoken. "Adjust" reopens the check-in — a relationship with your own
- * balance, not a score handed to you.
+ * LifeWheel — the honest life-wheel (Constitution v3.7). The system reads
+ * where you are across the five domains from real evidence (the all-seeing
+ * read) and draws the wheel itself; you can still adjust it, and your own
+ * read overrides the system's. INTERPRETED, NEVER FABRICATED: no evidence,
+ * no shape — when the journey is still too thin to read, it says it is still
+ * learning rather than drawing a fabricated wheel.
  */
 
 import React, { useState } from 'react';
-import { Compass } from 'lucide-react';
+import { Compass, Sparkles, RefreshCw, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLifeBalance } from '@/hooks/use-life-balance';
+import { useTwinName } from '@/hooks/use-twin-name';
 import {
   lifeBalanceService, WHEEL_ORDER, DOMAIN_LABELS, type LifeBalance,
 } from '@/services/life-balance-service';
@@ -24,15 +26,23 @@ const poly = (f: number) => WHEEL_ORDER.map((_, i) => pt(i, f).map((n) => n.toFi
 const COPY = {
   en: {
     title: 'Life domains', lede: 'Balance across what matters most.',
-    empty: 'A quick check-in draws your life wheel — your own read, not a score we assign.',
-    checkIn: 'Check in', adjust: 'Adjust', save: 'Save', cancel: 'Cancel',
+    reading: 'Reading your journey…',
+    thin: 'Your journey is still early — a few more conversations and I can read where your domains stand. You can also set it yourself.',
+    setSelf: 'Set it myself', checkIn: 'Check in', adjust: 'Adjust', save: 'Save', cancel: 'Cancel',
     scale: '0 = depleted · 100 = thriving',
+    fromSystem: (name: string) => `${name}'s read of your journey`,
+    fromUser: 'Your own read',
+    why: 'Why I see it this way', reread: 'Re-read',
   },
   nl: {
     title: 'Levensdomeinen', lede: 'Balans over wat het belangrijkst is.',
-    empty: 'Een korte check-in tekent je levenswiel — jouw eigen beeld, geen cijfer dat wij toekennen.',
-    checkIn: 'Inchecken', adjust: 'Aanpassen', save: 'Opslaan', cancel: 'Annuleren',
+    reading: 'Je reis lezen…',
+    thin: 'Je reis is nog pril — een paar gesprekken meer en ik kan lezen hoe je domeinen ervoor staan. Je kunt het ook zelf instellen.',
+    setSelf: 'Zelf instellen', checkIn: 'Inchecken', adjust: 'Aanpassen', save: 'Opslaan', cancel: 'Annuleren',
     scale: '0 = uitgeput · 100 = bloeiend',
+    fromSystem: (name: string) => `${name}'s beeld van je reis`,
+    fromUser: 'Jouw eigen beeld',
+    why: 'Waarom ik dit zo zie', reread: 'Opnieuw lezen',
   },
 };
 
@@ -41,12 +51,15 @@ export const LifeWheel: React.FC = () => {
   const lang = language === 'nl' ? 'nl' : 'en';
   const t = COPY[lang];
   const labels = DOMAIN_LABELS[lang];
-  const { balance } = useLifeBalance();
+  const { balance, source, rationale, analyzing, loading, refresh } = useLifeBalance();
+  const { twinName } = useTwinName();
+  const twin = twinName?.name || (lang === 'nl' ? 'je Twin' : 'your Twin');
   const hasData = !!balance && Object.keys(balance).length > 0;
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<LifeBalance>({});
   const [saving, setSaving] = useState(false);
+  const [showWhy, setShowWhy] = useState(false);
 
   const startEdit = () => {
     const seed: LifeBalance = {};
@@ -94,17 +107,31 @@ export const LifeWheel: React.FC = () => {
     );
   }
 
+  // No shape yet: reading (the system is analysing), or still too thin to read.
   if (!hasData) {
     return (
       <div className="ss-card">
         <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {t.title}</span>
-        <p className="text-sm mt-2 leading-relaxed" style={{ color: 'var(--ss-muted)' }}>{t.empty}</p>
-        <button onClick={startEdit}
-          className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold rounded-full px-4 py-2"
-          style={{ background: 'var(--ss-accent)', color: '#fff' }}>{t.checkIn}</button>
+        {analyzing || loading ? (
+          <div className="flex items-center gap-2.5 mt-3">
+            <span className="ss-orb" style={{ width: 24, height: 24 }} />
+            <span className="text-sm" style={{ color: 'var(--ss-muted)' }}>{t.reading}</span>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm mt-2 leading-relaxed" style={{ color: 'var(--ss-muted)' }}>{t.thin}</p>
+            <button onClick={startEdit}
+              className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold rounded-full px-4 py-2"
+              style={{ background: 'var(--ss-accent)', color: '#fff' }}>{t.setSelf}</button>
+          </>
+        )}
       </div>
     );
   }
+
+  const whyRows = source === 'system'
+    ? WHEEL_ORDER.filter((d) => rationale[d]).map((d) => ({ d, label: labels[d], why: rationale[d]! }))
+    : [];
 
   return (
     <div className="ss-card">
@@ -141,6 +168,40 @@ export const LifeWheel: React.FC = () => {
           );
         })}
       </svg>
+
+      {/* Whose read this is — the Twin's read of your journey, or your own. */}
+      <div className="flex items-center justify-between mt-1">
+        <span className="inline-flex items-center gap-1.5 text-[11.5px]" style={{ color: 'var(--ss-faint)' }}>
+          <Sparkles className="h-3 w-3" />
+          {source === 'user' ? t.fromUser : t.fromSystem(twin)}
+        </span>
+        {source === 'system' && (
+          <button onClick={refresh} disabled={analyzing}
+            className="inline-flex items-center gap-1 text-[11.5px] font-medium" style={{ color: 'var(--ss-accent-ink)' }}>
+            <RefreshCw className={`h-3 w-3 ${analyzing ? 'animate-spin' : ''}`} /> {t.reread}
+          </button>
+        )}
+      </div>
+
+      {/* Transparent read: why each domain sits where it does. */}
+      {whyRows.length > 0 && (
+        <div className="mt-3">
+          <button onClick={() => setShowWhy((v) => !v)}
+            className="inline-flex items-center gap-1 text-[12.5px] font-semibold" style={{ color: 'var(--ss-accent-ink)' }}>
+            {t.why} <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showWhy ? 'rotate-180' : ''}`} />
+          </button>
+          {showWhy && (
+            <div className="mt-2.5 flex flex-col gap-2">
+              {whyRows.map(({ d, label, why }) => (
+                <div key={d} className="flex items-baseline gap-2">
+                  <span className="text-[12px] font-semibold shrink-0" style={{ color: 'var(--ss-ink)', minWidth: 84 }}>{label}</span>
+                  <span className="text-[12.5px] leading-snug" style={{ color: 'var(--ss-muted)' }}>{why}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
