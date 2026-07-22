@@ -47,12 +47,12 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
 
   return (
     <div className="ss flex flex-col gap-5">
-      {/* Integrated Summary */}
+      {/* Integrated Summary — a snippet; the full text is in the report modal. */}
       {summary && (
         <div className="ss-card" style={{ padding: 20 }}>
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5" style={{ color: "var(--ss-accent)" }} />
-            <span className="text-[17px] font-semibold tracking-tight" style={{ color: "var(--ss-ink)" }}>
+            <Sparkles className="h-[18px] w-[18px]" style={{ color: "var(--ss-accent)" }} />
+            <span className="text-[18px] font-bold tracking-tight" style={{ color: "var(--ss-ink)" }}>
               {nl ? "Geïntegreerde samenvatting" : "Integrated Summary"}
             </span>
           </div>
@@ -60,17 +60,17 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
             style={{ color: "var(--ss-green)", background: "rgba(52,201,138,.13)" }}>
             {summary.length} {nl ? "tekens" : "chars"}
           </span>
-          <div className="mt-3 rounded-2xl p-4 text-[14.5px] leading-relaxed"
-            style={{ background: "var(--ss-accent-wash)", color: "var(--ss-ink)", border: "1px solid var(--ss-line)" }}>
-            {summary}
-          </div>
+          <p className="mt-3 text-[14px] leading-relaxed line-clamp-3" style={{ color: "var(--ss-muted)" }}>{summary}</p>
+          <button onClick={onViewFull} className="mt-2.5 inline-flex items-center gap-1 text-[13px] font-semibold" style={{ color: "var(--ss-accent-ink)" }}>
+            {nl ? "Lees volledig" : "Read full"} <ChevronRight className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
 
       {/* Key Themes — the report's real sections */}
       {themes.length > 0 && (
         <div className="flex flex-col gap-2.5">
-          <div className="text-[13px] font-semibold px-1" style={{ color: "var(--ss-ink)" }}>
+          <div className="text-[15px] font-bold tracking-tight px-1" style={{ color: "var(--ss-ink)" }}>
             {nl ? "Kernthema's" : "Key Themes"}
           </div>
           {themes.map((th) => (
