@@ -22,6 +22,10 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
   const { t, language } = useLanguage();
   const desc = (category: string, value: string | number) =>
     getPersonalityDescription(t, category, value, language);
+  const descText = (category: string, value: string | number): string => {
+    const d = getPersonalityDescription(t, category, value, language);
+    return d?.insight || d?.fullTitle || "";
+  };
 
   const unknown = t("blueprint.values.unknown");
   const userMeta = blueprint?.user_meta || {};
@@ -48,14 +52,14 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
   );
 
   const rows: Row[] = [
-    { icon: iconWrap(<Brain className="h-[18px] w-[18px]" />), label: nl ? "MBTI Type" : "MBTI Type", value: mbti, description: mbti !== unknown ? desc("mbtiDescriptions", mbti) : (nl ? "Je hebt unieke gaven die bijdragen aan je pad van zelfontdekking." : "You have unique gifts that contribute to your journey of self-discovery.") },
-    lifePath > 0 && { icon: iconWrap(<Hash className="h-[18px] w-[18px]" />), label: nl ? "Levenspad" : "Life Path", value: String(lifePath), description: desc("lifePathDescriptions", lifePath) },
-    expression && { icon: iconWrap(<Sparkles className="h-[18px] w-[18px]" />), label: nl ? "Expressie" : "Expression", value: String(expression), description: desc("expressionDescriptions", expression) },
-    { icon: iconWrap(<Compass className="h-[18px] w-[18px]" />), label: "Human Design", value: hd, description: desc("humanDesignDescriptions", hd) },
-    sun !== unknown && { icon: iconWrap(<Sun className="h-[18px] w-[18px]" />), label: nl ? "Zonneteken" : "Sun Sign", value: sun, description: desc("sunSignDescriptions", sun) },
-    moon && moon !== unknown && { icon: iconWrap(<Moon className="h-[18px] w-[18px]" />), label: nl ? "Maanteken" : "Moon Sign", value: moon, description: desc("moonSignDescriptions", moon) },
-    rising && rising !== unknown && { icon: iconWrap(<Sunrise className="h-[18px] w-[18px]" />), label: nl ? "Rijzend teken" : "Rising Sign", value: rising, description: desc("risingSignDescriptions", rising) },
-    chinese && chinese !== unknown && { icon: iconWrap(<Globe className="h-[18px] w-[18px]" />), label: nl ? "Chinese dierenriem" : "Chinese Zodiac", value: element ? `${chinese} ${element}` : chinese, description: desc("chineseZodiacDescriptions", chinese) },
+    { icon: iconWrap(<Brain className="h-[18px] w-[18px]" />), label: nl ? "MBTI Type" : "MBTI Type", value: mbti, description: mbti !== unknown ? descText("mbtiDescriptions", mbti) : (nl ? "Je hebt unieke gaven die bijdragen aan je pad van zelfontdekking." : "You have unique gifts that contribute to your journey of self-discovery.") },
+    lifePath > 0 && { icon: iconWrap(<Hash className="h-[18px] w-[18px]" />), label: nl ? "Levenspad" : "Life Path", value: String(lifePath), description: descText("lifePathDescriptions", lifePath) },
+    expression && { icon: iconWrap(<Sparkles className="h-[18px] w-[18px]" />), label: nl ? "Expressie" : "Expression", value: String(expression), description: descText("expressionDescriptions", expression) },
+    { icon: iconWrap(<Compass className="h-[18px] w-[18px]" />), label: "Human Design", value: hd, description: descText("humanDesignDescriptions", hd) },
+    sun !== unknown && { icon: iconWrap(<Sun className="h-[18px] w-[18px]" />), label: nl ? "Zonneteken" : "Sun Sign", value: sun, description: descText("sunSignDescriptions", sun) },
+    moon && moon !== unknown && { icon: iconWrap(<Moon className="h-[18px] w-[18px]" />), label: nl ? "Maanteken" : "Moon Sign", value: moon, description: descText("moonSignDescriptions", moon) },
+    rising && rising !== unknown && { icon: iconWrap(<Sunrise className="h-[18px] w-[18px]" />), label: nl ? "Rijzend teken" : "Rising Sign", value: rising, description: descText("risingSignDescriptions", rising) },
+    chinese && chinese !== unknown && { icon: iconWrap(<Globe className="h-[18px] w-[18px]" />), label: nl ? "Chinese dierenriem" : "Chinese Zodiac", value: element ? `${chinese} ${element}` : chinese, description: descText("chineseZodiacDescriptions", chinese) },
   ].filter(Boolean) as Row[];
 
   return (
