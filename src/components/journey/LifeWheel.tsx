@@ -23,13 +23,13 @@ const poly = (f: number) => WHEEL_ORDER.map((_, i) => pt(i, f).map((n) => n.toFi
 
 const COPY = {
   en: {
-    title: 'Life balance', lede: 'How balanced does each part of your life feel?',
+    title: 'Life domains', lede: 'Balance across what matters most.',
     empty: 'A quick check-in draws your life wheel — your own read, not a score we assign.',
     checkIn: 'Check in', adjust: 'Adjust', save: 'Save', cancel: 'Cancel',
     scale: '0 = depleted · 100 = thriving',
   },
   nl: {
-    title: 'Levensbalans', lede: 'Hoe in balans voelt elk deel van je leven?',
+    title: 'Levensdomeinen', lede: 'Balans over wat het belangrijkst is.',
     empty: 'Een korte check-in tekent je levenswiel — jouw eigen beeld, geen cijfer dat wij toekennen.',
     checkIn: 'Inchecken', adjust: 'Aanpassen', save: 'Opslaan', cancel: 'Annuleren',
     scale: '0 = uitgeput · 100 = bloeiend',
