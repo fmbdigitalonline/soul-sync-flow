@@ -17,7 +17,6 @@ import { SentenceActionButtons, SentenceAction } from "@/components/coach/Senten
 import { toast } from "sonner";
 // NEW: Orb Presence System (Singularity Principle)
 import { useOrbPresence } from "@/hooks/use-orb-presence";
-import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
 import { motion, AnimatePresence } from "framer-motion";
 import { PresenceFrame, PresenceState } from "@/components/companion/PresenceFrame";
 import { emitCoachOpen, emitCoachDecomposition } from "@/lib/coach-workspace-bus";
@@ -62,7 +61,9 @@ interface HACSChatInterfaceProps {
   onStopStreaming?: () => void;
   onFeedback?: (messageId: string, isPositive: boolean) => void;
   onAddOptimisticMessage?: (message: ConversationMessage) => void;
-  presenceState?: PresenceState;
+  /** The parent raises this when the Twin proactively surfaces something
+   *  (e.g. a subconscious observation) — the border's "reaching" state. */
+  reaching?: boolean;
 }
 
 export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
@@ -74,9 +75,14 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   onStopStreaming,
   onFeedback,
   onAddOptimisticMessage,
-  presenceState = "idle",
+  reaching = false,
 }) => {
   const [inputValue, setInputValue] = useState("");
+  const [inputFocused, setInputFocused] = useState(false);
+  // The settling cue (v3.8 "arriving"): a brief gentle motion when the last
+  // token lands, then the border rests.
+  const [settling, setSettling] = useState(false);
+  const wasStreamingRef = useRef(false);
   const [selectedSentences, setSelectedSentences] = useState<Record<string, string | null>>({});
   const [isProcessingAction, setIsProcessingAction] = useState(false);
   const [loadingAction, setLoadingAction] = useState<SentenceAction | null>(null);
@@ -99,6 +105,29 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   // NEW: Orb Presence System - notify when chat is open and thinking
   const { setChatOpen, startLoading, completeLoading, isChatAvatar } = useOrbPresence();
   const { openPanelWithIntake, openPanelWithTransformIntake } = useWorkspace();
+
+  // v3.8 "arriving": when streaming finishes, play one settling cue, then rest.
+  useEffect(() => {
+    const was = wasStreamingRef.current;
+    wasStreamingRef.current = isStreamingResponse;
+    if (was && !isStreamingResponse) {
+      setSettling(true);
+      const t = window.setTimeout(() => setSettling(false), 900);
+      return () => window.clearTimeout(t);
+    }
+  }, [isStreamingResponse]);
+
+  // v3.8 — the input border is the living state of the conversation. Each
+  // state maps to a real interaction phase (no fabricated variety), in
+  // priority order: proactive reach → speaking → gathering → settling →
+  // listening → still.
+  const borderState: PresenceState =
+    reaching || !!proactiveMoment ? "reaching"
+      : isStreamingResponse ? "speaking"
+      : isLoading ? "gathering"
+      : settling ? "arriving"
+      : inputFocused && inputValue.trim().length > 0 ? "listening"
+      : "idle";
 
   const routeConfirmToPanel = (
     title: string,
@@ -484,24 +513,17 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             );
           })}
           
-          {/* SINGULARITY PRINCIPLE: Orb morphs into chat as avatar when thinking */}
+          {/* v3.8: the input border carries "gathering"; this line is the
+              accessible language floor (the border is never the sole carrier). */}
           <AnimatePresence>
             {isLoading && !isStreamingResponse && (
-              <motion.div 
-                className="w-full py-3 text-left flex items-center gap-3"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
+              <motion.div
+                className="w-full py-3 text-left"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
               >
-                <IntelligentSoulOrb
-                  size="sm"
-                  stage="generating"
-                  speaking={true}
-                  isThinking={true}
-                  showProgressRing={false}
-                  className="shadow-md"
-                />
                 <span className="text-sm text-muted-foreground italic animate-pulse">
                   Channeling wisdom...
                 </span>
@@ -550,7 +572,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       >
         <div className="max-w-4xl mx-auto">
           <PresenceFrame
-            state={presenceState}
+            state={borderState}
             className="ss flex items-center gap-2 px-3 py-1.5 rounded-full"
             style={{ background: "var(--ss-card)", boxShadow: "var(--ss-shadow)" }}
           >
@@ -558,6 +580,8 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
               placeholder="Type your message..."
               disabled={isLoading}
               className="flex-1 text-base border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
