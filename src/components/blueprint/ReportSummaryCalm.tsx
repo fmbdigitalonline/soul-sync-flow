@@ -9,6 +9,15 @@ import React from "react";
 import { Sparkles, Heart, Compass, Users, Star, Zap, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+export interface CalmTheme {
+  key: string;
+  title: string;
+  /** A prose body — the snippet shows its first sentence. */
+  body?: string;
+  /** For sections that aren't prose (e.g. nested groups): a plain subtitle. */
+  note?: string;
+}
+
 interface ReportSummaryCalmProps {
   content: {
     core_personality_pattern?: string;
@@ -20,6 +29,9 @@ interface ReportSummaryCalmProps {
   };
   sectionTitles: Record<string, string>;
   onViewFull: () => void;
+  /** Optional explicit themes (used by the Hermetic report, whose sections
+   *  differ from the standard five). Falls back to the standard mapping. */
+  themes?: CalmTheme[];
 }
 
 const THEME_META: Array<{ key: string; icon: React.ReactNode }> = [
@@ -37,13 +49,20 @@ function firstSentence(text?: string): string {
   return cut.length > 90 ? `${cut.slice(0, 89).replace(/\s+\S*$/, "")}…` : cut;
 }
 
-export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, sectionTitles, onViewFull }) => {
+export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, sectionTitles, onViewFull, themes: themesProp }) => {
   const { language } = useLanguage();
   const nl = language === "nl";
   const summary = content?.integrated_summary || "";
 
-  const themes = THEME_META.map((m) => ({ ...m, title: sectionTitles[m.key], body: (content as any)?.[m.key] as string | undefined }))
+  const derived = THEME_META.map((m) => ({ ...m, title: sectionTitles[m.key], body: (content as any)?.[m.key] as string | undefined }))
     .filter((th) => th.body && th.title);
+
+  // Explicit themes (Hermetic) get the same icon rhythm as the standard five.
+  const themes = themesProp
+    ? themesProp
+        .filter((th) => th.title && (th.body || th.note))
+        .map((th, i) => ({ ...th, icon: THEME_META[i % THEME_META.length].icon }))
+    : derived;
 
   return (
     <div className="ss flex flex-col gap-5">
@@ -81,7 +100,9 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
               </span>
               <div className="min-w-0 flex-1">
                 <div className="text-[15px] font-semibold" style={{ color: "var(--ss-ink)" }}>{th.title}</div>
-                <div className="text-[13px] leading-relaxed mt-0.5" style={{ color: "var(--ss-muted)" }}>{firstSentence(th.body)}</div>
+                <div className="text-[13px] leading-relaxed mt-0.5" style={{ color: "var(--ss-muted)" }}>
+                  {th.body ? firstSentence(th.body) : (th as CalmTheme).note}
+                </div>
               </div>
               <ChevronRight className="h-[18px] w-[18px] shrink-0 mt-0.5" style={{ color: "var(--ss-faint)" }} />
             </button>
