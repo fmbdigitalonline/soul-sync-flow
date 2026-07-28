@@ -10,12 +10,21 @@ ledes beneath headings, reassurance beneath cards, a design law restated at
 the foot of the screen. Individually each line was true; stacked, they became
 friction, cramped text and cognitive overload. Remove them.*
 
-*THE RULE. A function must be legible from its own shape — its label, its
-placement, its result. It does not get a sentence underneath telling the user
-what it is for or what the product believes. Where an element genuinely cannot
-be understood without help (a scale, an unfamiliar unit, a provenance), that
-help goes in a TOOLTIP, not in standing body copy. Prompt-priming text and
-vision statements are removed from the interface entirely.*
+*THE LINE — and it is a precise one (founder's correction, same day). What
+comes out is copy that states the VISION and the GUIDING PRINCIPLES BINDING
+THE VISION — the product philosophising at the user ("Alignment isn't a score.
+It's a reflection of how closely your daily choices match the person you're
+becoming", "Based on Numerology, Astrology & Human Design"). What STAYS is
+copy that EXPLAINS WHAT A FEATURE DOES — what a trend is drawn from, what a
+list contains, what a section is showing ("Based on your reflections, choices
+and experiences", "Patterns I've noticed in your journey", "Moments that
+shaped you"). Feature explanation is orientation and belongs in the product;
+vision explanation is preaching and does not. Do not confuse the two — an
+earlier pass removed both and had to be walked back.*
+
+*Where an element genuinely cannot be understood from its own shape (a scale,
+an unfamiliar unit), that help goes in a TOOLTIP rather than standing body
+copy. Prompt-priming text is removed entirely.*
 
 *THIS DOES NOT WEAKEN THE LAWS — IT STOPS PRINTING THEM. Alignment is still
 interpreted and never scored (v3.6); Life Domains is still interpreted and

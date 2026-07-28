@@ -141,7 +141,7 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
         <div className="ss-avatar" style={{ width: 56, height: 56, fontSize: 22 }}>{name.charAt(0).toUpperCase()}</div>
         <div className="min-w-0">
           <div className="text-[20px] font-semibold tracking-tight" style={{ color: "var(--ss-ink)" }}>{name}</div>
-          <div className="text-[13px]" style={{ color: "var(--ss-muted)" }}>{nl ? "Jouw Blauwdruk" : "Your Blueprint"}</div>
+          <div className="text-[13px]" style={{ color: "var(--ss-muted)" }}>{nl ? "Jouw Mental Blueprint" : "Your Mental Blueprint"}</div>
         </div>
       </div>
 

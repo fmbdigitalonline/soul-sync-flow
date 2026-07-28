@@ -13,18 +13,18 @@ import { alignmentService, type AlignmentValue } from '@/services/alignment-serv
 const COPY = {
   en: {
     title: 'Your Alignment', learnMore: 'Learn more',
-    trend: 'Alignment Trend',
+    trend: 'Alignment Trend', trendLede: 'Based on your reflections, choices and experiences.',
     less: 'Less aligned', neutral: 'Neutral', more: 'More aligned',
-    contributing: "What's contributing",
+    contributing: "What's contributing", contributingLede: "Key patterns I've noticed in your journey.",
     weekly: 'Weekly Reflection', weeklyQ: 'Looking back, how aligned did this week feel with who you want to be?',
     moreAligned: 'More aligned', same: 'About the same', lessAligned: 'Less aligned',
     thanks: 'Thank you — that becomes part of how I understand you.',
   },
   nl: {
     title: 'Jouw Afstemming', learnMore: 'Meer weten',
-    trend: 'Afstemmingstrend',
+    trend: 'Afstemmingstrend', trendLede: 'Op basis van je reflecties, keuzes en ervaringen.',
     less: 'Minder afgestemd', neutral: 'Neutraal', more: 'Meer afgestemd',
-    contributing: 'Wat bijdraagt',
+    contributing: 'Wat bijdraagt', contributingLede: 'Patronen die ik in je reis heb opgemerkt.',
     weekly: 'Wekelijkse reflectie', weeklyQ: 'Terugkijkend, hoe afgestemd voelde deze week met wie je wilt zijn?',
     moreAligned: 'Meer afgestemd', same: 'Ongeveer hetzelfde', lessAligned: 'Minder afgestemd',
     thanks: 'Dank je — dat wordt deel van hoe ik je begrijp.',
@@ -86,6 +86,7 @@ export const AlignmentSection: React.FC<{ patterns?: Array<{ text: string }>; on
             <span className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.trend}</span>
             <Info className="h-4 w-4" style={{ color: 'var(--ss-faint)' }} />
           </div>
+          <p className="text-[12.5px] mt-0.5" style={{ color: 'var(--ss-muted)' }}>{t.trendLede}</p>
           <svg viewBox={`0 0 ${W} ${H}`} className="w-full mt-3" style={{ height: 'auto' }}>
             <defs>
               <linearGradient id="alignFill" x1="0" y1="0" x2="0" y2="1">
@@ -112,7 +113,8 @@ export const AlignmentSection: React.FC<{ patterns?: Array<{ text: string }>; on
       {patterns.length > 0 && (
         <div className="ss-card">
           <span className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.contributing}</span>
-          <div className="flex flex-col gap-2.5 mt-3">
+          <p className="text-[12.5px] mt-0.5 mb-3" style={{ color: 'var(--ss-muted)' }}>{t.contributingLede}</p>
+          <div className="flex flex-col gap-2.5">
             {patterns.slice(0, 4).map((p, i) => {
               const Icon = PATTERN_ICONS[i % PATTERN_ICONS.length];
               return (

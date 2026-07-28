@@ -141,6 +141,7 @@ const Profile = () => {
                   {/* Turning points — moments that shaped you, as a timeline. */}
                   <div className="ss-card">
                     <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {nl ? "Keerpunten" : "Turning points"}</span>
+                    <p className="text-[12.5px] mt-0.5" style={{ color: "var(--ss-muted)" }}>{nl ? "Momenten die je vormden." : "Moments that shaped you."}</p>
                     {journey && journey.turningPoints.length > 0 ? (
                       <div className="mt-4 flex flex-col">
                         {journey.turningPoints.map((e, i, arr) => {
@@ -274,6 +275,7 @@ const Profile = () => {
                     <div className="ss-hero-veil" />
                     <div className="ss-hero-cap">
                       <div className="text-[18px] font-semibold text-white">{nl ? "Jouw Reis" : "Your Journey"}</div>
+                      <div className="text-[12.5px] text-white/90 mt-0.5">{nl ? "Een weerspiegeling van je ontwikkeling." : "A reflection of your life's evolution."}</div>
                       <span className="ss-hero-open">{nl ? "Open Mijn Reis" : "Open My Journey"} <ArrowRight className="h-3.5 w-3.5" /></span>
                     </div>
                   </button>

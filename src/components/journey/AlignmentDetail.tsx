@@ -15,9 +15,9 @@ const COPY = {
   en: {
     title: 'Your Alignment',
     w90: '90 Days', w6m: '6 Months', w1y: '1 Year',
-    trend: 'Alignment Trend',
+    trend: 'Alignment Trend', trendLede: 'Based on your reflections, choices and experiences.',
     less: 'Less aligned', neutral: 'Neutral', more: 'More aligned',
-    why: "Why I'm seeing this",
+    why: "Why I'm seeing this", whyLede: 'These patterns have the biggest impact on your alignment.',
     coach: 'Coach Reflection',
     coachBody: "Growth isn't always linear. I'm here to help you stay connected to what matters most.",
     talk: 'Talk with echo',
@@ -35,9 +35,9 @@ const COPY = {
   nl: {
     title: 'Jouw Afstemming',
     w90: '90 Dagen', w6m: '6 Maanden', w1y: '1 Jaar',
-    trend: 'Afstemmingstrend',
+    trend: 'Afstemmingstrend', trendLede: 'Op basis van je reflecties, keuzes en ervaringen.',
     less: 'Minder', neutral: 'Neutraal', more: 'Meer afgestemd',
-    why: 'Waarom ik dit zie',
+    why: 'Waarom ik dit zie', whyLede: 'Deze patronen hebben de grootste invloed op je afstemming.',
     coach: 'Coachreflectie',
     coachBody: 'Groei verloopt niet altijd rechtlijnig. Ik help je verbonden te blijven met wat het belangrijkst is.',
     talk: 'Praat met echo',
@@ -119,6 +119,7 @@ export const AlignmentDetail: React.FC<{
       {/* Trend */}
       <div>
         <div className="text-[16px] font-bold tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.trend}</div>
+        <p className="text-[12.5px] mt-0.5" style={{ color: 'var(--ss-muted)' }}>{t.trendLede}</p>
         {trend.hasData ? (
           <>
             <svg viewBox={`0 0 ${W} ${H}`} className="w-full mt-3" style={{ height: 'auto' }}>
@@ -155,7 +156,8 @@ export const AlignmentDetail: React.FC<{
       {patterns.length > 0 && (
         <div className="ss-card">
           <div className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.why}</div>
-          <div className="flex flex-col gap-3 mt-3">
+          <p className="text-[12.5px] mt-0.5 mb-3" style={{ color: 'var(--ss-muted)' }}>{t.whyLede}</p>
+          <div className="flex flex-col gap-3">
             {patterns.slice(0, 4).map((p, i) => {
               const Icon = PATTERN_ICONS[i % PATTERN_ICONS.length];
               return (

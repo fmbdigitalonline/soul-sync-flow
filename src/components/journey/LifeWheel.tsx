@@ -25,9 +25,9 @@ const poly = (f: number) => WHEEL_ORDER.map((_, i) => pt(i, f).map((n) => n.toFi
 
 const COPY = {
   en: {
-    title: 'Life domains',
+    title: 'Life domains', lede: 'Balance across what matters most.',
     reading: 'Reading your journey…',
-    thin: 'Still learning your domains.',
+    thin: 'Your journey is still early — a few more conversations and I can read where your domains stand. You can also set it yourself.',
     setSelf: 'Set it myself', checkIn: 'Check in', adjust: 'Adjust', save: 'Save', cancel: 'Cancel',
     scale: '0 = depleted · 100 = thriving',
     fromSystem: (name: string) => `${name}'s read of your journey`,
@@ -35,9 +35,9 @@ const COPY = {
     why: 'Why I see it this way', reread: 'Re-read',
   },
   nl: {
-    title: 'Levensdomeinen',
+    title: 'Levensdomeinen', lede: 'Balans over wat het belangrijkst is.',
     reading: 'Je reis lezen…',
-    thin: 'Nog aan het leren.',
+    thin: 'Je reis is nog pril — een paar gesprekken meer en ik kan lezen hoe je domeinen ervoor staan. Je kunt het ook zelf instellen.',
     setSelf: 'Zelf instellen', checkIn: 'Inchecken', adjust: 'Aanpassen', save: 'Opslaan', cancel: 'Annuleren',
     scale: '0 = uitgeput · 100 = bloeiend',
     fromSystem: (name: string) => `${name}'s beeld van je reis`,
@@ -144,6 +144,7 @@ export const LifeWheel: React.FC = () => {
         <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {t.title}</span>
         <button onClick={startEdit} className="text-[12px] font-semibold" style={{ color: 'var(--ss-accent-ink)' }}>{t.adjust}</button>
       </div>
+      <p className="text-sm mt-1" style={{ color: 'var(--ss-muted)' }}>{t.lede}</p>
 
       <svg viewBox="0 0 300 252" className="w-full" style={{ height: 'auto' }}>
         <g stroke="var(--ss-line)" strokeWidth={1} fill="none">
