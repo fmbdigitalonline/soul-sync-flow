@@ -1324,8 +1324,15 @@ serve(async (req) => {
         .single()
 
       if (blueprint?.blueprint) {
+        const meta = blueprint.blueprint.user_meta || {};
+        const resolvedName =
+          (typeof meta.preferred_name === 'string' && meta.preferred_name.trim()) ||
+          (typeof meta.display_name === 'string' && meta.display_name.trim().split(' ')[0]) ||
+          (typeof meta.full_name === 'string' && meta.full_name.trim().split(' ')[0]) ||
+          (typeof meta.name === 'string' && meta.name.trim().split(' ')[0]) ||
+          'friend';
         personalityContext = {
-          name: blueprint.blueprint.user_meta?.preferred_name || 'Seeker',
+          name: resolvedName,
           mbti: blueprint.blueprint.user_meta?.personality?.likelyType || blueprint.blueprint.cognition_mbti?.type || 'Unknown',
           hdType: blueprint.blueprint.energy_strategy_human_design?.type || 'Unknown',
           sunSign: blueprint.blueprint.archetype_western?.sun_sign || 'Unknown'
@@ -2051,7 +2058,13 @@ serve(async (req) => {
           "- DO NOT repeat or paraphrase the user's question back to them - jump directly into your response",
           '- If this is a continuing conversation, NO greetings, NO welcomes, NO reintroductions',
           "- Respond directly and naturally to what they asked - don't echo their words",
-          "- Use " + userName + "'s name naturally when it feels warm and personal—avoid overusing it, but don't be afraid to use it to make responses feel more connected",
+          "",
+          "🔵 ADDRESS THEM BY NAME (BEHAVIOURAL REQUIREMENT, NOT CONTEXT):",
+          "- Their name is \"" + userName + "\". Actually say it out loud in your reply.",
+          "- Use \"" + userName + "\" at least once in every response, and at most twice—more than that sounds like a script.",
+          "- Place it where it lands naturally: at the opening of a direct point, or right before an insight that matters.",
+          "- Never write a placeholder, a title, or a generic address (no 'Seeker', 'friend', 'my friend', 'dear one')—only \"" + userName + "\".",
+          "- The only exception: if their message is a one-word or purely factual exchange where a name would feel stilted, you may omit it.",
           '- Keep language warm, accessible, and conversational',
           '- When you have specific facts, state them confidently and precisely',
           '- Provide insights that feel personally relevant',
