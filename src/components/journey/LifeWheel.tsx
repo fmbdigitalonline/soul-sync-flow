@@ -8,7 +8,7 @@
  */
 
 import React, { useState } from 'react';
-import { Compass, Sparkles, RefreshCw, ChevronDown } from 'lucide-react';
+import { Compass, Sparkles, RefreshCw, ChevronDown, Info } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLifeBalance } from '@/hooks/use-life-balance';
 import { useTwinName } from '@/hooks/use-twin-name';
@@ -25,9 +25,9 @@ const poly = (f: number) => WHEEL_ORDER.map((_, i) => pt(i, f).map((n) => n.toFi
 
 const COPY = {
   en: {
-    title: 'Life domains', lede: 'Balance across what matters most.',
+    title: 'Life domains',
     reading: 'Reading your journey…',
-    thin: 'Your journey is still early — a few more conversations and I can read where your domains stand. You can also set it yourself.',
+    thin: 'Still learning your domains.',
     setSelf: 'Set it myself', checkIn: 'Check in', adjust: 'Adjust', save: 'Save', cancel: 'Cancel',
     scale: '0 = depleted · 100 = thriving',
     fromSystem: (name: string) => `${name}'s read of your journey`,
@@ -35,9 +35,9 @@ const COPY = {
     why: 'Why I see it this way', reread: 'Re-read',
   },
   nl: {
-    title: 'Levensdomeinen', lede: 'Balans over wat het belangrijkst is.',
+    title: 'Levensdomeinen',
     reading: 'Je reis lezen…',
-    thin: 'Je reis is nog pril — een paar gesprekken meer en ik kan lezen hoe je domeinen ervoor staan. Je kunt het ook zelf instellen.',
+    thin: 'Nog aan het leren.',
     setSelf: 'Zelf instellen', checkIn: 'Inchecken', adjust: 'Aanpassen', save: 'Opslaan', cancel: 'Annuleren',
     scale: '0 = uitgeput · 100 = bloeiend',
     fromSystem: (name: string) => `${name}'s beeld van je reis`,
@@ -77,8 +77,13 @@ export const LifeWheel: React.FC = () => {
   if (editing) {
     return (
       <div className="ss-card">
-        <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {t.title}</span>
-        <p className="text-[11px] mt-1" style={{ color: 'var(--ss-faint)' }}>{t.scale}</p>
+        <div className="flex items-center gap-1.5">
+          <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {t.title}</span>
+          {/* The scale is the one thing the sliders can't say themselves. */}
+          <span title={t.scale} aria-label={t.scale} className="inline-flex cursor-help">
+            <Info className="h-3.5 w-3.5" style={{ color: 'var(--ss-faint)' }} />
+          </span>
+        </div>
         <div className="flex flex-col gap-3 mt-3">
           {WHEEL_ORDER.map((d) => (
             <div key={d}>
@@ -139,7 +144,6 @@ export const LifeWheel: React.FC = () => {
         <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {t.title}</span>
         <button onClick={startEdit} className="text-[12px] font-semibold" style={{ color: 'var(--ss-accent-ink)' }}>{t.adjust}</button>
       </div>
-      <p className="text-sm mt-1" style={{ color: 'var(--ss-muted)' }}>{t.lede}</p>
 
       <svg viewBox="0 0 300 252" className="w-full" style={{ height: 'auto' }}>
         <g stroke="var(--ss-line)" strokeWidth={1} fill="none">

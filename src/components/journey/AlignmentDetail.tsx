@@ -15,13 +15,12 @@ const COPY = {
   en: {
     title: 'Your Alignment',
     w90: '90 Days', w6m: '6 Months', w1y: '1 Year',
-    trend: 'Alignment Trend', trendLede: 'Based on your reflections, choices and experiences.',
+    trend: 'Alignment Trend',
     less: 'Less aligned', neutral: 'Neutral', more: 'More aligned',
-    why: "Why I'm seeing this", whyLede: 'These patterns have the biggest impact on your alignment.',
+    why: "Why I'm seeing this",
     coach: 'Coach Reflection',
     coachBody: "Growth isn't always linear. I'm here to help you stay connected to what matters most.",
     talk: 'Talk with echo',
-    footer: "Alignment isn't a score. It's a reflection of how closely your daily choices match the person you're becoming.",
     headings: {
       rising: 'Your journey shows a steady movement toward alignment.',
       steady: 'Your journey is holding a steady course.',
@@ -36,13 +35,12 @@ const COPY = {
   nl: {
     title: 'Jouw Afstemming',
     w90: '90 Dagen', w6m: '6 Maanden', w1y: '1 Jaar',
-    trend: 'Afstemmingstrend', trendLede: 'Op basis van je reflecties, keuzes en ervaringen.',
+    trend: 'Afstemmingstrend',
     less: 'Minder', neutral: 'Neutraal', more: 'Meer afgestemd',
-    why: 'Waarom ik dit zie', whyLede: 'Deze patronen hebben de grootste invloed op je afstemming.',
+    why: 'Waarom ik dit zie',
     coach: 'Coachreflectie',
     coachBody: 'Groei verloopt niet altijd rechtlijnig. Ik help je verbonden te blijven met wat het belangrijkst is.',
     talk: 'Praat met echo',
-    footer: 'Afstemming is geen cijfer. Het weerspiegelt hoe dicht je dagelijkse keuzes bij wie je wordt liggen.',
     headings: {
       rising: 'Je reis toont een gestage beweging richting afstemming.',
       steady: 'Je reis houdt een gestage koers.',
@@ -121,7 +119,6 @@ export const AlignmentDetail: React.FC<{
       {/* Trend */}
       <div>
         <div className="text-[16px] font-bold tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.trend}</div>
-        <p className="text-[12.5px] mt-0.5" style={{ color: 'var(--ss-muted)' }}>{t.trendLede}</p>
         {trend.hasData ? (
           <>
             <svg viewBox={`0 0 ${W} ${H}`} className="w-full mt-3" style={{ height: 'auto' }}>
@@ -158,8 +155,7 @@ export const AlignmentDetail: React.FC<{
       {patterns.length > 0 && (
         <div className="ss-card">
           <div className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.why}</div>
-          <p className="text-[12.5px] mt-0.5 mb-3" style={{ color: 'var(--ss-muted)' }}>{t.whyLede}</p>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 mt-3">
             {patterns.slice(0, 4).map((p, i) => {
               const Icon = PATTERN_ICONS[i % PATTERN_ICONS.length];
               return (
@@ -186,11 +182,6 @@ export const AlignmentDetail: React.FC<{
         </button>
       </div>
 
-      {/* Footer law */}
-      <div className="ss-card flex items-start justify-between gap-3" style={{ background: 'var(--ss-accent-wash)' }}>
-        <p className="text-[12.5px] leading-relaxed" style={{ color: 'var(--ss-muted)' }}>{t.footer}</p>
-        <Heart className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--ss-accent)' }} />
-      </div>
     </div>
   );
 };

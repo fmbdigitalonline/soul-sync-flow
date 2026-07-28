@@ -1,6 +1,28 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v3.8)
+# SoulSync — Developer Constitution & Wiring Roadmap (v3.9)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v3.9 — THE APP DOES NOT EXPLAIN ITSELF ratified (founder, Jul 22 2026).
+"It's too much text. Journeys, features, the goal of functions should be
+self-explanatory, or if necessary covered by tooltips." The product had
+accumulated micro-copy explaining its own vision under almost every element —
+ledes beneath headings, reassurance beneath cards, a design law restated at
+the foot of the screen. Individually each line was true; stacked, they became
+friction, cramped text and cognitive overload. Remove them.*
+
+*THE RULE. A function must be legible from its own shape — its label, its
+placement, its result. It does not get a sentence underneath telling the user
+what it is for or what the product believes. Where an element genuinely cannot
+be understood without help (a scale, an unfamiliar unit, a provenance), that
+help goes in a TOOLTIP, not in standing body copy. Prompt-priming text and
+vision statements are removed from the interface entirely.*
+
+*THIS DOES NOT WEAKEN THE LAWS — IT STOPS PRINTING THEM. Alignment is still
+interpreted and never scored (v3.6); Life Domains is still interpreted and
+never fabricated (v3.7). Those remain binding on what we BUILD. The change is
+that the interface no longer narrates them to the user: the absence of a score
+is the statement. A law the product has to explain out loud is a law the
+design has not yet honoured.*
 
 *v3.8 — CONVERSATIONAL PRESENCE ratified (founder, Jul 22 2026). THE INPUT
 BORDER IS THE LIVING STATE OF THE CONVERSATION. The floating orb was the AI;
