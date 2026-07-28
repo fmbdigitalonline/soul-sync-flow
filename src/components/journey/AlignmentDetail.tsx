@@ -21,7 +21,6 @@ const COPY = {
     coach: 'Coach Reflection',
     coachBody: "Growth isn't always linear. I'm here to help you stay connected to what matters most.",
     talk: 'Talk with echo',
-    footer: "Alignment isn't a score. It's a reflection of how closely your daily choices match the person you're becoming.",
     headings: {
       rising: 'Your journey shows a steady movement toward alignment.',
       steady: 'Your journey is holding a steady course.',
@@ -42,7 +41,6 @@ const COPY = {
     coach: 'Coachreflectie',
     coachBody: 'Groei verloopt niet altijd rechtlijnig. Ik help je verbonden te blijven met wat het belangrijkst is.',
     talk: 'Praat met echo',
-    footer: 'Afstemming is geen cijfer. Het weerspiegelt hoe dicht je dagelijkse keuzes bij wie je wordt liggen.',
     headings: {
       rising: 'Je reis toont een gestage beweging richting afstemming.',
       steady: 'Je reis houdt een gestage koers.',
@@ -186,11 +184,6 @@ export const AlignmentDetail: React.FC<{
         </button>
       </div>
 
-      {/* Footer law */}
-      <div className="ss-card flex items-start justify-between gap-3" style={{ background: 'var(--ss-accent-wash)' }}>
-        <p className="text-[12.5px] leading-relaxed" style={{ color: 'var(--ss-muted)' }}>{t.footer}</p>
-        <Heart className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--ss-accent)' }} />
-      </div>
     </div>
   );
 };

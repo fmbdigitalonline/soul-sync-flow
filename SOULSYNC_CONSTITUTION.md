@@ -1,6 +1,37 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v3.8)
+# SoulSync — Developer Constitution & Wiring Roadmap (v3.9)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v3.9 — THE APP DOES NOT EXPLAIN ITSELF ratified (founder, Jul 22 2026).
+"It's too much text. Journeys, features, the goal of functions should be
+self-explanatory, or if necessary covered by tooltips." The product had
+accumulated micro-copy explaining its own vision under almost every element —
+ledes beneath headings, reassurance beneath cards, a design law restated at
+the foot of the screen. Individually each line was true; stacked, they became
+friction, cramped text and cognitive overload. Remove them.*
+
+*THE LINE — and it is a precise one (founder's correction, same day). What
+comes out is copy that states the VISION and the GUIDING PRINCIPLES BINDING
+THE VISION — the product philosophising at the user ("Alignment isn't a score.
+It's a reflection of how closely your daily choices match the person you're
+becoming", "Based on Numerology, Astrology & Human Design"). What STAYS is
+copy that EXPLAINS WHAT A FEATURE DOES — what a trend is drawn from, what a
+list contains, what a section is showing ("Based on your reflections, choices
+and experiences", "Patterns I've noticed in your journey", "Moments that
+shaped you"). Feature explanation is orientation and belongs in the product;
+vision explanation is preaching and does not. Do not confuse the two — an
+earlier pass removed both and had to be walked back.*
+
+*Where an element genuinely cannot be understood from its own shape (a scale,
+an unfamiliar unit), that help goes in a TOOLTIP rather than standing body
+copy. Prompt-priming text is removed entirely.*
+
+*THIS DOES NOT WEAKEN THE LAWS — IT STOPS PRINTING THEM. Alignment is still
+interpreted and never scored (v3.6); Life Domains is still interpreted and
+never fabricated (v3.7). Those remain binding on what we BUILD. The change is
+that the interface no longer narrates them to the user: the absence of a score
+is the statement. A law the product has to explain out loud is a law the
+design has not yet honoured.*
 
 *v3.8 — CONVERSATIONAL PRESENCE ratified (founder, Jul 22 2026). THE INPUT
 BORDER IS THE LIVING STATE OF THE CONVERSATION. The floating orb was the AI;

@@ -8,7 +8,7 @@
  */
 
 import React, { useState } from 'react';
-import { Compass, Sparkles, RefreshCw, ChevronDown } from 'lucide-react';
+import { Compass, Sparkles, RefreshCw, ChevronDown, Info } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLifeBalance } from '@/hooks/use-life-balance';
 import { useTwinName } from '@/hooks/use-twin-name';
@@ -77,8 +77,13 @@ export const LifeWheel: React.FC = () => {
   if (editing) {
     return (
       <div className="ss-card">
-        <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {t.title}</span>
-        <p className="text-[11px] mt-1" style={{ color: 'var(--ss-faint)' }}>{t.scale}</p>
+        <div className="flex items-center gap-1.5">
+          <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {t.title}</span>
+          {/* The scale is the one thing the sliders can't say themselves. */}
+          <span title={t.scale} aria-label={t.scale} className="inline-flex cursor-help">
+            <Info className="h-3.5 w-3.5" style={{ color: 'var(--ss-faint)' }} />
+          </span>
+        </div>
         <div className="flex flex-col gap-3 mt-3">
           {WHEEL_ORDER.map((d) => (
             <div key={d}>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge, Maximize2, AlertTriangle, AlertCircle } from 'lucide-react';
@@ -49,6 +50,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     intelligence_analysis: false
   });
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  // Tapping a Key Theme opens THAT section, not the whole report.
+  const [openSectionKey, setOpenSectionKey] = useState<string | null>(null);
 
   // Add hermetic status hook
   const hermeticStatus = useHermeticReportStatus();
@@ -404,7 +407,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     return (
       <div className={`flex items-center justify-center ${spacing.container} ${className}`}>
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-soul-purple mx-auto mb-2" />
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" style={{ color: 'var(--ss-accent)' }} />
           <p className={`text-muted-foreground ${getTextSize('text-sm')}`}>{t('report.loading')}</p>
         </div>
       </div>
@@ -417,7 +420,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         <Card>
           <CardContent className={`${spacing.card} text-center`}>
             <div className="mb-4">
-              <Sparkles className="h-12 w-12 text-soul-purple mx-auto mb-4" />
+              <Sparkles className="h-12 w-12 mx-auto mb-4" style={{ color: 'var(--ss-accent)' }} />
               <h3 className={`font-semibold mb-2 ${getTextSize('text-lg')}`}>{t('report.title')}</h3>
               <p className={`text-muted-foreground mb-4 ${getTextSize('text-sm')} break-words`}>
                 {error || t('report.noReports')}
@@ -428,7 +431,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                 <Button 
                   onClick={() => generateReport(false)} 
                   disabled={generating}
-                  className="bg-soul-purple hover:bg-soul-purple/90 w-full sm:w-auto"
+                  className="w-full sm:w-auto rounded-full font-semibold" style={{ background: 'var(--ss-accent)', color: '#fff' }}
                   size={isMobile ? "default" : "default"}
                 >
                   {generating ? (
@@ -585,10 +588,10 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       className={`w-full flex items-center justify-between ${spacing.button} ${getTextSize('text-lg')} font-semibold text-left hover:bg-[var(--ss-accent-wash)] rounded-lg transition-colors`}
     >
       <div className="flex items-center gap-3">
-        {Icon && <Icon className="h-5 w-5 text-soul-purple flex-shrink-0" />}
+        {Icon && <Icon className="h-5 w-5 flex-shrink-0" style={{ color: 'var(--ss-accent)' }} />}
         <span>{title}</span>
         {badge && (
-          <Badge variant="outline" className="bg-soul-purple/10 text-soul-purple border-soul-purple/30">
+          <Badge variant="outline" className="border-transparent" style={{ background: 'var(--ss-accent-wash-2)', color: 'var(--ss-accent-ink)' }}>
             {badge}
           </Badge>
         )}
@@ -601,95 +604,84 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     <div className={`${className} w-full max-w-full overflow-hidden`}>
       {/* Report Type Toggle */}
       {(report || hermeticReport) && (
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="ss flex rounded-xl p-1" style={{ background: 'var(--ss-accent-wash)' }}>
-            <Button
-              variant={reportType === 'standard' ? 'default' : 'ghost'}
-              size="sm"
+        <div className="flex flex-col gap-3 mb-5">
+          {/* One design-system toggle — same treatment as every other
+              segmented control in the app. No gradients, no inline badges. */}
+          <div className="ss-seg">
+            <button
+              type="button"
+              data-on={reportType === 'standard'}
               onClick={() => setReportType('standard')}
               disabled={!report}
-              className="rounded-md px-3"
             >
-              <Sparkles className="h-4 w-4 mr-2" />
               {t('report.standardReport')}
-            </Button>
-            <Button
-              variant={reportType === 'hermetic' ? 'default' : 'ghost'}
-              size="sm"
+            </button>
+            <button
+              type="button"
+              data-on={reportType === 'hermetic'}
               onClick={() => {
                 if (!hasHermeticAccess) {
                   toast({
-                    title: "Toegang Geweigerd",
-                    description: "Hermetisch rapport is alleen beschikbaar voor specifieke gebruikers",
-                    variant: "default"
+                    title: language === 'nl' ? 'Nog niet beschikbaar' : 'Not available yet',
+                    description: language === 'nl'
+                      ? 'Dit rapport is nog niet voor je account beschikbaar.'
+                      : 'This report is not available for your account yet.',
                   });
                 } else if (!hermeticReport) {
                   toast({
-                    title: "Premium Feature",
-                    description: "Genereer eerst een hermetisch rapport",
-                    variant: "default"
+                    title: language === 'nl' ? 'Nog in wording' : 'Still forming',
+                    description: language === 'nl'
+                      ? 'Je diepe rapport is er nog niet.'
+                      : 'Your deep report is not ready yet.',
                   });
                 } else {
                   setReportType('hermetic');
                 }
               }}
               disabled={!hasHermeticAccess || !hermeticReport}
-              className={`rounded-md px-3 ${
-                !hasHermeticAccess || !hermeticReport
-                  ? 'opacity-50 cursor-not-allowed bg-gradient-to-r from-purple-600/30 to-blue-600/30 text-white/50' 
-                  : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600'
-              }`}
+              style={!hasHermeticAccess || !hermeticReport ? { opacity: 0.45 } : undefined}
             >
-              <Star className="h-4 w-4 mr-2" />
               {t('report.hermeticReport')}
-              {(!hasHermeticAccess || !hermeticReport) && (
-                <Badge variant="outline" className="ml-2 bg-amber-500/20 text-amber-100 border-amber-300/30">
-                  {!hasHermeticAccess ? 'Beperkte Toegang' : 'Premium'}
-                </Badge>
-              )}
-              {hasHermeticAccess && hermeticReport && (
-                <Badge variant="outline" className="ml-2 bg-white/20 text-white border-white/30">
-                  {hermeticReport.report_content.word_count}+ words
-                </Badge>
-              )}
-            </Button>
+            </button>
           </div>
-          
-          {/* Generate missing report buttons */}
-          <div className="flex gap-2">
-            {!report && (
-              <Button 
-                onClick={() => generateReport(false)} 
-                disabled={generating}
-                variant="outline"
-                size="sm"
-              >
-                {generating ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Plus className="h-4 w-4 mr-2" />
-                )}
-                Generate Standard
-              </Button>
-            )}
-            {!hermeticReport && hasHermeticAccess && hermeticStatus?.isGenerating && (
-              <span className="text-xs text-muted-foreground italic self-center">
-                Deep synthesis in progress…
-              </span>
-            )}
-            
-            {/* Standalone Purge Stuck Jobs Button - Dev Only */}
-            {import.meta.env.DEV && <PurgeStuckJobsButton />}
-          </div>
+
+          {(generating || (!hermeticReport && hasHermeticAccess && hermeticStatus?.isGenerating) || import.meta.env.DEV) && (
+            <div className="flex gap-2 items-center flex-wrap">
+              {!report && (
+                <Button
+                  onClick={() => generateReport(false)}
+                  disabled={generating}
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full font-medium"
+                >
+                  {generating ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  {language === 'nl' ? 'Rapport aanmaken' : 'Create report'}
+                </Button>
+              )}
+              {!hermeticReport && hasHermeticAccess && hermeticStatus?.isGenerating && (
+                <span className="text-[12.5px] italic" style={{ color: 'var(--ss-muted)' }}>
+                  {language === 'nl' ? 'Je diepe rapport wordt samengesteld…' : 'Your deep report is being composed…'}
+                </span>
+              )}
+
+              {/* Dev-only maintenance */}
+              {import.meta.env.DEV && <PurgeStuckJobsButton />}
+            </div>
+          )}
         </div>
       )}
 
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 ${spacing.gap} w-full`}>
         <div className="min-w-0 flex-1">
-          <h3 className={`font-bold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis ${getTextSize('text-2xl')}`} style={{ color: 'var(--ss-ink)' }}>
-            {reportType === 'hermetic' ? 'Hermetic Blueprint Report' : 'Personality Report'}
+          <h3 className="text-[20px] font-semibold tracking-tight break-words" style={{ color: 'var(--ss-ink)' }}>
+            {t(`reportModal.${reportType}Title`)}
           </h3>
-          <p className={`break-words ${getTextSize('text-sm')}`} style={{ color: 'var(--ss-muted)' }}>
+          <p className="text-[12.5px] break-words mt-0.5" style={{ color: 'var(--ss-muted)' }}>
             {currentReport && `${t('common.generatedOn')} ${new Date(currentReport.generated_at).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US')}`}
           </p>
         </div>
@@ -699,15 +691,10 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               <Sparkles className="h-3 w-3 mr-1 flex-shrink-0" />
               <span className="truncate">{t('common.soulGenerated')}</span>
             </Badge>
-            {currentReport && (
-              <Badge 
-                variant="outline" 
-                className={
-                  reportType === 'hermetic' 
-                    ? "bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 border-purple-300" 
-                    : "bg-blue-50 text-blue-700 border-blue-200"
-                }
-              >
+            {/* Build metadata is for us, not the reader. */}
+            {currentReport && import.meta.env.DEV && (
+              <Badge variant="outline" className="border-transparent"
+                style={{ background: 'var(--ss-line-2)', color: 'var(--ss-muted)' }}>
                 <span className="truncate">
                   Version {(currentReport as any).blueprint_version || '1.0'}
                 </span>
@@ -719,7 +706,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               onClick={() => setIsReportModalOpen(true)} 
               variant="default" 
               size="sm"
-              className="flex-1 sm:flex-none bg-soul-purple hover:bg-soul-purple/90"
+              className="flex-1 sm:flex-none rounded-full font-semibold"
+              style={{ background: 'var(--ss-accent)', color: '#fff' }}
             >
               <Maximize2 className="h-4 w-4" />
               <span className="ml-1 sm:ml-2">{t('reportModal.viewFullReport')}</span>
@@ -754,6 +742,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           content={currentReport.report_content as any}
           sectionTitles={sectionTitles}
           onViewFull={() => setIsReportModalOpen(true)}
+          onOpenSection={(k) => setOpenSectionKey(k)}
         />
       )}
 
@@ -785,10 +774,48 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             sectionTitles={hermeticSectionTitles as any}
             themes={themes}
             onViewFull={() => setIsReportModalOpen(true)}
+            onOpenSection={(k) => setOpenSectionKey(k)}
           />
         );
       })()}
 
+
+      {/* Single-section view — what a Key Theme tap opens. Calm chrome, the
+          section's full text, and a way through to the whole report. */}
+      <Dialog open={!!openSectionKey} onOpenChange={(o) => { if (!o) setOpenSectionKey(null); }}>
+        <DialogContent
+          className={`ss ${isMobile ? 'w-full h-[90vh] max-w-full m-0 rounded-t-3xl rounded-b-none' : 'max-w-2xl w-full h-[80vh]'} p-0 gap-0 border-0 flex flex-col`}
+          style={{ background: 'var(--ss-surface)' }}
+        >
+          <DialogHeader
+            className="sticky top-0 z-10 px-5 py-4"
+            style={{ background: 'color-mix(in srgb, var(--ss-surface) 92%, transparent)', borderBottom: '1px solid var(--ss-line-2)' }}
+          >
+            <DialogTitle className="text-[17px] font-semibold tracking-tight text-left pr-8" style={{ color: 'var(--ss-ink)' }}>
+              {openSectionKey
+                ? ((reportType === 'hermetic' ? (hermeticSectionTitles as any) : (sectionTitles as any))[openSectionKey]
+                    || openSectionKey.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()))
+                : ''}
+            </DialogTitle>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1 w-full">
+            <div className="px-5 py-4 pb-8">
+              {openSectionKey && currentReport &&
+                renderSafeContent((currentReport.report_content as any)?.[openSectionKey], openSectionKey)}
+
+              <button
+                onClick={() => { setOpenSectionKey(null); setIsReportModalOpen(true); }}
+                className="mt-4 inline-flex items-center gap-1 text-[13px] font-semibold"
+                style={{ color: 'var(--ss-accent-ink)' }}
+              >
+                {language === 'nl' ? 'Bekijk het volledige rapport' : 'View the full report'}
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       {/* Mobile-Optimized Report Modal */}
       <ReportModal

@@ -32,6 +32,9 @@ interface ReportSummaryCalmProps {
   /** Optional explicit themes (used by the Hermetic report, whose sections
    *  differ from the standard five). Falls back to the standard mapping. */
   themes?: CalmTheme[];
+  /** Opens the single section that was tapped. Without it, a tap falls back
+   *  to the full report (the old behaviour). */
+  onOpenSection?: (key: string) => void;
 }
 
 const THEME_META: Array<{ key: string; icon: React.ReactNode }> = [
@@ -49,7 +52,7 @@ function firstSentence(text?: string): string {
   return cut.length > 90 ? `${cut.slice(0, 89).replace(/\s+\S*$/, "")}…` : cut;
 }
 
-export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, sectionTitles, onViewFull, themes: themesProp }) => {
+export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, sectionTitles, onViewFull, themes: themesProp, onOpenSection }) => {
   const { language } = useLanguage();
   const nl = language === "nl";
   const summary = content?.integrated_summary || "";
@@ -75,11 +78,7 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
               {nl ? "Geïntegreerde samenvatting" : "Integrated Summary"}
             </span>
           </div>
-          <span className="inline-block mt-2 text-[11.5px] font-semibold rounded-full px-2.5 py-0.5"
-            style={{ color: "var(--ss-green)", background: "rgba(52,201,138,.13)" }}>
-            {summary.length} {nl ? "tekens" : "chars"}
-          </span>
-          <p className="mt-3 text-[14px] leading-relaxed line-clamp-3" style={{ color: "var(--ss-muted)" }}>{summary}</p>
+          <p className="mt-2.5 text-[14px] leading-relaxed line-clamp-3" style={{ color: "var(--ss-muted)" }}>{summary}</p>
           <button onClick={onViewFull} className="mt-2.5 inline-flex items-center gap-1 text-[13px] font-semibold" style={{ color: "var(--ss-accent-ink)" }}>
             {nl ? "Lees volledig" : "Read full"} <ChevronRight className="h-3.5 w-3.5" />
           </button>
@@ -93,7 +92,8 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
             {nl ? "Kernthema's" : "Key Themes"}
           </div>
           {themes.map((th) => (
-            <button key={th.key} onClick={onViewFull} className="ss-card flex items-start gap-3.5 text-left w-full" style={{ padding: 16 }}>
+            <button key={th.key} onClick={() => (onOpenSection ? onOpenSection(th.key) : onViewFull())}
+              className="ss-card flex items-start gap-3.5 text-left w-full" style={{ padding: 16 }}>
               <span className="shrink-0 grid place-items-center"
                 style={{ width: 40, height: 40, borderRadius: 12, background: "var(--ss-accent-wash)", color: "var(--ss-accent)" }}>
                 {th.icon}

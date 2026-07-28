@@ -142,9 +142,6 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
         <div className="min-w-0">
           <div className="text-[20px] font-semibold tracking-tight" style={{ color: "var(--ss-ink)" }}>{name}</div>
           <div className="text-[13px]" style={{ color: "var(--ss-muted)" }}>{nl ? "Jouw Mental Blueprint" : "Your Mental Blueprint"}</div>
-          <div className="text-[11.5px] mt-0.5" style={{ color: "var(--ss-faint)" }}>
-            {nl ? "Gebaseerd op Numerologie, Astrologie & Human Design" : "Based on Numerology, Astrology & Human Design"}
-          </div>
         </div>
       </div>
 

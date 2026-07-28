@@ -19,7 +19,6 @@ const COPY = {
     weekly: 'Weekly Reflection', weeklyQ: 'Looking back, how aligned did this week feel with who you want to be?',
     moreAligned: 'More aligned', same: 'About the same', lessAligned: 'Less aligned',
     thanks: 'Thank you — that becomes part of how I understand you.',
-    footer: "Alignment isn't a score. It's a reflection of how closely your daily choices match the person you're becoming.",
   },
   nl: {
     title: 'Jouw Afstemming', learnMore: 'Meer weten',
@@ -29,7 +28,6 @@ const COPY = {
     weekly: 'Wekelijkse reflectie', weeklyQ: 'Terugkijkend, hoe afgestemd voelde deze week met wie je wilt zijn?',
     moreAligned: 'Meer afgestemd', same: 'Ongeveer hetzelfde', lessAligned: 'Minder afgestemd',
     thanks: 'Dank je — dat wordt deel van hoe ik je begrijp.',
-    footer: 'Afstemming is geen cijfer. Het weerspiegelt hoe dicht je dagelijkse keuzes bij wie je wordt liggen.',
   },
 };
 
@@ -148,9 +146,6 @@ export const AlignmentSection: React.FC<{ patterns?: Array<{ text: string }>; on
           </>
         )}
       </div>
-
-      {/* The design law, gently stated */}
-      <p className="text-[12px] leading-relaxed px-1" style={{ color: 'var(--ss-faint)' }}>{t.footer}</p>
     </div>
   );
 };
