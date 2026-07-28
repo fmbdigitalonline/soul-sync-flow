@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import MainLayout from "@/components/Layout/MainLayout";
-import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, RotateCcw, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -192,18 +191,18 @@ const Coach = () => {
   // Create the main chat interface component
   const chatInterface = <HACSChatInterface messages={messages} isLoading={isLoading} isStreamingResponse={isStreamingResponse} onSendMessage={handleSendMessage} onStreamingComplete={markMessageStreamingComplete} onStopStreaming={handleStopStreaming} onFeedback={handleFeedback} onAddOptimisticMessage={addOptimisticMessage} reaching={reaching} />;
   const remindersContent = <div className="space-y-4 h-full">
-      <CosmicCard className="p-4">
-        <h3 className="font-semibold mb-3 flex items-center">
-          <RotateCcw className="h-4 w-4 mr-2" />
+      <div className="ss-card">
+        <h3 className="text-[15px] font-semibold tracking-tight mb-2 flex items-center" style={{ color: 'var(--ss-ink)' }}>
+          <RotateCcw className="h-4 w-4 mr-2" style={{ color: 'var(--ss-accent)' }} />
           {t('companion.resetTitle')}
         </h3>
-        <p className="text-xs text-muted-foreground mb-3">
+        <p className="text-[12.5px] leading-relaxed mb-3" style={{ color: 'var(--ss-muted)' }}>
           {t('companion.resetReassurance')}
         </p>
-        <Button onClick={handleReset} variant="outline" size="sm" className="w-full">
+        <Button onClick={handleReset} variant="outline" size="sm" className="w-full rounded-full font-medium">
           {t('companion.clearConversation')}
         </Button>
-      </CosmicCard>
+      </div>
     </div>;
   return <MainLayout>
       <div className="ss ss-page min-h-screen">

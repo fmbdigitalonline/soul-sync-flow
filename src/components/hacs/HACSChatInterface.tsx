@@ -383,7 +383,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             (reunion ? (
               <TwinReunionGreeting reunion={reunion} />
             ) : (
-              <div className="text-center text-muted-foreground py-4">
+              <div className="text-center py-4 text-[13.5px]" style={{ color: 'var(--ss-muted)' }}>
                 <p>Start a conversation to begin intelligence learning</p>
               </div>
             ))}
@@ -496,7 +496,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                     )}
                     
                     {message.isQuestion && (
-                      <div className="mt-2 text-xs text-muted-foreground opacity-70">
+                      <div className="mt-2 text-[11.5px]" style={{ color: 'var(--ss-faint)' }}>
                         Question from: {message.module}
                       </div>
                     )}
@@ -524,7 +524,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
               >
-                <span className="text-sm text-muted-foreground italic animate-pulse">
+                <span className="text-[13.5px] italic animate-pulse" style={{ color: 'var(--ss-muted)' }}>
                   Channeling wisdom...
                 </span>
               </motion.div>
@@ -590,7 +590,8 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
               onClick={handleButtonClick}
               disabled={!inputValue.trim() && !isStreamingResponse}
               size="icon"
-              className="h-11 w-11 rounded-full"
+              className="h-11 w-11 rounded-full shrink-0"
+              style={{ background: 'var(--ss-accent)', color: '#fff' }}
             >
               {isStreamingResponse ? (
                 <Square className="h-5 w-5" />

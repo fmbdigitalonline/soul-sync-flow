@@ -20,7 +20,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
         <div className="flex-1 flex flex-col">
           {chatContent}
         </div>
-        <div className="w-80 flex-shrink-0 p-4 bg-gray-50/50 rounded-lg">
+        <div className="w-80 flex-shrink-0 p-4 rounded-2xl" style={{ background: 'var(--ss-accent-wash)' }}>
           {remindersContent}
         </div>
       </div>
