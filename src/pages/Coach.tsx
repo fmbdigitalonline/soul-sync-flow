@@ -6,6 +6,7 @@ import { MessageCircle, RotateCcw, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
 import { useSubconsciousOrb } from "@/hooks/use-subconscious-orb";
+import { useUserProfile } from "@/hooks/use-user-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { HACSChatInterface } from "@/components/hacs/HACSChatInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -60,6 +61,10 @@ const Coach = () => {
     isEnabled: orbEnabled,
     orbState,
   } = useSubconsciousOrb();
+
+  // Real count only — the chip stays hidden rather than show a made-up number.
+  const { statistics } = useUserProfile();
+  const conversationCount = statistics?.coach_conversations ?? 0;
 
   // v3.8: the conversational lifecycle (listening/gathering/speaking/arriving)
   // is derived inside the chat from its real signals. Coach only raises the
@@ -208,15 +213,32 @@ const Coach = () => {
       <div className="ss ss-page min-h-screen">
         <div className={cn("container mx-auto px-4 max-w-6xl", isMobile ? "py-0" : "py-2")}>
 
-          {/* echo header — the Twin, calm */}
-          <div className="flex items-center gap-3 py-3">
-            <div className="ss-orb" style={{ width: 42, height: 42 }} />
-            <div>
+          {/* echo header — the Twin present on its own ground, the same soft
+              glow Profiel uses. A tab has a label; someone has a presence. */}
+          <div
+            className="flex items-center gap-3.5 my-3"
+            style={{
+              borderRadius: "var(--ss-radius)",
+              border: "1px solid var(--ss-line)",
+              padding: "14px 16px",
+              background:
+                "radial-gradient(300px 160px at 88% -10%, rgba(192,132,252,.28), transparent 62%), " +
+                "radial-gradient(260px 150px at 6% 110%, var(--ss-accent-wash-2), transparent 60%), " +
+                "linear-gradient(180deg, var(--ss-accent-wash), transparent)",
+            }}
+          >
+            <div className="ss-orb shrink-0" style={{ width: 50, height: 50 }} />
+            <div className="min-w-0">
               <div className="ss-title tracking-tight" style={{ color: "var(--ss-accent-ink)" }}>
                 {twinName?.name || t('companion.pageTitle')}
               </div>
-              <div className="text-xs" style={{ color: "var(--ss-muted)" }}>{nl ? "Je AI Twin" : "Your AI Twin"}</div>
+              <div className="ss-caption" style={{ color: "var(--ss-muted)" }}>{nl ? "Je AI Twin" : "Your AI Twin"}</div>
             </div>
+            {conversationCount > 0 && (
+              <span className="ss-chip ml-auto shrink-0" style={{ padding: "5px 11px" }}>
+                {nl ? `${conversationCount} gesprekken` : `${conversationCount} conversations`}
+              </span>
+            )}
           </div>
 
           {/* Render different layouts based on screen size */}

@@ -52,6 +52,31 @@ export type ConfirmedAction = {
   timeframe?: string;
 };
 
+
+/** The calendar day a message belongs to, or null when it has no timestamp. */
+function dayKey(ts?: string): string | null {
+  if (!ts) return null;
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+/** "Vandaag" / "Gisteren", otherwise the date — never a fabricated label. */
+function formatDay(ts: string | undefined, language: string): string | null {
+  if (!ts) return null;
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return null;
+  const nl = language === 'nl';
+  const today = new Date();
+  const same = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  if (same(d, today)) return nl ? 'Vandaag' : 'Today';
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (same(d, yesterday)) return nl ? 'Gisteren' : 'Yesterday';
+  return d.toLocaleDateString(nl ? 'nl-NL' : 'en-US', { day: 'numeric', month: 'long' });
+}
+
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
   isLoading: boolean;
@@ -395,10 +420,28 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             
             // Show interactive sentences for ALL completed AI messages (not currently streaming)
             const isCurrentlyStreaming = message.isStreaming;
-            
+
+            // A quiet day marker where the conversation actually crossed a
+            // day — read from the messages' own timestamps, never inserted
+            // for rhythm's sake.
+            const dayLabel = (() => {
+              const prev = messages[index - 1];
+              const cur = dayKey(message.timestamp);
+              if (!cur) return null;
+              if (prev && dayKey(prev.timestamp) === cur) return null;
+              return formatDay(message.timestamp, language);
+            })();
+
             return (
+              <React.Fragment key={message.id}>
+              {dayLabel && (
+                <div className="w-full flex items-center gap-2.5 py-3" aria-hidden="false">
+                  <span className="h-px flex-1" style={{ background: "var(--ss-line)" }} />
+                  <span className="ss-micro">{dayLabel}</span>
+                  <span className="h-px flex-1" style={{ background: "var(--ss-line)" }} />
+                </div>
+              )}
               <div
-                key={message.id}
                 className={cn(
                   "w-full py-2",
                   message.role === "user" ? "text-right" : "text-left"
@@ -417,9 +460,17 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                   <div className="ss w-full">
                     <div className="flex gap-2.5">
                       <div className="ss-orb shrink-0 mt-0.5" style={{ width: 30, height: 30 }} />
+                      {/* The Twin speaks from its own surface — white-on-white
+                          read as one column of text with no second voice. */}
                       <div
                         className="rounded-2xl px-4 py-3 ss-body leading-relaxed max-w-[86%]"
-                        style={{ background: "var(--ss-card)", border: "1px solid var(--ss-line)", color: "var(--ss-ink)" }}
+                        style={{
+                          background:
+                            "radial-gradient(300px 170px at 112% -18%, var(--ss-accent-wash-2), transparent 60%), " +
+                            "linear-gradient(180deg, var(--ss-accent-wash), transparent)",
+                          border: "1px solid var(--ss-line)",
+                          color: "var(--ss-ink)",
+                        }}
                       >
                         {isCurrentlyStreaming ? (
                           <TypewriterText
@@ -510,6 +561,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                   </div>
                 )}
               </div>
+              </React.Fragment>
             );
           })}
           
