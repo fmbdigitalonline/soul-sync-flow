@@ -40,8 +40,8 @@ const Row: React.FC<{ icon: React.ReactNode; title: string; body: string; emphas
       {icon}
     </span>
     <div className="min-w-0 flex-1">
-      <h4 className="text-[13.5px] font-semibold mb-0.5" style={{ color: 'var(--ss-ink)' }}>{title}</h4>
-      <p className="text-[13px] leading-relaxed" style={{ color: emphasis ? 'var(--ss-ink)' : 'var(--ss-muted)' }}>{body}</p>
+      <h4 className="ss-sub font-semibold mb-0.5" style={{ color: 'var(--ss-ink)' }}>{title}</h4>
+      <p className="ss-sub leading-relaxed" style={{ color: emphasis ? 'var(--ss-ink)' : 'var(--ss-muted)' }}>{body}</p>
     </div>
   </div>
 );
@@ -61,7 +61,7 @@ export const PersonalityDescription: React.FC<PersonalityDescriptionProps> = ({
   if (compact) {
     // Card overview — the insight alone.
     return (
-      <p className="text-[12.5px] leading-relaxed" style={{ color: 'var(--ss-muted)' }}>
+      <p className="ss-caption leading-relaxed" style={{ color: 'var(--ss-muted)' }}>
         {insight}
       </p>
     );
@@ -77,7 +77,7 @@ export const PersonalityDescription: React.FC<PersonalityDescriptionProps> = ({
 
       {(think || act || react) && (
         <div className="mt-2 pt-4" style={{ borderTop: '1px solid var(--ss-line-2)' }}>
-          <h3 className="text-[15px] font-semibold tracking-tight mb-3" style={{ color: 'var(--ss-ink)' }}>
+          <h3 className="ss-heading tracking-tight mb-3" style={{ color: 'var(--ss-ink)' }}>
             {t.alignment}
           </h3>
           <div className="flex flex-col gap-3.5">

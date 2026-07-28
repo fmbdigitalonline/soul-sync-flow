@@ -383,7 +383,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             (reunion ? (
               <TwinReunionGreeting reunion={reunion} />
             ) : (
-              <div className="text-center py-4 text-[13.5px]" style={{ color: 'var(--ss-muted)' }}>
+              <div className="text-center py-4 ss-sub" style={{ color: 'var(--ss-muted)' }}>
                 <p>Start a conversation to begin intelligence learning</p>
               </div>
             ))}
@@ -418,7 +418,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                     <div className="flex gap-2.5">
                       <div className="ss-orb shrink-0 mt-0.5" style={{ width: 30, height: 30 }} />
                       <div
-                        className="rounded-2xl px-4 py-3 text-[14.5px] leading-relaxed max-w-[86%]"
+                        className="rounded-2xl px-4 py-3 ss-body leading-relaxed max-w-[86%]"
                         style={{ background: "var(--ss-card)", border: "1px solid var(--ss-line)", color: "var(--ss-ink)" }}
                       >
                         {isCurrentlyStreaming ? (
@@ -496,7 +496,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                     )}
                     
                     {message.isQuestion && (
-                      <div className="mt-2 text-[11.5px]" style={{ color: 'var(--ss-faint)' }}>
+                      <div className="mt-2 ss-micro" style={{ color: 'var(--ss-faint)' }}>
                         Question from: {message.module}
                       </div>
                     )}
@@ -524,7 +524,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
               >
-                <span className="text-[13.5px] italic animate-pulse" style={{ color: 'var(--ss-muted)' }}>
+                <span className="ss-sub italic animate-pulse" style={{ color: 'var(--ss-muted)' }}>
                   Channeling wisdom...
                 </span>
               </motion.div>

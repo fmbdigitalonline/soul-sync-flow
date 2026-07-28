@@ -538,3 +538,54 @@
 .dark .ss-flow-green {
   background: linear-gradient(180deg, rgba(52, 211, 153, 0.12), rgba(52, 211, 153, 0.05));
 }
+
+/* =====================================================================
+   Type scale (v3.10) — ONE ladder for the whole app.
+
+   Before this, Profile alone used 13 arbitrary pixel sizes, each page used a
+   different subset, some files mixed those with Tailwind's text-sm/base, and
+   font-bold and font-semibold were used interchangeably for the same role.
+   That is what read as "every page looks like a different document".
+
+   Seven steps. The three heading steps lock weight (a heading should never be
+   guessed); the four text steps set size and leading only, so callers can
+   still say font-medium/font-semibold on a button or label.
+   Use these instead of arbitrary text-[..px]. Heading LEVEL is semantic
+   (<h1>/<h2>/<h3>); these classes only carry the look, so a visually small
+   heading can still be the right level for screen readers.
+   ===================================================================== */
+
+.ss-display,
+.ss-title,
+.ss-heading,
+.ss-body,
+.ss-sub,
+.ss-caption,
+.ss-micro { color: var(--ss-ink); margin: 0; }
+
+/* Page owner: the one big name at the top of a screen. */
+.ss-display { font-size: 25px; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; }
+
+/* Section owner: a screen's major divisions, and the largest card titles. */
+.ss-title { font-size: 19px; font-weight: 600; letter-spacing: -.015em; line-height: 1.25; }
+
+/* Card / group title. */
+.ss-heading { font-size: 15.5px; font-weight: 600; letter-spacing: -.01em; line-height: 1.3; }
+
+/* Reading text. */
+.ss-body { font-size: 14px; line-height: 1.6; }
+
+/* Secondary reading text and list rows. */
+.ss-sub { font-size: 13px; line-height: 1.55; color: var(--ss-muted); }
+
+/* Supporting detail beneath a heading. */
+.ss-caption { font-size: 12.5px; line-height: 1.5; color: var(--ss-muted); }
+
+/* Timestamps, counts, provenance. */
+.ss-micro { font-size: 11.5px; line-height: 1.45; color: var(--ss-faint); }
+
+/* Weight modifiers — so weight is never guessed alongside size. */
+.ss-strong { font-weight: 600; }
+.ss-ink    { color: var(--ss-ink); }
+.ss-dim    { color: var(--ss-muted); }
+.ss-faintc { color: var(--ss-faint); }

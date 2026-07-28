@@ -146,8 +146,8 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
       <div className="flex items-center gap-3.5">
         <div className="ss-avatar" style={{ width: 56, height: 56, fontSize: 22 }}>{name.charAt(0).toUpperCase()}</div>
         <div className="min-w-0">
-          <div className="text-[20px] font-semibold tracking-tight" style={{ color: "var(--ss-ink)" }}>{name}</div>
-          <div className="text-[13px]" style={{ color: "var(--ss-muted)" }}>{nl ? "Jouw Mental Blueprint" : "Your Mental Blueprint"}</div>
+          <div className="ss-title tracking-tight" style={{ color: "var(--ss-ink)" }}>{name}</div>
+          <div className="ss-sub" style={{ color: "var(--ss-muted)" }}>{nl ? "Jouw Mental Blueprint" : "Your Mental Blueprint"}</div>
         </div>
       </div>
 
@@ -155,7 +155,7 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
         <div key={section.title} className="flex flex-col gap-2.5">
           <div className="flex items-center gap-1.5 px-1">
             <span style={{ color: "var(--ss-accent)" }}>{section.icon}</span>
-            <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "var(--ss-faint)" }}>{section.title}</span>
+            <span className="ss-caption font-semibold uppercase tracking-wider" style={{ color: "var(--ss-faint)" }}>{section.title}</span>
           </div>
           {section.items.map((item) => {
             const insight = gd(item.category, item.descValue ?? item.value)?.insight as string | undefined;
@@ -167,10 +167,10 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
                 style={{ padding: 16 }}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="text-[12px]" style={{ color: "var(--ss-muted)" }}>{item.label}</div>
-                  <div className="text-[16px] font-semibold tracking-tight mt-0.5 capitalize" style={{ color: "var(--ss-accent-ink)" }}>{item.value}</div>
+                  <div className="ss-caption" style={{ color: "var(--ss-muted)" }}>{item.label}</div>
+                  <div className="ss-heading tracking-tight mt-0.5 capitalize" style={{ color: "var(--ss-accent-ink)" }}>{item.value}</div>
                   {insight && (
-                    <div className="text-[12.5px] leading-relaxed mt-1.5 line-clamp-2" style={{ color: "var(--ss-muted)" }}>{insight}</div>
+                    <div className="ss-caption leading-relaxed mt-1.5 line-clamp-2" style={{ color: "var(--ss-muted)" }}>{insight}</div>
                   )}
                 </div>
                 <Info className="h-[17px] w-[17px] shrink-0 mt-0.5" style={{ color: "var(--ss-accent)" }} />

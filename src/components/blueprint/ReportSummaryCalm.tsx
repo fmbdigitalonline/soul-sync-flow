@@ -74,12 +74,12 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
         <div className="ss-card" style={{ padding: 20 }}>
           <div className="flex items-center gap-2">
             <Sparkles className="h-[18px] w-[18px]" style={{ color: "var(--ss-accent)" }} />
-            <span className="text-[18px] font-bold tracking-tight" style={{ color: "var(--ss-ink)" }}>
+            <span className="ss-title tracking-tight" style={{ color: "var(--ss-ink)" }}>
               {nl ? "Geïntegreerde samenvatting" : "Integrated Summary"}
             </span>
           </div>
-          <p className="mt-2.5 text-[14px] leading-relaxed line-clamp-3" style={{ color: "var(--ss-muted)" }}>{summary}</p>
-          <button onClick={onViewFull} className="mt-2.5 inline-flex items-center gap-1 text-[13px] font-semibold" style={{ color: "var(--ss-accent-ink)" }}>
+          <p className="mt-2.5 ss-body leading-relaxed line-clamp-3" style={{ color: "var(--ss-muted)" }}>{summary}</p>
+          <button onClick={onViewFull} className="mt-2.5 inline-flex items-center gap-1 ss-sub font-semibold" style={{ color: "var(--ss-accent-ink)" }}>
             {nl ? "Lees volledig" : "Read full"} <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -88,7 +88,7 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
       {/* Key Themes — the report's real sections */}
       {themes.length > 0 && (
         <div className="flex flex-col gap-2.5">
-          <div className="text-[15px] font-bold tracking-tight px-1" style={{ color: "var(--ss-ink)" }}>
+          <div className="ss-heading tracking-tight px-1" style={{ color: "var(--ss-ink)" }}>
             {nl ? "Kernthema's" : "Key Themes"}
           </div>
           {themes.map((th) => (
@@ -99,8 +99,8 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
                 {th.icon}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="text-[15px] font-semibold" style={{ color: "var(--ss-ink)" }}>{th.title}</div>
-                <div className="text-[13px] leading-relaxed mt-0.5" style={{ color: "var(--ss-muted)" }}>
+                <div className="ss-heading" style={{ color: "var(--ss-ink)" }}>{th.title}</div>
+                <div className="ss-sub leading-relaxed mt-0.5" style={{ color: "var(--ss-muted)" }}>
                   {th.body ? firstSentence(th.body) : (th as CalmTheme).note}
                 </div>
               </div>

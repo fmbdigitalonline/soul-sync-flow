@@ -92,7 +92,7 @@ export const AlignmentDetail: React.FC<{
         <button onClick={onBack} className="inline-flex items-center gap-1 text-sm font-medium" style={{ color: 'var(--ss-muted)' }}>
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <div className="text-[17px] font-bold tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.title}</div>
+        <div className="ss-title tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.title}</div>
         <span style={{ width: 20 }} />
       </div>
 
@@ -107,10 +107,10 @@ export const AlignmentDetail: React.FC<{
       <div className="ss-twin">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[17px] font-semibold leading-snug tracking-tight" style={{ color: 'var(--ss-ink)' }}>
+            <p className="ss-title leading-snug tracking-tight" style={{ color: 'var(--ss-ink)' }}>
               {t.headings[dir]}
             </p>
-            <p className="text-[13.5px] leading-relaxed mt-2" style={{ color: 'var(--ss-muted)' }}>{t.subs[dir]}</p>
+            <p className="ss-sub leading-relaxed mt-2" style={{ color: 'var(--ss-muted)' }}>{t.subs[dir]}</p>
           </div>
           <div className="ss-orb shrink-0" style={{ width: 56, height: 56 }} />
         </div>
@@ -118,8 +118,8 @@ export const AlignmentDetail: React.FC<{
 
       {/* Trend */}
       <div>
-        <div className="text-[16px] font-bold tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.trend}</div>
-        <p className="text-[12.5px] mt-0.5" style={{ color: 'var(--ss-muted)' }}>{t.trendLede}</p>
+        <div className="ss-heading tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.trend}</div>
+        <p className="ss-caption mt-0.5" style={{ color: 'var(--ss-muted)' }}>{t.trendLede}</p>
         {trend.hasData ? (
           <>
             <svg viewBox={`0 0 ${W} ${H}`} className="w-full mt-3" style={{ height: 'auto' }}>
@@ -136,17 +136,17 @@ export const AlignmentDetail: React.FC<{
                   stroke={i === pts.length - 1 ? 'var(--ss-surface)' : 'none'} strokeWidth={i === pts.length - 1 ? 2 : 0} />
               ))}
             </svg>
-            <div className="flex justify-between text-[10.5px] mt-1" style={{ color: 'var(--ss-faint)' }}>
+            <div className="flex justify-between ss-micro mt-1" style={{ color: 'var(--ss-faint)' }}>
               <span>{t.less}</span><span>{t.neutral}</span><span>{t.more}</span>
             </div>
             {months.length > 0 && (
-              <div className="flex justify-between text-[10.5px] mt-1" style={{ color: 'var(--ss-faint)' }}>
+              <div className="flex justify-between ss-micro mt-1" style={{ color: 'var(--ss-faint)' }}>
                 {months.map((m, i) => <span key={i}>{m}</span>)}
               </div>
             )}
           </>
         ) : (
-          <p className="text-[13px] mt-3" style={{ color: 'var(--ss-faint)' }}>
+          <p className="ss-sub mt-3" style={{ color: 'var(--ss-faint)' }}>
             {lang === 'nl' ? 'Nog te weinig reflecties voor een trend — kijk wekelijks even terug.' : 'Not enough reflections yet for a trend — check in weekly.'}
           </p>
         )}
@@ -155,8 +155,8 @@ export const AlignmentDetail: React.FC<{
       {/* Why I'm seeing this */}
       {patterns.length > 0 && (
         <div className="ss-card">
-          <div className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.why}</div>
-          <p className="text-[12.5px] mt-0.5 mb-3" style={{ color: 'var(--ss-muted)' }}>{t.whyLede}</p>
+          <div className="ss-heading tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.why}</div>
+          <p className="ss-caption mt-0.5 mb-3" style={{ color: 'var(--ss-muted)' }}>{t.whyLede}</p>
           <div className="flex flex-col gap-3">
             {patterns.slice(0, 4).map((p, i) => {
               const Icon = PATTERN_ICONS[i % PATTERN_ICONS.length];
@@ -165,7 +165,7 @@ export const AlignmentDetail: React.FC<{
                   <span className="shrink-0 grid place-items-center" style={{ width: 34, height: 34, borderRadius: 11, background: 'var(--ss-accent-wash)', color: 'var(--ss-accent)' }}>
                     <Icon className="h-[16px] w-[16px]" />
                   </span>
-                  <p className="text-[13px] leading-relaxed flex-1" style={{ color: 'var(--ss-ink)' }}>{p.text}</p>
+                  <p className="ss-sub leading-relaxed flex-1" style={{ color: 'var(--ss-ink)' }}>{p.text}</p>
                   <ChevronRight className="h-[16px] w-[16px] shrink-0 mt-0.5" style={{ color: 'var(--ss-faint)' }} />
                 </div>
               );
@@ -177,8 +177,8 @@ export const AlignmentDetail: React.FC<{
       {/* Coach Reflection */}
       <div className="ss-twin">
         <span className="ss-eyebrow"><Sparkles className="h-3.5 w-3.5" /> {t.coach}</span>
-        <p className="text-[13.5px] leading-relaxed mt-2" style={{ color: 'var(--ss-ink)' }}>{t.coachBody}</p>
-        <button onClick={onTalk} className="mt-3 inline-flex items-center gap-2 text-[13.5px] font-semibold rounded-full pl-4 pr-2.5 py-2 border"
+        <p className="ss-sub leading-relaxed mt-2" style={{ color: 'var(--ss-ink)' }}>{t.coachBody}</p>
+        <button onClick={onTalk} className="mt-3 inline-flex items-center gap-2 ss-sub font-semibold rounded-full pl-4 pr-2.5 py-2 border"
           style={{ color: 'var(--ss-accent-ink)', background: 'var(--ss-card)', borderColor: 'var(--ss-line)' }}>
           {t.talk} <span className="ss-orb" style={{ width: 22, height: 22 }} />
         </button>

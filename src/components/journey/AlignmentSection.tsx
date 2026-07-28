@@ -68,9 +68,9 @@ export const AlignmentSection: React.FC<{ patterns?: Array<{ text: string }>; on
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <span className="ss-eyebrow"><Sparkles className="h-3.5 w-3.5" /> {t.title}</span>
-            <p className="text-[14px] leading-relaxed mt-2" style={{ color: 'var(--ss-ink)' }}>{narrative}</p>
+            <p className="ss-body leading-relaxed mt-2" style={{ color: 'var(--ss-ink)' }}>{narrative}</p>
             {onLearnMore && (
-              <button onClick={onLearnMore} className="mt-2.5 inline-flex items-center gap-1 text-[13px] font-semibold" style={{ color: 'var(--ss-accent-ink)' }}>
+              <button onClick={onLearnMore} className="mt-2.5 inline-flex items-center gap-1 ss-sub font-semibold" style={{ color: 'var(--ss-accent-ink)' }}>
                 {t.learnMore} <ChevronRight className="h-3.5 w-3.5" />
               </button>
             )}
@@ -83,10 +83,10 @@ export const AlignmentSection: React.FC<{ patterns?: Array<{ text: string }>; on
       {trend.hasData && (
         <div className="ss-card">
           <div className="flex items-center justify-between">
-            <span className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.trend}</span>
+            <span className="ss-heading tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.trend}</span>
             <Info className="h-4 w-4" style={{ color: 'var(--ss-faint)' }} />
           </div>
-          <p className="text-[12.5px] mt-0.5" style={{ color: 'var(--ss-muted)' }}>{t.trendLede}</p>
+          <p className="ss-caption mt-0.5" style={{ color: 'var(--ss-muted)' }}>{t.trendLede}</p>
           <svg viewBox={`0 0 ${W} ${H}`} className="w-full mt-3" style={{ height: 'auto' }}>
             <defs>
               <linearGradient id="alignFill" x1="0" y1="0" x2="0" y2="1">
@@ -100,10 +100,10 @@ export const AlignmentSection: React.FC<{ patterns?: Array<{ text: string }>; on
               <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r={i === pts.length - 1 ? 4 : 2.6} fill="var(--ss-accent)" />
             ))}
           </svg>
-          <div className="flex justify-between text-[10.5px] mt-1" style={{ color: 'var(--ss-faint)' }}>
+          <div className="flex justify-between ss-micro mt-1" style={{ color: 'var(--ss-faint)' }}>
             <span>{t.less}</span><span>{t.neutral}</span><span>{t.more}</span>
           </div>
-          <div className="flex justify-between text-[10.5px] mt-1" style={{ color: 'var(--ss-faint)' }}>
+          <div className="flex justify-between ss-micro mt-1" style={{ color: 'var(--ss-faint)' }}>
             <span>{fmtDate(trend.from, lang)}</span><span>{fmtDate(trend.to, lang)}</span>
           </div>
         </div>
@@ -112,8 +112,8 @@ export const AlignmentSection: React.FC<{ patterns?: Array<{ text: string }>; on
       {/* What's contributing — real patterns from the ledger */}
       {patterns.length > 0 && (
         <div className="ss-card">
-          <span className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.contributing}</span>
-          <p className="text-[12.5px] mt-0.5 mb-3" style={{ color: 'var(--ss-muted)' }}>{t.contributingLede}</p>
+          <span className="ss-heading tracking-tight" style={{ color: 'var(--ss-ink)' }}>{t.contributing}</span>
+          <p className="ss-caption mt-0.5 mb-3" style={{ color: 'var(--ss-muted)' }}>{t.contributingLede}</p>
           <div className="flex flex-col gap-2.5">
             {patterns.slice(0, 4).map((p, i) => {
               const Icon = PATTERN_ICONS[i % PATTERN_ICONS.length];
@@ -122,7 +122,7 @@ export const AlignmentSection: React.FC<{ patterns?: Array<{ text: string }>; on
                   <span className="shrink-0 grid place-items-center" style={{ width: 34, height: 34, borderRadius: 11, background: 'var(--ss-accent-wash)', color: 'var(--ss-accent)' }}>
                     <Icon className="h-[16px] w-[16px]" />
                   </span>
-                  <p className="text-[13px] leading-relaxed flex-1" style={{ color: 'var(--ss-ink)' }}>{p.text}</p>
+                  <p className="ss-sub leading-relaxed flex-1" style={{ color: 'var(--ss-ink)' }}>{p.text}</p>
                 </div>
               );
             })}
@@ -134,10 +134,10 @@ export const AlignmentSection: React.FC<{ patterns?: Array<{ text: string }>; on
       <div className="ss-card">
         <span className="ss-eyebrow"><Sparkles className="h-3.5 w-3.5" /> {t.weekly}</span>
         {justRecorded ? (
-          <p className="text-[13.5px] leading-relaxed mt-2" style={{ color: 'var(--ss-muted)' }}>{t.thanks}</p>
+          <p className="ss-sub leading-relaxed mt-2" style={{ color: 'var(--ss-muted)' }}>{t.thanks}</p>
         ) : (
           <>
-            <p className="text-[13.5px] leading-relaxed mt-2 mb-3" style={{ color: 'var(--ss-ink)' }}>{t.weeklyQ}</p>
+            <p className="ss-sub leading-relaxed mt-2 mb-3" style={{ color: 'var(--ss-ink)' }}>{t.weeklyQ}</p>
             <div className="grid grid-cols-3 gap-2">
               <ReflectBtn label={t.moreAligned} icon={<ArrowUp className="h-4 w-4" />} tone="up" onClick={() => record('more')} />
               <ReflectBtn label={t.same} icon={<Minus className="h-4 w-4" />} tone="neutral" onClick={() => record('same')} />
@@ -156,7 +156,7 @@ const ReflectBtn: React.FC<{ label: string; icon: React.ReactNode; tone: 'up' | 
   return (
     <button onClick={onClick} className="flex flex-col items-center gap-1.5 rounded-xl py-3 px-1 border" style={{ borderColor: 'var(--ss-line)' }}>
       <span className="grid place-items-center rounded-full" style={{ width: 30, height: 30, background: bg, color }}>{icon}</span>
-      <span className="text-[11px] font-medium text-center leading-tight" style={{ color: 'var(--ss-ink)' }}>{label}</span>
+      <span className="ss-micro font-medium text-center leading-tight" style={{ color: 'var(--ss-ink)' }}>{label}</span>
     </button>
   );
 };
