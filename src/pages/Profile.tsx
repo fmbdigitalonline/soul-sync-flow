@@ -126,7 +126,7 @@ const Profile = () => {
                 <button onClick={() => setDeep(false)} className="inline-flex items-center gap-1 text-sm font-medium" style={{ color: "var(--ss-muted)" }}>
                   <ChevronLeft className="h-4 w-4" /> {nl ? "Terug" : "Back"}
                 </button>
-                <div className="text-[17px] font-semibold">{nl ? "Mijn Reis" : "My Journey"}</div>
+                <div className="ss-title">{nl ? "Mijn Reis" : "My Journey"}</div>
                 <span className="ss-chip" style={{ padding: "4px 11px" }}>{displayName}</span>
               </div>
               <div className="ss-seg">
@@ -145,7 +145,7 @@ const Profile = () => {
                   {/* Turning points — moments that shaped you, as a timeline. */}
                   <div className="ss-card">
                     <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {nl ? "Keerpunten" : "Turning points"}</span>
-                    <p className="text-[12.5px] mt-0.5" style={{ color: "var(--ss-muted)" }}>{nl ? "Momenten die je vormden." : "Moments that shaped you."}</p>
+                    <p className="ss-caption mt-0.5" style={{ color: "var(--ss-muted)" }}>{nl ? "Momenten die je vormden." : "Moments that shaped you."}</p>
                     {journey && journey.turningPoints.length > 0 ? (
                       <div className="mt-4 flex flex-col">
                         {journey.turningPoints.map((e, i, arr) => {
@@ -158,8 +158,8 @@ const Profile = () => {
                                 {!last && <span className="flex-1" style={{ width: 2, marginTop: 2, marginBottom: 2, background: "var(--ss-line)" }} />}
                               </div>
                               <div className={last ? "pb-0.5" : "pb-5"}>
-                                <div className="text-[12px] font-semibold tabular-nums" style={{ color: "var(--ss-accent-ink)" }}>{Number.isFinite(year) ? year : ""}</div>
-                                <div className="text-[13.5px] leading-relaxed mt-0.5" style={{ color: "var(--ss-ink)" }}>{e.title}</div>
+                                <div className="ss-caption font-semibold tabular-nums" style={{ color: "var(--ss-accent-ink)" }}>{Number.isFinite(year) ? year : ""}</div>
+                                <div className="ss-sub leading-relaxed mt-0.5" style={{ color: "var(--ss-ink)" }}>{e.title}</div>
                               </div>
                             </div>
                           );
@@ -176,7 +176,7 @@ const Profile = () => {
                   {journey?.trajectory && (
                     <div className="ss-card">
                       <span className="ss-eyebrow"><TrendingUp className="h-3.5 w-3.5" /> {nl ? "Richting" : "Trajectory"}</span>
-                      <div className="text-[15px] leading-relaxed mt-2" style={{ color: "var(--ss-ink)" }}>{journey.trajectory}</div>
+                      <div className="ss-heading leading-relaxed mt-2" style={{ color: "var(--ss-ink)" }}>{journey.trajectory}</div>
                     </div>
                   )}
                 </>
@@ -205,7 +205,7 @@ const Profile = () => {
               {/* Identity */}
               <div className="flex flex-col items-center text-center gap-2.5">
                 <div className="ss-avatar">{displayName.charAt(0).toUpperCase()}</div>
-                <h1 className="text-[25px] font-semibold tracking-tight" style={{ color: "var(--ss-ink)" }}>{displayName}</h1>
+                <h1 className="ss-display tracking-tight" style={{ color: "var(--ss-ink)" }}>{displayName}</h1>
                 {traits.length > 0 && (
                   <div className="flex flex-wrap gap-2 justify-center">
                     {traits.slice(0, 3).map((trait, i) => (
@@ -221,7 +221,7 @@ const Profile = () => {
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
                     <span className="ss-eyebrow"><Sparkles className="h-3.5 w-3.5" /> {nl ? "Je Twin" : "Your Twin"}</span>
-                    <div className="text-[30px] font-semibold tracking-tight mt-2.5 mb-1" style={{ color: "var(--ss-accent-ink)" }}>{twinLabel}</div>
+                    <div className="ss-display tracking-tight mt-2.5 mb-1" style={{ color: "var(--ss-accent-ink)" }}>{twinLabel}</div>
                     <div className="text-sm" style={{ color: "var(--ss-muted)" }}>
                       {conversations === 0
                         ? (nl ? "Jullie hebben nog niet gesproken." : "You haven't spoken yet.")
@@ -230,7 +230,7 @@ const Profile = () => {
                   </div>
                   <div className="ss-orb" />
                 </div>
-                <button onClick={() => setTab("settings")} className="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-semibold rounded-full px-4 py-2 border"
+                <button onClick={() => setTab("settings")} className="mt-4 inline-flex items-center gap-1.5 ss-sub font-semibold rounded-full px-4 py-2 border"
                   style={{ color: "var(--ss-accent-ink)", background: "var(--ss-card)", borderColor: "var(--ss-line)" }}>
                   <Pencil className="h-3.5 w-3.5" /> {nl ? "Hernoem je Twin" : "Rename your Twin"}
                 </button>
@@ -238,10 +238,10 @@ const Profile = () => {
 
               {/* Where you are now — the narrative lead (persistent) */}
               <div className="px-1">
-                <div className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--ss-accent)" }}>
+                <div className="ss-micro font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--ss-accent)" }}>
                   {nl ? "Waar je nu bent" : "Where you are now"}
                 </div>
-                <div className="text-[16px] leading-relaxed" style={{ color: reflection ? "var(--ss-ink)" : "var(--ss-muted)" }}>
+                <div className="ss-heading leading-relaxed" style={{ color: reflection ? "var(--ss-ink)" : "var(--ss-muted)" }}>
                   {reflection || (nl ? "Je reis begint. Praat met je Twin en het verhaal ontvouwt zich hier." : "Your journey is beginning. Talk with your Twin and the story unfolds here.")}
                 </div>
               </div>
@@ -278,8 +278,8 @@ const Profile = () => {
                     </svg>
                     <div className="ss-hero-veil" />
                     <div className="ss-hero-cap">
-                      <div className="text-[18px] font-semibold text-white">{nl ? "Jouw Reis" : "Your Journey"}</div>
-                      <div className="text-[12.5px] text-white/90 mt-0.5">{nl ? "Een weerspiegeling van je ontwikkeling." : "A reflection of your life's evolution."}</div>
+                      <div className="ss-title text-white">{nl ? "Jouw Reis" : "Your Journey"}</div>
+                      <div className="ss-caption text-white/90 mt-0.5">{nl ? "Een weerspiegeling van je ontwikkeling." : "A reflection of your life's evolution."}</div>
                       <span className="ss-hero-open">{nl ? "Open Mijn Reis" : "Open My Journey"} <ArrowRight className="h-3.5 w-3.5" /></span>
                     </div>
                   </button>
@@ -300,16 +300,16 @@ const Profile = () => {
                         <div>
                           <div className="text-xs" style={{ color: "var(--ss-muted)" }}>{nl ? "Meest productieve dag" : "Most productive day"}</div>
                           <div className="flex items-center gap-2 mt-1.5">
-                            <span className="text-[16px] font-semibold">{weekly.mostProductiveDay || (nl ? "Zondag" : "Sunday")}</span>
+                            <span className="ss-heading">{weekly.mostProductiveDay || (nl ? "Zondag" : "Sunday")}</span>
                             {weekly.improvementTrend && (
-                              <span className="text-[11.5px] font-semibold rounded-full px-2 py-0.5" style={{ color: "var(--ss-green)", background: "rgba(52,201,138,.13)" }}>{weekly.improvementTrend}</span>
+                              <span className="ss-micro font-semibold rounded-full px-2 py-0.5" style={{ color: "var(--ss-green)", background: "rgba(52,201,138,.13)" }}>{weekly.improvementTrend}</span>
                             )}
                           </div>
                         </div>
                         <div>
                           <div className="text-xs" style={{ color: "var(--ss-muted)" }}>{nl ? "Energie" : "Energy"}</div>
                           <div className="flex items-center gap-1.5 mt-1.5">
-                            <span className="text-[16px] font-semibold">{weekly.energyPeaks || (nl ? "Stabiel" : "Steady")}</span>
+                            <span className="ss-heading">{weekly.energyPeaks || (nl ? "Stabiel" : "Steady")}</span>
                             <TrendingUp className="h-4 w-4" style={{ color: "var(--ss-accent)" }} />
                           </div>
                         </div>
@@ -326,7 +326,7 @@ const Profile = () => {
                     journey.programs.map((p, i) => (
                       <div key={i} className="ss-card flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <div className="text-[15px] font-semibold truncate" style={{ color: "var(--ss-ink)" }}>{p.title}</div>
+                          <div className="ss-heading truncate" style={{ color: "var(--ss-ink)" }}>{p.title}</div>
                           <div className="text-xs mt-0.5" style={{ color: "var(--ss-muted)" }}>
                             {p.kind === "transformation" ? (nl ? "Groeiprogramma" : "Growth journey") : (nl ? "Doel" : "Achievement")}
                             {p.domain ? ` · ${p.domain.replace(/_/g, " ")}` : ""}
@@ -356,15 +356,15 @@ const Profile = () => {
                         <div className="ss-lrow">
                           <span className="ss-ic"><Mic className="h-[18px] w-[18px]" /></span>
                           <div className="flex-1">
-                            <div className="text-[14.5px] font-medium">{nl ? "Stem & toon" : "Voice & tone"}</div>
-                            <div className="text-[12.5px]" style={{ color: "var(--ss-muted)" }}>{nl ? "Kalm · warm · inzichtelijk" : "Calm · warm · insightful"}</div>
+                            <div className="ss-body font-medium">{nl ? "Stem & toon" : "Voice & tone"}</div>
+                            <div className="ss-caption" style={{ color: "var(--ss-muted)" }}>{nl ? "Kalm · warm · inzichtelijk" : "Calm · warm · insightful"}</div>
                           </div>
                         </div>
                         <button onClick={() => navigate("/companion")} className="ss-lrow w-full text-left">
                           <span className="ss-ic"><MessageSquare className="h-[18px] w-[18px]" /></span>
                           <div className="flex-1">
-                            <div className="text-[14.5px] font-medium">{nl ? "Gespreksgeschiedenis" : "Conversation history"}</div>
-                            <div className="text-[12.5px]" style={{ color: "var(--ss-muted)" }}>{nl ? "Eerdere gesprekken teruglezen" : "Revisit past episodes"}</div>
+                            <div className="ss-body font-medium">{nl ? "Gespreksgeschiedenis" : "Conversation history"}</div>
+                            <div className="ss-caption" style={{ color: "var(--ss-muted)" }}>{nl ? "Eerdere gesprekken teruglezen" : "Revisit past episodes"}</div>
                           </div>
                           <ChevronRight className="h-[18px] w-[18px]" style={{ color: "var(--ss-faint)" }} />
                         </button>
@@ -377,19 +377,19 @@ const Profile = () => {
                     <div className="ss-rows">
                       <div className="ss-lrow">
                         <span className="ss-ic"><Bell className="h-[18px] w-[18px]" /></span>
-                        <div className="flex-1 text-[14.5px] font-medium">{t("profile.notifications")}</div>
+                        <div className="flex-1 ss-body font-medium">{t("profile.notifications")}</div>
                         <Switch defaultChecked />
                       </div>
                       <div className="ss-lrow">
                         <span className="ss-ic">{darkMode ? <Moon className="h-[18px] w-[18px]" /> : <Sun className="h-[18px] w-[18px]" />}</span>
-                        <div className="flex-1 text-[14.5px] font-medium">{t("profile.darkMode")}</div>
+                        <div className="flex-1 ss-body font-medium">{t("profile.darkMode")}</div>
                         <Switch checked={darkMode} onCheckedChange={toggleDarkMode} />
                       </div>
                       <div className="ss-lrow">
                         <span className="ss-ic"><BookOpen className="h-[18px] w-[18px]" /></span>
                         <div className="flex-1">
-                          <div className="text-[14.5px] font-medium">{nl ? "Focusmodus" : "Focus mode"}</div>
-                          <div className="text-[12.5px]" style={{ color: "var(--ss-muted)" }}>{nl ? "Afleidingsvrij" : "Distraction-free"}</div>
+                          <div className="ss-body font-medium">{nl ? "Focusmodus" : "Focus mode"}</div>
+                          <div className="ss-caption" style={{ color: "var(--ss-muted)" }}>{nl ? "Afleidingsvrij" : "Distraction-free"}</div>
                         </div>
                         <Switch checked={focusMode} onCheckedChange={toggleFocusMode} />
                       </div>
@@ -401,12 +401,12 @@ const Profile = () => {
                     <div className="ss-rows">
                       <div className="ss-lrow">
                         <span className="ss-ic"><Shield className="h-[18px] w-[18px]" /></span>
-                        <div className="flex-1 text-[14.5px] font-medium">{nl ? "Privacy & gegevens" : "Privacy & data"}</div>
+                        <div className="flex-1 ss-body font-medium">{nl ? "Privacy & gegevens" : "Privacy & data"}</div>
                         <ChevronRight className="h-[18px] w-[18px]" style={{ color: "var(--ss-faint)" }} />
                       </div>
                       <button onClick={handleLogout} className="ss-lrow w-full text-left">
                         <span className="ss-ic" style={{ background: "rgba(224,103,103,.12)", color: "var(--ss-danger)" }}><LogOut className="h-[18px] w-[18px]" /></span>
-                        <div className="flex-1 text-[14.5px] font-medium" style={{ color: "var(--ss-danger)" }}>{t("nav.signOut")}</div>
+                        <div className="flex-1 ss-body font-medium" style={{ color: "var(--ss-danger)" }}>{t("nav.signOut")}</div>
                       </button>
                     </div>
                   </div>
@@ -422,14 +422,14 @@ const Profile = () => {
 
 const Stat: React.FC<{ label: string; value: string; unit?: string; done?: boolean }> = ({ label, value, unit, done }) => (
   <div className="ss-qcell">
-    <div className="text-[12.5px]" style={{ color: "var(--ss-muted)" }}>{label}</div>
+    <div className="ss-caption" style={{ color: "var(--ss-muted)" }}>{label}</div>
     {done ? (
-      <div className="mt-1.5 inline-flex items-center gap-1.5 text-[18px] font-semibold" style={{ color: "var(--ss-green)" }}>
+      <div className="mt-1.5 inline-flex items-center gap-1.5 ss-title" style={{ color: "var(--ss-green)" }}>
         <Check className="h-4 w-4" strokeWidth={2.6} /> {value}
       </div>
     ) : (
-      <div className="mt-1.5 text-[21px] font-semibold tracking-tight tabular-nums" style={{ color: "var(--ss-ink)" }}>
-        {value} {unit && <span className="text-[12.5px] font-medium" style={{ color: "var(--ss-muted)" }}>{unit}</span>}
+      <div className="mt-1.5 ss-title tracking-tight tabular-nums" style={{ color: "var(--ss-ink)" }}>
+        {value} {unit && <span className="ss-caption font-medium" style={{ color: "var(--ss-muted)" }}>{unit}</span>}
       </div>
     )}
   </div>

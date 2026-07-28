@@ -102,10 +102,10 @@ export const LifeWheel: React.FC = () => {
         </div>
         <div className="flex gap-2 mt-4">
           <button onClick={save} disabled={saving}
-            className="text-[13px] font-semibold rounded-full px-4 py-2"
+            className="ss-sub font-semibold rounded-full px-4 py-2"
             style={{ background: 'var(--ss-accent)', color: '#fff' }}>{t.save}</button>
           <button onClick={() => setEditing(false)} disabled={saving}
-            className="text-[13px] font-semibold rounded-full px-4 py-2"
+            className="ss-sub font-semibold rounded-full px-4 py-2"
             style={{ color: 'var(--ss-muted)' }}>{t.cancel}</button>
         </div>
       </div>
@@ -126,7 +126,7 @@ export const LifeWheel: React.FC = () => {
           <>
             <p className="text-sm mt-2 leading-relaxed" style={{ color: 'var(--ss-muted)' }}>{t.thin}</p>
             <button onClick={startEdit}
-              className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold rounded-full px-4 py-2"
+              className="mt-3 inline-flex items-center gap-1.5 ss-sub font-semibold rounded-full px-4 py-2"
               style={{ background: 'var(--ss-accent)', color: '#fff' }}>{t.setSelf}</button>
           </>
         )}
@@ -142,7 +142,7 @@ export const LifeWheel: React.FC = () => {
     <div className="ss-card">
       <div className="flex items-center justify-between">
         <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {t.title}</span>
-        <button onClick={startEdit} className="text-[12px] font-semibold" style={{ color: 'var(--ss-accent-ink)' }}>{t.adjust}</button>
+        <button onClick={startEdit} className="ss-caption font-semibold" style={{ color: 'var(--ss-accent-ink)' }}>{t.adjust}</button>
       </div>
       <p className="text-sm mt-1" style={{ color: 'var(--ss-muted)' }}>{t.lede}</p>
 
@@ -176,13 +176,13 @@ export const LifeWheel: React.FC = () => {
 
       {/* Whose read this is — the Twin's read of your journey, or your own. */}
       <div className="flex items-center justify-between mt-1">
-        <span className="inline-flex items-center gap-1.5 text-[11.5px]" style={{ color: 'var(--ss-faint)' }}>
+        <span className="inline-flex items-center gap-1.5 ss-micro" style={{ color: 'var(--ss-faint)' }}>
           <Sparkles className="h-3 w-3" />
           {source === 'user' ? t.fromUser : t.fromSystem(twin)}
         </span>
         {source === 'system' && (
           <button onClick={refresh} disabled={analyzing}
-            className="inline-flex items-center gap-1 text-[11.5px] font-medium" style={{ color: 'var(--ss-accent-ink)' }}>
+            className="inline-flex items-center gap-1 ss-micro font-medium" style={{ color: 'var(--ss-accent-ink)' }}>
             <RefreshCw className={`h-3 w-3 ${analyzing ? 'animate-spin' : ''}`} /> {t.reread}
           </button>
         )}
@@ -192,15 +192,15 @@ export const LifeWheel: React.FC = () => {
       {whyRows.length > 0 && (
         <div className="mt-3">
           <button onClick={() => setShowWhy((v) => !v)}
-            className="inline-flex items-center gap-1 text-[12.5px] font-semibold" style={{ color: 'var(--ss-accent-ink)' }}>
+            className="inline-flex items-center gap-1 ss-caption font-semibold" style={{ color: 'var(--ss-accent-ink)' }}>
             {t.why} <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showWhy ? 'rotate-180' : ''}`} />
           </button>
           {showWhy && (
             <div className="mt-2.5 flex flex-col gap-2">
               {whyRows.map(({ d, label, why }) => (
                 <div key={d} className="flex items-baseline gap-2">
-                  <span className="text-[12px] font-semibold shrink-0" style={{ color: 'var(--ss-ink)', minWidth: 84 }}>{label}</span>
-                  <span className="text-[12.5px] leading-snug" style={{ color: 'var(--ss-muted)' }}>{why}</span>
+                  <span className="ss-caption font-semibold shrink-0" style={{ color: 'var(--ss-ink)', minWidth: 84 }}>{label}</span>
+                  <span className="ss-caption leading-snug" style={{ color: 'var(--ss-muted)' }}>{why}</span>
                 </div>
               ))}
             </div>

@@ -192,11 +192,11 @@ const Coach = () => {
   const chatInterface = <HACSChatInterface messages={messages} isLoading={isLoading} isStreamingResponse={isStreamingResponse} onSendMessage={handleSendMessage} onStreamingComplete={markMessageStreamingComplete} onStopStreaming={handleStopStreaming} onFeedback={handleFeedback} onAddOptimisticMessage={addOptimisticMessage} reaching={reaching} />;
   const remindersContent = <div className="space-y-4 h-full">
       <div className="ss-card">
-        <h3 className="text-[15px] font-semibold tracking-tight mb-2 flex items-center" style={{ color: 'var(--ss-ink)' }}>
+        <h3 className="ss-heading tracking-tight mb-2 flex items-center" style={{ color: 'var(--ss-ink)' }}>
           <RotateCcw className="h-4 w-4 mr-2" style={{ color: 'var(--ss-accent)' }} />
           {t('companion.resetTitle')}
         </h3>
-        <p className="text-[12.5px] leading-relaxed mb-3" style={{ color: 'var(--ss-muted)' }}>
+        <p className="ss-caption leading-relaxed mb-3" style={{ color: 'var(--ss-muted)' }}>
           {t('companion.resetReassurance')}
         </p>
         <Button onClick={handleReset} variant="outline" size="sm" className="w-full rounded-full font-medium">
@@ -212,7 +212,7 @@ const Coach = () => {
           <div className="flex items-center gap-3 py-3">
             <div className="ss-orb" style={{ width: 42, height: 42 }} />
             <div>
-              <div className="text-[19px] font-semibold tracking-tight" style={{ color: "var(--ss-accent-ink)" }}>
+              <div className="ss-title tracking-tight" style={{ color: "var(--ss-accent-ink)" }}>
                 {twinName?.name || t('companion.pageTitle')}
               </div>
               <div className="text-xs" style={{ color: "var(--ss-muted)" }}>{nl ? "Je AI Twin" : "Your AI Twin"}</div>

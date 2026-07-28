@@ -81,7 +81,7 @@ const Blueprint = () => {
     return <MainLayout>
         <div className="ss ss-page min-h-screen flex flex-col items-center justify-center px-5">
           <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'var(--ss-accent)' }} />
-          <p className="mt-3 text-[13px]" style={{ color: 'var(--ss-muted)' }}>{t('blueprint.loading')}</p>
+          <p className="mt-3 ss-sub" style={{ color: 'var(--ss-muted)' }}>{t('blueprint.loading')}</p>
         </div>
       </MainLayout>;
   }
@@ -91,10 +91,10 @@ const Blueprint = () => {
     return <MainLayout>
         <div className="ss ss-page min-h-screen flex items-center justify-center px-5">
           <div className="ss-card text-center w-full max-w-md">
-            <h1 className="text-[20px] font-semibold tracking-tight mb-3 break-words" style={{ color: 'var(--ss-ink)' }}>
+            <h1 className="ss-title tracking-tight mb-3 break-words" style={{ color: 'var(--ss-ink)' }}>
               Soul Blueprint
             </h1>
-            <p className="mb-5 text-[13.5px] leading-relaxed break-words" style={{ color: 'var(--ss-muted)' }}>{t('blueprint.signInRequired')}</p>
+            <p className="mb-5 ss-sub leading-relaxed break-words" style={{ color: 'var(--ss-muted)' }}>{t('blueprint.signInRequired')}</p>
             <Button className="w-full max-w-full rounded-full font-semibold" style={{ background: 'var(--ss-accent)', color: '#fff' }} onClick={() => navigate('/auth')}>
               {t('blueprint.signIn')}
             </Button>
@@ -108,7 +108,7 @@ const Blueprint = () => {
     return <MainLayout>
         <div className="ss ss-page min-h-screen flex flex-col items-center justify-center px-5">
           <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'var(--ss-accent)' }} />
-          <p className="mt-3 text-[13px] break-words" style={{ color: 'var(--ss-muted)' }}>{t('blueprint.loadingBlueprint')}</p>
+          <p className="mt-3 ss-sub break-words" style={{ color: 'var(--ss-muted)' }}>{t('blueprint.loadingBlueprint')}</p>
         </div>
       </MainLayout>;
   }
@@ -122,10 +122,10 @@ const Blueprint = () => {
           <div className="ss ss-page min-h-screen flex flex-col items-center justify-center px-5">
             <div className="ss-card text-center w-full max-w-md">
               <AlertCircle className="h-11 w-11 mx-auto mb-3" style={{ color: 'var(--ss-accent)' }} />
-              <h2 className="text-[18px] font-semibold tracking-tight mb-3 break-words" style={{ color: 'var(--ss-ink)' }}>
+              <h2 className="ss-title tracking-tight mb-3 break-words" style={{ color: 'var(--ss-ink)' }}>
                 {t('blueprint.createTitle')}
               </h2>
-              <p className="text-[13.5px] leading-relaxed mb-5 break-words" style={{ color: 'var(--ss-muted)' }}>
+              <p className="ss-sub leading-relaxed mb-5 break-words" style={{ color: 'var(--ss-muted)' }}>
                 {t('blueprint.createDescription')}
               </p>
               <div className="space-y-2">
@@ -147,8 +147,8 @@ const Blueprint = () => {
         <div className="ss ss-page min-h-screen flex flex-col items-center justify-center px-5">
           <div className="ss-card text-center w-full max-w-md">
             <AlertCircle className="h-11 w-11 mx-auto mb-3" style={{ color: 'var(--ss-danger)' }} />
-            <h2 className="text-[18px] font-semibold tracking-tight mb-2 break-words" style={{ color: 'var(--ss-danger)' }}>{t('blueprint.blueprintError')}</h2>
-            <p className="mb-4 text-[13px] leading-relaxed break-words" style={{ color: 'var(--ss-muted)' }}>{error}</p>
+            <h2 className="ss-title tracking-tight mb-2 break-words" style={{ color: 'var(--ss-danger)' }}>{t('blueprint.blueprintError')}</h2>
+            <p className="mb-4 ss-sub leading-relaxed break-words" style={{ color: 'var(--ss-muted)' }}>{error}</p>
             <div className="space-y-2">
               <Button onClick={() => refetch()} className="w-full rounded-full font-semibold" style={{ background: 'var(--ss-accent)', color: '#fff' }}>
                 <RefreshCw className="mr-2 h-4 w-4" />
@@ -170,17 +170,17 @@ const Blueprint = () => {
         <div className="ss ss-page min-h-screen flex flex-col items-center justify-center px-5">
           <div className="ss-card text-center w-full max-w-md">
             <AlertCircle className="h-11 w-11 mx-auto mb-3" style={{ color: 'var(--ss-accent)' }} />
-            <h2 className="text-[18px] font-semibold tracking-tight mb-3 break-words" style={{ color: 'var(--ss-ink)' }}>
+            <h2 className="ss-title tracking-tight mb-3 break-words" style={{ color: 'var(--ss-ink)' }}>
               {t('blueprint.completeTitle')}
             </h2>
-            <p className="text-[13.5px] leading-relaxed mb-4 break-words" style={{ color: 'var(--ss-muted)' }}>
+            <p className="ss-sub leading-relaxed mb-4 break-words" style={{ color: 'var(--ss-muted)' }}>
               {t('blueprint.completeDescription')}
-              {blueprintValidation.missingFields.length > 0 && <span className="block mt-2 text-[12px]" style={{ color: 'var(--ss-faint)' }}>
+              {blueprintValidation.missingFields.length > 0 && <span className="block mt-2 ss-caption" style={{ color: 'var(--ss-faint)' }}>
                   {t('blueprint.missing')}: {blueprintValidation.missingFields.join(', ')}
                 </span>}
             </p>
             <div className="mb-4">
-              <div className="text-[12px] mb-1.5" style={{ color: 'var(--ss-muted)' }}>
+              <div className="ss-caption mb-1.5" style={{ color: 'var(--ss-muted)' }}>
                 {t('blueprint.completion')}: {getBlueprintCompletionPercentage}%
               </div>
               <div className="w-full rounded-full h-2" style={{ background: 'var(--ss-line-2)' }}>
@@ -385,12 +385,12 @@ const Blueprint = () => {
         {/* Header — calm type scale, design-system tokens */}
         <div className="flex flex-col gap-3 w-full max-w-full">
           <div className="flex items-center justify-end">
-            {getBlueprintCompletionPercentage < 100 && <div className="text-[12px] font-medium" style={{ color: 'var(--ss-muted)' }}>
+            {getBlueprintCompletionPercentage < 100 && <div className="ss-caption font-medium" style={{ color: 'var(--ss-muted)' }}>
                 {getBlueprintCompletionPercentage}% Complete
               </div>}
           </div>
 
-          {isAdmin && <Button variant="outline" className="flex items-center justify-center text-[13px] h-12 w-full max-w-full rounded-2xl font-medium" onClick={handleRegenerateBlueprint} disabled={isGenerating}>
+          {isAdmin && <Button variant="outline" className="flex items-center justify-center ss-sub h-12 w-full max-w-full rounded-2xl font-medium" onClick={handleRegenerateBlueprint} disabled={isGenerating}>
               <RefreshCw className="mr-2 h-4 w-4 flex-shrink-0" />
               <span className="truncate">{isGenerating ? t('blueprint.regenerating') : t('blueprint.regenerate')}</span>
             </Button>}
