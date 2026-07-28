@@ -217,9 +217,9 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
     
     // Improved section parsing with multiple patterns
     const sectionPatterns = [
-      /(\d+)\.\s*([A-Z][A-Z\s&]+)\n([\s\S]*?)(?=\d+\.\s*[A-Z][A-Z\s&]+|$)/gi,
-      /(\d+)\.\s*([A-Z][A-Z\s&]+)\s*\n*([\s\S]*?)(?=\d+\.\s*[A-Z][A-Z\s&]+|$)/gi,
-      /(\d+)\.\s*([A-Z][A-Z\s&]+)[\s\S]*?(?=\d+\.\s*[A-Z][A-Z\s&]+|$)/gi
+      /(\d+)\.\s*([A-Z][A-Z &]*)\r?\n([\s\S]*?)(?=\d+\.\s*[A-Z][A-Z &]*\r?\n|$)/g,
+      /(\d+)\.\s*([A-Z][A-Z &]*)\s*\r?\n*([\s\S]*?)(?=\d+\.\s*[A-Z][A-Z &]*\r?\n|$)/g,
+      /(\d+)\.\s*([A-Z][A-Z &]*)\r?\n[\s\S]*?(?=\d+\.\s*[A-Z][A-Z &]*\r?\n|$)/g
     ];
     
     let sectionMatches = [];
