@@ -8,6 +8,7 @@ import { conversationMemoryService } from '@/services/conversation-memory-servic
 import { useXPEventEmitter } from './use-xp-event-emitter';
 import { hermeticIntelligenceBridge } from '@/services/hermetic-intelligence-bridge';
 import { SubconsciousOrbController } from '@/services/subconscious-orb-controller';
+import { resolveUserName } from '@/utils/user-name';
 import { conversationEpisodeService } from '@/services/conversation-episode-service';
 
 export interface ConversationMessage {
@@ -635,7 +636,7 @@ export const useHACSConversation = () => {
 
         if (hermeticContext?.personalityContext?.corePersonalityPattern || hermeticContext?.personalityContext?.decisionStyle) {
           userProfile = {
-            name: blueprintData?.user_meta?.preferred_name || 'Seeker',
+            name: resolveUserName({ userMeta: blueprintData?.user_meta }) || 'Seeker',
             corePersonalityPattern: hermeticContext.personalityContext.corePersonalityPattern,
             decisionStyle: hermeticContext.personalityContext.decisionStyle,
             communicationTone: hermeticContext.personalityContext.communicationTone,
@@ -651,7 +652,7 @@ export const useHACSConversation = () => {
           });
         } else if (blueprintData) {
           userProfile = {
-            name: blueprintData.user_meta?.preferred_name || 'Seeker',
+            name: resolveUserName({ userMeta: blueprintData.user_meta }) || 'Seeker',
             mbti: blueprintData.user_meta?.personality?.likelyType ||
                   blueprintData.cognition_mbti?.type || 'Unknown',
             hdType: blueprintData.energy_strategy_human_design?.type || 'Unknown',
