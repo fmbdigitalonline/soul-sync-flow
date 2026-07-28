@@ -1324,8 +1324,15 @@ serve(async (req) => {
         .single()
 
       if (blueprint?.blueprint) {
+        const meta = blueprint.blueprint.user_meta || {};
+        const resolvedName =
+          (typeof meta.preferred_name === 'string' && meta.preferred_name.trim()) ||
+          (typeof meta.display_name === 'string' && meta.display_name.trim().split(' ')[0]) ||
+          (typeof meta.full_name === 'string' && meta.full_name.trim().split(' ')[0]) ||
+          (typeof meta.name === 'string' && meta.name.trim().split(' ')[0]) ||
+          'friend';
         personalityContext = {
-          name: blueprint.blueprint.user_meta?.preferred_name || 'Seeker',
+          name: resolvedName,
           mbti: blueprint.blueprint.user_meta?.personality?.likelyType || blueprint.blueprint.cognition_mbti?.type || 'Unknown',
           hdType: blueprint.blueprint.energy_strategy_human_design?.type || 'Unknown',
           sunSign: blueprint.blueprint.archetype_western?.sun_sign || 'Unknown'
