@@ -13,6 +13,8 @@ import { Brain, Hash, Star, Compass, Globe, Info } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getPersonalityDescription } from "@/utils/personality-descriptions";
 import PersonalityDetailModal from "./PersonalityDetailModal";
+import { BlueprintFigure, hasFigure } from "./notation/BlueprintFigure";
+import { ConstellationFigure, normaliseSign, signElement, ELEMENT_TINT } from "./notation/ConstellationFigure";
 
 interface Item {
   category: string;
@@ -67,6 +69,10 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
       ? undefined
       : v;
   const num = (v: any) => (val(v) !== undefined && Number(v) > 0 ? Number(v) : undefined);
+
+  // The sun sign anchors the page's atmosphere — one stored field, no new data.
+  const signKey = normaliseSign(val(a.sunSign));
+  const tint = ELEMENT_TINT[signElement(val(a.sunSign)) ?? "air"];
 
   const sections: Section[] = [
     {
@@ -142,14 +148,36 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
 
   return (
     <div className="ss flex flex-col gap-5">
-      {/* Identity */}
-      <div className="flex items-center gap-3.5">
-        <div className="ss-avatar" style={{ width: 56, height: 56, fontSize: 22 }}>{name.charAt(0).toUpperCase()}</div>
-        <div className="min-w-0">
-          <div className="ss-title tracking-tight" style={{ color: "var(--ss-ink)" }}>{name}</div>
-          <div className="ss-sub" style={{ color: "var(--ss-muted)" }}>{nl ? "Jouw Mental Blueprint" : "Your Mental Blueprint"}</div>
+      {/* Signature — the sun sign's own sky opens the page. Falls back to the
+          plain identity row when the sign can't be read. */}
+      {signKey ? (
+        <div
+          className="flex items-center justify-between gap-3"
+          style={{
+            borderRadius: "var(--ss-radius)",
+            border: "1px solid var(--ss-line)",
+            padding: "16px 18px",
+            background: `radial-gradient(240px 130px at 86% -14%, ${tint.glow}, transparent 64%),
+                         radial-gradient(200px 120px at 4% 112%, var(--ss-accent-wash-2), transparent 62%),
+                         linear-gradient(180deg, ${tint.tint}, transparent)`,
+          }}
+        >
+          <div className="min-w-0">
+            <div className="ss-avatar" style={{ width: 44, height: 44, fontSize: 18 }}>{name.charAt(0).toUpperCase()}</div>
+            <div className="ss-title tracking-tight mt-2.5" style={{ color: "var(--ss-ink)" }}>{name}</div>
+            <div className="ss-sub" style={{ color: "var(--ss-muted)" }}>{nl ? "Jouw Mental Blueprint" : "Your Mental Blueprint"}</div>
+          </div>
+          <ConstellationFigure sign={String(a.sunSign)} size={110} elemental />
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center gap-3.5">
+          <div className="ss-avatar" style={{ width: 56, height: 56, fontSize: 22 }}>{name.charAt(0).toUpperCase()}</div>
+          <div className="min-w-0">
+            <div className="ss-title tracking-tight" style={{ color: "var(--ss-ink)" }}>{name}</div>
+            <div className="ss-sub" style={{ color: "var(--ss-muted)" }}>{nl ? "Jouw Mental Blueprint" : "Your Mental Blueprint"}</div>
+          </div>
+        </div>
+      )}
 
       {sections.map((section) => (
         <div key={section.title} className="flex flex-col gap-2.5">
@@ -159,6 +187,9 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
           </div>
           {section.items.map((item) => {
             const insight = gd(item.category, item.descValue ?? item.value)?.insight as string | undefined;
+            // Each system draws in its own notation; a facet we cannot read
+            // keeps the plain tile rather than showing an invented figure.
+            const drawn = hasFigure(item.category, item.value);
             return (
               <button
                 key={item.label}
@@ -166,6 +197,10 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
                 className="ss-card flex items-start gap-3 text-left w-full"
                 style={{ padding: 16 }}
               >
+                <span className="shrink-0 grid place-items-center"
+                  style={{ width: 44, height: 44, borderRadius: 13, background: "var(--ss-accent-wash)", color: "var(--ss-accent)" }}>
+                  {drawn ? <BlueprintFigure category={item.category} value={item.value} size={36} /> : section.icon}
+                </span>
                 <div className="min-w-0 flex-1">
                   <div className="ss-caption" style={{ color: "var(--ss-muted)" }}>{item.label}</div>
                   <div className="ss-heading tracking-tight mt-0.5 capitalize" style={{ color: "var(--ss-accent-ink)" }}>{item.value}</div>
