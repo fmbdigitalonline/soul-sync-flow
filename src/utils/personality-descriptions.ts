@@ -112,6 +112,27 @@ const findAlignmentGuidance = (
 /**
  * Helper function to safely retrieve personality descriptions with fallback
  */
+
+/**
+ * Generic fallbacks, per language. A missing description must never put
+ * English prose into a Dutch interface.
+ */
+const GENERIC_FALLBACK = {
+  en: {
+    light: "Your unique strengths shape how you move through the world",
+    shadow: "Every strength has a growth edge to explore",
+    insight: "You have unique gifts that contribute to your journey of self-discovery",
+  },
+  nl: {
+    light: "Je unieke sterktes bepalen hoe je je door de wereld beweegt",
+    shadow: "Elke sterkte heeft een groeirand om te verkennen",
+    insight: "Je hebt unieke gaven die bijdragen aan je weg van zelfontdekking",
+  },
+} as const;
+
+const genericFallback = (language: SupportedLanguage | string = 'en') =>
+  GENERIC_FALLBACK[language === 'nl' ? 'nl' : 'en'];
+
 export const getPersonalityDescription = (
   t: any,
   category: string,
@@ -175,7 +196,7 @@ export const getPersonalityDescription = (
     // Check if translation exists and has required structure
     if (desc === descKey || typeof desc !== 'object' || !desc.light) {
       console.warn(`❌ Missing translation for: ${descKey} (original key: "${key}")`);
-      return getFallbackDescription(category, key);
+      return getFallbackDescription(category, key, language);
     }
     
     console.log(`✅ Translation found for: ${descKey}`);
@@ -197,25 +218,25 @@ export const getPersonalityDescription = (
     
     return {
       fullTitle: desc.fullTitle || `${category} ${key}`,
-      light: desc.light || "Your unique strengths shape how you move through the world",
-      shadow: desc.shadow || "Every strength has a growth edge to explore",
-      insight: desc.insight || "You have unique gifts that contribute to your journey of self-discovery",
+      light: desc.light || genericFallback(language).light,
+      shadow: desc.shadow || genericFallback(language).shadow,
+      insight: desc.insight || genericFallback(language).insight,
       think: alignmentGuidance.think || undefined,
       act: alignmentGuidance.act || undefined,
       react: alignmentGuidance.react || undefined
     };
   } catch (error) {
     console.error(`Error retrieving translation for ${descKey}:`, error);
-    return getFallbackDescription(category, key);
+    return getFallbackDescription(category, key, language);
   }
 };
 
-const getFallbackDescription = (category: string, key: string | number) => {
+const getFallbackDescription = (category: string, key: string | number, language: SupportedLanguage | string = 'en') => {
   return {
     fullTitle: `${category} ${key}`,
-    light: "Your unique strengths shape how you move through the world",
-    shadow: "Every strength has a growth edge to explore",
-    insight: "You have unique gifts that contribute to your journey of self-discovery",
+    light: genericFallback(language).light,
+    shadow: genericFallback(language).shadow,
+    insight: genericFallback(language).insight,
     think: undefined,
     act: undefined,
     react: undefined

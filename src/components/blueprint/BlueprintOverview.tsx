@@ -59,7 +59,13 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
   const a = blueprint?.publicArchetype || {};
   const g = blueprint?.generationalCode || {};
 
-  const val = (v: any) => (v === undefined || v === null || v === "" ? undefined : v);
+  // The stored blueprint uses the literal string "Unknown" for a missing
+  // value. Treated as present it slipped past the translated label and showed
+  // English "Unknown" on a Dutch page — treat it as absent.
+  const val = (v: any) =>
+    v === undefined || v === null || v === "" || (typeof v === "string" && v.trim().toLowerCase() === "unknown")
+      ? undefined
+      : v;
   const num = (v: any) => (val(v) !== undefined && Number(v) > 0 ? Number(v) : undefined);
 
   const sections: Section[] = [

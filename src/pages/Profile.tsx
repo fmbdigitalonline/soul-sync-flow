@@ -8,6 +8,7 @@ import {
   ChevronRight, ChevronLeft, Check, Shield, Pencil, TrendingUp, BookOpen, Mic, ArrowRight,
 } from "lucide-react";
 import { useUserProfile } from "@/hooks/use-user-profile";
+import { resolveUserNameOr } from "@/utils/user-name";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { calculateWeeklyInsights, WeeklyInsights } from "@/services/insights-service";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -47,9 +48,9 @@ const Profile = () => {
 
   const { profile, statistics, goals, loading: profileLoading } = useUserProfile();
   const {
+    blueprintData,
     loading: blueprintLoading,
     getPersonalityTraits,
-    getDisplayName,
     getBlueprintCompletionPercentage,
   } = useOptimizedBlueprintData();
 
@@ -75,7 +76,10 @@ const Profile = () => {
   };
 
   const loading = profileLoading || blueprintLoading;
-  const displayName = profile?.display_name || getDisplayName || "Friend";
+  const displayName = resolveUserNameOr(
+    { userMeta: (blueprintData as any)?.user_meta, profileDisplayName: profile?.display_name, email: user?.email },
+    language,
+  );
   const traits: string[] = getPersonalityTraits || [];
   const blueprintPct = getBlueprintCompletionPercentage || 0;
   const activeGoals = goals.filter((g) => g.status === "active");
