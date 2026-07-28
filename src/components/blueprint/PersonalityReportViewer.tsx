@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge, Maximize2, AlertTriangle, AlertCircle } from 'lucide-react';
@@ -49,6 +50,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     intelligence_analysis: false
   });
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  // Tapping a Key Theme opens THAT section, not the whole report.
+  const [openSectionKey, setOpenSectionKey] = useState<string | null>(null);
 
   // Add hermetic status hook
   const hermeticStatus = useHermeticReportStatus();
@@ -754,6 +757,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           content={currentReport.report_content as any}
           sectionTitles={sectionTitles}
           onViewFull={() => setIsReportModalOpen(true)}
+          onOpenSection={(k) => setOpenSectionKey(k)}
         />
       )}
 
@@ -785,10 +789,48 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             sectionTitles={hermeticSectionTitles as any}
             themes={themes}
             onViewFull={() => setIsReportModalOpen(true)}
+            onOpenSection={(k) => setOpenSectionKey(k)}
           />
         );
       })()}
 
+
+      {/* Single-section view — what a Key Theme tap opens. Calm chrome, the
+          section's full text, and a way through to the whole report. */}
+      <Dialog open={!!openSectionKey} onOpenChange={(o) => { if (!o) setOpenSectionKey(null); }}>
+        <DialogContent
+          className={`ss ${isMobile ? 'w-full h-[90vh] max-w-full m-0 rounded-t-3xl rounded-b-none' : 'max-w-2xl w-full h-[80vh]'} p-0 gap-0 border-0 flex flex-col`}
+          style={{ background: 'var(--ss-surface)' }}
+        >
+          <DialogHeader
+            className="sticky top-0 z-10 px-5 py-4"
+            style={{ background: 'color-mix(in srgb, var(--ss-surface) 92%, transparent)', borderBottom: '1px solid var(--ss-line-2)' }}
+          >
+            <DialogTitle className="text-[17px] font-semibold tracking-tight text-left pr-8" style={{ color: 'var(--ss-ink)' }}>
+              {openSectionKey
+                ? ((reportType === 'hermetic' ? (hermeticSectionTitles as any) : (sectionTitles as any))[openSectionKey]
+                    || openSectionKey.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()))
+                : ''}
+            </DialogTitle>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1 w-full">
+            <div className="px-5 py-4 pb-8">
+              {openSectionKey && currentReport &&
+                renderSafeContent((currentReport.report_content as any)?.[openSectionKey], openSectionKey)}
+
+              <button
+                onClick={() => { setOpenSectionKey(null); setIsReportModalOpen(true); }}
+                className="mt-4 inline-flex items-center gap-1 text-[13px] font-semibold"
+                style={{ color: 'var(--ss-accent-ink)' }}
+              >
+                {language === 'nl' ? 'Bekijk het volledige rapport' : 'View the full report'}
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       {/* Mobile-Optimized Report Modal */}
       <ReportModal
