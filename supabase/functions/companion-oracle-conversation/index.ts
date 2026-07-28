@@ -1325,11 +1325,28 @@ serve(async (req) => {
 
       if (blueprint?.blueprint) {
         const meta = blueprint.blueprint.user_meta || {};
+        // Mirrors src/utils/user-name.ts exactly: same priority order and the
+        // same junk guards, so the profile and the Twin never say different names.
+        const usableName = (v: unknown): string | null => {
+          if (typeof v !== 'string') return null;
+          const s = v.trim();
+          if (!s) return null;
+          if (s.includes('@')) return null;                 // an email, not a name
+          if (s.length < 2) return null;                    // an initial
+          if (/^[a-z0-9._-]+$/.test(s) && !/\s/.test(s) && s.length <= 3) return null; // a handle like "gog"
+          return s;
+        };
+        const firstWord = (v: unknown): string | null => {
+          const s = usableName(v);
+          if (!s) return null;
+          return usableName(s.split(/\s+/)[0]);
+        };
         const resolvedName =
-          (typeof meta.preferred_name === 'string' && meta.preferred_name.trim()) ||
-          (typeof meta.display_name === 'string' && meta.display_name.trim().split(' ')[0]) ||
-          (typeof meta.full_name === 'string' && meta.full_name.trim().split(' ')[0]) ||
-          (typeof meta.name === 'string' && meta.name.trim().split(' ')[0]) ||
+          usableName(meta.preferred_name) ||
+          usableName(meta.first_name) ||
+          firstWord(meta.full_name) ||
+          usableName(meta.display_name) ||
+          firstWord(meta.name) ||
           'friend';
         personalityContext = {
           name: resolvedName,
