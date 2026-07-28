@@ -20,7 +20,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 219 24% 15%;
 
-    --primary: 265 82% 62%; /* soul-purple */
+    --primary: 258 90% 66%; /* aligned to --ss-accent (#8b5cf6) */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 180 68% 55%; /* soul-teal */
@@ -37,7 +37,7 @@
 
     --border: 219 24% 85%; /* Light gray border */
     --input: 219 24% 90%;
-    --ring: 265 82% 62%;
+    --ring: 258 90% 66%;
 
     --radius: 0.5rem;
 
@@ -78,7 +78,7 @@
     --popover: 219 24% 10%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 265 82% 62%;
+    --primary: 255 92% 76%; /* aligned to dark --ss-accent (#a78bfa) */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 180 68% 55%;
@@ -95,7 +95,7 @@
 
     --border: 219 24% 20%;
     --input: 219 24% 15%;
-    --ring: 265 82% 62%;
+    --ring: 255 92% 76%;
 
     --chart-1: 265 82% 62%;
     --chart-2: 180 68% 55%;

@@ -260,7 +260,11 @@ const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
           <nav className="flex-1 p-3 space-y-1">
             {navItems.map(item => {
         const Icon = item.icon;
-        return <Link key={item.to} to={item.to} className={cn("flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-150 text-sm font-medium", isActive(item.to) ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground")}>
+        const active = isActive(item.to);
+        return <Link key={item.to} to={item.to} className="flex items-center space-x-3 px-3 py-2 rounded-xl transition-all duration-150 text-[13.5px] font-medium"
+                style={active
+                  ? { background: "var(--ss-accent-wash)", color: "var(--ss-accent-ink)" }
+                  : { color: "var(--ss-muted)" }}>
                   <Icon className="h-4 w-4 flex-shrink-0" />
                   <span>{item.label}</span>
                 </Link>;
@@ -269,7 +273,7 @@ const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
 
           {/* User Actions */}
           <div className="p-3 border-t border-border/60">
-            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-muted-foreground rounded-lg hover:bg-muted/50 text-sm">
+            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start rounded-xl text-[13.5px]" style={{ color: "var(--ss-muted)" }}>
               <LogOut className="h-4 w-4 mr-3" />
               {t('nav.signOut')}
             </Button>
