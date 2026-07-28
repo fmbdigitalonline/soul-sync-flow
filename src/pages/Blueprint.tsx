@@ -79,9 +79,9 @@ const Blueprint = () => {
   // Show loading while auth is loading
   if (authLoading) {
     return <MainLayout>
-        <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
-          <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className={`mt-2 ${getTextSize('text-sm')} font-inter`}>{t('blueprint.loading')}</p>
+        <div className="ss ss-page min-h-screen flex flex-col items-center justify-center px-5">
+          <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'var(--ss-accent)' }} />
+          <p className="mt-3 text-[13px]" style={{ color: 'var(--ss-muted)' }}>{t('blueprint.loading')}</p>
         </div>
       </MainLayout>;
   }
@@ -89,13 +89,13 @@ const Blueprint = () => {
   // Show sign in required if no user
   if (!user) {
     return <MainLayout>
-        <div className={`w-full min-h-[80vh] flex items-center justify-center ${spacing.container} mobile-container`}>
-          <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
-            <h1 className={`${getTextSize('text-xl')} font-bold font-cormorant mb-4 break-words`}>
-              <span className="gradient-text">Soul Blueprint</span>
+        <div className="ss ss-page min-h-screen flex items-center justify-center px-5">
+          <div className="ss-card text-center w-full max-w-md">
+            <h1 className="text-[20px] font-semibold tracking-tight mb-3 break-words" style={{ color: 'var(--ss-ink)' }}>
+              Soul Blueprint
             </h1>
-            <p className={`mb-6 ${getTextSize('text-sm')} break-words font-inter`}>{t('blueprint.signInRequired')}</p>
-            <Button className="bg-soul-purple hover:bg-soul-purple/90 w-full max-w-full rounded-2xl font-inter font-medium" onClick={() => navigate('/auth')}>
+            <p className="mb-5 text-[13.5px] leading-relaxed break-words" style={{ color: 'var(--ss-muted)' }}>{t('blueprint.signInRequired')}</p>
+            <Button className="w-full max-w-full rounded-full font-semibold" style={{ background: 'var(--ss-accent)', color: '#fff' }} onClick={() => navigate('/auth')}>
               {t('blueprint.signIn')}
             </Button>
           </div>
@@ -106,9 +106,9 @@ const Blueprint = () => {
   // Show loading while blueprint is loading
   if (loading) {
     return <MainLayout>
-        <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
-          <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className={`mt-2 ${getTextSize('text-sm')} break-words font-inter`}>{t('blueprint.loadingBlueprint')}</p>
+        <div className="ss ss-page min-h-screen flex flex-col items-center justify-center px-5">
+          <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'var(--ss-accent)' }} />
+          <p className="mt-3 text-[13px] break-words" style={{ color: 'var(--ss-muted)' }}>{t('blueprint.loadingBlueprint')}</p>
         </div>
       </MainLayout>;
   }
@@ -119,20 +119,20 @@ const Blueprint = () => {
     if (isNoBlueprint) {
       console.log("📝 BLUEPRINT PAGE: No blueprint found, should redirect to onboarding");
       return <MainLayout>
-          <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
-            <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
-              <AlertCircle className="h-12 w-12 text-soul-purple mx-auto mb-4" />
-              <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 break-words font-cormorant`}>
-                <span className="gradient-text">{t('blueprint.createTitle')}</span>
+          <div className="ss ss-page min-h-screen flex flex-col items-center justify-center px-5">
+            <div className="ss-card text-center w-full max-w-md">
+              <AlertCircle className="h-11 w-11 mx-auto mb-3" style={{ color: 'var(--ss-accent)' }} />
+              <h2 className="text-[18px] font-semibold tracking-tight mb-3 break-words" style={{ color: 'var(--ss-ink)' }}>
+                {t('blueprint.createTitle')}
               </h2>
-              <p className={`${getTextSize('text-sm')} mb-6 break-words text-muted-foreground font-inter`}>
+              <p className="text-[13.5px] leading-relaxed mb-5 break-words" style={{ color: 'var(--ss-muted)' }}>
                 {t('blueprint.createDescription')}
               </p>
-              <div className={`space-y-2 ${spacing.gap}`}>
-                <Button className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-2xl font-inter font-medium" onClick={() => navigate('/onboarding')}>
+              <div className="space-y-2">
+                <Button className="w-full rounded-full font-semibold" style={{ background: 'var(--ss-accent)', color: '#fff' }} onClick={() => navigate('/onboarding')}>
                   {t('blueprint.createButton')}
                 </Button>
-                <Button variant="outline" onClick={() => refetch()} className="w-full rounded-2xl font-inter">
+                <Button variant="outline" onClick={() => refetch()} className="w-full rounded-full font-medium">
                   <RefreshCw className="mr-2 h-4 w-4" />
                   {t('blueprint.checkAgain')}
                 </Button>
@@ -144,17 +144,17 @@ const Blueprint = () => {
 
     // Other errors (loading/database issues)
     return <MainLayout>
-        <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
-          <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 text-red-500 break-words font-cormorant`}>{t('blueprint.blueprintError')}</h2>
-            <p className={`text-red-500 mb-4 ${getTextSize('text-sm')} break-words font-inter`}>{error}</p>
-            <div className={`space-y-2 ${spacing.gap}`}>
-              <Button onClick={() => refetch()} className="w-full rounded-2xl font-inter font-medium">
+        <div className="ss ss-page min-h-screen flex flex-col items-center justify-center px-5">
+          <div className="ss-card text-center w-full max-w-md">
+            <AlertCircle className="h-11 w-11 mx-auto mb-3" style={{ color: 'var(--ss-danger)' }} />
+            <h2 className="text-[18px] font-semibold tracking-tight mb-2 break-words" style={{ color: 'var(--ss-danger)' }}>{t('blueprint.blueprintError')}</h2>
+            <p className="mb-4 text-[13px] leading-relaxed break-words" style={{ color: 'var(--ss-muted)' }}>{error}</p>
+            <div className="space-y-2">
+              <Button onClick={() => refetch()} className="w-full rounded-full font-semibold" style={{ background: 'var(--ss-accent)', color: '#fff' }}>
                 <RefreshCw className="mr-2 h-4 w-4" />
                 {t('blueprint.tryAgain')}
               </Button>
-              <Button variant="outline" onClick={() => navigate('/onboarding')} className="w-full rounded-2xl font-inter">
+              <Button variant="outline" onClick={() => navigate('/onboarding')} className="w-full rounded-full font-medium">
                 {t('blueprint.createNew')}
               </Button>
             </div>
@@ -167,33 +167,34 @@ const Blueprint = () => {
   if (!hasBlueprint || !blueprintData) {
     console.log("📝 BLUEPRINT PAGE: Insufficient blueprint data, redirecting to onboarding");
     return <MainLayout>
-        <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
-          <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
-            <AlertCircle className="h-12 w-12 text-soul-purple mx-auto mb-4" />
-            <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 break-words font-cormorant`}>
-              <span className="gradient-text">{t('blueprint.completeTitle')}</span>
+        <div className="ss ss-page min-h-screen flex flex-col items-center justify-center px-5">
+          <div className="ss-card text-center w-full max-w-md">
+            <AlertCircle className="h-11 w-11 mx-auto mb-3" style={{ color: 'var(--ss-accent)' }} />
+            <h2 className="text-[18px] font-semibold tracking-tight mb-3 break-words" style={{ color: 'var(--ss-ink)' }}>
+              {t('blueprint.completeTitle')}
             </h2>
-            <p className={`${getTextSize('text-sm')} mb-4 break-words text-muted-foreground font-inter`}>
+            <p className="text-[13.5px] leading-relaxed mb-4 break-words" style={{ color: 'var(--ss-muted)' }}>
               {t('blueprint.completeDescription')}
-              {blueprintValidation.missingFields.length > 0 && <span className={`block mt-2 ${getTextSize('text-xs')} font-inter`}>
+              {blueprintValidation.missingFields.length > 0 && <span className="block mt-2 text-[12px]" style={{ color: 'var(--ss-faint)' }}>
                   {t('blueprint.missing')}: {blueprintValidation.missingFields.join(', ')}
                 </span>}
             </p>
             <div className="mb-4">
-              <div className={`${getTextSize('text-xs')} text-muted-foreground mb-1 font-inter`}>
+              <div className="text-[12px] mb-1.5" style={{ color: 'var(--ss-muted)' }}>
                 {t('blueprint.completion')}: {getBlueprintCompletionPercentage}%
               </div>
-              <div className="w-full bg-muted rounded-full h-2">
-                <div className="bg-soul-purple h-2 rounded-full transition-all duration-300" style={{
+              <div className="w-full rounded-full h-2" style={{ background: 'var(--ss-line-2)' }}>
+                <div className="h-2 rounded-full transition-all duration-300" style={{
+                background: 'var(--ss-accent)',
                 width: `${getBlueprintCompletionPercentage}%`
               }} />
               </div>
             </div>
-            <div className={`space-y-2 ${spacing.gap}`}>
-              <Button className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-2xl font-inter font-medium" onClick={() => navigate('/onboarding')}>
+            <div className="space-y-2">
+              <Button className="w-full rounded-full font-semibold" style={{ background: 'var(--ss-accent)', color: '#fff' }} onClick={() => navigate('/onboarding')}>
                 {t('blueprint.completeButton')}
               </Button>
-              <Button variant="outline" onClick={() => refetch()} className="w-full rounded-2xl font-inter">
+              <Button variant="outline" onClick={() => refetch()} className="w-full rounded-full font-medium">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 {t('blueprint.refresh')}
               </Button>
@@ -379,50 +380,48 @@ const Blueprint = () => {
   };
   return <MainLayout>
       <TriggerRecovery />
-      <div className={`ss ss-page w-full ${spacing.container} pb-20 mobile-container`}>
-        {/* Header with proper typography hierarchy */}
-        <div className={`flex flex-col ${spacing.gap} mb-6 w-full max-w-full`}>
-          <div className="flex items-center justify-between">
-            <h1 className={`${getTextSize('text-3xl')} font-bold font-cormorant break-words`}>
-              
-            </h1>
-            {getBlueprintCompletionPercentage < 100 && <div className={`${getTextSize('text-xs')} text-muted-foreground font-inter`}>
+      <div className="ss ss-page min-h-screen">
+        <div className="max-w-md mx-auto px-5 pt-8 pb-16 flex flex-col gap-5">
+        {/* Header — calm type scale, design-system tokens */}
+        <div className="flex flex-col gap-3 w-full max-w-full">
+          <div className="flex items-center justify-end">
+            {getBlueprintCompletionPercentage < 100 && <div className="text-[12px] font-medium" style={{ color: 'var(--ss-muted)' }}>
                 {getBlueprintCompletionPercentage}% Complete
               </div>}
           </div>
-          
-          {/* Action buttons with proper font styling */}
-          <div className={`flex flex-col ${spacing.gap} w-full max-w-full`}>
-            {isAdmin && <Button variant="outline" className={`flex items-center justify-center ${getTextSize('text-sm')} h-12 w-full max-w-full rounded-2xl font-inter font-medium`} onClick={handleRegenerateBlueprint} disabled={isGenerating}>
-                <RefreshCw className="mr-2 h-4 w-4 flex-shrink-0" />
-                <span className="truncate">{isGenerating ? t('blueprint.regenerating') : t('blueprint.regenerate')}</span>
-              </Button>}
-            
-          </div>
+
+          {isAdmin && <Button variant="outline" className="flex items-center justify-center text-[13px] h-12 w-full max-w-full rounded-2xl font-medium" onClick={handleRegenerateBlueprint} disabled={isGenerating}>
+              <RefreshCw className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{isGenerating ? t('blueprint.regenerating') : t('blueprint.regenerate')}</span>
+            </Button>}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 w-full max-w-full">
-          {/* Tabs with Inter font */}
-          <TabsList className={`w-full max-w-full h-auto p-1 grid ${isAdmin ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2'} !rounded-2xl font-inter border-none`} style={{ background: 'var(--ss-accent-wash)' }}>
-            <TabsTrigger value="view" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl font-medium`}>
+          {/* Segmented control — the one design-system toggle (.ss-seg), so the
+              active state matches echo and Profiel. */}
+          <div className="ss-seg">
+            <button type="button" data-on={activeTab === 'view'} onClick={() => setActiveTab('view')}>
               {t('blueprint.tab')}
-            </TabsTrigger>
-            <TabsTrigger value="report" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl font-medium`}>
+            </button>
+            <button type="button" data-on={activeTab === 'report'} onClick={() => setActiveTab('report')}>
               {t('blueprint.reportTab')}
-            </TabsTrigger>
+            </button>
             {isAdmin && <>
-                <TabsTrigger value="edit" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl font-medium`}>
-                  {t('blueprint.editTab')}
-                </TabsTrigger>
-                <TabsTrigger value="health-check" className={`${getTextSize('text-sm')} py-2 px-1 flex items-center gap-1 min-w-0 !rounded-2xl font-medium`}>
-                  <Activity className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                  <span className={`${isMobile ? 'hidden sm:inline' : 'inline'} truncate`}>{t('blueprint.healthTab')}</span>
-                </TabsTrigger>
-              </>}
-            <TabsTrigger value="generating" disabled={!isGenerating} className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl font-medium ${!isAdmin ? 'hidden' : ''}`}>
-              {t('blueprint.generatingTab')}
-            </TabsTrigger>
-          </TabsList>
+              <button type="button" data-on={activeTab === 'edit'} onClick={() => setActiveTab('edit')}>
+                {t('blueprint.editTab')}
+              </button>
+              <button type="button" data-on={activeTab === 'health-check'} onClick={() => setActiveTab('health-check')}
+                className="flex items-center justify-center gap-1 min-w-0">
+                <Activity className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className={`${isMobile ? 'hidden sm:inline' : 'inline'} truncate`}>{t('blueprint.healthTab')}</span>
+              </button>
+              {isGenerating && (
+                <button type="button" data-on={activeTab === 'generating'} onClick={() => setActiveTab('generating')}>
+                  {t('blueprint.generatingTab')}
+                </button>
+              )}
+            </>}
+          </div>
           
           <TabsContent value="view" className={`mt-6 w-full max-w-full`}>
             {blueprintData && <div className="w-full max-w-full overflow-hidden space-y-6">
@@ -468,6 +467,7 @@ const Blueprint = () => {
               </div>}
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </MainLayout>;
 };
