@@ -45,9 +45,30 @@ const THEME_META: Array<{ key: string; icon: React.ReactNode }> = [
   { key: "current_energy_timing", icon: <Zap className="h-[18px] w-[18px]" /> },
 ];
 
+
+/**
+ * The Hermetic summary arrives as markdown ("# The Living Symphony…", "---",
+ * "## I."). A snippet is prose, so strip the syntax rather than printing it.
+ */
+function plainText(text?: string): string {
+  if (!text) return "";
+  return String(text)
+    .replace(/```[\s\S]*?```/g, " ")        // fenced code
+    .replace(/^\s*#{1,6}\s*/gm, "")         // headings
+    .replace(/^\s*[-*_]{3,}\s*$/gm, " ")    // horizontal rules
+    .replace(/^\s*>\s?/gm, "")              // block quotes
+    .replace(/^\s*[-*+]\s+/gm, "")          // bullets
+    .replace(/\*\*(.*?)\*\*/g, "$1")      // bold
+    .replace(/(^|[^*])\*(?!\*)([^*]+)\*/g, "$1$2") // italic
+    .replace(/`([^`]+)`/g, "$1")             // inline code
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")     // links
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function firstSentence(text?: string): string {
   if (!text) return "";
-  const clean = String(text).replace(/\s+/g, " ").trim();
+  const clean = plainText(text);
   const cut = clean.split(/(?<=[.!?])\s/)[0];
   return cut.length > 90 ? `${cut.slice(0, 89).replace(/\s+\S*$/, "")}…` : cut;
 }
@@ -78,7 +99,7 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
               {nl ? "Geïntegreerde samenvatting" : "Integrated Summary"}
             </span>
           </div>
-          <p className="mt-2.5 ss-body leading-relaxed line-clamp-3" style={{ color: "var(--ss-muted)" }}>{summary}</p>
+          <p className="mt-2.5 ss-body leading-relaxed line-clamp-3" style={{ color: "var(--ss-muted)" }}>{plainText(summary)}</p>
           <button onClick={onViewFull} className="mt-2.5 inline-flex items-center gap-1 ss-sub font-semibold" style={{ color: "var(--ss-accent-ink)" }}>
             {nl ? "Lees volledig" : "Read full"} <ChevronRight className="h-3.5 w-3.5" />
           </button>
