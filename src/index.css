@@ -636,3 +636,84 @@
   --ss-el-water-tint: rgba(69, 201, 165, .16);
   --ss-el-water-glow: rgba(69, 201, 165, .32);
 }
+
+/* =====================================================================
+   Motion system (v3.12). The calm surfaces had no motion at all — every
+   keyframe in the app belonged to the orb or the input border, so pages
+   simply appeared, fully formed and inert.
+
+   The rule motion follows here is the one v3.8 established for the border:
+   MOTION MEANS SOMETHING. Content rises because it is arriving. A
+   constellation draws because a sky assembles. A card presses because it was
+   touched. Nothing moves to be lively.
+
+   Only transform and opacity are animated, so this stays on the compositor.
+   Everything yields under prefers-reduced-motion: the destination is always
+   the resting state, so removing motion removes nothing.
+   ===================================================================== */
+
+/* Arrival — content rises into place. Stagger with style="--i:2". */
+.ss-rise {
+  animation: ss-rise 520ms cubic-bezier(.22,.61,.36,1) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+@keyframes ss-rise {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* A softer arrival for large surfaces (heroes, signatures). */
+.ss-settle {
+  animation: ss-settle 700ms cubic-bezier(.22,.61,.36,1) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+@keyframes ss-settle {
+  from { opacity: 0; transform: translate3d(0, 6px, 0) scale(.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* A sky assembling: the lines of a figure draw themselves. Set on paths and
+   lines; --len should exceed the longest path. */
+.ss-draw {
+  stroke-dasharray: var(--len, 400);
+  stroke-dashoffset: var(--len, 400);
+  animation: ss-draw 1100ms cubic-bezier(.33,.7,.35,1) forwards;
+  animation-delay: calc(220ms + var(--i, 0) * 70ms);
+}
+@keyframes ss-draw { to { stroke-dashoffset: 0; } }
+
+/* Stars arrive before the lines that join them. */
+.ss-spark {
+  animation: ss-spark 460ms cubic-bezier(.22,.61,.36,1) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+  transform-origin: center;
+}
+@keyframes ss-spark {
+  from { opacity: 0; transform: scale(.4); }
+  60%  { opacity: 1; transform: scale(1.12); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Touch feedback — a card acknowledges being pressed. */
+.ss-press { transition: transform 160ms cubic-bezier(.22,.61,.36,1), box-shadow 160ms ease; }
+.ss-press:active { transform: scale(.985); }
+@media (hover: hover) {
+  .ss-press:hover { transform: translate3d(0,-1px,0); box-shadow: 0 4px 18px rgba(103,78,167,.10); }
+}
+
+/* Swapping panes (tab changes) — the new content arrives rather than blinks. */
+.ss-swap { animation: ss-swap 340ms cubic-bezier(.22,.61,.36,1) both; }
+@keyframes ss-swap {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ss-rise, .ss-settle, .ss-spark, .ss-swap, .ss-draw {
+    animation: none !important;
+  }
+  /* the resting state IS the design — nothing is lost by removing motion */
+  .ss-draw { stroke-dashoffset: 0; }
+  .ss-press { transition: none; }
+  .ss-press:active, .ss-press:hover { transform: none; }
+}

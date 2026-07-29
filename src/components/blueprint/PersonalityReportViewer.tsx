@@ -687,7 +687,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       {/* Signature header — the same shape Blauwdruk opens with, so the two
           tabs read as one product rather than two screens. */}
       <div
-        className="flex items-center justify-between gap-3 mb-5"
+        className="flex items-center justify-between gap-3 mb-5 ss-settle"
         style={{
           borderRadius: 'var(--ss-radius)',
           border: '1px solid var(--ss-line)',
@@ -725,7 +725,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             )}
           </div>
         </div>
-        {reportSign && <ConstellationFigure sign={reportSign} size={104} elemental />}
+        {reportSign && <ConstellationFigure sign={reportSign} size={104} elemental animate />}
       </div>
 
       {/* Standard report — the calm redesign: Integrated Summary + Key
@@ -734,6 +734,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         <ReportSummaryCalm
           content={currentReport.report_content as any}
           sectionTitles={sectionTitles}
+          blueprint={reportBlueprint}
           onViewFull={() => setIsReportModalOpen(true)}
           onOpenSection={(k) => setOpenSectionKey(k)}
         />

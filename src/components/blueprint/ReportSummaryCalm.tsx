@@ -8,6 +8,7 @@
 import React from "react";
 import { Sparkles, Heart, Compass, Users, Star, Zap, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { BlueprintFigure, hasFigure } from "./notation/BlueprintFigure";
 
 export interface CalmTheme {
   key: string;
@@ -35,6 +36,9 @@ interface ReportSummaryCalmProps {
   /** Opens the single section that was tapped. Without it, a tap falls back
    *  to the full report (the old behaviour). */
   onOpenSection?: (key: string) => void;
+  /** The reader's own blueprint, so each theme can carry THEIR figure rather
+   *  than a generic icon. Falls back to the icon when a figure can't be drawn. */
+  blueprint?: any;
 }
 
 const THEME_META: Array<{ key: string; icon: React.ReactNode }> = [
@@ -73,7 +77,28 @@ function firstSentence(text?: string): string {
   return cut.length > 90 ? `${cut.slice(0, 89).replace(/\s+\S*$/, "")}…` : cut;
 }
 
-export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, sectionTitles, onViewFull, themes: themesProp, onOpenSection }) => {
+/**
+ * Each standard-report section is about one system, so it can carry the
+ * reader's OWN figure from that system rather than a stock icon: their
+ * function stack, their bodygraph, their life-path geometry, their sky.
+ */
+function figureFor(key: string, bp: any): { category: string; value: string | number } | null {
+  if (!bp) return null;
+  const c = bp.cognitiveTemperamental || {};
+  const e = bp.energyDecisionStrategy || {};
+  const n = bp.coreValuesNarrative || {};
+  const a = bp.publicArchetype || {};
+  switch (key) {
+    case 'core_personality_pattern': return c.mbtiType ? { category: 'mbtiDescriptions', value: c.mbtiType } : null;
+    case 'decision_making_style':    return e.humanDesignType ? { category: 'humanDesignDescriptions', value: e.humanDesignType } : null;
+    case 'relationship_style':       return a.moonSign ? { category: 'moonSignDescriptions', value: a.moonSign } : null;
+    case 'life_path_purpose':        return n.lifePath ? { category: 'lifePathDescriptions', value: n.lifePath } : null;
+    case 'current_energy_timing':    return a.sunSign ? { category: 'sunSignDescriptions', value: a.sunSign } : null;
+    default: return null;
+  }
+}
+
+export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, sectionTitles, onViewFull, themes: themesProp, onOpenSection, blueprint }) => {
   const { language } = useLanguage();
   const nl = language === "nl";
   const summary = content?.integrated_summary || "";
@@ -92,7 +117,7 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
     <div className="ss flex flex-col gap-5">
       {/* Integrated Summary — a snippet; the full text is in the report modal. */}
       {summary && (
-        <div className="ss-card" style={{ padding: 20 }}>
+        <div className="ss-card ss-rise" style={{ padding: 20 }}>
           <div className="flex items-center gap-2">
             <Sparkles className="h-[18px] w-[18px]" style={{ color: "var(--ss-accent)" }} />
             <span className="ss-title tracking-tight" style={{ color: "var(--ss-ink)" }}>
@@ -112,12 +137,18 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
           <div className="ss-heading tracking-tight px-1" style={{ color: "var(--ss-ink)" }}>
             {nl ? "Kernthema's" : "Key Themes"}
           </div>
-          {themes.map((th) => (
+          {themes.map((th, i) => (
             <button key={th.key} onClick={() => (onOpenSection ? onOpenSection(th.key) : onViewFull())}
-              className="ss-card flex items-start gap-3.5 text-left w-full" style={{ padding: 16 }}>
+              className="ss-card ss-rise ss-press flex items-start gap-3.5 text-left w-full"
+              style={{ padding: 16, ['--i' as any]: i + 1 } as React.CSSProperties}>
               <span className="shrink-0 grid place-items-center"
-                style={{ width: 40, height: 40, borderRadius: 12, background: "var(--ss-accent-wash)", color: "var(--ss-accent)" }}>
-                {th.icon}
+                style={{ width: 44, height: 44, borderRadius: 13, background: "var(--ss-accent-wash)", color: "var(--ss-accent)" }}>
+                {(() => {
+                  const f = figureFor(th.key, blueprint);
+                  return f && hasFigure(f.category, f.value)
+                    ? <BlueprintFigure category={f.category} value={f.value} size={34} />
+                    : th.icon;
+                })()}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="ss-heading" style={{ color: "var(--ss-ink)" }}>{th.title}</div>
