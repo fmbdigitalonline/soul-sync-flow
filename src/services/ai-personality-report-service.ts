@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { BlueprintData } from "./blueprint-service";
+import { twinVoiceService } from "./twin-voice-service";
 
 export interface PersonalityReport {
   id: string;
@@ -74,11 +75,35 @@ class AIPersonalityReportService {
         hasBasharSuite: !!transformedBlueprint.bashar_suite
       });
       
+      // v3.10: the Twin authors the report. Compose its voice and send it with
+      // the request so the report is written by the same presence the user
+      // meets in conversation, instead of a generic analyst. The field is
+      // additive — an edge function that does not yet read it simply ignores
+      // it, so this is safe to ship ahead of the server change.
+      const reportUserId =
+        transformedBlueprint.user_meta?.user_id || transformedBlueprint.user_meta?.id;
+      let voiceDirective: string | undefined;
+      try {
+        if (reportUserId) {
+          const voice = await twinVoiceService.getVoiceProfile(reportUserId, blueprint as any);
+          const name = transformedBlueprint.user_meta?.preferred_name;
+          voiceDirective = twinVoiceService.toPromptDirective(voice, name);
+          console.log('🗣️ Report voice composed', {
+            sources: voice.sources,
+            confidence: voice.confidence,
+          });
+        }
+      } catch (voiceErr) {
+        // No voice is better than a wrong voice — fall through generic.
+        console.warn('Voice profile unavailable; report will use the default voice:', voiceErr);
+      }
+
       const { data, error } = await supabase.functions.invoke("generate-personality-report", {
         body: {
           blueprint: transformedBlueprint,
-          userId: transformedBlueprint.user_meta?.user_id || transformedBlueprint.user_meta?.id,
+          userId: reportUserId,
           language: language,
+          voiceDirective,
         },
       });
 
