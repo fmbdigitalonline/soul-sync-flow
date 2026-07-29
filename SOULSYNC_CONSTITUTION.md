@@ -1,6 +1,79 @@
-# SoulSync — Developer Constitution & Wiring Roadmap (v3.10)
+# SoulSync — Developer Constitution & Wiring Roadmap (v3.11)
 
 *Hand this to any AI developer session before it touches code.*
+
+*v3.11 — THE LIVING BLUEPRINT ratified (founder, Jul 2026). Deliberately NOT
+called governance: the Blueprint does not govern the user. It is a living
+model that continuously learns who the user is becoming.*
+
+*THE PROBLEM IT ANSWERS. Specialists are each locally correct and none sees the
+whole person. Career says push, psychology says rest, achievement says finish,
+relationships say go home. Something must reconcile them — and it is not the
+Twin, which narrates and must never invent priorities, and not the specialists,
+which cannot see past their own domain.*
+
+*WHAT WE ALIGN TO IS NOT ASTROLOGY. The Mental Blueprint is not MBTI plus
+Human Design plus numerology. It is the user's EVOLVING SELF-MODEL — those
+systems plus conversations, reflections, goals, values, the life wheel,
+assessments, programs, memories and behavioural patterns. So the question is
+never "is this aligned with your Human Design?" It is: "given everything I
+currently understand about you — including what you have explicitly told me —
+how well does this fit the person you are becoming?"*
+
+*THE BLUEPRINT IS A LIVING HYPOTHESIS, NOT A TRUTH. A scientific model: every
+conversation updates it, every reflection refines it, every disagreement
+improves it. The phrase "what we CURRENTLY BELIEVE is most aligned for you"
+is load-bearing — it keeps SoulSync humble, and that humility is what earns
+trust where a claim of certainty would destroy it.*
+
+*THE LAW. Every recommendation must be able to explain its alignment with the
+user's current Mental Blueprint, and every disagreement is treated as NEW
+EVIDENCE THAT REFINES THE BLUEPRINT — never as an error by the user. Note what
+this removes: no judge, no hidden filter, no score, no override, no authority.
+Only continuous refinement.*
+
+*DISAGREEMENT UPDATES THE MODEL; IT DOES NOT OVERRIDE IT. The user's stated
+direction BECOMES part of the Blueprint rather than outranking it — one
+evolving model, no hierarchy. If the Blueprint infers career is not a priority
+and the user says it is now, the Blueprint has learned something.*
+
+*BUT THE MODEL MUST HAVE INERTIA (developer's addition, founder accepted). A
+self-model that updates fully on every contradiction converges on whatever the
+user last said, and a Blueprint that only ever agrees can never offer the
+perspective the user does not already hold — which is the entire point of a
+mirror, and of shadow work. Weight a sustained pattern observed over months
+against a single statement made once. Refinement is not capitulation. The Twin
+must remain able to say "I notice you keep returning to this" even when the
+user has said otherwise.*
+
+*AGENCY BELONGS TO THE TWIN, NOT THE BLUEPRINT. The Blueprint never questions,
+judges or celebrates. THE TWIN INVITES REFLECTION when it detects tension
+between a decision and the user's evolving Blueprint. And it may question a
+choice; it may never devalue an achievement. "I can see what this cost you" is
+honest. "I'm not celebrating this" is the product appointing itself judge of a
+life.*
+
+*ALIGNMENT IS A CONVERSATION, NOT A VERDICT. The Twin may say "here is why I
+think this fits"; the user may say no; the system answers "thank you — I
+understand you differently now." That exchange is the feature.*
+
+*HOW THIS MEETS v3.9 (the app does not explain itself). "Must be able to
+explain" is a CAPABILITY, not an obligation to print a rationale under every
+card — that would reinstate exactly the explanatory copy v3.9 removed.
+Alignment reasoning surfaces when there is real tension, when recommendations
+genuinely compete, or when the user asks. Otherwise it stays available and
+unspoken.*
+
+*IMPLEMENTATION REALITY (verified Jul 2026, so nobody assumes it exists):
+nothing writes to user_blueprints after creation. The Blueprint is static
+today, and what the system learns lands in three other stores —
+user_session_memory, conversation_insights and hermetic_structured_intelligence.
+The Mental Blueprint described by this law is therefore not yet one artifact.
+Making it one — a blueprint that can actually evolve — is the work this law
+calls for. And build the reconciliation only when competing recommendations
+genuinely reach the user: today the specialists run at report generation, not
+as live rivals. The law comes first, as it has since v3.1; the engine follows
+the need.*
 
 *v3.10 — NARRATIVE CONSISTENCY ratified (founder, Jul 2026, resolving an
 advisor exchange that began with user feedback). The users said, in effect:
