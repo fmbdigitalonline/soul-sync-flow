@@ -219,22 +219,15 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
     console.log('🔍 Report part length:', reportPart?.length || 0);
     console.log('🔍 Quotes part length:', quotesPart?.length || 0);
     
-    // Improved section parsing with Unicode uppercase support (handles Dutch Ï, etc.)
-    const sectionPatterns = [
-      /(\d+)\.\s*([\p{Lu}][\p{Lu} &]*)\r?\n([\s\S]*?)(?=\d+\.\s*[\p{Lu}][\p{Lu} &]*\r?\n|$)/gu,
-      /(\d+)\.\s*([\p{Lu}][\p{Lu} &]*)\s*\r?\n*([\s\S]*?)(?=\d+\.\s*[\p{Lu}][\p{Lu} &]*\r?\n|$)/gu,
-      /(\d+)\.\s*([\p{Lu}][\p{Lu} &]*)\r?\n[\s\S]*?(?=\d+\.\s*[\p{Lu}][\p{Lu} &]*\r?\n|$)/gu
-    ];
-    
-    let sectionMatches = [];
-    for (const pattern of sectionPatterns) {
-      sectionMatches = [...(reportPart || '').matchAll(pattern)];
-      if (sectionMatches.length >= 6) break;
-    }
+    // Single structural section pattern: numbered ALL-CAPS heading (Unicode
+    // uppercase, so Dutch "GEÏNTEGREERDE" matches) on its own line, then the
+    // body up to the next such heading. Group 3 is always the body.
+    const sectionPattern = /(\d+)\.\s*([\p{Lu}][\p{Lu} &]*)\r?\n([\s\S]*?)(?=\d+\.\s*[\p{Lu}][\p{Lu} &]*\r?\n|$)/gu;
+    const sectionMatches = [...(reportPart || '').matchAll(sectionPattern)];
     
     console.log('🔍 Found section matches:', sectionMatches.length);
     sectionMatches.forEach((match, index) => {
-      console.log(`🔍 Section ${index + 1}: "${match[2]?.trim()}" - Content length: ${match[3]?.length || match[0]?.length || 0}`);
+      console.log(`🔍 Section ${index + 1}: "${match[2]?.trim()}" - Content length: ${match[3]?.length ?? 0}`);
     });
     
     // Extract content for each section with validation
@@ -245,9 +238,9 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
         return `Section ${sectionNumber} content was not properly generated. Please regenerate the report.`;
       }
       
-      // Use captured content group if available, otherwise clean the full match
-      let content = match[3] || match[0].replace(/^\d+\.\s*[A-Z\s&]+\s*/, '');
-      content = content.trim();
+      // Body is always capture group 3 — never fall back to the raw match,
+      // which is what previously ate the first characters of the text.
+      const content = (match[3] ?? '').trim();
       
       // Validate content is analysis, not quotes
       if (content.includes('"') && content.includes('Category:') && content.length < 200) {

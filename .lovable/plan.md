@@ -1,21 +1,21 @@
-Plan: Remove redundant Companion/Reminders toggle buttons from the mobile Coach view.
+## Status check (verified in `supabase/functions/generate-personality-report/index.ts`)
 
-## Context
-- The two buttons circled in the screenshot are rendered by `src/components/ui/mobile-toggle-panel.tsx` (lines 41–67).
-- They are used on mobile in `src/pages/Coach.tsx` and `src/pages/CoachPure.tsx` to switch between the chat panel and a reminders/clear-conversation panel.
-- The user is already on the Companion page via the bottom nav; the toggle is redundant.
+**voiceDirective — already done, not ignored.**
+- Line 39 destructures `voiceDirective` from the request body.
+- Lines 132–136 build a `voicePrefix` and prepend it to the system prompt, with a log line (`🗣️ Twin voice directive: present/absent`). Analyst prompts untouched.
+- So that half of the handoff is no longer true. If reports still read identically, the next step is checking the logs for `present (N chars)` versus `absent`, not another code change.
 
-## Scope
-- UI-only change in `src/components/ui/mobile-toggle-panel.tsx`.
-- Do not touch detection services, hooks, edge functions, or the desktop side-by-side layout.
-- Keep the `remindersContent` desktop rendering unchanged.
+**Parser — mostly landed, one residual gap.**
+- The regexes already use Unicode uppercase (`\p{Lu}`), the `i` flag is gone, and the newline is explicit (`\r?\n`). That was the "Section 6 / GEÏNTEGREERDE" fix.
+- What the handoff asked for and is still not in place:
+  1. It's still an **array of three patterns** (lines 223–227) with a first-to-reach-6-matches loop. The third pattern has **no third capture group**.
+  2. Line 249 is `match[3] || match[0].replace(/^\d+\.\s*[A-Z\s&]+\s*/, '')`. When the third pattern wins, `match[3]` is undefined and the ASCII-only cleanup regex runs on the full match — that is the surviving "eats first characters" path (it also can't strip an accented heading, so it chews into body text).
 
-## Changes
-1. Remove the mobile toggle header (the two buttons and their containing bar).
-2. On mobile, always render `chatContent` directly.
-3. Clean up now-unused imports/state (`Button`, `Badge`, `MessageSquare`, `Bell`, `useState`, `activePanel`, `activeRemindersCount`).
-4. Verify the mobile layout still fills the available height correctly and that the desktop branch still shows `chatContent` + `remindersContent` side-by-side.
+## Plan
 
-## Validation
-- Run the project typecheck/build.
-- Optionally preview the mobile Coach page to confirm the buttons are gone and the chat remains usable.
+1. Replace the three-pattern array with the single structural regex (the current pattern #1, which has the content capture group) and drop the fallback loop.
+2. Change line 249 to `const content = (match[3] ?? '').trim()` — no `match[0]` cleanup fallback, so no character-eating path remains.
+3. Keep the existing empty/quote-content validation and log lines so a genuinely missing section still surfaces visibly rather than silently.
+4. Deploy `generate-personality-report` and confirm the deploy returns success.
+
+Nothing else in the file changes; the voice half needs no edit.
