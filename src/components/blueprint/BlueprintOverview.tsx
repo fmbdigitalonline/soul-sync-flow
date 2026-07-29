@@ -152,7 +152,7 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
           plain identity row when the sign can't be read. */}
       {signKey ? (
         <div
-          className="flex items-center justify-between gap-3"
+          className="flex items-center justify-between gap-3 ss-settle"
           style={{
             borderRadius: "var(--ss-radius)",
             border: "1px solid var(--ss-line)",
@@ -167,7 +167,7 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
             <div className="ss-title tracking-tight mt-2.5" style={{ color: "var(--ss-ink)" }}>{name}</div>
             <div className="ss-sub" style={{ color: "var(--ss-muted)" }}>{nl ? "Jouw Mental Blueprint" : "Your Mental Blueprint"}</div>
           </div>
-          <ConstellationFigure sign={String(a.sunSign)} size={110} elemental />
+          <ConstellationFigure sign={String(a.sunSign)} size={110} elemental animate />
         </div>
       ) : (
         <div className="flex items-center gap-3.5">
@@ -185,7 +185,7 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
             <span style={{ color: "var(--ss-accent)" }}>{section.icon}</span>
             <span className="ss-caption font-semibold uppercase tracking-wider" style={{ color: "var(--ss-faint)" }}>{section.title}</span>
           </div>
-          {section.items.map((item) => {
+          {section.items.map((item, idx) => {
             const insight = gd(item.category, item.descValue ?? item.value)?.insight as string | undefined;
             // Each system draws in its own notation; a facet we cannot read
             // keeps the plain tile rather than showing an invented figure.
@@ -194,8 +194,8 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
               <button
                 key={item.label}
                 onClick={() => openDetail(item, section.title)}
-                className="ss-card flex items-start gap-3 text-left w-full"
-                style={{ padding: 16 }}
+                className="ss-card ss-rise ss-press flex items-start gap-3 text-left w-full"
+                style={{ padding: 16, ['--i' as any]: idx }}
               >
                 <span className="shrink-0 grid place-items-center"
                   style={{ width: 44, height: 44, borderRadius: 13, background: "var(--ss-accent-wash)", color: "var(--ss-accent)" }}>

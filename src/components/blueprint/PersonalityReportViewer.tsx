@@ -20,6 +20,8 @@ import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { supabase } from '@/integrations/supabase/client';
 import ReportModal from '@/components/ReportModal';
 import { ReportSummaryCalm } from './ReportSummaryCalm';
+import { ConstellationFigure, normaliseSign, signElement, ELEMENT_TINT } from './notation/ConstellationFigure';
+import { useOptimizedBlueprintData } from '@/hooks/use-optimized-blueprint-data';
 
 interface PersonalityReportViewerProps {
   className?: string;
@@ -52,6 +54,15 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   // Tapping a Key Theme opens THAT section, not the whole report.
   const [openSectionKey, setOpenSectionKey] = useState<string | null>(null);
+
+  // The report opens with the same sky as Blauwdruk — one product, two tabs.
+  const { blueprintData: reportBlueprint } = useOptimizedBlueprintData();
+  const reportSignRaw = (reportBlueprint as any)?.publicArchetype?.sunSign;
+  const reportSign = normaliseSign(reportSignRaw) ? String(reportSignRaw) : null;
+  const reportTint = ELEMENT_TINT[signElement(reportSignRaw) ?? 'air'];
+  // A toggle with one reachable side is not a choice. Only show it when the
+  // Hermetic report is genuinely available to this reader.
+  const hermeticAvailable = hasHermeticAccess && !!hermeticReport;
 
   // Add hermetic status hook
   const hermeticStatus = useHermeticReportStatus();
@@ -603,7 +614,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   return (
     <div className={`${className} w-full max-w-full overflow-hidden`}>
       {/* Report Type Toggle */}
-      {(report || hermeticReport) && (
+      {(report || hermeticReport) && (hermeticAvailable || import.meta.env.DEV) && (
         <div className="flex flex-col gap-3 mb-5">
           {/* One design-system toggle — same treatment as every other
               segmented control in the app. No gradients, no inline badges. */}
@@ -676,63 +687,62 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         </div>
       )}
 
-      <div className={`flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 ${spacing.gap} w-full`}>
-        <div className="min-w-0 flex-1">
-          <h3 className="text-[20px] font-semibold tracking-tight break-words" style={{ color: 'var(--ss-ink)' }}>
+      {/* Signature header — the same shape Blauwdruk opens with, so the two
+          tabs read as one product rather than two screens. */}
+      <div
+        className="flex items-center justify-between gap-3 mb-5 ss-settle"
+        style={{
+          borderRadius: 'var(--ss-radius)',
+          border: '1px solid var(--ss-line)',
+          padding: '16px 18px',
+          background: `radial-gradient(240px 130px at 86% -14%, ${reportTint.glow}, transparent 64%),
+                       radial-gradient(200px 120px at 4% 112%, var(--ss-accent-wash-2), transparent 62%),
+                       linear-gradient(180deg, ${reportTint.tint}, transparent)`,
+        }}
+      >
+        <div className="min-w-0">
+          <h3 className="ss-title tracking-tight break-words" style={{ color: 'var(--ss-ink)' }}>
             {t(`reportModal.${reportType}Title`)}
           </h3>
-          <p className="text-[12.5px] break-words mt-0.5" style={{ color: 'var(--ss-muted)' }}>
+          <p className="ss-caption break-words mt-0.5" style={{ color: 'var(--ss-muted)' }}>
             {currentReport && `${t('common.generatedOn')} ${new Date(currentReport.generated_at).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US')}`}
           </p>
-        </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto mt-3 sm:mt-0">
-          <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
-            <Badge variant="outline" className="border-transparent" style={{ background: 'var(--ss-accent-wash-2)', color: 'var(--ss-accent-ink)' }}>
-              <Sparkles className="h-3 w-3 mr-1 flex-shrink-0" />
-              <span className="truncate">{t('common.soulGenerated')}</span>
-            </Badge>
-            {/* Build metadata is for us, not the reader. */}
-            {currentReport && import.meta.env.DEV && (
-              <Badge variant="outline" className="border-transparent"
-                style={{ background: 'var(--ss-line-2)', color: 'var(--ss-muted)' }}>
-                <span className="truncate">
-                  Version {(currentReport as any).blueprint_version || '1.0'}
-                </span>
-              </Badge>
-            )}
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button 
-              onClick={() => setIsReportModalOpen(true)} 
-              variant="default" 
-              size="sm"
-              className="flex-1 sm:flex-none rounded-full font-semibold"
-              style={{ background: 'var(--ss-accent)', color: '#fff' }}
+          <div className="flex gap-2 mt-3">
+            {/* The calm ground can't carry a saturated full-width pill — the
+                action reads as the loudest thing on the page. A quiet card
+                button on the accent wash is the system's own weight. */}
+            <button
+              onClick={() => setIsReportModalOpen(true)}
+              className="ss-press inline-flex items-center gap-2 ss-sub font-semibold"
+              style={{
+                background: 'var(--ss-card)',
+                color: 'var(--ss-accent-ink)',
+                border: '1px solid var(--ss-line)',
+                borderRadius: 14,
+                padding: '9px 14px',
+                boxShadow: 'var(--ss-shadow)',
+              }}
             >
               <Maximize2 className="h-4 w-4" />
-              <span className="ml-1 sm:ml-2">{t('reportModal.viewFullReport')}</span>
-            </Button>
-            {import.meta.env.DEV && (
-              <Button 
-                onClick={handleRegenerate} 
-                variant="outline" 
-                size="sm"
-                disabled={generating}
-                className="flex-1 sm:flex-none"
-              >
-                {generating ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="h-4 w-4" />
-                )}
-                <span className="ml-1 sm:ml-2">{generating ? t('settings.regenerating') : t('common.regenerate')}</span>
-              </Button>
-            )}
-            <Button onClick={handleRefresh} variant="ghost" size="sm" className="flex-shrink-0">
+              {t('reportModal.viewFullReport')}
+            </button>
+            <button onClick={handleRefresh} aria-label={t('common.refresh') || 'Refresh'}
+              className="ss-press grid place-items-center flex-shrink-0"
+              style={{ width: 38, height: 38, borderRadius: 12, background: 'var(--ss-card)',
+                       border: '1px solid var(--ss-line)', color: 'var(--ss-muted)' }}>
               <RefreshCw className="h-4 w-4" />
-            </Button>
+            </button>
+            {import.meta.env.DEV && (
+              <button onClick={handleRegenerate} disabled={generating} aria-label="Regenerate"
+                className="ss-press grid place-items-center flex-shrink-0"
+                style={{ width: 38, height: 38, borderRadius: 12, background: 'var(--ss-card)',
+                         border: '1px solid var(--ss-line)', color: 'var(--ss-muted)' }}>
+                {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              </button>
+            )}
           </div>
         </div>
+        {reportSign && <ConstellationFigure sign={reportSign} size={104} elemental animate />}
       </div>
 
       {/* Standard report — the calm redesign: Integrated Summary + Key
@@ -741,6 +751,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         <ReportSummaryCalm
           content={currentReport.report_content as any}
           sectionTitles={sectionTitles}
+          blueprint={reportBlueprint}
           onViewFull={() => setIsReportModalOpen(true)}
           onOpenSection={(k) => setOpenSectionKey(k)}
         />

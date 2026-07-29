@@ -76,7 +76,9 @@ export const ConstellationFigure: React.FC<{
   className?: string;
   /** Use the element's colour rather than the system accent. */
   elemental?: boolean;
-}> = ({ sign, size = 34, className, elemental = false }) => {
+  /** Draw the figure in on mount. Off for small inline uses. */
+  animate?: boolean;
+}> = ({ sign, size = 34, className, elemental = false, animate = false }) => {
   const key = normaliseSign(sign);
   if (!key) return null;                    // never draw an invented sky
   const p = PATTERNS[key];
@@ -85,14 +87,27 @@ export const ConstellationFigure: React.FC<{
   return (
     <svg viewBox="0 0 100 72" width={size} height={size * 0.72} className={className}
       role="img" aria-label={`Sterrenbeeld ${sign}`} style={{ display: 'block' }}>
-      {p.e.map(([a, b], i) => (
-        <line key={i} x1={p.s[a][0]} y1={p.s[a][1]} x2={p.s[b][0]} y2={p.s[b][1]}
-          stroke={colour} strokeOpacity={0.38} strokeWidth={1} />
-      ))}
+      {/* The sky assembles: stars arrive first, then the lines that join them
+          draw themselves. Both yield entirely under reduced motion. */}
+      {p.e.map(([a, b], i) => {
+        const len = Math.hypot(p.s[b][0] - p.s[a][0], p.s[b][1] - p.s[a][1]);
+        return (
+          <line key={i} x1={p.s[a][0]} y1={p.s[a][1]} x2={p.s[b][0]} y2={p.s[b][1]}
+            stroke={colour} strokeOpacity={0.38} strokeWidth={1}
+            className={animate ? 'ss-draw' : undefined}
+            style={animate ? ({ ['--len' as any]: len.toFixed(1), ['--i' as any]: i } as React.CSSProperties) : undefined} />
+        );
+      })}
       {p.s.map(([x, y], i) => (
         <React.Fragment key={i}>
-          {i === 0 && <circle cx={x} cy={y} r={5.4} fill={colour} opacity={0.16} />}
-          <circle cx={x} cy={y} r={i === 0 ? 2.9 : 2} fill={colour} />
+          {i === 0 && (
+            <circle cx={x} cy={y} r={5.4} fill={colour} opacity={0.16}
+              className={animate ? 'ss-spark' : undefined}
+              style={animate ? ({ ['--i' as any]: i } as React.CSSProperties) : undefined} />
+          )}
+          <circle cx={x} cy={y} r={i === 0 ? 2.9 : 2} fill={colour}
+            className={animate ? 'ss-spark' : undefined}
+            style={animate ? ({ ['--i' as any]: i } as React.CSSProperties) : undefined} />
         </React.Fragment>
       ))}
     </svg>
