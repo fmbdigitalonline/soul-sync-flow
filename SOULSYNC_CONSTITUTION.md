@@ -37,6 +37,16 @@ direction BECOMES part of the Blueprint rather than outranking it — one
 evolving model, no hierarchy. If the Blueprint infers career is not a priority
 and the user says it is now, the Blueprint has learned something.*
 
+*BUT NOT EVERY DISAGREEMENT IS EVIDENCE ABOUT IDENTITY. Disagreement is FIRST
+treated as a possible correction to the system's understanding; it refines the
+Living Blueprint only when it reveals a meaningful preference, intention,
+value, or sustained pattern. The system misunderstands, works from stale
+information, reads sarcasm literally, or is simply wrong — and none of that is
+a personality signal. "No, the meeting was Tuesday, not Thursday" corrects a
+fact. "I know I used to prioritise status, but that no longer feels like
+success to me" refines the Blueprint. Absorbing the first kind as identity
+evidence would poison the model with noise.*
+
 *BUT THE MODEL MUST HAVE INERTIA (developer's addition, founder accepted). A
 self-model that updates fully on every contradiction converges on whatever the
 user last said, and a Blueprint that only ever agrees can never offer the
@@ -64,16 +74,27 @@ Alignment reasoning surfaces when there is real tension, when recommendations
 genuinely compete, or when the user asks. Otherwise it stays available and
 unspoken.*
 
-*IMPLEMENTATION REALITY (verified Jul 2026, so nobody assumes it exists):
+*THIS LAW RATIFIES A PRODUCT PRINCIPLE, NOT AN IMPLEMENTATION PROGRAMME. It
+constrains future work; it does not mandate a rebuild.*
+
+*THE LIVING BLUEPRINT IS A PRODUCT CONCEPT BEFORE IT IS A DATABASE OBJECT. Do
+not build a giant table, service or engine named living_blueprint — that is how
+a principle becomes another subsystem, and SoulSync already carries thousands
+of lines of infrastructure built for architectures that never arrived. The
+cleaner shape is a READ MODEL that composes what already exists: foundational
+blueprint + stated direction + durable memories + recurring patterns + current
+goals + recent context = the current working understanding. The underlying
+stores stay separate if that is technically cleaner.*
+
+*IMPLEMENTATION REALITY (verified Jul 2026, so nobody assumes otherwise):
 nothing writes to user_blueprints after creation. The Blueprint is static
 today, and what the system learns lands in three other stores —
 user_session_memory, conversation_insights and hermetic_structured_intelligence.
-The Mental Blueprint described by this law is therefore not yet one artifact.
-Making it one — a blueprint that can actually evolve — is the work this law
-calls for. And build the reconciliation only when competing recommendations
-genuinely reach the user: today the specialists run at report generation, not
-as live rivals. The law comes first, as it has since v3.1; the engine follows
-the need.*
+Conceptually those already form the evolving self-model; technically they are
+still fragmented, and composing them is incremental work, not a rewrite. Build
+the reconciliation only when competing recommendations genuinely reach the
+user: today the specialists run at report generation, not as live rivals. The
+law comes first, as it has since v3.1; the engine follows the need.*
 
 *v3.10 — NARRATIVE CONSISTENCY ratified (founder, Jul 2026, resolving an
 advisor exchange that began with user feedback). The users said, in effect:
