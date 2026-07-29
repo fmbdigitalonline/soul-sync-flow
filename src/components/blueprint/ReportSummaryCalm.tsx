@@ -6,9 +6,9 @@
  */
 
 import React from "react";
-import { Sparkles, Heart, Compass, Users, Star, Zap, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ReportSectionFigure, hasSectionFigure } from "./notation/ReportSectionFigure";
+import { ReportSectionFigure } from "./notation/ReportSectionFigure";
 
 export interface CalmTheme {
   key: string;
@@ -38,12 +38,13 @@ interface ReportSummaryCalmProps {
   onOpenSection?: (key: string) => void;
 }
 
-const THEME_META: Array<{ key: string; icon: React.ReactNode }> = [
-  { key: "core_personality_pattern", icon: <Heart className="h-[18px] w-[18px]" /> },
-  { key: "decision_making_style", icon: <Compass className="h-[18px] w-[18px]" /> },
-  { key: "relationship_style", icon: <Users className="h-[18px] w-[18px]" /> },
-  { key: "life_path_purpose", icon: <Star className="h-[18px] w-[18px]" /> },
-  { key: "current_energy_timing", icon: <Zap className="h-[18px] w-[18px]" /> },
+/** The standard report's five named sections, in reading order. */
+const THEME_KEYS = [
+  "core_personality_pattern",
+  "decision_making_style",
+  "relationship_style",
+  "life_path_purpose",
+  "current_energy_timing",
 ];
 
 
@@ -79,14 +80,14 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
   const nl = language === "nl";
   const summary = content?.integrated_summary || "";
 
-  const derived = THEME_META.map((m) => ({ ...m, title: sectionTitles[m.key], body: (content as any)?.[m.key] as string | undefined }))
+  const derived: CalmTheme[] = THEME_KEYS
+    .map((key) => ({ key, title: sectionTitles[key], body: (content as any)?.[key] as string | undefined }))
     .filter((th) => th.body && th.title);
 
-  // Explicit themes (Hermetic) get the same icon rhythm as the standard five.
-  const themes = themesProp
-    ? themesProp
-        .filter((th) => th.title && (th.body || th.note))
-        .map((th, i) => ({ ...th, icon: THEME_META[i % THEME_META.length].icon }))
+  // Every section — standard or Hermetic — draws its own geometric figure, so
+  // there is no icon rhythm to assign here.
+  const themes: CalmTheme[] = themesProp
+    ? themesProp.filter((th) => th.title && (th.body || th.note))
     : derived;
 
   return (
@@ -122,9 +123,7 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
               style={{ padding: 16, ['--i' as any]: i + 1 } as React.CSSProperties}>
               <span className="shrink-0 grid place-items-center"
                 style={{ width: 44, height: 44, borderRadius: 13, background: "var(--ss-accent-wash)", color: "var(--ss-accent)" }}>
-                {hasSectionFigure(th.key)
-                  ? <ReportSectionFigure section={th.key} size={34} animate />
-                  : th.icon}
+                <ReportSectionFigure section={th.key} size={34} animate />
               </span>
               <div className="min-w-0 flex-1">
                 <div className="ss-heading" style={{ color: "var(--ss-ink)" }}>{th.title}</div>
