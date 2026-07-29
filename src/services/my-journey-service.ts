@@ -30,7 +30,9 @@ export interface MyJourney {
   domains: string[];
   patterns: JourneyPattern[];
   programs: JourneyProgram[];
-  turningPoints: EpisodeSummary[];
+  /** The most recent conversation episodes. NOT turning points — a turning
+   *  point is only ever what the person confirmed (turning-point-service). */
+  recentEpisodes: EpisodeSummary[];
   trajectory?: string;
 }
 
@@ -146,7 +148,7 @@ export const myJourneyService = {
     const essence = blueprintEssence((bpRes as any)?.data, lang);
     const trajectory = composeTrajectory({ domains, patterns, programs, episodes }, lang);
 
-    return { essence, domains, patterns, programs, turningPoints: episodes, trajectory };
+    return { essence, domains, patterns, programs, recentEpisodes: episodes, trajectory };
   },
 };
 

@@ -4,7 +4,7 @@ import MainLayout from "@/components/Layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
-  Sparkles, Compass, MessageSquare, Bell, Moon, Sun, LogOut,
+  Sparkles, MessageSquare, Bell, Moon, Sun, LogOut,
   ChevronRight, ChevronLeft, Check, Shield, Pencil, TrendingUp, BookOpen, Mic, ArrowRight,
 } from "lucide-react";
 import { useUserProfile } from "@/hooks/use-user-profile";
@@ -19,6 +19,7 @@ import { TwinNameSettings } from "@/components/profile/TwinNameSettings";
 import { useTwinName } from "@/hooks/use-twin-name";
 import { myJourneyService, type MyJourney } from "@/services/my-journey-service";
 import { LifeWheel } from "@/components/journey/LifeWheel";
+import { TurningPoints } from "@/components/journey/TurningPoints";
 import { AlignmentSection } from "@/components/journey/AlignmentSection";
 import { AlignmentDetail } from "@/components/journey/AlignmentDetail";
 
@@ -83,7 +84,7 @@ const Profile = () => {
   const traits: string[] = getPersonalityTraits || [];
   const blueprintPct = getBlueprintCompletionPercentage || 0;
   const activeGoals = goals.filter((g) => g.status === "active");
-  const conversations = statistics?.coach_conversations ?? journey?.turningPoints.length ?? 0;
+  const conversations = statistics?.coach_conversations ?? journey?.recentEpisodes.length ?? 0;
   const twinLabel = twinName?.name || (nl ? "je Twin" : "your Twin");
   const programCount = journey ? journey.programs.length : activeGoals.length;
   const insightCount = journey ? journey.patterns.length : 0;
@@ -142,35 +143,9 @@ const Profile = () => {
                   {/* Life domains — the honest radar from the user's own balance ratings. */}
                   <LifeWheel />
 
-                  {/* Turning points — moments that shaped you, as a timeline. */}
-                  <div className="ss-card">
-                    <span className="ss-eyebrow"><Compass className="h-3.5 w-3.5" /> {nl ? "Keerpunten" : "Turning points"}</span>
-                    <p className="ss-caption mt-0.5" style={{ color: "var(--ss-muted)" }}>{nl ? "Momenten die je vormden." : "Moments that shaped you."}</p>
-                    {journey && journey.turningPoints.length > 0 ? (
-                      <div className="mt-4 flex flex-col">
-                        {journey.turningPoints.map((e, i, arr) => {
-                          const year = new Date(e.lastActivity).getFullYear();
-                          const last = i === arr.length - 1;
-                          return (
-                            <div key={e.sessionId} className="flex gap-3">
-                              <div className="flex flex-col items-center" style={{ width: 12 }}>
-                                <span className="shrink-0 rounded-full" style={{ width: 10, height: 10, marginTop: 4, background: "var(--ss-accent)", boxShadow: "0 0 0 4px var(--ss-accent-wash)" }} />
-                                {!last && <span className="flex-1" style={{ width: 2, marginTop: 2, marginBottom: 2, background: "var(--ss-line)" }} />}
-                              </div>
-                              <div className={last ? "pb-0.5" : "pb-5"}>
-                                <div className="ss-caption font-semibold tabular-nums" style={{ color: "var(--ss-accent-ink)" }}>{Number.isFinite(year) ? year : ""}</div>
-                                <div className="ss-sub leading-relaxed mt-0.5" style={{ color: "var(--ss-ink)" }}>{e.title}</div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="text-sm mt-3" style={{ color: "var(--ss-faint)" }}>
-                        {nl ? "Je reis is nog pril." : "Your journey is still early."}
-                      </div>
-                    )}
-                  </div>
+                  {/* Turning points — only what the person confirmed, plus the
+                      one question the Twin is asking. */}
+                  <TurningPoints />
 
                   {/* Direction — the interpreted trajectory (honest narrative, no score). */}
                   {journey?.trajectory && (

@@ -115,7 +115,7 @@ export const lifeBalanceAnalysisService = {
 
     const patterns = j.patterns.map((p) => p.text).filter(Boolean);
     const programs = j.programs.map((p) => (p.domain ? `${p.title} (${p.domain})` : p.title)).filter(Boolean);
-    const themes = j.turningPoints.map((e) => e.title).filter(Boolean);
+    const themes = j.recentEpisodes.map((e) => e.title).filter(Boolean);
     const focusDomains = j.domains.filter(Boolean);
 
     const signalCount = patterns.length + programs.length + themes.length + focusDomains.length;
