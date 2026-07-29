@@ -60,6 +60,9 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   const reportSignRaw = (reportBlueprint as any)?.publicArchetype?.sunSign;
   const reportSign = normaliseSign(reportSignRaw) ? String(reportSignRaw) : null;
   const reportTint = ELEMENT_TINT[signElement(reportSignRaw) ?? 'air'];
+  // A toggle with one reachable side is not a choice. Only show it when the
+  // Hermetic report is genuinely available to this reader.
+  const hermeticAvailable = hasHermeticAccess && !!hermeticReport;
 
   // Add hermetic status hook
   const hermeticStatus = useHermeticReportStatus();
@@ -611,7 +614,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   return (
     <div className={`${className} w-full max-w-full overflow-hidden`}>
       {/* Report Type Toggle */}
-      {(report || hermeticReport) && (
+      {(report || hermeticReport) && (hermeticAvailable || import.meta.env.DEV) && (
         <div className="flex flex-col gap-3 mb-5">
           {/* One design-system toggle — same treatment as every other
               segmented control in the app. No gradients, no inline badges. */}
@@ -705,23 +708,37 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             {currentReport && `${t('common.generatedOn')} ${new Date(currentReport.generated_at).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US')}`}
           </p>
           <div className="flex gap-2 mt-3">
-            <Button
+            {/* The calm ground can't carry a saturated full-width pill — the
+                action reads as the loudest thing on the page. A quiet card
+                button on the accent wash is the system's own weight. */}
+            <button
               onClick={() => setIsReportModalOpen(true)}
-              size="sm"
-              className="rounded-full font-semibold"
-              style={{ background: 'var(--ss-accent)', color: '#fff' }}
+              className="ss-press inline-flex items-center gap-2 ss-sub font-semibold"
+              style={{
+                background: 'var(--ss-card)',
+                color: 'var(--ss-accent-ink)',
+                border: '1px solid var(--ss-line)',
+                borderRadius: 14,
+                padding: '9px 14px',
+                boxShadow: 'var(--ss-shadow)',
+              }}
             >
               <Maximize2 className="h-4 w-4" />
-              <span className="ml-2">{t('reportModal.viewFullReport')}</span>
-            </Button>
-            <Button onClick={handleRefresh} variant="ghost" size="sm" className="rounded-full flex-shrink-0">
+              {t('reportModal.viewFullReport')}
+            </button>
+            <button onClick={handleRefresh} aria-label={t('common.refresh') || 'Refresh'}
+              className="ss-press grid place-items-center flex-shrink-0"
+              style={{ width: 38, height: 38, borderRadius: 12, background: 'var(--ss-card)',
+                       border: '1px solid var(--ss-line)', color: 'var(--ss-muted)' }}>
               <RefreshCw className="h-4 w-4" />
-            </Button>
+            </button>
             {import.meta.env.DEV && (
-              <Button onClick={handleRegenerate} variant="outline" size="sm"
-                disabled={generating} className="rounded-full flex-shrink-0">
+              <button onClick={handleRegenerate} disabled={generating} aria-label="Regenerate"
+                className="ss-press grid place-items-center flex-shrink-0"
+                style={{ width: 38, height: 38, borderRadius: 12, background: 'var(--ss-card)',
+                         border: '1px solid var(--ss-line)', color: 'var(--ss-muted)' }}>
                 {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-              </Button>
+              </button>
             )}
           </div>
         </div>
