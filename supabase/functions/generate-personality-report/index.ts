@@ -219,11 +219,11 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
     console.log('🔍 Report part length:', reportPart?.length || 0);
     console.log('🔍 Quotes part length:', quotesPart?.length || 0);
     
-    // Improved section parsing with multiple patterns
+    // Improved section parsing with Unicode uppercase support (handles Dutch Ï, etc.)
     const sectionPatterns = [
-      /(\d+)\.\s*([A-Z][A-Z &]*)\r?\n([\s\S]*?)(?=\d+\.\s*[A-Z][A-Z &]*\r?\n|$)/g,
-      /(\d+)\.\s*([A-Z][A-Z &]*)\s*\r?\n*([\s\S]*?)(?=\d+\.\s*[A-Z][A-Z &]*\r?\n|$)/g,
-      /(\d+)\.\s*([A-Z][A-Z &]*)\r?\n[\s\S]*?(?=\d+\.\s*[A-Z][A-Z &]*\r?\n|$)/g
+      /(\d+)\.\s*([\p{Lu}][\p{Lu} &]*)\r?\n([\s\S]*?)(?=\d+\.\s*[\p{Lu}][\p{Lu} &]*\r?\n|$)/gu,
+      /(\d+)\.\s*([\p{Lu}][\p{Lu} &]*)\s*\r?\n*([\s\S]*?)(?=\d+\.\s*[\p{Lu}][\p{Lu} &]*\r?\n|$)/gu,
+      /(\d+)\.\s*([\p{Lu}][\p{Lu} &]*)\r?\n[\s\S]*?(?=\d+\.\s*[\p{Lu}][\p{Lu} &]*\r?\n|$)/gu
     ];
     
     let sectionMatches = [];
