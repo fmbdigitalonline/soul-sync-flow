@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ReportModal from '@/components/ReportModal';
 import { ReportSummaryCalm } from './ReportSummaryCalm';
 import { ConstellationFigure, normaliseSign, signElement, ELEMENT_TINT } from './notation/ConstellationFigure';
+import { ReportSectionFigure } from './notation/ReportSectionFigure';
 import { useOptimizedBlueprintData } from '@/hooks/use-optimized-blueprint-data';
 
 interface PersonalityReportViewerProps {
@@ -801,7 +802,15 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             className="sticky top-0 z-10 px-5 py-4"
             style={{ background: 'color-mix(in srgb, var(--ss-surface) 92%, transparent)', borderBottom: '1px solid var(--ss-line-2)' }}
           >
-            <DialogTitle className="text-[17px] font-semibold tracking-tight text-left pr-8" style={{ color: 'var(--ss-ink)' }}>
+            <DialogTitle className="text-[17px] font-semibold tracking-tight text-left pr-8 flex items-center gap-2.5" style={{ color: 'var(--ss-ink)' }}>
+              {/* The same figure the snippet carried, so the section keeps its
+                  own symbol when it opens. */}
+              {openSectionKey && (
+                <span className="shrink-0 grid place-items-center"
+                  style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--ss-accent-wash)' }}>
+                  <ReportSectionFigure section={openSectionKey} size={26} animate />
+                </span>
+              )}
               {openSectionKey
                 ? ((reportType === 'hermetic' ? (hermeticSectionTitles as any) : (sectionTitles as any))[openSectionKey]
                     || openSectionKey.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()))
