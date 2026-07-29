@@ -751,7 +751,6 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         <ReportSummaryCalm
           content={currentReport.report_content as any}
           sectionTitles={sectionTitles}
-          blueprint={reportBlueprint}
           onViewFull={() => setIsReportModalOpen(true)}
           onOpenSection={(k) => setOpenSectionKey(k)}
         />
