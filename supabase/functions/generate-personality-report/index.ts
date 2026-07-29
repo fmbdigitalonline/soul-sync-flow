@@ -36,7 +36,7 @@ serve(async (req) => {
     );
 
     const requestBody = await req.json();
-    const { blueprint, userId, language = 'en' } = requestBody;
+    const { blueprint, userId, language = 'en', voiceDirective } = requestBody;
     
     if (!blueprint || !userId) {
       console.error('❌ Missing required parameters:', { hasBlueprint: !!blueprint, hasUserId: !!userId });
@@ -129,7 +129,11 @@ KRITIEKE INDELING VEREISTE: Je moet precies 6 gedetailleerde secties maken gevol
     };
 
     const languagePrompts = getLanguagePrompts(language);
-    const personalityReportSystemPrompt = `${languagePrompts.systemPrompt}
+    const voicePrefix = (typeof voiceDirective === 'string' && voiceDirective.trim())
+      ? `${voiceDirective.trim()}\n\n---\n\n`
+      : '';
+    console.log('🗣️ Twin voice directive:', voicePrefix ? `present (${voicePrefix.length} chars)` : 'absent');
+    const personalityReportSystemPrompt = `${voicePrefix}${languagePrompts.systemPrompt}
 
 USER PROFILE:
 Birth Date: ${userMeta.birth_date || 'Unknown'}
