@@ -43,11 +43,17 @@ const ELEMENT: Record<string, 'fire' | 'earth' | 'air' | 'water'> = {
   cancer: 'water', scorpio: 'water', pisces: 'water',
 };
 
+/**
+ * Element atmospheres read from theme tokens (--ss-el-*), so the dark theme
+ * pulls them back rather than inheriting values tuned for a white ground.
+ * The first pass was too faint to tell apart in daylight; the tokens carry
+ * the stronger values.
+ */
 export const ELEMENT_TINT: Record<string, { star: string; tint: string; glow: string; ink: string }> = {
-  fire:  { star: '#e8845c', tint: 'rgba(232,132,92,.13)',  glow: 'rgba(232,132,92,.30)',  ink: '#c2643c' },
-  earth: { star: '#b3a273', tint: 'rgba(154,143,111,.14)', glow: 'rgba(196,180,138,.30)', ink: '#8a7d55' },
-  air:   { star: '#7fa8d8', tint: 'rgba(127,168,216,.13)', glow: 'rgba(127,168,216,.30)', ink: '#5a86b8' },
-  water: { star: '#5eb8b0', tint: 'rgba(94,184,176,.13)',  glow: 'rgba(94,184,176,.30)',  ink: '#3f8f88' },
+  fire:  { star: 'var(--ss-el-fire)',  tint: 'var(--ss-el-fire-tint)',  glow: 'var(--ss-el-fire-glow)',  ink: 'var(--ss-el-fire)' },
+  earth: { star: 'var(--ss-el-earth)', tint: 'var(--ss-el-earth-tint)', glow: 'var(--ss-el-earth-glow)', ink: 'var(--ss-el-earth)' },
+  air:   { star: 'var(--ss-el-air)',   tint: 'var(--ss-el-air-tint)',   glow: 'var(--ss-el-air-glow)',   ink: 'var(--ss-el-air)' },
+  water: { star: 'var(--ss-el-water)', tint: 'var(--ss-el-water-tint)', glow: 'var(--ss-el-water-glow)', ink: 'var(--ss-el-water)' },
 };
 
 export function normaliseSign(sign?: string | null): string | null {

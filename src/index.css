@@ -589,3 +589,50 @@
 .ss-ink    { color: var(--ss-ink); }
 .ss-dim    { color: var(--ss-muted); }
 .ss-faintc { color: var(--ss-faint); }
+
+/* =====================================================================
+   Element atmospheres (v3.10). The sign's element tints its signature.
+
+   The first pass sat at 13% tint / 30% glow with low-chroma bases, which
+   washed out in daylight — fire and earth were nearly indistinguishable on a
+   near-white ground. Pushed here: more saturated bases (earth in particular
+   moved from a near-neutral tan to a true ochre) and roughly double the
+   opacity. Defined as tokens so the dark theme can pull them back rather than
+   inherit values tuned for white.
+   ===================================================================== */
+:root {
+  --ss-el-fire:       #c94a26;
+  --ss-el-fire-tint:  rgba(201, 74, 38, .24);
+  --ss-el-fire-glow:  rgba(201, 74, 38, .44);
+
+  --ss-el-earth:      #7a863e;
+  --ss-el-earth-tint: rgba(122, 134, 62, .24);
+  --ss-el-earth-glow: rgba(122, 134, 62, .42);
+
+  --ss-el-air:        #2e6ed6;
+  --ss-el-air-tint:   rgba(46, 110, 214, .22);
+  --ss-el-air-glow:   rgba(46, 110, 214, .42);
+
+  --ss-el-water:      #0e9c7c;
+  --ss-el-water-tint: rgba(14, 156, 124, .22);
+  --ss-el-water-glow: rgba(14, 156, 124, .42);
+}
+
+/* On a dark ground the same values read as muddy — lighter bases, less fill. */
+.dark {
+  --ss-el-fire:       #ef8a63;
+  --ss-el-fire-tint:  rgba(239, 138, 99, .17);
+  --ss-el-fire-glow:  rgba(239, 138, 99, .34);
+
+  --ss-el-earth:      #b9c46e;
+  --ss-el-earth-tint: rgba(185, 196, 110, .17);
+  --ss-el-earth-glow: rgba(185, 196, 110, .32);
+
+  --ss-el-air:        #79a9ee;
+  --ss-el-air-tint:   rgba(121, 169, 238, .16);
+  --ss-el-air-glow:   rgba(121, 169, 238, .32);
+
+  --ss-el-water:      #45c9a5;
+  --ss-el-water-tint: rgba(69, 201, 165, .16);
+  --ss-el-water-glow: rgba(69, 201, 165, .32);
+}
