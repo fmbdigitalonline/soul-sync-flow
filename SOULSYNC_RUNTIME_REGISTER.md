@@ -64,6 +64,41 @@ the work is Lovable's and has not started.
 
 ---
 
+## Behavioural observations
+
+### Jul 30 2026 — baseline run, 2 Dutch turns (founder)
+
+Pre-specification baseline. Exercised none of PR #239: no reunion greeting, no
+sentence selection, and a name was present so the removed `'Seeker'` path never
+fired. Measures the six behaviours still marked ➖.
+
+| Test | Result | Evidence |
+|---|---|---|
+| T5 language | **fail** | `Am I close?` in English closing a Dutch reply |
+| T6 length | **fail** | 81 and 115 words; median 98 (threshold 90) |
+| T7 framework | **fail** | blueprint narrated in both replies; r6 rations to once per session |
+| T8 name | **fail** | name used in 2 of 2 replies |
+
+**The length result confirms the loophole rather than predicting it.** Both
+replies are 4-5 sentences — inside Voice Charter rule 2 — at 20 and 23 words per
+sentence. The rule was obeyed and the reply was still too long. This is why the
+word count belongs in evaluation.
+
+Two violations no test covers: the question paraphrased back (UNIVERSAL RULES
+forbids it) and identity flattery (*"je energetische realiteit die wacht om
+volledig te ontvouwen"* — rule 7, the same class as the sentence that became a
+goal title).
+
+**Candidate missing law — occurrence 2 of 3.** Asked a concrete question ("how
+do I become a millionaire"), the reply carried no concrete step. No rule
+anywhere in the prompt requires a concrete referent: the charter governs length,
+questions, framework, warmth and honesty, but never whether the answer is
+actionable. Under *interpretation before amendment* this looks like a genuinely
+missing law rather than a poor application — held for a third occurrence per the
+Rule of Three before anything is written.
+
+---
+
 ## Open decisions
 
 | Decision | Blocked on | Owner |
