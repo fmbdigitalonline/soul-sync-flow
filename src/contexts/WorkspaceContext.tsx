@@ -10,13 +10,29 @@
  */
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { emitCoachOpen } from '@/lib/coach-workspace-bus';
+import { emitCoachOpen, emitCoachDecomposition } from '@/lib/coach-workspace-bus';
 
 export interface PendingIntake {
   title: string;
   category: string;
   timeframe: string;
   source: 'sentence' | 'offer';
+  /**
+   * AUTHORSHIP GATE (Runtime Constitution, deterministic behaviour).
+   *
+   * A goal is a claim about what the user wants. Only the user may make it.
+   * Sentence selection runs on the Twin's own messages — InteractiveSentenceText
+   * renders on assistant messages only — so every title arriving from that path
+   * is text the Twin wrote, and one of them became a `user_goals` row reading
+   * "Kortom: je bent niet alleen chaotisch…".
+   *
+   * `false` means proposed but not yet adopted: the flow stops and asks the user
+   * to author the title. Authorship has three equally valid forms — type a new
+   * one, edit the suggestion, or accept it unchanged — because all three are an
+   * intentional adoption. Nothing downstream of this gate may create a goal
+   * while it is false.
+   */
+  authored?: boolean;
 }
 
 /**
@@ -138,6 +154,7 @@ const STORAGE_KEY = 'coach-workspace:state:v1';
 interface WorkspaceContextValue {
   pendingIntake: PendingIntake | null;
   openPanelWithIntake: (intake: PendingIntake) => void;
+  adoptPendingIntake: (title: string) => void;
   clearPendingIntake: () => void;
   pendingTransformIntake: PendingTransformIntake | null;
   openPanelWithTransformIntake: (intake: PendingTransformIntake) => void;
@@ -264,6 +281,24 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     emitCoachOpen({ section: 'actions', view: 'decomposition', reason: `intake:${intake.source}` });
   }, []);
 
+  /**
+   * The user adopted the title — the ONE place `authored` may become true, and
+   * the point at which the build may start. Typing a new title, editing the
+   * suggestion and accepting it unchanged all arrive here, because all three
+   * are an intentional adoption.
+   */
+  const adoptPendingIntake = useCallback((title: string) => {
+    let adoptedTitle = '';
+    setPendingIntake((prev) => {
+      if (!prev) return prev;
+      adoptedTitle = title.trim() || prev.title;
+      return { ...prev, title: adoptedTitle, authored: true };
+    });
+    // Emitted outside the updater — StrictMode invokes updaters twice, and the
+    // build must start exactly once.
+    if (adoptedTitle) emitCoachDecomposition({ phase: 'start', dreamTitle: adoptedTitle });
+  }, []);
+
   const clearPendingIntake = useCallback(() => {
     setPendingIntake(null);
     setDreamFlow(DEFAULT_DREAM_FLOW);
@@ -325,6 +360,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     () => ({
       pendingIntake,
       openPanelWithIntake,
+      adoptPendingIntake,
       clearPendingIntake,
       pendingTransformIntake,
       openPanelWithTransformIntake,
@@ -346,6 +382,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [
       pendingIntake,
       openPanelWithIntake,
+      adoptPendingIntake,
       clearPendingIntake,
       pendingTransformIntake,
       openPanelWithTransformIntake,

@@ -160,10 +160,13 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     timeframe: string,
     source: 'sentence' | 'offer',
   ) => {
-    openPanelWithIntake({ title, category, timeframe, source });
-    // Kick the panel-side decomposition card into 'start' phase so the
-    // building animation is visible even before useDecompositionLogic mounts.
-    emitCoachDecomposition({ phase: 'start', dreamTitle: title });
+    // `authored: false` — the title is a proposal until the user adopts it in
+    // the panel. Every title reaching here came from a message the Twin wrote
+    // (sentence selection renders on assistant messages only), so nothing may
+    // be created from it yet.
+    openPanelWithIntake({ title, category, timeframe, source, authored: false });
+    // The building animation used to start here, before the user had agreed to
+    // anything. It now waits for the authorship gate.
   };
   
   // Track when chat opens/closes
@@ -249,6 +252,18 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     }));
   };
 
+  /**
+   * A hard slice cut "…die de juiste" to "…die de jui" and stored that as a
+   * goal title. Cut on a word boundary and mark the cut, so a shortened title
+   * still reads as language.
+   */
+  const clipToWords = (text: string, max: number): string => {
+    const s = text.trim().replace(/\s+/g, " ");
+    if (s.length <= max) return s;
+    const cut = s.slice(0, max - 1).replace(/\s+\S*$/, "").replace(/[,;:–—-]+$/, "");
+    return `${cut || s.slice(0, max - 1)}…`;
+  };
+
   // The four-intent card routing (Constitution v2.6). The card asks "How
   // can I help you with this?" — each intent routes to a different
   // subsystem, no implementation exposed:
@@ -260,7 +275,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   //   remember        → Memory — gated until the real write lands (bug 7).
   const handleSentenceAction = async (action: SentenceAction, sentence: string) => {
     if (action === "change_pattern") {
-      openPanelWithTransformIntake({ pattern: sentence.trim().slice(0, 200) });
+      openPanelWithTransformIntake({ pattern: clipToWords(sentence, 200) });
       setSelectedSentences({});
       return;
     }
@@ -268,7 +283,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     if (action === "achieve") {
       // Deterministic intake: the selected words ARE the program title —
       // straight to the panel, no server round-trip, no model call.
-      routeConfirmToPanel(sentence.trim().slice(0, 80), "personal_growth", "3 months", "sentence");
+      routeConfirmToPanel(clipToWords(sentence, 80), "personal_growth", "3 months", "sentence");
       setSelectedSentences({});
       return;
     }
@@ -294,7 +309,11 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     }
 
     // understand → the Twin, grounded in blueprint as always.
-    const hiddenPrompt = `[CONTEXT: User selected this sentence and asks to understand it better: "${sentence}"] Help them understand this more deeply — what it means, where it comes from, and how it shows up in their life. Speak from their blueprint as you always do; do not offer programs or plans on this turn.`;
+    // ONE thing, not three. This used to ask for "what it means, where it comes
+    // from, and how it shows up" — a three-part brief, which is why the reply
+    // came back as a three-part essay. The Twin optimises for insight, not
+    // completeness; asking for completeness overrode that from our own side.
+    const hiddenPrompt = `[CONTEXT: User selected this sentence and asks to understand it better: "${sentence}"] Take them one layer deeper into this — the single most useful thing to see about it, not a survey. Speak from their blueprint as you always do; do not offer programs or plans on this turn.`;
 
     setIsProcessingAction(true);
     setLoadingAction(action);
