@@ -79,7 +79,7 @@ const CONVERSATION_STATE_SCHEMA = {
         { "id": "curiosity_probe", "examples": ["I wonder how that works"], "regex": ["\\b((i|i'm|im)\\s+wonder(ing)?|curious|intrigued|interest(ed|ing)\\s+in|fascinated|i'd\\s+love\\s+to\\s+know)\\b"] },
         { "id": "scenario_imagining", "examples": ["suppose there's no budget"], "regex": ["\\b(suppose|imagine\\s+if|in\\s+that\\s+case|let'?s\\s+say|pretend|hypothetically|if\\s+we\\s+assume)\\b"] }
       ],
-      "opening_rule": "No recap; nurture breadth with 2–3 options or questions.",
+      "opening_rule": "No recap; nurture breadth with 2–3 possibilities.",
       "allowed_next_clusters": ["clarification", "decision", "validation"]
     },
     {
@@ -92,7 +92,7 @@ const CONVERSATION_STATE_SCHEMA = {
         { "id": "example_request", "examples": ["can you give an example?"], "regex": ["\\b(example|for\\s+instance|like\\s+when|such\\s+as|can\\s+you\\s+show|walk\\s+me\\s+through)\\b"] },
         { "id": "tradeoff_analysis", "examples": ["A vs B"], "regex": ["\\b(vs\\.?|versus|trade[-\\s]?off|compared\\s+to|weigh(ing)?|pros\\s+and\\s+cons|which\\s+is\\s+better)\\b"] }
       ],
-      "opening_rule": "Skip empathy; give a crisp model/mechanism then 1 probing question.",
+      "opening_rule": "Skip empathy; give a crisp model/mechanism.",
       "allowed_next_clusters": ["decision", "reflection", "meta_dialogue"]
     },
     {
