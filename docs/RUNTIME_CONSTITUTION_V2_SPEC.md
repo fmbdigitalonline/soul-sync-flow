@@ -17,10 +17,25 @@ Line numbers are from commit `2db0479`. Every instruction also quotes anchor tex
 | | |
 |---|---|
 | Lines removed | ~150 |
-| Lines added | ~35 |
-| Net | **−115** |
+| Lines added | ~30 |
+| Net | **−120** |
 
 If the diff is net positive, something was reworded instead of removed. That is the review test.
+
+## Every deletion is a contradiction, not a tension
+
+Runtime Constitution, *Tension is not contradiction*: law 1 removes rules that cannot both be satisfied; it must not remove rules that merely pull against each other. Each deletion below was classified before it was written:
+
+| Deleted | Why it is a contradiction |
+|---|---|
+| Per-role ending rules (B1c) | Five roles mandate an ending; the charter rations it. One is broken every turn. |
+| `FIRST CONTACT` question bullet (B1a) | "End with one short question" vs "one reply in three." |
+| Banned-phrase demonstrations (B2a-c) | The prompt shows the phrase it forbids. |
+| Per-step word budgets (B4a) | 4 steps × 1–3 sentences ≈ 7–9 sentences vs "2-5 sentences." |
+| `ADDRESS THEM BY NAME` (B5) | "at least once in every response" vs "not more than occasionally." |
+| Language literals (B6) | A bare English string vs "reply in the user's language." |
+
+**Explicitly kept as tensions:** charter rule 5 (*confront when the door opens*) against rule 2 (*one landed idea*) — a confrontation is one idea, and the judgment between them is the Twin's to make. Likewise `SESSION CLOSE RULE`'s open loop against rule 3's ban on fixed closers: one governs how a session ends, the other how a reply ends.
 
 ---
 
@@ -121,7 +136,7 @@ Two prescribed fixed sign-offs, in a prompt whose charter bans fixed sign-offs "
 
 ---
 
-## B3 · Framework exposure — 7 authorities → 1 + a deterministic gate
+## B3 · Framework exposure — 7 authorities → 1
 
 This is why "Projector" appeared in three consecutive replies. `index.ts:772` says `NOT: "Your ENFP pattern..."` and `index.ts:1098` says `✅ GOOD (oracle): "Your ENFP pattern creates through..."`.
 
@@ -140,17 +155,11 @@ if (hd === 'Projector') {
 ```
 Delete. This injects Human Design vocabulary into the voice guidelines for every Projector, every turn.
 
-### CHANGE — move the behaviour left (deterministic)
+### NOT DOING — intent-gated fact retrieval *(withdrawn, see Appendix A)*
 
-**`index.ts:1908`** — `factsSection` currently dumps every stored fact on every turn regardless of intent, then asks the model not to recite them. Which facts *enter* the prompt is deterministic; gate it:
+An earlier draft proposed restricting `factsSection` (`index.ts:1908`) to `FACTUAL` intent. **That is withdrawn.** It solved the wrong problem: the failure was not that the model knew too much, it was that the model *narrated* what it knew. Knowledge availability and dialogue behaviour must not be coupled — a user saying *"I keep sabotaging interviews"* needs the avoidance pattern and the decision style present, and needs the Twin not to say *"because you're an ENFP Projector."*
 
-```ts
-const factsSection =
-  (intent === 'FACTUAL' || wantsTechnicalDetails) && structuredFacts.length > 0
-    ? '\n\nCOMPREHENSIVE BLUEPRINT FOR ' + …          // unchanged body
-    : '';
-```
-> **Founder decision required.** This changes what the model can see on non-factual turns. It is the single highest-leverage item in this spec — you cannot recite what you were never given — but it is a behaviour change, not a cleanup.
+`factsSection` is unchanged by this spec. Framework exposure is governed by Voice Charter rule 6 alone.
 
 ### KEEP
 `VOICE CHARTER` rule 6, and `detectTechnicalDetailRequest` (`index.ts:12`) which already deterministically gates the MBTI/HD/sign labels in `profileLines`.
@@ -170,12 +179,15 @@ Keep the numbered *steps* (they describe substance). Remove only the parenthetic
 
 **c. `index.ts:2242`** — delete `Keep paragraphs to 2-3 sentences maximum for digestible, conversational flow.` from the message[0] tail. Keep the double-line-break instruction (that is formatting, not length).
 
-### CHANGE — give the charter a bound it can enforce
+### CHANGE — close the loophole semantically, measure it separately
 
-**`index.ts:2180`** — Voice Charter rule 2, add a word bound:
+The sentence loophole is real: every current rule counts sentences, so the model complies by writing longer ones. But the fix belongs in **evaluation, not generation** — a hard "under 90 words" turns a semantic policy into a lexical one, and sometimes 105 words is exactly right while 45 is already too many.
+
+**`index.ts:2180`** — Voice Charter rule 2, name the loophole without pricing it:
 ```
-2. LENGTH: default to SHORT. One idea, landed well, beats four ideas explained. Most replies: 2-5 sentences AND under 90 words total. A long sentence is not a short reply. Go long only when the user asks for depth or the moment truly demands it. You are a conversation, not an essay service.
+2. LENGTH: default to SHORT. One idea, landed well, beats four ideas explained. Most replies: 2-5 sentences — and a long sentence is not a short reply. Go long only when the user asks for depth or the moment truly demands it. You are a conversation, not an essay service.
 ```
+The word count moves to the acceptance tests as a **drift metric** (T6): it triggers investigation, never a failed generation.
 
 ### KEEP
 `maxTokens` (`index.ts:2222`) — the hard ceiling, a separate mechanism from the target.
@@ -270,13 +282,15 @@ Not "did the AI improve." Each test names one behaviour and one jurisdiction.
 | T3 | Grep the assembled prompt for `ENFP`, `Projector`, `Taurus` outside `profileLines` | none found |
 | T4 | Grep for `'friend'` and `'Seeker'` as name fallbacks | none found |
 | T5 | Six consecutive Dutch turns | **at most two** replies end in `?`; **zero** questions in English |
-| T6 | Ten turns, no request for depth | every reply **under 90 words** |
+| T6 | Ten turns, no request for depth | **median reply under 90 words.** A drift metric, not a pass/fail gate — a rising median means the loophole reopened, not that a given reply was wrong |
 | T7 | Ten turns | framework labels named in **at most one** reply |
 | T8 | Ten turns | the user's name appears in **no more than 4** replies, and never as a placeholder |
 | T9 | A turn where the blueprint has no name | reply contains no name and no generic address |
 | T10 | Diff review | **net line count is negative** |
 
-T5–T9 are behavioural and need a real conversation. T1–T4 and T10 are mechanical and should run before deploy.
+T1–T4 and T10 are **static review** — mechanical, run before deploy. T5–T9 are **behavioural review** — observed in real output over a run of turns, from transcripts and logs, never from reading the prompt.
+
+Neither completes a jurisdiction. Per the Runtime Constitution's *Runtime review* cadence, a behaviour moves to ✅ only after a third pass: **user observation** — someone who is not us used it and did not report the symptom the change was meant to remove. Those questions are about experience, not architecture (*did anything feel mechanical · did it feel like it was talking at you · did you ever feel misunderstood · was there a moment you wanted to keep talking*). "Did framework references go down" is a behavioural-review question and must not be asked of a user.
 
 ---
 
@@ -290,7 +304,7 @@ Per Runtime Constitution rule 4, answered in the PR that performs this work.
 | **What gets removed?** | 5 per-role ending rules · 3 prescribed sign-offs · 2 worked examples that demonstrate banned behaviour · the `ADDRESS THEM BY NAME` block · the `RESPONSE DISCIPLINE` block · per-step word budgets in 7 role blocks · 8 language literals · the Projector voice branch · 2 question clauses in `opening_rule`. |
 | **Who now owns this?** | One row per behaviour in Part 1. |
 | **How do we know the old path is dead?** | T1–T4 are greps over the deployed source. T5–T9 are observed in a live conversation after deploy, per Runtime Constitution rule 8 (logs and real output, not assumption). |
-| **What test proves that?** | Part 4. T1–T4 and T10 are automatable today; T5–T9 are a scripted 10-turn manual pass until this repo has a test runner. **Stated gap: there is no test runner configured, so nothing here is enforced by CI yet.** |
+| **What test proves that?** | Part 4. T1–T4 and T10 are automatable today; T5–T9 are a scripted 10-turn manual pass until this repo has a test runner. **Stated gap: there is no test runner configured, so nothing here is enforced by CI yet.** No behaviour reaches ✅ in the register until user observation has also run. |
 
 ---
 
@@ -303,9 +317,22 @@ Per Runtime Constitution rule 4, answered in the PR that performs this work.
 
 ---
 
-# Two decisions needed before implementation
+# One decision needed before implementation
 
-1. **B3 fact gating** — should the full blueprint fact dump be restricted to `FACTUAL` intent and explicit technical requests? Highest-leverage change here, and a real behaviour change.
-2. **S2 fallback prompt** — retire the non-oracle prompt, or keep it and bring it under the charters? Requires invocation-log evidence first.
+**S2 fallback prompt** — retire the non-oracle prompt, or keep it and bring it under the charters? Requires invocation-log evidence first; do not act on this document alone (rule 10).
 
 Everything else in this spec is deletion of contradicting text and can proceed without further input.
+
+---
+
+# Appendix A — withdrawn: intent-gated fact retrieval
+
+Recorded rather than deleted, because the reasoning is worth keeping and the idea will resurface.
+
+**Proposed:** restrict `factsSection` (`index.ts:1908`) to `FACTUAL` intent and explicit technical requests, on the logic that you cannot recite what you were never given.
+
+**Withdrawn because** it couples two things that must stay independent: what the Twin *knows* and what the Twin *says*. The observed failure was narration, not knowledge. A user who says *"I keep sabotaging interviews"* needs the avoidance pattern, decision style and transformation roadmap in context — and needs the Twin not to name the framework. Gating retrieval would make the Twin less insightful in exactly the moments it exists to synthesise.
+
+**What this means for the deterministic/emergent model:** "make it impossible" is a strong instinct that can be aimed at the wrong target. Removing the *capability* to be wrong is not the same as removing the *behaviour*. Framework exposure stays emergent, governed by Voice Charter rule 6.
+
+**The narrower deterministic option, if rule 6 proves insufficient after this spec ships:** strip framework *labels* (the `**MBTI**`, `**HUMAN DESIGN**` facet headers) from `factsSection` while keeping every value. That removes the vocabulary without removing the knowledge. Not proposed now — it should only be considered on evidence that rule 6 alone did not hold.

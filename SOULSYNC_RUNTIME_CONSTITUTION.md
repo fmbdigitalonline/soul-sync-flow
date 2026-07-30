@@ -81,6 +81,50 @@ not what you have added; it is what you have successfully made impossible.
 
 ---
 
+## Tension is not contradiction
+
+Law 1 removes contradictions. It must not be used to remove tensions, and the
+difference is testable:
+
+- A **contradiction** is two rules that cannot both be satisfied in the same
+  reply. *"End with a question"* and *"one question in three"* — one of them is
+  broken every turn. Contradictions get deleted.
+- A **tension** is two rules that are both satisfiable but pull in different
+  directions, so the model must exercise judgment. *"Confront when the door
+  opens"* and *"one idea, landed well"* — a confrontation IS one idea. Tensions
+  get kept.
+
+Good architecture removes contradictions and preserves tensions. A system with
+no tension left has not been governed; it has been flattened, and it will
+produce replies that are consistent and lifeless. When consolidating a
+behaviour, name which of the two you found before deleting anything.
+
+---
+
+## Runtime review
+
+Governance that stops at static analysis produces perfectly owned code that
+holds poor conversations. A jurisdiction is not complete until it has passed
+three reviews, in order:
+
+1. **Static** — the behaviour is decided in one place; every other site is
+   removed. Provable by reading the source.
+2. **Behavioural** — the behaviour is observed in real output over a run of
+   turns. Provable from logs and transcripts, never from the prompt text.
+3. **User observation** — a person who is not us used it and did not report the
+   symptom the change was meant to remove.
+
+Only then does the behaviour move to ✅ in the register below. Static review
+alone moves nothing.
+
+The questions asked at step 3 are about experience, not architecture: *did
+anything feel mechanical · did it feel like it was talking at you · did you ever
+feel misunderstood · was there a moment you wanted to keep talking.* "Did the
+framework references go down" is a step-2 question and must not be asked of a
+user.
+
+---
+
 ## The migration checklist
 
 Every replacement answers five questions, in the PR that performs it. A PR that
@@ -122,7 +166,8 @@ authorities · 🟠 overlapping but compatible · ✅ single jurisdiction.
 
 The register is the work list. A behaviour leaves it by reaching ✅ — one
 jurisdiction, one enforcement point, every other site removed under the
-migration checklist. It does not leave by being documented.
+migration checklist, **and all three runtime reviews passed**. It does not leave
+by being documented, and it does not leave on static review alone.
 
 **Success is not fewer bugs. It is fewer places where the same behaviour can be
 decided.** The measurable form: over a milestone, deleted lines should exceed
