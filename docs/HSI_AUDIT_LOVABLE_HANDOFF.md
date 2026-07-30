@@ -115,6 +115,72 @@ Migration checklist for this change, in your PR (Runtime Constitution rule 4):
 
 ---
 
+# Task 5 — Trimming policy and honesty states (decided; implement with the repair)
+
+## 5a · Deterministic omission, not length-based dropping
+
+Today `crisis_handling` is dropped by accident of serialisation order. Replace with an explicit, stable policy:
+
+1. Serialise each selected dimension compactly.
+2. Reserve a small **equal** maximum per dimension.
+3. **Preserve at least one complete statement per dimension** — never clip a sentence into a fragment, and never proportionally shrink every line.
+4. If the block still exceeds `CHAR_CAP`, omit whole dimensions in reverse order of the priority list below.
+5. **Log every omitted dimension** by name.
+
+## 5b · The priority order (founder decision, taken)
+
+Ordered so the permanently-present set is the one least dependent on what the user happens to be asking about:
+
+```
+1. internal_conflicts
+2. behavioral_triggers
+3. execution_bias
+4. goal_archetypes
+5. metacognitive_biases
+6. identity_constructs
+7. crisis_handling
+8. temporal_biology
+```
+
+`financial_archetype`, `career_vocational`, `compatibility` and the health dimensions **do not** enter this list. They belong to intent-based relevance selection later — a separate problem, out of scope here. Giving them permanent priority would reproduce the one-perspective failure in a more sophisticated form.
+
+> Note this expands the spine's read set from 5 to 8 dimensions. That is a change to what the Twin sees, and it is authorised **only** alongside the honesty states in 5c — otherwise it widens the gap between users who have this data and users who do not.
+
+## 5c · Honesty states — absence and damage must stay visible
+
+Roughly half of users have no usable structured intelligence. Partial and missing are the majority path, not an edge case, so the accessor must expose which one it is:
+
+```ts
+type StructuredIntelligenceResolution = {
+  source: 'blob' | 'legacy_table' | 'none';
+  status: 'complete' | 'partial' | 'invalid' | 'missing';
+  dimensions: Record<string, StructuredDimension>;
+  rejectedDimensions: string[];
+};
+```
+
+The exact shape can differ; the requirement is that a caller cannot mistake missing for present.
+
+**And the state must have behaviour attached, not just be reported.** The pattern already exists and should be reused rather than reinvented — `hasNoMemory` (`index.ts:2022`) structurally strips the BEHAVIORAL EVIDENCE step from the role block when memory is absent, so the model cannot claim to see what it has not got. Apply the same guard:
+
+- `status: 'missing'` or `'invalid'` → strip the prompt steps that depend on structured intelligence, exactly as `hasNoMemory` does.
+- Never substitute framework material to fill the gap silently. A Twin that speaks with equal confidence to the users it understands and the users it does not is the failure this repair exists to prevent.
+
+## 5d · Source authority
+
+**Option A — source-level precedence — is ratified, not introduced.** `index.ts:831-848` already resolves `blob_column → blob_nested → typed_table` as a whole record and never mixes. Keep it. Do not patch individual dimensions from the legacy table: mixing two extraction generations would produce a synthesis that never existed as one report, to gain data for one user.
+
+Mark the typed table explicitly as **legacy fallback** in code comments and in the log line, so no one later reads the two sources as equally canonical.
+
+### Tests for Task 5
+
+- Blob and table both present with conflicting values → **blob wins**, conflict logged.
+- Blob has one valid object and one scalar string; table has a valid value for that dimension → the dimension is **rejected, not patched** (Option A), and appears in `rejectedDimensions`.
+- Block over `CHAR_CAP` → omitted dimensions are the lowest-priority ones, named in the log, and every surviving dimension holds at least one complete statement.
+- User with `status: 'missing'` → the dependent prompt steps are absent, verified in the assembled prompt.
+
+---
+
 # What NOT to do in this handoff
 
 Explicitly out of scope. Doing any of these before the evidence lands would repeat the pattern three audits have already found:
@@ -135,7 +201,7 @@ The reason for the ceiling: if the tables turn out to be empty or damaged, wirin
 
 A PR containing:
 
-1. The Task 4 repair, with its five migration answers.
+1. The Task 4 repair and the Task 5 policy, each with its five migration answers.
 2. A markdown file — `docs/HSI_AUDIT_PRODUCTION_EVIDENCE.md` — holding the raw output of Tasks 1–3. Numbers and log excerpts, no interpretation.
 3. One sentence at the end naming which verdict the evidence supports: **wire**, **repair**, or **replace parts** — and nothing beyond that sentence.
 
