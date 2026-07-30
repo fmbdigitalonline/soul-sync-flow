@@ -160,6 +160,52 @@ structured, 5 scalar — and `financial_archetype` / `career_vocational` are
 missing for 18 of 43. Those two never enter the spine today, but when relevance
 selection arrives, **42% of users will not have them**.
 
+### Jul 30 2026 — post-Track-A behavioural review, 5 Dutch turns (founder)
+
+First run after Runtime Constitution v2 deployed. Static tests T1-T4 verified
+against the deployed source: `Am I close` 0, all language literals 0, the three
+flattery lookup tables deleted, no forbidden name fallback. The jurisdiction
+work landed.
+
+| Test | Result |
+|---|---|
+| T5 language / closer | **pass** — 0 English literals, 0 questions |
+| T6 length | median 91 words vs 90 — marginal fail, max 116 |
+| T7 framework | **fail** — 5 of 5 replies name the blueprint; rule 6 allows once per session |
+| T8 name | **fail** — 5 of 5 replies; rule 3 says not in every reply |
+| T11 flattery | **fail** — "je bent dichtbij iets waardevols", "het wordt jouw bron van kracht" |
+
+**The finding is the gap, not the failures.** The charter is deployed exactly as
+specified, singular and uncontested, and four behaviours still miss. Sole
+jurisdiction bought one place to change; it did not buy obedience. This is the
+deterministic/emergent boundary observed rather than argued.
+
+**Appendix A trigger met.** The specification recorded that stripping framework
+labels from `factsSection` should be reconsidered "if rule 6 proves insufficient
+after this spec ships". It has, at 5/5, with one reply naming two astrological
+placements outright. The option is now evidence-backed.
+
+**Questions collapsed to zero — flattening, not success.** B1 removed five
+instructions that said ask and none that said don't ask, leaving a ceiling with
+no floor. Rule 5 is the only floor and it was violated: the user disclosed
+working alone 24/7 and the reply smoothed into reassurance without asking. The
+tension the Constitution deliberately preserves collapsed in one direction.
+
+**Zero lived evidence in five replies** — nothing the user has built, done or
+said. Cannot be diagnosed from output alone: either the spine is not firing for
+this user, or it is firing and losing to framework material. The `SPINE`
+breadcrumb (`source`, `lines`, `status`, `omittedDimensions`) and whether the
+`STRUCTURED INTELLIGENCE GUARD` fired will separate the two. If the spine is
+present and the replies still carry no specifics, the problem is weighting, not
+availability.
+
+**Concreteness: occurrence three.** Improved but not resolved — a real
+constraint was named and the reply restated the strategy without engaging it.
+
+Noted: the run was three consecutive money questions, and `financial_archetype`
+is correctly outside the permanent eight. Intent-based relevance selection now
+has an observed case rather than a hypothesis.
+
 ---
 
 ## Open decisions
