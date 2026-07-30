@@ -97,6 +97,37 @@ actionable. Under *interpretation before amendment* this looks like a genuinely
 missing law rather than a poor application — held for a third occurrence per the
 Rule of Three before anything is written.
 
+### Jul 30 2026 — HSI production evidence (Lovable), and a corrected verdict
+
+Reported: 48 users with personality reports · 29 with structured intelligence in
+the report blob · **1** in `hermetic_structured_intelligence` · 5 blob reports
+carrying scalar error strings in key dimensions.
+
+**Prediction confirmed.** The static audit predicted the table would be "near
+zero and only from manual dev-panel use". One row. The static method held.
+
+**Verdict corrected by the evidence.** The audit concluded *wire, then repair*.
+The blob path was already wired and serving 29 users; the orphan was the table,
+with one row. Wiring it would have wired the wrong source. The verdict narrows
+to **repair access; do not wire the table** — which is why the gate existed.
+
+**Consequence that outranks the repair.** Roughly 24 of 48 users have usable
+HSI. Partial and missing are not edge cases, they are half the user base, so the
+resolution state needs behaviour attached and not merely a status field. The
+template already exists: `hasNoMemory` structurally strips the BEHAVIORAL
+EVIDENCE step when memory is absent. HSI needs the same guard, or the Twin
+speaks with equal confidence to the users it understands and the users it does
+not.
+
+Two decisions settled against the code: source-level precedence (Option A) is
+already implemented at `index.ts:831-848` — blob column, blob nested, typed
+table, whole record, never mixed — so it is ratified rather than introduced. And
+scalar error strings are not leaking by accident: `dimProse` at ~857 returns
+them deliberately, comment included.
+
+Unreconciled: "25 of 43 structured reports" against 48/29. Raw query output
+needed before the 50% figure is trusted (rule 8).
+
 ---
 
 ## Open decisions
