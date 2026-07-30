@@ -49,58 +49,9 @@ function getConversationFlowGuidance(conversationState: any): string {
   return detection.openingRule || 'Respond thoughtfully based on conversation context.';
 }
 
-// Helper function to convert MBTI types to natural descriptions
-function getThinkingStyleDescription(mbtiType: string): string {
-  const descriptions: Record<string, string> = {
-    'ENFP': 'creative and inspiring explorer',
-    'INTJ': 'strategic and analytical architect', 
-    'INFP': 'values-driven and empathetic idealist',
-    'INFJ': 'insightful and visionary advocate',
-    'ENTJ': 'confident and natural-born leader',
-    'ISFP': 'gentle and harmonious artist',
-    'ESFP': 'spontaneous and enthusiastic entertainer',
-    'ISFJ': 'warm and dedicated protector',
-    'ESFJ': 'caring and social connector',
-    'ISTP': 'practical and adaptable craftsperson',
-    'ESTP': 'bold and perceptive entrepreneur',
-    'INTP': 'logical and innovative thinker',
-    'ENTP': 'quick-witted and clever innovator',
-    'ISTJ': 'practical and fact-minded logistician',
-    'ESTJ': 'efficient and hardworking executive'
-  };
-  return descriptions[mbtiType] || 'unique and individual thinker';
-}
-
-// Helper function to convert Human Design types to natural descriptions
-function getEnergyDescription(hdType: string): string {
-  const descriptions: Record<string, string> = {
-    'Projector': 'invitation-based wisdom sharing',
-    'Generator': 'sustained creative energy flow',
-    'Manifestor': 'independent action and initiation',
-    'Manifesting Generator': 'dynamic multi-passionate energy',
-    'Reflector': 'environment-sensitive reflection and wisdom'
-  };
-  return descriptions[hdType] || 'unique energy expression';
-}
-
-// Helper function to convert sun signs to natural descriptions  
-function getArchetypalDescription(sunSign: string): string {
-  const descriptions: Record<string, string> = {
-    'Aries': 'pioneering and courageous spirit',
-    'Taurus': 'stable and nurturing presence',
-    'Gemini': 'curious and communicative nature',
-    'Cancer': 'intuitive and protective instinct',
-    'Leo': 'creative and confident expression',
-    'Virgo': 'analytical and helpful approach',
-    'Libra': 'harmonious and balanced perspective',
-    'Scorpio': 'intense and transformative depth',
-    'Sagittarius': 'adventurous and philosophical outlook',
-    'Capricorn': 'ambitious and structured methodology',
-    'Aquarius': 'innovative and humanitarian vision',
-    'Pisces': 'empathetic and imaginative flow'
-  };
-  return descriptions[sunSign] || 'individual archetypal influence';
-}
+// B7a: getThinkingStyleDescription / getEnergyDescription /
+// getArchetypalDescription deleted. All 32 values were flattering and none
+// named a cost; profileLines no longer renders them, so they are dead code.
 
 // PHASE 4: Enhanced conversation state detection with comprehensive cluster taxonomy
 function detectConversationState(message: string, conversationHistory: any[] = []) {
@@ -721,9 +672,10 @@ function buildHermeticIdentityPrimer(
     return ''; // Principle #2: Real empty state when no data
   }
   
+  // B7c: neutral frame. A prompt that says "this is not inference" licenses
+  // speaking about a person's future in the indicative.
   let primer = `═══════════════════════════════════════════════════════════\n`;
-  primer += `CORE IDENTITY KNOWLEDGE: WHO ${userName.toUpperCase()} TRULY IS\n`;
-  primer += `This is not inference. This is ground truth from the Hermetic 2.0 blueprint.\n`;
+  primer += `WHAT IS KNOWN ABOUT ${userName.toUpperCase()} (from their Hermetic blueprint):\n`;
   primer += `═══════════════════════════════════════════════════════════\n\n`;
   
   // Extract MORE context - aim for 150-200 words total
@@ -756,27 +708,11 @@ function buildHermeticIdentityPrimer(
     primer += `\n`;
   }
   
-  primer += `═══════════════════════════════════════════════════════════\n`;
-  primer += `When you respond, you speak from DEEP KNOWING of ${userName}.\n`;
-  primer += `This is not guesswork or generic coaching. You are their mirror.\n`;
+  // B3a / B7c: the PRIORITY ORDER / NOT / YES / EXAMPLE APPLICATION block is
+  // deleted. Framework exposure is governed by VOICE CHARTER rule 6 alone;
+  // the primer carries knowledge, not behaviour.
   primer += `═══════════════════════════════════════════════════════════\n\n`;
-  
-primer += `ORACLE RESPONSE MODE - HERMETIC PRIORITY:\n`;
-primer += `When ${userName} shares a situation, PULL FROM THE 80,000+ WORD HERMETIC REPORT SECTIONS.\n`;
-primer += `\n`;
-primer += `PRIORITY ORDER:\n`;
-primer += `1. HERMETIC REPORT SECTIONS (structured_intelligence, seven_laws, gate_analyses, shadow_work)\n`;
-primer += `2. Behavioral memory patterns (past conversations)\n`;
-primer += `3. Only mention personality labels (ENFP, Projector) if directly relevant\n`;
-primer += `\n`;
-primer += `NOT: "Your ENFP pattern..." (too surface-level)\n`;
-primer += `YES: "Your Hermetic profile shows [specific pattern from report] which manifests as [concrete behavior from memory]. [Actionable insight from report]."\n`;
-primer += `\n`;
-primer += `EXAMPLE APPLICATION:\n`;
-primer += `User: "People steal my ideas and I don't get credit"\n`;
-primer += `Oracle response: "[From Hermetic shadow_work]: Your identity construct around 'innovation without recognition' stems from [specific trigger pattern]. [From behavioral memory: sister-in-law AI mockup situation]. [From integration_practices]: Establish co-creation agreements that credit your contribution before sharing insights. I'm here if this brings up more."\n`;
-primer += `═══════════════════════════════════════════════════════════\n\n`;
-  
+
   console.log('✅ HERMETIC PRIMER DATA CHECK:', {
     sectionsAvailable: Object.keys(hermeticSections),
     hasIntegratedSummary: !!hermeticSections.integrated_summary,
@@ -798,7 +734,17 @@ primer += `═══════════════════════
 // every turn (right after the main system prompt, before history) so
 // prompt caching stays stable. Fail-soft: row missing → no block.
 // ────────────────────────────────────────────────────────────────────
-async function buildStructuredIntelligenceSpine(userId: string, supabase: any): Promise<string | null> {
+// HSI Task 5c — absence and damage must stay visible to the caller.
+type SpineResolution = {
+  source: 'blob_column' | 'blob_nested' | 'legacy_table' | 'none';
+  status: 'complete' | 'partial' | 'invalid' | 'missing';
+  block: string | null;
+  rejectedDimensions: string[];
+  omittedDimensions: string[];
+};
+
+async function buildStructuredIntelligenceSpine(userId: string, supabase: any): Promise<SpineResolution> {
+  const NONE: SpineResolution = { source: 'none', status: 'missing', block: null, rejectedDimensions: [], omittedDimensions: [] };
   try {
     // Source-of-truth: personality_reports blob. The typed table
     // hermetic_structured_intelligence is a lossy derived cache and, for
@@ -812,7 +758,7 @@ async function buildStructuredIntelligenceSpine(userId: string, supabase: any): 
     };
 
     let hsi: any = null;
-    let source: 'blob_column' | 'blob_nested' | 'typed_table' | null = null;
+    let source: SpineResolution['source'] = 'none';
 
     const { data: report, error: reportErr } = await supabase
       .from('personality_reports')
@@ -838,23 +784,33 @@ async function buildStructuredIntelligenceSpine(userId: string, supabase: any): 
     if (!hsi) {
       const { data: tbl, error: tblErr } = await supabase
         .from('hermetic_structured_intelligence')
-        .select('execution_bias, behavioral_triggers, temporal_biology, identity_constructs, crisis_handling')
+        // LEGACY FALLBACK ONLY (HSI Task 5d). The blob is canonical; this
+        // table is a stale mirror of an older extraction generation and is
+        // never mixed with the blob at dimension level.
+        .select('internal_conflicts, behavioral_triggers, execution_bias, goal_archetypes, metacognitive_biases, identity_constructs, crisis_handling, temporal_biology')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (tblErr) console.warn('⚠️ SPINE: typed-table fallback failed:', tblErr.message);
-      if (tbl) { hsi = tbl; source = 'typed_table'; }
+      if (tblErr) console.warn('⚠️ SPINE: legacy-table fallback failed:', tblErr.message);
+      if (tbl) { hsi = tbl; source = 'legacy_table'; }
     }
 
-    if (!hsi) return null;
+    if (!hsi) {
+      console.warn('⚠️ SPINE: no structured intelligence for user (status: missing)');
+      return NONE;
+    }
 
     // Shape-agnostic dimension reader. Blob rows are `{analysis: "prose"}`
     // per dimension; typed-table rows are `{preferred_style, ...}` or a
     // scalar string on broken rows. Returns the best available prose.
+    // HSI Task 5c: a dimension that arrives as a bare scalar string is an
+    // extraction error (open bug 12), not content. It is REJECTED — never
+    // serialised into the prompt, and never patched from the legacy table
+    // (Task 5d: sources do not mix).
+    const rejectedDimensions: string[] = [];
     const dimProse = (dim: any): string => {
       if (!dim) return '';
-      if (typeof dim === 'string') return dim;              // broken-row scalar
       if (typeof dim !== 'object') return '';
       if (typeof dim.analysis === 'string') return dim.analysis; // blob shape
       return '';
@@ -863,76 +819,100 @@ async function buildStructuredIntelligenceSpine(userId: string, supabase: any): 
       return dim && typeof dim === 'object' && !Array.isArray(dim) ? dim[key] : undefined;
     };
 
-    const lines: string[] = [];
+    // HSI Task 5b — priority order (founder decision). Ordered so the
+    // permanently-present set is the one least dependent on what the user
+    // happens to be asking about. financial_archetype / career_vocational /
+    // compatibility deliberately do NOT enter this list: they belong to
+    // intent-based relevance selection, which is a separate problem.
+    const PRIORITY: Array<{ key: string; label: string; render: (d: any) => string | null }> = [
+      { key: 'internal_conflicts', label: 'Internal conflict', render: (d) => {
+          const c = dimField(d, 'belief_contradictions');
+          return Array.isArray(c) && c.length ? String(c[0]) : dimProse(d) || null;
+        } },
+      { key: 'behavioral_triggers', label: 'Avoidance pattern', render: (d) => {
+          const a = dimField(d, 'avoidance_patterns');
+          return Array.isArray(a) && a.length ? a.slice(0, 2).map(String).join(' | ') : dimProse(d) || null;
+        } },
+      { key: 'execution_bias', label: 'Execution style', render: (d) => {
+          const s = dimField(d, 'preferred_style');
+          return s ? String(s) : dimProse(d) || null;
+        } },
+      { key: 'goal_archetypes', label: 'Motivation structure', render: (d) => {
+          const m = dimField(d, 'motivation_structure');
+          return m ? String(m) : dimProse(d) || null;
+        } },
+      { key: 'metacognitive_biases', label: 'Dominant bias', render: (d) => {
+          const b = dimField(d, 'dominant_biases');
+          return Array.isArray(b) && b.length ? b.slice(0, 2).map(String).join(' | ') : dimProse(d) || null;
+        } },
+      { key: 'identity_constructs', label: 'Core narrative', render: (d) => {
+          const n = dimField(d, 'core_narratives');
+          return Array.isArray(n) && n.length ? String(n[0]) : dimProse(d) || null;
+        } },
+      { key: 'crisis_handling', label: 'Bounce-back ritual', render: (d) => {
+          const r = dimField(d, 'bounce_back_rituals');
+          return Array.isArray(r) && r.length ? String(r[0]) : dimProse(d) || null;
+        } },
+      { key: 'temporal_biology', label: 'Cognitive peaks', render: (d) => {
+          const p = dimField(d, 'cognitive_peaks');
+          return Array.isArray(p) && p.length ? p.slice(0, 3).map(String).join(' | ') : dimProse(d) || null;
+        } },
+    ];
 
-    // Execution bias — prefer typed sub-keys, else prose analysis.
-    const eb = hsi.execution_bias;
-    const ebStyle = dimField(eb, 'preferred_style');
-    const ebCompletion = dimField(eb, 'completion_patterns');
-    if (ebStyle) lines.push(`- Execution style: ${clip(ebStyle, 180)}`);
-    if (ebCompletion) lines.push(`- Completion pattern: ${clip(ebCompletion, 180)}`);
-    if (!ebStyle && !ebCompletion) {
-      const prose = dimProse(eb);
-      if (prose) lines.push(`- Execution bias: ${clip(prose, 260)}`);
-    }
-
-    // Behavioral triggers — avoidance list, else prose.
-    const bt = hsi.behavioral_triggers;
-    const avoidance = dimField(bt, 'avoidance_patterns');
-    if (Array.isArray(avoidance) && avoidance.length > 0) {
-      lines.push(`- Avoidance patterns: ${avoidance.slice(0, 3).map((a: any) => clip(a, 90)).join(' | ')}`);
-    } else {
-      const prose = dimProse(bt);
-      if (prose) lines.push(`- Behavioral triggers: ${clip(prose, 220)}`);
-    }
-
-    // Temporal biology — peaks list, else prose.
-    const tb = hsi.temporal_biology;
-    const peaks = dimField(tb, 'cognitive_peaks');
-    if (Array.isArray(peaks) && peaks.length > 0) {
-      lines.push(`- Cognitive peaks: ${peaks.slice(0, 3).map((p: any) => clip(p, 70)).join(' | ')}`);
-    } else {
-      const prose = dimProse(tb);
-      if (prose) lines.push(`- Temporal biology: ${clip(prose, 200)}`);
-    }
-
-    // Identity constructs — first core narrative, else prose.
-    const ic = hsi.identity_constructs;
-    const narratives = dimField(ic, 'core_narratives');
-    if (Array.isArray(narratives) && narratives.length > 0) {
-      lines.push(`- Core narrative: ${clip(narratives[0], 200)}`);
-    } else {
-      const prose = dimProse(ic);
-      if (prose) lines.push(`- Identity constructs: ${clip(prose, 220)}`);
-    }
-
-    // Crisis handling — first bounce-back ritual, else prose.
-    const ch = hsi.crisis_handling;
-    const rituals = dimField(ch, 'bounce_back_rituals');
-    if (Array.isArray(rituals) && rituals.length > 0) {
-      lines.push(`- Bounce-back ritual: ${clip(rituals[0], 140)}`);
-    } else {
-      const prose = dimProse(ch);
-      if (prose) lines.push(`- Crisis handling: ${clip(prose, 200)}`);
-    }
-
-    if (lines.length === 0) return null;
-
-    let block = 'USER STATE SPINE (structured): ground your read and any plan in these verified patterns. Do not recite them; let them shape word choice, pacing, and what you push on.\n' + lines.join('\n');
-
-    // Hard cap ≈ 350 tokens (~1400 chars): trim trailing lines until under cap.
+    const HEADER = 'USER STATE SPINE (structured): ground your read and any plan in these verified patterns. Do not recite them; let them shape word choice, pacing, and what you push on.\n';
     const CHAR_CAP = 1400;
-    while (block.length > CHAR_CAP && lines.length > 1) {
-      lines.pop();
-      block = 'USER STATE SPINE (structured): ground your read and any plan in these verified patterns. Do not recite them; let them shape word choice, pacing, and what you push on.\n' + lines.join('\n');
-    }
-    if (block.length > CHAR_CAP) block = block.slice(0, CHAR_CAP);
+    // Task 5a step 2-3: an equal per-dimension budget, clipped at a sentence
+    // boundary so a surviving dimension always holds at least one complete
+    // statement — never a fragment.
+    const PER_DIM = Math.max(80, Math.floor((CHAR_CAP - HEADER.length) / PRIORITY.length));
+    const toSentence = (raw: string, max: number): string => {
+      const s = raw.replace(/\s+/g, ' ').trim();
+      if (s.length <= max) return s;
+      const head = s.slice(0, max);
+      const stop = Math.max(head.lastIndexOf('. '), head.lastIndexOf('! '), head.lastIndexOf('? '));
+      if (stop > 40) return head.slice(0, stop + 1);
+      return clip(s, max);
+    };
 
-    console.log(`📐 SPINE: ~${Math.ceil(block.length / 4)} tokens injected`, { lines: lines.length, source });
-    return block;
+    const rendered: Array<{ key: string; line: string }> = [];
+    for (const dim of PRIORITY) {
+      const raw = hsi[dim.key];
+      if (raw == null) continue;
+      if (typeof raw === 'string') { rejectedDimensions.push(dim.key); continue; } // scalar error string
+      const value = dim.render(raw);
+      if (!value || !String(value).trim()) continue;
+      rendered.push({ key: dim.key, line: `- ${dim.label}: ${toSentence(String(value), PER_DIM)}` });
+    }
+
+    if (rendered.length === 0) {
+      const status: SpineResolution['status'] = rejectedDimensions.length > 0 ? 'invalid' : 'missing';
+      console.warn('⚠️ SPINE: no usable dimensions', { source, status, rejectedDimensions });
+      return { source, status, block: null, rejectedDimensions, omittedDimensions: [] };
+    }
+
+    // Task 5a step 4-5: if still over cap, omit WHOLE dimensions in reverse
+    // priority order and name every omission in the log. crisis_handling is
+    // no longer the systematic casualty of serialisation order.
+    const omittedDimensions: string[] = [];
+    const compose = () => HEADER + rendered.map(r => r.line).join('\n');
+    while (compose().length > CHAR_CAP && rendered.length > 1) {
+      const dropped = rendered.pop()!;
+      omittedDimensions.push(dropped.key);
+    }
+    const block = compose();
+
+    const status: SpineResolution['status'] =
+      rejectedDimensions.length > 0 || omittedDimensions.length > 0 || rendered.length < PRIORITY.length
+        ? 'partial'
+        : 'complete';
+
+    console.log(`📐 SPINE: ~${Math.ceil(block.length / 4)} tokens injected`, {
+      lines: rendered.length, source, status, rejectedDimensions, omittedDimensions,
+    });
+    return { source, status, block, rejectedDimensions, omittedDimensions };
   } catch (e) {
     console.warn('⚠️ SPINE: build failed (non-blocking):', e instanceof Error ? e.message : e);
-    return null;
+    return NONE;
   }
 }
 
@@ -960,11 +940,9 @@ function generateVoiceStyle(mbti: string, hd: string, sun: string): string {
     style += "- Emphasize logic, analysis, and objective problem-solving\n";
   }
   
-  if (hd === 'Projector') {
-    style += "- Recognize their need for recognition and invitation\n";
-    style += "- Honor their role as a guide and wise advisor\n";
-  }
-  
+  // B3c / B7b: the Projector branch injected Human Design vocabulary and an
+  // explicit instruction to flatter into every turn. Deleted.
+
   return style;
 }
 
@@ -1024,13 +1002,11 @@ Offer wisdom, interpretation, and guidance that honors ${userName}'s depth. Draw
       return `You are ${userName}'s mirror. They're asking "why" because they want to understand the MECHANISM behind their patterns.
 
 RESPONSE STRUCTURE (WHY-FIRST):
-1. MECHANISM: Explain the underlying pattern/design (30-40 words)
-2. MANIFESTATION: Show how it shows up in their life (20-30 words)
-3. ALIGNMENT PATH: One actionable insight to work WITH this pattern (20 words max)
+1. MECHANISM: Explain the underlying pattern/design
+2. MANIFESTATION: Show how it shows up in their life
+3. ALIGNMENT PATH: One actionable insight to work WITH this pattern
 
-Keep total response under 100 words. No jargon. Speak like a friend who deeply knows them.
-
-CRITICAL: End naturally—no exploration questions, no "Would you like", no "Wil je".`;
+No jargon. Speak like someone who deeply knows them.`;
 
     case 'BLUEPRINT_GUIDANCE':
       return `You are ${userName}'s blueprint interpreter with access to their complete 80,000+ word Hermetic 2.0 report AND behavioral memory patterns.
@@ -1038,10 +1014,10 @@ CRITICAL: End naturally—no exploration questions, no "Would you like", no "Wil
 CRITICAL: "Blueprint" means BOTH their basic traits (MBTI, Human Design, Life Path) AND their deep Hermetic report containing how they think, act, their shadow sides, and behavioral patterns.
 
 RESPONSE STRUCTURE (HERMETIC + BEHAVIORAL FUSION):
-1. ACKNOWLEDGE SITUATION: Reflect what they're navigating (1 sentence, concrete—no metaphors yet)
-2. BLUEPRINT INSIGHT: Pull from Hermetic report sections to explain WHY they think/act this way (2-3 sentences, specific patterns)
-3. BEHAVIORAL EVIDENCE: Reference actual behavioral patterns from their memory to show HOW this plays out in real situations (1-2 sentences)
-4. ALIGNED ACTION: One immediately actionable step that honors their blueprint (1 sentence)
+1. ACKNOWLEDGE SITUATION: Reflect what they're navigating (concrete—no metaphors yet)
+2. BLUEPRINT INSIGHT: Pull from Hermetic report sections to explain WHY they think/act this way (specific patterns)
+3. BEHAVIORAL EVIDENCE: Reference actual behavioral patterns from their memory to show HOW this plays out in real situations
+4. ALIGNED ACTION: One immediately actionable step that honors their blueprint
 
 FOCUS AREAS FOR BLUEPRINT GUIDANCE:
 - Pull from: integrated_summary, core_personality_pattern, decision_making_style, authentic_expression_guide, transformation_roadmap
@@ -1050,33 +1026,24 @@ FOCUS AREAS FOR BLUEPRINT GUIDANCE:
 MANDATORY RULES:
 - NO generic advice - everything must be grounded in THEIR specific Hermetic patterns
 - If you use a metaphor, immediately follow with: "In practical terms, this means [concrete action]"
-- Users seek alignment to reach goals, be happy, and approach challenges—speak to this directly
-
-CRITICAL ENDING RULES:
-❌ NEVER: "Would you like to know...", "Wil je ontdekken...", "Shall we explore..."
-✅ ALWAYS: "I'm here when you're ready to dive deeper." OR "Let me know if this resonates."`;
+- Users seek alignment to reach goals, be happy, and approach challenges—speak to this directly`;
     
     case 'SHADOW_EXPLORATION':
       return `You are ${userName}'s shadow work guide with access to their Hermetic 2.0 report and behavioral memory patterns.
 
 RESPONSE STRUCTURE (SHADOW-FOCUSED):
-1. ACKNOWLEDGE PATTERN: Reflect the pattern they're noticing (1 sentence)
-2. SHADOW INSIGHT: Connect to specific shadow patterns from Hermetic report (2 sentences)
-3. BEHAVIORAL EVIDENCE: Reference how this shadow pattern manifests in their actual behavior (1-2 sentences)
-4. COMPASSIONATE ACKNOWLEDGMENT: Hold space for this awareness (1 sentence)
-
-CRITICAL: End with compassionate acknowledgment, NOT exploration questions.
-Example: "This pattern takes courage to see. I'm here." NOT "Would you like to explore this?"`;
+1. ACKNOWLEDGE PATTERN: Reflect the pattern they're noticing
+2. SHADOW INSIGHT: Connect to specific shadow patterns from Hermetic report
+3. BEHAVIORAL EVIDENCE: Reference how this shadow pattern manifests in their actual behavior
+4. COMPASSIONATE ACKNOWLEDGMENT: Hold space for this awareness`;
     
     case 'ALIGNED_ACTION':
       return `You are ${userName}'s action strategist with access to their Hermetic 2.0 report and behavioral memory patterns.
 
 RESPONSE STRUCTURE (ACTION-FOCUSED):
-1. ACKNOWLEDGE SITUATION: Reflect where they are (1 sentence)
-2. BLUEPRINT-ALIGNED ACTION: One specific, immediately actionable step grounded in their Hermetic patterns (2-3 sentences)
-3. BEHAVIORAL VALIDATION: Show why this action works for their demonstrated patterns (1 sentence)
-
-END with the concrete action step. No follow-up questions.`;
+1. ACKNOWLEDGE SITUATION: Reflect where they are
+2. BLUEPRINT-ALIGNED ACTION: One specific, immediately actionable step grounded in their Hermetic patterns
+3. BEHAVIORAL VALIDATION: Show why this action works for their demonstrated patterns`;
 
     default: // ORACLE MODE (formerly MIXED)
       return `You are ${userName}'s oracle companion with their complete 80,000+ word Hermetic 2.0 report AND behavioral memory patterns.
@@ -1088,22 +1055,10 @@ CRITICAL ROLE DEFINITION:
 YOUR JOB: TELL them what their blueprint reveals about this situation.
 
 RESPONSE STRUCTURE (ORACLE-MODE):
-1. ACKNOWLEDGE: Mirror their situation with compassion (1 sentence, specific)
-2. BLUEPRINT MECHANISM: Explain WHY this pattern exists using their Hermetic data (2-3 sentences—cite specific personality mechanics)
-3. BEHAVIORAL EVIDENCE: Show HOW this manifests using their memory patterns (1-2 sentences)
-4. ALIGNED INSIGHT: Provide ONE concrete reframe or action from their blueprint (1 sentence)
-
-EXAMPLES:
-❌ BAD (coaching): "Wat als je jouw AI-schetsen gebruikt als inspiratie? Hoe zou dat voelen?"
-✅ GOOD (oracle): "Your ENFP pattern creates through rapid exploration, not linear refinement—position your AI sketches as 'creative direction' for specialists, not pixel-perfect UI."
-
-❌ BAD (coaching): "What do you think is causing this doubt?"
-✅ GOOD (oracle): "This recurring doubt pattern appears when your divergent creative process (exploration-first) clashes with specialist expectations (credentials-first)—it's architectural, not a skill gap."
-
-ENDING:
-❌ NEVER: deflecting coaching questions that outsource the insight ("What do you think is causing this?", "Would you like to explore...", "Hoe zou dat voelen?")
-✅ ALLOWED sparingly: after DELIVERING your insight, ONE short hypothesis-check inviting confirmation or pushback ("Am I close?", "Klopt dit?") — you are checking your read, not fishing for direction. This is the EXCEPTION, not the rule.
-❌ NEVER end with a ritual sign-off. "I'm here if this brings up more." and "Let me know how this lands." are BANNED phrases — they are template tells.`;
+1. ACKNOWLEDGE: Mirror their situation with compassion (specific)
+2. BLUEPRINT MECHANISM: Explain WHY this pattern exists using their Hermetic data (cite specific personality mechanics)
+3. BEHAVIORAL EVIDENCE: Show HOW this manifests using their memory patterns
+4. ALIGNED INSIGHT: Provide ONE concrete reframe or action from their blueprint`;
   }
 }
 
@@ -1347,7 +1302,9 @@ serve(async (req) => {
           firstWord(meta.full_name) ||
           usableName(meta.display_name) ||
           firstWord(meta.name) ||
-          'friend';
+          // B5: no placeholder. Absence is a real state — the Twin simply
+          // does not use a name that turn.
+          null;
         personalityContext = {
           name: resolvedName,
           mbti: blueprint.blueprint.user_meta?.personality?.likelyType || blueprint.blueprint.cognition_mbti?.type || 'Unknown',
@@ -1416,8 +1373,14 @@ serve(async (req) => {
     // messages array below — same slot every turn.
     // ────────────────────────────────────────────────────────────────
     console.log('🧭 SPINE ENTRY: calling buildStructuredIntelligenceSpine', { userId: userId?.slice(0, 8) });
-    const structuredSpine = await buildStructuredIntelligenceSpine(userId, supabase);
-    console.log('🧭 SPINE EXIT:', { hasSpine: !!structuredSpine, len: structuredSpine?.length ?? 0 });
+    const spineResolution = await buildStructuredIntelligenceSpine(userId, supabase);
+    const structuredSpine = spineResolution.block;
+    console.log('🧭 SPINE EXIT:', {
+      hasSpine: !!structuredSpine,
+      len: structuredSpine?.length ?? 0,
+      source: spineResolution.source,
+      status: spineResolution.status,
+    });
 
     // ────────────────────────────────────────────────────────────────
     // PHASE 1 (item 5): shadow-detector cue — synchronous, current turn
@@ -1930,7 +1893,12 @@ serve(async (req) => {
 
       // FUSION: Generate intent-aware prompt based on sidecar results
       const generateHybridPrompt = async () => {
-        const userName = personalityContext.name || 'friend';
+        // B5: `addressName` is the name the Twin may actually say. When it is
+        // null the profile line and the name rule are omitted entirely — no
+        // placeholder, no generic address. `userName` is prompt-internal
+        // phrasing only and never reaches the reply.
+        const addressName: string | null = personalityContext.name || null;
+        const userName = addressName ?? 'the user';
         const mbtiType = personalityContext.mbti || 'Unknown';
         const hdType = personalityContext.hdType || 'Unknown';
         const sunSign = personalityContext.sunSign || 'Unknown';
@@ -2047,13 +2015,19 @@ serve(async (req) => {
           effectiveRoleBlock = renumbered.join('\n');
         }
 
-        // Profile block
+        // Profile block.
+        // B7a: the three lookup-table descriptors are deleted — all 32 values
+        // were flattering and none named a cost, which is the input the
+        // identity flattery came from. Framework labels still appear behind
+        // detectTechnicalDetailRequest; the real personal model is the spine.
         const profileLines = [
-          userName + "'S CURRENT PROFILE (Technical Details):",
-          '- Name: ' + userName,
-          '- Natural thinking style: ' + getThinkingStyleDescription(mbtiType) + (wantsTechnicalDetails ? ' (MBTI: ' + mbtiType + ')' : ''),
-          '- Energy approach: ' + getEnergyDescription(hdType) + (wantsTechnicalDetails ? ' (Human Design: ' + hdType + ')' : ''),
-          '- Archetypal influence: ' + getArchetypalDescription(sunSign) + (wantsTechnicalDetails ? ' (Sun Sign: ' + sunSign + ')' : ''),
+          "CURRENT PROFILE (Technical Details):",
+          ...(addressName ? ['- Name: ' + addressName] : []),
+          ...(wantsTechnicalDetails ? [
+            '- MBTI: ' + mbtiType,
+            '- Human Design: ' + hdType,
+            '- Sun Sign: ' + sunSign,
+          ] : []),
           '- Intelligence Level: ' + intelligenceLevel + '/100'
         ];
 
@@ -2076,12 +2050,7 @@ serve(async (req) => {
           '- If this is a continuing conversation, NO greetings, NO welcomes, NO reintroductions',
           "- Respond directly and naturally to what they asked - don't echo their words",
           "",
-          "🔵 ADDRESS THEM BY NAME (BEHAVIOURAL REQUIREMENT, NOT CONTEXT):",
-          "- Their name is \"" + userName + "\". Actually say it out loud in your reply.",
-          "- Use \"" + userName + "\" at least once in every response, and at most twice—more than that sounds like a script.",
-          "- Place it where it lands naturally: at the opening of a direct point, or right before an insight that matters.",
-          "- Never write a placeholder, a title, or a generic address (no 'Seeker', 'friend', 'my friend', 'dear one')—only \"" + userName + "\".",
-          "- The only exception: if their message is a one-word or purely factual exchange where a name would feel stilted, you may omit it.",
+          // B5: name usage is decided by VOICE CHARTER rule 3 alone.
           '- Keep language warm, accessible, and conversational',
           '- When you have specific facts, state them confidently and precisely',
           '- Provide insights that feel personally relevant',
@@ -2095,7 +2064,7 @@ serve(async (req) => {
           '3. For interpretive queries: Focus on insights and guidance',
           '4. For mixed queries: Balance facts with meaningful interpretation',
           '5. CONVERSATION FLOW INTELLIGENCE: ' + getConversationFlowGuidance(conversationState),
-          '6. ENDING: State your final insight clearly. You may close with ONE short hypothesis-check inviting confirmation or pushback ("Am I close?") - never a deflecting exploration question, and never a ritual sign-off (the two legacy closers are banned; see VOICE CHARTER). Vary how you end; sometimes just stop after the insight.'
+          '6. ENDING: State your final insight clearly. How you end is governed by the VOICE CHARTER.'
         ].join('\n');
 
         // Final prompt pieces
@@ -2108,16 +2077,10 @@ serve(async (req) => {
           'COMMUNICATION GUIDELINES:\n' + [voiceStyle, humorStyle, communicationDepth].filter(Boolean).join('\n'),
           'UNIVERSAL RULES:\n' + universalRules,
           'RESPONSE GUIDELINES:\n' + responseGuidelines,
-          // Founder testing (Jul 2026): responses ran long (fatigue, skimming)
-          // and neutral messages were relabelled as "frustration". This block
-          // overrides the multi-part structures above on both counts.
-          'RESPONSE DISCIPLINE (overrides any longer structure above):\n' + [
-            '- BREVITY: lean short — a few sentences usually lands better than a long structured answer, unless they ask you to go deeper. A wall of text tends to get skimmed; one clear insight often lands harder than four stacked ones.',
-            '- Prefer ONE idea per turn over running the full acknowledge→mechanism→evidence→action structure every time. Let the conversation breathe.',
-            "- MIRROR THEIR REGISTER: lean toward reflecting the state they actually expressed. When a message reads as neutral or even (e.g. \"het gaat zijn gangetje\" / \"it's just ticking along\"), it's usually better to meet it as neutral than to read frustration, stuckness, or struggle into it — unless something specific in their words points there.",
-            '- When you are unsure of their state, a light check tends to serve better than asserting a feeling ("sounds fairly even today — or am I missing something?").',
-          ].join('\n'),
-          "Remember: You're " + userName + "'s perceptive AI companion who has access to their detailed blueprint and can provide both specific facts and meaningful guidance through conversation."
+          // B4b: RESPONSE DISCIPLINE deleted. Bullets 1-2 restated VOICE
+          // CHARTER rule 2; bullets 3-4 restated the evidence gate already
+          // enforced in getConversationFlowGuidance. Nothing is lost.
+          "Remember: you are this person's perceptive AI companion who has access to their detailed blueprint and can provide both specific facts and meaningful guidance through conversation."
         ];
 
         let assembled = blocks.filter(Boolean).join('\n\n');
@@ -2140,18 +2103,21 @@ serve(async (req) => {
     }
 
     // ------------------------------------------------------------------
-    // QUESTION RATION: if the last 3 assistant messages ended with "?",
-    // force this reply to end with a statement.
+    // QUESTION RATION (B1): a 3-message window let alternating
+    // question/statement never trip the guard while the user still got a
+    // question every other turn. Widened to six.
     // ------------------------------------------------------------------
     {
-      const last3Assistant = (finalHistory || [])
+      const recent = (finalHistory || [])
         .filter((m: any) => m.role === 'assistant')
-        .slice(-3);
-      const endsInQ = last3Assistant.filter((m: any) =>
+        .slice(-6);
+      const endsInQ = recent.filter((m: any) =>
         typeof m.content === 'string' && m.content.trim().endsWith('?')
       ).length;
-      if (endsInQ >= 2) {
-        systemPrompt += '\n\nQUESTION RATION: Your recent replies all ended in questions. End this one with a statement.';
+      // Voice Charter rule 4: one reply in three. Two in the last six is
+      // already at the limit, so a third is refused.
+      if (recent.length >= 3 && endsInQ >= 2) {
+        systemPrompt += '\n\nQUESTION RATION: You have used your question allowance. End this reply with a statement.';
       }
     }
 
@@ -2166,22 +2132,25 @@ serve(async (req) => {
         '- Open the conversation yourself. Never say "welcome", never explain features or what you can do, never ask "how can I help".\n' +
         '- From the blueprint context above, pick the ONE fact that carries the most tension (authority, profile, or a shadow-adjacent pattern) and make a single specific, slightly confronting observation about how it probably shows up in their daily life.\n' +
         '- Confronting means precise and caring — the feeling of being seen, never judged. No flattery.\n' +
-        '- End with one short question inviting them to confirm or push back (for example: "Am I close?"). You are checking a hypothesis, not declaring a truth.\n' +
+        '- Do not close with a question unless the Voice Charter permits one.\n' +
         '- HARD LIMIT: 2 to 4 sentences total. No lists, no headers, no emojis, no name-dropping of frameworks or system terms.';
     }
 
     // ------------------------------------------------------------------
-    // VOICE CHARTER — governs every reply, all modes. This block wins over
-    // any conflicting instruction above it. Tune the voice HERE, once.
+    // VOICE CHARTER — governs every reply, all modes. S1: the charters are
+    // PREPENDED, not appended. A constitution that appears first constrains
+    // what follows; one that appears last negotiates with it.
+    // Tune the voice HERE, once.
     // ------------------------------------------------------------------
-    systemPrompt += '\n\nVOICE CHARTER (final authority on how you speak — overrides any conflicting rule above):\n' +
+    let chartersBlock =
+      'VOICE CHARTER (final authority on how you speak — overrides any conflicting rule below):\n' +
       '1. LANGUAGE: reply in the language of the user\'s MOST RECENT message. If they switch to Dutch, you switch fully to Dutch and stay there until they switch back. Never drift mid-topic.\n' +
-      '2. LENGTH: default to SHORT. One idea, landed well, beats four ideas explained. Most replies: 2-5 sentences. Go long only when the user asks for depth or the moment truly demands it. You are a conversation, not an essay service.\n' +
-      '3. VARY YOUR SHAPE: never open consecutive replies the same way. Do not start replies with the user\'s name more than occasionally. No fixed closing lines, ever — ritual sign-offs are template tells that kill intimacy.\n' +
-      '4. ONE QUESTION MAX: at most one question per reply, and only when it earns its place. A hypothesis-check after an insight ("Am I close?") is the EXCEPTION, not the rule — rationed to one reply in three. A deflecting question instead of an insight is not.\n' +
+      '2. LENGTH: default to SHORT. One idea, landed well, beats four ideas explained. Most replies: 2-5 sentences — and a long sentence is not a short reply. Go long only when the user asks for depth or the moment truly demands it. You are a conversation, not an essay service.\n' +
+      '3. VARY YOUR SHAPE: never open consecutive replies the same way. Use their name where it lands — at most once per reply, and not in every reply. If no name is available, use none; never a placeholder or a generic address. No fixed closing lines, ever — ritual sign-offs are template tells that kill intimacy.\n' +
+      '4. ONE QUESTION MAX: at most one question per reply, and only when it earns its place. A short hypothesis-check after an insight, phrased in the user\'s language, is the EXCEPTION, not the rule — rationed to one reply in three. A deflecting question instead of an insight is not.\n' +
       '5. CONFRONT WHEN THE DOOR OPENS: when the user discloses something loaded (status, shame, fear, money, a relationship, "out of necessity"), do NOT smooth past it into advice. Stop. Name it. Ask about it. The disclosure IS the conversation.\n' +
       '6. THE CHART INFORMS, IT DOES NOT NARRATE: never explain every feeling by the blueprint ("you feel X because Taurus Moon"). Use chart mechanics for the occasional precise strike — rationed to at most ONCE per session — not as a running commentary. The user is the author of their life; you hold a map, not a script.\n' +
-      '7. NO IDENTITY FLATTERY: do not cast the user as a blocked visionary whose environment is unworthy of them. Being seen precisely lands deeper than being praised. When their pattern is costing them something, say so plainly and kindly.\n' +
+      '7. NO IDENTITY FLATTERY: do not cast the user as a blocked visionary whose environment is unworthy of them, and do not declare a destiny, a latent greatness, or an energetic certainty about who they are becoming. Being seen precisely lands deeper than being praised. Appreciation is allowed when it is grounded in something they actually did or said; it is not allowed as a statement about their nature. When their pattern is costing them something, say so plainly and kindly.\n' +
       '8. HONESTY OVER COMFORT: you would rather be corrected than be agreeable. State your read confidently, hold it loosely, and make pushing back feel easy and welcome.';
 
     // ------------------------------------------------------------------
@@ -2189,12 +2158,16 @@ serve(async (req) => {
     // the Voice Charter: Voice rules how you speak, this rules when you act.
     // Tune the tool reflex HERE, once.
     // ------------------------------------------------------------------
-    systemPrompt += '\n\nACTION CHARTER (final authority on when you act — you have hands, use them):\n' +
+    chartersBlock += '\n\nACTION CHARTER (final authority on when you act — you have hands, use them):\n' +
       '1. YOU HAVE HANDS: get_active_dream is yours to call within this very turn (decompose_goal fires only on a confirmed tap — never on your own initiative). NEVER describe, promise, or narrate what a tool would produce instead of calling it.\n' +
       '2. CONFIRMED = CALL NOW: once the user has confirmed they want a goal broken down and you know the what plus a rough timeframe, you MUST call decompose_goal in THIS turn. Deferring a confirmed decomposition to a future turn is a violation. Do not reframe, translate, or abstract the user\'s stated goal — copy their words.\n' +
       '3. CONSULT BEFORE COUNSEL: before advising on goals, progress, or "what\'s next", call get_active_dream so your counsel is grounded in what actually exists — never advise on a dream from memory alone.\n' +
       '4. THE WORKSPACE BUILDS PROGRAMS, NOT YOU (v2.5): you never deal offer cards and never offer decomposition in prose. When the user states a concrete goal, respond to its substance; at most, mention ONCE and in passing that they can select that sentence to open their program builder in the workspace. If they let it pass, drop it — no nagging, no re-offers.\n' +
       '5. TOOLS ACCOMPANY INSIGHT, NEVER REPLACE IT: your text must still carry the observation, the confrontation, or the read. The card only holds structure. A tool call wrapped in a hollow message is a violation.';
+
+    // S1: charters first.
+    systemPrompt = chartersBlock + '\n\n' + systemPrompt;
+
     // ending (goodbye, thanks, heading to sleep, wrapping up), do not just
     // say goodbye. Close warmly AND plant exactly one open loop: name one
     // specific, real area of their chart or an unfinished thread from this
@@ -2202,11 +2175,24 @@ serve(async (req) => {
     // about it next time. The loop must be genuinely grounded in their
     // actual blueprint context or conversation — never invented, never a
     // generic teaser.
-    systemPrompt += '\n\nSESSION CLOSE RULE: if the user signals they are wrapping up (goodbye, thanks, gtg, going to bed), close warmly and leave exactly ONE open loop — a specific, real, unexplored area of their chart or an unfinished thread from this conversation — phrased as something to ask you about next time (for example: "Before you go — there is something in your chart about how you handle endings. Ask me about it tomorrow."). Ground it in real context; never fabricate a teaser. At most one loop per session close.';
+    // B6: the worked example was an English literal. The move is described,
+    // the words are not supplied. Jurisdiction (session-level close, distinct
+    // from per-reply endings) is unchanged.
+    systemPrompt += '\n\nSESSION CLOSE RULE: if the user signals they are wrapping up (goodbye, thanks, gtg, going to bed), close warmly and leave exactly ONE open loop — a specific, real, unexplored area of their chart or an unfinished thread from this conversation — phrased in their language as something to ask you about next time. Ground it in real context; never fabricate a teaser. At most one loop per session close.';
 
     // PHASE 1 (item 5): one-line shadow cue arms Voice Charter rule 5.
     if (shadowCue) {
       systemPrompt += '\n\nSHADOW CUE (do not name it, respond to it): ' + shadowCue.cue;
+    }
+
+    // HSI Task 5c — honesty state with behaviour attached, mirroring the
+    // hasNoMemory guard: when the structured intelligence is missing or
+    // damaged, the prompt steps that depend on it are stripped rather than
+    // silently filled with framework material.
+    if (spineResolution.status === 'missing' || spineResolution.status === 'invalid') {
+      systemPrompt += '\n\nSTRUCTURED INTELLIGENCE GUARD: no verified structured model of this person is available this turn. ' +
+        'Skip any step that asks you to cite their patterns, mechanisms or behavioural evidence — you do not have them. ' +
+        'Speak from what they actually said and from their chart only, and never present a framework inference as something you observed about them.';
     }
 
     // FULL BLUEPRINT DETECTION: Check if user is requesting comprehensive blueprint
@@ -2239,7 +2225,9 @@ serve(async (req) => {
     const messages = [
       { 
         role: 'system', 
-        content: systemPrompt + '\n\nIMPORTANT: Use double line breaks (\\n\\n) between paragraphs to create natural reading pauses. Keep paragraphs to 2-3 sentences maximum for digestible, conversational flow.\n\nRespond directly and naturally without repeating the user\'s question - they already know what they asked.'
+        // B4c: the paragraph-length clause is deleted; length is the VOICE
+        // CHARTER's. The double-line-break instruction is formatting, kept.
+        content: systemPrompt + '\n\nIMPORTANT: Use double line breaks (\\n\\n) between paragraphs to create natural reading pauses.\n\nRespond directly and naturally without repeating the user\'s question - they already know what they asked.'
       }
     ];
 

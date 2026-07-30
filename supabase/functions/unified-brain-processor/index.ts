@@ -400,18 +400,27 @@ async function processVFP(supabase: any, userId: string): Promise<HermeticModule
 
     const personalityContext = blueprint ? extractPersonalityContext(blueprint.blueprint) : null;
 
-    // Fix 1: Also fetch hermetic_structured_intelligence for deep identity data
+    // HSI Task 4: this select previously named four columns that do not exist
+    // on hermetic_structured_intelligence (shadow_patterns, core_wounds,
+    // defense_mechanisms, communication_style). PostgREST rejects a select
+    // naming unknown columns, so the unified brain received NO hermetic data
+    // at all — not a partial row. Corrected to the four real columns.
     let hermeticIntelligence = null;
     try {
-      const { data: hermeticData } = await supabase
+      const { data: hermeticData, error: hermeticQueryError } = await supabase
         .from('hermetic_structured_intelligence')
-        .select('identity_constructs, behavioral_triggers, attachment_style, cognitive_functions, shadow_patterns, core_wounds, defense_mechanisms, communication_style')
+        .select('identity_constructs, behavioral_triggers, attachment_style, cognitive_functions')
         .eq('user_id', userId)
         .maybeSingle();
-      
-      if (hermeticData) {
+
+      if (hermeticQueryError) {
+        // Fail visibly: this read is expected to succeed once the row exists.
+        console.error('🧬 VFP: hermetic_structured_intelligence select failed:', hermeticQueryError.message);
+      } else if (hermeticData) {
         hermeticIntelligence = hermeticData;
         console.log('🧬 VFP: Merged hermetic_structured_intelligence data');
+      } else {
+        console.warn('🧬 VFP: no hermetic_structured_intelligence row for user (absent, not an error)');
       }
     } catch (hermeticError) {
       console.warn('🧬 VFP: hermetic_structured_intelligence query failed (non-blocking):', hermeticError);
@@ -514,8 +523,11 @@ DEEP IDENTITY INTELLIGENCE (from Hermetic Structured Intelligence):
 - Identity Constructs: ${JSON.stringify(hermeticIntel.identity_constructs || 'N/A')}
 - Behavioral Triggers: ${JSON.stringify(hermeticIntel.behavioral_triggers || 'N/A')}
 - Attachment Style: ${JSON.stringify(hermeticIntel.attachment_style || 'N/A')}
-- Cognitive Functions: ${JSON.stringify(hermeticIntel.cognitive_functions || 'N/A')}
-- Communication Style: ${JSON.stringify(hermeticIntel.communication_style || 'N/A')}` : '';
+- Cognitive Functions: ${JSON.stringify(hermeticIntel.cognitive_functions || 'N/A')}` : '';
+// HSI Task 4: the Communication Style line is removed rather than left to
+// render as undefined — the column does not exist. If the consumer genuinely
+// needs shadow/wound/defense/communication data, that is a schema question
+// for the founder, not something to invent in a migration.
 
   const systemPrompt = `You are HACS (Holistic Adaptive Cognitive System) with unified brain architecture.
 
