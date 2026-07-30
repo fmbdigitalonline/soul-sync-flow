@@ -634,9 +634,14 @@ export const useHACSConversation = () => {
           console.warn('⚠️ ORACLE CONTEXT: Hermetic intelligence bridge unavailable, using fallback', error);
         }
 
+        // The name has ONE resolver. When it returns nothing we send no name at
+        // all rather than a placeholder: the prompt forbids addressing anyone as
+        // 'Seeker' or 'friend', so inventing one only guarantees a violation.
+        const resolvedName = resolveUserName({ userMeta: blueprintData?.user_meta });
+
         if (hermeticContext?.personalityContext?.corePersonalityPattern || hermeticContext?.personalityContext?.decisionStyle) {
           userProfile = {
-            name: resolveUserName({ userMeta: blueprintData?.user_meta }) || 'Seeker',
+            ...(resolvedName ? { name: resolvedName } : {}),
             corePersonalityPattern: hermeticContext.personalityContext.corePersonalityPattern,
             decisionStyle: hermeticContext.personalityContext.decisionStyle,
             communicationTone: hermeticContext.personalityContext.communicationTone,
@@ -652,7 +657,7 @@ export const useHACSConversation = () => {
           });
         } else if (blueprintData) {
           userProfile = {
-            name: resolveUserName({ userMeta: blueprintData.user_meta }) || 'Seeker',
+            ...(resolvedName ? { name: resolvedName } : {}),
             mbti: blueprintData.user_meta?.personality?.likelyType ||
                   blueprintData.cognition_mbti?.type || 'Unknown',
             hdType: blueprintData.energy_strategy_human_design?.type || 'Unknown',
