@@ -22,6 +22,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { personalizedQuotesService } from '@/services/personalized-quotes-service';
+import { blueprintService } from '@/services/blueprint-service';
+import { resolveUserName, type NameSources } from '@/utils/user-name';
 
 export interface TwinReunion {
   greeting: string;
@@ -86,10 +88,36 @@ function timeGreeting(lang: Lang, name?: string): string {
   return COPY[lang].greet(COPY[lang].parts[idx], name);
 }
 
-function firstName(user: { user_metadata?: Record<string, unknown> } | null | undefined): string | undefined {
+/**
+ * The name, through the one canonical resolver.
+ *
+ * This used to read auth user_metadata directly, which is empty for most
+ * sign-up paths — so the Twin opened with a bare "Goedemiddag." while the
+ * conversation itself knew the person's name perfectly well. The name lives in
+ * the blueprint's user_meta; auth metadata is only a fallback.
+ */
+async function greetingName(user: { user_metadata?: Record<string, unknown> } | null | undefined): Promise<string | undefined> {
+  let blueprintMeta: NameSources['userMeta'] = null;
+  try {
+    const res: any = await blueprintService.getActiveBlueprintData();
+    blueprintMeta = res?.data?.user_meta ?? null;
+  } catch {
+    /* the reunion still greets, just without a name */
+  }
+  const fromBlueprint = resolveUserName({ userMeta: blueprintMeta });
+  if (fromBlueprint) return fromBlueprint;
+
   const meta = user?.user_metadata ?? {};
-  const raw = (meta.preferred_name || meta.full_name || meta.name) as string | undefined;
-  return raw?.trim().split(/\s+/)[0];
+  return (
+    resolveUserName({
+      userMeta: {
+        preferred_name: meta.preferred_name,
+        first_name: meta.first_name,
+        full_name: meta.full_name ?? meta.name,
+        display_name: meta.display_name,
+      },
+    }) ?? undefined
+  );
 }
 
 function excerpt(text: string, max = 110): string {
@@ -191,13 +219,14 @@ export const twinReunionService = {
     const user = auth?.user;
     if (!user) return null;
     const lang = activeLang();
-    const [remember, reminder, cont] = await Promise.all([
+    const [remember, reminder, cont, name] = await Promise.all([
       rememberLine(user.id, lang).catch(() => undefined),
       reminderLine(user.id, lang).catch(() => undefined),
       continueLine(user.id, lang).catch(() => undefined),
+      greetingName(user).catch(() => undefined),
     ]);
     return {
-      greeting: timeGreeting(lang, firstName(user)),
+      greeting: timeGreeting(lang, name),
       remember,
       reminder,
       continueLine: cont,

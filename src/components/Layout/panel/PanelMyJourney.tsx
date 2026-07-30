@@ -22,7 +22,7 @@ const COPY = {
     domains: 'Where you\'re living',
     patterns: 'What keeps appearing',
     programs: 'In motion',
-    turningPoints: 'Turning points',
+    recentEpisodes: 'Recent conversations',
     trajectory: 'Trajectory',
     empty: 'Your journey is still early — as you talk, reflect, and work, the larger story will take shape here.',
     loading: 'Gathering the larger picture…',
@@ -34,7 +34,7 @@ const COPY = {
     domains: 'Waar je leeft',
     patterns: 'Wat steeds terugkeert',
     programs: 'In beweging',
-    turningPoints: 'Keerpunten',
+    recentEpisodes: 'Recente gesprekken',
     trajectory: 'Richting',
     empty: 'Je reis is nog pril — naarmate je praat, reflecteert en werkt, krijgt het grotere verhaal hier vorm.',
     loading: 'Het grotere beeld verzamelen…',
@@ -72,7 +72,7 @@ export const PanelMyJourney: React.FC = () => {
     journey.domains.length === 0 &&
     journey.patterns.length === 0 &&
     journey.programs.length === 0 &&
-    journey.turningPoints.length === 0;
+    journey.recentEpisodes.length === 0;
 
   return (
     <div className="rounded-xl border border-soul-purple/20 bg-soul-purple/[0.03] overflow-hidden">
@@ -143,10 +143,10 @@ export const PanelMyJourney: React.FC = () => {
                     </ul>
                   </Block>
                 )}
-                {journey.turningPoints.length > 0 && (
-                  <Block label={t.turningPoints}>
+                {journey.recentEpisodes.length > 0 && (
+                  <Block label={t.recentEpisodes}>
                     <ul className="space-y-1">
-                      {journey.turningPoints.map((e) => (
+                      {journey.recentEpisodes.map((e) => (
                         <li key={e.sessionId} className="text-xs text-muted-foreground truncate">
                           {e.title}
                         </li>
