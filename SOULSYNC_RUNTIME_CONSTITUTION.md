@@ -81,6 +81,37 @@ not what you have added; it is what you have successfully made impossible.
 
 ---
 
+## Interpretation before amendment
+
+Every constitution meets situations it did not anticipate. *"The Twin interrupted
+too quickly." "That answer felt too certain."* These are rarely constitutional
+failures; they are usually interpretations. Without a discipline for
+interpretation, each one becomes a new clause and the appending starts again —
+this time inside the governance layer.
+
+**Before changing any constitutional document, ask one question:**
+
+> Does this reveal a **missing law**, or a **poor application** of an existing
+> one?
+
+Most of the time the answer is the second, and the correct response is to fix
+the implementation, not the law. An amendment is a last resort, and a new law is
+rarer still.
+
+**The failure mode of this question is the opposite one.** "It's just a poor
+application" can become the reason nothing is ever amended, and a law that never
+changes while reality does has drifted just as far as a law that changes weekly
+— it has simply stopped describing anything. Rule 4 was that: correct for a
+year, then quietly the cause of three audits.
+
+So the tiebreaker is the Product Constitution's existing **Rule of Three**: when
+the same "poor application" recurs a third time, it is no longer an application
+problem. Three occurrences of one symptom mean the law does not say what we
+thought it said, and it is amended — not appended to. This introduces no new
+mechanism; it reuses the one already ratified for the Twin.
+
+---
+
 ## Tension is not contradiction
 
 Law 1 removes contradictions. It must not be used to remove tensions, and the
@@ -114,7 +145,7 @@ three reviews, in order:
 3. **User observation** — a person who is not us used it and did not report the
    symptom the change was meant to remove.
 
-Only then does the behaviour move to ✅ in the register below. Static review
+Only then does the behaviour move to ✅ in SOULSYNC_RUNTIME_REGISTER.md. Static review
 alone moves nothing.
 
 The questions asked at step 3 are about experience, not architecture: *did
@@ -146,28 +177,15 @@ licence to delete quickly.
 
 ## Behaviour jurisdiction register
 
-Status as of the conversational-authority audit (Jul 2026). 🔴 contradicting
-authorities · 🟠 overlapping but compatible · ✅ single jurisdiction.
+*Moved to **SOULSYNC_RUNTIME_REGISTER.md**. The Constitution changes rarely and
+the register changes constantly; keeping them in one file made every review
+update an edit to a constitutional document — the habit the freeze exists to
+break. A move, not a copy: the table is not duplicated here.*
 
-| Behaviour | Places deciding it | Status | Jurisdiction |
-|---|--:|:--:|---|
-| Memory claims | 2 | ✅ | Read Policy |
-| Response length | 8 | 🔴 | Response Policy |
-| Questions | 7 | 🔴 | Voice Policy |
-| Framework exposure | 7 | 🔴 | Voice Policy |
-| Endings / sign-offs | 7 | 🔴 | Voice Policy |
-| Goal creation | 7 | 🔴 | Action Policy |
-| Emotional tone | 6 | 🟠 | Read Policy |
-| Cards & attachments | 5 | 🟠 | Action Policy |
-| Directness | 5 | 🟠 | Voice Policy |
-| Name usage | 4 | 🔴 | Voice Policy |
-| Language | 4 | 🔴 | Voice Policy |
-| Warmth | 4 | 🟠 | Voice Policy |
-
-The register is the work list. A behaviour leaves it by reaching ✅ — one
-jurisdiction, one enforcement point, every other site removed under the
-migration checklist, **and all three runtime reviews passed**. It does not leave
-by being documented, and it does not leave on static review alone.
+*A behaviour leaves the register by reaching ✅ — one jurisdiction, one
+enforcement point, every rival site removed under the migration checklist, and
+all three runtime reviews passed. It does not leave by being documented, and it
+does not leave on static review alone.*
 
 **Success is not fewer bugs. It is fewer places where the same behaviour can be
 decided.** The measurable form: over a milestone, deleted lines should exceed
