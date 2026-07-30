@@ -19,7 +19,7 @@ review*):
 - **User** — someone who is not us used it and did not report the symptom the
   change was meant to remove.
 
-✅ passed · ⏳ not yet · ➖ not started
+✅ passed · ⚠️ passed the letter, missed the intent · ❌ failed · ⏳ not yet · ➖ not started
 
 ---
 
@@ -29,21 +29,28 @@ review*):
 |---|---|:--:|:--:|:--:|---|
 | Goal provenance | `adoptPendingIntake` (Action) | ✅ | ⏳ | ⏳ | In review |
 | Memory claims | `MEMORY TRUTH GUARD` + `hasNoMemory` (Read) | ✅ | ⏳ | ⏳ | In review |
-| Questions | Voice Charter r4 + ration guard | ✅ | ⏳ | ⏳ | Deployed, unobserved |
-| Endings / sign-offs | Voice Charter r3 | ✅ | ⏳ | ⏳ | Deployed, unobserved |
-| Framework exposure | Voice Charter r6 | ✅ | ⏳ | ⏳ | Deployed, unobserved |
-| Response length | Voice Charter r2 + `maxTokens` | ✅ | ⏳ | ⏳ | Deployed, unobserved |
-| Name usage | Voice Charter r3 | ✅ | ⏳ | ⏳ | Deployed, unobserved |
-| Language | Voice Charter r1 | ✅ | ⏳ | ⏳ | Deployed, unobserved |
-| Identity flattery | Voice Charter r7 | ✅ | ⏳ | ⏳ | Deployed, unobserved |
+| Questions | Voice Charter r4 + ration guard | ✅ | ⚠️ | ⏳ | Over-corrected to zero; rule 5 floor violated |
+| Endings / sign-offs | Voice Charter r3 | ✅ | ✅ | ⏳ | No ritual closers in 5 turns |
+| Framework exposure | Voice Charter r6 | ✅ | ❌ | ⏳ | 5/5 replies; Appendix A trigger met |
+| Response length | Voice Charter r2 + `maxTokens` | ✅ | ⚠️ | ⏳ | Median 91 vs 90 — marginal |
+| Name usage | Voice Charter r3 | ✅ | ❌ | ⏳ | 5/5 replies; no ration guard exists |
+| Language | Voice Charter r1 | ✅ | ✅ | ⏳ | 0 foreign literals in 5 Dutch turns |
+| Identity flattery | Voice Charter r7 | ✅ | ❌ | ⏳ | Destiny declarations persist |
 | Emotional tone | v3.5 evidence gate (Read) | ⏳ | ⏳ | ⏳ | 6 sites, gate enforced in 1 |
 | Cards & attachments | Action Charter r4 | ⏳ | ⏳ | ⏳ | 5 sites |
 | Directness | Voice Charter r5/7/8 | ⏳ | ⏳ | ⏳ | 5 sites |
 | Warmth | Voice Charter r6 generated block | ⏳ | ⏳ | ⏳ | 4 sites |
 
-**Nothing is complete.** That is the true state and the reason this table exists:
-nine behaviours now pass static review, none has been observed in real output,
-and no user has looked at any of it. Static review alone moves nothing.
+**Nothing is complete, and behavioural review is where it stops.** Nine
+behaviours pass static review. Two pass behavioural, three fail it, two pass the
+letter and miss the intent, and no user has seen any of it.
+
+That distribution is the most useful thing in this document: **static and
+behavioural do not correlate.** The charter is deployed exactly as specified,
+singular and uncontested, and four behaviours still miss. Sole jurisdiction
+bought one place to change; it did not buy obedience — which is the
+deterministic/emergent boundary measured rather than argued, and the answer to
+whether a flag is "still prompt text".
 
 ### Notes on individual rows
 
