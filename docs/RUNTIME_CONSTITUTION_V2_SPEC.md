@@ -4,7 +4,7 @@
 **Governing law:** `SOULSYNC_RUNTIME_CONSTITUTION.md` (v2) — read it first; this spec implements it.
 **Target:** `supabase/functions/companion-oracle-conversation/index.ts` (3,071 lines) and `supabase/functions/_shared/conversation-phase-tracker.ts`.
 
-This is **not five prompt fixes**. It is one change with one shape, applied six times:
+This is **not a set of prompt fixes**. It is one change with one shape, applied seven times:
 
 > Every behaviour gets one jurisdiction. Every other site that decides it is **deleted**, not reworded, not down-ranked.
 
@@ -16,9 +16,9 @@ Line numbers are from commit `2db0479`. Every instruction also quotes anchor tex
 
 | | |
 |---|---|
-| Lines removed | ~150 |
-| Lines added | ~30 |
-| Net | **−120** |
+| Lines removed | ~165 |
+| Lines added | ~32 |
+| Net | **−133** |
 
 If the diff is net positive, something was reworded instead of removed. That is the review test.
 
@@ -34,6 +34,7 @@ Runtime Constitution, *Tension is not contradiction*: law 1 removes rules that c
 | Per-step word budgets (B4a) | 4 steps × 1–3 sentences ≈ 7–9 sentences vs "2-5 sentences." |
 | `ADDRESS THEM BY NAME` (B5) | "at least once in every response" vs "not more than occasionally." |
 | Language literals (B6) | A bare English string vs "reply in the user's language." |
+| Flattering identity descriptors (B7) | 32 of 32 profile descriptors name only strengths vs "when their pattern is costing them something, say so plainly." |
 
 **Explicitly kept as tensions:** charter rule 5 (*confront when the door opens*) against rule 2 (*one landed idea*) — a confrontation is one idea, and the judgment between them is the Twin's to make. Likewise `SESSION CLOSE RULE`'s open loop against rule 3's ban on fixed closers: one governs how a session ends, the other how a reply ends.
 
@@ -41,7 +42,7 @@ Runtime Constitution, *Tension is not contradiction*: law 1 removes rules that c
 
 # Part 1 — Jurisdictions
 
-Six behaviours. After this spec, each is decided in exactly one place.
+Seven behaviours. After this spec, each is decided in exactly one place.
 
 | Behaviour | Jurisdiction (the ONLY place that decides) |
 |---|---|
@@ -51,8 +52,9 @@ Six behaviours. After this spec, each is decided in exactly one place.
 | Response length | `VOICE CHARTER` rule 2 + `maxTokens` |
 | Name usage | `VOICE CHARTER` rule 3 + the name block, made conditional |
 | Language | `VOICE CHARTER` rule 1 |
+| Identity flattery | `VOICE CHARTER` rule 7 |
 
-The Voice Charter holds five of six. That is intentional: it already exists, it is already correct, and it has never governed because it competes with text above it. **This spec does not improve the charter. It removes its rivals.**
+The Voice Charter holds six of seven. That is intentional: it already exists, it is already correct, and it has never governed because it competes with text above it. **This spec does not improve the charter. It removes its rivals.**
 
 ---
 
@@ -246,6 +248,60 @@ After this pass, **grep the assembled prompt for quoted example phrases. There s
 
 ---
 
+## B7 · Identity flattery — 4 authorities → 1
+
+Added on evidence (register, Jul 30 baseline run): *"het is je energetische realiteit die wacht om volledig te ontvouwen"* — the same move as *"je bent een creatief architect,"* which is the sentence that became a `user_goals` row. The authorship gate now stops the downstream damage; it does not correct the conversational behaviour.
+
+**Jurisdiction: `VOICE CHARTER` rule 7.** Same method as B1–B6 — one owner, rivals deleted.
+
+### The mechanism
+
+`profileLines` renders three identity descriptions on every turn, from three lookup tables:
+
+| Function | Values | Naming a cost or limit |
+|---|--:|--:|
+| `getThinkingStyleDescription` (MBTI) | 15 | **0** |
+| `getArchetypalDescription` (sun sign) | 12 | **0** |
+| `getEnergyDescription` (Human Design) | 5 | **0** |
+
+`creative and inspiring explorer` · `strategic and analytical architect` · `confident and natural-born leader` · `pioneering and courageous spirit` · `intense and transformative depth`.
+
+**32 of 32 are flattering. Not one names a friction.** Charter rule 7 requires *"when their pattern is costing them something, say so plainly"* — and the prompt hands the model no vocabulary for cost. The flattery is not the model's invention; it is the input.
+
+### DELETE
+
+**a. `index.ts:2053-2055`** — the three description calls in `profileLines`. The always-on profile keeps `Name` and `Intelligence Level`; the framework labels already appear behind `detectTechnicalDetailRequest`, and the real personal model is the HSI spine.
+
+> **Founder decision, flagged not taken:** the alternative is rewriting all 32 values as two-sided (`creative and inspiring explorer` → something that also names what it costs). That is authoring product content, not a jurisdiction cleanup, so it does not belong in this spec. Deleting is the reversible option; if you prefer the rewrite, this deletion waits.
+
+**b. `index.ts:964-965`** — `"Honor their role as a guide and wise advisor"` in the Projector branch of `generateVoiceStyle`. An explicit instruction to flatter. *(Already scheduled for deletion under B3c — one deletion, two behaviours.)*
+
+**c. `index.ts:726-728, 762-763`** — the primer's certainty frame:
+```
+CORE IDENTITY KNOWLEDGE: WHO {NAME} TRULY IS
+This is not inference. This is ground truth from the Hermetic 2.0 blueprint.
+…
+When you respond, you speak from DEEP KNOWING of {name}.
+This is not guesswork or generic coaching. You are their mirror.
+```
+Replace with a single neutral line:
+```
+WHAT IS KNOWN ABOUT {NAME} (from their Hermetic blueprint):
+```
+This is the licence behind *"energetic certainty."* A prompt that says *this is not inference* invites the model to speak about a person's future in the indicative.
+
+### CHANGE — the charter carries it alone
+
+**`index.ts:2188`**, rule 7:
+```
+7. NO IDENTITY FLATTERY: do not cast the user as a blocked visionary whose environment is unworthy of them, and do not declare a destiny, a latent greatness, or an energetic certainty about who they are becoming. Being seen precisely lands deeper than being praised. Appreciation is allowed when it is grounded in something they actually did or said; it is not allowed as a statement about their nature. When their pattern is costing them something, say so plainly and kindly.
+```
+
+### Test
+
+**T11** — ten turns: no reply contains a declaration about the user's nature, destiny or potential that is not tied to something they did or said. Behavioural review; not automatable.
+
+
 # Part 3 — Structural changes
 
 ## S1 · Charters first, not last
@@ -287,6 +343,7 @@ Not "did the AI improve." Each test names one behaviour and one jurisdiction.
 | T8 | Ten turns | the user's name appears in **no more than 4** replies, and never as a placeholder |
 | T9 | A turn where the blueprint has no name | reply contains no name and no generic address |
 | T10 | Diff review | **net line count is negative** |
+| T11 | Ten turns | no declaration about the user's nature, destiny or potential that is not tied to something they did or said |
 
 T1–T4 and T10 are **static review** — mechanical, run before deploy. T5–T9 are **behavioural review** — observed in real output over a run of turns, from transcripts and logs, never from reading the prompt.
 
