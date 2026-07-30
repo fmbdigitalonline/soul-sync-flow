@@ -160,10 +160,13 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     timeframe: string,
     source: 'sentence' | 'offer',
   ) => {
-    openPanelWithIntake({ title, category, timeframe, source });
-    // Kick the panel-side decomposition card into 'start' phase so the
-    // building animation is visible even before useDecompositionLogic mounts.
-    emitCoachDecomposition({ phase: 'start', dreamTitle: title });
+    // `authored: false` — the title is a proposal until the user adopts it in
+    // the panel. Every title reaching here came from a message the Twin wrote
+    // (sentence selection renders on assistant messages only), so nothing may
+    // be created from it yet.
+    openPanelWithIntake({ title, category, timeframe, source, authored: false });
+    // The building animation used to start here, before the user had agreed to
+    // anything. It now waits for the authorship gate.
   };
   
   // Track when chat opens/closes

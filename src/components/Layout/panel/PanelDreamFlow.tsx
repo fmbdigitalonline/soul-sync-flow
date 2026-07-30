@@ -30,13 +30,46 @@ import { emitCoachDecomposition } from '@/lib/coach-workspace-bus';
 export const PanelDreamFlow: React.FC = () => {
   const {
     pendingIntake,
+    adoptPendingIntake,
     clearPendingIntake,
     dreamFlow,
     patchDreamFlow,
   } = useWorkspace();
   const { blueprintData } = useBlueprintCache();
+  const [draftTitle, setDraftTitle] = useState('');
 
   if (!pendingIntake) return null;
+
+  // ── Authorship gate ──────────────────────────────────────────────
+  // A goal is a claim about what the user wants, so the user makes it.
+  // Sentence selection runs on the Twin's own messages, which is how
+  // "Kortom: je bent niet alleen chaotisch…" became a goal. The engine
+  // does not start until the title has been adopted; editing it, replacing
+  // it, or accepting it unchanged all count — each is a deliberate choice.
+  if (!pendingIntake.authored) {
+    const value = draftTitle || pendingIntake.title;
+    const adopt = () => adoptPendingIntake(value);
+    return (
+      <Card className="p-3 ss-flow space-y-3">
+        <MomentHeader eyebrow="What are you working toward?" onClose={clearPendingIntake} />
+        <input
+          value={value}
+          onChange={(e) => setDraftTitle(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && value.trim()) adopt(); }}
+          aria-label="Goal title"
+          autoFocus
+          className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-soul-purple/40"
+        />
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Say it in your own words — this becomes the name of your journey.
+        </p>
+        <div className="flex items-center gap-2">
+          <Button size="sm" onClick={adopt} disabled={!value.trim()}>Start</Button>
+          <Button size="sm" variant="ghost" onClick={clearPendingIntake}>Cancel</Button>
+        </div>
+      </Card>
+    );
+  }
 
   const { phase, decomposedGoal, dismissed, momentStage, showPlan } = dreamFlow;
 
