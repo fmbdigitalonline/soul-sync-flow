@@ -29,20 +29,21 @@ review*):
 |---|---|:--:|:--:|:--:|---|
 | Goal provenance | `adoptPendingIntake` (Action) | ✅ | ⏳ | ⏳ | In review |
 | Memory claims | `MEMORY TRUTH GUARD` + `hasNoMemory` (Read) | ✅ | ⏳ | ⏳ | In review |
-| Name usage | Voice Charter r3 | ⏳ | ⏳ | ⏳ | Client done, server pending |
-| Questions | Voice Charter r4 + ration guard | ➖ | ➖ | ➖ | Specified, not implemented |
-| Endings / sign-offs | Voice Charter r3 | ➖ | ➖ | ➖ | Specified, not implemented |
-| Framework exposure | Voice Charter r6 | ➖ | ➖ | ➖ | Specified, not implemented |
-| Response length | Voice Charter r2 + `maxTokens` | ➖ | ➖ | ➖ | Specified, not implemented |
-| Language | Voice Charter r1 | ➖ | ➖ | ➖ | Specified, not implemented |
+| Questions | Voice Charter r4 + ration guard | ✅ | ⏳ | ⏳ | Deployed, unobserved |
+| Endings / sign-offs | Voice Charter r3 | ✅ | ⏳ | ⏳ | Deployed, unobserved |
+| Framework exposure | Voice Charter r6 | ✅ | ⏳ | ⏳ | Deployed, unobserved |
+| Response length | Voice Charter r2 + `maxTokens` | ✅ | ⏳ | ⏳ | Deployed, unobserved |
+| Name usage | Voice Charter r3 | ✅ | ⏳ | ⏳ | Deployed, unobserved |
+| Language | Voice Charter r1 | ✅ | ⏳ | ⏳ | Deployed, unobserved |
+| Identity flattery | Voice Charter r7 | ✅ | ⏳ | ⏳ | Deployed, unobserved |
 | Emotional tone | v3.5 evidence gate (Read) | ⏳ | ⏳ | ⏳ | 6 sites, gate enforced in 1 |
 | Cards & attachments | Action Charter r4 | ⏳ | ⏳ | ⏳ | 5 sites |
 | Directness | Voice Charter r5/7/8 | ⏳ | ⏳ | ⏳ | 5 sites |
 | Warmth | Voice Charter r6 generated block | ⏳ | ⏳ | ⏳ | 4 sites |
 
 **Nothing is complete.** That is the true state and the reason this table exists:
-two behaviours pass static review, none has been observed in real output, and no
-user has looked at any of it. Static review alone moves nothing.
+nine behaviours now pass static review, none has been observed in real output,
+and no user has looked at any of it. Static review alone moves nothing.
 
 ### Notes on individual rows
 
@@ -55,12 +56,11 @@ assertion to make is that no `user_goals.title` matches assistant text.
 from reading the source, not from watching output. Honest state: unverified in
 production.
 
-**Name usage** — the client no longer sends `'Seeker'`; the server still has
-`personalityContext.name || 'friend'`, which is on the prompt's own forbidden
-list. Static cannot pass until both halves land.
+**Name usage** — both halves landed: the client sends the resolved name or
+omits the field, and the server's `|| 'friend'` fallback is gone.
 
-**Six rows marked ➖** — `docs/RUNTIME_CONSTITUTION_V2_SPEC.md` specifies them;
-the work is Lovable's and has not started.
+**The seven specification behaviours** — deployed Jul 30. Static verified
+against the deployed source, not accepted on report.
 
 ---
 
@@ -127,6 +127,38 @@ them deliberately, comment included.
 
 Unreconciled: "25 of 43 structured reports" against 48/29. Raw query output
 needed before the 50% figure is trusted (rule 8).
+
+### Jul 30 2026 — Runtime Constitution v2 and the HSI repair deployed (Lovable)
+
+Static review passed on the deployed source, verified rather than accepted:
+`Am I close` 0 occurrences; `Klopt dit`, `Wil je ontdekken`, `Hoe zou dat
+voelen`, `het gaat zijn gangetje` all 0; both banned sign-offs and the
+prescribed shadow closer 0; the three flattery lookup tables deleted, with only
+a comment recording why; no `'friend'` or `'Seeker'` fallback; the name block,
+`RESPONSE DISCIPLINE`, and all five per-role ending rules gone; ration window
+widened to six. The charter header was changed from "any conflicting rule above"
+to "below" — the edit S1 required and the specification did not spell out.
+
+**T10 is unreadable as executed.** The oracle file is −12 net, against an
+estimate of −165. That estimate covered the prompt specification only; this
+commit also carries the HSI Task 5 rewrite, which legitimately adds lines. The
+handoff said not to apply both in one PR precisely so this metric stayed
+readable. Not a fault in the work — a sequencing instruction that did not
+survive contact, recorded so the next handoff states it louder.
+
+**All seven behaviours move to static ✅ and stop there.** None has been
+observed in real output; none has been seen by a user. Per *Runtime review*,
+static alone moves nothing further.
+
+**Open, flagged by Lovable rather than buried:** the six never-written
+dimensions and the 5-of-9 scalar-error rate are **write-time** bugs in the
+extractor. The read path now refuses the bad data instead of injecting it, but
+the extractor still produces it. That fix is unscoped and unstarted.
+
+Evidence detail worth carrying forward: the blob is better, not clean — 38 of 43
+structured, 5 scalar — and `financial_archetype` / `career_vocational` are
+missing for 18 of 43. Those two never enter the spine today, but when relevance
+selection arrives, **42% of users will not have them**.
 
 ---
 
