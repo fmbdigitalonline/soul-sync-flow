@@ -16,7 +16,7 @@ longer exist in the Product Constitution.
 
 ---
 
-## The three laws
+## The four laws
 
 ### 1. One jurisdiction
 
@@ -48,6 +48,39 @@ cleanly. It is the template.
 
 A replacement is finished when the old path is **gone**, not when the new path
 works. See rule 4 of §A below, which this law amends.
+
+### 4. No state without a canonical reader
+
+State that nothing consumes must not be written. Every store — table, column,
+cache, ledger — names the runtime that reads it, and if that reader does not
+exist yet, the write waits until it does.
+
+This is the inverse of law 1, and the pair completes each other: **every
+behaviour has exactly one decider; every state has at least one reader.**
+
+Added on evidence, not principle. Four occurrences, each found by a separate
+audit:
+
+| Store | Written | Read by the runtime that needed it |
+|---|---|---|
+| `FloatingHACSOrb` and its pipelines | continuously | never mounted |
+| `hermetic_structured_intelligence` | by a dev panel | 1 user; reply path used the blob |
+| `conversation_state_tracking` | every turn (insert fails on RLS) | **no SELECT exists anywhere** |
+| `conversation_insights` | every session | Profile and Journey read it; **the Twin never does** |
+
+The failure mode is specific and worth naming: unread state produces **the
+illusion of intelligence without any influence on behaviour**. Every one of
+these looked like a working capability in the code and changed nothing a user
+could experience. A reviewer reading the repo would conclude the system tracks
+conversational state; a user would find it does not.
+
+The last row is the sharpest form of it. The Twin generates the pattern ledger
+and never reads it back, so accumulated understanding reaches the retrospective
+surfaces and never the conversation where it would be alive.
+
+**Test:** for any store, name the file and function that reads it in service of
+user-visible behaviour. "The dashboard shows it" is a reader. "We might use it
+later" is not.
 
 ---
 

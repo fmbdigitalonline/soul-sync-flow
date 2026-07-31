@@ -213,6 +213,50 @@ Noted: the run was three consecutive money questions, and `financial_archetype`
 is correctly outside the permanent eight. Intent-based relevance selection now
 has an observed case rather than a hypothesis.
 
+### Jul 30 2026 — hypothesis-evolution audit (four questions, answered from code)
+
+| Question | Answer |
+|---|---|
+| Does the runtime preserve a working hypothesis? | **No.** Searched for `working_hypothesis`, `current_understanding`, `conversation_summary`, a running summary. Every hit for "hypothesis" is prompt vocabulary, not a stored object. |
+| Can new evidence update it? | **Nothing to update.** Every turn recomputes from scratch — detect cluster, fetch blueprint, fetch spine, attach last 10 messages. Nothing carries forward but raw text. |
+| Where is the update represented? | **Nowhere.** Though `conversation_state_tracking` already stores cluster, subState and confidence per turn, so the home exists. |
+| Does the Twin expose the update? | **It cannot.** No prompt text asks it to notice change: *what changed · changed since · shifted · revise · previously said · earlier you* — zero matches in 3,059 lines. |
+
+**The diagnosis is re-derivation, not fixation.** The model is not clinging to an
+explanation; it is recomputing the same one from near-identical inputs, five
+times. That distinction changes the fix: nothing needs to be argued out of it,
+something needs to carry forward.
+
+**Defect underneath the design question.** `conversation-phase-tracker.ts`
+contains no Dutch patterns — every regex is English. For a Dutch user
+`clusterScores.size === 0` every turn, and `selectWinningCluster` falls back to
+**turn count**: ≤2 engagement, ≤5 clarification, >5 decision. So the phase
+injected during the observed run was almost certainly *"PHASE: CLARIFICATION —
+focus on mechanisms and definitions"*, which is exactly what the replies did.
+The rotation was instructed, on the basis of message count.
+
+Consequence: the v3.5 Emotional Evidence gate only runs for emotional clusters,
+and the turn-count fallback never returns `frustration` or `validation`. **A
+ratified law that cannot fire in the user's language.**
+
+**Design constraints recorded before anything is built** (advisor, endorsed):
+
+- The hypothesis is the **current explanation of the obstacle**, not a summary
+  of the topic. *"The obstacle is depleted social energy, not absent contacts"* —
+  not *"the conversation is about getting rich."* An interpretation, not a
+  transcript.
+- Four outcomes per turn, and no more: **reinforced · refined · challenged ·
+  replaced**. Enough to be useful, few enough to stop the explanation
+  oscillating.
+- **Do not persist a free-text hypothesis first.** Prove the behaviour with an
+  ephemeral per-request object; persist only if conversations demonstrably
+  improve. Law 4 applies to whatever is stored.
+
+**T12 added — the qualitative test.** Across a 10-turn conversation, how many
+replies acknowledge that the user's latest message changed or refined the Twin's
+understanding? **Baseline from the Jul 30 run: zero of five.** Not a quota; a
+fixation detector.
+
 ---
 
 ## Open decisions
@@ -228,6 +272,7 @@ has an observed case rather than a hypothesis.
 
 | Date | Change | Kind |
 |---|---|---|
+| Jul 30 2026 | **Law 4 — no state without a canonical reader** | New law (four observed occurrences; Rule of Three met) |
 | Jul 30 2026 | Rule 4 `Never delete services/hooks` → **Replacement completes** | Amendment |
 | Jul 30 2026 | §7/§8 moved out of the Product Constitution into the Runtime Constitution | Move |
 | Jul 30 2026 | *Tension is not contradiction* added | New law (protects an existing one) |
