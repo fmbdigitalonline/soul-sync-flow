@@ -263,6 +263,7 @@ fixation detector.
 
 | Decision | Blocked on | Owner |
 |---|---|---|
+| Consume `conversation_state_tracking` in the prompt (law 4 applies) | The Dutch detector defect landing first — the signal is invalid until then | Founder |
 | Retire the non-oracle fallback prompt (`index.ts:2133`) — a second, ungoverned prompt sharing no rule with the charters | Invocation-log evidence that the branch is dead (rule 4 + rule 10) | Founder |
 | Strip framework facet labels from `factsSection`, keeping values | Evidence that Voice Charter r6 alone did not hold after the spec ships | Founder |
 
@@ -272,7 +273,7 @@ fixation detector.
 
 | Date | Change | Kind |
 |---|---|---|
-| Jul 30 2026 | **Law 4 — no state without a canonical reader** | New law (four observed occurrences; Rule of Three met) |
+| Jul 30 2026 | **Law 4 — every persisted state has a canonical consumer** | New law (four observed occurrences; Rule of Three met). Reworded from "reader" to "consumer": events, cache invalidation and scheduling are legitimate consumers. The competing reading — a recurring habit rather than a constitutional gap — is recorded inside the law rather than hidden. |
 | Jul 30 2026 | Rule 4 `Never delete services/hooks` → **Replacement completes** | Amendment |
 | Jul 30 2026 | §7/§8 moved out of the Product Constitution into the Runtime Constitution | Move |
 | Jul 30 2026 | *Tension is not contradiction* added | New law (protects an existing one) |
