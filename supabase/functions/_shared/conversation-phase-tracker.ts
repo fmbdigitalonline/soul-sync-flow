@@ -42,7 +42,8 @@ const CONVERSATION_STATE_SCHEMA = {
   },
   "paralinguistic_rules": [
     { "id": "brevity_closure", "pattern": "^\\s*(ok(ay|é|e)?|thanks?|thx|ty|tyvm|cool|got it|fine|perfect|great|nice|awesome|sweet|kk|k|prima|top|dank|dankje|dank\\s*je|dankjewel|bedankt|fijn|mooi|goed|duidelijk|helder)\\s*[.!]?\\s*$", "state_boost": { "cluster": "closure", "sub_state": "gratitude", "weight": 0.6 } },
-    { "id": "emphasis_frustration", "pattern": "(!{2,}|\\.{3,}|[A-Z]{5,})", "state_boost": { "cluster": "frustration", "sub_state": "venting", "weight": 0.6 } },
+    { "id": "emphasis_frustration", "pattern": "(!{2,}|\\.{3,})", "state_boost": { "cluster": "frustration", "sub_state": "venting", "weight": 0.6 } },
+    { "id": "shouting", "pattern": "[A-Z]{5,}", "flags": "", "state_boost": { "cluster": "frustration", "sub_state": "venting", "weight": 0.6 } },
     { "id": "time_pressure", "pattern": "\\b(today|asap|urgent|deadline|this\\s+week|now|right\\s+now|immediately|quick(ly)?|fast|soon|eod|end\\s+of\\s+(day|week)|vandaag|dringend|urgent|deze\\s+week|nu|meteen|direct|snel|zsm|zo\\s+snel\\s+mogelijk|einde\\s+van\\s+de\\s+(dag|week))\\b", "state_boost": { "cluster": "constraint", "sub_state": "time_pressure", "weight": 0.6 } },
     { "id": "stuck_signal", "pattern": "\\b(stuck|blocked|trapped|spinning|circling|can'?t\\s+move\\s+forward|vast|vastgelopen|loop\\s+vast|geblokkeerd|kom\\s+niet\\s+verder|in\\s+cirkels|klem)\\b", "state_boost": { "cluster": "validation", "sub_state": "self_disclosure", "weight": 0.3 } }
   ],
@@ -154,7 +155,7 @@ const CONVERSATION_STATE_SCHEMA = {
       "description": "Blocked, irritated, emotional rupture.",
       "sub_states": [
         { "id": "complaint", "examples": ["this system isn't working", "dit werkt niet"], "regex": ["\\b((this|it|that)\\s*(isn'?t|is\\s*not|doesn'?t|does\\s*not)\\s*(working|work)|broken|buggy|useless|garbage|terrible|awful|sucks)\\b", "\\b((dit|dat|het)\\s+(werkt\\s+niet|doet\\s+het\\s+niet)|kapot|waardeloos|nutteloos|vreselijk|verschrikkelijk|slecht|brak)\\b"] },
-        { "id": "venting", "examples": ["I'm so done with this!!!", "ik ben er klaar mee"], "regex": ["\\b(i'?m\\s+(so\\s+)?done|nothing\\s*(works|helps)|wtf|fml|screw\\s*this|fuck\\s*this|this\\s+is\\s+(ridiculous|insane|bullshit)|i\\s+give\\s+up|i\\s+quit|fed\\s+up)\\b|!{2,}|[A-Z]{5,}", "\\b(ik\\s+ben\\s+er\\s+klaar\\s+mee|niets\\s+(werkt|helpt)|dit\\s+is\\s+(belachelijk|waanzin|onzin)|ik\\s+geef\\s+het\\s+op|ik\\s+stop\\s+ermee|verdomme|klote|balen)\\b"] },
+        { "id": "venting", "examples": ["I'm so done with this!!!", "ik ben er klaar mee"], "regex": ["\\b(i'?m\\s+(so\\s+)?done|nothing\\s*(works|helps)|wtf|fml|screw\\s*this|fuck\\s*this|this\\s+is\\s+(ridiculous|insane|bullshit)|i\\s+give\\s+up|i\\s+quit|fed\\s+up)\\b", "\\b(ik\\s+ben\\s+er\\s+klaar\\s+mee|niets\\s+(werkt|helpt)|dit\\s+is\\s+(belachelijk|waanzin|onzin)|ik\\s+geef\\s+het\\s+op|ik\\s+stop\\s+ermee|verdomme|klote|balen)\\b"] },
         { "id": "meta_feedback", "examples": ["you're repeating yourself", "je herhaalt jezelf"], "regex": ["\\b(repeat(ing)?\\s+(yourself|things)|too\\s+(long|vague|wordy|much)|robotic|generic|same\\s+thing|stop\\s+saying)\\b", "\\b(je\\s+herhaalt\\s+(jezelf|je)|steeds\\s+hetzelfde|te\\s+(lang|vaag|wollig|veel)|robotachtig|algemeen|stop\\s+met\\s+zeggen)\\b"] }
       ],
       "opening_rule": "Acknowledge in 1 line, then give friction-reducing step + quick win.",
@@ -312,7 +313,7 @@ export class ConversationPhaseTracker {
     const rules = CONVERSATION_STATE_SCHEMA.paralinguistic_rules;
     
     for (const rule of rules) {
-      const regex = new RegExp(rule.pattern, CONVERSATION_STATE_SCHEMA.globals.flags);
+      const regex = new RegExp(rule.pattern, (rule as any).flags ?? CONVERSATION_STATE_SCHEMA.globals.flags);
       const match = message.match(regex);
       
       if (match) {
@@ -531,7 +532,7 @@ export class ConversationPhaseTracker {
     
     // Paralinguistic
     for (const rule of CONVERSATION_STATE_SCHEMA.paralinguistic_rules) {
-      const regex = new RegExp(rule.pattern, CONVERSATION_STATE_SCHEMA.globals.flags);
+      const regex = new RegExp(rule.pattern, (rule as any).flags ?? CONVERSATION_STATE_SCHEMA.globals.flags);
       const match = userMessage.match(regex);
       if (match) {
         breakdown.paralinguistic.push({
