@@ -257,6 +257,66 @@ replies acknowledge that the user's latest message changed or refined the Twin's
 understanding? **Baseline from the Jul 30 run: zero of five.** Not a quota; a
 fixation detector.
 
+### Jul 31 2026 — Dutch phase detection shipped, and the origin of v3.5
+
+Verified against the deployed schema rather than accepted on report. All four
+transcript phrases now resolve, and the resolutions match what was predicted:
+
+| Phrase | Detected |
+|---|---|
+| `ok ik snap het` | `reflection / learning_statement` |
+| `ik ben terug getrokken` | `validation / self_disclosure` |
+| `klinkt als veel werk` | `constraint / time_pressure` |
+| `hoe verzilver ik het concreet?` | `decision / plan_request` |
+
+Coverage: **29 of 31 sub-states across 10 clusters** carry Dutch. Two do not —
+`reflection/summary_request` and `meta_dialogue/rephrasing_request`. Small, named,
+not blocking.
+
+### The second defect is the more important one
+
+Lovable found and flagged it rather than burying it: `globals.flags` is `"i"`, and
+the shout detector was `[A-Z]{5,}`. Case-folded, that matches **any five
+consecutive letters**. Reproduced against the pre-fix schema:
+
+| Message | Scored |
+|---|---|
+| `vandaag gaat het goed met me` | **frustration +0.6** |
+| `hoe verzilver ik het concreet?` | **frustration +0.6** |
+| `ik ben terug getrokken` | **frustration +0.6** |
+| `hello there` | **frustration +0.6** |
+
+*"Today is going well for me"* scored frustration. Every message of five or more
+letters, in every language, for as long as the rule has existed.
+
+**This is the cause of the founder complaint that produced v3.5.** The original
+report was that neutral messages were being relabelled as frustration. That
+observation produced the `RESPONSE DISCIPLINE` MIRROR THEIR REGISTER block, the
+"Founder testing fixes" round, and — the expensive part — **v3.5 Emotional
+Evidence, ratified as constitutional law**.
+
+The cause was a missing per-rule flag override.
+
+v3.5 is not wrong; gating emotional claims on evidence is right on its own
+merits. But it was ratified in response to a symptom whose cause was a defect,
+and *interpretation before amendment* — written yesterday — asks exactly the
+question that would have caught it: **missing law, or poor application?** It was
+a poor application, and a law was written instead.
+
+The compounding irony, established the day before: v3.5's gate only runs for
+emotional clusters, and the turn-count fallback never returned one. **The law
+written to fix the symptom could not fire in the language where the symptom was
+observed.**
+
+This is the first historical case validating the discipline, and it is worth more
+than the discipline's own argument. Nothing about v3.5 is being retracted — but
+its origin is now recorded, so a future reader does not treat it as evidence that
+laws solve detector bugs.
+
+**Not verified:** rows landing in `conversation_state_tracking` in production.
+That needs a live Dutch re-run, which is the next step regardless. Bug 2 closes
+on rows, not on a successful `CREATE POLICY`.
+
 ---
 
 ## Open decisions
