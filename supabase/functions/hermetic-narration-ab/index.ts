@@ -135,7 +135,13 @@ serve(async (req) => {
       || (blueprint as any)?.basic_info?.first_name || 'this person';
 
     // ── A: the prose that exists today. Read back, never rewritten. ────
+    // Two places hold it. progress_data is the orchestrator's working copy and
+    // is not guaranteed to survive; personality_reports is the durable copy the
+    // app itself reads. Try the job first, fall back to the report, and say
+    // which one answered — A means something different from each source.
     let existing: string | null = null;
+    let existingSource: string | null = null;
+
     const { data: jobs } = await supabase
       .from('hermetic_processing_jobs')
       .select('progress_data, created_at')
@@ -145,7 +151,32 @@ serve(async (req) => {
     for (const j of jobs ?? []) {
       const sections = (j as any)?.progress_data?.hermetic_sections ?? [];
       const hit = sections.find((s: any) => s?.agent_type === agent);
-      if (hit?.content) { existing = hit.content; break; }
+      if (hit?.content) {
+        existing = hit.content;
+        existingSource = 'hermetic_processing_jobs.progress_data';
+        break;
+      }
+    }
+
+    if (!existing) {
+      const { data: report } = await supabase
+        .from('personality_reports')
+        .select('report_content')
+        .eq('user_id', userId)
+        .eq('blueprint_version', '2.0')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const rc = (report as any)?.report_content;
+      // The seven law analysts land under seven_laws_integration keyed by law;
+      // the five translators under system_translations keyed *_hermetic.
+      const candidate =
+        rc?.seven_laws_integration?.[agent.replace(/_analyst$/, '')]
+        ?? rc?.system_translations?.[agent.replace(/_hermetic_translator$/, '_hermetic')];
+      if (typeof candidate === 'string' && candidate.trim()) {
+        existing = candidate;
+        existingSource = 'personality_reports.report_content';
+      }
     }
 
     // ── B: the analyst as investigator ─────────────────────────────────
@@ -192,6 +223,7 @@ serve(async (req) => {
       agent,
       userName,
       A_existing_prose: existing,
+      A_source: existingSource,
       B_findings: findings,
       B_raw_if_unparsed: findings ? undefined : findingsRaw,
       C_twin_narration: narration,
