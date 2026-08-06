@@ -1889,20 +1889,6 @@ serve(async (req) => {
         }).join(' ');
       };
 
-      // FRAMING, INVERTED. This block used to be headed "COMPREHENSIVE
-      // BLUEPRINT (n Facts Available)" while the person's actual report was
-      // headed "use ONLY if directly relevant". The prompt told the model which
-      // source to trust, and it was the wrong one: a chart position is a
-      // pointer, not an explanation, and a user who is told "because of your
-      // Taurus moon" has been given a label instead of an answer.
-      const factsSection =
-        structuredFacts.length > 0
-          ? '\n\nCHART REFERENCE (positions and codes; supporting detail, not an explanation. ' +
-            'A position never explains a behaviour on its own — if you cannot say what it means ' +
-            'in this person\'s life in plain language, do not name it):\n' +
-            formatFactsByFacet(structuredFacts)
-          : '';
-
       // Filter semantic chunks based on conversation relevance
       const isDiscussingEmotions = /\b(feel|feeling|emotion|fear|doubt|worry|anxiety|struggle|shadow|insecur|worth|reject)\b/i.test(message);
       const relevantChunks = (semanticChunks && semanticChunks.length > 0)
@@ -1919,6 +1905,50 @@ serve(async (req) => {
       // lead rather than being hedged. The old header ("use ONLY if directly
       // relevant") discounted the only content that could answer "what does
       // that actually mean for how I think and behave".
+      // FRAMING, INVERTED (#241). This block used to be headed "COMPREHENSIVE
+      // BLUEPRINT (n Facts Available)" while the person's actual report was
+      // headed "use ONLY if directly relevant". The prompt told the model which
+      // source to trust, and it was the wrong one: a chart position is a
+      // pointer, not an explanation, and a user told "because of your Taurus
+      // moon" has been given a label instead of an answer.
+      //
+      // DETERMINISTIC, NOT PERSUADED (Aug 6). #241 inverted the framing and told
+      // the model in plain words not to name a position it could not explain.
+      // Measured after deploy, on a user with 1,117 indexed passages: three
+      // chart labels, in causal form, in one reply. That is instruction failing
+      // this behaviour twice — 5/5 before the framing change, and again after.
+      //
+      // So the preference stops being an instruction and becomes assembly: when
+      // this person's own report can carry the answer, the chart is not sent at
+      // all. It cannot be recited if it is not there.
+      //
+      // This is NOT the intent-gating that was withdrawn in the specification's
+      // Appendix A. That coupled knowing to saying — it would have starved the
+      // model on turns where the report cannot help. This gates on whether the
+      // BETTER SOURCE IS PRESENT for this turn, and hands the chart back the
+      // moment it is not.
+      const REPORT_CARRIES_MIN = 2;
+      const reportCarries = relevantChunks.length >= REPORT_CARRIES_MIN;
+      const chartRequested = detectTechnicalDetailRequest(message);
+      const includeChart = chartRequested || !reportCarries;
+
+      console.log('🗺️ CHART BLOCK:', {
+        included: includeChart,
+        reason: chartRequested ? 'user asked for technical detail'
+              : reportCarries ? 'suppressed — report carries this turn'
+              : 'included — report coverage thin',
+        relevantChunks: relevantChunks.length,
+        facts: structuredFacts.length,
+      });
+
+      const factsSection =
+        includeChart && structuredFacts.length > 0
+          ? '\n\nCHART REFERENCE (positions and codes; supporting detail, not an explanation. ' +
+            'A position never explains a behaviour on its own — if you cannot say what it means ' +
+            'in this person\'s life in plain language, do not name it):\n' +
+            formatFactsByFacet(structuredFacts)
+          : '';
+
       const narrativeSection = relevantChunks.length > 0
         ? '\n\nWHAT IS ACTUALLY KNOWN ABOUT THIS PERSON (from their own report — this is your primary material; ' +
           'prefer it over chart positions whenever it can carry the point):\n' +
