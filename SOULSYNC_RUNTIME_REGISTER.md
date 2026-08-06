@@ -313,9 +313,25 @@ than the discipline's own argument. Nothing about v3.5 is being retracted — bu
 its origin is now recorded, so a future reader does not treat it as evidence that
 laws solve detector bugs.
 
-**Not verified:** rows landing in `conversation_state_tracking` in production.
-That needs a live Dutch re-run, which is the next step regardless. Bug 2 closes
-on rows, not on a successful `CREATE POLICY`.
+**Bug 2 CLOSED (Aug 4).** Rows are landing in `conversation_state_tracking` with
+real cluster, sub_state, confidence and signal counts. Confirmed by rows, not by
+a successful `CREATE POLICY`.
+
+**But the detector is not live.** Four rows from Aug 4 20:11-20:14; two carry
+`confidence 0.30` with every signal count at zero — the turn-count fallback,
+made visible by the instrumentation added in the same ticket. The bilingual
+schema was committed **Aug 3 07:02**, a day and a half earlier, so these turns
+ran with the fix in the repo and still fell back. The deployed bundle is stale:
+the `_shared` change did not reach it. Redeploy is the fix, not a precaution.
+
+**Two proposed acceptance values were wrong, and one was dangerous.** Computed
+against the deployed schema, the full sentences produce
+`validation/self_disclosure` and `constraint/time_pressure`, not the expected
+`exploration|clarification` and `frustration/venting`. Both actual results are
+better reads — a withdrawal is a disclosure, and naming a 24/7 workload is a
+resource constraint. Tuning the schema to score that sentence as frustration
+would have re-created the over-labelling defect this same ticket removed.
+Acceptance corrected before the replay ran.
 
 ---
 
