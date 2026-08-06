@@ -390,11 +390,15 @@ function calculateContextBudget(intent: string): {
       };
     
     default: // MIXED, FACTUAL, INTERPRETIVE
+      // vectorChunks was 3 against an unlimited chart-fact block — the specific
+      // material lost the contest before the model read a word. Raised to match
+      // the other intents rather than inflated: the chart side was made less
+      // salient in the same change, so this evens the two rather than adding.
       return {
-        hermeticSections: 2,
-        vectorChunks: 3,
+        hermeticSections: 3,
+        vectorChunks: 5,
         behavioralMemories: 2,
-        totalWordsEstimate: 800
+        totalWordsEstimate: 1100
       };
   }
 }
@@ -760,14 +764,28 @@ async function buildStructuredIntelligenceSpine(userId: string, supabase: any): 
     let hsi: any = null;
     let source: SpineResolution['source'] = 'none';
 
-    const { data: report, error: reportErr } = await supabase
-      .from('personality_reports')
-      .select('structured_intelligence, report_content')
-      .eq('user_id', userId)
-      .not('report_content', 'is', null)
-      .order('generated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // The Hermetic report (blueprint_version 2.0) is the richer source. This
+    // read used to take "the most recent report of any version", so a user with
+    // both got their personal model built from the thin standard report
+    // whenever it happened to be newer — while the 80,000-word one sat unused
+    // in the same table. Prefer 2.0; fall back to any version.
+    const fetchReport = async (version?: string) => {
+      let q = supabase
+        .from('personality_reports')
+        .select('structured_intelligence, report_content')
+        .eq('user_id', userId)
+        .not('report_content', 'is', null);
+      if (version) q = q.eq('blueprint_version', version);
+      return await q.order('generated_at', { ascending: false }).limit(1).maybeSingle();
+    };
+
+    let { data: report, error: reportErr } = await fetchReport('2.0');
+    let reportVersion = '2.0';
+    if (!report) {
+      ({ data: report, error: reportErr } = await fetchReport());
+      reportVersion = 'any';
+    }
+    console.log('📐 SPINE SOURCE REPORT:', { preferred: '2.0', used: report ? reportVersion : 'none' });
 
     if (reportErr) {
       console.warn('⚠️ SPINE: personality_reports fetch failed:', reportErr.message);
@@ -1855,23 +1873,33 @@ serve(async (req) => {
           Object.keys(factsByFacet).filter(f => !facetOrder.includes(f))
         );
 
+        // SALIENCE, NOT REMOVAL. Every fact is still here — the model must know
+        // the moon is in Taurus. What is gone is the packaging that made the
+        // label the easiest thing in the prompt to quote: bolded framework
+        // headings, bolded field names, bullet lists. Rendered flat, a fact is
+        // available to reason from and unattractive to recite. Voice Charter
+        // rule 6 still governs whether the chart is named at all.
         return orderedFacets.map(facet => {
-          const facetTitle = facet.replace(/_/g, ' ').toUpperCase();
           const facetFacts = factsByFacet[facet];
-          const factsList = facetFacts.map(fact => {
+          return facetFacts.map(fact => {
             const value = fact.value_json?.value ?? fact.value_json;
             const label = fact.value_json?.label ?? fact.key.replace(/_/g, ' ');
-            return '  • **' + label + '**: ' + (typeof value === 'object' ? JSON.stringify(value) : String(value));
-          }).join('\n');
-          return '**' + facetTitle + '** (' + facetFacts.length + ' facts):\n' + factsList;
-        }).join('\n\n');
+            return label + ': ' + (typeof value === 'object' ? JSON.stringify(value) : String(value)) + '.';
+          }).join(' ');
+        }).join(' ');
       };
 
+      // FRAMING, INVERTED. This block used to be headed "COMPREHENSIVE
+      // BLUEPRINT (n Facts Available)" while the person's actual report was
+      // headed "use ONLY if directly relevant". The prompt told the model which
+      // source to trust, and it was the wrong one: a chart position is a
+      // pointer, not an explanation, and a user who is told "because of your
+      // Taurus moon" has been given a label instead of an answer.
       const factsSection =
         structuredFacts.length > 0
-          ? '\n\nCOMPREHENSIVE BLUEPRINT FOR ' +
-            String(personalityContext.name || '').toUpperCase() +
-            ' (' + structuredFacts.length + ' Facts Available):\n' +
+          ? '\n\nCHART REFERENCE (positions and codes; supporting detail, not an explanation. ' +
+            'A position never explains a behaviour on its own — if you cannot say what it means ' +
+            'in this person\'s life in plain language, do not name it):\n' +
             formatFactsByFacet(structuredFacts)
           : '';
 
@@ -1886,8 +1914,14 @@ serve(async (req) => {
           })
         : [];
 
+      // The passages retrieved from this person's own report. These are the
+      // specific material — the thing a chart position only points at — so they
+      // lead rather than being hedged. The old header ("use ONLY if directly
+      // relevant") discounted the only content that could answer "what does
+      // that actually mean for how I think and behave".
       const narrativeSection = relevantChunks.length > 0
-        ? '\n\nPERSONALITY INSIGHTS (Use ONLY if directly relevant to understanding their current message):\n' +
+        ? '\n\nWHAT IS ACTUALLY KNOWN ABOUT THIS PERSON (from their own report — this is your primary material; ' +
+          'prefer it over chart positions whenever it can carry the point):\n' +
           relevantChunks.map(ch => ch.content || '').join('\n\n')
         : '';
 
