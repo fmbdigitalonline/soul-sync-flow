@@ -16,7 +16,7 @@ longer exist in the Product Constitution.
 
 ---
 
-## The three laws
+## The four laws
 
 ### 1. One jurisdiction
 
@@ -48,6 +48,55 @@ cleanly. It is the template.
 
 A replacement is finished when the old path is **gone**, not when the new path
 works. See rule 4 of §A below, which this law amends.
+
+### 4. Every persisted state has a canonical consumer
+
+State that nothing consumes must not be persisted. Every store — table, column,
+cache, ledger — names the runtime that consumes it, and if that consumer does
+not exist yet, the write waits until it does.
+
+**Consumer, not reader.** A `SELECT` is the common case, but state may
+legitimately drive an event, a cache invalidation, a schedule, or analytics. The
+invariant is not that something reads it; it is that the state exists to
+**influence observable system behaviour** rather than because it was written.
+
+This is the inverse of law 1, and the pair completes each other: **every
+behaviour has exactly one decider; every persisted state has at least one
+consumer.**
+
+Added on evidence, not principle. Four occurrences, each found by a separate
+audit:
+
+| Store | Written | Read by the runtime that needed it |
+|---|---|---|
+| `FloatingHACSOrb` and its pipelines | continuously | never mounted |
+| `hermetic_structured_intelligence` | by a dev panel | 1 user; reply path used the blob |
+| `conversation_state_tracking` | every turn (insert fails on RLS) | **no SELECT exists anywhere** |
+| `conversation_insights` | every session | Profile and Journey read it; **the Twin never does** |
+
+The failure mode is specific and worth naming: unread state produces **the
+illusion of intelligence without any influence on behaviour**. Every one of
+these looked like a working capability in the code and changed nothing a user
+could experience. A reviewer reading the repo would conclude the system tracks
+conversational state; a user would find it does not.
+
+The last row is the sharpest form of it. The Twin generates the pattern ledger
+and never reads it back, so accumulated understanding reaches the retrospective
+surfaces and never the conversation where it would be alive.
+
+**Test:** for any store, name the file and function that consumes it in service
+of observable behaviour. "The dashboard shows it" is a consumer. "It triggers a
+refresh" is a consumer. "We might use it later" is not.
+
+**The challenge, recorded rather than hidden.** Four occurrences support a
+second reading: not a constitutional gap but a recurring engineering habit —
+optimising for writes before proving reads. That reading is plausible, and a
+constitution should describe enduring principles rather than catalogue repeated
+mistakes. This one is ratified anyway because it generalises past its evidence:
+it is the formal inverse of law 1, it applies to any store in any subsystem, and
+the four instances span four unrelated subsystems rather than one team's
+pattern. If it ever reads as a description of a habit rather than a principle,
+that is the signal to retire it.
 
 ---
 
