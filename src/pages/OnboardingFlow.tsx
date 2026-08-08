@@ -8,7 +8,7 @@ import StarField from "@/components/ui/star-field";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { blueprintService, BlueprintData } from "@/services/blueprint-service";
-import { MBTI_TYPES } from "@/services/mbti-data-repair-service";
+import { PersonalityFusion } from "@/components/blueprint/PersonalityFusion";
 import { supabase } from "@/integrations/supabase/client";
 import { hermeticPersonalityReportService } from "@/services/hermetic-personality-report-service";
 import { aiPersonalityReportService } from "@/services/ai-personality-report-service";
@@ -17,21 +17,25 @@ import { useLanguage } from "@/contexts/LanguageContext";
 /**
  * OnboardingFlow — the 90-second path from birth data to first contact.
  *
- * Three screens, three principles per screen:
+ * Four screens, three principles per screen:
  *  1. Birth data   — one form, smart defaults, "I don't know my time" escape.
- *  2. The reveal   — progress starts at 20% (goal-gradient); the wait is the
+ *  2. Personality  — three taps. Five of the six frameworks are computed from
+ *                    birth data; MBTI is the one that has to be asked.
+ *                    Skippable, and skipping leaves it Unknown rather than
+ *                    recording a guess.
+ *  3. The reveal   — progress starts at 20% (goal-gradient); the wait is the
  *                    show: real blueprint fragments materialize one by one.
- *  3. First contact — no tutorial, no path choice: straight into the chat,
+ *  4. First contact — no tutorial, no path choice: straight into the chat,
  *                    where the companion speaks first.
  *
  * Replaces the 9-step wizard (src/pages/Onboarding.tsx — kept on disk,
  * unrouted). Language moves into the conversation; full name stays here because
- * numerology requires the birth name, and personality type stays here because
- * it is the one of the six frameworks that cannot be computed from birth data —
- * it has to be asked. It is optional, and blank means Unknown, never a guess.
+ * numerology requires the birth name. The personality step reuses that wizard's
+ * own PersonalityFusion poll — it was never rebuilt when the wizard was
+ * retired, which is why cognition_mbti had been Unknown for every user since.
  */
 
-type Phase = "form" | "reveal";
+type Phase = "form" | "personality" | "reveal";
 
 interface RevealFragment {
   label: string;
@@ -61,11 +65,12 @@ const OnboardingFlow: React.FC = () => {
   const [birthTime, setBirthTime] = useState("");
   const [timeUnknown, setTimeUnknown] = useState(false);
   const [birthPlace, setBirthPlace] = useState("");
-  // Optional, and optional on purpose. MBTI is the one framework of the six
-  // that cannot be computed from birth data — it has to be asked. Left blank it
-  // stays Unknown, and the MBTI lens reports it as an absence rather than
-  // inventing a type.
-  const [mbtiType, setMbtiType] = useState("");
+  // MBTI is the one framework of the six that cannot be computed from birth
+  // data — it has to be asked. PersonalityFusion asks it as three taps and a
+  // confidence slider, and returns a full profile (Big Five estimates,
+  // probabilities, likelyType). Skipped, it stays null: assembly degrades to
+  // Unknown and the MBTI lens reports an absence rather than inventing a type.
+  const [personality, setPersonality] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
 
   // ---------------------------------------------------------------- reveal
@@ -165,9 +170,9 @@ const OnboardingFlow: React.FC = () => {
           birth_time_local: timeUnknown ? "12:00" : birthTime,
           birth_location: birthPlace.trim(),
           timezone,
-          // A stated type outranks inference. Empty stays empty — assembly
-          // degrades to Unknown rather than guessing.
-          ...(mbtiType ? { personality: mbtiType } : {}),
+          // Skipped stays absent — assembly degrades to Unknown rather than
+          // guessing a type nobody gave us.
+          ...(personality ? { personality } : {}),
         });
 
       if (error || !data) {
@@ -263,8 +268,18 @@ const OnboardingFlow: React.FC = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!formValid || submitting) return;
+    // The poll has to run BEFORE generation, not alongside it: cognition_mbti is
+    // derived at blueprint assembly, so a profile arriving later would land
+    // after the value it feeds has already been written as Unknown.
+    setPhase("personality");
+  };
+
+  /** Both paths into the reveal — answered or skipped. Skipping is honest: it
+   *  leaves personality null rather than recording a type nobody gave. */
+  const startCasting = async () => {
+    if (submitting) return;
     setSubmitting(true);
     setPhase("reveal");
     await beginGeneration();
@@ -372,26 +387,6 @@ const OnboardingFlow: React.FC = () => {
               />
             </div>
 
-            <div>
-              <Label htmlFor="ob-mbti">
-                Personality type{" "}
-                <span className="font-normal opacity-60">— if you know it</span>
-              </Label>
-              <select
-                id="ob-mbti"
-                value={mbtiType}
-                onChange={(e) => setMbtiType(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="">I don't know it</option>
-                {MBTI_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-              <p className="mt-1 text-xs opacity-60">
-                Everything else is calculated from your birth data. This one can only be asked.
-              </p>
-            </div>
           </div>
 
           <GradientButton
@@ -402,6 +397,27 @@ const OnboardingFlow: React.FC = () => {
             Cast my chart — 60 seconds
           </GradientButton>
         </CosmicCard>
+      )}
+
+      {phase === "personality" && (
+        <div className="relative z-10 mx-auto w-full max-w-lg px-5 pb-16 pt-10">
+          <p className="mb-4 text-center text-sm opacity-70">
+            Three taps. Your chart gives us five of the six lenses — this is the
+            one it can\'t reach.
+          </p>
+          <PersonalityFusion
+            value={personality}
+            onChange={setPersonality}
+            onComplete={startCasting}
+          />
+          <button
+            type="button"
+            onClick={startCasting}
+            className="mx-auto mt-6 block text-sm underline opacity-60 hover:opacity-100"
+          >
+            Skip — I\'d rather not say
+          </button>
+        </div>
       )}
 
       {phase === "reveal" && (
