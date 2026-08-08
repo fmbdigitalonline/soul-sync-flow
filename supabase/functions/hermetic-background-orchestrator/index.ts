@@ -12,6 +12,33 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+/**
+ * Two defects found by reading a real report back, agreed as fixes independently
+ * of the open question about framework vocabulary.
+ *
+ *  1. Internal scores reached the reader verbatim — "a striking 0.9 on that
+ *     scale!", "both sitting around 0.5 to 0.6". Those are storage values. A
+ *     person reading about themselves should never meet them.
+ *  2. Sections signed off as their own character — "With warmth and unwavering
+ *     belief in your luminous path, Your Hermetic Law Guide". The product has
+ *     one narrator. A specialist writing a section is not a second person the
+ *     reader is introduced to.
+ *
+ * This says nothing about framework vocabulary on purpose. That decision is
+ * still open, and settling it here would make the next before/after unreadable.
+ */
+const NARRATIVE_CONSTRAINTS = `
+
+Two constraints on how this is written, whatever it says:
+
+- Never quote internal numeric values. Scores like 0.9, 0.65, or "around 0.5 to
+  0.6" are storage, not language. Say what the value means in ordinary words;
+  the number itself never reaches the reader.
+- You are not a character. Do not introduce yourself, do not name yourself, and
+  do not sign off. No "Your Hermetic Law Guide", no "your guide", no closing
+  signature of any kind. The reader hears one voice across this whole report,
+  and it is not yours.`;
+
 // Agent arrays for each stage
 const SYSTEM_TRANSLATORS = [
   'mbti_hermetic_translator',
@@ -839,7 +866,7 @@ Synthesize all practical guidance into one coherent roadmap for their conscious 
 **THE DESTINY CALLING** (1,000+ words)
 End with an inspiring vision of their highest potential and the unique gift they're here to share with the world.
 
-Write every sentence to mesmerize, every insight to inspire profound self-recognition, and every revelation to feel like coming home to themselves. This is their personal bible of self-understanding.`;
+Write every sentence to mesmerize, every insight to inspire profound self-recognition, and every revelation to feel like coming home to themselves. This is their personal bible of self-understanding.${NARRATIVE_CONSTRAINTS}`;
 
   } else if (synthesisType === 'fractal_synthesis') {
     expectedWords = 1500;
@@ -852,7 +879,7 @@ Show how their fundamental nature creates similar patterns in their:
 - Life challenges and growth opportunities
 - Spiritual evolution and consciousness expansion
 
-Write with poetic elegance that reveals the beautiful mathematics of their soul's signature repeating across all scales of their existence.`;
+Write with poetic elegance that reveals the beautiful mathematics of their soul's signature repeating across all scales of their existence.${NARRATIVE_CONSTRAINTS}`;
 
   } else if (synthesisType === 'consciousness_mapping') {
     expectedWords = 1500;
@@ -866,7 +893,7 @@ Explore the geography of their consciousness:
 - The bridges between different aspects of their nature
 - The gateways to their untapped potential
 
-Write as if you're creating a mystical guidebook to their own consciousness, complete with landmarks, treasures, and secret passages.`;
+Write as if you're creating a mystical guidebook to their own consciousness, complete with landmarks, treasures, and secret passages.${NARRATIVE_CONSTRAINTS}`;
 
   } else if (synthesisType === 'practical_applications') {
     expectedWords = 1500;
@@ -882,7 +909,7 @@ Create an enchanting practical framework that feels less like homework and more 
 **CONSCIOUS DECISION-MAKING** - Using their blueprint as an inner compass
 **SPIRITUAL EVOLUTION PATHWAY** - Progressive practices for ongoing growth
 
-Present each practice as a mystical key to unlocking more of their authentic power and joy.`;
+Present each practice as a mystical key to unlocking more of their authentic power and joy.${NARRATIVE_CONSTRAINTS}`;
   }
   
   const { data, error } = await supabase.functions.invoke('openai-agent', {
@@ -1311,7 +1338,7 @@ Offer practical, personalized guidance that feels doable and relevant to their s
 **Empowering Conclusion** (200+ words)
 End with an inspiring vision of their potential that feels both achievable and exciting. Help them see their unique gifts and how they can share them with the world.
 
-Write every sentence to captivate ${userName} specifically, making them feel seen, understood, and inspired to grow.`;
+Write every sentence to captivate ${userName} specifically, making them feel seen, understood, and inspired to grow.${NARRATIVE_CONSTRAINTS}`;
 }
 
 function getPersonalizedHermeticPrompt(agent: string, blueprint: any, language: string = 'en'): string {
@@ -1344,7 +1371,7 @@ Provide practical steps tailored to ${userName}'s personality type for working m
 **Relationship Dynamics** (200+ words)
 Show how this law influences ${userName}'s relationships and how understanding it can deepen their connections with others.
 
-Write with genuine care for ${userName}'s growth, helping them see both their challenges and gifts through the lens of this Hermetic Law.`;
+Write with genuine care for ${userName}'s growth, helping them see both their challenges and gifts through the lens of this Hermetic Law.${NARRATIVE_CONSTRAINTS}`;
 }
 
 function getPersonalizedGatePrompt(gateNumber: number, blueprint: any, language: string = 'en'): string {
@@ -1382,7 +1409,7 @@ Show ${userName} how to consciously work with this gate's energy to create posit
 **Gender - Creative & Receptive Flow** (170+ words)
 Explore the active and receptive aspects of this gate and how ${userName} can balance these energies for optimal expression.
 
-Write as if you're helping ${userName} understand a powerful aspect of their authentic self, making the insights practical and personally meaningful.`;
+Write as if you're helping ${userName} understand a powerful aspect of their authentic self, making the insights practical and personally meaningful.${NARRATIVE_CONSTRAINTS}`;
 }
 
 function getPersonalizedIntelligencePrompt(agent: string, dimensionName: string, blueprint: any, language: string = 'en'): string {
@@ -1414,7 +1441,7 @@ Address areas where ${userName} could develop greater awareness and skill within
 **Integration Practices** (100+ words)
 Offer practical suggestions tailored to ${userName}'s personality type for developing this dimension more consciously.
 
-Write with genuine insight into ${userName}'s experience, helping them understand this aspect of their intelligence as both a current reality and an area for conscious development.`;
+Write with genuine insight into ${userName}'s experience, helping them understand this aspect of their intelligence as both a current reality and an area for conscious development.${NARRATIVE_CONSTRAINTS}`;
 }
 
 function getPersonalizedSynthesisPrompt(synthesisType: string, blueprint: any, expectedWords: number, language: string = 'en'): string {
@@ -1453,11 +1480,11 @@ Synthesize all practical guidance into ${userName}'s personalized roadmap for au
 **${userName}'s Unique Contribution** (1,000+ words)
 End with an inspiring vision of the unique gift ${userName} is here to share with the world.
 
-Write every section to feel personally relevant to ${userName}, helping them see themselves clearly and embrace their authentic path.`;
+Write every section to feel personally relevant to ${userName}, helping them see themselves clearly and embrace their authentic path.${NARRATIVE_CONSTRAINTS}`;
   }
   
   // Other synthesis types with similar personalization...
-  return `${languageInstruction}You are creating a ${synthesisType} synthesis for ${userName}. Write in a ${tone} style with ${pacing} organization. Generate ${expectedWords}+ words of deeply personal insight that helps ${userName} understand and integrate all aspects of their analysis.`;
+  return `${languageInstruction}You are creating a ${synthesisType} synthesis for ${userName}. Write in a ${tone} style with ${pacing} organization. Generate ${expectedWords}+ words of deeply personal insight that helps ${userName} understand and integrate all aspects of their analysis.${NARRATIVE_CONSTRAINTS}`;
 }
 
 // ============ HELPER FUNCTIONS ============
