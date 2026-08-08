@@ -69,6 +69,7 @@ import User360Page from "./pages/User360Page";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import HermeticIntelligenceTest from "./pages/HermeticIntelligenceTest";
+import TestingPage from "./pages/TestingPage";
 import LifeClarityFunnel from "./pages/LifeClarityFunnel";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { BlueprintCacheProvider } from "./contexts/BlueprintCacheContext";
@@ -173,6 +174,10 @@ const router = createBrowserRouter([
       { path: "phase3-memory-test", element: <ProtectedRoute><Phase3MemoryTestPage /></ProtectedRoute> },
       { path: "test-environment", element: <ProtectedRoute><TestEnvironmentPage /></ProtectedRoute> },
       { path: "test-hermetic-intelligence", element: <ProtectedRoute><HermeticIntelligenceTest /></ProtectedRoute> },
+      // TestingPage holds HermeticPipelineValidator, the only control that can
+      // regenerate a hermetic report. It existed but was never routed, so there
+      // was no way to trigger generation outside of registration.
+      { path: "testing", element: <ProtectedRoute><TestingPage /></ProtectedRoute> },
       { path: "*", element: <NotFound /> }
     ]
   }

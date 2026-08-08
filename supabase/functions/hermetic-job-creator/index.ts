@@ -19,7 +19,11 @@ serve(async (req) => {
   }
 
   try {
-    const { user_id, blueprint_data, language = 'en' } = await req.json();
+    // `force` is for a deliberate regeneration — an operator asking for a new
+    // report on purpose. It bypasses the freshness guard only. The active-job
+    // guard below still applies, because two concurrent jobs for one user would
+    // race each other into the same tables.
+    const { user_id, blueprint_data, language = 'en', force = false } = await req.json();
     
     if (!user_id || !blueprint_data) {
       return new Response(JSON.stringify({ 
@@ -36,7 +40,9 @@ serve(async (req) => {
     // user (< 7 days old), skip dispatch entirely. Hermetic generation is
     // expensive (10k+ words); avoid regenerating from the onboarding auto-trigger
     // when the user already has a recent one.
-    try {
+    if (force) console.log(`🔁 Hermetic job: force requested — freshness guard skipped for user ${user_id}`);
+
+    if (!force) try {
       const { data: freshReports } = await supabase
         .from('personality_reports')
         .select('id, generated_at, blueprint_version')
