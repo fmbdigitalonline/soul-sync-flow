@@ -117,7 +117,29 @@ serve(async (req) => {
     }
     
     console.log(`📊 HERMETIC RECOVERY: Found ${subJobs?.length || 0} completed sub-jobs`);
-    
+
+    // This function reconstructs a report by treating each sub-job's `content`
+    // as finished prose. Under the v3 pipeline that column holds a lens's
+    // structured observations instead, so reassembling it here would write a
+    // report made of JSON fragments and store it as though it were narrative.
+    //
+    // Refusing is the correct behaviour until recovery is taught to resume a v3
+    // job at its stage — a real work item, and not this one. The orchestrator's
+    // own relay already retries; this path exists for jobs it gave up on.
+    const looksStructured = (subJobs || []).some((sj: any) => {
+      const head = (sj.content || '').trimStart();
+      return head.startsWith('{') && head.includes('"observations"');
+    });
+    if (looksStructured) {
+      console.warn('⛔ HERMETIC RECOVERY: v3 job detected (structured sub-jobs). Refusing to reassemble.');
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'v3_job_not_recoverable_here',
+        message: 'This job used the observation/synthesis/narration pipeline. Its sub-jobs hold structured observations, not prose, so this recovery path would produce a corrupt report. Re-run the orchestrator for this job instead.',
+        jobId,
+      }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // Organize sub-jobs by stage
     const systemSections = subJobs?.filter(sj => sj.stage === 'system_translation') || [];
     const hermeticSections = subJobs?.filter(sj => sj.stage === 'hermetic_laws') || [];

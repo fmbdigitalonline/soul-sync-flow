@@ -169,8 +169,8 @@ class HermeticPersonalityReportService {
         job_id: jobId,
         user_id: userId,
         expectedDuration: '15-30 minutes',
-        expectedWords: '120,000+',
-        processingStages: ['system_translation', 'hermetic_laws', 'gate_analysis', 'intelligence_extraction', 'synthesis_integration']
+        expectedWords: '30,000+',
+        processingStages: ['system_translation', 'hermetic_laws', 'gate_analysis', 'intelligence_extraction', 'cross_framework_synthesis', 'twin_narration']
       });
       
       return { 
