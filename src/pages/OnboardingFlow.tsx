@@ -8,6 +8,7 @@ import StarField from "@/components/ui/star-field";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { blueprintService, BlueprintData } from "@/services/blueprint-service";
+import { PersonalityFusion } from "@/components/blueprint/PersonalityFusion";
 import { supabase } from "@/integrations/supabase/client";
 import { hermeticPersonalityReportService } from "@/services/hermetic-personality-report-service";
 import { aiPersonalityReportService } from "@/services/ai-personality-report-service";
@@ -16,19 +17,25 @@ import { useLanguage } from "@/contexts/LanguageContext";
 /**
  * OnboardingFlow — the 90-second path from birth data to first contact.
  *
- * Three screens, three principles per screen:
+ * Four screens, three principles per screen:
  *  1. Birth data   — one form, smart defaults, "I don't know my time" escape.
- *  2. The reveal   — progress starts at 20% (goal-gradient); the wait is the
+ *  2. Personality  — three taps. Five of the six frameworks are computed from
+ *                    birth data; MBTI is the one that has to be asked.
+ *                    Skippable, and skipping leaves it Unknown rather than
+ *                    recording a guess.
+ *  3. The reveal   — progress starts at 20% (goal-gradient); the wait is the
  *                    show: real blueprint fragments materialize one by one.
- *  3. First contact — no tutorial, no path choice: straight into the chat,
+ *  4. First contact — no tutorial, no path choice: straight into the chat,
  *                    where the companion speaks first.
  *
  * Replaces the 9-step wizard (src/pages/Onboarding.tsx — kept on disk,
- * unrouted). Name/personality/language questions move into the conversation;
- * full name stays here because numerology requires the birth name.
+ * unrouted). Language moves into the conversation; full name stays here because
+ * numerology requires the birth name. The personality step reuses that wizard's
+ * own PersonalityFusion poll — it was never rebuilt when the wizard was
+ * retired, which is why cognition_mbti had been Unknown for every user since.
  */
 
-type Phase = "form" | "reveal";
+type Phase = "form" | "personality" | "reveal";
 
 interface RevealFragment {
   label: string;
@@ -58,6 +65,12 @@ const OnboardingFlow: React.FC = () => {
   const [birthTime, setBirthTime] = useState("");
   const [timeUnknown, setTimeUnknown] = useState(false);
   const [birthPlace, setBirthPlace] = useState("");
+  // MBTI is the one framework of the six that cannot be computed from birth
+  // data — it has to be asked. PersonalityFusion asks it as three taps and a
+  // confidence slider, and returns a full profile (Big Five estimates,
+  // probabilities, likelyType). Skipped, it stays null: assembly degrades to
+  // Unknown and the MBTI lens reports an absence rather than inventing a type.
+  const [personality, setPersonality] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
 
   // ---------------------------------------------------------------- reveal
@@ -157,6 +170,9 @@ const OnboardingFlow: React.FC = () => {
           birth_time_local: timeUnknown ? "12:00" : birthTime,
           birth_location: birthPlace.trim(),
           timezone,
+          // Skipped stays absent — assembly degrades to Unknown rather than
+          // guessing a type nobody gave us.
+          ...(personality ? { personality } : {}),
         });
 
       if (error || !data) {
@@ -179,9 +195,28 @@ const OnboardingFlow: React.FC = () => {
 
         // Kick off the hermetic deep-report in the background (same call the
         // old "Activate Steward" button used).
-        hermeticPersonalityReportService
-          .generateHermeticReport(data, language)
-          .catch((e) => console.warn("Hermetic report generation deferred:", e));
+        //
+        // generateHermeticReport RESOLVES with { success: false, error } on
+        // failure — it does not throw. A bare .catch() therefore caught nothing
+        // and reported nothing, so a new user whose report never started looked
+        // identical to one whose report was on its way. The standard-report
+        // block below already got this right; this one didn't.
+        (async () => {
+          try {
+            const res = await hermeticPersonalityReportService.generateHermeticReport(data, language);
+            if (res.success) {
+              console.log(`✅ Hermetic job created: ${res.job_id}`);
+              localStorage.removeItem(`hermetic_report_pending_${user.id}`);
+              return;
+            }
+            console.error("❌ Hermetic report did not start:", res.error);
+          } catch (e) {
+            console.error("❌ Hermetic report threw:", e);
+          }
+          // Leave a marker so the failure is recoverable and visible rather
+          // than a report that simply never appears.
+          localStorage.setItem(`hermetic_report_pending_${user.id}`, String(Date.now()));
+        })();
 
         // Also kick off the user-facing standard personality report so the
         // Rapport tab is typically ready by the time the user gets there.
@@ -233,8 +268,18 @@ const OnboardingFlow: React.FC = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!formValid || submitting) return;
+    // The poll has to run BEFORE generation, not alongside it: cognition_mbti is
+    // derived at blueprint assembly, so a profile arriving later would land
+    // after the value it feeds has already been written as Unknown.
+    setPhase("personality");
+  };
+
+  /** Both paths into the reveal — answered or skipped. Skipping is honest: it
+   *  leaves personality null rather than recording a type nobody gave. */
+  const startCasting = async () => {
+    if (submitting) return;
     setSubmitting(true);
     setPhase("reveal");
     await beginGeneration();
@@ -341,6 +386,7 @@ const OnboardingFlow: React.FC = () => {
                 autoComplete="off"
               />
             </div>
+
           </div>
 
           <GradientButton
@@ -351,6 +397,27 @@ const OnboardingFlow: React.FC = () => {
             Cast my chart — 60 seconds
           </GradientButton>
         </CosmicCard>
+      )}
+
+      {phase === "personality" && (
+        <div className="relative z-10 mx-auto w-full max-w-lg px-5 pb-16 pt-10">
+          <p className="mb-4 text-center text-sm opacity-70">
+            Three taps. Your chart gives us five of the six lenses — this is the
+            one it can\'t reach.
+          </p>
+          <PersonalityFusion
+            value={personality}
+            onChange={setPersonality}
+            onComplete={startCasting}
+          />
+          <button
+            type="button"
+            onClick={startCasting}
+            className="mx-auto mt-6 block text-sm underline opacity-60 hover:opacity-100"
+          >
+            Skip — I\'d rather not say
+          </button>
+        </div>
       )}
 
       {phase === "reveal" && (

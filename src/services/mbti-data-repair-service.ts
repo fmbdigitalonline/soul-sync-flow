@@ -6,6 +6,39 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+/**
+ * The 16 types and their dominant/auxiliary functions. Module-level so that
+ * validation and mapping cannot drift apart — a string is accepted as an MBTI
+ * type only if this map can actually place it.
+ */
+const MBTI_FUNCTIONS: Record<string, { dominant: string; auxiliary: string }> = {
+  INFP: { dominant: 'Introverted Feeling', auxiliary: 'Extraverted Intuition' },
+  ENFP: { dominant: 'Extraverted Intuition', auxiliary: 'Introverted Feeling' },
+  INFJ: { dominant: 'Introverted Intuition', auxiliary: 'Extraverted Feeling' },
+  ENFJ: { dominant: 'Extraverted Feeling', auxiliary: 'Introverted Intuition' },
+  INTJ: { dominant: 'Introverted Intuition', auxiliary: 'Extraverted Thinking' },
+  ENTJ: { dominant: 'Extraverted Thinking', auxiliary: 'Introverted Intuition' },
+  INTP: { dominant: 'Introverted Thinking', auxiliary: 'Extraverted Intuition' },
+  ENTP: { dominant: 'Extraverted Intuition', auxiliary: 'Introverted Thinking' },
+  ISFP: { dominant: 'Introverted Feeling', auxiliary: 'Extraverted Sensing' },
+  ESFP: { dominant: 'Extraverted Sensing', auxiliary: 'Introverted Feeling' },
+  ISFJ: { dominant: 'Introverted Sensing', auxiliary: 'Extraverted Feeling' },
+  ESFJ: { dominant: 'Extraverted Feeling', auxiliary: 'Introverted Sensing' },
+  ISTJ: { dominant: 'Introverted Sensing', auxiliary: 'Extraverted Thinking' },
+  ESTJ: { dominant: 'Extraverted Thinking', auxiliary: 'Introverted Sensing' },
+  ISTP: { dominant: 'Introverted Thinking', auxiliary: 'Extraverted Sensing' },
+  ESTP: { dominant: 'Extraverted Sensing', auxiliary: 'Introverted Thinking' },
+};
+
+export const MBTI_TYPES = Object.keys(MBTI_FUNCTIONS);
+
+/** Only a real, placeable type counts. Anything else is Unknown, never guessed. */
+function asMbtiType(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const upper = value.trim().toUpperCase();
+  return MBTI_FUNCTIONS[upper] ? upper : null;
+}
+
 export interface MBTIRepairResult {
   success: boolean;
   mbtiType: string;
@@ -107,6 +140,22 @@ class MBTIDataRepairService {
   private extractPersonalityData(blueprint: any): { mbtiType: string; description?: string; confidence?: number; bigFive?: any } {
     console.log('🔍 MBTI Repair: Extracting personality data from blueprint');
     
+    // Source 0: the user said so themselves.
+    //
+    // `user_meta.personality` has two legal shapes. The retired 9-step wizard
+    // stored a full PersonalityFusion profile (an object with `likelyType`);
+    // an intake question that simply asks for the type stores a bare string,
+    // which every source below would have missed — the extractor read
+    // `.likelyType` off a string, got undefined, and fell through to Unknown.
+    // A directly stated type also outranks anything inferred.
+    const stated = asMbtiType(blueprint.user_meta?.personality)
+      ?? asMbtiType(blueprint.user_meta?.personality?.type)
+      ?? asMbtiType(blueprint.user_meta?.mbti_type);
+    if (stated) {
+      console.log('✅ MBTI Repair: Using the type the user stated:', stated);
+      return { mbtiType: stated, confidence: 1, description: blueprint.user_meta?.personality?.description };
+    }
+
     // Source 1: user_meta.personality (most common location)
     if (blueprint.user_meta?.personality?.likelyType) {
       console.log('✅ MBTI Repair: Found personality data in user_meta.personality');
@@ -148,27 +197,7 @@ class MBTIDataRepairService {
   private buildMBTIStructure(personalityData: { mbtiType: string; description?: string; confidence?: number; bigFive?: any }) {
     const { mbtiType, description = '', confidence = 0.8, bigFive = {} } = personalityData;
     
-    // Map MBTI functions
-    const functionMap: { [key: string]: { dominant: string; auxiliary: string } } = {
-      'INFP': { dominant: 'Introverted Feeling', auxiliary: 'Extraverted Intuition' },
-      'ENFP': { dominant: 'Extraverted Intuition', auxiliary: 'Introverted Feeling' },
-      'INFJ': { dominant: 'Introverted Intuition', auxiliary: 'Extraverted Feeling' },
-      'ENFJ': { dominant: 'Extraverted Feeling', auxiliary: 'Introverted Intuition' },
-      'INTJ': { dominant: 'Introverted Intuition', auxiliary: 'Extraverted Thinking' },
-      'ENTJ': { dominant: 'Extraverted Thinking', auxiliary: 'Introverted Intuition' },
-      'INTP': { dominant: 'Introverted Thinking', auxiliary: 'Extraverted Intuition' },
-      'ENTP': { dominant: 'Extraverted Intuition', auxiliary: 'Introverted Thinking' },
-      'ISFP': { dominant: 'Introverted Feeling', auxiliary: 'Extraverted Sensing' },
-      'ESFP': { dominant: 'Extraverted Sensing', auxiliary: 'Introverted Feeling' },
-      'ISFJ': { dominant: 'Introverted Sensing', auxiliary: 'Extraverted Feeling' },
-      'ESFJ': { dominant: 'Extraverted Feeling', auxiliary: 'Introverted Sensing' },
-      'ISTJ': { dominant: 'Introverted Sensing', auxiliary: 'Extraverted Thinking' },
-      'ESTJ': { dominant: 'Extraverted Thinking', auxiliary: 'Introverted Sensing' },
-      'ISTP': { dominant: 'Introverted Thinking', auxiliary: 'Extraverted Sensing' },
-      'ESTP': { dominant: 'Extraverted Sensing', auxiliary: 'Introverted Thinking' }
-    };
-    
-    const functions = functionMap[mbtiType] || { dominant: 'Unknown', auxiliary: 'Unknown' };
+    const functions = MBTI_FUNCTIONS[mbtiType] || { dominant: 'Unknown', auxiliary: 'Unknown' };
     
     // Extract keywords from description
     const extractKeywords = (desc: string) => {
