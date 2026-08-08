@@ -96,7 +96,16 @@ function narrationPrompt(dimensionLabel: string, userName: string, language: str
     '- Say only what the findings support. Where confidence is low, let the prose',
     '  be tentative rather than confident. You may say you are unsure.',
     '',
-    'Length: comparable to a full report section — roughly 700-1000 words.',
+    // Matched deliberately to getPersonalizedHermeticPrompt's own band so the
+    // only variable between A and C is labels-versus-behaviour. Asking for a
+    // shorter piece and then reading the gap as lost depth measures nothing but
+    // the instruction.
+    'Length: 1100-1500 words.',
+    '',
+    'Do not pad to reach the length. If the findings genuinely do not support',
+    'this much, write less and say at the end what you would have needed to',
+    'know to write more. A short honest section is worth more than a long one',
+    'that repeats itself.',
   ].filter(Boolean).join('\n');
 }
 
@@ -201,6 +210,7 @@ serve(async (req) => {
 
     // ── C: the Twin narrating from B alone. Nothing else is passed. ────
     let narration = '';
+    let narrationFinish: string | null = null;
     if (findings) {
       const cResp = await callChatCompletion({
         messages: [
@@ -208,9 +218,14 @@ serve(async (req) => {
           { role: 'user', content: `FINDINGS:\n${JSON.stringify(findings, null, 2)}` },
         ],
         model: MODEL,
-        max_tokens: 1800,
+        // 1500 words does not fit in 1800 tokens, and Dutch runs richer per
+        // word than English. A truncated C reads as thin for a reason that has
+        // nothing to do with the question being asked.
+        max_tokens: 4000,
       });
-      narration = JSON.parse(await cResp.text())?.choices?.[0]?.message?.content ?? '';
+      const cJson = JSON.parse(await cResp.text());
+      narration = cJson?.choices?.[0]?.message?.content ?? '';
+      narrationFinish = cJson?.choices?.[0]?.finish_reason ?? null;
     }
 
     // A crude, honest signal — not a verdict. Counts how often chart
@@ -229,7 +244,13 @@ serve(async (req) => {
       C_twin_narration: narration,
       signals: {
         A: { words: words(existing ?? ''), chart_terms: count(existing ?? '') },
-        C: { words: words(narration), chart_terms: count(narration) },
+        C: {
+          words: words(narration),
+          chart_terms: count(narration),
+          finish_reason: narrationFinish,
+          truncated: narrationFinish === 'length',
+        },
+        length_target: 'A and C are both asked for 1100-1500 words, so a gap in length is a finding rather than an artefact of the prompt.',
         note: 'chart_terms is a surface count, not a quality judgement. Read A against C.',
       },
       wrote_nothing: true,
