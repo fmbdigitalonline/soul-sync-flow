@@ -8,6 +8,7 @@ import StarField from "@/components/ui/star-field";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { blueprintService, BlueprintData } from "@/services/blueprint-service";
+import { MBTI_TYPES } from "@/services/mbti-data-repair-service";
 import { supabase } from "@/integrations/supabase/client";
 import { hermeticPersonalityReportService } from "@/services/hermetic-personality-report-service";
 import { aiPersonalityReportService } from "@/services/ai-personality-report-service";
@@ -24,8 +25,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
  *                    where the companion speaks first.
  *
  * Replaces the 9-step wizard (src/pages/Onboarding.tsx — kept on disk,
- * unrouted). Name/personality/language questions move into the conversation;
- * full name stays here because numerology requires the birth name.
+ * unrouted). Language moves into the conversation; full name stays here because
+ * numerology requires the birth name, and personality type stays here because
+ * it is the one of the six frameworks that cannot be computed from birth data —
+ * it has to be asked. It is optional, and blank means Unknown, never a guess.
  */
 
 type Phase = "form" | "reveal";
@@ -58,6 +61,11 @@ const OnboardingFlow: React.FC = () => {
   const [birthTime, setBirthTime] = useState("");
   const [timeUnknown, setTimeUnknown] = useState(false);
   const [birthPlace, setBirthPlace] = useState("");
+  // Optional, and optional on purpose. MBTI is the one framework of the six
+  // that cannot be computed from birth data — it has to be asked. Left blank it
+  // stays Unknown, and the MBTI lens reports it as an absence rather than
+  // inventing a type.
+  const [mbtiType, setMbtiType] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   // ---------------------------------------------------------------- reveal
@@ -157,6 +165,9 @@ const OnboardingFlow: React.FC = () => {
           birth_time_local: timeUnknown ? "12:00" : birthTime,
           birth_location: birthPlace.trim(),
           timezone,
+          // A stated type outranks inference. Empty stays empty — assembly
+          // degrades to Unknown rather than guessing.
+          ...(mbtiType ? { personality: mbtiType } : {}),
         });
 
       if (error || !data) {
@@ -359,6 +370,27 @@ const OnboardingFlow: React.FC = () => {
                 placeholder="City, country"
                 autoComplete="off"
               />
+            </div>
+
+            <div>
+              <Label htmlFor="ob-mbti">
+                Personality type{" "}
+                <span className="font-normal opacity-60">— if you know it</span>
+              </Label>
+              <select
+                id="ob-mbti"
+                value={mbtiType}
+                onChange={(e) => setMbtiType(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">I don't know it</option>
+                {MBTI_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs opacity-60">
+                Everything else is calculated from your birth data. This one can only be asked.
+              </p>
             </div>
           </div>
 

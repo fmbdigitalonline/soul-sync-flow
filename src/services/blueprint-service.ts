@@ -11,7 +11,13 @@ export interface UserProfile {
   birth_time_local: string;
   birth_location: string;
   timezone: string;
-  personality?: string;
+  /**
+   * Either a bare MBTI type the user stated ("ENFP"), or a full
+   * PersonalityFusion profile object. `deriveCognitionMbti` accepts both; it
+   * was declared as a string while the extractor only read `.likelyType` off
+   * an object, so either shape silently produced "Unknown".
+   */
+  personality?: string | Record<string, any>;
   user_id?: string;
 }
 
