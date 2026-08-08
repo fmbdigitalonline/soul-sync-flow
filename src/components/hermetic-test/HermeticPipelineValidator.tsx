@@ -189,10 +189,15 @@ export const HermeticPipelineValidator: React.FC = () => {
       const reportStartTime = Date.now();
       
       // Generate new hermetic report - this should trigger the intelligence extraction
+      // force: this control exists to regenerate on purpose, so the job
+      // creator's freshness guard would otherwise silently skip it and the run
+      // would look like it succeeded while doing nothing.
       await hermeticPersonalityReportService.generateHermeticReport(
         typeof blueprint.blueprint === 'string' 
           ? JSON.parse(blueprint.blueprint) 
-          : blueprint.blueprint
+          : blueprint.blueprint,
+        'en',
+        { force: true }
       );
       
       const reportEndTime = Date.now();

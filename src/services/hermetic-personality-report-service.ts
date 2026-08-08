@@ -85,8 +85,13 @@ class HermeticPersonalityReportService {
   /**
    * CREATE BACKEND JOB for hermetic report generation
    * This replaces all client-side generation with backend processing
+   *
+   * `force` is a deliberate regeneration: it bypasses the job creator's 7-day
+   * freshness guard. Automatic triggers (onboarding, steward intro) must never
+   * pass it — the guard exists to stop them re-running an expensive generation
+   * for someone who already has a report.
    */
-  async generateHermeticReport(blueprint: BlueprintData, language: string = 'en'): Promise<{ 
+  async generateHermeticReport(blueprint: BlueprintData, language: string = 'en', options: { force?: boolean } = {}): Promise<{ 
     success: boolean; 
     job_id?: string;
     error?: string 
@@ -136,7 +141,8 @@ class HermeticPersonalityReportService {
         body: {
           user_id: userId,
           blueprint_data: blueprint,
-          language: language
+          language: language,
+          force: options.force === true
         }
       });
 
