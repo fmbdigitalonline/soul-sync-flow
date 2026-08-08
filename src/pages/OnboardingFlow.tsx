@@ -179,9 +179,28 @@ const OnboardingFlow: React.FC = () => {
 
         // Kick off the hermetic deep-report in the background (same call the
         // old "Activate Steward" button used).
-        hermeticPersonalityReportService
-          .generateHermeticReport(data, language)
-          .catch((e) => console.warn("Hermetic report generation deferred:", e));
+        //
+        // generateHermeticReport RESOLVES with { success: false, error } on
+        // failure — it does not throw. A bare .catch() therefore caught nothing
+        // and reported nothing, so a new user whose report never started looked
+        // identical to one whose report was on its way. The standard-report
+        // block below already got this right; this one didn't.
+        (async () => {
+          try {
+            const res = await hermeticPersonalityReportService.generateHermeticReport(data, language);
+            if (res.success) {
+              console.log(`✅ Hermetic job created: ${res.job_id}`);
+              localStorage.removeItem(`hermetic_report_pending_${user.id}`);
+              return;
+            }
+            console.error("❌ Hermetic report did not start:", res.error);
+          } catch (e) {
+            console.error("❌ Hermetic report threw:", e);
+          }
+          // Leave a marker so the failure is recoverable and visible rather
+          // than a report that simply never appears.
+          localStorage.setItem(`hermetic_report_pending_${user.id}`, String(Date.now()));
+        })();
 
         // Also kick off the user-facing standard personality report so the
         // Rapport tab is typically ready by the time the user gets there.
