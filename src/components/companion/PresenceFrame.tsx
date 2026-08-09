@@ -30,16 +30,15 @@ const RING_OFFSET = 4;
 interface PresenceFrameProps {
   state: PresenceState;
   /**
-   * Determinate background work, 0–100. The floating orb used to carry this as
-   * an outer ring; the border inherits it, because the border is now where
-   * presence lives.
+   * The deep blueprint, 0–100, as a second outline OUTSIDE the border.
    *
-   * It is a different kind of signal from `state`: state is what the Twin is
-   * doing in this conversation, progress is work happening behind it. They can
-   * be true at once, so the ring is an extra layer just outside the border
-   * rather than a replacement for it — the frame keeps exactly one edge, and
-   * this decorates it. Null or undefined means nothing is running: no arc, no
-   * residue.
+   * The border itself is spoken for — it carries the conversation's presence
+   * states — so this cannot live on it. It is a separate outer line, and it has
+   * two lives: it fills while the blueprint is being woven, and at 100 it stays,
+   * quietly, for good. A completed hermetic blueprint is a permanent fact about
+   * this person, so the frame keeps showing it rather than returning to bare.
+   *
+   * Null means there is no blueprint and none being built: no line at all.
    */
   progress?: number | null;
   /** Accessible name for the progress ring, e.g. "Deep report". */
@@ -68,7 +67,8 @@ export const PresenceFrame: React.FC<PresenceFrameProps> = ({
   const hostRef = React.useRef<HTMLDivElement>(null);
   const [box, setBox] = React.useState<{ w: number; h: number } | null>(null);
 
-  const showRing = typeof progress === "number" && progress > 0 && progress < 100;
+  const showRing = typeof progress === "number" && progress > 0;
+  const complete = showRing && (progress as number) >= 100;
 
   // The frame is a pill of unknown width, so the ring is a rounded rect rather
   // than a circle and has to be measured. `pathLength="100"` then normalises
@@ -87,6 +87,13 @@ export const PresenceFrame: React.FC<PresenceFrameProps> = ({
   }, [showRing]);
 
   const pct = showRing ? Math.max(0, Math.min(100, progress as number)) : 0;
+
+  // Softer once complete: growing is an event worth watching, having grown is a
+  // fact worth keeping — it should not keep asking for attention for the rest of
+  // the relationship.
+  const strokeColour = complete
+    ? "hsl(var(--soul-teal) / 0.45)"
+    : "hsl(var(--soul-teal) / 0.85)";
 
   return (
     <div
@@ -119,7 +126,7 @@ export const PresenceFrame: React.FC<PresenceFrameProps> = ({
             rx={(box.h + RING_OFFSET * 2) / 2}
             ry={(box.h + RING_OFFSET * 2) / 2}
             fill="none"
-            stroke="hsl(var(--soul-teal) / 0.85)"
+            stroke={strokeColour}
             strokeWidth={2}
             strokeLinecap="round"
             pathLength={100}
@@ -130,8 +137,9 @@ export const PresenceFrame: React.FC<PresenceFrameProps> = ({
       )}
       {/* The ring is ambient; this is the state in language. Visually hidden so
           the border stays the only thing competing for attention, and polite so
-          it never interrupts what the reader is doing. */}
-      {showRing && (
+          it never interrupts what the reader is doing. Silent once complete —
+          a permanent line should not keep announcing itself. */}
+      {showRing && !complete && (
         <span className="sr-only" role="status" aria-live="polite">
           {progressLabel}: {Math.round(pct)}%
         </span>
