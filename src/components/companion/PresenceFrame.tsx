@@ -22,19 +22,26 @@ export type PresenceState =
   | "reaching";
 
 /**
- * How far outside the frame's own edge the progress ring sits. Small enough to
- * read as one component, large enough not to touch the border it decorates.
+ * The ring is drawn just INSIDE the element's own bounds, riding the outer edge
+ * of the frame's 3px border band.
+ *
+ * It used to sit outside, which needed 4px of room the layout does not have —
+ * the input is pinned to the bottom of a fixed container, so the ring was
+ * clipped. A decoration that requires its host to make space for it is the
+ * wrong shape of decoration. Half the stroke width keeps the whole stroke
+ * within the box, so it can never be cut off no matter what contains it.
  */
-const RING_OFFSET = 4;
+const RING_STROKE = 2;
+const RING_INSET = RING_STROKE / 2;
 
 interface PresenceFrameProps {
   state: PresenceState;
   /**
-   * The deep blueprint, 0–100, as a second outline OUTSIDE the border.
+   * The deep blueprint, 0–100, as a second line riding the border's outer edge.
    *
    * The border itself is spoken for — it carries the conversation's presence
-   * states — so this cannot live on it. It is a separate outer line, and it has
-   * two lives: it fills while the blueprint is being woven, and at 100 it stays,
+   * states — so this is a separate line riding its outer edge. It has two
+   * lives: it fills while the blueprint is being woven, and at 100 it stays,
    * quietly, for good. A completed hermetic blueprint is a permanent fact about
    * this person, so the frame keeps showing it rather than returning to bare.
    *
@@ -110,24 +117,24 @@ export const PresenceFrame: React.FC<PresenceFrameProps> = ({
           aria-hidden="true"
           focusable="false"
         >
-          {/* One arc, sitting just outside the frame's own edge. No track ring
-              behind it: a second full outline would read as a second border,
-              which is what this is meant to decorate, not duplicate.
+          {/* One arc, inset by half its own stroke so it rides the outer edge
+              of the frame without leaving the box. No track ring behind it: a
+              second full outline would read as a second border, which is what
+              this is meant to decorate, not duplicate.
 
-              rx and ry are both half the OUTER HEIGHT. SVG clamps rx to
-              width/2 and ry to height/2 independently, so rx={9999} on a wide
-              box yields an ellipse rather than a pill — which is exactly the
-              oval this replaces. */}
+              rx and ry are both half the height. SVG clamps rx to width/2 and
+              ry to height/2 independently, so rx={9999} on a wide box yields
+              an ellipse rather than a pill — the oval this replaces. */}
           <rect
-            x={-RING_OFFSET}
-            y={-RING_OFFSET}
-            width={box.w + RING_OFFSET * 2}
-            height={box.h + RING_OFFSET * 2}
-            rx={(box.h + RING_OFFSET * 2) / 2}
-            ry={(box.h + RING_OFFSET * 2) / 2}
+            x={RING_INSET}
+            y={RING_INSET}
+            width={Math.max(0, box.w - RING_STROKE)}
+            height={Math.max(0, box.h - RING_STROKE)}
+            rx={Math.max(0, box.h - RING_STROKE) / 2}
+            ry={Math.max(0, box.h - RING_STROKE) / 2}
             fill="none"
             stroke={strokeColour}
-            strokeWidth={2}
+            strokeWidth={RING_STROKE}
             strokeLinecap="round"
             pathLength={100}
             strokeDasharray={100}
