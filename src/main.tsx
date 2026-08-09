@@ -80,6 +80,15 @@ import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useCoachAskBridge } from "./hooks/use-coach-ask-bridge";
 
+declare const __BUILD_SHA__: string;
+declare const __BUILD_TIME__: string;
+
+// Printed once at boot so "is my change live?" is a fact rather than a debate.
+// Also on window, so it can be read without scrolling the console.
+(window as any).__SOULSYNC_BUILD__ = { sha: __BUILD_SHA__, builtAt: __BUILD_TIME__ };
+console.log(`%cSoulSync build ${__BUILD_SHA__} · ${__BUILD_TIME__}`, 'color:#8b5cf6;font-weight:600');
+
+
 // Create stable QueryClient instance outside of component to prevent recreation
 const queryClient = new QueryClient({
   defaultOptions: {
