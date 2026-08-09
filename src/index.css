@@ -287,6 +287,26 @@
   isolation: isolate;
 }
 
+/* Determinate background work drawn on the same ring the presence states use.
+   The stroke sits on the border line itself, not inside or outside it, so the
+   frame never gains a second edge. Transitioning the dash offset lets a jump
+   from 35% to 50% travel rather than teleport. */
+.presence-frame > .presence-progress {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+.presence-frame > .presence-progress rect {
+  transition: stroke-dashoffset 700ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .presence-frame > .presence-progress rect {
+    transition: none;
+  }
+}
+
 
 
 /* The conversational-presence vocabulary (Constitution v3.8). The input
