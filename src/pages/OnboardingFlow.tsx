@@ -387,23 +387,20 @@ const OnboardingFlow: React.FC = () => {
               />
             </div>
 
-            <div className="pt-1">
-              <Label>
-                Three quick ones{" "}
-                <span className="font-normal opacity-60">— optional</span>
-              </Label>
-              <p className="text-xs text-muted-foreground mt-1 mb-3">
-                Your chart gives us five of the six lenses. This is the one it
-                cannot reach.
+            <div className="pt-2 border-t border-gray-200/70">
+              <p className="text-sm text-muted-foreground mb-4">
+                Three quick ones, optional. Your chart gives us five of the six
+                lenses — this is the one it cannot reach.
               </p>
 
-              <div className="space-y-3">
+              <div className="space-y-5">
                 {MICRO_QUESTIONS.map((q) => (
                   <div key={q.id}>
-                    <p className="text-xs text-muted-foreground mb-1.5">
-                      {t(MICRO_QUESTION_TITLE_KEYS[q.id])}
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <Label>{t(MICRO_QUESTION_TITLE_KEYS[q.id])}</Label>
+                    {/* Same box as an Input — h-14, rounded-2xl, 2px border,
+                        white — split in two, so a question reads as a field
+                        rather than a pair of chips floating beside one. */}
+                    <div className="flex h-14 min-h-[3.5rem] w-full gap-1.5 rounded-2xl border-2 border-gray-200 bg-white/90 p-1.5 backdrop-blur-sm transition-all duration-300">
                       {[q.left, q.right].map((opt) => {
                         const selected = answers[q.id] === opt.value;
                         return (
@@ -424,13 +421,12 @@ const OnboardingFlow: React.FC = () => {
                                 return { ...prev, [q.id]: opt.value };
                               })
                             }
-                            className={`text-xs rounded-full px-3 py-2 border transition-colors ${
+                            className={`flex-1 rounded-xl px-2 text-sm leading-tight transition-colors duration-200 ${
                               selected
-                                ? "bg-soul-purple/15 border-soul-purple text-soul-purple"
-                                : "border-muted text-muted-foreground hover:border-soul-purple/50"
+                                ? "bg-soul-purple text-white font-medium"
+                                : "text-gray-500 hover:bg-soul-purple/5"
                             }`}
                           >
-                            {selected ? "✓ " : ""}
                             {t(opt.key)}
                           </button>
                         );
