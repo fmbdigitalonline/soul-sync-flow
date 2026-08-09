@@ -21,6 +21,12 @@ export type PresenceState =
   | "arriving"
   | "reaching";
 
+/**
+ * How far outside the frame's own edge the progress ring sits. Small enough to
+ * read as one component, large enough not to touch the border it decorates.
+ */
+const RING_OFFSET = 4;
+
 interface PresenceFrameProps {
   state: PresenceState;
   /**
@@ -30,9 +36,10 @@ interface PresenceFrameProps {
    *
    * It is a different kind of signal from `state`: state is what the Twin is
    * doing in this conversation, progress is work happening behind it. They can
-   * be true at once, so the ring draws over the state animation rather than
-   * replacing it. Null or undefined means nothing is running — no track, no
-   * arc, no residue.
+   * be true at once, so the ring is an extra layer just outside the border
+   * rather than a replacement for it — the frame keeps exactly one edge, and
+   * this decorates it. Null or undefined means nothing is running: no arc, no
+   * residue.
    */
   progress?: number | null;
   /** Accessible name for the progress ring, e.g. "Deep report". */
@@ -96,29 +103,24 @@ export const PresenceFrame: React.FC<PresenceFrameProps> = ({
           aria-hidden="true"
           focusable="false"
         >
-          {/* The unfilled remainder, so the arc reads as a proportion rather
-              than a lone travelling mark. */}
+          {/* One arc, sitting just outside the frame's own edge. No track ring
+              behind it: a second full outline would read as a second border,
+              which is what this is meant to decorate, not duplicate.
+
+              rx and ry are both half the OUTER HEIGHT. SVG clamps rx to
+              width/2 and ry to height/2 independently, so rx={9999} on a wide
+              box yields an ellipse rather than a pill — which is exactly the
+              oval this replaces. */}
           <rect
-            x={1.5}
-            y={1.5}
-            width={Math.max(0, box.w - 3)}
-            height={Math.max(0, box.h - 3)}
-            rx={9999}
-            ry={9999}
-            fill="none"
-            stroke="hsl(var(--soul-purple) / 0.10)"
-            strokeWidth={3}
-          />
-          <rect
-            x={1.5}
-            y={1.5}
-            width={Math.max(0, box.w - 3)}
-            height={Math.max(0, box.h - 3)}
-            rx={9999}
-            ry={9999}
+            x={-RING_OFFSET}
+            y={-RING_OFFSET}
+            width={box.w + RING_OFFSET * 2}
+            height={box.h + RING_OFFSET * 2}
+            rx={(box.h + RING_OFFSET * 2) / 2}
+            ry={(box.h + RING_OFFSET * 2) / 2}
             fill="none"
             stroke="hsl(var(--soul-teal) / 0.85)"
-            strokeWidth={3}
+            strokeWidth={2}
             strokeLinecap="round"
             pathLength={100}
             strokeDasharray={100}
