@@ -143,11 +143,21 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     }
   }, [isStreamingResponse]);
 
-  // The deep report generates in the background for 15-30 minutes. It used to
-  // be visible as the floating orb's outer ring; the orb is gone, so the ring
-  // moves to the border — the one place presence now lives.
-  const { isGenerating: hermeticGenerating, progress: hermeticProgress } =
-    useHermeticReportStatus();
+  // The deep blueprint takes 15-30 minutes in the background. It used to be
+  // visible as the floating orb's outer ring; the orb is gone, so the ring
+  // becomes a second outline outside the input.
+  //
+  // It does not disappear when the work finishes. A completed hermetic
+  // blueprint is a permanent fact about this person, so the line stays — the
+  // frame quietly says "this is in place" for the rest of the relationship.
+  const {
+    isGenerating: hermeticGenerating,
+    progress: hermeticProgress,
+    hasReport: hermeticReady,
+  } = useHermeticReportStatus();
+
+  const hermeticRing =
+    hermeticReady ? 100 : hermeticGenerating ? hermeticProgress : null;
 
   // v3.8 — the input border is the living state of the conversation. Each
   // state maps to a real interaction phase (no fabricated variety), in
@@ -604,7 +614,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
           )}
 
           {showNaming && (
-            <TwinNamingCard onNamed={handleNamed} onLater={() => setNamingLater(true)} />
+            <TwinNamingCard onNamed={handleNamed} onLater={() => setNamingLater(true)} growing={hermeticGenerating} />
           )}
 
           {proactiveMoment && (
@@ -645,7 +655,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
         <div className="max-w-4xl mx-auto">
           <PresenceFrame
             state={borderState}
-            progress={hermeticGenerating ? hermeticProgress : null}
+            progress={hermeticRing}
             progressLabel="Deep report"
             className="ss flex items-center gap-2 px-3 py-1.5 rounded-full"
             style={{ background: "var(--ss-card)", boxShadow: "var(--ss-shadow)" }}

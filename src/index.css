@@ -287,10 +287,11 @@
   isolation: isolate;
 }
 
-/* Determinate background work drawn on the same ring the presence states use.
-   The stroke sits on the border line itself, not inside or outside it, so the
-   frame never gains a second edge. Transitioning the dash offset lets a jump
-   from 35% to 50% travel rather than teleport. */
+/* Determinate background work, drawn as one arc just outside the frame's own
+   edge — an extra layer on the existing border, never a second outline of its
+   own. The arc extends past the element bounds, so it must not be clipped.
+   Transitioning the dash offset lets a jump from 35% to 50% travel rather than
+   teleport. */
 .presence-frame > .presence-progress {
   position: absolute;
   inset: 0;

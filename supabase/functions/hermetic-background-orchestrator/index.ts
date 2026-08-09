@@ -129,6 +129,49 @@ serve(async (req) => {
       });
     }
 
+    // A job that was mid-flight when this function was replaced cannot be
+    // resumed: its stored sections are prose with no observations, and one of
+    // its stages no longer exists. Left alone it either dies on an unknown
+    // stage or reaches a synthesis with nothing to read — both of which look
+    // to a waiting user exactly like "stuck".
+    //
+    // Restarting it is the honest repair. The lens stages are cheap now, the
+    // user has already been told a deep blueprint is being woven, and a job
+    // that silently produces a worse report is worse than one that takes the
+    // long way round.
+    const carriesProseSections = [
+      ...(job.progress_data?.system_sections || []),
+      ...(job.progress_data?.hermetic_sections || []),
+      ...(job.progress_data?.gate_sections || []),
+      ...(job.progress_data?.intelligence_sections || []),
+    ].some((s: any) => typeof s?.content === 'string' && !s?.observations);
+
+    if (job.current_stage === 'synthesis_integration' || carriesProseSections) {
+      console.warn(`♻️ MIGRATION: job ${jobId} predates the v3 pipeline (stage=${job.current_stage}, prose=${carriesProseSections}). Restarting it.`);
+
+      await supabase.from('hermetic_sub_jobs').delete().eq('job_id', jobId);
+      await supabase
+        .from('hermetic_processing_jobs')
+        .update({
+          current_stage: 'system_translation',
+          current_step_index: 0,
+          progress_data: {},
+          progress_percentage: 0,
+          status: 'processing',
+          current_step: 'Restarted on the current pipeline',
+          error_message: null,
+          last_heartbeat: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', jobId);
+
+      await supabase.functions.invoke('hermetic-background-orchestrator', { body: { job_id: jobId } });
+
+      return new Response(JSON.stringify({ success: true, message: 'Job restarted on the current pipeline.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // --- RELAY RACE STATE MACHINE ---
     //
     // Same relay, different work. The four observation stages are cheap and fast

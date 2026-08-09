@@ -72,21 +72,44 @@ serve(async (req) => {
     // Check if user has existing active job
     const { data: existingJobs } = await supabase
       .from('hermetic_processing_jobs')
-      .select('id, status')
+      .select('id, status, last_heartbeat, updated_at, created_at')
       .eq('user_id', user_id)
       .in('status', ['pending', 'processing'])
       .order('created_at', { ascending: false });
     
     if (existingJobs && existingJobs.length > 0) {
-      console.log(`⏭️ Hermetic job skip: active job exists (id=${existingJobs[0].id}, status=${existingJobs[0].status})`);
-      return new Response(JSON.stringify({ 
-        job_id: existingJobs[0].id,
-        message: 'Existing job found',
-        skipped: true,
-        reason: 'active_job'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      const active = existingJobs[0];
+
+      // A job only counts as active if it is still moving. The orchestrator
+      // beats last_heartbeat on every step, so a job that has not beaten in
+      // fifteen minutes is dead — and until now a dead job blocked this user
+      // from ever generating again, because "pending or processing" was
+      // treated as alive regardless of age. One stuck job locked the account.
+      const beat = (active as any).last_heartbeat || (active as any).updated_at || (active as any).created_at;
+      const silentMs = beat ? Date.now() - new Date(beat).getTime() : Infinity;
+      const DEAD_AFTER_MS = 15 * 60 * 1000;
+
+      if (silentMs < DEAD_AFTER_MS) {
+        console.log(`⏭️ Hermetic job skip: active job exists (id=${active.id}, status=${active.status}, silent=${Math.round(silentMs / 1000)}s)`);
+        return new Response(JSON.stringify({
+          job_id: active.id,
+          message: 'Existing job found',
+          skipped: true,
+          reason: 'active_job'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      console.warn(`💀 Hermetic job ${active.id} has been silent for ${Math.round(silentMs / 60000)}min — marking it failed and starting a new one`);
+      await supabase
+        .from('hermetic_processing_jobs')
+        .update({
+          status: 'failed',
+          error_message: `Abandoned: no heartbeat for ${Math.round(silentMs / 60000)} minutes. Superseded by a new job.`,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', active.id);
     }
     
     // Create new job record
