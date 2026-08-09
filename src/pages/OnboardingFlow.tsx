@@ -8,7 +8,11 @@ import StarField from "@/components/ui/star-field";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { blueprintService, BlueprintData } from "@/services/blueprint-service";
-import { PersonalityFusion } from "@/components/blueprint/PersonalityFusion";
+import {
+  MICRO_QUESTIONS,
+  MICRO_QUESTION_TITLE_KEYS,
+  estimateFromAnswers,
+} from "@/services/personality-estimate";
 import { supabase } from "@/integrations/supabase/client";
 import { hermeticPersonalityReportService } from "@/services/hermetic-personality-report-service";
 import { aiPersonalityReportService } from "@/services/ai-personality-report-service";
@@ -17,25 +21,25 @@ import { useLanguage } from "@/contexts/LanguageContext";
 /**
  * OnboardingFlow — the 90-second path from birth data to first contact.
  *
- * Four screens, three principles per screen:
+ * Three screens, three principles per screen:
  *  1. Birth data   — one form, smart defaults, "I don't know my time" escape.
- *  2. Personality  — three taps. Five of the six frameworks are computed from
- *                    birth data; MBTI is the one that has to be asked.
- *                    Skippable, and skipping leaves it Unknown rather than
- *                    recording a guess.
- *  3. The reveal   — progress starts at 20% (goal-gradient); the wait is the
+ *                    Three personality taps ride along at the bottom of the same
+ *                    form: five of the six frameworks are computed from birth
+ *                    data, and MBTI is the one that has to be asked. Optional,
+ *                    and unanswered means Unknown rather than a guess.
+ *  2. The reveal   — progress starts at 20% (goal-gradient); the wait is the
  *                    show: real blueprint fragments materialize one by one.
- *  4. First contact — no tutorial, no path choice: straight into the chat,
+ *  3. First contact — no tutorial, no path choice: straight into the chat,
  *                    where the companion speaks first.
  *
  * Replaces the 9-step wizard (src/pages/Onboarding.tsx — kept on disk,
  * unrouted). Language moves into the conversation; full name stays here because
- * numerology requires the birth name. The personality step reuses that wizard's
- * own PersonalityFusion poll — it was never rebuilt when the wizard was
- * retired, which is why cognition_mbti had been Unknown for every user since.
+ * numerology requires the birth name. The three questions are that wizard's own
+ * — they were never rebuilt when it was retired, which is why cognition_mbti
+ * had been Unknown for every user since.
  */
 
-type Phase = "form" | "personality" | "reveal";
+type Phase = "form" | "reveal";
 
 interface RevealFragment {
   label: string;
@@ -66,11 +70,11 @@ const OnboardingFlow: React.FC = () => {
   const [timeUnknown, setTimeUnknown] = useState(false);
   const [birthPlace, setBirthPlace] = useState("");
   // MBTI is the one framework of the six that cannot be computed from birth
-  // data — it has to be asked. PersonalityFusion asks it as three taps and a
-  // confidence slider, and returns a full profile (Big Five estimates,
-  // probabilities, likelyType). Skipped, it stays null: assembly degrades to
-  // Unknown and the MBTI lens reports an absence rather than inventing a type.
-  const [personality, setPersonality] = useState<any>(null);
+  // data — it has to be asked. Three taps, in the form, alongside everything
+  // else. Unanswered questions simply don't move their trait, and answering
+  // none leaves personality absent entirely: assembly degrades to Unknown and
+  // the MBTI lens reports it as a gap rather than inventing a type.
+  const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
 
   // ---------------------------------------------------------------- reveal
@@ -172,7 +176,13 @@ const OnboardingFlow: React.FC = () => {
           timezone,
           // Skipped stays absent — assembly degrades to Unknown rather than
           // guessing a type nobody gave us.
-          ...(personality ? { personality } : {}),
+          ...(Object.keys(answers).length > 0
+            ? {
+                personality: estimateFromAnswers(answers, {
+                  descriptions: (t('personality.mbtiDescriptions') as any) || {},
+                }),
+              }
+            : {}),
         });
 
       if (error || !data) {
@@ -268,18 +278,8 @@ const OnboardingFlow: React.FC = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formValid || submitting) return;
-    // The poll has to run BEFORE generation, not alongside it: cognition_mbti is
-    // derived at blueprint assembly, so a profile arriving later would land
-    // after the value it feeds has already been written as Unknown.
-    setPhase("personality");
-  };
-
-  /** Both paths into the reveal — answered or skipped. Skipping is honest: it
-   *  leaves personality null rather than recording a type nobody gave. */
-  const startCasting = async () => {
-    if (submitting) return;
     setSubmitting(true);
     setPhase("reveal");
     await beginGeneration();
@@ -387,6 +387,59 @@ const OnboardingFlow: React.FC = () => {
               />
             </div>
 
+            <div className="pt-1">
+              <Label>
+                Three quick ones{" "}
+                <span className="font-normal opacity-60">— optional</span>
+              </Label>
+              <p className="text-xs text-muted-foreground mt-1 mb-3">
+                Your chart gives us five of the six lenses. This is the one it
+                cannot reach.
+              </p>
+
+              <div className="space-y-3">
+                {MICRO_QUESTIONS.map((q) => (
+                  <div key={q.id}>
+                    <p className="text-xs text-muted-foreground mb-1.5">
+                      {t(MICRO_QUESTION_TITLE_KEYS[q.id])}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[q.left, q.right].map((opt) => {
+                        const selected = answers[q.id] === opt.value;
+                        return (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            aria-pressed={selected}
+                            onClick={() =>
+                              setAnswers((prev) => {
+                                // Tapping the chosen side again clears it. There
+                                // is no other way to un-answer, and a mis-tap
+                                // should not be permanent.
+                                if (prev[q.id] === opt.value) {
+                                  const next = { ...prev };
+                                  delete next[q.id];
+                                  return next;
+                                }
+                                return { ...prev, [q.id]: opt.value };
+                              })
+                            }
+                            className={`text-xs rounded-full px-3 py-2 border transition-colors ${
+                              selected
+                                ? "bg-soul-purple/15 border-soul-purple text-soul-purple"
+                                : "border-muted text-muted-foreground hover:border-soul-purple/50"
+                            }`}
+                          >
+                            {selected ? "✓ " : ""}
+                            {t(opt.key)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <GradientButton
@@ -397,27 +450,6 @@ const OnboardingFlow: React.FC = () => {
             Cast my chart — 60 seconds
           </GradientButton>
         </CosmicCard>
-      )}
-
-      {phase === "personality" && (
-        <div className="relative z-10 mx-auto w-full max-w-lg px-5 pb-16 pt-10">
-          <p className="mb-4 text-center text-sm opacity-70">
-            Three taps. Your chart gives us five of the six lenses — this is the
-            one it can\'t reach.
-          </p>
-          <PersonalityFusion
-            value={personality}
-            onChange={setPersonality}
-            onComplete={startCasting}
-          />
-          <button
-            type="button"
-            onClick={startCasting}
-            className="mx-auto mt-6 block text-sm underline opacity-60 hover:opacity-100"
-          >
-            Skip — I\'d rather not say
-          </button>
-        </div>
       )}
 
       {phase === "reveal" && (

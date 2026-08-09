@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SendHorizontal, Loader2, Square } from "lucide-react";
+import { SendHorizontal, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConversationMessage } from "@/hooks/use-hacs-conversation";
 import { TypewriterText } from "@/components/coach/TypewriterText";
@@ -141,6 +141,12 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       return () => window.clearTimeout(t);
     }
   }, [isStreamingResponse]);
+
+  // The deep report generates in the background for 15-30 minutes. It used to
+  // be visible as the floating orb's outer ring; the orb is gone, so the ring
+  // moves to the border — the one place presence now lives.
+  const { isGenerating: hermeticGenerating, progress: hermeticProgress } =
+    useHermeticReportStatus();
 
   // v3.8 — the input border is the living state of the conversation. Each
   // state maps to a real interaction phase (no fabricated variety), in
@@ -584,24 +590,18 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             );
           })}
           
-          {/* v3.8: the input border carries "gathering"; this line is the
-              accessible language floor (the border is never the sole carrier). */}
-          <AnimatePresence>
-            {isLoading && !isStreamingResponse && (
-              <motion.div
-                className="w-full py-3 text-left"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-              >
-                <span className="ss-sub italic animate-pulse" style={{ color: 'var(--ss-muted)' }}>
-                  Channeling wisdom...
-                </span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          
+          {/* v3.8 asks that the border never be the sole carrier. The visible
+              "Channeling wisdom…" line was one of three things all saying the
+              same thing — border, line, and a spinner in the send button — so
+              it drops to a polite live region: the language floor survives for
+              assistive tech, and the border is the only thing a sighted reader
+              has to watch. */}
+          {isLoading && !isStreamingResponse && (
+            <span className="sr-only" role="status" aria-live="polite">
+              Channeling wisdom…
+            </span>
+          )}
+
           {showNaming && (
             <TwinNamingCard onNamed={handleNamed} onLater={() => setNamingLater(true)} />
           )}
@@ -644,6 +644,8 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
         <div className="max-w-4xl mx-auto">
           <PresenceFrame
             state={borderState}
+            progress={hermeticGenerating ? hermeticProgress : null}
+            progressLabel="Deep report"
             className="ss flex items-center gap-2 px-3 py-1.5 rounded-full"
             style={{ background: "var(--ss-card)", boxShadow: "var(--ss-shadow)" }}
           >
@@ -664,10 +666,10 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
               className="h-11 w-11 rounded-full shrink-0"
               style={{ background: 'var(--ss-accent)', color: '#fff' }}
             >
+              {/* Square is a control (stop streaming), so it stays. The
+                  spinner was pure feedback and the ring already carries it. */}
               {isStreamingResponse ? (
                 <Square className="h-5 w-5" />
-              ) : isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <SendHorizontal className="h-5 w-5" />
               )}
