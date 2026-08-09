@@ -32,6 +32,7 @@ import { TwinReunionGreeting } from "./TwinReunionGreeting";
 import { TwinNamingCard } from "./TwinNamingCard";
 import { useTwinName } from "@/hooks/use-twin-name";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useHermeticReportStatus } from "@/hooks/use-hermetic-report-status";
 
 /**
  * Feature flag: route OfferCard confirmations into the panel-hosted flow
