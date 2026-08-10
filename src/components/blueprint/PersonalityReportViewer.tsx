@@ -707,6 +707,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           </h3>
           <p className="ss-caption break-words mt-0.5" style={{ color: 'var(--ss-muted)' }}>
             {currentReport && `${t('common.generatedOn')} ${new Date(currentReport.generated_at).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US')}`}
+            {/* Which pipeline wrote what you are reading. Two generations of the
+                deep report now render through this same viewer, and they are
+                hard to tell apart from the prose alone — which is exactly the
+                thing being compared. Temporary: it comes out once one of them
+                is retired. */}
+            {reportType === 'hermetic' && currentReport?.blueprint_version && (
+              <span className="ml-2 opacity-70">· v{currentReport.blueprint_version}</span>
+            )}
           </p>
           <div className="flex gap-2 mt-3">
             {/* The calm ground can't carry a saturated full-width pill — the

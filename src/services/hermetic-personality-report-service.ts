@@ -6,6 +6,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import { BlueprintData } from "./blueprint-service";
 
+/**
+ * The report versions that are "hermetic". 1.0 is the standard report and is
+ * deliberately excluded; everything above it is a deep report of some
+ * generation.
+ */
+const HERMETIC_VERSIONS = ['3.0', '2.0'];
+
 export interface HermeticPersonalityReport {
   id: string;
   user_id: string;
@@ -195,6 +202,14 @@ class HermeticPersonalityReportService {
 
   /**
    * GET EXISTING HERMETIC REPORT from database
+   *
+   * Both hermetic generations count as "the deep report".
+   *
+   * 2.0 is the prose pipeline, 3.0 the observation/synthesis/narration one.
+   * They write the same report_content keys deliberately, so the viewer renders
+   * either without knowing which it got. Newest wins, which means a freshly
+   * generated 3.0 supersedes an old 2.0 for the same person without anything
+   * being deleted.
    */
   async getHermeticReport(userId: string): Promise<{ 
     success: boolean; 
@@ -212,7 +227,7 @@ class HermeticPersonalityReportService {
         .from('personality_reports')
         .select('*')
         .eq('user_id', userId)
-        .eq('blueprint_version', '2.0') // Hermetic reports use version 2.0
+        .in('blueprint_version', HERMETIC_VERSIONS)
         .order('generated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -344,12 +359,11 @@ class HermeticPersonalityReportService {
    */
   async hasHermeticReport(userId: string): Promise<boolean> {
     try {
-      // FIXED: Check specifically for Hermetic 2.0 reports only
       const { data, error } = await supabase
         .from('personality_reports')
         .select('id, blueprint_version, generated_at')
         .eq('user_id', userId)
-        .eq('blueprint_version', '2.0') // Only check for Hermetic 2.0 reports
+        .in('blueprint_version', HERMETIC_VERSIONS)
         .order('generated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
