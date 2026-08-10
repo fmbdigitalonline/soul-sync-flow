@@ -166,7 +166,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
                 {message.sender === 'user' ? (
                   // User Message
                   <div className="flex justify-end">
-                    <div className="max-w-[85%] rounded-lg px-4 py-3 bg-blue-600 text-white">
+                    <div className="max-w-[85%] ss-rs px-4 py-3 bg-blue-600 text-white">
                       <div className="whitespace-pre-wrap break-words">{message.content}</div>
                     </div>
                   </div>
@@ -192,10 +192,10 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
             {/* Loading indicator for when waiting for response */}
             {isLoading && !isStreaming && (
               <div className="flex items-start gap-3 mb-4">
-                <div className="flex-shrink-0 p-3 bg-soul-purple/10 rounded-lg">
+                <div className="flex-shrink-0 p-3 bg-soul-purple/10 ss-rs">
                   <Brain className="h-6 w-6 text-soul-purple" />
                 </div>
-                <div className="bg-soul-purple/5 rounded-lg p-4 border border-soul-purple/10">
+                <div className="bg-soul-purple/5 ss-rs p-4 border border-soul-purple/10">
                   <div className="flex items-center gap-2 text-soul-purple">
                     <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse"></div>
                     <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
@@ -242,7 +242,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
             </div>
             
             {isReadyToComplete && (
-              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="mt-3 p-3 bg-green-50 border border-green-200 ss-rs">
                 <div className="flex items-center gap-2 text-sm text-green-800">
                   <Target className="w-4 h-4" />
                   <span>

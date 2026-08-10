@@ -36,7 +36,7 @@ export const GrowthCoachWelcome: React.FC<GrowthCoachWelcomeProps> = ({
         <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={onStartProgram}>
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-soul-purple/10 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-soul-purple/10 ss-rs flex items-center justify-center">
                 <TrendingUp className="h-6 w-6 text-soul-purple" />
               </div>
               <div className="flex-1">
@@ -52,7 +52,7 @@ export const GrowthCoachWelcome: React.FC<GrowthCoachWelcomeProps> = ({
         <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={onTalkToCoach}>
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-soul-teal/10 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-soul-teal/10 ss-rs flex items-center justify-center">
                 <MessageCircle className="h-6 w-6 text-soul-teal" />
               </div>
               <div className="flex-1">
@@ -68,7 +68,7 @@ export const GrowthCoachWelcome: React.FC<GrowthCoachWelcomeProps> = ({
         <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={onGoToTools}>
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-soul-purple to-soul-teal opacity-10 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-soul-purple to-soul-teal opacity-10 ss-rs flex items-center justify-center">
                 <Wrench className="h-6 w-6 text-gray-600" />
               </div>
               <div className="flex-1">

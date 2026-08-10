@@ -149,7 +149,7 @@ export const GrowthProgramGeneration: React.FC<GrowthProgramGenerationProps> = (
           </p>
         </div>
         
-        <div className="bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 rounded-lg p-6 max-w-md mx-auto">
+        <div className="bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 ss-rs p-6 max-w-md mx-auto">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <div className="text-3xl">{domainEmoji[domain]}</div>
             <div className="text-left">
@@ -225,7 +225,7 @@ export const GrowthProgramGeneration: React.FC<GrowthProgramGenerationProps> = (
           return (
             <div 
               key={stage.id}
-              className={`flex items-center space-x-3 p-3 rounded-lg ${
+              className={`flex items-center space-x-3 p-3 ss-rs ${
                 isActive ? 'bg-soul-purple/10' : isCompleted ? 'bg-green-50' : 'bg-gray-50'
               }`}
             >

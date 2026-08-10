@@ -551,7 +551,7 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
                   {programWeeks.map((week) => (
                     <div
                       key={week.week_number}
-                      className={`p-4 rounded-lg border transition-all ${
+                      className={`p-4 ss-rs border transition-all ${
                         week.is_completed 
                           ? 'bg-green-50 border-green-200' 
                           : week.is_unlocked 

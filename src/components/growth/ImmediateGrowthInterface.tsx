@@ -118,14 +118,14 @@ export const ImmediateGrowthInterface: React.FC<ImmediateGrowthInterfaceProps> =
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={t('forms.placeholders.shareThoughts')}
-                className={`border-soul-purple/20 focus:border-soul-purple focus:ring-soul-purple/20 rounded-2xl ${getTextSize('text-sm')} ${touchTargetSize}`}
+                className={`border-soul-purple/20 focus:border-soul-purple focus:ring-soul-purple/20 ss-r ${getTextSize('text-sm')} ${touchTargetSize}`}
                 disabled={isLoading}
               />
             </div>
             <Button
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || isLoading}
-              className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg transition-all duration-300 rounded-2xl ${touchTargetSize}`}
+              className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg transition-all duration-300 ss-r ${touchTargetSize}`}
             >
               {isLoading ? (
                 <Loader2 className={`animate-spin ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />

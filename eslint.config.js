@@ -83,6 +83,9 @@ const ENFORCED_PATHS = [
   "src/components/Layout/**/*.tsx",
   // Phase A, pass 3: the blueprint surface — the screen that started this.
   "src/components/blueprint/**/*.tsx",
+  // Phase A, passes 4 and 5.
+  "src/components/dashboard/**/*.tsx",
+  "src/components/growth/**/*.tsx",
   "src/components/bedtime/**/*.tsx",
   "src/components/context/**/*.tsx",
   "src/components/feedback/**/*.tsx",

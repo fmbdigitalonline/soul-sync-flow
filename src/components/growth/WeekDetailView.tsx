@@ -176,7 +176,7 @@ export const WeekDetailView: React.FC<WeekDetailViewProps> = ({
                 </div>
                 
                 {weekProgress.insights.length > 0 && (
-                  <div className="mt-4 p-3 bg-soul-purple/10 rounded-lg">
+                  <div className="mt-4 p-3 bg-soul-purple/10 ss-rs">
                     <div className="text-sm font-medium mb-2">Personalized Insights:</div>
                     <ul className="text-sm space-y-1">
                       {weekProgress.insights.slice(0, 2).map((insight: string, idx: number) => (
@@ -201,7 +201,7 @@ export const WeekDetailView: React.FC<WeekDetailViewProps> = ({
               {week.key_activities.map((activity, idx) => (
                 <div
                   key={idx}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                  className={`p-3 ss-rs border cursor-pointer transition-all ${
                     completedActivities.includes(activity)
                       ? 'bg-green-50 border-green-200'
                       : 'bg-gray-50 border-gray-200 hover:bg-gray-100'

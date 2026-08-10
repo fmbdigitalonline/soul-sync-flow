@@ -129,7 +129,7 @@ export const ReflectiveGrowthInterface: React.FC<ReflectiveGrowthInterfaceProps>
                 )}
               >
                 {message.role === "user" ? (
-                  <div className="inline-block bg-soul-purple text-white rounded-lg p-3 max-w-[85%] sm:max-w-[70%]">
+                  <div className="inline-block bg-soul-purple text-white ss-rs p-3 max-w-[85%] sm:max-w-[70%]">
                     <p className="text-sm">{message.content}</p>
                   </div>
                 ) : (
