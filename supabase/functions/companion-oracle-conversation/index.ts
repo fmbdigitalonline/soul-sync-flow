@@ -3144,11 +3144,23 @@ serve(async (req) => {
     // FUSION STEP 5: Return immediate response (customer served, background tasks queued)
     return immediateResponse;
   } catch (error) {
-    console.error("❌ Oracle Conversation Error:", error);
+    const err = error as Error & { providerErrorCode?: string; providerHttpStatus?: number };
+    // RCA 2026-08-10: carry the classified provider cause into the log trail and
+    // the machine-readable error body. The user-facing string is unchanged.
+    console.error("❌ Oracle Conversation Error:", {
+      error_code: err.providerErrorCode || 'unhandled_error',
+      providerHttpStatus: err.providerHttpStatus ?? null,
+      message: err.message,
+      stack: err.stack,
+    });
     return new Response(JSON.stringify({
-      error: (error as Error).message,
+      error: err.message,
+      error_code: err.providerErrorCode || 'unhandled_error',
       response: "The cosmic channels are temporarily disrupted. Please try again, seeker."
-    }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }), {
+      status: err.providerHttpStatus && err.providerHttpStatus >= 400 ? err.providerHttpStatus : 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
   }
 });
 
