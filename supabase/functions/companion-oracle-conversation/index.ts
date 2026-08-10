@@ -8,9 +8,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { ConversationShadowDetector } from '../_shared/conversation-shadow-detector.ts';
 import { ConversationPhaseTracker } from '../_shared/conversation-phase-tracker.ts';
 
-// Helper function to detect if user wants technical personality details
-function detectTechnicalDetailRequest(message: string): boolean {
-
 // RCA 2026-08-10: name the class of an upstream model-provider failure so the
 // log trail (and the JSON error body, which the UI never renders) carries the
 // operational cause. Purely diagnostic — no user-facing surface.
@@ -25,6 +22,8 @@ function classifyProviderError(status: number, parsedError: any): string {
   return 'provider_error';
 }
 
+// Helper function to detect if user wants technical personality details
+function detectTechnicalDetailRequest(message: string): boolean {
   const technicalKeywords = /\b(mbti|human design|personality type|what.*type|technical|specific|sun sign|projector|enfp|intj|generator|manifestor|manifesting generator|reflector)\b/i;
   return technicalKeywords.test(message);
 }
