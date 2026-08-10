@@ -10,6 +10,21 @@ import { ConversationPhaseTracker } from '../_shared/conversation-phase-tracker.
 
 // Helper function to detect if user wants technical personality details
 function detectTechnicalDetailRequest(message: string): boolean {
+
+// RCA 2026-08-10: name the class of an upstream model-provider failure so the
+// log trail (and the JSON error body, which the UI never renders) carries the
+// operational cause. Purely diagnostic — no user-facing surface.
+function classifyProviderError(status: number, parsedError: any): string {
+  const code = String(parsedError?.error?.code ?? '');
+  const type = String(parsedError?.error?.type ?? '');
+  if (code === 'credit_balance_exhausted' || type === 'insufficient_quota') {
+    return 'provider_quota_exhausted';
+  }
+  if (status === 429) return 'provider_rate_limited';
+  if (status === 401 || status === 403) return 'provider_auth_failed';
+  return 'provider_error';
+}
+
   const technicalKeywords = /\b(mbti|human design|personality type|what.*type|technical|specific|sun sign|projector|enfp|intj|generator|manifestor|manifesting generator|reflector)\b/i;
   return technicalKeywords.test(message);
 }
