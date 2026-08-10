@@ -67,7 +67,7 @@ export const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
                 variant="ghost"
                 size="icon"
                 onClick={onToolsPanelToggle}
-                className="absolute top-4 right-4 z-10 h-8 w-8 rounded-lg bg-card/80 backdrop-blur-sm shadow-sm hover:bg-accent"
+                className="absolute top-4 right-4 z-10 h-8 w-8 ss-rs bg-card/80 backdrop-blur-sm shadow-sm hover:bg-accent"
                 title={toolsPanelCollapsed ? 'Show tools panel (⌘])' : 'Hide tools panel (⌘])'}
               >
                 {toolsPanelCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}

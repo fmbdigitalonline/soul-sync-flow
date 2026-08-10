@@ -118,12 +118,12 @@ const Column: React.FC<ColumnProps> = ({ label, icon: Icon, tone, items, onSelec
                   <button
                     type="button"
                     onClick={() => onSelect!(item.goalId, item.id)}
-                    className="w-full text-left pl-5 pr-2 py-1.5 rounded-md hover:bg-muted/40 transition-colors"
+                    className="w-full text-left pl-5 pr-2 py-1.5 ss-rs hover:bg-muted/40 transition-colors"
                   >
                     {inner}
                   </button>
                 ) : (
-                  <div className="pl-5 pr-2 py-1.5 rounded-md">{inner}</div>
+                  <div className="pl-5 pr-2 py-1.5 ss-rs">{inner}</div>
                 )}
               </li>
             );

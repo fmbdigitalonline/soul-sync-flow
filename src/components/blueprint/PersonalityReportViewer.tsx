@@ -344,7 +344,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   // Helper function to safely render content with smart extraction
   const contentCardPadding = isMobile ? 'px-4 py-3' : 'p-3';
-  const contentCardClass = `ss w-full max-w-full ${contentCardPadding} bg-[var(--ss-accent-wash)] text-[color:var(--ss-ink)] border border-[color:var(--ss-line)] rounded-2xl`;
+  const contentCardClass = `ss w-full max-w-full ${contentCardPadding} bg-[var(--ss-accent-wash)] text-[color:var(--ss-ink)] border border-[color:var(--ss-line)] ss-r`;
   const contentTextClass = getTextSize(isMobile ? 'text-base' : 'text-sm');
 
   const renderSafeContent = (content: any, contentType: string = 'Unknown') => {
@@ -397,7 +397,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       
       // If no extractable content, show user-friendly message
       return (
-        <div className={`flex items-center gap-2 ${spacing.card} bg-[var(--ss-line-2)] rounded-lg`}>
+        <div className={`flex items-center gap-2 ${spacing.card} bg-[var(--ss-line-2)] ss-rs`}>
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           <p className={`text-muted-foreground ${getTextSize('text-sm')}`}>
             {language === 'nl' ? 'Inhoud wordt verwerkt...' : 'Content is being processed...'}
@@ -406,7 +406,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       );
     } else {
       return (
-        <div className={`w-full ${contentCardPadding} bg-[var(--ss-line-2)] rounded-lg`}>
+        <div className={`w-full ${contentCardPadding} bg-[var(--ss-line-2)] ss-rs`}>
           <p className={`text-muted-foreground italic ${contentTextClass}`}>
             {language === 'nl' ? 'Inhoud wordt binnenkort beschikbaar' : 'Content will be available soon'}
           </p>
@@ -597,7 +597,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   }) => (
     <button
       onClick={onClick}
-      className={`w-full flex items-center justify-between ${spacing.button} ${getTextSize('text-lg')} font-semibold text-left hover:bg-[var(--ss-accent-wash)] rounded-lg transition-colors`}
+      className={`w-full flex items-center justify-between ${spacing.button} ${getTextSize('text-lg')} font-semibold text-left hover:bg-[var(--ss-accent-wash)] ss-rs transition-colors`}
     >
       <div className="flex items-center gap-3">
         {Icon && <Icon className="h-5 w-5 flex-shrink-0" style={{ color: 'var(--ss-accent)' }} />}
@@ -707,6 +707,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           </h3>
           <p className="ss-caption break-words mt-0.5" style={{ color: 'var(--ss-muted)' }}>
             {currentReport && `${t('common.generatedOn')} ${new Date(currentReport.generated_at).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US')}`}
+            {/* Which pipeline wrote what you are reading. Two generations of the
+                deep report now render through this same viewer, and they are
+                hard to tell apart from the prose alone — which is exactly the
+                thing being compared. Temporary: it comes out once one of them
+                is retired. */}
+            {reportType === 'hermetic' && currentReport?.blueprint_version && (
+              <span className="ml-2 opacity-70">· v{currentReport.blueprint_version}</span>
+            )}
           </p>
           <div className="flex gap-2 mt-3">
             {/* The calm ground can't carry a saturated full-width pill — the
@@ -720,7 +728,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                 color: 'var(--ss-accent-ink)',
                 border: '1px solid var(--ss-line)',
                 borderRadius: 'var(--ss-radius-sm)',
-                padding: '9px 14px',
+                padding: 'var(--ss-pad-ctl)',
                 boxShadow: 'var(--ss-shadow)',
               }}
             >
@@ -976,7 +984,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                         }
 
                         return (
-                          <div key={itemKey} className="bg-accent/10 rounded-2xl p-6 border border-accent/20 mb-4">
+                          <div key={itemKey} className="bg-accent/10 ss-r p-6 border border-accent/20 mb-4">
                             <div className="flex items-center gap-3 mb-4">
                               <IconComponent className="h-6 w-6 text-primary" />
                               <h4 className="text-lg font-semibold text-foreground">{displayTitle}</h4>
@@ -1027,7 +1035,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                     const title = intelligenceTitles[dimensionKey as keyof typeof intelligenceTitles] || dimensionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                                     
                                     return (
-                                      <div key={dimensionKey} className="bg-primary/5 rounded-2xl p-6 border border-primary/20 mb-4">
+                                      <div key={dimensionKey} className="bg-primary/5 ss-r p-6 border border-primary/20 mb-4">
                                         <div className="flex items-center gap-3 mb-4">
                                           <IconComponent className="h-6 w-6 text-primary" />
                                           <h4 className="text-lg font-semibold text-foreground">{title}</h4>
@@ -1036,7 +1044,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                           {Array.isArray(dimensionContent) ? (
                                             <div className="space-y-4">
                                               {dimensionContent.map((item, index) => (
-                                                <div key={index} className="p-4 bg-accent/10 rounded-lg">
+                                                <div key={index} className="p-4 bg-accent/10 ss-rs">
                                                   <p className="leading-relaxed whitespace-pre-wrap break-words">
                                                     {typeof item === 'string' ? item : JSON.stringify(item, null, 2)}
                                                   </p>
@@ -1056,7 +1064,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                               ) : sectionKey === 'practical_activation_framework' ? (
                                 /* Handle practical framework section with both main content and consciousness map */
                                 <>
-                                  <div className="bg-accent/10 rounded-2xl p-6 mb-4">
+                                  <div className="bg-accent/10 ss-r p-6 mb-4">
                                     <div className="flex items-center gap-3 mb-4">
                                       <Zap className="h-6 w-6 text-primary" />
                                       <h4 className="text-lg font-semibold text-foreground">Practical Activation Framework</h4>
@@ -1067,7 +1075,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                   </div>
                                   
                                   {hermeticContent.consciousness_integration_map && (
-                                    <div className="bg-accent/10 rounded-2xl p-6">
+                                    <div className="bg-accent/10 ss-r p-6">
                                       <div className="flex items-center gap-3 mb-4">
                                         <Brain className="h-6 w-6 text-primary" />
                                         <h4 className="text-lg font-semibold text-foreground">Consciousness Integration Map</h4>
@@ -1080,7 +1088,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                 </>
                               ) : (
                                 /* Handle simple single-content sections */
-                                <div className="bg-accent/10 rounded-2xl p-6">
+                                <div className="bg-accent/10 ss-r p-6">
                                   <div className="prose prose-lg max-w-none">
                                     {renderSafeContent(content, sectionConfig.title)}
                                   </div>
@@ -1103,7 +1111,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                           if (!sectionContent) return null;
                           
                           return (
-                            <div key={key} className="bg-accent/10 rounded-2xl p-6">
+                            <div key={key} className="bg-accent/10 ss-r p-6">
                               <div className="flex items-center gap-3 mb-4">
                                 <SectionIcon className="h-6 w-6 text-primary" />
                                 <h3 className="text-xl font-semibold text-foreground">{title}</h3>

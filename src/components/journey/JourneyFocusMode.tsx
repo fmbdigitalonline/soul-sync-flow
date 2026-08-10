@@ -105,7 +105,7 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
   return (
     <div className="space-y-6 animate-fade-in transition-all duration-300">
       {/* Focus Mode Header */}
-      <div className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-200 flex flex-wrap items-center justify-between relative overflow-hidden">
+      <div className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 ss-rs border border-blue-200 flex flex-wrap items-center justify-between relative overflow-hidden">
         <div className="flex items-center mb-4 md:mb-0">
           <Button
             variant="ghost"
@@ -151,7 +151,7 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
 
       {/* Blueprint Alignment for this Milestone */}
       {blueprintAlignmentText && (
-        <div className="p-3 bg-soul-purple/10 rounded-lg border border-soul-purple/20">
+        <div className="p-3 bg-soul-purple/10 ss-rs border border-soul-purple/20">
           <h4 className="font-medium text-soul-purple mb-2 flex items-center gap-2">
             <Brain className="h-4 w-4" />
             {t('journey.focusModeView.blueprintAlignment')}
@@ -186,7 +186,7 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
             {milestoneTasks.map((task: any, index: number) => (
               <div
                 key={task.id ?? index}
-                className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-secondary/20 cursor-pointer transition-all duration-200 hover:shadow-md"
+                className="flex items-center space-x-3 p-3 border ss-rs hover:bg-secondary/20 cursor-pointer transition-all duration-200 hover:shadow-md"
                 onClick={() => handleTaskClick(task)}
               >
                 <div className="w-6 h-6 bg-soul-purple/20 rounded-full flex items-center justify-center text-soul-purple font-medium text-xs">
@@ -245,7 +245,7 @@ export const JourneyFocusMode: React.FC<JourneyFocusModeProps> = ({
               (criteria: string, index: number) => (
                 <div
                   key={index}
-                  className="flex items-center p-2 bg-green-50 rounded-lg border border-green-200"
+                  className="flex items-center p-2 bg-green-50 ss-rs border border-green-200"
                 >
                   <div className="w-4 h-4 bg-green-200 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                     <div className="w-2 h-2 bg-green-600 rounded-full"></div>

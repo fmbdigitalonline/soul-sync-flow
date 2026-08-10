@@ -103,7 +103,7 @@ export const TaskInsights: React.FC<TaskInsightsProps> = ({
         {onClose && (
           <button
             onClick={onClose}
-            className="w-full px-3 py-2 bg-soul-purple hover:bg-soul-purple/90 text-white rounded-lg font-medium transition-colors text-sm"
+            className="w-full px-3 py-2 bg-soul-purple hover:bg-soul-purple/90 text-white ss-rs font-medium transition-colors text-sm"
           >
             {t('tasks.actions.continueJourney')}
           </button>

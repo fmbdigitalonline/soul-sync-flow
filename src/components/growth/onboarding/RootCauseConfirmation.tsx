@@ -97,7 +97,7 @@ export const RootCauseConfirmation: React.FC<RootCauseConfirmationProps> = ({
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border">
+          <div className="bg-white p-4 ss-rs border">
             <h4 className="font-medium mb-2">Next Recommended Action:</h4>
             <p className="text-sm text-gray-600">{depthAnalysis.nextRecommendedAction}</p>
           </div>
@@ -157,7 +157,7 @@ export const RootCauseConfirmation: React.FC<RootCauseConfirmationProps> = ({
           {candidates.map((candidate) => (
             <div
               key={candidate.id}
-              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+              className={`p-4 ss-rs border-2 cursor-pointer transition-all ${
                 selectedCandidate === candidate.id
                   ? 'border-blue-500 bg-blue-50'
                   : 'border-gray-200 hover:border-gray-300'
@@ -189,7 +189,7 @@ export const RootCauseConfirmation: React.FC<RootCauseConfirmationProps> = ({
               </div>
 
               {candidate.supportingEvidence.length > 0 && (
-                <div className="bg-gray-50 p-3 rounded-md">
+                <div className="bg-gray-50 p-3 ss-rs">
                   <h5 className="text-xs font-medium text-gray-700 mb-2">Supporting Evidence:</h5>
                   <ul className="space-y-1">
                     {candidate.supportingEvidence.slice(0, 2).map((evidence, index) => (

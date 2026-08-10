@@ -316,7 +316,7 @@ Be warm, wise, and encouraging.`;
       {currentStepData && (
         <CosmicCard className="p-6">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 p-3 bg-soul-purple/10 rounded-lg">
+            <div className="flex-shrink-0 p-3 bg-soul-purple/10 ss-rs">
               <Icon className="h-6 w-6 text-soul-purple" />
             </div>
             <div className="flex-1">
@@ -335,7 +335,7 @@ Be warm, wise, and encouraging.`;
                     value={userResponse}
                     onChange={(e) => setUserResponse(e.target.value)}
                     placeholder="Share your reflection or response..."
-                    className="w-full p-3 border rounded-lg min-h-[100px] resize-none"
+                    className="w-full p-3 border ss-rs min-h-[100px] resize-none"
                   />
                   <Button 
                     onClick={() => processStepResponse(currentStep, userResponse)}
@@ -348,7 +348,7 @@ Be warm, wise, and encouraging.`;
               )}
               
               {currentStepData.completed && currentStepData.aiGuidance && (
-                <div className="mt-4 p-4 bg-soul-purple/5 rounded-lg border border-soul-purple/20">
+                <div className="mt-4 p-4 bg-soul-purple/5 ss-rs border border-soul-purple/20">
                   <div className="flex items-center gap-2 text-soul-purple text-sm font-medium mb-2">
                     <Sparkles className="h-4 w-4" />
                     Guidance

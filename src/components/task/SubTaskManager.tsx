@@ -103,7 +103,7 @@ export const SubTaskManager: React.FC<SubTaskManagerProps> = ({
         {subTasks.map(task => (
           <div 
             key={task.id}
-            className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer hover:bg-muted/50 ${
+            className={`flex items-center gap-3 p-3 ss-rs border transition-colors cursor-pointer hover:bg-muted/50 ${
               task.completed ? 'bg-emerald-50 border-emerald-200' : 'bg-background'
             }`}
             onClick={() => toggleSubTask(task.id)}

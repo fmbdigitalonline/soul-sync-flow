@@ -169,7 +169,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               <div className="flex items-center space-x-2">
                 {user && <Sheet open={isToolsOpen} onOpenChange={setIsToolsOpen}>
                     <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="rounded-xl">
+                      <Button variant="ghost" size="icon" className="ss-rs">
                         <PanelRightOpen className="h-5 w-5" />
                         <span className="sr-only">{t('contextualTools.toolsAndInsights')}</span>
                       </Button>
@@ -261,7 +261,7 @@ const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
             {navItems.map(item => {
         const Icon = item.icon;
         const active = isActive(item.to);
-        return <Link key={item.to} to={item.to} className="flex items-center space-x-3 px-3 py-2 rounded-xl transition-all duration-150 text-[13.5px] font-medium"
+        return <Link key={item.to} to={item.to} className="flex items-center space-x-3 px-3 py-2 ss-rs transition-all duration-150 text-[13.5px] font-medium"
                 style={active
                   ? { background: "var(--ss-accent-wash)", color: "var(--ss-accent-ink)" }
                   : { color: "var(--ss-muted)" }}>
@@ -273,7 +273,7 @@ const DesktopThreePanelLayout: React.FC<DesktopThreePanelLayoutProps> = ({
 
           {/* User Actions */}
           <div className="p-3 border-t border-border/60">
-            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start rounded-xl text-[13.5px]" style={{ color: "var(--ss-muted)" }}>
+            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start ss-rs text-[13.5px]" style={{ color: "var(--ss-muted)" }}>
               <LogOut className="h-4 w-4 mr-3" />
               {t('nav.signOut')}
             </Button>

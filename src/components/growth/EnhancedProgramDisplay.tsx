@@ -197,7 +197,7 @@ export function EnhancedProgramDisplay({ program, planBranches, onSelectBranch }
                   <h4 className="font-semibold mb-3">Action Steps</h4>
                   <div className="space-y-3">
                     {selectedBranch.actionSteps.map((step, idx) => (
-                      <div key={idx} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                      <div key={idx} className="flex items-start gap-3 p-3 bg-blue-50 ss-rs">
                         <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
                           {idx + 1}
                         </div>

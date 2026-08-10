@@ -192,7 +192,7 @@ export const IntelligentScheduler: React.FC = () => {
             {suggestions.map(suggestion => (
               <div 
                 key={suggestion.taskId} 
-                className="border rounded-lg p-4 space-y-3"
+                className="border ss-rs p-4 space-y-3"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">

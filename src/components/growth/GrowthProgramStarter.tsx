@@ -105,7 +105,7 @@ export const GrowthProgramStarter: React.FC<GrowthProgramStarterProps> = ({
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-lg ${domain.color} text-white`}>
+                    <div className={`p-2 ss-rs ${domain.color} text-white`}>
                       <IconComponent className="h-5 w-5" />
                     </div>
                     <div className="flex-1">
@@ -120,9 +120,9 @@ export const GrowthProgramStarter: React.FC<GrowthProgramStarterProps> = ({
         </div>
         
         {selectedDomain && (
-          <div className="p-4 bg-soul-purple/5 rounded-lg">
+          <div className="p-4 bg-soul-purple/5 ss-rs">
             <div className="flex items-start gap-3 mb-4">
-              <div className="p-2 bg-soul-purple/20 rounded-lg">
+              <div className="p-2 bg-soul-purple/20 ss-rs">
                 <Play className="h-5 w-5 text-soul-purple" />
               </div>
               <div>

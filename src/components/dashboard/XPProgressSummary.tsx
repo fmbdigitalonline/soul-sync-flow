@@ -59,15 +59,15 @@ export const XPProgressSummary: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-soul-purple/10 to-transparent border border-soul-purple/20">
+          <div className="p-3 ss-rs bg-gradient-to-br from-soul-purple/10 to-transparent border border-soul-purple/20">
             <p className="text-xs text-muted-foreground">Session</p>
             <p className="text-lg font-semibold">{progress.sessionXP.toFixed(1)} xp</p>
           </div>
-          <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/10 to-transparent border border-emerald-200/40">
+          <div className="p-3 ss-rs bg-gradient-to-br from-emerald-500/10 to-transparent border border-emerald-200/40">
             <p className="text-xs text-muted-foreground">Today</p>
             <p className="text-lg font-semibold">{progress.dailyXP.toFixed(1)} xp</p>
           </div>
-          <div className="p-3 rounded-xl bg-gradient-to-br from-sky-500/10 to-transparent border border-sky-200/40 col-span-2">
+          <div className="p-3 ss-rs bg-gradient-to-br from-sky-500/10 to-transparent border border-sky-200/40 col-span-2">
             <div className="flex items-center gap-2">
               <Trophy className="h-4 w-4 text-soul-purple" />
               <div>
@@ -88,7 +88,7 @@ export const XPProgressSummary: React.FC = () => {
           <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Top Dimensions</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {topDimensions.map(([dim, score]) => (
-              <div key={dim} className="p-3 rounded-lg border border-border bg-muted/30">
+              <div key={dim} className="p-3 ss-rs border border-border bg-muted/30">
                 <p className="text-xs text-muted-foreground">{getDimensionName(dim as any)}</p>
                 <p className="text-lg font-semibold">{Math.round(score as number)}%</p>
               </div>

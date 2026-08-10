@@ -29,7 +29,7 @@ export const ProactiveMoment: React.FC<ProactiveMomentProps> = ({
 }) => (
   <div
     className={cn(
-      'animate-in fade-in-0 slide-in-from-bottom-2 duration-300 rounded-xl border border-soul-purple/25 bg-soul-purple/5 p-3 space-y-2',
+      'animate-in fade-in-0 slide-in-from-bottom-2 duration-300 ss-rs border border-soul-purple/25 bg-soul-purple/5 p-3 space-y-2',
       className,
     )}
   >
@@ -60,7 +60,7 @@ const MomentButton: React.FC<{ emoji: string; label: string; onClick: () => void
   <button
     type="button"
     onClick={onClick}
-    className="w-full flex items-center gap-2 text-left text-xs rounded-lg px-2.5 py-2 border border-border/50 hover:bg-soul-purple/10 hover:border-soul-purple/30 transition-colors"
+    className="w-full flex items-center gap-2 text-left text-xs ss-rs px-2.5 py-2 border border-border/50 hover:bg-soul-purple/10 hover:border-soul-purple/30 transition-colors"
   >
     <span className="shrink-0">{emoji}</span>
     <span className="text-foreground">{label}</span>

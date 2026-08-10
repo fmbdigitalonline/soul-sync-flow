@@ -92,7 +92,7 @@ export const LanguageSelectionStep: React.FC<LanguageSelectionStepProps> = ({
         ))}
       </div>
 
-      <div className="bg-muted/30 rounded-lg p-4 text-center">
+      <div className="bg-muted/30 ss-rs p-4 text-center">
         <p className="text-xs text-foreground/70">
           <strong>Note:</strong> {t('onboarding.languageNote')}
         </p>

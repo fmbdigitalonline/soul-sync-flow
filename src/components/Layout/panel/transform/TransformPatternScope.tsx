@@ -56,21 +56,21 @@ export const TransformPatternScope: React.FC = () => {
             <button
               type="button"
               onClick={() => patchTransformFlow({ stage: 'scope_domain_focus' })}
-              className="text-left text-xs rounded-lg px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
+              className="text-left text-xs ss-rs px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
             >
               Check this life area
             </button>
             <button
               type="button"
               onClick={() => patchTransformFlow({ stage: 'scope_guided' })}
-              className="text-left text-xs rounded-lg px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
+              className="text-left text-xs ss-rs px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
             >
               Explore it through conversation
             </button>
             <button
               type="button"
               onClick={() => patchTransformFlow({ stage: 'scope_full' })}
-              className="text-left text-xs rounded-lg px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
+              className="text-left text-xs ss-rs px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
             >
               Review my full Life OS
             </button>

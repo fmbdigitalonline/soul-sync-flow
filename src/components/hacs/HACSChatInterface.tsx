@@ -484,7 +484,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                 )}
               >
                 {message.role === "user" ? (
-                  <div className="ss inline-block rounded-2xl px-4 py-2.5 max-w-[85%] sm:max-w-[70%] text-left" style={{ background: "var(--ss-accent)", color: "#fff" }}>
+                  <div className="ss inline-block ss-r px-4 py-2.5 max-w-[85%] sm:max-w-[70%] text-left" style={{ background: "var(--ss-accent)", color: "#fff" }}>
                     <p className="text-sm">{message.content}</p>
                     {message.isQuestion && (
                       <div className="mt-2 text-xs opacity-70">
@@ -499,7 +499,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                       {/* The Twin speaks from its own surface — white-on-white
                           read as one column of text with no second voice. */}
                       <div
-                        className="rounded-2xl px-4 py-3 ss-body leading-relaxed max-w-[86%]"
+                        className="ss-r px-4 py-3 ss-body leading-relaxed max-w-[86%]"
                         style={{
                           background:
                             "radial-gradient(300px 170px at 112% -18%, var(--ss-accent-wash-2), transparent 60%), " +

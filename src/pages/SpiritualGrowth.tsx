@@ -710,7 +710,7 @@ const SpiritualGrowth = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border/70 bg-white shadow-sm">
+            <div className="ss-r border border-border/70 bg-white shadow-sm">
               <div className="flex items-center gap-2 px-4 pt-4 text-sm text-muted-foreground">
                 <Sparkles className="h-4 w-4 text-primary" />
                 <span>Today&apos;s Growth Focus</span>
@@ -725,7 +725,7 @@ const SpiritualGrowth = () => {
                     <p className="text-xs text-muted-foreground">Your peace unlocks higher consciousness.</p>
                   </div>
                 </div>
-                <div className="rounded-xl border border-purple-100 bg-purple-50 px-4 py-3 text-sm text-purple-900 shadow-inner">
+                <div className="ss-rs border border-purple-100 bg-purple-50 px-4 py-3 text-sm text-purple-900 shadow-inner">
                   {focusDescriptionText}
                 </div>
               </div>
@@ -742,10 +742,10 @@ const SpiritualGrowth = () => {
                 <button
                   key={tile.key}
                   onClick={tile.onClick}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-white px-4 py-3 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md"
+                  className="flex items-center justify-between gap-3 ss-r border border-border/70 bg-white px-4 py-3 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-primary">
+                    <div className="flex h-11 w-11 items-center justify-center ss-rs bg-muted text-primary">
                       <tile.icon className="h-5 w-5" />
                     </div>
                     <div className="text-left">
@@ -770,9 +770,9 @@ const SpiritualGrowth = () => {
                 <button
                   key={module.title}
                   onClick={module.onClick}
-                  className="group rounded-2xl border border-border/70 bg-white p-2 shadow-sm transition hover:border-primary/40 hover:shadow-md"
+                  className="group ss-r border border-border/70 bg-white p-2 shadow-sm transition hover:border-primary/40 hover:shadow-md"
                 >
-                  <div className="overflow-hidden rounded-xl">
+                  <div className="overflow-hidden ss-rs">
                     <img
                       src={module.image}
                       alt={module.title}
@@ -787,7 +787,7 @@ const SpiritualGrowth = () => {
             </div>
           </div>
 
-          <div className="space-y-4 rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
+          <div className="space-y-4 ss-r border border-border/70 bg-white p-4 shadow-sm">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <Clock className="h-4 w-4 text-primary" />
               <span>Recent Activity</span>
@@ -800,7 +800,7 @@ const SpiritualGrowth = () => {
                 <p className="text-sm text-muted-foreground">No growth activities yet. Log a mood, reflection, or insight to begin.</p>
               )}
               {!loadingActivity && recentGrowthActivity.map(activity => (
-                <div key={activity.id} className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/40 px-3 py-2">
+                <div key={activity.id} className="flex items-start gap-3 ss-rs border border-border/60 bg-muted/40 px-3 py-2">
                   <div className="mt-2 h-2 w-2 rounded-full bg-primary" />
                   <div className="flex-1">
                     <p className="text-sm text-foreground">{describeActivity(activity)}</p>

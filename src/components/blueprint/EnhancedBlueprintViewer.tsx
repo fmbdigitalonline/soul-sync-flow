@@ -27,7 +27,7 @@ const FactsGrid: React.FC<FactsGridProps> = ({ facts, title }) => {
       <h4 className={`${getTextSize("text-sm")} font-medium text-muted-foreground mb-3`}>{title} Overview</h4>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {facts.map((fact, index) => (
-          <div key={index} className="bg-soul-purple/5 rounded-3xl p-3 text-center">
+          <div key={index} className="bg-soul-purple/5 ss-r p-3 text-center">
             <span className={`font-medium ${getTextSize("text-sm")} break-words`}>{fact}</span>
           </div>
         ))}
@@ -294,7 +294,7 @@ export const EnhancedBlueprintViewer: React.FC<EnhancedBlueprintViewerProps> = (
         </div>
         
         {/* Depth Toggle - Mobile Responsive */}
-        <div className={`flex gap-1 bg-gray-100 rounded-lg p-1 w-fit ${isMobile ? 'mx-auto' : 'mx-0'}`}>
+        <div className={`flex gap-1 bg-gray-100 ss-rs p-1 w-fit ${isMobile ? 'mx-auto' : 'mx-0'}`}>
           {(['novice', 'amateur', 'pro'] as ViewDepth[]).map((level) => (
             <Button
               key={level}

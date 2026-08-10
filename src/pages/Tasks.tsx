@@ -81,7 +81,7 @@ const Tasks = () => {
     return (
       <MainLayout>
         <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-25 flex items-center justify-center p-4">
-          <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/20 text-center max-w-sm w-full">
+          <div className="bg-white/80 backdrop-blur-lg ss-r p-8 shadow-2xl border border-white/20 text-center max-w-sm w-full">
             <div className="w-16 h-16 bg-gradient-to-br from-green-600 to-green-500 rounded-full mx-auto mb-6 flex items-center justify-center">
               <Target className="h-8 w-8 text-white" />
             </div>
@@ -90,7 +90,7 @@ const Tasks = () => {
             </h1>
             <p className="mb-8 text-gray-600 leading-relaxed">{t('tasks.subtitle')}</p>
             <Button
-              className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:shadow-lg transition-all duration-300 rounded-2xl h-12 text-white font-medium"
+              className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:shadow-lg transition-all duration-300 ss-r h-12 text-white font-medium"
               onClick={() => window.location.href = '/auth'}
             >
               {t('tasks.getStarted')}
@@ -137,7 +137,7 @@ const Tasks = () => {
           </CosmicCard>
 
           {/* Mobile-First Single Card Layout */}
-          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-lg ss-r shadow-lg border border-white/20 overflow-hidden">
             
             {/* Horizontal Tab Navigation */}
             <div className="border-b border-gray-100 p-3 bg-white/50">
@@ -146,7 +146,7 @@ const Tasks = () => {
                   variant={activeTab === 'achievement' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('achievement')}
-                  className={`flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
+                  className={`flex items-center gap-2 ss-rs whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
                     activeTab === 'achievement' 
                       ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-md' 
                       : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
@@ -159,7 +159,7 @@ const Tasks = () => {
                   variant={activeTab === 'planning' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('planning')}
-                  className={`flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
+                  className={`flex items-center gap-2 ss-rs whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
                     activeTab === 'planning' 
                       ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-md' 
                       : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
@@ -172,7 +172,7 @@ const Tasks = () => {
                   variant={activeTab === 'timer' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('timer')}
-                  className={`flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
+                  className={`flex items-center gap-2 ss-rs whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
                     activeTab === 'timer' 
                       ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-md' 
                       : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
@@ -185,7 +185,7 @@ const Tasks = () => {
                   variant={activeTab === 'habits' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('habits')}
-                  className={`flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
+                  className={`flex items-center gap-2 ss-rs whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
                     activeTab === 'habits' 
                       ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-md' 
                       : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
@@ -198,7 +198,7 @@ const Tasks = () => {
                   variant={activeTab === 'goals' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('goals')}
-                  className={`flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
+                  className={`flex items-center gap-2 ss-rs whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
                     activeTab === 'goals' 
                       ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-md' 
                       : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
@@ -211,7 +211,7 @@ const Tasks = () => {
                   variant={activeTab === 'chat' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('chat')}
-                  className={`flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
+                  className={`flex items-center gap-2 ss-rs whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
                     activeTab === 'chat' 
                       ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-md' 
                       : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
@@ -228,7 +228,7 @@ const Tasks = () => {
               {activeTab === 'achievement' && (
                 <div className="w-full">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-500 rounded-xl flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-500 ss-rs flex items-center justify-center">
                       <Brain className="h-4 w-4 text-white" />
                     </div>
                     <div>
@@ -245,7 +245,7 @@ const Tasks = () => {
               {activeTab === 'planning' && (
                 <div className="w-full">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-500 rounded-xl flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-500 ss-rs flex items-center justify-center">
                       <Target className="h-4 w-4 text-white" />
                     </div>
                     <div>
@@ -262,7 +262,7 @@ const Tasks = () => {
               {activeTab === 'timer' && (
                 <div className="w-full">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-500 rounded-xl flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-500 ss-rs flex items-center justify-center">
                       <Clock className="h-4 w-4 text-white" />
                     </div>
                     <div>
@@ -279,7 +279,7 @@ const Tasks = () => {
               {activeTab === 'habits' && (
                 <div className="w-full">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-500 rounded-xl flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-500 ss-rs flex items-center justify-center">
                       <CheckCircle className="h-4 w-4 text-white" />
                     </div>
                     <div>
@@ -296,7 +296,7 @@ const Tasks = () => {
               {activeTab === 'goals' && (
                 <div className="w-full">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-500 rounded-xl flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-500 ss-rs flex items-center justify-center">
                       <Target className="h-4 w-4 text-white" />
                     </div>
                     <div>
@@ -313,7 +313,7 @@ const Tasks = () => {
               {activeTab === 'chat' && (
                 <div className="w-full">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-500 rounded-xl flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-500 ss-rs flex items-center justify-center">
                       <MessageCircle className="h-4 w-4 text-white" />
                     </div>
                     <div>

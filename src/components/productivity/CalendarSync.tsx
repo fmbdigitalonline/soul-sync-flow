@@ -120,7 +120,7 @@ export const CalendarSync: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Calendar Status Overview */}
-        <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-muted/50 ss-rs">
           <div>
             <p className="font-medium">Calendar Status</p>
             <p className="text-sm text-muted-foreground">
@@ -142,22 +142,22 @@ export const CalendarSync: React.FC = () => {
 
         {/* Calendar Statistics */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="text-center p-3 bg-blue-50 rounded-lg">
+          <div className="text-center p-3 bg-blue-50 ss-rs">
             <p className="text-2xl font-bold text-blue-600">{tasksWithDates.length}</p>
             <p className="text-xs text-blue-600">Scheduled Tasks</p>
           </div>
-          <div className="text-center p-3 bg-green-50 rounded-lg">
+          <div className="text-center p-3 bg-green-50 ss-rs">
             <p className="text-2xl font-bold text-green-600">{upcomingTasks.length}</p>
             <p className="text-xs text-green-600">Upcoming</p>
           </div>
-          <div className="text-center p-3 bg-red-50 rounded-lg">
+          <div className="text-center p-3 bg-red-50 ss-rs">
             <p className="text-2xl font-bold text-red-600">{overdueTasks.length}</p>
             <p className="text-xs text-red-600">Overdue</p>
           </div>
         </div>
 
         {/* Calendar Settings */}
-        <div className="border rounded-lg p-4 space-y-4">
+        <div className="border ss-rs p-4 space-y-4">
           <h4 className="font-medium">Calendar Preferences</h4>
           
           <div className="space-y-3">
@@ -208,7 +208,7 @@ export const CalendarSync: React.FC = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="border rounded-lg p-4">
+        <div className="border ss-rs p-4">
           <h4 className="font-medium mb-3">Calendar Actions</h4>
           <div className="grid grid-cols-2 gap-3">
             <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -224,7 +224,7 @@ export const CalendarSync: React.FC = () => {
 
         {/* Recent Calendar Activity */}
         {allTasks.length > 0 && (
-          <div className="border rounded-lg p-4">
+          <div className="border ss-rs p-4">
             <h4 className="font-medium mb-3">Recent Calendar Activity</h4>
             <div className="space-y-2">
               {allTasks.slice(0, 3).map((task, index) => (

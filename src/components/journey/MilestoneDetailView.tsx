@@ -59,7 +59,7 @@ export const MilestoneDetailView: React.FC<MilestoneDetailViewProps> = ({
         </div>
 
         {/* Progress Stats */}
-        <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-4 mb-6 shadow-lg border border-white/20">
+        <div className="bg-white/80 backdrop-blur-lg ss-r p-4 mb-6 shadow-lg border border-white/20">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-soul-purple">{completedMilestones.length}</div>
@@ -77,7 +77,7 @@ export const MilestoneDetailView: React.FC<MilestoneDetailViewProps> = ({
         </div>
 
         {/* Milestone Timeline */}
-        <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-white/20">
+        <div className="bg-white/80 backdrop-blur-lg ss-r p-6 shadow-lg border border-white/20">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <Target className="h-5 w-5 mr-2 text-soul-purple" />
             Your Milestone Journey
@@ -107,7 +107,7 @@ export const MilestoneDetailView: React.FC<MilestoneDetailViewProps> = ({
                   <button
                     key={milestone?.id ?? `milestone-${index}`}
                     onClick={handleMilestoneFocus}
-                    className="flex items-start space-x-4 relative z-10 w-full text-left group transition-all duration-300 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-soul-purple/50 rounded-lg"
+                    className="flex items-start space-x-4 relative z-10 w-full text-left group transition-all duration-300 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-soul-purple/50 ss-rs"
                   >
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
                       isCompleted ? 'bg-soul-purple text-white scale-105' : 
@@ -123,7 +123,7 @@ export const MilestoneDetailView: React.FC<MilestoneDetailViewProps> = ({
                       )}
                     </div>
                     
-                    <div className="flex-1 p-4 rounded-xl border transition-all duration-300 group-hover:shadow-md group-hover:border-soul-purple/30" 
+                    <div className="flex-1 p-4 ss-rs border transition-all duration-300 group-hover:shadow-md group-hover:border-soul-purple/30" 
                          style={{
                            backgroundColor: isCompleted ? '#f8fafc' : isCurrent ? '#dbeafe' : '#f9fafb',
                            borderColor: isCompleted ? '#e2e8f0' : isCurrent ? '#3b82f6' : '#e5e7eb'

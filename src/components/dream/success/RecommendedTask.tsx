@@ -42,7 +42,7 @@ export const RecommendedTask: React.FC<RecommendedTaskProps> = ({
   };
 
   return (
-    <div className={`bg-gradient-to-br from-soul-purple/10 to-soul-teal/5 rounded-2xl border border-soul-purple/20 transition-all duration-500 w-full overflow-hidden ${spacing.card} ${
+    <div className={`bg-gradient-to-br from-soul-purple/10 to-soul-teal/5 ss-r border border-soul-purple/20 transition-all duration-500 w-full overflow-hidden ${spacing.card} ${
       isHighlighted ? 'ring-2 ring-soul-purple shadow-soul-purple/20 transform scale-[1.01]' : ''
     }`}>
       <div className="flex flex-col gap-3 w-full">
@@ -76,7 +76,7 @@ export const RecommendedTask: React.FC<RecommendedTaskProps> = ({
 
         {/* The why-line — the moat, one compact breath */}
         {task.blueprint_reasoning && (
-          <p className={`text-soul-purple bg-soul-purple/10 rounded-lg px-2.5 py-1.5 leading-snug line-clamp-2 ${getTextSize('text-xs')}`} title={task.blueprint_reasoning}>
+          <p className={`text-soul-purple bg-soul-purple/10 ss-rs px-2.5 py-1.5 leading-snug line-clamp-2 ${getTextSize('text-xs')}`} title={task.blueprint_reasoning}>
             💡 {task.blueprint_reasoning}
           </p>
         )}
@@ -84,7 +84,7 @@ export const RecommendedTask: React.FC<RecommendedTaskProps> = ({
         {/* One primary action, directly reachable */}
         <Button
           onClick={() => onStartTask(task)}
-          className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white rounded-xl font-semibold transition-all duration-300 active:scale-95 w-full ${spacing.button} ${touchTargetSize}`}
+          className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white ss-rs font-semibold transition-all duration-300 active:scale-95 w-full ${spacing.button} ${touchTargetSize}`}
         >
           <span className={getTextSize('text-sm')}>{t('recommendedTask.startTask')}</span>
           <ArrowRight className={`ml-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />

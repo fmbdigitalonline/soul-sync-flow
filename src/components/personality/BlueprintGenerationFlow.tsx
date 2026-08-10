@@ -130,7 +130,7 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             <p className="text-lg">Your personalized blueprint has been created</p>
             
             {/* VFP-Graph Status Display */}
-            <div className="bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 border border-soul-purple/20 rounded-lg p-4 mt-4">
+            <div className="bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 border border-soul-purple/20 ss-rs p-4 mt-4">
               <div className="flex items-center justify-center gap-2 mb-2">
                 {vfpGraphGenerated ? (
                   <>
@@ -243,7 +243,7 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
 
         {/* Special VFP-Graph Info */}
         {currentStep === 2 && (
-          <div className="bg-gradient-to-r from-soul-purple/5 to-soul-teal/5 border border-soul-purple/20 rounded-lg p-4">
+          <div className="bg-gradient-to-r from-soul-purple/5 to-soul-teal/5 border border-soul-purple/20 ss-rs p-4">
             <div className="flex items-center gap-2 mb-2">
               <Brain className="h-5 w-5 text-soul-purple" />
               <span className="font-medium text-soul-purple">VFP-Graph Technology</span>

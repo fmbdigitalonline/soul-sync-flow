@@ -329,7 +329,7 @@ ${ASSESSMENT_STAGES[0].prompt}`;
                 {ASSESSMENT_STAGES.map((stage, index) => (
                   <div 
                     key={stage.id}
-                    className={`p-2 rounded-lg border text-xs ${
+                    className={`p-2 ss-rs border text-xs ${
                       index === currentStage 
                         ? 'bg-primary text-primary-foreground border-primary' 
                         : index < currentStage 

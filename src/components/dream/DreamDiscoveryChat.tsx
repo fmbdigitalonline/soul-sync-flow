@@ -132,7 +132,7 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
           
           {isLoading && (
             <div className="flex justify-center py-6">
-              <div className="bg-card/80 backdrop-blur-lg rounded-2xl px-6 py-4 shadow-lg">
+              <div className="bg-card/80 backdrop-blur-lg ss-r px-6 py-4 shadow-lg">
                 <div className="flex items-center gap-3">
                   <Sparkles className="h-5 w-5 text-soul-purple animate-pulse" />
                   <span className={`text-gray-600 ${getTextSize('text-sm')}`}>
@@ -152,7 +152,7 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
             <div className="flex justify-center py-6">
               <Button
                 onClick={onReadyForDecomposition}
-                className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white font-semibold rounded-2xl px-8 py-4 transition-all duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
+                className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white font-semibold ss-r px-8 py-4 transition-all duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <Sparkles className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 {t('dreamDiscovery.createJourney')}
@@ -174,14 +174,14 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={getPlaceholderText()}
-                className={`border-soul-purple/20 focus:border-soul-purple focus:ring-soul-purple/20 rounded-2xl ${getTextSize('text-sm')} ${touchTargetSize}`}
+                className={`border-soul-purple/20 focus:border-soul-purple focus:ring-soul-purple/20 ss-r ${getTextSize('text-sm')} ${touchTargetSize}`}
                 disabled={isLoading || showDecompositionButton}
               />
             </div>
             <Button
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || isLoading || showDecompositionButton}
-              className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg transition-all duration-300 rounded-2xl ${touchTargetSize}`}
+              className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg transition-all duration-300 ss-r ${touchTargetSize}`}
             >
               <Send className={`${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
             </Button>
@@ -210,7 +210,7 @@ const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
   if (message.sender === 'user') {
     return (
       <div className="flex justify-end">
-        <div className="bg-gradient-to-r from-soul-purple to-soul-teal text-white rounded-2xl px-4 py-3 max-w-xs shadow-lg">
+        <div className="bg-gradient-to-r from-soul-purple to-soul-teal text-white ss-r px-4 py-3 max-w-xs shadow-lg">
           <div className="flex items-center gap-2 mb-1">
             <Heart className={`${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
             <span className={`font-medium ${getTextSize('text-xs')}`}>You</span>
@@ -226,7 +226,7 @@ const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
   return (
     <div className="flex justify-start">
       <div className="max-w-md">
-        <Card className="bg-card/90 backdrop-blur-lg shadow-lg rounded-2xl p-4">
+        <Card className="bg-card/90 backdrop-blur-lg shadow-lg ss-r p-4">
           <div className="flex items-center gap-2 mb-3">
             <div className={`bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
               <Sparkles className={`text-white ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
@@ -260,7 +260,7 @@ const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
                     key={choice.id}
                     onClick={() => onChoiceSelect(choice)}
                     variant="outline"
-                    className={`justify-start text-left h-auto py-3 px-4 border-soul-purple/20 hover:bg-soul-purple/5 hover:border-soul-purple rounded-xl transition-all duration-200 ${getTextSize('text-sm')} ${touchTargetSize}`}
+                    className={`justify-start text-left h-auto py-3 px-4 border-soul-purple/20 hover:bg-soul-purple/5 hover:border-soul-purple ss-rs transition-all duration-200 ${getTextSize('text-sm')} ${touchTargetSize}`}
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-lg">{choice.emoji}</span>
@@ -273,7 +273,7 @@ const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
           )}
 
           {parsedMessage.type === 'question' && parsedMessage.question && (
-            <div className="bg-soul-purple/5 rounded-xl p-3 border-l-4 border-soul-purple">
+            <div className="bg-soul-purple/5 ss-rs p-3 border-l-4 border-soul-purple">
               <p className={`text-soul-purple font-medium ${getTextSize('text-sm')}`}>
                 {parsedMessage.question}
               </p>
@@ -281,7 +281,7 @@ const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
           )}
 
           {parsedMessage.type === 'reflection' && (
-            <div className="bg-soul-teal/5 rounded-xl p-3 border-l-4 border-soul-teal">
+            <div className="bg-soul-teal/5 ss-rs p-3 border-l-4 border-soul-teal">
               <p className={`text-soul-teal font-medium ${getTextSize('text-sm')}`}>
                 {t('dreamDiscovery.reflect')}
               </p>

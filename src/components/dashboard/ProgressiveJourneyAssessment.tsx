@@ -197,7 +197,7 @@ export function ProgressiveJourneyAssessment({ onComplete, onBack }: Progressive
                 {JOURNEY_STEPS.map((step, index) => (
                   <div 
                     key={step.id}
-                    className={`p-2 rounded-lg border text-xs ${
+                    className={`p-2 ss-rs border text-xs ${
                       index === currentStep 
                         ? 'bg-primary text-primary-foreground border-primary' 
                         : index < currentStep 
@@ -485,7 +485,7 @@ function DomainAssessmentCard({ domain, onAssess, existingAssessment }: DomainAs
         </div>
 
         {/* Gap Indicator */}
-        <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+        <div className="p-4 bg-amber-50 ss-rs border border-amber-200">
           <div className="flex items-center gap-2 mb-2">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <span className="font-medium text-amber-800">Growth Opportunity</span>
@@ -503,7 +503,7 @@ function DomainAssessmentCard({ domain, onAssess, existingAssessment }: DomainAs
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Any specific thoughts about this life area..."
-            className="w-full mt-1 p-2 border rounded-md text-sm"
+            className="w-full mt-1 p-2 border ss-rs text-sm"
             rows={3}
           />
         </div>

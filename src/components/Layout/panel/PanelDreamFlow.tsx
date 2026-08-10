@@ -58,7 +58,7 @@ export const PanelDreamFlow: React.FC = () => {
           onKeyDown={(e) => { if (e.key === 'Enter' && value.trim()) adopt(); }}
           aria-label="Goal title"
           autoFocus
-          className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-soul-purple/40"
+          className="w-full ss-rs border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-soul-purple/40"
         />
         <p className="text-[11px] text-muted-foreground leading-relaxed">
           Say it in your own words — this becomes the name of your journey.
@@ -121,7 +121,7 @@ export const PanelDreamFlow: React.FC = () => {
           eyebrow="Creating your plan"
           onClose={() => patchDreamFlow({ dismissed: true })}
         />
-        <div className="relative rounded-lg overflow-hidden bg-background/60 [&_.min-h-screen]:min-h-0 [&_.min-h-screen]:p-3">
+        <div className="relative ss-rs overflow-hidden bg-background/60 [&_.min-h-screen]:min-h-0 [&_.min-h-screen]:p-3">
           <DreamDecompositionPage
             dreamTitle={pendingIntake.title}
             dreamCategory={pendingIntake.category}
@@ -151,7 +151,7 @@ export const PanelDreamFlow: React.FC = () => {
           onClose={() => patchDreamFlow({ dismissed: true })}
           onBack={() => patchDreamFlow({ showPlan: false })}
         />
-        <div className="[&_.rounded-2xl]:rounded-lg [&_.shadow-lg]:shadow-none">
+        <div className="[&_.ss-r]:ss-rs [&_.shadow-lg]:shadow-none">
           <MilestonesRoadmap milestones={milestones} isHighlighted={false} />
         </div>
       </Card>

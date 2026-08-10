@@ -39,12 +39,12 @@ export const JourneyDetailedView: React.FC<JourneyDetailedViewProps> = ({
     <div className="space-y-4">
       {/* Current Focus */}
       {currentMilestone && (
-        <div className="p-4 rounded-3xl border border-primary/30 bg-primary/5">
+        <div className="p-4 ss-r border border-primary/30 bg-primary/5">
           <h3 className="font-medium mb-3 flex items-center">
             <Star className="h-4 w-4 mr-2 text-primary" />
             Current Milestone Focus
           </h3>
-          <div className="bg-card p-3 rounded-2xl border border-border mb-3">
+          <div className="bg-card p-3 ss-r border border-border mb-3">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <h4 className="font-medium text-foreground mb-2 text-sm">{currentMilestone.title}</h4>
@@ -84,7 +84,7 @@ export const JourneyDetailedView: React.FC<JourneyDetailedViewProps> = ({
             {nextTasks.map((task: any, index: number) => (
               <div
                 key={task.id}
-                className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-secondary/20 cursor-pointer transition-all duration-200 hover:shadow-md"
+                className="flex items-center space-x-3 p-3 border ss-rs hover:bg-secondary/20 cursor-pointer transition-all duration-200 hover:shadow-md"
                 onClick={() => onTaskClick?.(task.id)}
               >
                 <div className="w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-primary font-medium text-xs">
@@ -123,7 +123,7 @@ export const JourneyDetailedView: React.FC<JourneyDetailedViewProps> = ({
           </h3>
           <div className="grid grid-cols-1 gap-2">
             {mainGoal.blueprint_alignment.map((trait: string, index: number) => (
-              <div key={index} className="flex items-center p-2 bg-secondary/10 rounded-lg border border-secondary/30">
+              <div key={index} className="flex items-center p-2 bg-secondary/10 ss-rs border border-secondary/30">
                 <Star className="h-3 w-3 mr-2 text-secondary" />
                 <span className="text-xs text-secondary font-medium">{trait}</span>
               </div>

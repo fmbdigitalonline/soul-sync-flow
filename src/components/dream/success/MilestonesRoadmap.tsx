@@ -52,7 +52,7 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
   };
 
   return (
-    <div className={`bg-card/80 backdrop-blur-lg rounded-2xl shadow-lg transition-all duration-500 w-full overflow-hidden ${spacing.card} ${
+    <div className={`bg-card/80 backdrop-blur-lg ss-r shadow-lg transition-all duration-500 w-full overflow-hidden ${spacing.card} ${
       isHighlighted ? 'ring-2 ring-soul-purple shadow-soul-purple/20 transform scale-[1.01]' : ''
     }`}>
       <h3 className={`font-semibold mb-4 flex items-center gap-2 flex-wrap ${getTextSize('text-base')}`}>
@@ -71,7 +71,7 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
             <button
               key={milestone.id || index}
               onClick={() => onMilestoneClick?.(milestone)}
-              className={`flex items-start gap-3 rounded-xl border transition-all duration-300 active:scale-[0.98] w-full text-left overflow-hidden ${spacing.card} ${touchTargetSize} ${
+              className={`flex items-start gap-3 ss-rs border transition-all duration-300 active:scale-[0.98] w-full text-left overflow-hidden ${spacing.card} ${touchTargetSize} ${
                 isCurrent
                   ? 'border-soul-purple/50 bg-soul-purple/10 ring-1 ring-soul-purple/30'
                   : 'border-soul-purple/10 bg-gradient-to-r from-soul-purple/5 to-transparent hover:border-soul-purple/30 hover:bg-soul-purple/10'

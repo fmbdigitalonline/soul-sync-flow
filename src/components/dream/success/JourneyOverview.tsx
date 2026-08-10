@@ -16,7 +16,7 @@ export const JourneyOverview: React.FC<JourneyOverviewProps> = ({
   isHighlighted
 }) => {
   return (
-    <div className={`bg-card/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg transition-all duration-500 ${
+    <div className={`bg-card/80 backdrop-blur-lg ss-r p-6 shadow-lg transition-all duration-500 ${
       isHighlighted ? 'ring-2 ring-soul-purple shadow-soul-purple/20 transform scale-[1.02]' : ''
     }`}>
       <div className="text-center mb-6">
@@ -26,7 +26,7 @@ export const JourneyOverview: React.FC<JourneyOverviewProps> = ({
       
       <div className="grid md:grid-cols-3 gap-6">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-soul-purple to-soul-teal rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-soul-purple to-soul-teal ss-r flex items-center justify-center mx-auto mb-4">
             <Target className="h-8 w-8 text-white" />
           </div>
           <h3 className="font-semibold mb-2 text-gray-800">Milestones</h3>
@@ -35,7 +35,7 @@ export const JourneyOverview: React.FC<JourneyOverviewProps> = ({
         </div>
         
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-soul-teal to-soul-blue rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-soul-teal to-soul-blue ss-r flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="h-8 w-8 text-white" />
           </div>
           <h3 className="font-semibold mb-2 text-gray-800">Action Tasks</h3>
@@ -44,7 +44,7 @@ export const JourneyOverview: React.FC<JourneyOverviewProps> = ({
         </div>
         
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-soul-blue to-soul-purple rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-soul-blue to-soul-purple ss-r flex items-center justify-center mx-auto mb-4">
             <Calendar className="h-8 w-8 text-white" />
           </div>
           <h3 className="font-semibold mb-2 text-gray-800">Timeline</h3>

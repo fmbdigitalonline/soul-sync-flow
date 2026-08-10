@@ -39,7 +39,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <div className="justify-self-center w-full max-w-md">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder={t('common.search')} className="pl-10 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50 h-10 rounded-xl" />
+            <Input placeholder={t('common.search')} className="pl-10 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50 h-10 ss-rs" />
           </div>
         </div>
 
@@ -47,12 +47,12 @@ export const TopBar: React.FC<TopBarProps> = ({
         <div className="flex items-center justify-end space-x-4">
           <LanguageSelector />
 
-          {showToolsToggle && <Button aria-label={t('contextualTools.toolsAndInsights')} variant="ghost" size="icon" onClick={() => onToolsPanelToggle?.()} className="rounded-xl h-10 w-10">
+          {showToolsToggle && <Button aria-label={t('contextualTools.toolsAndInsights')} variant="ghost" size="icon" onClick={() => onToolsPanelToggle?.()} className="ss-rs h-10 w-10">
               {toolsPanelCollapsed ? <PanelRightOpen className="h-5 w-5" /> : <PanelRightClose className="h-5 w-5" />}
             </Button>}
 
           {/* Notifications */}
-          <Button aria-label={t('common.notifications')} variant="ghost" size="icon" className="relative rounded-xl h-10 w-10">
+          <Button aria-label={t('common.notifications')} variant="ghost" size="icon" className="relative ss-rs h-10 w-10">
             <Bell className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full"></span>
           </Button>

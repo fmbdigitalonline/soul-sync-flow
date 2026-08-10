@@ -131,7 +131,7 @@ export const PanelProgramsSection: React.FC<PanelProgramsSectionProps> = ({
                     type="button"
                     disabled={!nextMilestone}
                     onClick={() => nextMilestone && onOpenMilestone(g.id, nextMilestone.id)}
-                    className="w-full text-left rounded-md px-2 py-1.5 hover:bg-muted/40 transition-colors disabled:opacity-70"
+                    className="w-full text-left ss-rs px-2 py-1.5 hover:bg-muted/40 transition-colors disabled:opacity-70"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-xs font-medium text-foreground truncate">{g.title}</p>
@@ -147,7 +147,7 @@ export const PanelProgramsSection: React.FC<PanelProgramsSectionProps> = ({
                       <button
                         type="button"
                         onClick={() => onResumeTask(g.id, resumeTask)}
-                        className="flex items-center gap-1.5 text-[11px] rounded-md px-2 py-1 border border-primary/25 bg-primary/5 hover:bg-primary/10 transition-colors text-foreground"
+                        className="flex items-center gap-1.5 text-[11px] ss-rs px-2 py-1 border border-primary/25 bg-primary/5 hover:bg-primary/10 transition-colors text-foreground"
                         title={resumeTask.title}
                       >
                         <Play className="h-3 w-3 text-primary" />
@@ -159,7 +159,7 @@ export const PanelProgramsSection: React.FC<PanelProgramsSectionProps> = ({
                       <button
                         type="button"
                         onClick={() => onOpenMap(rawGoalById(g.id) ?? g)}
-                        className="flex items-center gap-1 text-[11px] rounded-md px-2 py-1 border border-border/50 hover:bg-muted/40 transition-colors text-muted-foreground hover:text-foreground"
+                        className="flex items-center gap-1 text-[11px] ss-rs px-2 py-1 border border-border/50 hover:bg-muted/40 transition-colors text-muted-foreground hover:text-foreground"
                         title="Journey map"
                       >
                         <MapIcon className="h-3 w-3" />
@@ -169,7 +169,7 @@ export const PanelProgramsSection: React.FC<PanelProgramsSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => setDetailGoal(rawGoalById(g.id) ?? g)}
-                      className="flex items-center gap-1 text-[11px] rounded-md px-2 py-1 border border-border/50 hover:bg-muted/40 transition-colors text-muted-foreground hover:text-foreground"
+                      className="flex items-center gap-1 text-[11px] ss-rs px-2 py-1 border border-border/50 hover:bg-muted/40 transition-colors text-muted-foreground hover:text-foreground"
                       title="Details"
                     >
                       <Info className="h-3 w-3" />
@@ -178,7 +178,7 @@ export const PanelProgramsSection: React.FC<PanelProgramsSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => void handleDelete(g)}
-                      className="flex items-center gap-1 text-[11px] rounded-md px-2 py-1 border border-border/50 hover:bg-destructive/10 hover:border-destructive/30 transition-colors text-muted-foreground hover:text-destructive"
+                      className="flex items-center gap-1 text-[11px] ss-rs px-2 py-1 border border-border/50 hover:bg-destructive/10 hover:border-destructive/30 transition-colors text-muted-foreground hover:text-destructive"
                       title="Delete program"
                     >
                       <Trash2 className="h-3 w-3" />
@@ -213,11 +213,11 @@ export const PanelProgramsSection: React.FC<PanelProgramsSectionProps> = ({
               const label = pattern || DOMAIN_LABELS[p.domain as keyof typeof DOMAIN_LABELS] || p.domain;
               const isOpen = openTransformId === p.id;
               return (
-                <li key={p.id} className="rounded-md overflow-hidden">
+                <li key={p.id} className="ss-rs overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setOpenTransformId(isOpen ? null : p.id)}
-                    className="w-full text-left rounded-md px-2 py-1.5 hover:bg-muted/40 transition-colors"
+                    className="w-full text-left ss-rs px-2 py-1.5 hover:bg-muted/40 transition-colors"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-xs font-medium text-foreground truncate">“{label}”</p>

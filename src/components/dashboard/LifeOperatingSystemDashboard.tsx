@@ -87,21 +87,21 @@ export function LifeOperatingSystemDashboard({ onCreateProgram }: LifeOperatingS
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <div className="grid md:grid-cols-3 gap-4 mb-6">
-              <div className="p-4 bg-muted/50 rounded-lg">
+              <div className="p-4 bg-muted/50 ss-rs">
                 <TrendingUp className="w-6 h-6 text-blue-500 mx-auto mb-2" />
                 <h4 className="font-semibold">Gap Analysis</h4>
                 <p className="text-sm text-muted-foreground">
                   Identify your biggest growth opportunities
                 </p>
               </div>
-              <div className="p-4 bg-muted/50 rounded-lg">
+              <div className="p-4 bg-muted/50 ss-rs">
                 <Target className="w-6 h-6 text-green-500 mx-auto mb-2" />
                 <h4 className="font-semibold">Multi-Domain Strategy</h4>
                 <p className="text-sm text-muted-foreground">
                   Coordinate growth across connected life areas
                 </p>
               </div>
-              <div className="p-4 bg-muted/50 rounded-lg">
+              <div className="p-4 bg-muted/50 ss-rs">
                 <Settings className="w-6 h-6 text-purple-500 mx-auto mb-2" />
                 <h4 className="font-semibold">Blueprint Integration</h4>
                 <p className="text-sm text-muted-foreground">

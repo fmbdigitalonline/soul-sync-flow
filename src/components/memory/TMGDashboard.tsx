@@ -56,7 +56,7 @@ export const TMGDashboard: React.FC<TMGDashboardProps> = ({
 
   if (compact) {
     return (
-      <div className="p-4 bg-gray-50 rounded-lg space-y-2">
+      <div className="p-4 bg-gray-50 ss-rs space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Brain className="w-4 h-4 text-purple-600" />
@@ -268,7 +268,7 @@ export const TMGDashboard: React.FC<TMGDashboardProps> = ({
           ) : (
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {hotMemory.slice(0, 10).map((entry) => (
-                <div key={entry.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div key={entry.id} className="flex items-start space-x-3 p-3 bg-gray-50 ss-rs">
                   <div className="flex-shrink-0">
                     <Badge 
                       variant="outline" 

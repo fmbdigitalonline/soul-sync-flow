@@ -34,7 +34,7 @@ export const VFPGraphVisualization: React.FC<VFPGraphVisualizationProps> = ({
           {preview.map((val, i) => (
             <div
               key={i}
-              className={`w-4 h-8 bg-${color}-200 rounded-sm relative overflow-hidden`}
+              className={`w-4 h-8 bg-${color}-200 ss-rs relative overflow-hidden`}
             >
               <div
                 className={`absolute bottom-0 w-full bg-${color}-500 transition-all`}
@@ -71,7 +71,7 @@ export const VFPGraphVisualization: React.FC<VFPGraphVisualizationProps> = ({
             <div className="space-y-2">
               <h4 className="font-medium text-amber-800">Clarifying Questions:</h4>
               {conflicts.clarifyingQuestions.slice(0, 3).map((question, i) => (
-                <div key={i} className="p-3 bg-white rounded-lg border border-amber-200">
+                <div key={i} className="p-3 bg-white ss-rs border border-amber-200">
                   <p className="text-sm">{question}</p>
                   {onResolveConflict && (
                     <Button

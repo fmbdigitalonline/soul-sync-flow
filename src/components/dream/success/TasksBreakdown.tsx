@@ -70,7 +70,7 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
   };
 
   return (
-    <div className={`bg-card/80 backdrop-blur-lg rounded-2xl shadow-lg transition-all duration-500 w-full max-w-full ${spacing.card} ${
+    <div className={`bg-card/80 backdrop-blur-lg ss-r shadow-lg transition-all duration-500 w-full max-w-full ${spacing.card} ${
       isHighlighted ? 'ring-2 ring-soul-purple shadow-soul-purple/20 transform scale-[1.02]' : ''
     }`}>
       <h3 className={`font-semibold mb-4 flex items-center flex-wrap ${getTextSize('text-base')} ${spacing.gap} ${isFoldDevice ? 'mb-2' : ''}`}>
@@ -83,7 +83,7 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
       
       <div className={`space-y-4 ${isFoldDevice ? 'space-y-2' : ''}`}>
         {Object.entries(tasksByMilestone).map(([milestoneId, milestoneTasks]) => (
-          <div key={milestoneId} className="bg-card rounded-lg shadow-sm overflow-hidden">
+          <div key={milestoneId} className="bg-card ss-rs shadow-sm overflow-hidden">
             <button
               onClick={() => toggleMilestone(milestoneId)}
               className={`w-full bg-accent hover:bg-accent/70 transition-colors flex items-center justify-between ${spacing.card} ${touchTargetSize}`}
@@ -111,7 +111,7 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
                     <button
                       key={task.id || index}
                       onClick={() => handleTaskClick(task)}
-                      className={`w-full border border-border rounded-lg hover:border-soul-purple/30 hover:bg-soul-purple/5 transition-all duration-200 text-left ${spacing.card} ${touchTargetSize}`}
+                      className={`w-full border border-border ss-rs hover:border-soul-purple/30 hover:bg-soul-purple/5 transition-all duration-200 text-left ${spacing.card} ${touchTargetSize}`}
                     >
                       <div className={`flex items-start ${spacing.gap}`}>
                         <div className={`bg-soul-purple/20 rounded-full flex items-center justify-center text-soul-purple font-medium flex-shrink-0 mt-0.5 ${getTextSize('text-xs')} ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>

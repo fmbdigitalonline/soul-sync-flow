@@ -367,7 +367,7 @@ export const CoachWorkspaceShell: React.FC<CoachWorkspaceShellProps> = ({ legacy
             ) : id === 'insights' ? (
               <InsightsList entries={helpHistory} />
             ) : id === 'history' ? (
-              <div className="space-y-2 [&_.rounded-2xl]:rounded-lg [&_.shadow-lg]:shadow-none">
+              <div className="space-y-2 [&_.ss-r]:ss-rs [&_.shadow-lg]:shadow-none">
                 {/* v3.4: My Journey — the perspective level, entered
                     deliberately (collapsed), composed from existing stores */}
                 <PanelMyJourney />
@@ -578,7 +578,7 @@ interface SectionDrawerProps {
 }
 
 const SectionDrawer: React.FC<SectionDrawerProps> = ({ label, isOpen, onToggle, children }) => (
-  <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--ss-line)', background: 'var(--ss-card)' }}>
+  <div className="ss-r overflow-hidden" style={{ border: '1px solid var(--ss-line)', background: 'var(--ss-card)' }}>
     <Button
       variant="ghost"
       onClick={onToggle}
@@ -611,7 +611,7 @@ const InsightsList: React.FC<{ entries: { id: string; title: string; when: strin
     <div className="space-y-1">
       <ul className="space-y-1">
         {visible.map((e) => (
-          <li key={e.id} className="pl-2 pr-2 py-1.5 rounded-md hover:bg-muted/40">
+          <li key={e.id} className="pl-2 pr-2 py-1.5 ss-rs hover:bg-muted/40">
             <p className="text-xs font-medium text-foreground truncate" title={e.title}>
               {e.title}
             </p>

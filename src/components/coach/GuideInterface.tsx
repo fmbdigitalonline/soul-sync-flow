@@ -82,7 +82,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
             {message.sender === 'user' ? (
               // User Message
               <div className="flex items-start gap-3 mb-4 justify-end">
-                <div className="bg-soul-purple text-white rounded-lg p-3 max-w-[80%]">
+                <div className="bg-soul-purple text-white ss-rs p-3 max-w-[80%]">
                   <p className="text-sm leading-relaxed">{message.content}</p>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-soul-purple/10 flex items-center justify-center flex-shrink-0">
@@ -109,7 +109,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
                       Soul Guide
                     </span>
                   </div>
-                  <div className="bg-soul-purple/5 rounded-lg p-4 border border-soul-purple/10">
+                  <div className="bg-soul-purple/5 ss-rs p-4 border border-soul-purple/10">
                     <SlowStreamingMessage
                       content={
                         // If this is the last message and we're streaming, show streaming content
@@ -143,7 +143,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
                 showProgressRing={false}
               />
             </div>
-            <div className="bg-soul-purple/5 rounded-lg p-4 border border-soul-purple/10">
+            <div className="bg-soul-purple/5 ss-rs p-4 border border-soul-purple/10">
               <div className="flex items-center gap-2 text-soul-purple">
                 <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse"></div>
                 <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>

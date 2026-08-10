@@ -153,7 +153,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({
             
             <Button 
               onClick={handleContinue}
-              className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground px-8 py-3 rounded-2xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground px-8 py-3 ss-r font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               {isLastStep ? (
                 <>

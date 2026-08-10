@@ -170,7 +170,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
       </div>
 
       {showNewGoalForm && (
-        <div className="mb-6 p-4 bg-secondary/20 rounded-lg space-y-4">
+        <div className="mb-6 p-4 bg-secondary/20 ss-rs space-y-4">
           <div>
             <label className="text-sm font-medium">{t('goals.goalTitle')}</label>
             <Input
@@ -239,7 +239,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
             {tempMilestones.length > 0 && (
               <div className="mt-2 space-y-2">
                 {tempMilestones.map((milestone, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-background rounded-md">
+                  <div key={index} className="flex items-center justify-between p-2 bg-background ss-rs">
                     <span className="text-sm">{milestone.title}</span>
                     <Button
                       onClick={() => handleRemoveMilestone(index)}
@@ -321,7 +321,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
                     {goal.milestones.map((milestone) => (
                       <div
                         key={milestone.id}
-                        className="flex items-center space-x-2 p-2 bg-secondary/20 rounded-md"
+                        className="flex items-center space-x-2 p-2 bg-secondary/20 ss-rs"
                       >
                         <Button
                           onClick={() => toggleMilestone(goal.id, milestone.id)}

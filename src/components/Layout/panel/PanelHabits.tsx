@@ -43,7 +43,7 @@ export const PanelHabits: React.FC = () => {
               disabled={h.completedToday}
               onClick={() => void markHabitComplete(h.id)}
               className={cn(
-                'flex items-center gap-2 min-w-0 flex-1 text-left rounded-md px-2 py-1.5 transition-colors',
+                'flex items-center gap-2 min-w-0 flex-1 text-left ss-rs px-2 py-1.5 transition-colors',
                 h.completedToday ? 'opacity-70' : 'hover:bg-muted/40',
               )}
               title={h.title}

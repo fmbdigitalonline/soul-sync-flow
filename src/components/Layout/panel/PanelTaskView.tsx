@@ -79,7 +79,7 @@ export const PanelTaskView: React.FC<PanelTaskViewProps> = ({ task, goalId, onBa
   return (
     // The interface is h-full/flex — give it a real height inside the
     // scrolling panel so its own internal scroll areas work.
-    <div className={`h-[70vh] min-h-[420px] overflow-hidden bg-background ${compact ? '' : 'rounded-lg border border-border/60'}`}>
+    <div className={`h-[70vh] min-h-[420px] overflow-hidden bg-background ${compact ? '' : 'ss-rs border border-border/60'}`}>
       <TaskCoachInterface
         task={coachTask as any}
         onBack={onBack}

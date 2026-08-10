@@ -109,7 +109,7 @@ export const ReflectionPrompts: React.FC<ReflectionPromptsProps> = ({ onReflecti
 
         {selectedPrompt && !saved && (
           <div className="space-y-3">
-            <div className="p-3 bg-soul-purple/5 rounded-md">
+            <div className="p-3 bg-soul-purple/5 ss-rs">
               <p className="text-sm font-medium text-soul-purple mb-1">{t('reflection.reflecting')}</p>
               <p className="text-sm">{selectedPrompt}</p>
             </div>
@@ -144,7 +144,7 @@ export const ReflectionPrompts: React.FC<ReflectionPromptsProps> = ({ onReflecti
         )}
 
         {saved && (
-          <div className="flex items-center justify-center p-4 bg-green-50 rounded-md">
+          <div className="flex items-center justify-center p-4 bg-green-50 ss-rs">
             <Check className="h-4 w-4 text-green-600 mr-2" />
             <span className="text-sm text-green-700">{t('reflection.saved')}</span>
           </div>

@@ -445,6 +445,10 @@
      of guessed. */
   --ss-pad: 20px;
   --ss-pad-sm: 16px;
+  /* Controls are not surfaces. A button wants to be wider than it is tall, so
+     symmetric surface padding makes it look wrong — which is why this was
+     hand-written as '9px 14px'. Naming it keeps the next one consistent. */
+  --ss-pad-ctl: 9px 14px;
   --ss-shadow: 0 1px 2px rgba(46, 42, 61, 0.03), 0 10px 26px rgba(103, 78, 167, 0.05);
 }
 .dark {
@@ -469,6 +473,13 @@
 }
 
 .ss { color: var(--ss-ink); }
+
+/* Radius utilities, so a component can name the system in className instead of
+   reaching for an inline style or a Tailwind step. Two, because there are two
+   kinds of thing: a surface, and something living inside one.
+   rounded-full stays legal — a pill and a circle are shapes, not scale. */
+.ss-r  { border-radius: var(--ss-radius); }
+.ss-rs { border-radius: var(--ss-radius-sm); }
 .ss-card {
   background: var(--ss-card); border: 1px solid var(--ss-line);
   border-radius: var(--ss-radius); padding: var(--ss-pad); box-shadow: var(--ss-shadow);

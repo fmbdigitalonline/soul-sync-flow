@@ -161,7 +161,7 @@ export const LanguagePreferenceSettings: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-muted/30 rounded-lg p-4 text-sm text-muted-foreground">
+        <div className="bg-muted/30 ss-rs p-4 text-sm text-muted-foreground">
           <p>
             <strong>{t('common.note')}:</strong> {t('settings.languageChangeNote')}
           </p>

@@ -64,7 +64,7 @@ export const HermeticInsightTester: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Report Status */}
-        <div className="p-4 border rounded-lg">
+        <div className="p-4 border ss-rs">
           <h3 className="font-medium mb-2">Report Status</h3>
           {reportLoading ? (
             <p>Checking hermetic report status...</p>
@@ -91,7 +91,7 @@ export const HermeticInsightTester: React.FC = () => {
 
         {/* Error Display */}
         {error && (
-          <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+          <div className="p-4 border border-red-200 ss-rs bg-red-50">
             <h4 className="font-medium text-red-800 mb-2">Test Error</h4>
             <p className="text-sm text-red-600">{error}</p>
           </div>
@@ -102,7 +102,7 @@ export const HermeticInsightTester: React.FC = () => {
           <div className="space-y-4">
             <h3 className="font-medium">Test Results ({insights.length} insights found)</h3>
             {insights.map((insight, index) => (
-              <div key={insight.id} className="p-4 border rounded-lg space-y-2">
+              <div key={insight.id} className="p-4 border ss-rs space-y-2">
                 <div className="flex justify-between items-start">
                   <h4 className="font-medium">Insight #{index + 1}</h4>
                   <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
@@ -126,7 +126,7 @@ export const HermeticInsightTester: React.FC = () => {
         )}
 
         {insights.length === 0 && !testing && !error && (
-          <div className="p-4 border border-yellow-200 rounded-lg bg-yellow-50">
+          <div className="p-4 border border-yellow-200 ss-rs bg-yellow-50">
             <p className="text-sm text-yellow-800">
               No insights extracted yet. Click the test button to try extracting insights from your hermetic report.
             </p>

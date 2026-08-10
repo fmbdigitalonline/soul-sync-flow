@@ -34,7 +34,7 @@ export const GuidedTourPanel: React.FC<GuidedTourPanelProps> = ({
       currentStep?.highlight === 'celebration' 
         ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200' 
         : 'bg-soul-purple/10 border-soul-purple/20'
-    } backdrop-blur-sm rounded-2xl border overflow-hidden ${spacing.card}`}>
+    } backdrop-blur-sm ss-r border overflow-hidden ${spacing.card}`}>
       <div className="w-full max-w-full">
         <div className={`flex w-full max-w-full ${isFoldDevice ? 'flex-col items-center text-center space-y-3' : 'items-start gap-3'}`}>
           <div className={`bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${getTextSize('text-sm')} ${isFoldDevice ? 'w-6 h-6' : 'w-10 h-10'}`}>
@@ -57,14 +57,14 @@ export const GuidedTourPanel: React.FC<GuidedTourPanelProps> = ({
                 variant="ghost"
                 onClick={onSkipTour}
                 size="sm"
-                className={`text-gray-500 hover:text-gray-700 rounded-xl flex-shrink-0 ${getTextSize('text-xs')} ${touchTargetSize} ${isFoldDevice || isUltraNarrow ? 'w-full' : ''}`}
+                className={`text-gray-500 hover:text-gray-700 ss-rs flex-shrink-0 ${getTextSize('text-xs')} ${touchTargetSize} ${isFoldDevice || isUltraNarrow ? 'w-full' : ''}`}
               >
                 {t('guidedTour.skipTour')}
               </Button>
               <Button 
                 onClick={onNextStep}
                 size="sm"
-                className={`bg-soul-purple hover:bg-soul-purple/90 text-white rounded-xl flex-shrink-0 ${getTextSize('text-xs')} ${touchTargetSize} ${isFoldDevice || isUltraNarrow ? 'w-full' : ''}`}
+                className={`bg-soul-purple hover:bg-soul-purple/90 text-white ss-rs flex-shrink-0 ${getTextSize('text-xs')} ${touchTargetSize} ${isFoldDevice || isUltraNarrow ? 'w-full' : ''}`}
               >
                 <span>{tourStep < totalSteps - 1 ? t('guidedTour.next') : t('guidedTour.gotIt')}</span>
                 <ArrowRight className={`ml-1 ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />

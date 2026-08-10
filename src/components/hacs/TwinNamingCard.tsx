@@ -74,7 +74,7 @@ export const TwinNamingCard: React.FC<TwinNamingCardProps> = ({ onNamed, onLater
     <div
       className={cn(
         'animate-in fade-in-0 slide-in-from-bottom-2 duration-300',
-        'rounded-xl border border-soul-purple/25 bg-soul-purple/5 p-3 space-y-3',
+        'ss-rs border border-soul-purple/25 bg-soul-purple/5 p-3 space-y-3',
       )}
     >
       <p className="text-sm text-foreground leading-relaxed">{t.lead}</p>
@@ -92,7 +92,7 @@ export const TwinNamingCard: React.FC<TwinNamingCardProps> = ({ onNamed, onLater
                   type="button"
                   disabled={saving}
                   onClick={() => choose(s.name, 'blueprint', s.reason)}
-                  className="w-full text-left rounded-lg px-3 py-2 border border-border/50 hover:bg-soul-purple/10 hover:border-soul-purple/30 transition-colors disabled:opacity-50"
+                  className="w-full text-left ss-rs px-3 py-2 border border-border/50 hover:bg-soul-purple/10 hover:border-soul-purple/30 transition-colors disabled:opacity-50"
                 >
                   <span className="text-sm font-semibold text-foreground">{s.name}</span>
                   {s.reason && (
@@ -114,13 +114,13 @@ export const TwinNamingCard: React.FC<TwinNamingCardProps> = ({ onNamed, onLater
                 }}
                 placeholder={t.ownPlaceholder}
                 maxLength={24}
-                className="flex-1 text-sm rounded-lg px-3 py-2 bg-background border border-border/60 focus:border-soul-purple/40 outline-none"
+                className="flex-1 text-sm ss-rs px-3 py-2 bg-background border border-border/60 focus:border-soul-purple/40 outline-none"
               />
               <button
                 type="button"
                 disabled={saving || !ownValue.trim()}
                 onClick={() => choose(ownValue, 'user')}
-                className="text-xs rounded-lg px-3 py-2 border border-soul-purple/40 bg-soul-purple/10 text-foreground disabled:opacity-40"
+                className="text-xs ss-rs px-3 py-2 border border-soul-purple/40 bg-soul-purple/10 text-foreground disabled:opacity-40"
               >
                 {t.confirm}
               </button>

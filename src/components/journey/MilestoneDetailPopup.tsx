@@ -68,12 +68,12 @@ export const MilestoneDetailPopup: React.FC<MilestoneDetailPopupProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-md mx-auto h-[90vh] max-h-[90vh] overflow-y-auto p-0 rounded-t-3xl rounded-b-none sm:rounded-2xl">
+      <DialogContent className="w-full max-w-md mx-auto h-[90vh] max-h-[90vh] overflow-y-auto p-0 rounded-t-3xl rounded-b-none sm:ss-r">
         {/* Header */}
         <DialogHeader className="p-4 pb-0 sticky top-0 bg-white z-10">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${getPhaseColor(milestone.phase)}`}>
+              <div className={`w-10 h-10 ss-rs flex items-center justify-center bg-gradient-to-br ${getPhaseColor(milestone.phase)}`}>
                 <span className="text-lg">{getPhaseIcon(milestone.phase)}</span>
               </div>
               <div className="flex-1 min-w-0">
@@ -108,7 +108,7 @@ export const MilestoneDetailPopup: React.FC<MilestoneDetailPopupProps> = ({
 
           {/* Timeline & Progress */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gray-50 p-3 rounded-xl">
+            <div className="bg-gray-50 p-3 ss-rs">
               <div className="flex items-center gap-2 mb-1">
                 <Calendar className="h-4 w-4 text-gray-500" />
                 <span className="text-xs font-medium text-gray-500">Target Date</span>
@@ -117,7 +117,7 @@ export const MilestoneDetailPopup: React.FC<MilestoneDetailPopupProps> = ({
                 {formatDate(milestone.target_date)}
               </p>
             </div>
-            <div className="bg-gray-50 p-3 rounded-xl">
+            <div className="bg-gray-50 p-3 ss-rs">
               <div className="flex items-center gap-2 mb-1">
                 <Target className="h-4 w-4 text-gray-500" />
                 <span className="text-xs font-medium text-gray-500">Progress</span>
@@ -145,7 +145,7 @@ export const MilestoneDetailPopup: React.FC<MilestoneDetailPopupProps> = ({
               <h4 className="font-semibold text-sm mb-3 text-gray-700">Success Criteria</h4>
               <div className="space-y-2">
                 {milestone.completion_criteria.map((criteria: string, index: number) => (
-                  <div key={index} className="flex items-start gap-2 p-2 bg-green-50 rounded-lg">
+                  <div key={index} className="flex items-start gap-2 p-2 bg-green-50 ss-rs">
                     <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                     <span className="text-sm text-green-800">{criteria}</span>
                   </div>
@@ -165,7 +165,7 @@ export const MilestoneDetailPopup: React.FC<MilestoneDetailPopupProps> = ({
                 {milestoneTasks.map((task: any) => (
                   <div
                     key={task.id}
-                    className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:border-gray-200 cursor-pointer transition-colors"
+                    className="flex items-center gap-3 p-3 bg-white border border-gray-100 ss-rs hover:border-gray-200 cursor-pointer transition-colors"
                     onClick={() => onTaskClick?.(task)}
                   >
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -202,7 +202,7 @@ export const MilestoneDetailPopup: React.FC<MilestoneDetailPopupProps> = ({
             <div className="pt-4">
               <Button
                 onClick={() => onMilestoneAction?.(milestone)}
-                className="w-full bg-gradient-to-r from-soul-purple to-soul-teal text-white py-3 rounded-xl font-semibold"
+                className="w-full bg-gradient-to-r from-soul-purple to-soul-teal text-white py-3 ss-rs font-semibold"
               >
                 <Focus className="h-4 w-4 mr-2" />
                 Focus on This Milestone

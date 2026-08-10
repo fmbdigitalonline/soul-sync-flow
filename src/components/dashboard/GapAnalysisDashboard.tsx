@@ -111,7 +111,7 @@ export function GapAnalysisDashboard({
                 </Badge>
               </div>
               
-              <div className="bg-muted/50 p-4 rounded-lg">
+              <div className="bg-muted/50 p-4 ss-rs">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-2xl">
                     {DOMAIN_ICONS[primaryGap.domain as keyof typeof DOMAIN_ICONS]}
@@ -189,7 +189,7 @@ export function GapAnalysisDashboard({
             {topGaps.map((gap, index) => (
               <div 
                 key={gap.domain}
-                className="flex items-center gap-4 p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                className="flex items-center gap-4 p-3 ss-rs border hover:bg-muted/50 transition-colors cursor-pointer"
                 onClick={() => onFocusDomain?.(gap.domain)}
               >
                 {/* Priority Indicator */}
@@ -259,7 +259,7 @@ export function GapAnalysisDashboard({
         <CardContent>
           <div className="space-y-3">
             {primaryGap.interdependency_boost > 2 && (
-              <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+              <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 ss-rs">
                 <TrendingUp className="w-4 h-4 text-blue-500 mt-0.5" />
                 <div className="text-sm">
                   <strong>Synergy Opportunity:</strong> Improving {DOMAIN_LABELS[primaryGap.domain as keyof typeof DOMAIN_LABELS]} 
@@ -269,7 +269,7 @@ export function GapAnalysisDashboard({
             )}
             
             {primaryGap.blueprint_alignment > 7 && (
-              <div className="flex items-start gap-2 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
+              <div className="flex items-start gap-2 p-3 bg-green-50 dark:bg-green-950/20 ss-rs">
                 <Target className="w-4 h-4 text-green-500 mt-0.5" />
                 <div className="text-sm">
                   <strong>Natural Fit:</strong> This focus area aligns well with your personality blueprint 
@@ -279,7 +279,7 @@ export function GapAnalysisDashboard({
             )}
 
             {gaps.filter(g => g.gap_size > 5).length > 3 && (
-              <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg">
+              <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 ss-rs">
                 <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5" />
                 <div className="text-sm">
                   <strong>Pacing Recommendation:</strong> You have several large gaps. 

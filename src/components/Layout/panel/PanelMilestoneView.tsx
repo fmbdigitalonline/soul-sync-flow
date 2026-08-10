@@ -101,7 +101,7 @@ export const PanelMilestoneView: React.FC<PanelMilestoneViewProps> = ({
             {visibleTraits.map((t, i) => (
               <li
                 key={`${t}-${i}`}
-                className="text-xs text-foreground pl-5 pr-2 py-1 rounded-md bg-muted/30"
+                className="text-xs text-foreground pl-5 pr-2 py-1 ss-rs bg-muted/30"
               >
                 {t}
               </li>
@@ -138,7 +138,7 @@ export const PanelMilestoneView: React.FC<PanelMilestoneViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onOpenTask(t)}
-                  className="w-full text-left pl-5 pr-2 py-1.5 rounded-md hover:bg-muted/40 transition-colors"
+                  className="w-full text-left pl-5 pr-2 py-1.5 ss-rs hover:bg-muted/40 transition-colors"
                 >
                   <p
                     className={
@@ -185,7 +185,7 @@ export const PanelMilestoneView: React.FC<PanelMilestoneViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onSelectMilestone(m.id)}
-                  className="w-full text-left pl-5 pr-2 py-1.5 rounded-md hover:bg-muted/40 transition-colors"
+                  className="w-full text-left pl-5 pr-2 py-1.5 ss-rs hover:bg-muted/40 transition-colors"
                 >
                   <p className="text-xs text-foreground truncate">{m.title}</p>
                 </button>

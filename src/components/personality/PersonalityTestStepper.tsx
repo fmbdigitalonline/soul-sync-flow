@@ -76,7 +76,7 @@ export const PersonalityTestStepper: React.FC<PersonalityTestStepperProps> = ({
         </div>
 
         {/* Current Step */}
-        <div className="bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 rounded-lg p-6">
+        <div className="bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 ss-rs p-6">
           <h3 className="text-lg font-semibold mb-2">{steps[currentStep].title}</h3>
           <p className="text-muted-foreground mb-4">{steps[currentStep].description}</p>
           

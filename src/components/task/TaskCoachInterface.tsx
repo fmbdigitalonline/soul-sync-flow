@@ -1085,7 +1085,7 @@ Give me 3-5 specific actions I need to take to complete this sub-task. Use the f
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyPress}
                     placeholder="Ask about your task, request actions, or get guidance..."
-                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="flex-1 px-4 py-2 border border-gray-200 ss-rs focus:outline-none focus:ring-2 focus:ring-green-500"
                     disabled={isLoading}
                   />
                   <Button

@@ -15,7 +15,7 @@ export const CardShell: React.FC<{
   const [open, setOpen] = useState(false);
   if (fossil) {
     return (
-      <div className="mt-2 text-xs text-muted-foreground border border-muted rounded-xl px-3 py-1.5 opacity-70">
+      <div className="mt-2 text-xs text-muted-foreground border border-muted ss-rs px-3 py-1.5 opacity-70">
         {summary}
       </div>
     );
@@ -25,7 +25,7 @@ export const CardShell: React.FC<{
     if (children) setOpen((v) => !v);
   };
   return (
-    <div className="mt-2 rounded-2xl border border-soul-purple/25 bg-soul-purple/5 overflow-hidden">
+    <div className="mt-2 ss-r border border-soul-purple/25 bg-soul-purple/5 overflow-hidden">
       <button
         type="button"
         onClick={handleClick}

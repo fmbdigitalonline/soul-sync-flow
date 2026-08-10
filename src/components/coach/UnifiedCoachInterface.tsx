@@ -184,7 +184,7 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
     <div className="flex flex-col h-full max-w-4xl mx-auto space-y-4">
       
       {/* Unified Brain Status Bar with PIE Integration */}
-      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border">
+      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-blue-50 ss-rs border">
         <div className="flex items-center space-x-3">
           <Brain className="w-5 h-5 text-purple-600" />
           <span className="text-sm font-medium">Unified Brain/Soul Architecture</span>
@@ -215,7 +215,7 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
       </div>
 
       {/* Agent Mode Selector */}
-      <div className="flex items-center justify-center space-x-2 p-2 bg-gray-50 rounded-lg">
+      <div className="flex items-center justify-center space-x-2 p-2 bg-gray-50 ss-rs">
         {(['coach', 'guide', 'blend'] as AgentMode[]).map((mode) => (
           <Button
             key={mode}
@@ -233,7 +233,7 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
 
       {/* PIE Insights Display */}
       {pieCoach.pieInsights.length > 0 && (
-        <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+        <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 ss-rs border border-purple-200">
           <div className="flex items-center space-x-2 mb-2">
             <Sparkles className="w-4 h-4 text-purple-600" />
             <span className="text-sm font-medium text-purple-800">Active Insights</span>
@@ -259,7 +259,7 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
                 className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                  className={`max-w-[70%] ss-rs px-4 py-2 ${
                     message.isUser
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-900'
@@ -300,7 +300,7 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
             
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg px-4 py-2 flex items-center space-x-2">
+                <div className="bg-gray-100 ss-rs px-4 py-2 flex items-center space-x-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span className="text-sm text-gray-600">Brain processing...</span>
                 </div>

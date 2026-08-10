@@ -67,21 +67,21 @@ export const TransformImmediate: React.FC = () => {
             <button
               type="button"
               onClick={() => patchTransformFlow({ stage: 'tool_mood' })}
-              className="text-left text-xs rounded-lg px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
+              className="text-left text-xs ss-rs px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
             >
               Name what I feel
             </button>
             <button
               type="button"
               onClick={() => patchTransformFlow({ stage: 'tool_reflection' })}
-              className="text-left text-xs rounded-lg px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
+              className="text-left text-xs ss-rs px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
             >
               Explore the belief underneath
             </button>
             <button
               type="button"
               onClick={() => patchTransformFlow({ stage: 'tool_insight' })}
-              className="text-left text-xs rounded-lg px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
+              className="text-left text-xs ss-rs px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
             >
               Capture a realization
             </button>

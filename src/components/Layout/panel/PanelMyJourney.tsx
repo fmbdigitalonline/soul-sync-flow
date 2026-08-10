@@ -75,7 +75,7 @@ export const PanelMyJourney: React.FC = () => {
     journey.recentEpisodes.length === 0;
 
   return (
-    <div className="rounded-xl border border-soul-purple/20 bg-soul-purple/[0.03] overflow-hidden">
+    <div className="ss-rs border border-soul-purple/20 bg-soul-purple/[0.03] overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

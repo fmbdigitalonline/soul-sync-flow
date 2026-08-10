@@ -294,7 +294,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
     sessionTypeMap: Map<string, TaskSessionType>;
   }) => (
     <div className={`flex-1 ${isMobile ? 'w-full' : 'min-w-64'}`}>
-      <div className={`flex items-center justify-between mb-3 p-3 rounded-lg ${accentColor}`}>
+      <div className={`flex items-center justify-between mb-3 p-3 ss-rs ${accentColor}`}>
         <div className="flex items-center space-x-2">
           {icon}
           <h3 className="font-medium text-sm">{title}</h3>
@@ -305,7 +305,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
       </div>
       
       <div
-        className={`space-y-2 p-2 border-2 border-dashed border-muted-foreground/20 rounded-lg bg-muted/5 transition-colors hover:border-muted-foreground/40 ${
+        className={`space-y-2 p-2 border-2 border-dashed border-muted-foreground/20 ss-rs bg-muted/5 transition-colors hover:border-muted-foreground/40 ${
           isMobile ? 'min-h-60' : 'min-h-80'
         }`}
         onDragOver={handleDragOver}
@@ -436,7 +436,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
             /* Mobile: Single Column View with Navigation */
             <div className="space-y-4">
               {/* Mobile Column Navigation */}
-              <div className="flex items-center justify-between bg-white rounded-lg p-3 border">
+              <div className="flex items-center justify-between bg-white ss-rs p-3 border">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -552,7 +552,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
               mode="single"
               selected={selectedDate}
               onSelect={(date) => date && setSelectedDate(date)}
-              className="rounded-lg border"
+              className="ss-rs border"
             />
           </div>
           

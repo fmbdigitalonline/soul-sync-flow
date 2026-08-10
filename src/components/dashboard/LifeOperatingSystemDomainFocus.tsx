@@ -89,7 +89,7 @@ export function LifeOperatingSystemDomainFocus({ onBack, onComplete }: LifeOpera
           </Button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-2">
+        <div className="bg-white ss-rs shadow-sm p-2">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold mb-2">Choose Your Focus Areas</h2>
             <p className="text-muted-foreground">
@@ -104,7 +104,7 @@ export function LifeOperatingSystemDomainFocus({ onBack, onComplete }: LifeOpera
 
           {/* Selected Domains Display */}
           {selectedDomains.length > 0 && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <div className="mt-6 p-4 bg-blue-50 ss-rs">
               <h4 className="font-medium mb-2">Selected Focus Areas:</h4>
               <div className="flex flex-wrap gap-2 mb-4">
                 {selectedDomains.map(domain => (

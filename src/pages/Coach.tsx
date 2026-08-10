@@ -235,7 +235,7 @@ const Coach = () => {
               <div className="ss-caption" style={{ color: "var(--ss-muted)" }}>{nl ? "Je AI Twin" : "Your AI Twin"}</div>
             </div>
             {conversationCount > 0 && (
-              <span className="ss-chip ml-auto shrink-0" style={{ padding: "5px 11px" }}>
+              <span className="ss-chip ml-auto shrink-0">
                 {nl ? `${conversationCount} gesprekken` : `${conversationCount} conversations`}
               </span>
             )}

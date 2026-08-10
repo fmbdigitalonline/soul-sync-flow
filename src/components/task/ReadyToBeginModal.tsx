@@ -23,7 +23,7 @@ export const ReadyToBeginModal: React.FC<ReadyToBeginModalProps> = ({
   
   return (
     <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50 animate-fade-in">
-      <div className="bg-white rounded-xl shadow-2xl p-8 max-w-xs w-full border border-slate-200">
+      <div className="bg-white ss-rs shadow-2xl p-8 max-w-xs w-full border border-slate-200">
         <div className="text-xl font-semibold mb-3 text-center">{t('modal.readyToBegin')}</div>
         <div className="text-gray-700 mb-4 text-center">
           {safeInterpolateTranslation(t('modal.sessionDuration'), { duration: estimatedDuration || "~30 mins" })}<br />

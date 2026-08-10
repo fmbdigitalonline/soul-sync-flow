@@ -104,7 +104,7 @@ export const HACSChatOverlay: React.FC<HACSChatOverlayProps> = ({
                     </div>
 
                     {/* Message */}
-                    <div className="bg-muted/50 rounded-2xl p-4">
+                    <div className="bg-muted/50 ss-r p-4">
                       <p className="text-foreground leading-relaxed">
                         {currentMessage.text}
                       </p>

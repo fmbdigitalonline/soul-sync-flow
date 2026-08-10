@@ -219,7 +219,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <button
               className={`${
                 isFoldDevice || isUltraNarrow ? 'w-full' : 'flex-1'
-              } ${isFoldDevice ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${touchTargetSize} flex items-center justify-center gap-1`}
+              } ${isFoldDevice ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} bg-emerald-600 hover:bg-emerald-700 text-white ss-rs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${touchTargetSize} flex items-center justify-center gap-1`}
               disabled={isCompleted || isProcessing || isTaskCompleting(task.id)}
               onClick={handleMarkDone}
             >
@@ -231,7 +231,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 isFoldDevice || isUltraNarrow ? 'w-full' : 'flex-1'
               } ${isFoldDevice ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} ${
                 isWorkInstructionSession ? 'bg-blue-600 hover:bg-blue-700' : 'bg-soul-purple hover:bg-soul-purple/90'
-              } text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${touchTargetSize} flex items-center justify-center gap-1`}
+              } text-white ss-rs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${touchTargetSize} flex items-center justify-center gap-1`}
               onClick={isWorkInstructionSession ? handleResumePlan : handleStartCoach}
               disabled={isCompleted || isProcessing}
             >

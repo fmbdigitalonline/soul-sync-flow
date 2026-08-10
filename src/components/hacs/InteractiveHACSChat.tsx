@@ -198,7 +198,7 @@ export const InteractiveHACSChat: React.FC<InteractiveHACSChatProps> = ({
                       )}
                       
                       <div className={cn(
-                        "max-w-[80%] rounded-2xl px-4 py-3",
+                        "max-w-[80%] ss-r px-4 py-3",
                         message.role === 'user' 
                           ? "bg-primary text-primary-foreground ml-auto" 
                           : "bg-muted/50"
@@ -251,7 +251,7 @@ export const InteractiveHACSChat: React.FC<InteractiveHACSChatProps> = ({
                         showProgressRing={false}
                         pulse={true}
                       />
-                      <div className="bg-muted/50 rounded-2xl px-4 py-3">
+                      <div className="bg-muted/50 ss-r px-4 py-3">
                         <div className="flex space-x-1">
                           <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
                           <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />

@@ -550,7 +550,7 @@ export default function Auth() {
           </Alert>
 
           {fromFunnel && funnelData && !isRecoveryMode && !isResetMode && (
-            <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4">
+            <div className="bg-primary/10 border border-primary/20 ss-rs p-3 mb-4">
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium text-primary">{t('auth.funnelReportReady')}</span>

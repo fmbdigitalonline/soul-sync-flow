@@ -70,7 +70,7 @@ export const GoalAchievement: React.FC<GoalAchievementProps> = ({
   return (
     <div className="space-y-4">
       {/* Header with Stats */}
-      <div className="bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 p-4 rounded-xl border">
+      <div className="bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 p-4 ss-rs border">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-soul-purple" />

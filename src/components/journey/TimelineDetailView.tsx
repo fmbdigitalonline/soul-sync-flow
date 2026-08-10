@@ -60,8 +60,8 @@ export const TimelineDetailView: React.FC<TimelineDetailViewProps> = ({
 
         {/* Timeline Stats */}
         <div className="grid md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white/80 backdrop-blur-lg rounded-xl p-4 shadow-lg border border-white/20 text-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+          <div className="bg-white/80 backdrop-blur-lg ss-rs p-4 shadow-lg border border-white/20 text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 ss-rs flex items-center justify-center mx-auto mb-3">
               <Clock className="h-6 w-6 text-white" />
             </div>
             <h3 className="font-semibold text-gray-800 mb-1">Days Elapsed</h3>
@@ -69,8 +69,8 @@ export const TimelineDetailView: React.FC<TimelineDetailViewProps> = ({
             <p className="text-xs text-gray-500">Since you started</p>
           </div>
           
-          <div className="bg-white/80 backdrop-blur-lg rounded-xl p-4 shadow-lg border border-white/20 text-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+          <div className="bg-white/80 backdrop-blur-lg ss-rs p-4 shadow-lg border border-white/20 text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 ss-rs flex items-center justify-center mx-auto mb-3">
               <Target className="h-6 w-6 text-white" />
             </div>
             <h3 className="font-semibold text-gray-800 mb-1">Days Remaining</h3>
@@ -78,8 +78,8 @@ export const TimelineDetailView: React.FC<TimelineDetailViewProps> = ({
             <p className="text-xs text-gray-500">Until completion</p>
           </div>
           
-          <div className="bg-white/80 backdrop-blur-lg rounded-xl p-4 shadow-lg border border-white/20 text-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-soul-purple to-soul-teal rounded-xl flex items-center justify-center mx-auto mb-3">
+          <div className="bg-white/80 backdrop-blur-lg ss-rs p-4 shadow-lg border border-white/20 text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-soul-purple to-soul-teal ss-rs flex items-center justify-center mx-auto mb-3">
               <Calendar className="h-6 w-6 text-white" />
             </div>
             <h3 className="font-semibold text-gray-800 mb-1">Progress</h3>
@@ -89,7 +89,7 @@ export const TimelineDetailView: React.FC<TimelineDetailViewProps> = ({
         </div>
 
         {/* Visual Timeline */}
-        <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-white/20">
+        <div className="bg-white/80 backdrop-blur-lg ss-r p-6 shadow-lg border border-white/20">
           <h2 className="text-lg font-semibold mb-6 flex items-center">
             <Calendar className="h-5 w-5 mr-2 text-soul-blue" />
             Your Journey Timeline
@@ -123,7 +123,7 @@ export const TimelineDetailView: React.FC<TimelineDetailViewProps> = ({
               const isCompleted = milestone.completed;
               
               return (
-                <div key={milestone.id} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                <div key={milestone.id} className="flex items-center space-x-4 p-3 ss-rs hover:bg-gray-50 transition-colors">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                     isCompleted ? 'bg-soul-purple text-white' : 
                     isPast ? 'bg-yellow-500 text-white' : 

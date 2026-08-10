@@ -105,7 +105,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
           if (message.sender === "user") {
             return (
               <div key={message.id} className={cn("flex justify-end", isMobile ? "px-2" : "px-4")}>
-                <div className={cn("max-w-[80%] rounded-2xl bg-green-600 text-white", isMobile ? "px-3 py-2" : "px-4 py-3")}>
+                <div className={cn("max-w-[80%] ss-r bg-green-600 text-white", isMobile ? "px-3 py-2" : "px-4 py-3")}>
                   <div className="flex items-center gap-2 mb-1">
                     <ArrowRight className="h-3 w-3" />
                     <span className="text-xs font-medium">{userName}</span>
@@ -129,7 +129,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                     showProgressRing={true}
                   />
                 </div>
-                <div className={cn("max-w-[85%] rounded-2xl border bg-slate-50", isMobile ? "p-3" : "p-4")}>
+                <div className={cn("max-w-[85%] ss-r border bg-slate-50", isMobile ? "p-3" : "p-4")}>
                   <div className="flex items-center gap-2 mb-2">
                     <span className={cn("font-medium text-slate-700", isMobile ? "text-xs" : "text-sm")}>
                       AI Companion
@@ -162,7 +162,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                 showProgressRing={true}
               />
             </div>
-            <div className={cn("border border-green-200/20 max-w-[80%] rounded-2xl bg-slate-50", isMobile ? "p-3" : "p-4")}>
+            <div className={cn("border border-green-200/20 max-w-[80%] ss-r bg-slate-50", isMobile ? "p-3" : "p-4")}>
               <div className="flex items-center space-x-2">
                 <p className={cn("font-medium", isMobile ? "text-xs" : "text-sm")}>
                   AI Companion

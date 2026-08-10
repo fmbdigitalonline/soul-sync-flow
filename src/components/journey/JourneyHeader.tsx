@@ -20,7 +20,7 @@ export const JourneyHeader: React.FC<JourneyHeaderProps> = ({
   setSelectedView
 }) => {
   return (
-    <div className="p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-3xl border border-border">
+    <div className="p-4 bg-gradient-to-r from-primary/10 to-secondary/10 ss-r border border-border">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <h2 className="text-xl font-bold mb-2 flex items-center">

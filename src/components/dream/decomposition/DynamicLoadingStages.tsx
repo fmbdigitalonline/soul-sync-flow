@@ -122,7 +122,7 @@ export const DynamicLoadingStages: React.FC<DynamicLoadingStagesProps> = ({
 
       {/* Long Processing Warning */}
       {isLongProcessing && (
-        <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl animate-fade-in">
+        <div className="mt-4 p-3 bg-amber-50 border border-amber-200 ss-rs animate-fade-in">
           <div className="flex items-center gap-3">
             <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
             <div className="text-sm">
@@ -137,7 +137,7 @@ export const DynamicLoadingStages: React.FC<DynamicLoadingStagesProps> = ({
 
       {/* Reassurance Message for Long Waits */}
       {hasBeenLoadingLong && (
-        <div className="mt-6 p-4 bg-soul-purple/5 rounded-xl border border-soul-purple/10 animate-fade-in">
+        <div className="mt-6 p-4 bg-soul-purple/5 ss-rs border border-soul-purple/10 animate-fade-in">
           <div className="flex items-center gap-3">
             <Heart className="h-5 w-5 text-soul-purple animate-pulse" />
             <p className="text-sm text-soul-purple font-medium italic">
@@ -156,7 +156,7 @@ export const DynamicLoadingStages: React.FC<DynamicLoadingStagesProps> = ({
 
       {/* Technical Details for Long Processing (Debug) */}
       {isLongProcessing && processingDuration > 120 && (
-        <div className="mt-4 p-2 bg-gray-50 rounded-lg">
+        <div className="mt-4 p-2 bg-gray-50 ss-rs">
           <details className="text-xs text-gray-600">
             <summary className="cursor-pointer hover:text-gray-800">{t('decomposition.processingDetails')}</summary>
             <div className="mt-2 space-y-1">

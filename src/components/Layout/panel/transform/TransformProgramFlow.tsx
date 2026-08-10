@@ -88,7 +88,7 @@ export const TransformProgramFlow: React.FC = () => {
   return (
     <div className="space-y-3">
       {phase === 'interpret' && topGuess && (
-        <div className="space-y-2 rounded-lg border border-emerald-500/20 bg-background/50 p-2.5">
+        <div className="space-y-2 ss-rs border border-emerald-500/20 bg-background/50 p-2.5">
           <p className="text-[11px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400 font-semibold">
             Here's what I think you want to transform
           </p>
@@ -128,7 +128,7 @@ export const TransformProgramFlow: React.FC = () => {
                 key={d}
                 type="button"
                 onClick={() => runCreate(d)}
-                className="text-xs rounded-lg px-2.5 py-1.5 border border-emerald-500/30 bg-background/60 hover:bg-emerald-500/10 transition-colors"
+                className="text-xs ss-rs px-2.5 py-1.5 border border-emerald-500/30 bg-background/60 hover:bg-emerald-500/10 transition-colors"
               >
                 {DOMAIN_LABELS[d]}
               </button>
@@ -137,7 +137,7 @@ export const TransformProgramFlow: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowAllDomains(true)}
-                className="text-xs rounded-lg px-2.5 py-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                className="text-xs ss-rs px-2.5 py-1.5 text-muted-foreground hover:text-foreground transition-colors"
               >
                 More…
               </button>
@@ -164,7 +164,7 @@ export const TransformProgramFlow: React.FC = () => {
             {visibleWeeks.map((w) => (
               <li
                 key={w.week_number}
-                className="flex items-start gap-2 text-xs rounded-md bg-background/50 px-2 py-1.5"
+                className="flex items-start gap-2 text-xs ss-rs bg-background/50 px-2 py-1.5"
               >
                 <span className="font-semibold text-emerald-700 dark:text-emerald-400 shrink-0">
                   W{w.week_number}

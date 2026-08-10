@@ -109,7 +109,7 @@ export const PanelEpisodeHistory: React.FC = () => {
         {lang === 'nl' ? 'Gesprekken' : 'Conversations'}
       </p>
       {episodes.map((ep) => (
-        <div key={ep.sessionId} className="rounded-lg border border-border/40 overflow-hidden">
+        <div key={ep.sessionId} className="ss-rs border border-border/40 overflow-hidden">
           <button
             type="button"
             onClick={() => toggle(ep.sessionId)}

@@ -116,7 +116,7 @@ const ChooserButton: React.FC<{ title: string; hint: string; onClick: () => void
   <button
     type="button"
     onClick={onClick}
-    className="text-left rounded-lg px-3 py-2 border border-emerald-500/30 bg-background/60 hover:bg-emerald-500/10 transition-colors"
+    className="text-left ss-rs px-3 py-2 border border-emerald-500/30 bg-background/60 hover:bg-emerald-500/10 transition-colors"
   >
     <div className="text-xs font-semibold text-foreground">{title}</div>
     <div className="text-[11px] text-muted-foreground leading-snug mt-0.5">{hint}</div>

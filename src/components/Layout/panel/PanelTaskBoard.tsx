@@ -74,7 +74,7 @@ export const PanelTaskBoard: React.FC<PanelTaskBoardProps> = ({ onOpenTask }) =>
                   <button
                     type="button"
                     onClick={() => onOpenTask(task)}
-                    className="min-w-0 flex-1 text-left rounded-md px-2 py-1.5 hover:bg-muted/40 transition-colors"
+                    className="min-w-0 flex-1 text-left ss-rs px-2 py-1.5 hover:bg-muted/40 transition-colors"
                   >
                     <p
                       className={cn(
