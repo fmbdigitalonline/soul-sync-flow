@@ -29,6 +29,7 @@ import {
 import { ProactiveMoment } from "./ProactiveMoment";
 import { twinReunionService, type TwinReunion } from "@/services/twin-reunion-service";
 import { TwinReunionGreeting } from "./TwinReunionGreeting";
+import { BlueprintGrowingNote } from "./BlueprintGrowingNote";
 import { TwinNamingCard } from "./TwinNamingCard";
 import { useTwinName } from "@/hooks/use-twin-name";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -396,22 +397,58 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     }
   };
 
-  // Naming ceremony gate (v3.3): only after the Twin's first message, only
-  // while it is still unnamed, only early in the relationship. The proactive
-  // moment requires >=6 messages, so the two never overlap.
   const userMsgCount = messages.filter((m: any) => m.role === "user" || m.isUser).length;
   const lastMsg = messages[messages.length - 1];
   const lastIsCompletedAssistant =
     !!lastMsg &&
     !((lastMsg as any).role === "user" || (lastMsg as any).isUser) &&
     !(lastMsg as any).isStreaming;
-  const showNaming =
-    !twinName &&
-    !twinNameLoading &&
-    !namingLater &&
-    lastIsCompletedAssistant &&
-    userMsgCount <= 1 &&
-    !isLoading;
+
+  // ── First contact, in four beats ──────────────────────────────────────────
+  //
+  // These used to fire into the same moment: the reunion greeting rendered on
+  // an empty conversation, the blueprint insight arrived on a timer, and the
+  // naming card appeared the instant that insight landed — because its gate
+  // said userMsgCount <= 1, and zero satisfies that. A new user was greeted,
+  // analysed and asked to name their Twin simultaneously, before they had said
+  // anything.
+  //
+  //   1. the blueprint insight   — something true, so there is something to
+  //                                recognise before anything is asked
+  //   2. the naming              — now that it has earned a name
+  //   3. the growing blueprint   — the ring explained, once, ever
+  //   4. the greeting            — hello, and what we can do here
+  //
+  // Each beat waits for the one before. Returning users skip all of it: the
+  // sequence is finished the moment step 4 is acknowledged, and that is
+  // remembered per user.
+  const seqKey = user?.id ? `ss_first_contact_${user.id}` : null;
+  const [seqDone, setSeqDone] = useState<boolean>(() =>
+    seqKey ? localStorage.getItem(seqKey) === 'done' : true);
+  const [ringNoted, setRingNoted] = useState(false);
+
+  // Anyone who has already talked is not in first contact, whatever the flag
+  // says. This also covers users who existed before the sequence did.
+  // The sequence ends when the reader speaks — not on a timer and not when the
+  // greeting finishes animating, which would unmount the greeting the instant
+  // it appeared. Beat 4 stays on screen until it is answered, which is the
+  // whole point of it being an invitation.
+  useEffect(() => {
+    if (!seqKey || seqDone) return;
+    if (userMsgCount > 0) {
+      localStorage.setItem(seqKey, 'done');
+      setSeqDone(true);
+    }
+  }, [seqKey, seqDone, userMsgCount]);
+
+
+
+  const inFirstContact = !seqDone && userMsgCount === 0 && lastIsCompletedAssistant && !isLoading;
+  const namingResolved = !!twinName || namingLater;
+
+  const showNaming = inFirstContact && !twinName && !twinNameLoading && !namingLater;
+  const showGrowingNote = inFirstContact && namingResolved && !ringNoted;
+  const showFirstContactGreeting = inFirstContact && namingResolved && ringNoted;
 
   const handleNamed = (name: string) => {
     // The Twin acknowledges in its own voice, as a real chat message.
@@ -439,8 +476,10 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
           "px-3 py-2 space-y-3",
           isMobile ? "pb-32" : "pb-24"
         )}>
-          {/* The Twin speaks first (v3.1): reunion replaces the empty state. */}
-          {messages.length === 0 &&
+          {/* The Twin speaks first (v3.1): reunion replaces the empty state —
+              for a RETURNING reader. On first contact it is beat 4, below,
+              after the insight, the naming and the ring. */}
+          {messages.length === 0 && seqDone &&
             (reunion ? (
               <TwinReunionGreeting reunion={reunion} />
             ) : (
@@ -613,8 +652,37 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             </span>
           )}
 
+          {/* Beat 2 — the naming. The "still weaving" line is no longer folded
+              in here: it is beat 3, because naming and the blueprint's growth
+              are two different things to take in and stacking them was part of
+              what made first contact feel like four things at once. */}
           {showNaming && (
-            <TwinNamingCard onNamed={handleNamed} onLater={() => setNamingLater(true)} growing={hermeticGenerating} />
+            <TwinNamingCard onNamed={handleNamed} onLater={() => setNamingLater(true)} />
+          )}
+
+          {/* Beat 3 — the ring, explained once and never again. */}
+          {showGrowingNote && (
+            <BlueprintGrowingNote onAcknowledge={() => setRingNoted(true)} />
+          )}
+
+          {/* Beat 4 — hello, and what we can do here. The same reunion a
+              returning reader gets, arriving last rather than first. */}
+          {showFirstContactGreeting && (
+            <div>
+              {reunion ? (
+                <TwinReunionGreeting reunion={reunion} />
+              ) : (
+                <div className="w-full py-2 text-left animate-in fade-in-0 duration-500">
+                  <p className="text-sm text-foreground font-medium">
+                    {twinName ? `${twinName} is here.` : 'I am here.'}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Ask me anything — about a decision, a pattern you keep hitting,
+                    or what your blueprint means for something you are facing.
+                  </p>
+                </div>
+              )}
+            </div>
           )}
 
           {proactiveMoment && (
