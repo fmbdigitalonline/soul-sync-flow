@@ -30,6 +30,7 @@ import { ProactiveMoment } from "./ProactiveMoment";
 import { twinReunionService, type TwinReunion } from "@/services/twin-reunion-service";
 import { TwinReunionGreeting } from "./TwinReunionGreeting";
 import { BlueprintGrowingNote } from "./BlueprintGrowingNote";
+import { InsightResonanceCard, RESONANCE_REPLY, type Resonance } from "./InsightResonanceCard";
 import { TwinNamingCard } from "./TwinNamingCard";
 import { useTwinName } from "@/hooks/use-twin-name";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -415,9 +416,15 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   //
   //   1. the blueprint insight   — something true, so there is something to
   //                                recognise before anything is asked
-  //   2. the naming              — now that it has earned a name
-  //   3. the growing blueprint   — the ring explained, once, ever
-  //   4. the greeting            — hello, and what we can do here
+  //   2. does it land?           — three answers, none of them a failure state.
+  //                                The reader judges the Twin before the Twin
+  //                                asks anything of them.
+  //   3. the naming              — now that it has said something that was
+  //                                weighed and answered
+  //   4. the greeting            — spoken, not a card, so it reads as the Twin
+  //                                talking rather than a fourth thing to dismiss
+  //   5. the growing blueprint   — the ring explained, once, ever
+  //   then: ordinary conversation
   //
   // Each beat waits for the one before. Returning users skip all of it: the
   // sequence is finished the moment step 4 is acknowledged, and that is
@@ -435,15 +442,54 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   // true the moment you reply. Beats 3 and 4 additionally require that beat 2
   // happened in THIS session, so a returning reader who never answered does not
   // meet the ring again.
+  const [resonance, setResonance] = useState<Resonance | null>(null);
   const [ringNoted, setRingNoted] = useState(false);
   const [namedHere, setNamedHere] = useState(false);
 
   const inFirstContact =
     userMsgCount === 0 && messages.length > 0 && lastIsCompletedAssistant && !isLoading;
 
-  const showNaming = inFirstContact && !namedHere && !twinName && !twinNameLoading;
+  const showResonance = inFirstContact && !resonance;
+  const showNaming = inFirstContact && !!resonance && !namedHere && !twinName && !twinNameLoading;
   const showGrowingNote = inFirstContact && namedHere && !ringNoted;
-  const showFirstContactGreeting = inFirstContact && namedHere && ringNoted;
+
+  /** The Twin answers the reader's verdict in its own voice, then asks for a name. */
+  const handleResonance = (choice: Resonance) => {
+    setResonance(choice);
+    onAddOptimisticMessage?.({
+      id: `twin_resonance_${Date.now()}`,
+      role: "hacs",
+      content: RESONANCE_REPLY[choice][language === "nl" ? "nl" : "en"],
+      timestamp: new Date().toISOString(),
+      isStreaming: false,
+    } as ConversationMessage);
+    // "Not me" is real feedback on that message, and the existing channel takes
+    // it. "Partly" is deliberately not forced into a binary it does not fit.
+    const last = messages[messages.length - 1] as any;
+    if (last?.id && choice !== 'partly') onFeedback(last.id, choice === 'yes');
+  };
+
+  /** Beat 4 is speech, not a card — so it reads as the Twin greeting you. */
+  const handleNamedAndGreet = (name: string) => {
+    setNamedHere(true);
+    handleNamed(name);
+    greetAfterNaming(name);
+  };
+
+  const greetAfterNaming = (name?: string) => {
+    const who = name || twinName;
+    const nl = language === "nl";
+    const greeting = nl
+      ? `${who ? `Ik ben ${who}. ` : ''}Vanaf hier praten we gewoon. Vraag me wat je bezighoudt — een keuze, een patroon dat blijft terugkomen, of waar je nu tegenaan loopt.`
+      : `${who ? `I'm ${who}. ` : ''}From here we just talk. Ask me what's on your mind — a decision, a pattern that keeps returning, or whatever you're up against right now.`;
+    onAddOptimisticMessage?.({
+      id: `twin_first_greeting_${Date.now()}`,
+      role: "hacs",
+      content: greeting,
+      timestamp: new Date().toISOString(),
+      isStreaming: false,
+    } as ConversationMessage);
+  };
 
   const handleNamed = (name: string) => {
     // The Twin acknowledges in its own voice, as a real chat message.
@@ -647,40 +693,28 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             </span>
           )}
 
-          {/* Beat 2 — the naming. The "still weaving" line is no longer folded
-              in here: it is beat 3, because naming and the blueprint's growth
-              are two different things to take in and stacking them was part of
-              what made first contact feel like four things at once. */}
+          {/* Beat 2 — does it land? The reader answers before anything is
+              asked of them, so the first interaction is recognition rather
+              than compliance. "Not me" is the most useful of the three. */}
+          {showResonance && (
+            <InsightResonanceCard onChoose={handleResonance} />
+          )}
+
+          {/* Beat 3 — the naming, now that the Twin has said something the
+              reader has judged. */}
           {showNaming && (
             <TwinNamingCard
-              onNamed={(name) => { setNamedHere(true); handleNamed(name); }}
-              onLater={() => { setNamedHere(true); setNamingLater(true); }}
+              onNamed={handleNamedAndGreet}
+              onLater={() => { setNamedHere(true); greetAfterNaming(); }}
             />
           )}
 
-          {/* Beat 3 — the ring, explained once and never again. */}
+          {/* Beat 5 — the ring, explained once and never again. Beat 4, the
+              greeting, is not here: it is spoken as a message when the naming
+              resolves, so it reads as the Twin talking rather than a fourth
+              card in a stack. */}
           {showGrowingNote && (
             <BlueprintGrowingNote onAcknowledge={() => setRingNoted(true)} />
-          )}
-
-          {/* Beat 4 — hello, and what we can do here. The same reunion a
-              returning reader gets, arriving last rather than first. */}
-          {showFirstContactGreeting && (
-            <div>
-              {reunion ? (
-                <TwinReunionGreeting reunion={reunion} />
-              ) : (
-                <div className="w-full py-2 text-left animate-in fade-in-0 duration-500">
-                  <p className="text-sm text-foreground font-medium">
-                    {twinName ? `${twinName} is here.` : 'I am here.'}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Ask me anything — about a decision, a pattern you keep hitting,
-                    or what your blueprint means for something you are facing.
-                  </p>
-                </div>
-              )}
-            </div>
           )}
 
           {proactiveMoment && (

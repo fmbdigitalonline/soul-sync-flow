@@ -30,13 +30,14 @@ Each step is observably true or it is not. No step is "mostly working".
 | # | State | Last checked |
 |---|---|---|
 | 1 | ✅ passes | 2026-08-10 |
-| 2 | ❓ unverified — MBTI collection was only restored recently | — |
-| 3 | ❌ failed — no job ran for the last new registration | 2026-08-10 |
-| 4 | ❓ unverified — no 3.0 report has been confirmed to exist | — |
+| 2 | ✅ passes — the insight names real facets, so the blueprint assembled | 2026-08-10 |
+| 3 | ✅ **passes** — the ring is filling on a new registration, which only happens when a job row exists and is progressing | 2026-08-10 |
+| 4 | ❓ unverified — a job started; no 3.0 report confirmed to exist yet | — |
 | 5 | ❓ unverified — viewer can now see 3.0, untested against a real one | — |
 | 6 | ❌ blocked — `companion-oracle-conversation` still filters `blueprint_version = '2.0'` | — |
 
-**The next piece of work is step 3.** Not step 5, not step 6, not anything in
+**The next piece of work is step 4.** Does the job that started actually finish,
+and does it write a `3.0` report? Not step 5, not step 6, not anything in
 `PARKED.md`.
 
 ---
