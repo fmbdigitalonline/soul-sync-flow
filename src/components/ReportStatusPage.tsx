@@ -348,7 +348,7 @@ export function ReportStatusPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Current Status */}
-          <div className={`p-4 rounded-lg ${getStatusColor(job.status)}`}>
+          <div className={`p-4 ss-rs ${getStatusColor(job.status)}`}>
             <div className="flex justify-between items-center mb-2">
               <span className="font-medium">Status: {job.status}</span>
               <span className="text-sm">
@@ -362,7 +362,7 @@ export function ReportStatusPage() {
 
           {/* Progress Data */}
           {job.progress_data && Object.keys(job.progress_data).length > 0 && (
-            <div className="p-4 bg-blue-50 text-blue-700 rounded-lg">
+            <div className="p-4 bg-blue-50 text-blue-700 ss-rs">
               <p className="font-medium mb-1">Progress Details:</p>
               <div className="text-sm space-y-1">
                 {job.progress_data.hermetic_sections && (

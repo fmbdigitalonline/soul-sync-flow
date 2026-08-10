@@ -128,7 +128,7 @@ const Profile = () => {
                   <ChevronLeft className="h-4 w-4" /> {nl ? "Terug" : "Back"}
                 </button>
                 <div className="ss-title">{nl ? "Mijn Reis" : "My Journey"}</div>
-                <span className="ss-chip" style={{ padding: "4px 11px" }}>{displayName}</span>
+                <span className="ss-chip">{displayName}</span>
               </div>
               <div className="ss-seg">
                 {(["overview", "patterns"] as DeepTab[]).map((k) => (

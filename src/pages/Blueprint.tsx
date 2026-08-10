@@ -390,7 +390,7 @@ const Blueprint = () => {
               </div>}
           </div>
 
-          {isAdmin && <Button variant="outline" className="flex items-center justify-center ss-sub h-12 w-full max-w-full rounded-2xl font-medium" onClick={handleRegenerateBlueprint} disabled={isGenerating}>
+          {isAdmin && <Button variant="outline" className="flex items-center justify-center ss-sub h-12 w-full max-w-full ss-r font-medium" onClick={handleRegenerateBlueprint} disabled={isGenerating}>
               <RefreshCw className="mr-2 h-4 w-4 flex-shrink-0" />
               <span className="truncate">{isGenerating ? t('blueprint.regenerating') : t('blueprint.regenerate')}</span>
             </Button>}

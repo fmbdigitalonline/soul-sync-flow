@@ -62,7 +62,7 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
             return (
               <div
                 key={key}
-                className={`p-3 rounded-lg border transition-colors ${
+                className={`p-3 ss-rs border transition-colors ${
                   isAvailable 
                     ? 'bg-background border-primary/20' 
                     : 'bg-muted/50 border-muted'
@@ -430,7 +430,7 @@ const User360Dashboard: React.FC = () => {
                   if (!value) return null;
                   
                   return (
-                    <div key={key} className="border rounded-lg p-4">
+                    <div key={key} className="border ss-rs p-4">
                       <h3 className="font-cormorant text-lg font-semibold mb-2 capitalize">
                         {key.replace(/([A-Z])/g, ' $1').trim()}
                       </h3>
