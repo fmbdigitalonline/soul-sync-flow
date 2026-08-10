@@ -93,6 +93,35 @@ interface HACSChatInterfaceProps {
   reaching?: boolean;
 }
 
+/**
+ * Storage that cannot take the page down with it.
+ *
+ * localStorage throws — not returns null, throws — when a browser blocks
+ * storage for a frame: Safari with cross-site tracking prevention, a sandboxed
+ * preview iframe, private windows on some engines. Reading it inside a useState
+ * initialiser means that throw happens during render, which React cannot
+ * recover from, and the whole app falls to the error boundary over a
+ * remembered-once onboarding flag.
+ *
+ * Forgetting the flag is a fine failure: the sequence runs again. A blank page
+ * is not.
+ */
+function readFlag(key: string): boolean {
+  try {
+    return window.localStorage.getItem(key) === 'done';
+  } catch {
+    return false;
+  }
+}
+
+function writeFlag(key: string): void {
+  try {
+    window.localStorage.setItem(key, 'done');
+  } catch {
+    /* Storage is unavailable; the sequence simply runs again next time. */
+  }
+}
+
 export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   messages,
   isLoading,
@@ -423,8 +452,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   // sequence is finished the moment step 4 is acknowledged, and that is
   // remembered per user.
   const seqKey = user?.id ? `ss_first_contact_${user.id}` : null;
-  const [seqDone, setSeqDone] = useState<boolean>(() =>
-    seqKey ? localStorage.getItem(seqKey) === 'done' : true);
+  const [seqDone, setSeqDone] = useState<boolean>(() => (seqKey ? readFlag(seqKey) : true));
   const [ringNoted, setRingNoted] = useState(false);
 
   // Anyone who has already talked is not in first contact, whatever the flag
@@ -436,7 +464,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   useEffect(() => {
     if (!seqKey || seqDone) return;
     if (userMsgCount > 0) {
-      localStorage.setItem(seqKey, 'done');
+      writeFlag(seqKey);
       setSeqDone(true);
     }
   }, [seqKey, seqDone, userMsgCount]);
