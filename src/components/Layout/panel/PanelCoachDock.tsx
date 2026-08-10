@@ -123,7 +123,7 @@ export const PanelCoachDock: React.FC<PanelCoachDockProps> = ({
   };
 
   return (
-    <div className={cn('rounded-lg border border-border/60 bg-background/60 overflow-hidden', className)}>
+    <div className={cn('ss-rs border border-border/60 bg-background/60 overflow-hidden', className)}>
       <div className="max-h-56 overflow-y-auto p-2.5 space-y-2">
         {!initialized && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground py-1">
@@ -135,7 +135,7 @@ export const PanelCoachDock: React.FC<PanelCoachDockProps> = ({
           <div
             key={m.id}
             className={cn(
-              'text-xs leading-relaxed rounded-lg px-2.5 py-1.5 max-w-[92%] whitespace-pre-wrap',
+              'text-xs leading-relaxed ss-rs px-2.5 py-1.5 max-w-[92%] whitespace-pre-wrap',
               m.sender === 'user'
                 ? 'ml-auto bg-primary/10 text-foreground'
                 : 'mr-auto bg-muted/50 text-foreground',

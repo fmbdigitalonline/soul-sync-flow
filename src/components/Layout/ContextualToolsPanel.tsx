@@ -481,14 +481,14 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                 type="button"
                 onClick={() => setActiveModule(module.id)}
                 className={cn(
-                  'group relative flex h-full flex-col items-start gap-2 rounded-lg border p-3 text-left transition-colors',
+                  'group relative flex h-full flex-col items-start gap-2 ss-rs border p-3 text-left transition-colors',
                   isActive
                     ? 'border-primary bg-primary/10 text-primary shadow-sm'
                     : 'border-transparent bg-muted/60 text-muted-foreground hover:border-border hover:bg-background'
                 )}
               >
                 <div className="flex w-full items-center justify-between">
-                  <div className={cn('rounded-md p-1.5', isActive ? 'bg-primary text-primary-foreground' : 'bg-background')}>
+                  <div className={cn('ss-rs p-1.5', isActive ? 'bg-primary text-primary-foreground' : 'bg-background')}>
                     <Icon className="h-4 w-4" />
                   </div>
                   {module.badge ? (
@@ -535,7 +535,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
               value={noteDraft}
               onChange={event => setNoteDraft(event.target.value)}
               placeholder={t('contextualTools.notePlaceholder')}
-              className="min-h-[90px] w-full rounded-md border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
+              className="min-h-[90px] w-full ss-rs border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
             />
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="space-y-1">
@@ -546,7 +546,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                   id="workspace-priority"
                   value={notePriority}
                   onChange={event => setNotePriority(event.target.value as WorkspaceNote['priority'])}
-                  className="w-full rounded-md border border-border bg-background px-2 py-1 text-xs"
+                  className="w-full ss-rs border border-border bg-background px-2 py-1 text-xs"
                 >
                   <option value="low">{t('contextualTools.priorityOptions.low')}</option>
                   <option value="medium">{t('contextualTools.priorityOptions.medium')}</option>
@@ -580,7 +580,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                   }}
                 />
                 {noteAttachment?.dataUrl ? (
-                  <div className="flex items-center justify-between rounded-md border border-dashed border-primary/50 bg-primary/5 px-2 py-1 text-[11px] text-foreground">
+                  <div className="flex items-center justify-between ss-rs border border-dashed border-primary/50 bg-primary/5 px-2 py-1 text-[11px] text-foreground">
                     <span className="truncate" title={noteAttachment.name}>{noteAttachment.name}</span>
                     <button
                       type="button"
@@ -598,12 +598,12 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                 <button
                   type="button"
                   onClick={addWorkspaceNote}
-                  className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                  className="inline-flex items-center gap-1 ss-rs bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   {t('contextualTools.saveToWorkspace')}
                 </button>
-                <span className="inline-flex items-center gap-1 rounded-md border border-dashed border-primary/40 px-2 py-1 text-[10px] text-primary">
+                <span className="inline-flex items-center gap-1 ss-rs border border-dashed border-primary/40 px-2 py-1 text-[10px] text-primary">
                   <Mic className="h-3 w-3" />
                   {t('contextualTools.voiceReady')}
                 </span>
@@ -619,7 +619,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                 {workspaceNotes.map(note => (
                   <div
                     key={note.id}
-                    className="rounded-md border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground flex items-start justify-between gap-3 overflow-hidden"
+                    className="ss-rs border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground flex items-start justify-between gap-3 overflow-hidden"
                   >
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center gap-2">
@@ -641,7 +641,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                         {note.content}
                       </span>
                       {note.attachment?.dataUrl ? (
-                        <div className="mt-1 overflow-hidden rounded-md border border-border/50 bg-background">
+                        <div className="mt-1 overflow-hidden ss-rs border border-border/50 bg-background">
                           <img
                             src={note.attachment.dataUrl}
                             alt={note.attachment.name}
@@ -659,7 +659,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                         <button
                           type="button"
                           onClick={() => downloadWorkspaceNote(note)}
-                          className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-foreground transition-colors hover:bg-muted"
+                          className="inline-flex items-center gap-1 ss-rs border border-border px-2 py-1 text-foreground transition-colors hover:bg-muted"
                         >
                           <Download className="h-3.5 w-3.5" />
                           {t('contextualTools.downloadNote')}
@@ -668,7 +668,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                           <button
                             type="button"
                             onClick={() => downloadWorkspaceAttachment(note.attachment)}
-                            className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-foreground transition-colors hover:bg-muted"
+                            className="inline-flex items-center gap-1 ss-rs border border-border px-2 py-1 text-foreground transition-colors hover:bg-muted"
                           >
                             <FileDown className="h-3.5 w-3.5" />
                             {t('contextualTools.downloadAttachment')}
@@ -679,7 +679,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                     <button
                       type="button"
                       onClick={() => removeWorkspaceNote(note.id)}
-                      className="inline-flex items-center rounded-md p-1 text-muted-foreground transition-colors hover:text-destructive"
+                      className="inline-flex items-center ss-rs p-1 text-muted-foreground transition-colors hover:text-destructive"
                       aria-label={t('contextualTools.deleteNote')}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -695,7 +695,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
           )}
 
           <div className="grid gap-2 sm:grid-cols-2">
-            <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-background/70 p-3">
+            <div className="flex items-start gap-3 ss-rs border border-border/60 bg-background/70 p-3">
               <FileDown className="mt-0.5 h-4 w-4 text-primary" />
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-foreground">{t('contextualTools.flexibleExports')}</p>
@@ -704,7 +704,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-background/70 p-3">
+            <div className="flex items-start gap-3 ss-rs border border-border/60 bg-background/70 p-3">
               <Cloud className="mt-0.5 h-4 w-4 text-primary" />
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-foreground">{t('contextualTools.crossPlatformSyncing')}</p>
@@ -731,7 +731,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
               <button
                 type="button"
                 onClick={importGoalTasksToAgenda}
-                className="inline-flex items-center gap-1 rounded-md border border-dashed border-secondary px-3 py-1.5 text-[11px] font-medium text-secondary transition-colors hover:bg-secondary/10"
+                className="inline-flex items-center gap-1 ss-rs border border-dashed border-secondary px-3 py-1.5 text-[11px] font-medium text-secondary transition-colors hover:bg-secondary/10"
               >
                 <ListTodo className="h-3.5 w-3.5" />
                 {t('contextualTools.importGoalTasks')}
@@ -750,15 +750,15 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
               value={agendaInput}
               onChange={event => setAgendaInput(event.target.value)}
               placeholder={t('contextualTools.agendaPlaceholder')}
-              className="rounded-md border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
+              className="ss-rs border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
             />
             <input
               type="time"
               value={agendaTime}
               onChange={event => setAgendaTime(event.target.value)}
-              className="rounded-md border border-border bg-background px-3 py-2 text-xs text-muted-foreground outline-none focus:border-primary"
+              className="ss-rs border border-border bg-background px-3 py-2 text-xs text-muted-foreground outline-none focus:border-primary"
             />
-            <label className="flex items-center gap-2 rounded-md border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground">
+            <label className="flex items-center gap-2 ss-rs border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground">
               <input
                 type="checkbox"
                 checked={lockAgendaBlock}
@@ -772,7 +772,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
             <button
               type="button"
               onClick={handleAddAgendaItem}
-              className="inline-flex items-center gap-2 rounded-md bg-secondary px-4 py-1.5 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/90"
+              className="inline-flex items-center gap-2 ss-rs bg-secondary px-4 py-1.5 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/90"
             >
               <Plus className="h-3.5 w-3.5" />
               {t('contextualTools.addToAgenda')}
@@ -785,7 +785,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                 <div
                   key={item.id}
                   className={cn(
-                    'flex flex-col gap-2 rounded-lg border border-border/60 bg-muted/40 p-3 text-xs transition-colors sm:flex-row sm:items-center sm:justify-between',
+                    'flex flex-col gap-2 ss-rs border border-border/60 bg-muted/40 p-3 text-xs transition-colors sm:flex-row sm:items-center sm:justify-between',
                     item.completed ? 'opacity-70' : ''
                   )}
                 >
@@ -794,12 +794,12 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                       {item.text}
                     </p>
                     <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-1">
+                      <span className="inline-flex items-center gap-1 ss-rs bg-background px-2 py-1">
                         <Clock className="h-3 w-3" />
                         {item.scheduledFor}
                       </span>
                       {item.locked ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/10 px-2 py-1 text-secondary">
+                        <span className="inline-flex items-center gap-1 ss-rs bg-secondary/10 px-2 py-1 text-secondary">
                           <ShieldCheck className="h-3 w-3" />
                           {t('contextualTools.locked')}
                         </span>
@@ -810,7 +810,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                     type="button"
                     onClick={() => toggleAgendaCompletion(item.id)}
                     className={cn(
-                      'inline-flex items-center gap-1 self-start rounded-md px-3 py-1.5 text-[11px] font-semibold transition-colors sm:self-auto',
+                      'inline-flex items-center gap-1 self-start ss-rs px-3 py-1.5 text-[11px] font-semibold transition-colors sm:self-auto',
                       item.completed
                         ? 'bg-muted text-muted-foreground hover:bg-muted/80'
                         : 'bg-primary text-primary-foreground hover:bg-primary/90'
@@ -845,7 +845,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2 rounded-lg border border-border/60 bg-muted/40 p-3">
+            <div className="space-y-2 ss-rs border border-border/60 bg-muted/40 p-3">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{t('contextualTools.focusTimer')}</span>
                 <span>{focusTimer.isRunning ? t('contextualTools.inProgress') : t('contextualTools.paused')}</span>
@@ -876,7 +876,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
                     type="button"
                     onClick={() => updateFocusDuration(minutes)}
                     className={cn(
-                      'inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 font-medium transition-colors',
+                      'inline-flex items-center gap-1 ss-rs border border-border px-2 py-1 font-medium transition-colors',
                       focusTimer.duration === minutes * 60
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'hover:border-primary hover:text-primary'
@@ -888,16 +888,16 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
               </div>
             </div>
 
-            <div className="space-y-2 rounded-lg border border-border/60 bg-background p-3 text-xs">
+            <div className="space-y-2 ss-rs border border-border/60 bg-background p-3 text-xs">
               <p className="font-semibold text-foreground">{activeGoalTitle}</p>
               <div className="space-y-2 text-muted-foreground">
-                <button className="w-full rounded-md bg-primary/10 px-3 py-2 text-left font-medium text-primary transition-colors hover:bg-primary/20">
+                <button className="w-full ss-rs bg-primary/10 px-3 py-2 text-left font-medium text-primary transition-colors hover:bg-primary/20">
                   {t('contextualTools.reviewJourneyTimeline')}
                 </button>
-                <button className="w-full rounded-md bg-secondary/10 px-3 py-2 text-left font-medium text-secondary transition-colors hover:bg-secondary/20">
+                <button className="w-full ss-rs bg-secondary/10 px-3 py-2 text-left font-medium text-secondary transition-colors hover:bg-secondary/20">
                   {t('contextualTools.logProgressNote')}
                 </button>
-                <button className="w-full rounded-md bg-accent/10 px-3 py-2 text-left font-medium text-accent-foreground transition-colors hover:bg-accent/20">
+                <button className="w-full ss-rs bg-accent/10 px-3 py-2 text-left font-medium text-accent-foreground transition-colors hover:bg-accent/20">
                   {t('contextualTools.openDeepFocusMode')}
                 </button>
               </div>
@@ -958,11 +958,11 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <div className="flex-1 rounded-md bg-muted/40 px-3 py-2">
+                <div className="flex-1 ss-rs bg-muted/40 px-3 py-2">
                   <span className="text-[11px] text-muted-foreground">{t('contextualTools.recentStreak')}</span>
                   <p className="text-sm font-semibold text-foreground">{activeStreak} {t('contextualTools.days')}</p>
                 </div>
-                <div className="flex-1 rounded-md bg-muted/40 px-3 py-2">
+                <div className="flex-1 ss-rs bg-muted/40 px-3 py-2">
                   <span className="text-[11px] text-muted-foreground">{t('contextualTools.focusAllocation')}</span>
                   <p className="text-sm font-semibold text-foreground">{Math.round(timeAllocation)}%</p>
                 </div>
@@ -988,7 +988,7 @@ function JourneyTools({ activeGoal }: { activeGoal?: any }) {
 
           <div className="space-y-3">
             {insights.map(insight => (
-              <div key={insight.id} className="space-y-1 rounded-lg border border-border/40 bg-background/70 p-3">
+              <div key={insight.id} className="space-y-1 ss-rs border border-border/40 bg-background/70 p-3">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-semibold text-foreground">{insight.title}</p>
                   <Badge variant="outline" className="rounded-full text-[10px] uppercase tracking-wide">

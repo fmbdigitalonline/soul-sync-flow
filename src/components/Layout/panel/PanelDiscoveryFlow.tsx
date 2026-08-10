@@ -85,7 +85,7 @@ export const PanelDiscoveryFlow: React.FC<PanelDiscoveryFlowProps> = ({ onClose 
           <div
             key={m.id}
             className={cn(
-              'text-xs leading-relaxed rounded-lg px-2.5 py-1.5 max-w-[92%] whitespace-pre-wrap',
+              'text-xs leading-relaxed ss-rs px-2.5 py-1.5 max-w-[92%] whitespace-pre-wrap',
               (m.sender === 'user' || m.isUser)
                 ? 'ml-auto bg-primary/10 text-foreground'
                 : 'mr-auto bg-muted/50 text-foreground',
@@ -114,7 +114,7 @@ export const PanelDiscoveryFlow: React.FC<PanelDiscoveryFlowProps> = ({ onClose 
               key={s.id}
               type="button"
               onClick={() => adoptSuggestion(s)}
-              className="w-full text-left rounded-lg px-2.5 py-2 border border-primary/25 bg-background/60 hover:bg-primary/10 transition-colors"
+              className="w-full text-left ss-rs px-2.5 py-2 border border-primary/25 bg-background/60 hover:bg-primary/10 transition-colors"
             >
               <div className="flex items-center gap-1.5">
                 <Sparkles className="h-3 w-3 text-primary shrink-0" />

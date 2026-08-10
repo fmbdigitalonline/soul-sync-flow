@@ -469,6 +469,13 @@
 }
 
 .ss { color: var(--ss-ink); }
+
+/* Radius utilities, so a component can name the system in className instead of
+   reaching for an inline style or a Tailwind step. Two, because there are two
+   kinds of thing: a surface, and something living inside one.
+   rounded-full stays legal — a pill and a circle are shapes, not scale. */
+.ss-r  { border-radius: var(--ss-radius); }
+.ss-rs { border-radius: var(--ss-radius-sm); }
 .ss-card {
   background: var(--ss-card); border: 1px solid var(--ss-line);
   border-radius: var(--ss-radius); padding: var(--ss-pad); box-shadow: var(--ss-shadow);

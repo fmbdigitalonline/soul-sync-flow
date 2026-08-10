@@ -75,7 +75,7 @@ const Chip: React.FC<{ active: boolean; label: string; onClick: () => void }> = 
     type="button"
     onClick={onClick}
     className={cn(
-      'text-left text-xs rounded-lg px-2.5 py-1.5 border transition-colors',
+      'text-left text-xs ss-rs px-2.5 py-1.5 border transition-colors',
       active
         ? 'border-soul-purple/40 bg-soul-purple/10 text-foreground'
         : 'border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/40',

@@ -55,7 +55,7 @@ export const PanelJourneyView: React.FC<PanelJourneyViewProps> = ({
         </div>
       </div>
 
-      <div className="rounded-lg border border-border/60 overflow-hidden bg-background [&_.min-h-screen]:min-h-0">
+      <div className="ss-rs border border-border/60 overflow-hidden bg-background [&_.min-h-screen]:min-h-0">
         {view === 'map' ? (
           <EnhancedJourneyMap
             activeGoal={goal}
@@ -80,7 +80,7 @@ const ToggleChip: React.FC<{
     type="button"
     onClick={onClick}
     className={cn(
-      'flex items-center gap-1 text-[11px] rounded-md px-2 py-1 border transition-colors',
+      'flex items-center gap-1 text-[11px] ss-rs px-2 py-1 border transition-colors',
       active
         ? 'ss-flow text-foreground'
         : 'border-border/50 text-muted-foreground hover:text-foreground',

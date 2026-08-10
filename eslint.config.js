@@ -79,6 +79,8 @@ const ENFORCED_PATHS = [
   "src/components/journey/AlignmentDetail.tsx",
   "src/components/journey/AlignmentSection.tsx",
   "src/components/journey/TurningPoints.tsx",
+  // Phase A, pass 2: the shell every screen sits inside.
+  "src/components/Layout/**/*.tsx",
   "src/components/bedtime/**/*.tsx",
   "src/components/context/**/*.tsx",
   "src/components/feedback/**/*.tsx",

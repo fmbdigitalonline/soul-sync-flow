@@ -56,7 +56,7 @@ export const TransformScopeInterpretation: React.FC<Props> = ({ pattern }) => {
         {domains.map((d) => (
           <li
             key={d}
-            className="text-xs rounded-lg px-3 py-2 border border-emerald-500/25 bg-background/60"
+            className="text-xs ss-rs px-3 py-2 border border-emerald-500/25 bg-background/60"
           >
             {DOMAIN_LABELS[d]}
           </li>
@@ -77,21 +77,21 @@ export const TransformScopeInterpretation: React.FC<Props> = ({ pattern }) => {
         <button
           type="button"
           onClick={startHere}
-          className="text-left text-xs rounded-lg px-3 py-2 border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/15 font-medium"
+          className="text-left text-xs ss-rs px-3 py-2 border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/15 font-medium"
         >
           Yes, start with {primaryLabel}
         </button>
         <button
           type="button"
           onClick={showAll}
-          className="text-left text-xs rounded-lg px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
+          className="text-left text-xs ss-rs px-3 py-2 border border-emerald-500/25 bg-background/60 hover:bg-emerald-500/10"
         >
           Show me all areas
         </button>
         <button
           type="button"
           onClick={() => setShowWhy((v) => !v)}
-          className="text-left text-xs rounded-lg px-3 py-2 border border-emerald-500/20 bg-background/60 hover:bg-emerald-500/10 text-muted-foreground"
+          className="text-left text-xs ss-rs px-3 py-2 border border-emerald-500/20 bg-background/60 hover:bg-emerald-500/10 text-muted-foreground"
         >
           {showWhy ? 'Hide reasoning' : 'Tell me why'}
         </button>
