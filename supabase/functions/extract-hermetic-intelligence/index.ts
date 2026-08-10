@@ -182,10 +182,23 @@ async function extractIntelligenceFromReport(report: any) {
     // Check if structured intelligence is already available
     if (reportContent?.structured_intelligence) {
       console.log(`✅ Structured intelligence already available for report ${report.id}`);
-      
+
       // Transform existing intelligence to database format
       const structuredIntelligence = reportContent.structured_intelligence;
-      
+
+      // A v3 report's structured_intelligence is the cross-framework model —
+      // { syntheses, unresolved, thin_ground } — not thirteen named dimensions.
+      // Falling through would write thirteen empty objects and stamp them
+      // extraction_confidence 0.95, which is a confident claim about nothing.
+      // Better to say plainly that this extractor does not understand the shape.
+      if (Array.isArray((structuredIntelligence as any).syntheses)) {
+        console.warn(
+          `⛔ Report ${report.id} carries a v3 synthesis model, not per-dimension intelligence. ` +
+          `Skipping: this extractor reads the v2 shape and would store empty dimensions as though they were extracted.`,
+        );
+        return null;
+      }
+
       return {
         identity_constructs: structuredIntelligence.identity_constructs || {},
         behavioral_triggers: structuredIntelligence.behavioral_triggers || {},
