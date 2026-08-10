@@ -322,29 +322,34 @@ serve(async (req) => {
 
   } catch (error) {
     // Enhanced error handling with recovery context
-    let errorJobId: string | undefined;
-    let originalRequestBody: any;
-    
-    try {
-      originalRequestBody = await req.clone().json();
-      errorJobId = originalRequestBody?.job_id;
-    } catch {
-      console.error('❌ Could not parse request body for error handling');
-    }
-    
+    const errorJobId = currentJobId;
+
+    // RCA 2026-08-10: surface the underlying provider cause in the failure
+    // reason so /testing shows "provider credits exhausted" instead of a
+    // silent 0%. Log trail only — no end-user surface.
+    const rawMessage = String(error?.message ?? error);
+    const providerCause =
+      /no credits remaining|insufficient_quota|credit_balance_exhausted/i.test(rawMessage)
+        ? 'provider_quota_exhausted'
+        : /429|rate limit/i.test(rawMessage)
+          ? 'provider_rate_limited'
+          : /401|403|unauthorized|invalid api key/i.test(rawMessage)
+            ? 'provider_auth_failed'
+            : 'orchestrator_error';
+
     console.error(`❌ Orchestrator failed for job ${errorJobId || 'unknown'}:`, {
-      error: error.message,
-      stack: error.stack,
-      jobId: errorJobId,
-      requestBody: originalRequestBody
+      error_code: providerCause,
+      error: rawMessage,
+      stack: error?.stack,
+      jobId: errorJobId
     });
     
     if (errorJobId) {
       // Enhanced error logging similar to client service
       const errorUpdate = {
         status: 'failed',
-        current_step: `Error: ${error.message}`,
-        error_message: `Processing failed at step: ${error.message}. Check logs for recovery options.`,
+        current_step: `Error: ${rawMessage}`,
+        error_message: `[${providerCause}] Processing failed at step: ${rawMessage}. Check logs for recovery options.`,
         updated_at: new Date().toISOString()
       };
       
