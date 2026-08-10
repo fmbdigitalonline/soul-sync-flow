@@ -117,7 +117,7 @@ export const OracleInitializationBanner = ({ userId }: OracleInitializationBanne
 
   if (isChecking) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-lg border border-border/50">
+      <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 ss-rs border border-border/50">
         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Checking Oracle status...</span>
       </div>
@@ -127,7 +127,7 @@ export const OracleInitializationBanner = ({ userId }: OracleInitializationBanne
   // Show progress during processing
   if (isProcessing && currentJob) {
     return (
-      <div className="flex flex-col gap-3 px-4 py-3 bg-primary/10 rounded-lg border border-primary/20">
+      <div className="flex flex-col gap-3 px-4 py-3 bg-primary/10 ss-rs border border-primary/20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -154,7 +154,7 @@ export const OracleInitializationBanner = ({ userId }: OracleInitializationBanne
   // Legacy embeddings detected - show upgrade prompt
   if (hasLegacyEmbeddings && embeddingCount && embeddingCount > 0) {
     return (
-      <div className="flex items-center justify-between gap-4 px-4 py-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+      <div className="flex items-center justify-between gap-4 px-4 py-3 bg-yellow-500/10 ss-rs border border-yellow-500/20">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
           <div>
@@ -191,7 +191,7 @@ export const OracleInitializationBanner = ({ userId }: OracleInitializationBanne
   // Modern embeddings with facets - full power
   if (embeddingCount && embeddingCount > 0 && !hasLegacyEmbeddings) {
     return (
-      <div className="flex items-center justify-between gap-4 px-4 py-3 bg-primary/10 rounded-lg border border-primary/20">
+      <div className="flex items-center justify-between gap-4 px-4 py-3 bg-primary/10 ss-rs border border-primary/20">
         <div className="flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 text-primary" />
           <span className="text-sm font-medium text-primary">
@@ -223,7 +223,7 @@ export const OracleInitializationBanner = ({ userId }: OracleInitializationBanne
   // Show processing state if active embedding job exists
   if (hasActiveEmbeddingJob && !embeddingCount) {
     return (
-      <div className="flex items-center gap-2 px-4 py-3 bg-primary/10 rounded-lg border border-primary/20">
+      <div className="flex items-center gap-2 px-4 py-3 bg-primary/10 ss-rs border border-primary/20">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
         <div>
           <p className="text-sm font-medium text-primary">
@@ -240,7 +240,7 @@ export const OracleInitializationBanner = ({ userId }: OracleInitializationBanne
   // Original "Initialize Oracle" button only if no active job
   if (!embeddingCount && !hasActiveEmbeddingJob) {
     return (
-      <div className="flex items-center justify-between gap-4 px-4 py-3 bg-accent/50 rounded-lg border border-accent">
+      <div className="flex items-center justify-between gap-4 px-4 py-3 bg-accent/50 ss-rs border border-accent">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-accent-foreground" />
           <div>

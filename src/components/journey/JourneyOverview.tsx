@@ -20,7 +20,7 @@ export const JourneyOverview: React.FC<JourneyOverviewProps> = ({
     mainGoal.milestones?.find((m: any) => !m.completed) || null;
 
   return (
-    <div className="bg-card/80 backdrop-blur-lg rounded-3xl p-6 shadow-sm hover:shadow-md border border-border">
+    <div className="bg-card/80 backdrop-blur-lg ss-r p-6 shadow-sm hover:shadow-md border border-border">
       <h2 className="text-lg font-semibold mb-4">Milestones</h2>
       <div className="space-y-6">
         {mainGoal.milestones?.map((milestone: any, idx: number) => {
@@ -30,7 +30,7 @@ export const JourneyOverview: React.FC<JourneyOverviewProps> = ({
           return (
             <div
               key={milestone.id}
-              className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-200 ${isCompleted
+              className={`flex items-center justify-between p-4 ss-r border transition-all duration-200 ${isCompleted
                   ? "bg-muted border-border text-muted-foreground opacity-60"
                   : isCurrent
                     ? "bg-primary/10 border-primary"

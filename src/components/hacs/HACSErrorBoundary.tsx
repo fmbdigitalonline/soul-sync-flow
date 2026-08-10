@@ -28,7 +28,7 @@ const HACSErrorFallback: React.FC<HACSErrorFallbackProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-card/50 backdrop-blur border border-destructive/20 rounded-xl max-w-md mx-auto">
+    <div className="flex flex-col items-center justify-center p-6 bg-card/50 backdrop-blur border border-destructive/20 ss-rs max-w-md mx-auto">
       <AlertTriangle className="w-8 h-8 text-destructive mb-4" />
       <h3 className="text-lg font-semibold text-foreground mb-2">
         {t('errors.hacs_system_error')}

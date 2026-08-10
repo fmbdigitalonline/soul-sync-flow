@@ -35,12 +35,12 @@ export const HabitDetailPopup: React.FC<HabitDetailPopupProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-md mx-auto h-[80vh] max-h-[80vh] overflow-y-auto p-0 rounded-t-3xl rounded-b-none sm:rounded-2xl">
+      <DialogContent className="w-full max-w-md mx-auto h-[80vh] max-h-[80vh] overflow-y-auto p-0 rounded-t-3xl rounded-b-none sm:ss-r">
         {/* Header */}
         <DialogHeader className="p-4 pb-0 sticky top-0 bg-white z-10">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-orange-400 to-orange-600">
+              <div className="w-10 h-10 ss-rs flex items-center justify-center bg-gradient-to-br from-orange-400 to-orange-600">
                 <Flame className="h-5 w-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
@@ -77,7 +77,7 @@ export const HabitDetailPopup: React.FC<HabitDetailPopupProps> = ({
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-orange-50 p-3 rounded-xl">
+            <div className="bg-orange-50 p-3 ss-rs">
               <div className="flex items-center gap-2 mb-1">
                 <Flame className="h-4 w-4 text-orange-500" />
                 <span className="text-xs font-medium text-orange-700">Current Streak</span>
@@ -86,7 +86,7 @@ export const HabitDetailPopup: React.FC<HabitDetailPopupProps> = ({
                 {streak} days
               </p>
             </div>
-            <div className="bg-blue-50 p-3 rounded-xl">
+            <div className="bg-blue-50 p-3 ss-rs">
               <div className="flex items-center gap-2 mb-1">
                 <Target className="h-4 w-4 text-blue-500" />
                 <span className="text-xs font-medium text-blue-700">Target</span>
@@ -112,7 +112,7 @@ export const HabitDetailPopup: React.FC<HabitDetailPopupProps> = ({
           </div>
 
           {/* Today's Status */}
-          <div className={`p-4 rounded-xl border-2 ${
+          <div className={`p-4 ss-rs border-2 ${
             todayCompleted 
               ? 'bg-green-50 border-green-200' 
               : 'bg-gray-50 border-gray-200'
@@ -144,7 +144,7 @@ export const HabitDetailPopup: React.FC<HabitDetailPopupProps> = ({
             <div className="pt-4">
               <Button
                 onClick={() => onMarkComplete?.(habit.id)}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-semibold"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 ss-rs font-semibold"
               >
                 <CheckCircle2 className="h-4 w-4 mr-2" />
                 Mark as Complete Today

@@ -37,7 +37,7 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
   // User messages - render as simple cards
   if (isUser) {
     return (
-      <div className="w-full mx-auto max-w-2xl md:max-w-3xl rounded-2xl border bg-green-600 text-white text-base px-5 py-4 my-2">
+      <div className="w-full mx-auto max-w-2xl md:max-w-3xl ss-r border bg-green-600 text-white text-base px-5 py-4 my-2">
         <div className="flex items-center gap-2 mb-1">
           <ArrowRight className="h-4 w-4 text-white" />
           <span className="text-xs font-medium">You</span>
@@ -135,7 +135,7 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
   // Default rendering for regular coach messages
   console.log('🔍 TaskCoachMessageRenderer: Using default rendering for message type:', parsedMessage.type);
   return (
-    <div className="w-full mx-auto max-w-2xl md:max-w-3xl rounded-2xl border bg-slate-50 border-green-200/40 text-gray-900 px-5 py-4 my-2">
+    <div className="w-full mx-auto max-w-2xl md:max-w-3xl ss-r border bg-slate-50 border-green-200/40 text-gray-900 px-5 py-4 my-2">
       <div className="flex items-center gap-2 mb-1">
         <ArrowRight className="h-4 w-4 text-green-400" />
         <span className="text-xs font-medium">Task Coach</span>

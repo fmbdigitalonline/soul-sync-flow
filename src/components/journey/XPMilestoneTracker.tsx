@@ -9,7 +9,7 @@ export const XPMilestoneTracker: React.FC = () => {
 
   if (loading || error || !progress) {
     return (
-      <div className="p-4 rounded-2xl border border-border bg-muted/30">
+      <div className="p-4 ss-r border border-border bg-muted/30">
         <div className="flex items-center gap-2 text-sm font-semibold mb-1">
           <Award className="h-4 w-4 text-soul-purple" />
           XP Milestones
@@ -28,7 +28,7 @@ export const XPMilestoneTracker: React.FC = () => {
     .slice(0, 2);
 
   return (
-    <div className="p-4 rounded-2xl border border-border bg-gradient-to-br from-soul-purple/10 via-background to-emerald-500/5">
+    <div className="p-4 ss-r border border-border bg-gradient-to-br from-soul-purple/10 via-background to-emerald-500/5">
       <div className="flex items-center gap-2 text-sm font-semibold mb-1">
         <Award className="h-4 w-4 text-soul-purple" />
         XP Milestones
@@ -42,17 +42,17 @@ export const XPMilestoneTracker: React.FC = () => {
       <Progress value={progress.percent} className="h-2 mb-3" />
 
       <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="p-2 rounded-lg bg-background border border-border">
+        <div className="p-2 ss-rs bg-background border border-border">
           <p className="text-muted-foreground">Session</p>
           <p className="text-sm font-semibold">{progress.sessionXP.toFixed(1)} xp</p>
         </div>
-        <div className="p-2 rounded-lg bg-background border border-border">
+        <div className="p-2 ss-rs bg-background border border-border">
           <p className="text-muted-foreground">Weekly</p>
           <p className="text-sm font-semibold">{progress.weeklyXP.toFixed(1)} xp</p>
         </div>
       </div>
 
-      <div className="mt-3 p-3 rounded-xl bg-background border border-border">
+      <div className="mt-3 p-3 ss-rs bg-background border border-border">
         <div className="flex items-center gap-2 text-xs font-semibold mb-1">
           <Shield className="h-4 w-4 text-emerald-500" />
           {milestoneLabel}

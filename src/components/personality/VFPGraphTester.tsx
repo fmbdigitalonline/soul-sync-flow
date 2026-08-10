@@ -208,7 +208,7 @@ export const VFPGraphTester: React.FC = () => {
 
           {/* Error Display */}
           {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="p-4 bg-red-50 border border-red-200 ss-rs">
               <p className="text-red-800 text-sm">Error: {error}</p>
             </div>
           )}

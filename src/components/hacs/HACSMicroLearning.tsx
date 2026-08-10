@@ -182,7 +182,7 @@ export const HACSMicroLearning: React.FC<HACSMicroLearningProps> = ({
                 animate={{ opacity: 1, x: 0 }}
                 className="space-y-4"
               >
-                <div className="p-4 rounded-lg bg-muted/50">
+                <div className="p-4 ss-rs bg-muted/50">
                   <p className="font-medium mb-2">{t('hacs.microLearning.interface.questionLabel')}</p>
                   <p className="text-sm">{question.text}</p>
                 </div>
@@ -248,7 +248,7 @@ export const HACSMicroLearning: React.FC<HACSMicroLearningProps> = ({
               >
                 <div className="text-center mb-4">
                   {analysisResult.analysis.validatedLearning ? (
-                    <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/20">
+                    <div className="p-4 ss-rs bg-green-50 dark:bg-green-950/20">
                       <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
                       <h4 className="font-semibold text-green-700 dark:text-green-400">
                         Learning Validated!
@@ -258,7 +258,7 @@ export const HACSMicroLearning: React.FC<HACSMicroLearningProps> = ({
                       </p>
                     </div>
                   ) : (
-                    <div className="p-4 rounded-lg bg-orange-50 dark:bg-orange-950/20">
+                    <div className="p-4 ss-rs bg-orange-50 dark:bg-orange-950/20">
                       <Brain className="h-8 w-8 text-orange-500 mx-auto mb-2" />
                       <h4 className="font-semibold text-orange-700 dark:text-orange-400">
                         {t('learning.responseRecorded')}

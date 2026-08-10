@@ -205,7 +205,7 @@ export const MicroActionReminders: React.FC<MicroActionRemindersProps> = ({
         ) : (
           <div className="space-y-4">
             {reminders.map((reminder) => (
-              <div key={reminder.id} className="border rounded-lg p-4">
+              <div key={reminder.id} className="border ss-rs p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
@@ -296,7 +296,7 @@ export const MicroActionReminders: React.FC<MicroActionRemindersProps> = ({
                 )}
 
                 {reminder.status === 'completed' && reminder.completion_notes && (
-                  <div className="mt-3 p-3 bg-green-50 rounded-lg">
+                  <div className="mt-3 p-3 bg-green-50 ss-rs">
                     <p className="text-sm text-green-800">
                       <strong>Completion notes:</strong> {reminder.completion_notes}
                     </p>

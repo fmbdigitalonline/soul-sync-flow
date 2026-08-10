@@ -114,7 +114,7 @@ export const MoodTracker: React.FC<MoodTrackerProps> = ({ onMoodSave }) => {
         )}
 
         {saved && (
-          <div className="flex items-center justify-center p-2 bg-green-50 rounded-md">
+          <div className="flex items-center justify-center p-2 bg-green-50 ss-rs">
             <Check className="h-4 w-4 text-green-600 mr-2" />
             <span className="text-sm text-green-700">{t('moodTracker.moodTracked')}!</span>
           </div>

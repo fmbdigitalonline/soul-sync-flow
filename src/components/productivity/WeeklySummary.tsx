@@ -177,7 +177,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({
             {insights.map((insight, index) => {
               const IconComponent = insight.icon;
               return (
-                <div key={index} className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+                <div key={index} className="flex items-start gap-2 p-3 bg-muted/50 ss-rs">
                   <IconComponent className="h-4 w-4 mt-0.5 text-soul-purple" />
                   <p className="text-sm">{insight.message}</p>
                 </div>

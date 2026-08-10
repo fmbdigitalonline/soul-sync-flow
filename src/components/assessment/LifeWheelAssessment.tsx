@@ -226,7 +226,7 @@ export function LifeWheelAssessment({ onComplete, onCancel, initialAssessments }
 
           {/* Gap Indicator */}
           {calculateGap(currentAssessment.current_score, currentAssessment.desired_score) > 0 && (
-            <div className="bg-muted/50 p-4 rounded-lg">
+            <div className="bg-muted/50 p-4 ss-rs">
               <div className="flex items-center gap-2">
                 <Lightbulb className="w-4 h-4 text-amber-500" />
                 <span className="font-medium">Growth Gap: </span>

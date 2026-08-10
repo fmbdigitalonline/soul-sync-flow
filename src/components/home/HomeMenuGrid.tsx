@@ -29,11 +29,11 @@ export function HomeMenuGrid({ items, className, ...props }: HomeMenuGridProps) 
       {/* Constrained width on mobile to match button, grid on larger screens */}
       <div className="flex flex-col gap-4 w-full mb-12 mt-6">
         {items.map(({ key, to, title, description, Icon, image }) => (
-          <article key={key} className="bg-card rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden group">
+          <article key={key} className="bg-card ss-rs sm:ss-rs shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden group">
             {/* Mobile: Compact horizontal layout, Desktop: Vertical layout */}
             <div className="flex sm:flex-col h-full pl-4 sm:pl-0">
               {/* Image container - smaller on mobile */}
-              <div className="w-14 h-14 sm:w-full sm:aspect-[4/3] relative overflow-hidden flex-shrink-0 rounded-md sm:rounded-none self-center sm:self-start">
+              <div className="w-14 h-14 sm:w-full sm:aspect-[4/3] relative overflow-hidden flex-shrink-0 ss-rs sm:rounded-none self-center sm:self-start">
                 {image ? (
                   <img
                     src={image}

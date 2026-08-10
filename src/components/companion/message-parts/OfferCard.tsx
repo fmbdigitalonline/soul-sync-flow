@@ -82,7 +82,7 @@ export const OfferCard: React.FC<{
             <span className="text-sm">
               Break <span className="font-semibold">{title}</span> into milestones?
             </span>
-            <span className="shrink-0 text-xs rounded-lg px-3 py-1.5 border border-soul-purple/30 bg-soul-purple/10">
+            <span className="shrink-0 text-xs ss-rs px-3 py-1.5 border border-soul-purple/30 bg-soul-purple/10">
               {frame || "Break it down →"}
             </span>
           </div>
@@ -92,7 +92,7 @@ export const OfferCard: React.FC<{
                 {intakeChips.map((chip) => (
                   <span
                     key={chip}
-                    className="text-[11px] rounded-md px-2 py-0.5 border border-border/40 bg-background/50 text-muted-foreground"
+                    className="text-[11px] ss-rs px-2 py-0.5 border border-border/40 bg-background/50 text-muted-foreground"
                   >
                     {chip}
                   </span>
@@ -101,7 +101,7 @@ export const OfferCard: React.FC<{
               {deferChip && (
                 <button
                   type="button"
-                  className="shrink-0 text-xs rounded-lg px-3 py-1.5 border border-border/40 bg-background/50 text-muted-foreground hover:bg-background/80 transition-colors"
+                  className="shrink-0 text-xs ss-rs px-3 py-1.5 border border-border/40 bg-background/50 text-muted-foreground hover:bg-background/80 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     setState("deferred");

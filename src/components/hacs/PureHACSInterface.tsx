@@ -295,7 +295,7 @@ export const PureHACSInterface: React.FC<PureHACSInterfaceProps> = ({
                   className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[85%] sm:max-w-[80%] md:max-w-[70%] rounded-lg px-3 md:px-4 py-2 md:py-3 ${
+                    className={`max-w-[85%] sm:max-w-[80%] md:max-w-[70%] ss-rs px-3 md:px-4 py-2 md:py-3 ${
                       message.isUser
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted"

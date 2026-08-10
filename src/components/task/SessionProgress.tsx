@@ -58,7 +58,7 @@ export const SessionProgress: React.FC<SessionProgressProps> = ({
         {[1, 2, 3].map(i => (
           <div 
             key={i}
-            className={`w-1 h-3 rounded-sm ${
+            className={`w-1 h-3 ss-rs ${
               i <= bars ? 'bg-current' : 'bg-current/20'
             }`}
           />
@@ -70,7 +70,7 @@ export const SessionProgress: React.FC<SessionProgressProps> = ({
   const dayProgress = totalDays > 1 ? (dayOfTask / totalDays) * 100 : 100;
 
   return (
-    <div className="space-y-4 p-4 bg-muted/20 rounded-lg border">
+    <div className="space-y-4 p-4 bg-muted/20 ss-rs border">
       <div className="flex items-center justify-between">
         <h3 className="font-medium text-sm flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-soul-purple" />

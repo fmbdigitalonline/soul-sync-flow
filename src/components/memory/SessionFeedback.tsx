@@ -131,7 +131,7 @@ export const SessionFeedback: React.FC<SessionFeedbackProps> = ({
               <button
                 key={star}
                 onClick={() => handleRatingClick(star)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-2 ss-rs transition-colors ${
                   star <= rating
                     ? 'text-yellow-500 bg-yellow-50 hover:bg-yellow-100'
                     : 'text-gray-300 hover:text-yellow-400 hover:bg-gray-50'

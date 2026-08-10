@@ -884,7 +884,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
           {/* Show database errors if any */}
           {databaseValidation.error && (
             <div className="max-w-sm">
-              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <div className="p-3 bg-destructive/10 border border-destructive/20 ss-rs">
                 <div className="text-xs text-destructive">
                   Database Error: {databaseValidation.error}
                 </div>
@@ -893,7 +893,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
           )}
           
           {/* Loading orb */}
-          <div className="p-4 bg-card/95 backdrop-blur border border-border rounded-lg shadow-lg">
+          <div className="p-4 bg-card/95 backdrop-blur border border-border ss-rs shadow-lg">
             <div className="flex items-center gap-3">
               <IntelligentSoulOrb
                 size="sm"
@@ -1143,7 +1143,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
 
         {/* Background Report Generation Indicator */}
         {isGeneratingReport && (
-          <div className="fixed bottom-4 right-4 z-40 bg-card/95 backdrop-blur border border-border rounded-lg p-4 shadow-lg">
+          <div className="fixed bottom-4 right-4 z-40 bg-card/95 backdrop-blur border border-border ss-rs p-4 shadow-lg">
             <div className="flex items-center gap-3">
               <IntelligentSoulOrb
                 size="sm"
@@ -1321,7 +1321,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
                     <h2 className="text-lg font-semibold mb-3 text-card-foreground">
                       {introductionState.steps[introductionState.currentStep].title}
                     </h2>
-                    <p className="text-muted-foreground leading-relaxed text-left bg-muted/20 p-4 rounded-lg border-l-4 border-primary">
+                    <p className="text-muted-foreground leading-relaxed text-left bg-muted/20 p-4 ss-rs border-l-4 border-primary">
                       "{introductionState.steps[introductionState.currentStep].message}"
                     </p>
                   </div>
@@ -1373,7 +1373,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, enable
                     continueIntroduction();
                   }
                 }}
-                className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90 transition-colors font-medium min-h-[44px]"
+                className="w-full bg-primary text-primary-foreground px-6 py-3 ss-rs hover:bg-primary/90 transition-colors font-medium min-h-[44px]"
               >
                 {introductionState.currentStep === introductionState.steps.length - 1 
                   ? t('activateSteward') 

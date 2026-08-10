@@ -147,10 +147,10 @@ const Dashboard = () => {
           {isMobile ? (
             <div className="relative mb-6">
               <div className="overflow-x-auto scrollbar-hide">
-                <div className="flex space-x-1 min-w-max p-1 bg-muted rounded-3xl">
+                <div className="flex space-x-1 min-w-max p-1 bg-muted ss-r">
                   <button
                     onClick={() => setActiveTab("overview")}
-                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-2xl transition-all whitespace-nowrap text-xs font-medium ${
+                    className={`flex items-center justify-center gap-2 py-2 px-3 ss-r transition-all whitespace-nowrap text-xs font-medium ${
                       activeTab === "overview" 
                         ? "bg-background text-foreground shadow-sm" 
                         : "text-muted-foreground hover:text-foreground"
@@ -160,7 +160,7 @@ const Dashboard = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("productivity")}
-                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-2xl transition-all whitespace-nowrap text-xs font-medium ${
+                    className={`flex items-center justify-center gap-2 py-2 px-3 ss-r transition-all whitespace-nowrap text-xs font-medium ${
                       activeTab === "productivity" 
                         ? "bg-background text-foreground shadow-sm" 
                         : "text-muted-foreground hover:text-foreground"
@@ -170,7 +170,7 @@ const Dashboard = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("growth")}
-                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-2xl transition-all whitespace-nowrap text-xs font-medium ${
+                    className={`flex items-center justify-center gap-2 py-2 px-3 ss-r transition-all whitespace-nowrap text-xs font-medium ${
                       activeTab === "growth" 
                         ? "bg-background text-foreground shadow-sm" 
                         : "text-muted-foreground hover:text-foreground"
@@ -180,7 +180,7 @@ const Dashboard = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("blueprint")}
-                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-2xl transition-all whitespace-nowrap text-xs font-medium ${
+                    className={`flex items-center justify-center gap-2 py-2 px-3 ss-r transition-all whitespace-nowrap text-xs font-medium ${
                       activeTab === "blueprint" 
                         ? "bg-background text-foreground shadow-sm" 
                         : "text-muted-foreground hover:text-foreground"
@@ -190,7 +190,7 @@ const Dashboard = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("user360")}
-                    className={`flex items-center justify-center gap-1 py-2 px-3 rounded-2xl transition-all whitespace-nowrap text-xs font-medium ${
+                    className={`flex items-center justify-center gap-1 py-2 px-3 ss-r transition-all whitespace-nowrap text-xs font-medium ${
                       activeTab === "user360" 
                         ? "bg-background text-foreground shadow-sm" 
                         : "text-muted-foreground hover:text-foreground"
@@ -201,7 +201,7 @@ const Dashboard = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("pie")}
-                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-2xl transition-all whitespace-nowrap text-xs font-medium ${
+                    className={`flex items-center justify-center gap-2 py-2 px-3 ss-r transition-all whitespace-nowrap text-xs font-medium ${
                       activeTab === "pie" 
                         ? "bg-background text-foreground shadow-sm" 
                         : "text-muted-foreground hover:text-foreground"

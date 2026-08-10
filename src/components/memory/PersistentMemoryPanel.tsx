@@ -139,7 +139,7 @@ export const PersistentMemoryPanel: React.FC<PersistentMemoryPanelProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Welcome Message with Context */}
-        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="p-4 bg-blue-50 ss-rs border border-blue-200">
           <p className="text-sm text-blue-800 leading-relaxed">
             {welcomeMessage}
           </p>
@@ -177,7 +177,7 @@ export const PersistentMemoryPanel: React.FC<PersistentMemoryPanelProps> = ({
                   searchResults.map((memory) => (
                     <div
                       key={memory.id}
-                      className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="p-3 border ss-rs hover:bg-gray-50 cursor-pointer transition-colors"
                       onClick={() => onMemorySelected?.(memory)}
                     >
                       <div className="flex items-start justify-between mb-2">
@@ -219,7 +219,7 @@ export const PersistentMemoryPanel: React.FC<PersistentMemoryPanelProps> = ({
                   memories.map((memory) => (
                     <div
                       key={memory.id}
-                      className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="p-3 border ss-rs hover:bg-gray-50 cursor-pointer transition-colors"
                       onClick={() => onMemorySelected?.(memory)}
                     >
                       <div className="flex items-start justify-between mb-2">
@@ -260,7 +260,7 @@ export const PersistentMemoryPanel: React.FC<PersistentMemoryPanelProps> = ({
               </div>
             ) : (
               lifeContext.map((context) => (
-                <div key={context.id} className="p-3 border rounded-lg">
+                <div key={context.id} className="p-3 border ss-rs">
                   <div className="flex items-center gap-2 mb-3">
                     {getContextIcon(context.context_category)}
                     <h4 className="font-medium capitalize">

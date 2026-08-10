@@ -174,7 +174,7 @@ export const PlanningInterface = () => {
     
     return (
       <div
-        className={`p-4 border-2 rounded-xl cursor-move transition-all duration-200 ${getStatusColor(task.status)} hover:shadow-md`}
+        className={`p-4 border-2 ss-rs cursor-move transition-all duration-200 ${getStatusColor(task.status)} hover:shadow-md`}
         draggable
         onDragStart={() => handleDragStart(task)}
       >
@@ -241,7 +241,7 @@ export const PlanningInterface = () => {
     accentColor: string;
   }) => (
     <div className="flex-1 min-w-72">
-      <div className={`flex items-center justify-between mb-4 p-4 rounded-xl ${accentColor}`}>
+      <div className={`flex items-center justify-between mb-4 p-4 ss-rs ${accentColor}`}>
         <div className="flex items-center space-x-3">
           {icon}
           <h3 className="font-semibold text-sm">{title}</h3>
@@ -252,7 +252,7 @@ export const PlanningInterface = () => {
       </div>
       
       <div
-        className="space-y-3 min-h-96 p-3 border-2 border-dashed border-muted-foreground/20 rounded-xl bg-muted/10 transition-colors hover:border-muted-foreground/40"
+        className="space-y-3 min-h-96 p-3 border-2 border-dashed border-muted-foreground/20 ss-rs bg-muted/10 transition-colors hover:border-muted-foreground/40"
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, status)}
       >
@@ -270,7 +270,7 @@ export const PlanningInterface = () => {
   );
 
   const StatCard = ({ label, value, icon, color }: { label: string; value: number; icon: React.ReactNode; color: string }) => (
-    <div className={`p-4 rounded-xl ${color}`}>
+    <div className={`p-4 ss-rs ${color}`}>
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-medium text-muted-foreground">{label}</p>
@@ -396,7 +396,7 @@ export const PlanningInterface = () => {
                 mode="single"
                 selected={selectedDate}
                 onSelect={(date) => date && setSelectedDate(date)}
-                className="rounded-xl border"
+                className="ss-rs border"
               />
             </div>
             
@@ -425,7 +425,7 @@ export const PlanningInterface = () => {
         <TabsContent value="list" className="mt-6">
           <div className="space-y-6">
             {currentGoals.map(goal => (
-              <div key={goal.id} className="border rounded-xl p-6 bg-gradient-to-r from-background to-muted/20">
+              <div key={goal.id} className="border ss-rs p-6 bg-gradient-to-r from-background to-muted/20">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h4 className="text-lg font-semibold">{goal.title}</h4>
@@ -459,7 +459,7 @@ export const PlanningInterface = () => {
           <div className="grid gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {currentGoals.map(goal => (
-                <div key={goal.id} className="p-6 border rounded-xl bg-gradient-to-br from-background to-muted/20">
+                <div key={goal.id} className="p-6 border ss-rs bg-gradient-to-br from-background to-muted/20">
                   <div className="flex items-center justify-between mb-4">
                     <Target className="h-8 w-8 text-soul-purple" />
                     <Badge variant="outline" className="text-xs">

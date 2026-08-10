@@ -40,7 +40,7 @@ export const SlowStreamingMessage: React.FC<SlowStreamingMessageProps> = ({
       </div>
       
       <div className="flex-1 space-y-2">
-        <div className="bg-soul-purple/5 rounded-lg p-4 border border-soul-purple/10">
+        <div className="bg-soul-purple/5 ss-rs p-4 border border-soul-purple/10">
           <TypewriterText
             text={content}
             isStreaming={isStreaming}

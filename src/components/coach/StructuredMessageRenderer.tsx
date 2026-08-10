@@ -54,7 +54,7 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
       });
       
       return (
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="p-4 bg-yellow-50 border border-yellow-200 ss-rs">
           <p className="text-sm text-yellow-800">
             ⚠️ Working instructions cannot be saved: Missing goal context. Please navigate to this task from a goal.
           </p>
@@ -154,7 +154,7 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
         
         <div className="space-y-2">
           {parsedMessage.actionItems.map((item, index) => (
-            <div key={index} className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-100 hover:border-blue-200 transition-colors">
+            <div key={index} className="flex items-start gap-3 p-3 bg-white ss-rs border border-blue-100 hover:border-blue-200 transition-colors">
               <Target className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
               <span className="text-sm text-gray-700 leading-relaxed">{item}</span>
             </div>

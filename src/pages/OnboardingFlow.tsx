@@ -392,10 +392,10 @@ const OnboardingFlow: React.FC = () => {
             {MICRO_QUESTIONS.map((q) => (
                 <div key={q.id}>
                   <Label>{t(MICRO_QUESTION_TITLE_KEYS[q.id])}</Label>
-                  {/* Same box as an Input — h-14, rounded-2xl, 2px border,
+                  {/* Same box as an Input — h-14, ss-r, 2px border,
                       white — split in two, so a question reads as a field
                       rather than a pair of chips floating beside one. */}
-                  <div className="flex h-14 min-h-[3.5rem] w-full gap-1.5 rounded-2xl border-2 border-gray-200 bg-white/90 p-1.5 backdrop-blur-sm transition-all duration-300">
+                  <div className="flex h-14 min-h-[3.5rem] w-full gap-1.5 ss-r border-2 border-gray-200 bg-white/90 p-1.5 backdrop-blur-sm transition-all duration-300">
                     {[q.left, q.right].map((opt) => {
                       const selected = answers[q.id] === opt.value;
                       return (
@@ -416,7 +416,7 @@ const OnboardingFlow: React.FC = () => {
                               return { ...prev, [q.id]: opt.value };
                             })
                           }
-                          className={`flex-1 rounded-xl px-2 text-sm leading-tight transition-colors duration-200 ${
+                          className={`flex-1 ss-rs px-2 text-sm leading-tight transition-colors duration-200 ${
                             selected
                               ? "bg-soul-purple text-white font-medium"
                               : "text-gray-500 hover:bg-soul-purple/5"
@@ -479,7 +479,7 @@ const OnboardingFlow: React.FC = () => {
                 {fragments.slice(0, visibleCount).map((f) => (
                   <div
                     key={f.label}
-                    className="rounded-xl border border-soul-purple/25 bg-soul-purple/5 px-4 py-3 animate-in fade-in slide-in-from-bottom-2 duration-500"
+                    className="ss-rs border border-soul-purple/25 bg-soul-purple/5 px-4 py-3 animate-in fade-in slide-in-from-bottom-2 duration-500"
                   >
                     <div className="flex items-baseline justify-between">
                       <span className="text-xs uppercase tracking-wider text-muted-foreground">

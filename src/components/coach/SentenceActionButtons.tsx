@@ -46,7 +46,7 @@ export const SentenceActionButtons: React.FC<SentenceActionButtonsProps> = ({
   loadingAction = null,
 }) => {
   return (
-    <div className="animate-in fade-in-0 slide-in-from-top-2 duration-200 rounded-xl border border-border/60 bg-card/60 p-2.5 space-y-1.5">
+    <div className="animate-in fade-in-0 slide-in-from-top-2 duration-200 ss-rs border border-border/60 bg-card/60 p-2.5 space-y-1.5">
       <p className="text-[11px] font-medium text-muted-foreground px-1">
         How can I help you with this?
       </p>
@@ -60,7 +60,7 @@ export const SentenceActionButtons: React.FC<SentenceActionButtonsProps> = ({
               disabled={isLoading}
               onClick={() => onAction(action, selectedSentence)}
               className={cn(
-                "w-full flex items-center gap-2 text-left text-xs rounded-lg px-2.5 py-2 border border-border/50 transition-colors",
+                "w-full flex items-center gap-2 text-left text-xs ss-rs px-2.5 py-2 border border-border/50 transition-colors",
                 "hover:bg-soul-purple/10 hover:border-soul-purple/30",
                 isLoading && "opacity-50 cursor-not-allowed"
               )}

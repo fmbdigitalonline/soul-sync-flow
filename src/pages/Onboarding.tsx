@@ -567,7 +567,7 @@ export default function Onboarding() {
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.whatsYourName')}</h2>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 space-y-4">
+            <div className="bg-white/10 backdrop-blur-sm ss-rs p-4 border border-white/20 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="fullName">{t('onboarding.fullName')}</Label>
                 <Input
@@ -597,7 +597,7 @@ export default function Onboarding() {
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.whenWereBorn')}</h2>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 space-y-4">
+            <div className="bg-white/10 backdrop-blur-sm ss-rs p-4 border border-white/20 space-y-4">
               <div className="space-y-3">
                 <Label>{t('onboarding.birthDate')}</Label>
                 <div className="grid grid-cols-3 gap-2">
@@ -665,7 +665,7 @@ export default function Onboarding() {
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.whatTimeWereBorn')}</h2>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 space-y-4">
+            <div className="bg-white/10 backdrop-blur-sm ss-rs p-4 border border-white/20 space-y-4">
               {/* Toggle for unknown birth time */}
               <div className="flex items-center space-x-2">
                 <input
@@ -727,7 +727,7 @@ export default function Onboarding() {
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.whereWereBorn')}</h2>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+            <div className="bg-white/10 backdrop-blur-sm ss-rs p-4 border border-white/20">
               <div className="space-y-2">
                 <Label htmlFor="birthLocation">{t('onboarding.birthLocation')}</Label>
                 <Input
@@ -759,7 +759,7 @@ export default function Onboarding() {
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.tellPersonality')}</h2>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+            <div className="bg-white/10 backdrop-blur-sm ss-rs p-4 border border-white/20">
               <PersonalityFusion 
                 value={formData.personality}
                 onChange={(value) => updateFormData({ personality: value })}

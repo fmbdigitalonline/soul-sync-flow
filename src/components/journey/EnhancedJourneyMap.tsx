@@ -216,7 +216,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
         
         <div className="flex-1 min-w-0 w-full">
           <div 
-            className="p-4 rounded-xl border transition-all duration-300 hover:shadow-lg cursor-pointer w-full transform active:scale-[0.98]" 
+            className="p-4 ss-rs border transition-all duration-300 hover:shadow-lg cursor-pointer w-full transform active:scale-[0.98]" 
             style={{
               backgroundColor: isCompleted ? '#f8fafc' : isCurrent ? '#dbeafe' : '#f9fafb',
               borderColor: isCompleted ? '#e2e8f0' : isCurrent ? '#3b82f6' : '#e5e7eb',
@@ -294,7 +294,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
       )}
 
       {/* Mobile-Optimized Journey Header */}
-      <div className="p-3 bg-gradient-to-r from-soul-purple/10 to-blue-500/10 rounded-xl border border-white/20 mb-4 w-full">
+      <div className="p-3 bg-gradient-to-r from-soul-purple/10 to-blue-500/10 ss-rs border border-white/20 mb-4 w-full">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0 pr-3">
             <h2 className="text-base font-bold mb-1 flex items-center leading-tight">
@@ -360,7 +360,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
                   <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center shadow-md flex-shrink-0 mt-1">
                     <CheckCircle2 className="h-4 w-4 text-white" />
                   </div>
-                  <div className="flex-1 min-w-0 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex-1 min-w-0 p-3 bg-gray-50 ss-rs border border-gray-200">
                     <h5 className="font-medium text-gray-600 text-sm mb-1">{t('journey.journeyStarted')}</h5>
                     <p className="text-xs text-gray-500 mb-1">{t('journey.dreamBeginsHere')}</p>
                     <p className="text-xs text-gray-400">
@@ -425,7 +425,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
                   <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 mt-1">
                     <Target className="h-5 w-5 text-white" />
                   </div>
-                  <div className="flex-1 min-w-0 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                  <div className="flex-1 min-w-0 p-3 bg-gradient-to-r from-green-50 to-emerald-50 ss-rs border border-green-200">
                     <h4 className="font-medium text-green-800 text-sm mb-1">{t('journey.dreamAchieved')}</h4>
                     <p className="text-xs text-green-600 mb-1 line-clamp-1">{mainGoal.title}</p>
                     <p className="text-xs text-green-500">
@@ -444,12 +444,12 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
         <div className="space-y-4 w-full">
           {/* Current Milestone Focus */}
           {currentMilestone && (
-            <div className="p-3 border-blue-200 bg-blue-50/50 rounded-lg border w-full">
+            <div className="p-3 border-blue-200 bg-blue-50/50 ss-rs border w-full">
               <h3 className="font-medium mb-3 flex items-center text-sm">
                 <Star className="h-4 w-4 mr-2 text-blue-500" />
                 {t('journey.currentMilestoneFocus')}
               </h3>
-              <div className="bg-white p-3 rounded-lg border border-blue-200 mb-3 w-full">
+              <div className="bg-white p-3 ss-rs border border-blue-200 mb-3 w-full">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="text-base">{getPhaseIcon(currentMilestone.phase)}</span>
                   <h4 className="font-medium text-blue-800 text-sm flex-1">{currentMilestone.title}</h4>
@@ -486,7 +486,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
                 {nextTasks.map((task: any, index: number) => (
                   <div
                     key={task.id}
-                    className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-secondary/20 cursor-pointer transition-all duration-200 hover:shadow-md w-full min-h-[60px]"
+                    className="flex items-center space-x-3 p-3 border ss-rs hover:bg-secondary/20 cursor-pointer transition-all duration-200 hover:shadow-md w-full min-h-[60px]"
                     onClick={() => onTaskClick?.(task)}
                   >
                     <div className="w-6 h-6 bg-soul-purple/20 rounded-full flex items-center justify-center text-soul-purple font-medium text-xs flex-shrink-0">
@@ -525,7 +525,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({
               </h3>
               <div className="grid grid-cols-1 gap-2 w-full">
                 {mainGoal.blueprint_alignment.map((trait: string, index: number) => (
-                  <div key={index} className="flex items-center p-2 bg-green-50 rounded-lg border border-green-200 w-full">
+                  <div key={index} className="flex items-center p-2 bg-green-50 ss-rs border border-green-200 w-full">
                     <Star className="h-3 w-3 mr-2 text-green-600 flex-shrink-0" />
                     <span className="text-xs text-green-800 font-medium line-clamp-1">{trait}</span>
                   </div>

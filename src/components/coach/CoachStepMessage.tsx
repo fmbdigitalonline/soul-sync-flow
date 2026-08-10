@@ -37,7 +37,7 @@ export const CoachStepMessage: React.FC<CoachStepMessageProps> = ({
   }
 
   return (
-    <div className="w-full bg-soul-purple/5 border-l-4 border-soul-purple rounded-lg shadow-sm px-5 py-4 my-3 animate-fade-in">
+    <div className="w-full bg-soul-purple/5 border-l-4 border-soul-purple ss-rs shadow-sm px-5 py-4 my-3 animate-fade-in">
       {/* Progress Meta Row */}
       <div className="flex items-center gap-2 mb-1">
         <ArrowRight className="h-4 w-4 text-soul-purple" />

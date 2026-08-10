@@ -121,10 +121,10 @@ export const StewardActivationCompletionScreen: React.FC<StewardActivationComple
               <button
                 key={index}
                 onClick={option.action}
-                className="group relative bg-card hover:bg-card/80 border border-border hover:border-primary/50 rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                className="group relative bg-card hover:bg-card/80 border border-border hover:border-primary/50 ss-r p-6 text-left transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
               >
                 {/* Icon */}
-                <div className={`p-3 rounded-xl bg-gradient-to-r ${option.gradient} inline-flex mb-4`}>
+                <div className={`p-3 ss-rs bg-gradient-to-r ${option.gradient} inline-flex mb-4`}>
                   <option.icon className="h-6 w-6 text-white" />
                 </div>
                 

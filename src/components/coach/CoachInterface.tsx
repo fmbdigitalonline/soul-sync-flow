@@ -164,7 +164,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
     return (
       <div
         key={message.id}
-        className={`w-full mx-auto max-w-2xl md:max-w-3xl rounded-2xl border ${messageClass}`}
+        className={`w-full mx-auto max-w-2xl md:max-w-3xl ss-r border ${messageClass}`}
       >
         <div className="flex items-center gap-2 mb-1">
           {message.sender === "assistant" ? (
@@ -247,7 +247,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
 
         {isLoading && (
           <div className="flex justify-start">
-            <div className={cn("cosmic-card max-w-[80%] rounded-2xl", isMobile ? "p-3" : "p-4")}>
+            <div className={cn("cosmic-card max-w-[80%] ss-r", isMobile ? "p-3" : "p-4")}>
               <div className="flex items-center space-x-2">
                 <ArrowRight className="h-4 w-4 text-green-400" />
                 <p className="text-xs font-medium">{t('coach.soulCoach')}</p>
@@ -290,7 +290,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
           </div>
         )}
 
-        <div className="flex items-center space-x-2 p-2 border border-green-200/20 bg-white rounded-2xl shadow">
+        <div className="flex items-center space-x-2 p-2 border border-green-200/20 bg-white ss-r shadow">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}

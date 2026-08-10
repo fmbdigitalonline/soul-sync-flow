@@ -16,7 +16,7 @@ export const StepChecklistProgress: React.FC<{
       <div
         key={i}
         className={
-          "flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-xs font-semibold " +
+          "flex items-center gap-2 px-3 py-2 ss-rs transition-all text-xs font-semibold " +
           (i < currentStepIdx
             ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
             : i === currentStepIdx

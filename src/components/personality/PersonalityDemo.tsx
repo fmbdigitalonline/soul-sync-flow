@@ -200,7 +200,7 @@ const PersonalityDemo = () => {
           <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
             Generated AI System Prompt for {selectedProfile}
           </h3>
-          <div className="bg-muted/50 p-3 sm:p-4 rounded-lg max-h-64 sm:max-h-96 overflow-y-auto">
+          <div className="bg-muted/50 p-3 sm:p-4 ss-rs max-h-64 sm:max-h-96 overflow-y-auto">
             <pre className="whitespace-pre-wrap text-xs sm:text-sm leading-relaxed break-words">
               {generatedPrompt}
             </pre>

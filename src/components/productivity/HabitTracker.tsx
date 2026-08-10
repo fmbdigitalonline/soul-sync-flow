@@ -37,7 +37,7 @@ export const HabitTracker: React.FC = () => {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="bg-gradient-to-r from-orange-50 to-red-50 p-8 rounded-xl border border-orange-200 text-center">
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 p-8 ss-rs border border-orange-200 text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-orange-600" />
           <p className="text-sm text-gray-600">Loading your habits...</p>
         </div>
@@ -49,7 +49,7 @@ export const HabitTracker: React.FC = () => {
   if (error) {
     return (
       <div className="space-y-4">
-        <div className="bg-red-50 p-6 rounded-xl border border-red-200">
+        <div className="bg-red-50 p-6 ss-rs border border-red-200">
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
@@ -67,7 +67,7 @@ export const HabitTracker: React.FC = () => {
   if (habits.length === 0) {
     return (
       <div className="space-y-4">
-        <div className="bg-gradient-to-r from-orange-50 to-red-50 p-8 rounded-xl border border-orange-200 text-center">
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 p-8 ss-rs border border-orange-200 text-center">
           <Flame className="h-12 w-12 text-orange-500 mx-auto mb-3" />
           <h3 className="text-lg font-bold text-gray-800 mb-2">No Habits Yet</h3>
           <p className="text-sm text-gray-600 mb-4">
@@ -88,7 +88,7 @@ export const HabitTracker: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Header with Stats */}
-      <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-xl border border-orange-200">
+      <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 ss-rs border border-orange-200">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Flame className="h-5 w-5 text-orange-500" />
@@ -115,15 +115,15 @@ export const HabitTracker: React.FC = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-green-50 p-3 rounded-lg text-center border border-green-200">
+        <div className="bg-green-50 p-3 ss-rs text-center border border-green-200">
           <div className="text-lg font-bold text-green-800">{completedToday}</div>
           <div className="text-xs text-green-600">Today</div>
         </div>
-        <div className="bg-orange-50 p-3 rounded-lg text-center border border-orange-200">
+        <div className="bg-orange-50 p-3 ss-rs text-center border border-orange-200">
           <div className="text-lg font-bold text-orange-800">{longestStreak}</div>
           <div className="text-xs text-orange-600">Best Streak</div>
         </div>
-        <div className="bg-blue-50 p-3 rounded-lg text-center border border-blue-200">
+        <div className="bg-blue-50 p-3 ss-rs text-center border border-blue-200">
           <div className="text-lg font-bold text-blue-800">{totalHabits}</div>
           <div className="text-xs text-blue-600">Total Habits</div>
         </div>

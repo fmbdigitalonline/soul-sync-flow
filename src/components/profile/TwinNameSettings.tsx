@@ -77,7 +77,7 @@ export const TwinNameSettings: React.FC = () => {
             }}
             maxLength={24}
             placeholder={t.placeholder}
-            className="w-full text-base rounded-xl px-3 py-2 outline-none"
+            className="w-full text-base ss-rs px-3 py-2 outline-none"
             style={{ background: 'var(--ss-surface)', border: '1px solid var(--ss-line)', color: 'var(--ss-ink)' }}
           />
           <div className="flex gap-2">

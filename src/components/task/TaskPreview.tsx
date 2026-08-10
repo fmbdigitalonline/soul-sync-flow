@@ -38,7 +38,7 @@ export const TaskPreview: React.FC<TaskPreviewProps> = ({ task }) => {
         <span className="text-xl">{expanded ? "−" : "+"}</span>
       </button>
       {expanded && (
-        <div className="bg-slate-50 rounded-xl p-4 mt-2 animate-fade-in border border-slate-200">
+        <div className="bg-slate-50 ss-rs p-4 mt-2 animate-fade-in border border-slate-200">
           {loading && (
             <div className="flex items-center gap-2 text-sm text-soul-purple mb-3">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -66,7 +66,7 @@ export const TaskPreview: React.FC<TaskPreviewProps> = ({ task }) => {
           </div>
           
           {assistantData?.timeOptimization && (
-            <div className="mt-3 p-2 bg-soul-purple/10 rounded-lg">
+            <div className="mt-3 p-2 bg-soul-purple/10 ss-rs">
               <div className="text-xs font-medium text-soul-purple mb-1">⏰ Optimal Timing</div>
               <div className="text-sm text-muted-foreground">{assistantData.timeOptimization}</div>
             </div>
