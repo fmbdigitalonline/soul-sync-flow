@@ -16,8 +16,6 @@ import { twinNamingService, type TwinNameSuggestion } from '@/services/twin-nami
 interface TwinNamingCardProps {
   onNamed: (name: string) => void;
   onLater: () => void;
-  /** The deep blueprint is being woven right now, in the background. */
-  growing?: boolean;
 }
 
 const COPY = {
@@ -29,7 +27,6 @@ const COPY = {
     confirm: 'This one',
     thinking: 'Thinking of a few names…',
     later: 'Maybe later',
-    growing: "While we talk I'm still weaving the deeper layers of you together — the ring around us fills as it goes.",
   },
   nl: {
     lead: 'Nu we tijd samen gaan doorbrengen, wil ik graag een naam. Kijkend naar je blauwdruk kwamen er een paar op —',
@@ -39,11 +36,10 @@ const COPY = {
     confirm: 'Deze',
     thinking: 'Ik denk aan een paar namen…',
     later: 'Misschien later',
-    growing: 'Terwijl we praten weef ik de diepere lagen van jou nog samen — de ring om ons heen vult zich onderweg.',
   },
 };
 
-export const TwinNamingCard: React.FC<TwinNamingCardProps> = ({ onNamed, onLater, growing }) => {
+export const TwinNamingCard: React.FC<TwinNamingCardProps> = ({ onNamed, onLater }) => {
   const { language } = useLanguage();
   const lang = language === 'nl' ? 'nl' : 'en';
   const t = COPY[lang];
@@ -143,16 +139,6 @@ export const TwinNamingCard: React.FC<TwinNamingCardProps> = ({ onNamed, onLater
             {t.later}
           </button>
 
-          {/* The steward introduction used to explain the deep synthesis across
-              five screens. This is the one sentence worth keeping: the Twin
-              says the work is happening and points at where it shows. It is the
-              only place the ring is ever explained — after this, the line just
-              stays there and means "in place". */}
-          {growing && (
-            <p className="text-xs leading-relaxed pt-1 border-t border-soul-purple/15 mt-1" style={{ color: 'var(--ss-muted)' }}>
-              {t.growing}
-            </p>
-          )}
         </>
       )}
     </div>
