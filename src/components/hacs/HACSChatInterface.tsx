@@ -93,35 +93,6 @@ interface HACSChatInterfaceProps {
   reaching?: boolean;
 }
 
-/**
- * Storage that cannot take the page down with it.
- *
- * localStorage throws — not returns null, throws — when a browser blocks
- * storage for a frame: Safari with cross-site tracking prevention, a sandboxed
- * preview iframe, private windows on some engines. Reading it inside a useState
- * initialiser means that throw happens during render, which React cannot
- * recover from, and the whole app falls to the error boundary over a
- * remembered-once onboarding flag.
- *
- * Forgetting the flag is a fine failure: the sequence runs again. A blank page
- * is not.
- */
-function readFlag(key: string): boolean {
-  try {
-    return window.localStorage.getItem(key) === 'done';
-  } catch {
-    return false;
-  }
-}
-
-function writeFlag(key: string): void {
-  try {
-    window.localStorage.setItem(key, 'done');
-  } catch {
-    /* Storage is unavailable; the sequence simply runs again next time. */
-  }
-}
-
 export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   messages,
   isLoading,
@@ -451,32 +422,28 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   // Each beat waits for the one before. Returning users skip all of it: the
   // sequence is finished the moment step 4 is acknowledged, and that is
   // remembered per user.
-  const seqKey = user?.id ? `ss_first_contact_${user.id}` : null;
-  const [seqDone, setSeqDone] = useState<boolean>(() => (seqKey ? readFlag(seqKey) : true));
+  // Nothing here is persisted, and that is deliberate.
+  //
+  // The first version remembered "done" in localStorage, read inside a
+  // useState initialiser — so the read happened during render. localStorage
+  // does not return null when a browser blocks storage for a frame, it throws,
+  // and a throw during render takes the whole app to the error boundary. A
+  // sandboxed preview iframe is exactly such a frame.
+  //
+  // It does not need storage. "The Twin has spoken and you have not answered"
+  // is already true or false from the messages themselves, and it stops being
+  // true the moment you reply. Beats 3 and 4 additionally require that beat 2
+  // happened in THIS session, so a returning reader who never answered does not
+  // meet the ring again.
   const [ringNoted, setRingNoted] = useState(false);
+  const [namedHere, setNamedHere] = useState(false);
 
-  // Anyone who has already talked is not in first contact, whatever the flag
-  // says. This also covers users who existed before the sequence did.
-  // The sequence ends when the reader speaks — not on a timer and not when the
-  // greeting finishes animating, which would unmount the greeting the instant
-  // it appeared. Beat 4 stays on screen until it is answered, which is the
-  // whole point of it being an invitation.
-  useEffect(() => {
-    if (!seqKey || seqDone) return;
-    if (userMsgCount > 0) {
-      writeFlag(seqKey);
-      setSeqDone(true);
-    }
-  }, [seqKey, seqDone, userMsgCount]);
+  const inFirstContact =
+    userMsgCount === 0 && messages.length > 0 && lastIsCompletedAssistant && !isLoading;
 
-
-
-  const inFirstContact = !seqDone && userMsgCount === 0 && lastIsCompletedAssistant && !isLoading;
-  const namingResolved = !!twinName || namingLater;
-
-  const showNaming = inFirstContact && !twinName && !twinNameLoading && !namingLater;
-  const showGrowingNote = inFirstContact && namingResolved && !ringNoted;
-  const showFirstContactGreeting = inFirstContact && namingResolved && ringNoted;
+  const showNaming = inFirstContact && !namedHere && !twinName && !twinNameLoading;
+  const showGrowingNote = inFirstContact && namedHere && !ringNoted;
+  const showFirstContactGreeting = inFirstContact && namedHere && ringNoted;
 
   const handleNamed = (name: string) => {
     // The Twin acknowledges in its own voice, as a real chat message.
@@ -507,7 +474,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
           {/* The Twin speaks first (v3.1): reunion replaces the empty state —
               for a RETURNING reader. On first contact it is beat 4, below,
               after the insight, the naming and the ring. */}
-          {messages.length === 0 && seqDone &&
+          {messages.length === 0 &&
             (reunion ? (
               <TwinReunionGreeting reunion={reunion} />
             ) : (
@@ -685,7 +652,10 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
               are two different things to take in and stacking them was part of
               what made first contact feel like four things at once. */}
           {showNaming && (
-            <TwinNamingCard onNamed={handleNamed} onLater={() => setNamingLater(true)} />
+            <TwinNamingCard
+              onNamed={(name) => { setNamedHere(true); handleNamed(name); }}
+              onLater={() => { setNamedHere(true); setNamingLater(true); }}
+            />
           )}
 
           {/* Beat 3 — the ring, explained once and never again. */}
