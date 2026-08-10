@@ -59,7 +59,7 @@ export const DreamSuccessView: React.FC<DreamSuccessViewProps> = ({
             Your Dream Journey is Ready! ✨
           </h1>
           
-          <div className="bg-card/80 backdrop-blur-lg rounded-xl p-4 max-w-2xl mx-auto shadow-sm">
+          <div className="bg-card/80 backdrop-blur-lg ss-rs p-4 max-w-2xl mx-auto shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800 mb-2">{dream?.title}</h2>
             <p className="text-sm text-gray-600 mb-4">{dream?.description}</p>
             
@@ -139,14 +139,14 @@ export const DreamSuccessView: React.FC<DreamSuccessViewProps> = ({
             
             {/* Blueprint Insights */}
             {insights.length > 0 && (
-              <div className="bg-card/80 backdrop-blur-lg rounded-xl p-6 shadow-sm">
+              <div className="bg-card/80 backdrop-blur-lg ss-rs p-6 shadow-sm">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-soul-purple" />
                   Personalized Insights
                 </h3>
                 <div className="space-y-3">
                   {insights.map((insight: string, index: number) => (
-                    <div key={index} className="flex items-start gap-3 p-3 bg-soul-purple/5 rounded-lg">
+                    <div key={index} className="flex items-start gap-3 p-3 bg-soul-purple/5 ss-rs">
                       <div className="w-6 h-6 bg-soul-purple/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-soul-purple text-xs font-bold">{index + 1}</span>
                       </div>
@@ -178,7 +178,7 @@ export const DreamSuccessView: React.FC<DreamSuccessViewProps> = ({
 
         {/* Personalization Note */}
         <div className="text-center">
-          <p className="text-sm text-gray-600 bg-card/60 rounded-lg p-4 max-w-2xl mx-auto">
+          <p className="text-sm text-gray-600 bg-card/60 ss-rs p-4 max-w-2xl mx-auto">
             ✨ {dream?.personalization_notes || 
               `This journey has been crafted specifically for your unique blueprint, 
               with ${milestones.length} milestones and ${tasks.length} tasks optimized for your energy type and cognitive style.`}

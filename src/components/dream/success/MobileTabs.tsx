@@ -22,11 +22,11 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
   // For very narrow screens, use a different approach
   if (isFoldDevice) {
     return (
-      <div className="w-full bg-card/50 backdrop-blur-sm rounded-xl p-1 mb-6">
+      <div className="w-full bg-card/50 backdrop-blur-sm ss-rs p-1 mb-6">
         <div className="flex flex-col w-full space-y-1">
           <button
             onClick={() => onTabChange('overview')}
-            className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-all w-full ${
+            className={`flex items-center justify-center gap-2 py-2 px-3 ss-rs transition-all w-full ${
               activeTab === 'overview' 
                 ? 'bg-soul-purple/10 text-soul-purple font-medium' 
                 : 'text-gray-600 hover:bg-gray-50'
@@ -37,7 +37,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
           </button>
           <button
             onClick={() => onTabChange('roadmap')}
-            className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-all w-full ${
+            className={`flex items-center justify-center gap-2 py-2 px-3 ss-rs transition-all w-full ${
               activeTab === 'roadmap' 
                 ? 'bg-soul-purple/10 text-soul-purple font-medium' 
                 : 'text-gray-600 hover:bg-gray-50'
@@ -51,7 +51,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
           </button>
           <button
             onClick={() => onTabChange('nexttask')}
-            className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-all w-full ${
+            className={`flex items-center justify-center gap-2 py-2 px-3 ss-rs transition-all w-full ${
               activeTab === 'nexttask' 
                 ? 'bg-soul-purple/10 text-soul-purple font-medium' 
                 : 'text-gray-600 hover:bg-gray-50'
@@ -68,11 +68,11 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
   // For ultra-narrow but not fold devices
   if (isUltraNarrow) {
     return (
-      <div className="w-full bg-card/50 backdrop-blur-sm rounded-xl p-1 mb-6">
+      <div className="w-full bg-card/50 backdrop-blur-sm ss-rs p-1 mb-6">
         <div className="grid grid-cols-3 gap-1 w-full">
           <button
             onClick={() => onTabChange('overview')}
-            className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all min-w-0 ${
+            className={`flex flex-col items-center gap-1 py-2 px-1 ss-rs transition-all min-w-0 ${
               activeTab === 'overview' 
                 ? 'bg-soul-purple/10 text-soul-purple font-medium' 
                 : 'text-gray-600 hover:bg-gray-50'
@@ -83,7 +83,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
           </button>
           <button
             onClick={() => onTabChange('roadmap')}
-            className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all min-w-0 relative ${
+            className={`flex flex-col items-center gap-1 py-2 px-1 ss-rs transition-all min-w-0 relative ${
               activeTab === 'roadmap' 
                 ? 'bg-soul-purple/10 text-soul-purple font-medium' 
                 : 'text-gray-600 hover:bg-gray-50'
@@ -97,7 +97,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
           </button>
           <button
             onClick={() => onTabChange('nexttask')}
-            className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all min-w-0 ${
+            className={`flex flex-col items-center gap-1 py-2 px-1 ss-rs transition-all min-w-0 ${
               activeTab === 'nexttask' 
                 ? 'bg-soul-purple/10 text-soul-purple font-medium' 
                 : 'text-gray-600 hover:bg-gray-50'
@@ -113,11 +113,11 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
 
   // Default mobile layout for larger mobile screens
   return (
-    <div className="w-full bg-card/50 backdrop-blur-sm rounded-xl p-1 mb-6">
+    <div className="w-full bg-card/50 backdrop-blur-sm ss-rs p-1 mb-6">
       <div className="flex w-full">
         <button
           onClick={() => onTabChange('overview')}
-          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all flex-1 min-w-0 ${
+          className={`flex items-center justify-center gap-2 py-3 px-4 ss-rs transition-all flex-1 min-w-0 ${
             activeTab === 'overview' 
               ? 'bg-soul-purple/10 text-soul-purple font-medium' 
               : 'text-gray-600 hover:bg-gray-50'
@@ -128,7 +128,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
         </button>
         <button
           onClick={() => onTabChange('roadmap')}
-          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all flex-1 min-w-0 relative ${
+          className={`flex items-center justify-center gap-2 py-3 px-4 ss-rs transition-all flex-1 min-w-0 relative ${
             activeTab === 'roadmap' 
               ? 'bg-soul-purple/10 text-soul-purple font-medium' 
               : 'text-gray-600 hover:bg-gray-50'
@@ -142,7 +142,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
         </button>
         <button
           onClick={() => onTabChange('nexttask')}
-          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all flex-1 min-w-0 ${
+          className={`flex items-center justify-center gap-2 py-3 px-4 ss-rs transition-all flex-1 min-w-0 ${
             activeTab === 'nexttask' 
               ? 'bg-soul-purple/10 text-soul-purple font-medium' 
               : 'text-gray-600 hover:bg-gray-50'

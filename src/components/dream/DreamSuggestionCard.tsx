@@ -85,7 +85,7 @@ export const DreamSuggestionCard: React.FC<DreamSuggestionCardProps> = ({
         </div>
 
         {/* Blueprint reason */}
-        <div className={`bg-soul-purple/5 rounded-lg p-3 mb-4 border-l-4 border-soul-purple ${isFoldDevice ? 'p-2' : ''}`}>
+        <div className={`bg-soul-purple/5 ss-rs p-3 mb-4 border-l-4 border-soul-purple ${isFoldDevice ? 'p-2' : ''}`}>
           <p className={`text-soul-purple font-medium ${getTextSize('text-xs')}`}>
             <Lightbulb className={`inline mr-1 ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
             {t('dreamSuggestions.whyFits')}
@@ -98,7 +98,7 @@ export const DreamSuggestionCard: React.FC<DreamSuggestionCardProps> = ({
         {/* Action button */}
         <Button
           onClick={() => onSelect(suggestion)}
-          className={`w-full bg-gradient-to-r from-soul-purple to-soul-teal text-white rounded-xl font-medium transition-colors duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
+          className={`w-full bg-gradient-to-r from-soul-purple to-soul-teal text-white ss-rs font-medium transition-colors duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
         >
           <Heart className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
           {t('dreamSuggestions.exploreDream')}

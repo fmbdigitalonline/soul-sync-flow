@@ -141,7 +141,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({
         )}
 
         {hasResumableTasks && (
-          <div className="rounded-lg border border-blue-200 bg-blue-50/70 p-3">
+          <div className="ss-rs border border-blue-200 bg-blue-50/70 p-3">
             <div className="flex items-center gap-2 text-blue-700 font-semibold text-sm">
               <ListChecks className="h-4 w-4" />
               Plans ready to resume

@@ -25,7 +25,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error }) => {
           <p className="text-muted-foreground">{error}</p>
           
           {isQuotaError && (
-            <div className="bg-muted p-4 rounded-lg text-sm text-left">
+            <div className="bg-muted p-4 ss-rs text-sm text-left">
               <p className="font-medium mb-2">💡 What to try:</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>Wait 30-60 seconds and try again</li>
@@ -36,7 +36,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error }) => {
           )}
           
           {isTimeoutError && (
-            <div className="bg-muted p-4 rounded-lg text-sm text-left">
+            <div className="bg-muted p-4 ss-rs text-sm text-left">
               <p className="font-medium mb-2">💡 What to try:</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>Simplify your dream description (max 500 words)</li>
@@ -47,7 +47,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error }) => {
           )}
           
           {isAuthError && (
-            <div className="bg-muted p-4 rounded-lg text-sm text-left">
+            <div className="bg-muted p-4 ss-rs text-sm text-left">
               <p className="font-medium mb-2">💡 What to try:</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>Log out and log back in</li>

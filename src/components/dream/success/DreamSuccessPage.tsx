@@ -293,7 +293,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
               <Button
                 onClick={onCreateAnother}
                 variant="outline"
-                className="w-full py-4 rounded-xl font-medium transition-all duration-300"
+                className="w-full py-4 ss-rs font-medium transition-all duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Another Dream

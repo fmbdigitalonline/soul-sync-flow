@@ -86,6 +86,9 @@ const ENFORCED_PATHS = [
   // Phase A, passes 4 and 5.
   "src/components/dashboard/**/*.tsx",
   "src/components/growth/**/*.tsx",
+  // Phase A, pass 6: dreams — the largest untouched customer-facing surface.
+  "src/components/dream/**/*.tsx",
+  "src/pages/Dreams.tsx",
   "src/components/bedtime/**/*.tsx",
   "src/components/context/**/*.tsx",
   "src/components/feedback/**/*.tsx",
