@@ -8,6 +8,20 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { ConversationShadowDetector } from '../_shared/conversation-shadow-detector.ts';
 import { ConversationPhaseTracker } from '../_shared/conversation-phase-tracker.ts';
 
+// RCA 2026-08-10: name the class of an upstream model-provider failure so the
+// log trail (and the JSON error body, which the UI never renders) carries the
+// operational cause. Purely diagnostic — no user-facing surface.
+function classifyProviderError(status: number, parsedError: any): string {
+  const code = String(parsedError?.error?.code ?? '');
+  const type = String(parsedError?.error?.type ?? '');
+  if (code === 'credit_balance_exhausted' || type === 'insufficient_quota') {
+    return 'provider_quota_exhausted';
+  }
+  if (status === 429) return 'provider_rate_limited';
+  if (status === 401 || status === 403) return 'provider_auth_failed';
+  return 'provider_error';
+}
+
 // Helper function to detect if user wants technical personality details
 function detectTechnicalDetailRequest(message: string): boolean {
   const technicalKeywords = /\b(mbti|human design|personality type|what.*type|technical|specific|sun sign|projector|enfp|intj|generator|manifestor|manifesting generator|reflector)\b/i;
@@ -2917,7 +2931,24 @@ serve(async (req) => {
       });
       
       const errorMessage = parsedError?.error?.message || responseText || `HTTP ${openAIResponse.status}`;
-      throw new Error(`OpenAI API error: ${errorMessage}`);
+
+      // RCA 2026-08-10: classify provider failures so the log trail names the
+      // real cause instead of a generic 500. Diagnostics only — nothing here
+      // reaches the end user, the UI keeps its own neutral message.
+      const providerCode = classifyProviderError(openAIResponse.status, parsedError);
+      console.error('🚨 PROVIDER FAILURE:', {
+        code: providerCode,
+        httpStatus: openAIResponse.status,
+        providerCode: parsedError?.error?.code ?? null,
+        providerType: parsedError?.error?.type ?? null,
+        model: selectedModel,
+        detail: errorMessage,
+      });
+
+      const providerError = new Error(`OpenAI API error: ${errorMessage}`) as Error & { providerErrorCode?: string; providerHttpStatus?: number };
+      providerError.providerErrorCode = providerCode;
+      providerError.providerHttpStatus = openAIResponse.status;
+      throw providerError;
     }
     
     const aiResponse = JSON.parse(responseText);
@@ -3113,11 +3144,23 @@ serve(async (req) => {
     // FUSION STEP 5: Return immediate response (customer served, background tasks queued)
     return immediateResponse;
   } catch (error) {
-    console.error("❌ Oracle Conversation Error:", error);
+    const err = error as Error & { providerErrorCode?: string; providerHttpStatus?: number };
+    // RCA 2026-08-10: carry the classified provider cause into the log trail and
+    // the machine-readable error body. The user-facing string is unchanged.
+    console.error("❌ Oracle Conversation Error:", {
+      error_code: err.providerErrorCode || 'unhandled_error',
+      providerHttpStatus: err.providerHttpStatus ?? null,
+      message: err.message,
+      stack: err.stack,
+    });
     return new Response(JSON.stringify({
-      error: (error as Error).message,
+      error: err.message,
+      error_code: err.providerErrorCode || 'unhandled_error',
       response: "The cosmic channels are temporarily disrupted. Please try again, seeker."
-    }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }), {
+      status: err.providerHttpStatus && err.providerHttpStatus >= 400 ? err.providerHttpStatus : 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
   }
 });
 

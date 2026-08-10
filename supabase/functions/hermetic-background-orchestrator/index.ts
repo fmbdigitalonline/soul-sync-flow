@@ -71,8 +71,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // RCA 2026-08-10: hoisted so the error path always knows which job failed.
+  // Previously the catch re-read an already-consumed body and logged
+  // "job unknown", leaving failing jobs stuck at 0% instead of marked failed.
+  let currentJobId: string | undefined;
+
   try {
     const { job_id: jobId } = await req.json();
+    currentJobId = jobId;
     
     if (!jobId) {
       throw new Error('Missing job_id in request body');
@@ -316,29 +322,34 @@ serve(async (req) => {
 
   } catch (error) {
     // Enhanced error handling with recovery context
-    let errorJobId: string | undefined;
-    let originalRequestBody: any;
-    
-    try {
-      originalRequestBody = await req.clone().json();
-      errorJobId = originalRequestBody?.job_id;
-    } catch {
-      console.error('❌ Could not parse request body for error handling');
-    }
-    
+    const errorJobId = currentJobId;
+
+    // RCA 2026-08-10: surface the underlying provider cause in the failure
+    // reason so /testing shows "provider credits exhausted" instead of a
+    // silent 0%. Log trail only — no end-user surface.
+    const rawMessage = String(error?.message ?? error);
+    const providerCause =
+      /no credits remaining|insufficient_quota|credit_balance_exhausted/i.test(rawMessage)
+        ? 'provider_quota_exhausted'
+        : /429|rate limit/i.test(rawMessage)
+          ? 'provider_rate_limited'
+          : /401|403|unauthorized|invalid api key/i.test(rawMessage)
+            ? 'provider_auth_failed'
+            : 'orchestrator_error';
+
     console.error(`❌ Orchestrator failed for job ${errorJobId || 'unknown'}:`, {
-      error: error.message,
-      stack: error.stack,
-      jobId: errorJobId,
-      requestBody: originalRequestBody
+      error_code: providerCause,
+      error: rawMessage,
+      stack: error?.stack,
+      jobId: errorJobId
     });
     
     if (errorJobId) {
       // Enhanced error logging similar to client service
       const errorUpdate = {
         status: 'failed',
-        current_step: `Error: ${error.message}`,
-        error_message: `Processing failed at step: ${error.message}. Check logs for recovery options.`,
+        current_step: `Error: ${rawMessage}`,
+        error_message: `[${providerCause}] Processing failed at step: ${rawMessage}. Check logs for recovery options.`,
         updated_at: new Date().toISOString()
       };
       
@@ -390,7 +401,19 @@ async function callAgent(systemPrompt: string, userPrompt: string, label: string
     },
   });
 
-  if (error) throw new Error(`Agent call failed for ${label}: ${error.message}`);
+  if (error) {
+    // RCA 2026-08-10: `error.message` for a function invoke is only
+    // "non-2xx status code". Pull the upstream body so the real provider
+    // cause reaches the log trail and the job's error_message.
+    let upstream = '';
+    try {
+      upstream = (await (error as any)?.context?.text?.()) ?? '';
+    } catch {
+      upstream = '';
+    }
+    console.error(`❌ AGENT FAILURE (${label}):`, { message: error.message, upstream: upstream.slice(0, 800) });
+    throw new Error(`Agent call failed for ${label}: ${error.message}${upstream ? ` :: ${upstream.slice(0, 500)}` : ''}`);
+  }
   const content = (data?.content ?? '').trim();
   if (!content) throw new Error(`${label} returned empty content`);
   return content;

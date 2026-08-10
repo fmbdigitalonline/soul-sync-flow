@@ -26,19 +26,23 @@ Secondary observation, not the cause: the orchestrator error handler logs `job u
 ## Fix
 
 ### 1. Restore provider credit (required, outside the code)
-Add credits at https://platform.openai.com/settings/organization/billing/ for the org that owns `OPENAI_API_KEY`, or set `OPENAI_API_KEY` to a key on a funded org. Nothing in the app can work around an unfunded account, and per project rules no mock or fallback content will be substituted.
+
+Add credits at [https://platform.openai.com/settings/organization/billing/](https://platform.openai.com/settings/organization/billing/) for the org that owns `OPENAI_API_KEY`, or set `OPENAI_API_KEY` to a key on a funded org. Nothing in the app can work around an unfunded account, and per project rules no mock or fallback content will be substituted.
 
 Once funded: re-send a companion message and re-create the hermetic job from `/testing`. The current stuck job must be abandoned or restarted — it has no live worker.
 
 ### 2. Surface the failure honestly instead of hiding it (code)
+
 Today a 402/429-class provider failure is flattened into a generic apology, which reads like a model reply and hides an operational problem.
 
 - `supabase/functions/companion-oracle-conversation/index.ts`: on an OpenAI non-2xx, return the upstream status and a typed body (`{ error: "provider_quota_exhausted" | "provider_rate_limited" | "provider_error", detail }`) rather than a generic 500.
 - `src/hooks/use-hacs-conversation.ts` (and the three sibling hooks carrying the same literal string: `use-program-aware-coach.ts`, `use-optimized-program-coach.ts`, `use-enhanced-ai-coach-vfp.ts`): branch on that error code and show a distinct, non-conversational system notice ("AI service unavailable — provider credits exhausted") instead of an in-character apology message.
 
 ### 3. Make orchestrator failures observable (code)
+
 - `supabase/functions/hermetic-background-orchestrator/index.ts`: clone the request body before parsing (or capture `jobId` into a variable at the top of the handler) so the error path can mark the job `failed` with the real reason instead of logging `job unknown`.
 - Propagate the analyst's status/message into the job's failure reason so `/testing` shows "provider credits exhausted" rather than a silent 0%.
 
 ## Scope note
-Items 2 and 3 are diagnostics/plumbing only — no prompt, model-routing, or personality logic changes. Item 1 is a billing action only you can take, and until it is done the app will keep failing at every model call regardless of what is deployed.
+
+Items 2 and 3 are diagnostics/plumbing only — no prompt, model-routing, or personality logic changes. Item 1 is a billing action only you can take, and until it is done the app will keep failing at every model call regardless of what is deployed. DEV NOTE-Point two and 3 can never be visible for end user,put in in the log trail
