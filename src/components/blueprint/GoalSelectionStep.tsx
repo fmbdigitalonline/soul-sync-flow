@@ -121,7 +121,7 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
         }}
       >
         <div className="space-y-6 max-w-md mx-auto">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 space-y-6">
+          <div className="bg-white/10 backdrop-blur-sm ss-rs p-6 border border-white/20 space-y-6">
             {/* Primary Goal Selection */}
             <div className="space-y-4">
               <Label className="text-base font-medium text-center block">
@@ -131,7 +131,7 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
                 {goals.map((goal) => (
                   <div 
                     key={goal.id} 
-                    className="flex items-start space-x-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                    className="flex items-start space-x-3 p-2 ss-rs hover:bg-white/5 transition-colors cursor-pointer"
                     onClick={() => !isSubmitting && handleGoalToggle(goal.id)}
                   >
                     <Checkbox
@@ -190,7 +190,7 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
 
           {/* Selection Summary */}
           {primaryGoals.length > 0 && (
-            <div className="bg-white/5 rounded-lg p-4 space-y-2">
+            <div className="bg-white/5 ss-rs p-4 space-y-2">
               <h4 className="text-sm font-medium text-soul-purple">{t('goals.yourSelections')}</h4>
               <div className="text-xs space-y-1">
                 <p><span className="text-white/60">{t('goals.focus')}</span> {primaryGoals.length} {primaryGoals.length === 1 ? 'goal' : 'goals'} selected</p>
@@ -222,7 +222,7 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
 
           {/* Error Message */}
           {submitError && (
-            <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-4 space-y-3">
+            <div className="bg-red-900/20 border border-red-500/50 ss-rs p-4 space-y-3">
               <div className="text-red-300 text-sm">
                 <strong>{t('error')}:</strong> {submitError}
               </div>

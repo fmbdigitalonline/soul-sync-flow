@@ -81,6 +81,8 @@ const ENFORCED_PATHS = [
   "src/components/journey/TurningPoints.tsx",
   // Phase A, pass 2: the shell every screen sits inside.
   "src/components/Layout/**/*.tsx",
+  // Phase A, pass 3: the blueprint surface — the screen that started this.
+  "src/components/blueprint/**/*.tsx",
   "src/components/bedtime/**/*.tsx",
   "src/components/context/**/*.tsx",
   "src/components/feedback/**/*.tsx",

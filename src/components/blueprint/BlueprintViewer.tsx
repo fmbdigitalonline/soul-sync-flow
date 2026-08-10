@@ -132,7 +132,7 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
   }) => (
     <button
       onClick={onClick}
-      className={`w-full flex items-center justify-between ${spacing.button} ${getTextSize('text-lg')} font-semibold text-left hover:bg-muted/50 rounded-lg transition-colors`}
+      className={`w-full flex items-center justify-between ${spacing.button} ${getTextSize('text-lg')} font-semibold text-left hover:bg-muted/50 ss-rs transition-colors`}
     >
       <div className="flex items-center gap-3">
         {Icon && <Icon className="h-5 w-5 text-soul-purple flex-shrink-0" />}
@@ -215,29 +215,29 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
                   <p className={getTextSize('text-base')}>Welcome to your Soul Blueprint, {blueprint.user_meta.preferred_name}!</p>
                   
                   {isRealCalculation ? (
-                    <div className="bg-green-50 border border-green-200 rounded-3xl p-4">
+                    <div className="bg-green-50 border border-green-200 ss-r p-4">
                       <h4 className={`font-semibold text-green-800 mb-2 ${getTextSize('text-sm')}`}>✅ Accurate Calculations</h4>
                       <p className={`text-green-700 ${getTextSize('text-sm')}`}>Your blueprint was generated using precise astronomical calculations from the Swiss Ephemeris, taking into account your exact birth time, location, and historical timezone data.</p>
                     </div>
                   ) : (
-                    <div className="bg-gray-50 border border-gray-200 rounded-3xl p-4">
+                    <div className="bg-gray-50 border border-gray-200 ss-r p-4">
                       <h4 className={`font-semibold text-gray-800 mb-2 ${getTextSize('text-sm')}`}>📋 Template Data</h4>
                       <p className={`text-gray-700 ${getTextSize('text-sm')}`}>This blueprint uses template data. For accurate calculations based on your birth details, please regenerate your blueprint.</p>
                     </div>
                   )}
                   
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
-                    <div className="text-center bg-soul-purple/5 rounded-3xl p-4">
+                    <div className="text-center bg-soul-purple/5 ss-r p-4">
                       <h4 className={`font-semibold ${getTextSize('text-sm')}`}>Sun Sign</h4>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-lg')}`}>{westernData.sun_sign}</p>
                       <p className={`text-gray-600 ${getTextSize('text-xs')}`}>{westernData.sun_keyword}</p>
                     </div>
-                    <div className="text-center bg-soul-purple/5 rounded-3xl p-4">
+                    <div className="text-center bg-soul-purple/5 ss-r p-4">
                       <h4 className={`font-semibold ${getTextSize('text-sm')}`}>Moon Sign</h4>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-lg')}`}>{westernData.moon_sign}</p>
                       <p className={`text-gray-600 ${getTextSize('text-xs')}`}>{westernData.moon_keyword}</p>
                     </div>
-                    <div className="text-center bg-soul-purple/5 rounded-3xl p-4">
+                    <div className="text-center bg-soul-purple/5 ss-r p-4">
                       <h4 className={`font-semibold ${getTextSize('text-sm')}`}>Life Path</h4>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-lg')}`}>{numerologyData.lifePathNumber}</p>
                       <p className={`text-gray-600 ${getTextSize('text-xs')}`}>Your spiritual journey</p>
@@ -261,22 +261,22 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
               {expandedSections.mbti && (
                 <div className={`mt-4 space-y-4`}>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold ${getTextSize('text-sm')}`}>Type</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-lg')}`}>{mbtiData.type}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold ${getTextSize('text-sm')}`}>Keywords</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{mbtiData.core_keywords?.join(", ")}</p>
                     </div>
                   </div>
                   
                   <div className="space-y-3">
-                    <div className="bg-gray-50 rounded-3xl p-4">
+                    <div className="bg-gray-50 ss-r p-4">
                       <span className={`font-semibold ${getTextSize('text-sm')}`}>Dominant Function: </span>
                       <span className={getTextSize('text-sm')}>{mbtiData.dominant_function}</span>
                     </div>
-                    <div className="bg-gray-50 rounded-3xl p-4">
+                    <div className="bg-gray-50 ss-r p-4">
                       <span className={`font-semibold ${getTextSize('text-sm')}`}>Auxiliary Function: </span>
                       <span className={getTextSize('text-sm')}>{mbtiData.auxiliary_function}</span>
                     </div>
@@ -299,33 +299,33 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
               {expandedSections.humanDesign && (
                 <div className={`mt-4 space-y-4`}>
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Type</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{humanDesignData.type}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Profile</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{humanDesignData.profile}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Authority</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{humanDesignData.authority}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Strategy</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{humanDesignData.strategy}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Definition</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{humanDesignData.definition}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Not-Self Theme</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{humanDesignData.not_self_theme}</p>
                     </div>
                   </div>
                   
-                  <div className="bg-gray-50 rounded-3xl p-4">
+                  <div className="bg-gray-50 ss-r p-4">
                     <span className={`font-semibold ${getTextSize('text-sm')}`}>Life Purpose: </span>
                     <span className={getTextSize('text-sm')}>{humanDesignData.life_purpose}</span>
                   </div>
@@ -346,16 +346,16 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
               
               {expandedSections.bashar && (
                 <div className={`mt-4 space-y-4`}>
-                  <div className="bg-soul-purple/5 rounded-3xl p-4">
+                  <div className="bg-soul-purple/5 ss-r p-4">
                     <h4 className={`font-semibold ${getTextSize('text-sm')}`}>Excitement Compass</h4>
                     <p className={`text-gray-700 ${getTextSize('text-sm')}`}>{basharData.excitement_compass?.principle}</p>
                   </div>
-                  <div className="bg-soul-purple/5 rounded-3xl p-4">
+                  <div className="bg-soul-purple/5 ss-r p-4">
                     <h4 className={`font-semibold ${getTextSize('text-sm')}`}>Belief Interface</h4>
                     <p className={`text-gray-700 ${getTextSize('text-sm')}`}>{basharData.belief_interface?.principle}</p>
                     <p className={`text-gray-500 mt-1 ${getTextSize('text-xs')}`}>Reframe: {basharData.belief_interface?.reframe_prompt}</p>
                   </div>
-                  <div className="bg-soul-purple/5 rounded-3xl p-4">
+                  <div className="bg-soul-purple/5 ss-r p-4">
                     <h4 className={`font-semibold ${getTextSize('text-sm')}`}>Frequency Alignment</h4>
                     <p className={`text-gray-700 ${getTextSize('text-sm')}`}>{basharData.frequency_alignment?.quick_ritual}</p>
                   </div>
@@ -377,28 +377,28 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
               {expandedSections.numerology && (
                 <div className={`mt-4 space-y-4`}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <h4 className={`font-semibold text-soul-purple ${getTextSize('text-sm')}`}>Life Path Number</h4>
                       <p className={`font-bold text-soul-purple ${getTextSize('text-2xl')}`}>{numerologyData.lifePathNumber}</p>
                       <p className={`text-gray-600 ${getTextSize('text-xs')}`}>{numerologyData.lifePathKeyword || "Your life's purpose and journey"}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <h4 className={`font-semibold text-soul-purple ${getTextSize('text-sm')}`}>Expression Number</h4>
                       <p className={`font-bold text-soul-purple ${getTextSize('text-2xl')}`}>{numerologyData.expressionNumber}</p>
                       <p className={`text-gray-600 ${getTextSize('text-xs')}`}>{numerologyData.expressionKeyword || "Your natural talents and abilities"}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <h4 className={`font-semibold text-soul-purple ${getTextSize('text-sm')}`}>Soul Urge Number</h4>
                       <p className={`font-bold text-soul-purple ${getTextSize('text-2xl')}`}>{numerologyData.soulUrgeNumber}</p>
                       <p className={`text-gray-600 ${getTextSize('text-xs')}`}>{numerologyData.soulUrgeKeyword || "Your inner desires and motivations"}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <h4 className={`font-semibold text-soul-purple ${getTextSize('text-sm')}`}>Birthday Number</h4>
                       <p className={`font-bold text-soul-purple ${getTextSize('text-2xl')}`}>{numerologyData.birthdayNumber}</p>
                       <p className={`text-gray-600 ${getTextSize('text-xs')}`}>{numerologyData.birthdayKeyword || "Special talents from your birth day"}</p>
                     </div>
                   </div>
-                  <div className="bg-gray-50 rounded-3xl p-4">
+                  <div className="bg-gray-50 ss-r p-4">
                     <p className={`text-gray-500 ${getTextSize('text-xs')}`}>
                       Calculated from: {blueprint.user_meta.full_name} • Born: {new Date(blueprint.user_meta.birth_date).toLocaleDateString()}
                     </p>
@@ -421,30 +421,30 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
               {expandedSections.western && (
                 <div className={`mt-4 space-y-4`}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Sun Sign</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{westernData.sun_sign}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Moon Sign</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{westernData.moon_sign}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Rising Sign</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{westernData.rising_sign}</p>
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <div className="bg-gray-50 rounded-3xl p-4">
+                    <div className="bg-gray-50 ss-r p-4">
                       <span className={`font-semibold ${getTextSize('text-sm')}`}>Sun Keyword: </span>
                       <span className={getTextSize('text-sm')}>{westernData.sun_keyword}</span>
                     </div>
-                    <div className="bg-gray-50 rounded-3xl p-4">
+                    <div className="bg-gray-50 ss-r p-4">
                       <span className={`font-semibold ${getTextSize('text-sm')}`}>Moon Keyword: </span>
                       <span className={getTextSize('text-sm')}>{westernData.moon_keyword}</span>
                     </div>
-                    <div className="bg-gray-50 rounded-3xl p-4">
+                    <div className="bg-gray-50 ss-r p-4">
                       <span className={`font-semibold ${getTextSize('text-sm')}`}>Source: </span>
                       <span className={getTextSize('text-sm')}>{westernData.source}</span>
                     </div>
@@ -467,19 +467,19 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
               {expandedSections.chinese && (
                 <div className={`mt-4 space-y-4`}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Animal</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{chineseData.animal}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Element</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{chineseData.element}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Yin Yang</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{chineseData.yin_yang}</p>
                     </div>
-                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                    <div className="bg-soul-purple/5 ss-r p-4 text-center">
                       <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Keyword</span>
                       <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{chineseData.keyword}</p>
                     </div>

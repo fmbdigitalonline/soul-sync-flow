@@ -444,7 +444,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
           <Button 
             onClick={handleConfidenceSubmit}
             disabled={isSubmitting}
-            className="w-full bg-soul-purple hover:bg-soul-purple/90 text-white font-medium py-3 rounded-lg"
+            className="w-full bg-soul-purple hover:bg-soul-purple/90 text-white font-medium py-3 ss-rs"
           >
             {isSubmitting ? (
               <div className="flex items-center gap-2">

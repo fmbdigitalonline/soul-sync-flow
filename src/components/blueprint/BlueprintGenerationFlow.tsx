@@ -236,7 +236,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             {retryCount < maxRetries ? (
               <button
                 onClick={handleTryAgain}
-                className="bg-soul-purple hover:bg-soul-purple/80 text-white px-4 py-2 rounded-md flex items-center mx-auto"
+                className="bg-soul-purple hover:bg-soul-purple/80 text-white px-4 py-2 ss-rs flex items-center mx-auto"
               >
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Try Again ({retryCount + 1}/{maxRetries + 1})

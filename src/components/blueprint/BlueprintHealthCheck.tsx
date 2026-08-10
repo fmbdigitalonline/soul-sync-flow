@@ -221,7 +221,7 @@ export const BlueprintHealthCheck: React.FC = () => {
             Enter any birth data and run the health check to validate calculations. This disables all fallback data to reveal the real calculation engines.
           </p>
           {/* New: Input Form */}
-          <form className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-white/50 rounded-md p-4 border mb-2">
+          <form className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-white/50 ss-rs p-4 border mb-2">
             <div>
               <label htmlFor="full_name" className="text-xs font-medium">Full Name</label>
               <Input
@@ -310,7 +310,7 @@ export const BlueprintHealthCheck: React.FC = () => {
             <div className="space-y-3">
               <h3 className="font-semibold">Health Check Results:</h3>
               {results.map((result, index) => (
-                <div key={index} className={`border rounded-lg p-4 ${getStatusColor(result.status)}`}>
+                <div key={index} className={`border ss-rs p-4 ${getStatusColor(result.status)}`}>
                   <div className="flex items-start gap-3">
                     {getStatusIcon(result.status)}
                     <div className="flex-1">

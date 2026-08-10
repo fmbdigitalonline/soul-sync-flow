@@ -445,6 +445,10 @@
      of guessed. */
   --ss-pad: 20px;
   --ss-pad-sm: 16px;
+  /* Controls are not surfaces. A button wants to be wider than it is tall, so
+     symmetric surface padding makes it look wrong — which is why this was
+     hand-written as '9px 14px'. Naming it keeps the next one consistent. */
+  --ss-pad-ctl: 9px 14px;
   --ss-shadow: 0 1px 2px rgba(46, 42, 61, 0.03), 0 10px 26px rgba(103, 78, 167, 0.05);
 }
 .dark {
