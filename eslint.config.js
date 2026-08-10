@@ -26,18 +26,41 @@ import tseslint from "typescript-eslint";
  */
 const RADIUS_SCALE = "rounded-(?:sm|md|lg|xl|2xl|3xl)";
 
+const SURFACE_MESSAGE =
+  "Corner radius is a design-system decision. Use <SsCard> or an .ss-* class; rounded-full and rounded-none are still fine.";
+
+/**
+ * The second half of the same problem, and the one the class rule cannot see.
+ *
+ * Profile and Blueprint both use .ss-card and still did not match, because a
+ * card can be re-decided inline: style={{ padding: 16 }} sails past any rule
+ * about className. That is how the app ended up with five hand-written radii
+ * (10, 11, 12, 13, 14) inside files that were already "on the system".
+ *
+ * A literal number or px string here is the violation. var(--ss-*) is not.
+ */
+const INLINE_LITERAL = "^(?:[0-9]|.*px)";
+
 const radiusRules = (severity) => ({
   "no-restricted-syntax": [
     severity,
     {
-      selector: `JSXAttribute[name.name="className"] Literal[value=/${RADIUS_SCALE}/]`,
+      selector: `JSXAttribute[name.name="style"] Property[key.name=/^(borderRadius|padding)$/] > Literal[value=/${INLINE_LITERAL}/]`,
       message:
-        "Corner radius is a design-system decision. Use <SsCard> or an .ss-* class; rounded-full and rounded-none are still fine.",
+        "Hand-written radius/padding. Use var(--ss-radius), --ss-radius-sm, --ss-pad or --ss-pad-sm so surfaces stay in step.",
+    },
+    {
+      selector: `JSXAttribute[name.name="style"] Property[key.name=/^(borderRadius|padding)$/] > Literal[raw=/^[0-9]/]`,
+      message:
+        "Hand-written radius/padding. Use var(--ss-radius), --ss-radius-sm, --ss-pad or --ss-pad-sm so surfaces stay in step.",
+    },
+    {
+      selector: `JSXAttribute[name.name="className"] Literal[value=/${RADIUS_SCALE}/]`,
+      message: SURFACE_MESSAGE,
     },
     {
       selector: `JSXAttribute[name.name="className"] TemplateElement[value.raw=/${RADIUS_SCALE}/]`,
-      message:
-        "Corner radius is a design-system decision. Use <SsCard> or an .ss-* class; rounded-full and rounded-none are still fine.",
+      message: SURFACE_MESSAGE,
     },
   ],
 });
@@ -48,6 +71,14 @@ const radiusRules = (severity) => ({
  */
 const ENFORCED_PATHS = [
   "src/components/ui/ss-card.tsx",
+  // Phase A, first pass: the surfaces the founder photographed. Every inline
+  // radius and padding in these now names a token.
+  "src/components/blueprint/BlueprintOverview.tsx",
+  "src/components/blueprint/PersonalityDescription.tsx",
+  "src/components/blueprint/PersonalityDetailModal.tsx",
+  "src/components/journey/AlignmentDetail.tsx",
+  "src/components/journey/AlignmentSection.tsx",
+  "src/components/journey/TurningPoints.tsx",
   "src/components/bedtime/**/*.tsx",
   "src/components/context/**/*.tsx",
   "src/components/feedback/**/*.tsx",

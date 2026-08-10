@@ -94,10 +94,10 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
     <div className="ss flex flex-col gap-5">
       {/* Integrated Summary — a snippet; the full text is in the report modal. */}
       {summary && (
-        <div className="ss-card ss-rise" style={{ padding: 20 }}>
+        <div className="ss-card ss-rise" style={{ padding: 'var(--ss-pad)' }}>
           <div className="flex items-center gap-2.5">
             <span className="shrink-0 grid place-items-center"
-              style={{ width: 36, height: 36, borderRadius: 11, background: "var(--ss-accent-wash)" }}>
+              style={{ width: 36, height: 36, borderRadius: 'var(--ss-radius-sm)', background: "var(--ss-accent-wash)" }}>
               <ReportSectionFigure section="integrated_summary" size={28} animate />
             </span>
             <span className="ss-title tracking-tight" style={{ color: "var(--ss-ink)" }}>
@@ -120,9 +120,9 @@ export const ReportSummaryCalm: React.FC<ReportSummaryCalmProps> = ({ content, s
           {themes.map((th, i) => (
             <button key={th.key} onClick={() => (onOpenSection ? onOpenSection(th.key) : onViewFull())}
               className="ss-card ss-rise ss-press flex items-start gap-3.5 text-left w-full"
-              style={{ padding: 16, ['--i' as any]: i + 1 } as React.CSSProperties}>
+              style={{ padding: 'var(--ss-pad-sm)', ['--i' as any]: i + 1 } as React.CSSProperties}>
               <span className="shrink-0 grid place-items-center"
-                style={{ width: 44, height: 44, borderRadius: 13, background: "var(--ss-accent-wash)", color: "var(--ss-accent)" }}>
+                style={{ width: 44, height: 44, borderRadius: 'var(--ss-radius-sm)', background: "var(--ss-accent-wash)", color: "var(--ss-accent)" }}>
                 <ReportSectionFigure section={th.key} size={34} animate />
               </span>
               <div className="min-w-0 flex-1">

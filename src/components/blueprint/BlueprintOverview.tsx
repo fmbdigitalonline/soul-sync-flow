@@ -156,7 +156,7 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
           style={{
             borderRadius: "var(--ss-radius)",
             border: "1px solid var(--ss-line)",
-            padding: "16px 18px",
+            padding: 'var(--ss-pad-sm)',
             background: `radial-gradient(240px 130px at 86% -14%, ${tint.glow}, transparent 64%),
                          radial-gradient(200px 120px at 4% 112%, var(--ss-accent-wash-2), transparent 62%),
                          linear-gradient(180deg, ${tint.tint}, transparent)`,
@@ -195,10 +195,10 @@ const BlueprintOverview: React.FC<{ blueprint: any }> = ({ blueprint }) => {
                 key={item.label}
                 onClick={() => openDetail(item, section.title)}
                 className="ss-card ss-rise ss-press flex items-start gap-3 text-left w-full"
-                style={{ padding: 16, ['--i' as any]: idx }}
+                style={{ padding: 'var(--ss-pad-sm)', ['--i' as any]: idx }}
               >
                 <span className="shrink-0 grid place-items-center"
-                  style={{ width: 44, height: 44, borderRadius: 13, background: "var(--ss-accent-wash)", color: "var(--ss-accent)" }}>
+                  style={{ width: 44, height: 44, borderRadius: 'var(--ss-radius-sm)', background: "var(--ss-accent-wash)", color: "var(--ss-accent)" }}>
                   {drawn ? <BlueprintFigure category={item.category} value={item.value} size={36} /> : section.icon}
                 </span>
                 <div className="min-w-0 flex-1">

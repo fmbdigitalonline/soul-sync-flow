@@ -695,7 +695,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         style={{
           borderRadius: 'var(--ss-radius)',
           border: '1px solid var(--ss-line)',
-          padding: '16px 18px',
+          padding: 'var(--ss-pad-sm)',
           background: `radial-gradient(240px 130px at 86% -14%, ${reportTint.glow}, transparent 64%),
                        radial-gradient(200px 120px at 4% 112%, var(--ss-accent-wash-2), transparent 62%),
                        linear-gradient(180deg, ${reportTint.tint}, transparent)`,
@@ -719,7 +719,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                 background: 'var(--ss-card)',
                 color: 'var(--ss-accent-ink)',
                 border: '1px solid var(--ss-line)',
-                borderRadius: 14,
+                borderRadius: 'var(--ss-radius-sm)',
                 padding: '9px 14px',
                 boxShadow: 'var(--ss-shadow)',
               }}
@@ -729,14 +729,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             </button>
             <button onClick={handleRefresh} aria-label={t('common.refresh') || 'Refresh'}
               className="ss-press grid place-items-center flex-shrink-0"
-              style={{ width: 38, height: 38, borderRadius: 12, background: 'var(--ss-card)',
+              style={{ width: 38, height: 38, borderRadius: 'var(--ss-radius-sm)', background: 'var(--ss-card)',
                        border: '1px solid var(--ss-line)', color: 'var(--ss-muted)' }}>
               <RefreshCw className="h-4 w-4" />
             </button>
             {import.meta.env.DEV && (
               <button onClick={handleRegenerate} disabled={generating} aria-label="Regenerate"
                 className="ss-press grid place-items-center flex-shrink-0"
-                style={{ width: 38, height: 38, borderRadius: 12, background: 'var(--ss-card)',
+                style={{ width: 38, height: 38, borderRadius: 'var(--ss-radius-sm)', background: 'var(--ss-card)',
                          border: '1px solid var(--ss-line)', color: 'var(--ss-muted)' }}>
                 {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               </button>
@@ -807,7 +807,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   own symbol when it opens. */}
               {openSectionKey && (
                 <span className="shrink-0 grid place-items-center"
-                  style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--ss-accent-wash)' }}>
+                  style={{ width: 34, height: 34, borderRadius: 'var(--ss-radius-sm)', background: 'var(--ss-accent-wash)' }}>
                   <ReportSectionFigure section={openSectionKey} size={26} animate />
                 </span>
               )}

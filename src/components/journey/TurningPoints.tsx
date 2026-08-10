@@ -90,7 +90,7 @@ export const TurningPoints: React.FC = () => {
           style={{
             borderRadius: "var(--ss-radius)",
             border: "1px solid var(--ss-line)",
-            padding: 14,
+            padding: 'var(--ss-pad-sm)',
             background: "var(--ss-accent-wash)",
           }}
         >

@@ -36,7 +36,7 @@ const Row: React.FC<{ icon: React.ReactNode; title: string; body: string; emphas
 }) => (
   <div className="flex gap-3 items-start">
     <span className="shrink-0 grid place-items-center"
-      style={{ width: 34, height: 34, borderRadius: 11, background: 'var(--ss-accent-wash)', color: 'var(--ss-accent)' }}>
+      style={{ width: 34, height: 34, borderRadius: 'var(--ss-radius-sm)', background: 'var(--ss-accent-wash)', color: 'var(--ss-accent)' }}>
       {icon}
     </span>
     <div className="min-w-0 flex-1">
