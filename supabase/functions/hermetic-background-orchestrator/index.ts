@@ -401,7 +401,19 @@ async function callAgent(systemPrompt: string, userPrompt: string, label: string
     },
   });
 
-  if (error) throw new Error(`Agent call failed for ${label}: ${error.message}`);
+  if (error) {
+    // RCA 2026-08-10: `error.message` for a function invoke is only
+    // "non-2xx status code". Pull the upstream body so the real provider
+    // cause reaches the log trail and the job's error_message.
+    let upstream = '';
+    try {
+      upstream = (await (error as any)?.context?.text?.()) ?? '';
+    } catch {
+      upstream = '';
+    }
+    console.error(`❌ AGENT FAILURE (${label}):`, { message: error.message, upstream: upstream.slice(0, 800) });
+    throw new Error(`Agent call failed for ${label}: ${error.message}${upstream ? ` :: ${upstream.slice(0, 500)}` : ''}`);
+  }
   const content = (data?.content ?? '').trim();
   if (!content) throw new Error(`${label} returned empty content`);
   return content;
