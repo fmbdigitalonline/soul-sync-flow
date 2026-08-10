@@ -71,8 +71,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // RCA 2026-08-10: hoisted so the error path always knows which job failed.
+  // Previously the catch re-read an already-consumed body and logged
+  // "job unknown", leaving failing jobs stuck at 0% instead of marked failed.
+  let currentJobId: string | undefined;
+
   try {
     const { job_id: jobId } = await req.json();
+    currentJobId = jobId;
     
     if (!jobId) {
       throw new Error('Missing job_id in request body');
