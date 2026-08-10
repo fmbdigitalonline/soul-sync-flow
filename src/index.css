@@ -435,6 +435,16 @@
   --ss-green: #34c98a;
   --ss-danger: #e06767;
   --ss-radius: 24px;
+  /* Inner surfaces — a row, an inset panel, a tile inside a card — cannot wear
+     the card's 24px without looking like a card themselves. The app had been
+     hand-writing 10, 11, 12, 13 and 14px for exactly this, because there was no
+     token to reach for. */
+  --ss-radius-sm: 12px;
+  /* The card's own padding, and the one for anything nested inside it. .ss-card
+     hard-coded 20px; naming it means an inner element can be consistent instead
+     of guessed. */
+  --ss-pad: 20px;
+  --ss-pad-sm: 16px;
   --ss-shadow: 0 1px 2px rgba(46, 42, 61, 0.03), 0 10px 26px rgba(103, 78, 167, 0.05);
 }
 .dark {
@@ -461,7 +471,7 @@
 .ss { color: var(--ss-ink); }
 .ss-card {
   background: var(--ss-card); border: 1px solid var(--ss-line);
-  border-radius: var(--ss-radius); padding: 20px; box-shadow: var(--ss-shadow);
+  border-radius: var(--ss-radius); padding: var(--ss-pad); box-shadow: var(--ss-shadow);
 }
 .ss-eyebrow {
   font-size: 11px; letter-spacing: .13em; text-transform: uppercase;
@@ -500,7 +510,7 @@
 
 .ss-twin {
   position: relative; overflow: hidden; border: 1px solid var(--ss-line);
-  border-radius: var(--ss-radius); padding: 20px; box-shadow: var(--ss-shadow);
+  border-radius: var(--ss-radius); padding: var(--ss-pad); box-shadow: var(--ss-shadow);
   background:
     radial-gradient(360px 200px at 116% -20%, rgba(192,132,252,.20), transparent 60%),
     linear-gradient(180deg, rgba(139,92,246,.06), rgba(139,92,246,.03));

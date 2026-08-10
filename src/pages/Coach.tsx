@@ -220,7 +220,7 @@ const Coach = () => {
             style={{
               borderRadius: "var(--ss-radius)",
               border: "1px solid var(--ss-line)",
-              padding: "14px 16px",
+              padding: 'var(--ss-pad-sm)',
               background:
                 "radial-gradient(300px 160px at 88% -10%, rgba(192,132,252,.28), transparent 62%), " +
                 "radial-gradient(260px 150px at 6% 110%, var(--ss-accent-wash-2), transparent 60%), " +

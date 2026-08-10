@@ -75,7 +75,7 @@ const PersonalityDetailModal: React.FC<PersonalityDetailModalProps> = ({
               </div>
 
               {/* Light & Shadow Description */}
-              <div className="ss-card" style={{ padding: 20 }}>
+              <div className="ss-card" style={{ padding: 'var(--ss-pad)' }}>
                 <PersonalityDescription
                   light={light}
                   shadow={shadow}

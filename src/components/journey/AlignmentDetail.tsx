@@ -162,7 +162,7 @@ export const AlignmentDetail: React.FC<{
               const Icon = PATTERN_ICONS[i % PATTERN_ICONS.length];
               return (
                 <div key={i} className="flex items-start gap-3">
-                  <span className="shrink-0 grid place-items-center" style={{ width: 34, height: 34, borderRadius: 11, background: 'var(--ss-accent-wash)', color: 'var(--ss-accent)' }}>
+                  <span className="shrink-0 grid place-items-center" style={{ width: 34, height: 34, borderRadius: 'var(--ss-radius-sm)', background: 'var(--ss-accent-wash)', color: 'var(--ss-accent)' }}>
                     <Icon className="h-[16px] w-[16px]" />
                   </span>
                   <p className="ss-sub leading-relaxed flex-1" style={{ color: 'var(--ss-ink)' }}>{p.text}</p>

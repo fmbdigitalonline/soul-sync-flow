@@ -119,7 +119,7 @@ export const AlignmentSection: React.FC<{ patterns?: Array<{ text: string }>; on
               const Icon = PATTERN_ICONS[i % PATTERN_ICONS.length];
               return (
                 <div key={i} className="flex items-start gap-3">
-                  <span className="shrink-0 grid place-items-center" style={{ width: 34, height: 34, borderRadius: 11, background: 'var(--ss-accent-wash)', color: 'var(--ss-accent)' }}>
+                  <span className="shrink-0 grid place-items-center" style={{ width: 34, height: 34, borderRadius: 'var(--ss-radius-sm)', background: 'var(--ss-accent-wash)', color: 'var(--ss-accent)' }}>
                     <Icon className="h-[16px] w-[16px]" />
                   </span>
                   <p className="ss-sub leading-relaxed flex-1" style={{ color: 'var(--ss-ink)' }}>{p.text}</p>
@@ -154,7 +154,11 @@ const ReflectBtn: React.FC<{ label: string; icon: React.ReactNode; tone: 'up' | 
   const color = tone === 'up' ? 'var(--ss-green)' : tone === 'down' ? 'var(--ss-danger)' : 'var(--ss-muted)';
   const bg = tone === 'up' ? 'rgba(52,201,138,.10)' : tone === 'down' ? 'rgba(224,103,103,.10)' : 'var(--ss-line-2)';
   return (
-    <button onClick={onClick} className="flex flex-col items-center gap-1.5 rounded-xl py-3 px-1 border" style={{ borderColor: 'var(--ss-line)' }}>
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center gap-1.5 py-3 px-1 border"
+      style={{ borderColor: 'var(--ss-line)', borderRadius: 'var(--ss-radius-sm)' }}
+    >
       <span className="grid place-items-center rounded-full" style={{ width: 30, height: 30, background: bg, color }}>{icon}</span>
       <span className="ss-micro font-medium text-center leading-tight" style={{ color: 'var(--ss-ink)' }}>{label}</span>
     </button>
