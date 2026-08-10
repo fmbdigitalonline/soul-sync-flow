@@ -2917,7 +2917,24 @@ serve(async (req) => {
       });
       
       const errorMessage = parsedError?.error?.message || responseText || `HTTP ${openAIResponse.status}`;
-      throw new Error(`OpenAI API error: ${errorMessage}`);
+
+      // RCA 2026-08-10: classify provider failures so the log trail names the
+      // real cause instead of a generic 500. Diagnostics only — nothing here
+      // reaches the end user, the UI keeps its own neutral message.
+      const providerCode = classifyProviderError(openAIResponse.status, parsedError);
+      console.error('🚨 PROVIDER FAILURE:', {
+        code: providerCode,
+        httpStatus: openAIResponse.status,
+        providerCode: parsedError?.error?.code ?? null,
+        providerType: parsedError?.error?.type ?? null,
+        model: selectedModel,
+        detail: errorMessage,
+      });
+
+      const providerError = new Error(`OpenAI API error: ${errorMessage}`) as Error & { providerErrorCode?: string; providerHttpStatus?: number };
+      providerError.providerErrorCode = providerCode;
+      providerError.providerHttpStatus = openAIResponse.status;
+      throw providerError;
     }
     
     const aiResponse = JSON.parse(responseText);
