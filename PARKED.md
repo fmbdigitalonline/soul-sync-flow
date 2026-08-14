@@ -40,6 +40,7 @@ nothing, or it does not happen.
 | 2026-08-10 | **Report indexing is not wired into normal generation.** Backfill covered 7 of ~40 users. Worth more once reports are worth indexing. |
 | 2026-08-10 | **Distinctiveness calibration against the user population.** Agreed shape: suppression only, never generation — weak base rates can say "don't call this exceptional", never "only 4% have this". Needs a population worth calibrating against. |
 | 2026-08-10 | **Relevance as a third factor** alongside resonance and distinctiveness. Requires knowing what the person is currently dealing with, so it is conversation-only and cannot exist at report time. |
+| 2026-08-14 | **Redistributing the specialists by synthesis mechanism** instead of by framework. Closed, not open — see `docs/HERMETIC_V3_PIPELINE.md`. Kept here only so the evidence that would reopen it is written down: mechanism spread collapsed onto one or two across several users, with `lenses_failed` empty and `dropped_single_lens` near zero. |
 
 ## Open questions
 
@@ -47,6 +48,8 @@ nothing, or it does not happen.
 |---|---|
 | 2026-08-10 | `select count(distinct user_id) from blueprint_text_embeddings;` — asked for, never answered. |
 | 2026-08-10 | Suppression rate of the `🗺️ CHART BLOCK` gate on live turns, and the `relevantChunks` distribution beside it. Lovable offered to pull both from function logs. |
+| 2026-08-14 | **Mechanism spread across users.** The two 3.0 reports differ a lot: 7/18 convergence in one, 13/19 in the other. Convergence is the cheapest mechanism to find. Worth watching over the next handful of reports, not acting on with n=2. |
+| 2026-08-14 | **One report listed `thin_ground` as a mechanism.** It is a separate field, not one of the nine — the model is not fully holding the list. No data lost. Prompt-adherence, not correctness. |
 
 ---
 
@@ -54,7 +57,8 @@ nothing, or it does not happen.
 
 These are in `THE_PATH.md` and are the only things that get worked on:
 
-- **Step 3** — a new registration must create a hermetic job. Currently failing.
+- **Step 5** — a 3.0 report has to be read, by a person, and judged true and
+  specific. Steps 3 and 4 now pass; this one cannot be passed by code.
 - **Step 6** — `companion-oracle-conversation` filters `blueprint_version = '2.0'`,
   so a 3.0 report is invisible to the Twin. Two-line change, but it lands only
   after a 3.0 report exists and has been read.

@@ -32,13 +32,14 @@ Each step is observably true or it is not. No step is "mostly working".
 | 1 | ✅ passes | 2026-08-10 |
 | 2 | ✅ passes — the insight names real facets, so the blueprint assembled | 2026-08-10 |
 | 3 | ✅ **passes** — the ring is filling on a new registration, which only happens when a job row exists and is progressing | 2026-08-10 |
-| 4 | ❓ unverified — a job started; no 3.0 report confirmed to exist yet | — |
-| 5 | ❓ unverified — viewer can now see 3.0, untested against a real one | — |
+| 4 | ✅ **passes** — two rows, both `3.0`, both `v3-observation-synthesis-narration`. 50 lenses read, 0 failed, 0 dropped for single-lens sourcing, `unresolved` and `thin_ground` non-empty in both. Chart terms across ~30,000 words: 7 and 4, against a 2.0 baseline of 27 and 46 *in one section* | 2026-08-14 |
+| 5 | ❓ unverified — the reports exist and the viewer can show them; nobody has read one yet. **This is the founder's step, not the developer's** | — |
 | 6 | ❌ blocked — `companion-oracle-conversation` still filters `blueprint_version = '2.0'` | — |
 
-**The next piece of work is step 4.** Does the job that started actually finish,
-and does it write a `3.0` report? Not step 5, not step 6, not anything in
-`PARKED.md`.
+**The next piece of work is step 5, and it is not code.** The report exists and
+the counts are clean. The only remaining question is whether two sections read
+as true and specific, and no measurement answers that — it has to be read.
+Step 6 stays untouched until it has been.
 
 ---
 

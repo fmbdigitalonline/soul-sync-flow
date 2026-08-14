@@ -70,6 +70,44 @@ than the mechanism. A pipeline that only finds tensions produces a report where
 every section says "you are pulled between X and Y" — the same monoculture,
 different clothes.
 
+## The lens layer stays framework-specific — question closed
+
+Once the mechanisms existed, an obvious next question appeared: should the
+specialists be reorganised *by* mechanism — a tension agent, a convergence
+agent, a shadow agent — instead of by framework?
+
+**No, and this is not an open choice.** It is recorded here so it does not get
+reopened as if it were.
+
+The reason a lens is worth having is that a different esoteric tradition looks
+at the same person differently *on purpose*. Human Design and numerology do not
+disagree about a tension; they are not both looking at tension at all. Reassign
+the specialists by mechanism and every one of them reads the whole blueprint
+again through the same question, which is the arrangement v3 exists to remove —
+31 writers covering everything — rebuilt with the labels swapped for mechanism
+names. The six-framework identity lives in the lens layer or nowhere.
+
+Differentiation is the synthesis step's job, not the specialists'. A lens
+represents its own instrument well; the synthesis is what relates instruments to
+each other. That is the same division `SOULSYNC_CONSTITUTION.md` v3.10 already
+states as **Experts discover. The Twin speaks** — the experts stay
+framework-bound, and none of them narrates.
+
+```
+6 frameworks / specialist perspectives
+        ↓  structured observations
+cross-framework synthesis
+        ↓  nine mechanisms
+Twin narration
+```
+
+Redistribution is an **alternative that needs evidence**, not a decision
+pending. What would reopen it: reports where `byMechanism` stays collapsed onto
+one or two mechanisms across several users *while* `lenses_failed` is empty and
+`dropped_single_lens` is near zero — i.e. the lenses are reporting cleanly and
+the synthesis still cannot find variety. Until that is measured, the current
+shape stands.
+
 ## Non-overlap is assigned, not hoped for
 
 Every narration section declares what it **covers** and what it must **avoid**
