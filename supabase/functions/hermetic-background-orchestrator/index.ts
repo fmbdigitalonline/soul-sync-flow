@@ -8,6 +8,7 @@ import {
   buildNarrationPlan,
   lensBriefFor,
   normaliseLensReport,
+  normaliseProcessingModel,
   parseJsonLoosely,
   setByPath,
   type LensReport,
@@ -576,17 +577,30 @@ async function processCrossFrameworkSynthesis(job: any) {
     acc[s.mechanism || 'unnamed'] = (acc[s.mechanism || 'unnamed'] || 0) + 1;
     return acc;
   }, {});
+
+  // The second question the synthesis now answers: not what this combination
+  // means, but how it appears to run. These are the four hypotheses the Twin
+  // opens with and the Living Blueprint refines from lived evidence.
+  const processing = normaliseProcessingModel(parsed);
+  if (processing.missingAxes.length > 0) {
+    console.warn(`⚠️ SYNTHESIS: processing model missing axes — ${processing.missingAxes.join(', ')}`);
+  }
+
   console.log('🧩 SYNTHESIS:', {
     lensesRead: allLenses.length,
     accepted: accepted.length,
     dropped,
     byMechanism,
+    processingAxes: processing.accepted.map((p: any) => p.axis),
+    processingDropped: processing.dropped,
     unresolved: (parsed.unresolved || []).length,
     thinGround: (parsed.thin_ground || []).length,
   });
 
   const model = {
     syntheses: accepted,
+    processing_model: processing.accepted,
+    processing_model_missing: processing.missingAxes,
     unresolved: Array.isArray(parsed.unresolved) ? parsed.unresolved : [],
     thin_ground: Array.isArray(parsed.thin_ground) ? parsed.thin_ground : [],
     lenses_read: allLenses.length,
@@ -702,6 +716,8 @@ async function finalizeReport(job: any) {
     lenses_failed: model.lenses_failed,
     syntheses: (model.syntheses || []).length,
     dropped_single_lens: model.dropped_single_lens,
+    processing_axes: (model.processing_model || []).map((p: any) => p.axis),
+    processing_axes_missing: model.processing_model_missing || [],
     unresolved: (model.unresolved || []).length,
     thin_ground: (model.thin_ground || []).length,
     sections_narrated: narratedSections.length,
@@ -713,6 +729,13 @@ async function finalizeReport(job: any) {
   // that it is no longer recovered by reading prose back. It is the model.
   reportContent.structured_intelligence = {
     syntheses: model.syntheses,
+    // The Twin's opening model of how this person runs. Stated as hypothesis
+    // on purpose: it is derived from six frameworks and nothing has been
+    // observed, so the Living Blueprint must be able to find it wrong and
+    // refine it rather than inherit it as fact.
+    processing_model: model.processing_model || [],
+    processing_model_status: 'hypothesis',
+    processing_model_basis: 'blueprint_derived',
     unresolved: model.unresolved,
     thin_ground: model.thin_ground,
     source: 'cross_framework_synthesis',

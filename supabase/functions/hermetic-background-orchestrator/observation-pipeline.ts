@@ -60,6 +60,42 @@ export const SYNTHESIS_MECHANISMS = [
   ['natural_strength', 'what this configuration does easily that others find hard'],
 ] as const;
 
+/**
+ * The four axes the synthesis must derive in addition to meaning.
+ *
+ * "What does this combination mean?" produces a portrait. It does not produce
+ * anything the Twin can hold while a person is talking to it. These four ask a
+ * different question — *how does this combination appear to organise itself* —
+ * and the answer is a working model rather than a description.
+ *
+ * Every entry is a HYPOTHESIS derived from six frameworks. Nobody has watched
+ * this person do anything. The Twin holds them as its opening guess and the
+ * Living Blueprint refines them from lived evidence
+ * (`SOULSYNC_CONSTITUTION.md`: disagreement updates the model, and the model
+ * has inertia).
+ */
+export const PROCESSING_AXES = [
+  ['information_processing', 'how information appears to get taken in, filtered and held — what gets through, what is discarded, what is needed before anything can be considered at all'],
+  ['meaning_making', 'how raw experience appears to become significant — what this person treats as a sign, what they need something to connect to before it counts'],
+  ['decision_making', 'what appears to happen between an option and a commitment — what has to be satisfied, what reliably stalls it, and what a decision actually rests on when it lands'],
+  ['action', 'how intention appears to become movement — the conditions under which it starts, sustains, and stops'],
+] as const;
+
+export interface ProcessingHypothesis {
+  axis: string;
+  hypothesis: string;
+  /** ≥2 lenses, same rule as syntheses. One lens is an observation, not a model. */
+  lenses: string[];
+  /**
+   * The observable signature: what would show up in an ordinary week if this is
+   * right. Without it a hypothesis cannot be refined by lived evidence — it can
+   * only be repeated. This field is what makes the Living Blueprint able to do
+   * its job later without anything new being built now.
+   */
+  would_look_like: string;
+  confidence: number;
+}
+
 /** What each specialist is actually looking through. Framework-bound on purpose. */
 export const LENS_BRIEFS: Record<string, string> = {
   mbti_hermetic_translator: 'cognitive functions and how attention, judgement and energy are typically organised',
@@ -152,6 +188,15 @@ export function buildSynthesisPrompt(): string {
     '      "confidence": 0.0',
     '    }',
     '  ],',
+    '  "processing_model": [',
+    '    {',
+    '      "axis": "one of the four axes listed below",',
+    '      "hypothesis": "how this combination appears to organise that axis, in ordinary language",',
+    '      "lenses": ["at least two lens names that support it"],',
+    '      "would_look_like": "what would show up in an ordinary week if this is right",',
+    '      "confidence": 0.0',
+    '    }',
+    '  ],',
     '  "unresolved": ["where the lenses disagree and you could not reconcile them"],',
     '  "thin_ground": ["what several lenses reported as absent, so the model is weak here"]',
     '}',
@@ -159,7 +204,29 @@ export function buildSynthesisPrompt(): string {
     'The mechanisms:',
     ...SYNTHESIS_MECHANISMS.map(([name, gloss]) => `- ${name}: ${gloss}`),
     '',
+    'The four processing axes — all four, every time:',
+    ...PROCESSING_AXES.map(([name, gloss]) => `- ${name}: ${gloss}`),
+    '',
     'Rules:',
+    '- **`syntheses` answers "what does this combination mean?".**',
+    '  **`processing_model` answers "how does this combination appear to run?".**',
+    '  They are different questions and the second is not a summary of the first.',
+    '  A meaning can be interesting and still tell nobody how this person takes in',
+    '  information. Derive the second explicitly; do not let it fall out of the',
+    '  first by accident.',
+    '- Every `processing_model` entry is a **hypothesis**, never a fact. You have',
+    '  read six frameworks. You have not watched this person do anything. Phrase',
+    '  each one as what the configuration suggests — "seems to", "appears to",',
+    '  "tends to" — because something downstream will later compare it against how',
+    '  this person actually behaves, and it has to be able to find it wrong.',
+    '- `would_look_like` is what makes that comparison possible, so it must be',
+    '  concrete and observable. "Rereads the same message before replying" can be',
+    '  checked against a real week. "Processes deeply" cannot.',
+    '- All four axes, even where the ground is thin. If the lenses barely support',
+    '  one, give it low confidence and say so in the hypothesis — an axis marked',
+    '  uncertain is usable; a missing axis leaves a hole in the working model.',
+    '- The same two-lens rule applies to the processing model. One lens describing',
+    '  how someone decides is that lens\'s opinion, not a model.',
     '- **If only one lens sees it, it is not synthesis.** Every entry names two or',
     '  more contributing lenses. A single-lens observation restated here is the',
     '  failure mode this step exists to prevent.',
@@ -424,6 +491,20 @@ export function buildNarrationPrompt(
     '- Where confidence is low or the model records thin ground, let the prose be',
     '  tentative. You are allowed to say you are not sure.',
     '- Do not introduce yourself and do not sign off.',
+    '',
+    '## The working model you are holding',
+    '',
+    'THE MODEL contains a `processing_model`: four hypotheses about how this',
+    'person appears to take in information, make meaning, decide and act. That is',
+    'your opening picture of how they run — not a section to summarise. Let it',
+    'shape how you say things: if the model suggests they need something to',
+    'connect to before it counts, then connect it before you say it.',
+    '',
+    'Two limits on it. It is derived from a chart, not from watching them, so it',
+    'is what you *expect* rather than what you *know* — say "ik vermoed", "dit',
+    'suggereert", and mean it. And it is your first guess, not a verdict: you',
+    'expect to be corrected by how they actually turn out to be, and you can say',
+    'that out loud. A model that cannot be told it is wrong is not a mirror.',
   ].filter(Boolean).join('\n');
 }
 
@@ -471,6 +552,51 @@ export function normaliseLensReport(parsed: any, lensName: string): LensReport {
   const absences: string[] = Array.isArray(parsed?.absences) ? parsed.absences.map(String) : [];
 
   return { observations, tensions, absences };
+}
+
+/**
+ * Keeps one entry per axis, enforcing the same two-lens rule the syntheses get.
+ *
+ * Missing axes are not invented. A working model that is honest about having
+ * nothing to say on `action` is usable; one that fills the gap to look complete
+ * teaches the Living Blueprint something false and then defends it, because the
+ * constitution gives the model inertia.
+ */
+export function normaliseProcessingModel(parsed: any): {
+  accepted: ProcessingHypothesis[];
+  dropped: number;
+  missingAxes: string[];
+} {
+  const raw: any[] = Array.isArray(parsed?.processing_model) ? parsed.processing_model : [];
+  const known = new Set(PROCESSING_AXES.map(([a]) => a));
+
+  const seen = new Set<string>();
+  const accepted: ProcessingHypothesis[] = [];
+  let dropped = 0;
+
+  for (const p of raw) {
+    const axis = typeof p?.axis === 'string' ? p.axis.trim() : '';
+    const hypothesis = typeof p?.hypothesis === 'string' ? p.hypothesis.trim() : '';
+    const lenses = Array.isArray(p?.lenses) ? p.lenses.map(String) : [];
+    if (!known.has(axis) || seen.has(axis) || !hypothesis || lenses.length < 2) {
+      dropped++;
+      continue;
+    }
+    seen.add(axis);
+    accepted.push({
+      axis,
+      hypothesis,
+      lenses,
+      would_look_like: typeof p.would_look_like === 'string' ? p.would_look_like.trim() : '',
+      confidence: Number.isFinite(p.confidence) ? Number(p.confidence) : 0.5,
+    });
+  }
+
+  return {
+    accepted,
+    dropped,
+    missingAxes: PROCESSING_AXES.map(([a]) => a).filter((a) => !seen.has(a)),
+  };
 }
 
 /**

@@ -70,6 +70,62 @@ than the mechanism. A pipeline that only finds tensions produces a report where
 every section says "you are pulled between X and Y" — the same monoculture,
 different clothes.
 
+## The synthesis derives a working model, not only meaning
+
+`syntheses` answers **"what does this combination mean?"**. That produces a
+portrait. A portrait is not something the Twin can hold while somebody is
+talking to it — which is why the reports read well and the conversation does
+not.
+
+So the same synthesis step — no new agent, no new framework, no new store — now
+also answers **"how does this combination appear to run?"** along four axes:
+
+| Axis | Derives |
+|---|---|
+| `information_processing` | what gets through, what is discarded, what is needed before anything can be considered |
+| `meaning_making` | what this person treats as significant, and what something has to connect to before it counts |
+| `decision_making` | what happens between an option and a commitment, and what reliably stalls it |
+| `action` | how intention becomes movement — what starts it, sustains it, stops it |
+
+All four, every time. A thin axis gets low confidence and says so; a **missing**
+axis leaves a hole in the working model and is logged as `processing_axes_missing`.
+
+### These are hypotheses, and the shape says so
+
+Nothing here has been observed. Six frameworks were read. So each entry is
+phrased as what the configuration *suggests*, and it is stored as such:
+
+```jsonc
+structured_intelligence: {
+  processing_model: [ { axis, hypothesis, lenses, would_look_like, confidence } ],
+  processing_model_status: 'hypothesis',
+  processing_model_basis: 'blueprint_derived',
+}
+```
+
+`would_look_like` is the load-bearing field. A hypothesis with no observable
+signature cannot be refined by lived evidence — it can only be repeated. "Rereads
+the same message before replying" can be checked against a real week;
+"processes deeply" cannot.
+
+That is what hands the axes to the **Living Blueprint** without building
+anything for it now. `SOULSYNC_CONSTITUTION.md` already ratifies the mechanism:
+disagreement refines the model rather than overriding it, and the model has
+inertia so it does not converge on whatever was last said. The report is the
+Twin's opening guess; the relationship corrects it.
+
+The two-lens rule applies here exactly as it does to `syntheses` — one lens
+describing how somebody decides is that lens's opinion, not a model.
+
+### What the Twin is told
+
+The narration prompt now says the `processing_model` is the picture it is
+holding, **not a section to summarise**. It shapes *how* things are said: if the
+model suggests this person needs something to connect to before it counts, the
+Twin connects it before saying it. With two limits — say "ik vermoed" and mean
+it, and expect to be corrected out loud, because a model that cannot be told it
+is wrong is not a mirror.
+
 ## The lens layer stays framework-specific — question closed
 
 Once the mechanisms existed, an obvious next question appeared: should the
@@ -162,5 +218,9 @@ Generate **one** report for the founder's account and check, in this order:
    `🧩 SYNTHESIS` log is spread across mechanisms rather than piled on `tension`.
 4. `unresolved` and `thin_ground` are **non-empty**. A model that found nothing
    contradictory and no weak ground is flattering itself.
-5. Then read two sections and answer the only question that matters: does this
+5. `processing_axes` lists all four and `processing_axes_missing` is empty. Then
+   read the four hypotheses on their own, before any prose: do they describe how
+   somebody *runs*, or are they the syntheses restated? If a `would_look_like`
+   could not be checked against a real week, the axis is decoration.
+6. Then read two sections and answer the only question that matters: does this
    say something true and specific, and does it sound like one voice?

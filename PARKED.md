@@ -40,6 +40,8 @@ nothing, or it does not happen.
 | 2026-08-10 | **Report indexing is not wired into normal generation.** Backfill covered 7 of ~40 users. Worth more once reports are worth indexing. |
 | 2026-08-10 | **Distinctiveness calibration against the user population.** Agreed shape: suppression only, never generation — weak base rates can say "don't call this exceptional", never "only 4% have this". Needs a population worth calibrating against. |
 | 2026-08-10 | **Relevance as a third factor** alongside resonance and distinctiveness. Requires knowing what the person is currently dealing with, so it is conversation-only and cannot exist at report time. |
+| 2026-08-14 | **The Twin reading `processing_model` in conversation.** The synthesis now derives it and stores it; `companion-oracle-conversation` does not read it yet. That wiring belongs with step 6, not before it — the same two-line filter change, one field further. |
+| 2026-08-14 | **Living Blueprint refining the four axes from lived evidence.** `would_look_like` exists so a later layer can test a hypothesis against a real week and revise it. Nothing consumes it yet. The constitution already ratifies the mechanism; this is the implementation, and it needs a relationship long enough to have evidence. |
 | 2026-08-14 | **Redistributing the specialists by synthesis mechanism** instead of by framework. Closed, not open — see `docs/HERMETIC_V3_PIPELINE.md`. Kept here only so the evidence that would reopen it is written down: mechanism spread collapsed onto one or two across several users, with `lenses_failed` empty and `dropped_single_lens` near zero. |
 
 ## Open questions
