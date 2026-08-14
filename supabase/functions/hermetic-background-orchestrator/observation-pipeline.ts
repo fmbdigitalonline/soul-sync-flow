@@ -73,6 +73,23 @@ export const SYNTHESIS_MECHANISMS = [
  * Living Blueprint refines them from lived evidence
  * (`SOULSYNC_CONSTITUTION.md`: disagreement updates the model, and the model
  * has inertia).
+ *
+ * TWO AGREED BOUNDARIES. Only the second is enforced here, on purpose.
+ *
+ * 1. These are internal synthesis output, not a seventh framework. A reader
+ *    told they are "an information_processing type X" has been handed exactly
+ *    the labelling machine v3 exists to remove, in a vocabulary nobody speaks.
+ *    Stated as a rule in the two prompts and nowhere else: it is a constraint
+ *    on how *consumers* use the axes, and there is no consumer yet. Deciding
+ *    what needs real enforcement waits until the output has been read.
+ *
+ * 2. Completeness never outranks honesty — enforced, because it is about what
+ *    this step produces right now. An axis the lenses do not support comes back
+ *    as `insufficient_ground`: a first-class answer, not a failure.
+ *    "decision_making: not enough signal" is a usable model. A hypothesis
+ *    invented to fill the fourth slot is worse than a blank, because anything
+ *    downstream would treat it as a starting belief and defend it against the
+ *    person it is about.
  */
 export const PROCESSING_AXES = [
   ['information_processing', 'how information appears to get taken in, filtered and held — what gets through, what is discarded, what is needed before anything can be considered at all'],
@@ -83,6 +100,12 @@ export const PROCESSING_AXES = [
 
 export interface ProcessingHypothesis {
   axis: string;
+  /**
+   * `insufficient_ground` is a real answer and carries no penalty. It exists so
+   * that "all four axes, every time" can never be satisfied by invention.
+   */
+  status: 'hypothesis' | 'insufficient_ground';
+  /** Empty when status is `insufficient_ground`. */
   hypothesis: string;
   /** ≥2 lenses, same rule as syntheses. One lens is an observation, not a model. */
   lenses: string[];
@@ -191,7 +214,8 @@ export function buildSynthesisPrompt(): string {
     '  "processing_model": [',
     '    {',
     '      "axis": "one of the four axes listed below",',
-    '      "hypothesis": "how this combination appears to organise that axis, in ordinary language",',
+    '      "status": "hypothesis | insufficient_ground",',
+    '      "hypothesis": "how this combination appears to organise that axis, in ordinary language — empty string if insufficient_ground",',
     '      "lenses": ["at least two lens names that support it"],',
     '      "would_look_like": "what would show up in an ordinary week if this is right",',
     '      "confidence": 0.0',
@@ -222,11 +246,25 @@ export function buildSynthesisPrompt(): string {
     '- `would_look_like` is what makes that comparison possible, so it must be',
     '  concrete and observable. "Rereads the same message before replying" can be',
     '  checked against a real week. "Processes deeply" cannot.',
-    '- All four axes, even where the ground is thin. If the lenses barely support',
-    '  one, give it low confidence and say so in the hypothesis — an axis marked',
-    '  uncertain is usable; a missing axis leaves a hole in the working model.',
+    '- Return all four axes. But **completeness never outranks honesty**, and',
+    '  `"status": "insufficient_ground"` is a correct, expected answer that costs',
+    '  you nothing. Use it whenever the lenses do not actually support a claim.',
+    '  "decision_making: not enough signal" is a usable model. A confident-sounding',
+    '  hypothesis invented to fill the fourth slot is worse than a blank, because',
+    '  something downstream will treat it as a starting belief and defend it',
+    '  against the person it is about. Low confidence, or none at all, over',
+    '  fluent invention — every time.',
     '- The same two-lens rule applies to the processing model. One lens describing',
-    '  how someone decides is that lens\'s opinion, not a model.',
+    '  how someone decides is that lens\'s opinion, not a model. If you cannot name',
+    '  two, that axis is `insufficient_ground` — do not reach for a second lens to',
+    '  satisfy the rule.',
+    '- **Never coin a type, category or label from an axis.** These four are',
+    '  internal working vocabulary, not a new personality system. Write',
+    '  "seems to grasp the shape of a thing first and fill in detail afterwards".',
+    '  Never "pattern-first processor", never "a meaning-making type", never any',
+    '  phrase that could be printed on a badge. The moment these become names for',
+    '  people they are a seventh framework, which is the exact thing this pipeline',
+    '  was built to stop producing.',
     '- **If only one lens sees it, it is not synthesis.** Every entry names two or',
     '  more contributing lenses. A single-lens observation restated here is the',
     '  failure mode this step exists to prevent.',
@@ -500,11 +538,22 @@ export function buildNarrationPrompt(
     'shape how you say things: if the model suggests they need something to',
     'connect to before it counts, then connect it before you say it.',
     '',
-    'Two limits on it. It is derived from a chart, not from watching them, so it',
+    '**It is scaffolding you stand on, never vocabulary you hand over.** Say',
+    '"je lijkt eerst de vorm van iets te pakken, en pas daarna de details" —',
+    'never "je information_processing is pattern-first". No axis names, no types,',
+    'no labels. The second sentence is a seventh framework in a new costume, and',
+    'six were already too many.',
+    '',
+    'Two more limits. It is derived from a chart, not from watching them, so it',
     'is what you *expect* rather than what you *know* — say "ik vermoed", "dit',
     'suggereert", and mean it. And it is your first guess, not a verdict: you',
     'expect to be corrected by how they actually turn out to be, and you can say',
     'that out loud. A model that cannot be told it is wrong is not a mirror.',
+    '',
+    'Any axis marked `insufficient_ground` is something you do not know yet.',
+    'Do not narrate from it, do not fill it in, and do not apologise for it. If',
+    'the section would naturally touch it, saying plainly that you cannot see it',
+    'yet is honest and lands better than a confident guess.',
   ].filter(Boolean).join('\n');
 }
 
@@ -564,7 +613,11 @@ export function normaliseLensReport(parsed: any, lensName: string): LensReport {
  */
 export function normaliseProcessingModel(parsed: any): {
   accepted: ProcessingHypothesis[];
-  dropped: number;
+  /** Entries that failed the two-lens rule and were demoted, not deleted. */
+  demoted: number;
+  /** Axes honestly returned as unsupported. Expected, not a defect. */
+  insufficient: string[];
+  /** Axes absent from the output entirely — the only real gap. */
   missingAxes: string[];
 } {
   const raw: any[] = Array.isArray(parsed?.processing_model) ? parsed.processing_model : [];
@@ -572,29 +625,47 @@ export function normaliseProcessingModel(parsed: any): {
 
   const seen = new Set<string>();
   const accepted: ProcessingHypothesis[] = [];
-  let dropped = 0;
+  let demoted = 0;
 
   for (const p of raw) {
     const axis = typeof p?.axis === 'string' ? p.axis.trim() : '';
+    if (!known.has(axis) || seen.has(axis)) continue;
+
     const hypothesis = typeof p?.hypothesis === 'string' ? p.hypothesis.trim() : '';
     const lenses = Array.isArray(p?.lenses) ? p.lenses.map(String) : [];
-    if (!known.has(axis) || seen.has(axis) || !hypothesis || lenses.length < 2) {
-      dropped++;
-      continue;
-    }
+
+    // A thin axis is demoted to insufficient_ground, never dropped. Dropping it
+    // would report a hole where the model was actually being honest, and the
+    // pressure that creates is exactly what makes a model invent the fourth
+    // slot next time.
+    const claimed = p?.status === 'insufficient_ground' ? 'insufficient_ground' : 'hypothesis';
+    const supported = claimed === 'hypothesis' && !!hypothesis && lenses.length >= 2;
+    if (claimed === 'hypothesis' && !supported) demoted++;
+
     seen.add(axis);
-    accepted.push({
-      axis,
-      hypothesis,
-      lenses,
-      would_look_like: typeof p.would_look_like === 'string' ? p.would_look_like.trim() : '',
-      confidence: Number.isFinite(p.confidence) ? Number(p.confidence) : 0.5,
-    });
+    accepted.push(supported
+      ? {
+          axis,
+          status: 'hypothesis',
+          hypothesis,
+          lenses,
+          would_look_like: typeof p.would_look_like === 'string' ? p.would_look_like.trim() : '',
+          confidence: Number.isFinite(p.confidence) ? Number(p.confidence) : 0.5,
+        }
+      : {
+          axis,
+          status: 'insufficient_ground',
+          hypothesis: '',
+          lenses,
+          would_look_like: '',
+          confidence: 0,
+        });
   }
 
   return {
     accepted,
-    dropped,
+    demoted,
+    insufficient: accepted.filter((p) => p.status === 'insufficient_ground').map((p) => p.axis),
     missingAxes: PROCESSING_AXES.map(([a]) => a).filter((a) => !seen.has(a)),
   };
 }

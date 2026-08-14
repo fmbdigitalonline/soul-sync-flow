@@ -581,6 +581,9 @@ async function processCrossFrameworkSynthesis(job: any) {
   // The second question the synthesis now answers: not what this combination
   // means, but how it appears to run. These are the four hypotheses the Twin
   // opens with and the Living Blueprint refines from lived evidence.
+  // `insufficient` is not a warning. An axis the lenses do not support is the
+  // model being honest, and treating it as a defect is what teaches it to
+  // invent one next time. Only a genuinely absent axis is a gap.
   const processing = normaliseProcessingModel(parsed);
   if (processing.missingAxes.length > 0) {
     console.warn(`⚠️ SYNTHESIS: processing model missing axes — ${processing.missingAxes.join(', ')}`);
@@ -591,8 +594,9 @@ async function processCrossFrameworkSynthesis(job: any) {
     accepted: accepted.length,
     dropped,
     byMechanism,
-    processingAxes: processing.accepted.map((p: any) => p.axis),
-    processingDropped: processing.dropped,
+    processingAxes: processing.accepted.filter((p) => p.status === 'hypothesis').map((p) => p.axis),
+    processingInsufficient: processing.insufficient,
+    processingDemoted: processing.demoted,
     unresolved: (parsed.unresolved || []).length,
     thinGround: (parsed.thin_ground || []).length,
   });
@@ -600,6 +604,7 @@ async function processCrossFrameworkSynthesis(job: any) {
   const model = {
     syntheses: accepted,
     processing_model: processing.accepted,
+    processing_model_insufficient: processing.insufficient,
     processing_model_missing: processing.missingAxes,
     unresolved: Array.isArray(parsed.unresolved) ? parsed.unresolved : [],
     thin_ground: Array.isArray(parsed.thin_ground) ? parsed.thin_ground : [],
@@ -716,7 +721,9 @@ async function finalizeReport(job: any) {
     lenses_failed: model.lenses_failed,
     syntheses: (model.syntheses || []).length,
     dropped_single_lens: model.dropped_single_lens,
-    processing_axes: (model.processing_model || []).map((p: any) => p.axis),
+    processing_axes: (model.processing_model || [])
+      .filter((p: any) => p.status === 'hypothesis').map((p: any) => p.axis),
+    processing_axes_insufficient: model.processing_model_insufficient || [],
     processing_axes_missing: model.processing_model_missing || [],
     unresolved: (model.unresolved || []).length,
     thin_ground: (model.thin_ground || []).length,

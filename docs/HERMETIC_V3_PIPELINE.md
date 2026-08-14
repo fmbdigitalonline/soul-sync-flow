@@ -87,8 +87,40 @@ also answers **"how does this combination appear to run?"** along four axes:
 | `decision_making` | what happens between an option and a commitment, and what reliably stalls it |
 | `action` | how intention becomes movement — what starts it, sustains it, stops it |
 
-All four, every time. A thin axis gets low confidence and says so; a **missing**
-axis leaves a hole in the working model and is logged as `processing_axes_missing`.
+### Completeness never outranks honesty — enforced
+
+"All four axes, every time" is exactly the instruction that makes a model invent
+the fourth one. So `insufficient_ground` is a first-class answer that costs the
+model nothing: an axis the lenses do not support comes back marked unsupported,
+and the normaliser **demotes** a thin entry rather than dropping it. Dropping
+would report a hole where the model was being honest, and that pressure is what
+teaches it to fill the slot next time.
+
+*"decision_making: not enough signal"* is a usable working model. A
+confident-sounding hypothesis assembled from too little is worse than a blank,
+because anything downstream would take it as a starting belief and — the
+constitution gives the model inertia — defend it against the person it is about.
+
+Three different states, kept apart on the record:
+
+| Field | Means |
+|---|---|
+| `processing_axes` | supported by ≥2 lenses |
+| `processing_axes_insufficient` | honestly unsupported — **expected, not a defect** |
+| `processing_axes_missing` | absent from the output — the only real gap, and the only one logged as a warning |
+
+### The axes are not a seventh framework — stated, not enforced
+
+The moment a reader is told they are "an information_processing type X", we have
+rebuilt the labelling machine v3 exists to remove, in a vocabulary nobody speaks.
+The Twin may say *"je lijkt eerst de vorm van iets te pakken, en pas daarna de
+details"*; it may never say *"je information_processing is pattern-first"*.
+
+This is a rule in the two prompts and **nowhere else on purpose.** It constrains
+how a *consumer* uses the axes, and there is no consumer yet — the Twin does not
+read the model in conversation, and the Living Blueprint does not refine it.
+Writing enforcement machinery now would protect against behaviour nobody has
+observed. What actually needs code is decided after a report has been read.
 
 ### These are hypotheses, and the shape says so
 
@@ -97,7 +129,7 @@ phrased as what the configuration *suggests*, and it is stored as such:
 
 ```jsonc
 structured_intelligence: {
-  processing_model: [ { axis, hypothesis, lenses, would_look_like, confidence } ],
+  processing_model: [ { axis, status, hypothesis, lenses, would_look_like, confidence } ],
   processing_model_status: 'hypothesis',
   processing_model_basis: 'blueprint_derived',
 }
@@ -218,9 +250,13 @@ Generate **one** report for the founder's account and check, in this order:
    `🧩 SYNTHESIS` log is spread across mechanisms rather than piled on `tension`.
 4. `unresolved` and `thin_ground` are **non-empty**. A model that found nothing
    contradictory and no weak ground is flattering itself.
-5. `processing_axes` lists all four and `processing_axes_missing` is empty. Then
-   read the four hypotheses on their own, before any prose: do they describe how
-   somebody *runs*, or are they the syntheses restated? If a `would_look_like`
-   could not be checked against a real week, the axis is decoration.
+5. `processing_axes_missing` is empty. `processing_axes_insufficient` may not be
+   — that is the model being honest and is not a failure. Then read the axes on
+   their own, **before any prose**: do they describe how somebody *runs*, or are
+   they the syntheses restated? Could each `would_look_like` be checked against a
+   real week? An axis that fails that is decoration.
+
+   This reading decides the open question: which of the two agreed boundaries
+   actually needs code. Do not write enforcement for either one before it.
 6. Then read two sections and answer the only question that matters: does this
    say something true and specific, and does it sound like one voice?
