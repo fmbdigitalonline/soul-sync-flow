@@ -1,6 +1,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+// This was called below but never imported — the function threw
+// "callChatCompletion is not defined" the moment it reached the model call.
+// Found while migrating models; fixed here because a migration that leaves a
+// function broken has not migrated it.
+import { callChatCompletion } from '../_shared/azure-openai.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -189,9 +194,11 @@ FORMAT REQUIRED:
           content: `Generate 25 personalized quotes for ${userName}. Make them deeply personal, empowering, and speak directly to who ${userName} is. Use their name naturally in 40% of quotes.` 
         }
       ],
-      model: 'gpt-4o',
+      // Writing for a reader, so `narration`. No model named — the shared
+      // owner decides. The temperature this used to carry is dropped by the
+      // helper, because reasoning models reject it.
+      task: 'narration',
       max_tokens: 4000,
-      temperature: 0.8,
     });
 
     if (!openAIResponse.ok) {
