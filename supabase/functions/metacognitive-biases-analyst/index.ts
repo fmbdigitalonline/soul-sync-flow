@@ -39,7 +39,6 @@ Generate a comprehensive 3,000-4,000 word analysis covering cognitive biases, pe
         { role: 'system', content: 'You are an expert metacognitive analyst specializing in cognitive bias identification and thinking pattern analysis.' },
         { role: 'user', content: prompt }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
       max_tokens: 4000,
     });
 

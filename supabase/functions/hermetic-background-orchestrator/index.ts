@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import type { TaskKind } from '../_shared/model.ts';
 import {
   buildObservationPrompt,
   buildSynthesisPrompt,
@@ -391,14 +392,26 @@ const OBSERVATION_STAGES: Record<string, string> = {
   intelligence_extraction: 'intelligence_sections',
 };
 
-async function callAgent(systemPrompt: string, userPrompt: string, label: string): Promise<string> {
+/**
+ * @param task What kind of work this is, which sets reasoning effort. The three
+ *   roles want different amounts: a lens returns bounded JSON and deliberation
+ *   there invents fields; the synthesis reads fifty lenses at once and is the
+ *   only step where thinking is the product; narration is writing, not
+ *   reasoning. Defaults per task live in `_shared/model.ts`.
+ */
+async function callAgent(
+  systemPrompt: string,
+  userPrompt: string,
+  label: string,
+  task: TaskKind = 'structured',
+): Promise<string> {
   const { data, error } = await supabase.functions.invoke('openai-agent', {
     body: {
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
+      task,
     },
   });
 
@@ -559,6 +572,7 @@ async function processCrossFrameworkSynthesis(job: any) {
     buildSynthesisPrompt(),
     `LENS REPORTS:\n${JSON.stringify(lensInput, null, 2)}`,
     'cross-framework synthesis',
+    'synthesis',
   );
 
   const parsed = parseJsonLoosely<any>(raw);
@@ -664,6 +678,7 @@ async function processNarrationSection(job: any, index: number, language: string
     buildNarrationPrompt(section, userName, getLanguageName(language)),
     `THE MODEL:\n${JSON.stringify(model, null, 2)}${lensMaterial}`,
     section.key,
+    'narration',
   );
 
   const wordCount = content.split(/\s+/).filter(Boolean).length;

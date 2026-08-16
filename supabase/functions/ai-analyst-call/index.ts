@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callChatCompletion } from "../_shared/azure-openai.ts";
+import { CHAT_MODEL } from '../_shared/model.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, model = 'gpt-4.1-mini-2025-04-14', max_tokens = 4000, analyst_type } = await req.json();
+    const { prompt, model = CHAT_MODEL, max_tokens = 4000, analyst_type } = await req.json();
     
     if (!prompt) {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), {

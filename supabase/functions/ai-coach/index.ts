@@ -1,16 +1,17 @@
 // ==============================================
 // AI COACH EDGE FUNCTION - VERSION 2.2.0
 // DEPLOYMENT: 2025-10-06T15:45:00Z
-// MODEL: gpt-4.1-mini-2025-04-14 (QUOTA-SAFE)
+// MODEL: the shared CHAT_MODEL (QUOTA-SAFE)
 // CHANGES: Forced redeployment to activate GET handler
 // ==============================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { callChatCompletion } from "../_shared/azure-openai.ts";
+import { CHAT_MODEL } from '../_shared/model.ts';
 
 const DEPLOYMENT_VERSION = "2.2.0";
 const DEPLOYMENT_TIMESTAMP = "2025-10-06T15:45:00Z"; // Updated to force redeployment
-const DEPLOYMENT_MODEL = "gpt-4.1-mini-2025-04-14";
+const DEPLOYMENT_MODEL = CHAT_MODEL;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -103,7 +104,7 @@ const selectModel = (
     return modelOverride;
   }
   
-  // Default: Always use gpt-4.1-mini-2025-04-14 (quota-safe)
+  // Default: Always use the shared CHAT_MODEL (quota-safe)
   console.log('🧠 USING DEFAULT MODEL:', DEPLOYMENT_MODEL);
   return DEPLOYMENT_MODEL;
 };

@@ -122,7 +122,6 @@ USER MESSAGE: "${message}"
 Provide transformational spiritual guidance tailored to their personality. Stay focused on growth and consciousness expansion.`;
 
     console.log(`🤖 AI REQUEST: [${requestId}] Calling OpenAI with growth-specific prompt`, {
-      model: 'gpt-4.1-mini-2025-04-14',
       systemPromptLength: systemPrompt.length,
       userMessageLength: message.length,
       maxTokens: 500,
@@ -141,7 +140,6 @@ Provide transformational spiritual guidance tailored to their personality. Stay 
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
         ],
-        model: 'gpt-4.1-mini-2025-04-14',
         max_tokens: 500,
         temperature: 0.8,
         signal: controller.signal,

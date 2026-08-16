@@ -80,7 +80,6 @@ Generate a personalized HACS message for this situation.`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
       max_tokens: Math.min(100, spec.maxWords * 2),
     });
 

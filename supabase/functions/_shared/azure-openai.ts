@@ -7,6 +7,15 @@
  * quickly by restoring the AZURE_* secrets and flipping USE_AZURE to true.
  */
 
+import {
+  CHAT_MODEL,
+  DEFAULT_TASK,
+  REASONING_BY_TASK,
+  isReasoningModel,
+  type ReasoningEffort,
+  type TaskKind,
+} from './model.ts';
+
 // Force direct-OpenAI regardless of any lingering AZURE_* env vars in the
 // runtime. Flip to true (and restore the Azure secrets) to re-enable Azure.
 const USE_AZURE = false;
@@ -54,6 +63,8 @@ export const isAzureConfigured = (): boolean => {
  * Map OpenAI model names to Azure deployment names.
  */
 const MODEL_TO_DEPLOYMENT: Record<string, string> = {
+  'gpt-5.6-luna': 'gpt-5.6-luna',
+  'gpt-5.6-terra': 'gpt-5.6-terra',
   'gpt-4.1-mini-2025-04-14': 'gpt-4.1-mini',
   'gpt-4.1-mini': 'gpt-4.1-mini',
   'gpt-4.1': 'gpt-4.1',
@@ -77,6 +88,13 @@ function getDeploymentName(model: string): string {
 export async function callChatCompletion(options: {
   messages: Array<{ role: string; content: string }>;
   model?: string;
+  /**
+   * What kind of work this is. Decides reasoning effort via REASONING_BY_TASK.
+   * Prefer this over naming a model — see _shared/model.ts.
+   */
+  task?: TaskKind;
+  /** Overrides whatever `task` would have chosen. Use sparingly. */
+  reasoning_effort?: ReasoningEffort;
   max_tokens?: number;
   stream?: boolean;
   temperature?: number;
@@ -87,7 +105,9 @@ export async function callChatCompletion(options: {
 }): Promise<Response> {
   const {
     messages,
-    model = 'gpt-4.1-mini-2025-04-14',
+    model = CHAT_MODEL,
+    task = DEFAULT_TASK,
+    reasoning_effort,
     max_tokens = 4000,
     stream = false,
     temperature,
@@ -96,6 +116,18 @@ export async function callChatCompletion(options: {
     signal,
     ...rest
   } = options;
+
+  // Reasoning models bill their thinking as output tokens and reject
+  // `temperature` outright. Thirty-seven functions call through here and many
+  // still pass a temperature they inherited from the 4.1 era; forwarding it
+  // would 400 every one of them at once. Drop it rather than fail, and say so
+  // once per call so the reason is in the log trail rather than a mystery.
+  const reasoning = isReasoningModel(model);
+  const effort: ReasoningEffort = reasoning_effort ?? REASONING_BY_TASK[task];
+  if (reasoning && temperature !== undefined) {
+    console.log(`ℹ️ ${model} ignores temperature (${temperature}) — dropped, reasoning_effort=${effort}`);
+  }
+  const sendTemperature = !reasoning && temperature !== undefined;
 
   if (isAzureConfigured()) {
     const deployment = getDeploymentName(model);
@@ -107,7 +139,8 @@ export async function callChatCompletion(options: {
       stream,
       ...rest,
     };
-    if (temperature !== undefined) body.temperature = temperature;
+    if (sendTemperature) body.temperature = temperature;
+    if (reasoning && effort !== 'none') body.reasoning_effort = effort;
     if (tools) body.tools = tools;
     if (tool_choice) body.tool_choice = tool_choice;
 
@@ -129,7 +162,7 @@ export async function callChatCompletion(options: {
     throw new Error('Neither Azure OpenAI nor OpenAI API key is configured');
   }
 
-  console.log(`⚡ OpenAI Direct (fallback): ${model}`);
+  console.log(`⚡ OpenAI Direct: ${model} task=${task} reasoning=${effort}`);
 
   const body: Record<string, unknown> = {
     model,
@@ -138,7 +171,11 @@ export async function callChatCompletion(options: {
     stream,
     ...rest,
   };
-  if (temperature !== undefined) body.temperature = temperature;
+  if (sendTemperature) body.temperature = temperature;
+  // Chat Completions takes a flat `reasoning_effort`; the nested
+  // `reasoning: { effort }` shape belongs to the Responses API, which this
+  // helper does not speak. Moving to it is a separate change — see PARKED.md.
+  if (reasoning && effort !== 'none') body.reasoning_effort = effort;
   if (tools) body.tools = tools;
   if (tool_choice) body.tool_choice = tool_choice;
 

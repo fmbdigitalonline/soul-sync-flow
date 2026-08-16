@@ -78,7 +78,6 @@ Write in a profound, insightful tone that reveals deep psychological patterns. U
         { role: 'system', content: 'You are an expert identity analyst specializing in deep psychological pattern recognition and identity formation dynamics.' },
         { role: 'user', content: prompt }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
       max_tokens: 4000,
     });
 

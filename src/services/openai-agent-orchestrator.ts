@@ -297,7 +297,6 @@ Consider interdependencies like: Energy → Career, Health → Energy, Relations
     if (depth === 0) return [];
 
     const response = await this.callOpenAI({
-      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
@@ -392,7 +391,6 @@ Consider interdependencies like: Energy → Career, Health → Energy, Relations
     };
 
     const response = await this.callOpenAI({
-      model: 'gpt-4o-mini',
       messages: [systemMessage, ...messages],
       tools: agent.tools,
       temperature: agentType === 'planner' ? 0.8 : 0.3
@@ -504,7 +502,7 @@ Consider interdependencies like: Energy → Career, Health → Energy, Relations
       const { data, error } = await supabase.functions.invoke('openai-agent', {
         body: {
           messages: params.messages,
-          model: params.model || 'gpt-4o-mini',
+          model: params.model,
           temperature: params.temperature || 0.7,
           tools: params.tools
         }
@@ -590,7 +588,6 @@ Consider interdependencies like: Energy → Career, Health → Energy, Relations
       console.log('🧪 Testing simple OpenAI call...');
       
       const result = await this.callOpenAI({
-        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',

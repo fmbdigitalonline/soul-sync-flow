@@ -195,7 +195,6 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
         { role: 'system', content: personalityReportSystemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
       max_tokens: 4000,
     });
 

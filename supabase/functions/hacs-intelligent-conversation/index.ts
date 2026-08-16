@@ -675,7 +675,6 @@ Generate a ${questionType} question for the ${targetModule} module to help me le
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ],
-    model: 'gpt-4.1-mini-2025-04-14',
     max_tokens: 150,
   });
 
@@ -788,7 +787,6 @@ Respond as HACS:`;
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ],
-    model: 'gpt-4.1-mini-2025-04-14',
     max_tokens: 200,
   });
 

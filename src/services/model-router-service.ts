@@ -20,13 +20,26 @@ interface ModelSelection {
 
 class ModelRouterService {
   private readonly MODEL_CONFIGS = {
-    // GPT-4.1-mini - Primary model for all operations
-    'gpt-4.1-mini-2025-04-14': {
+    // Primary model for all operations.
+    //
+    // This name must match CHAT_MODEL in supabase/functions/_shared/model.ts.
+    // The edge functions are the canonical owner; the frontend only repeats it
+    // because it passes `modelOverride` and cannot import a Deno module. The
+    // right end state is that the frontend stops naming a model at all and
+    // lets the edge default apply — parked, not done here.
+    'gpt-5.6-luna': {
       maxTokens: 2000,
-      temperature: undefined, // Not supported by GPT-4.1
-      costPerToken: 0.000001,
+      temperature: undefined, // Reasoning models reject temperature.
+      costPerToken: 0.0000002,
       layer: 'optimized' as const,
       costTier: 'low' as const
+    },
+    'gpt-4.1-mini-2025-04-14': {
+      maxTokens: 2000,
+      temperature: undefined,
+      costPerToken: 0.000001,
+      layer: 'optimized' as const,
+      costTier: 'deprecated' as const
     },
     // Legacy models (deprecated, kept for compatibility)
     'gpt-4o': {
@@ -60,10 +73,11 @@ class ModelRouterService {
   };
 
   selectModel(context: ConversationContext): ModelSelection {
-    console.log('🎯 Model Router: Using GPT-4.1-mini for all requests:', context);
+    console.log('🎯 Model Router: Using the shared chat model for all requests:', context);
 
-    // Always use gpt-4.1-mini-2025-04-14 (quota-safe model)
-    return this.buildSelection('gpt-4.1-mini-2025-04-14', 'Using quota-safe GPT-4.1-mini model');
+    // One model for everything. Not a router in practice — kept because its
+    // ModelSelection shape is consumed downstream.
+    return this.buildSelection('gpt-5.6-luna', 'Shared chat model');
   }
 
   private requiresPremiumModel(context: ConversationContext): boolean {
@@ -99,8 +113,8 @@ class ModelRouterService {
     const config = this.MODEL_CONFIGS[model as keyof typeof this.MODEL_CONFIGS];
     
     if (!config) {
-      console.warn(`⚠️ Unknown model ${model}, falling back to gpt-4o-mini`);
-      return this.buildSelection('gpt-4o-mini', 'Fallback due to unknown model');
+      console.warn(`⚠️ Unknown model ${model}, falling back to the shared chat model`);
+      return this.buildSelection('gpt-5.6-luna', 'Fallback due to unknown model');
     }
 
     console.log(`✅ Selected ${model} (${config.layer} layer, ${config.costTier} tier): ${reasoning}`);
@@ -116,10 +130,10 @@ class ModelRouterService {
   }
 
   escalateModel(currentModel: string, reason: 'user_feedback' | 'low_quality' | 'timeout'): ModelSelection {
-    console.log(`🔄 Escalation requested but staying with gpt-4.1-mini-2025-04-14 due to: ${reason}`);
+    console.log(`🔄 Escalation requested but staying with the shared chat model due to: ${reason}`);
     
-    // Always use gpt-4.1-mini-2025-04-14 (no escalation needed)
-    return this.buildSelection('gpt-4.1-mini-2025-04-14', `Staying with quota-safe model despite ${reason}`);
+    // No escalation: one model, chosen once.
+    return this.buildSelection('gpt-5.6-luna', `Staying with the shared chat model despite ${reason}`);
   }
 
   // Cost optimization suggestions

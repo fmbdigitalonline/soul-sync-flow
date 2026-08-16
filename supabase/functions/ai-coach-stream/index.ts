@@ -3,6 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 import { callChatCompletion } from "../_shared/azure-openai.ts";
+import { CHAT_MODEL } from '../_shared/model.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -72,25 +73,25 @@ serve(async (req) => {
     const selectStreamingModel = (agentType: string, contextDepth: string, includeBlueprint: boolean, isFullBlueprint: boolean) => {
       // Full blueprint requests get premium treatment
       if (isFullBlueprint) {
-        console.log('📋 Full Blueprint Request: gpt-4.1-mini-2025-04-14');
-        return 'gpt-4.1-mini-2025-04-14';
+        console.log(`📋 Full Blueprint Request: `);
+        return CHAT_MODEL;
       }
       
       // Core Brain Layer - deep personality integration
       if (includeBlueprint && (contextDepth === 'deep' || agentType === 'guide')) {
-        console.log('🧠 Streaming with Core Brain Layer: gpt-4.1-mini-2025-04-14');
-        return 'gpt-4.1-mini-2025-04-14';
+        console.log(`🧠 Streaming with Core Brain Layer: `);
+        return CHAT_MODEL;
       }
       
       // Exploration Coach Layer - emotional themes
       if (agentType === 'coach' && contextDepth === 'emotional') {
-        console.log('🧭 Streaming with Exploration Coach Layer: gpt-4.1-mini-2025-04-14');
-        return 'gpt-4.1-mini-2025-04-14';
+        console.log(`🧭 Streaming with Exploration Coach Layer: `);
+        return CHAT_MODEL;
       }
       
       // ACS Layer - fast state switching and routine interactions
-      console.log('⚡ Streaming with ACS Layer: gpt-4.1-mini-2025-04-14');
-      return 'gpt-4.1-mini-2025-04-14';
+      console.log(`⚡ Streaming with ACS Layer: `);
+      return CHAT_MODEL;
     };
 
     const selectedModel = selectStreamingModel(agentType, contextDepth, includeBlueprint, isFullBlueprintRequest);

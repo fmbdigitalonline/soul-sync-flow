@@ -23,13 +23,14 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { callChatCompletion } from '../_shared/azure-openai.ts';
+import { CHAT_MODEL } from '../_shared/model.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const MODEL = 'gpt-4.1-mini-2025-04-14';
+const MODEL = CHAT_MODEL;
 
 /** B — the analyst as investigator. Structure out, no prose, no narration. */
 function findingsPrompt(agent: string, dimensionLabel: string): string {
