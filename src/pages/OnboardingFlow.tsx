@@ -12,6 +12,8 @@ import {
   MICRO_QUESTIONS,
   MICRO_QUESTION_TITLE_KEYS,
   estimateFromAnswers,
+  sunSignFromBirthDate,
+  lifePathFromBirthData,
 } from "@/services/personality-estimate";
 import { supabase } from "@/integrations/supabase/client";
 import { hermeticPersonalityReportService } from "@/services/hermetic-personality-report-service";
@@ -176,9 +178,20 @@ const OnboardingFlow: React.FC = () => {
           timezone,
           // Skipped stays absent — assembly degrades to Unknown rather than
           // guessing a type nobody gave us.
+          // The seed is not optional in practice. Without it openness and
+          // agreeableness never move off 0.5, N and F become unreachable, and
+          // every user who fills in this form is typed xSTx — four types out of
+          // sixteen. Sun sign and life path are both derivable from what this
+          // form already holds, so there is no reason to compute the estimate
+          // blind. The chart is not cast yet; these are priors, and the real
+          // ephemeris values land in the blueprint moments later.
           ...(Object.keys(answers).length > 0
             ? {
                 personality: estimateFromAnswers(answers, {
+                  seed: {
+                    sunSign: sunSignFromBirthDate(birthDate),
+                    lifePath: lifePathFromBirthData(fullName, birthDate),
+                  },
                   descriptions: (t('personality.mbtiDescriptions') as any) || {},
                 }),
               }
