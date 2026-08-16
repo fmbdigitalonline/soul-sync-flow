@@ -45,11 +45,23 @@ export interface MicroQuestion {
 }
 
 /**
- * The same three questions, traits and weights the wizard used. Labels are not
- * here — they are translated at the call site, so this stays language-free.
+ * One question per MBTI axis. Labels are not here — they are translated at the
+ * call site, so this stays language-free.
+ *
+ * The inherited set asked three questions that measured **two** traits:
+ * extraversion once and conscientiousness twice. Openness and agreeableness
+ * were never asked, so they sat at 0.5 and the N/S and F/T letters were decided
+ * by whatever the seed happened to do — which meant astrology chose two of
+ * MBTI's four letters. Two of the six frameworks were partly the same lens.
+ *
+ * Four questions, one per axis, fix that at the source: the person decides
+ * their own type and the chart goes back to being a separate framework. The
+ * weight is 0.3 across the board so an answered trait always outruns the seed
+ * (max ±0.2) — a stated preference must never be overridden by a birth date.
  */
 export const MICRO_QUESTIONS: MicroQuestion[] = [
   {
+    // E / I
     id: 'energy_source',
     trait: 'extraversion',
     weight: 0.3,
@@ -57,16 +69,26 @@ export const MICRO_QUESTIONS: MicroQuestion[] = [
     right: { key: 'personality.beingWithPeople', value: 1 },
   },
   {
-    id: 'workspace_style',
-    trait: 'conscientiousness',
-    weight: 0.25,
-    left: { key: 'personality.tidyOrganized', value: 1 },
-    right: { key: 'personality.creativeChaos', value: -1 },
+    // N / S
+    id: 'attention_style',
+    trait: 'openness',
+    weight: 0.3,
+    left: { key: 'personality.whatIsConcrete', value: -1 },
+    right: { key: 'personality.whatItCouldBecome', value: 1 },
   },
   {
+    // F / T
+    id: 'decision_basis',
+    trait: 'agreeableness',
+    weight: 0.3,
+    left: { key: 'personality.whatAddsUp', value: -1 },
+    right: { key: 'personality.whoItAffects', value: 1 },
+  },
+  {
+    // J / P
     id: 'planning_style',
     trait: 'conscientiousness',
-    weight: 0.25,
+    weight: 0.3,
     left: { key: 'personality.bookInAdvance', value: 1 },
     right: { key: 'personality.seeWhatHappens', value: -1 },
   },
@@ -74,7 +96,8 @@ export const MICRO_QUESTIONS: MicroQuestion[] = [
 
 export const MICRO_QUESTION_TITLE_KEYS: Record<string, string> = {
   energy_source: 'personality.energySource',
-  workspace_style: 'personality.workspaceStyle',
+  attention_style: 'personality.attentionStyle',
+  decision_basis: 'personality.decisionBasis',
   planning_style: 'personality.planningStyle',
 };
 
@@ -222,9 +245,21 @@ export function estimateFromAnswers(
 ): PersonalityEstimate {
   const { base, confidence } = seedBase(opts.seed);
 
+  // The seed fills gaps; it never overrules an answer. Chart nudges stack —
+  // fire sign plus Projector plus a life path can move openness by 0.35, more
+  // than a single answer's weight — so adding them together let a birth date
+  // flip a letter the person had just chosen for themselves. Instead, the first
+  // answer on a trait clears the seed from it and the answers alone decide.
+  // This is the constitution's rule about disagreement, one layer earlier: a
+  // stated preference becomes the model rather than being outvoted by it.
+  const ownedByAnswer = new Set<keyof BigFive>();
   for (const q of MICRO_QUESTIONS) {
     const value = answers[q.id];
     if (value !== -1 && value !== 1) continue;
+    if (!ownedByAnswer.has(q.trait)) {
+      base[q.trait] = 0.5;
+      ownedByAnswer.add(q.trait);
+    }
     base[q.trait] += value * q.weight;
     confidence[q.trait] = Math.max(0.7, confidence[q.trait]);
   }
