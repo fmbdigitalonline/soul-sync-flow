@@ -127,7 +127,12 @@ serve(async (req) => {
     // Azure/OpenAI routing handled by shared helper
 
     // Dynamic parameters - use finalMaxTokens calculated earlier for blueprint requests
-    const finalTemperature = selectedModel.includes('gpt-4.1') ? temperature : Math.min(temperature, 0.5);
+    //
+    // This used to clamp temperature for anything that was not gpt-4.1. The
+    // shared model is a reasoning model, which rejects temperature outright —
+    // the helper drops it and logs that it did. The value is kept only for the
+    // log line below, so the branch that named a retired model is gone.
+    const finalTemperature = temperature;
 
     console.log('🎯 Streaming with layered model:', {
       model: selectedModel,

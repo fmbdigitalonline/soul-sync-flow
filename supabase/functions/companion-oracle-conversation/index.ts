@@ -2444,8 +2444,11 @@ serve(async (req) => {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 1000);
         const resp = await callChat({
-          model: 'gpt-4.1-nano',
-          temperature: 0,
+          // A small, fast classifier behind a 1s abort. `classify` sets
+          // reasoning to none — deliberation here only costs latency the
+          // timeout will not wait for. gpt-4.1-nano, which this used, is the
+          // one model actually on OpenAI's deprecations list.
+          task: 'classify',
           max_tokens: 120,
           stream: false,
           signal: controller.signal,

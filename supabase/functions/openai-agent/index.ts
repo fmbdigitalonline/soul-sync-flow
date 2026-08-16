@@ -743,7 +743,10 @@ serve(async (req) => {
         messages: conversationMessages,
       };
 
-      // CRITICAL: Add parameters based on model type with extensive logging
+      // Pre-4.1 models take `max_tokens` and accept `temperature`; everything
+      // since takes `max_completion_tokens` and rejects temperature. The names
+      // below are the old family, kept as a detector rather than a choice —
+      // nothing in this project selects them any more.
       if (model.includes('gpt-4o') || model.includes('gpt-3.5')) {
         // Legacy models
         requestBody.max_tokens = max_tokens;
