@@ -396,7 +396,6 @@ Generate an authentic insight based ONLY on the real user data patterns provided
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
       max_tokens: 300,
     });
 

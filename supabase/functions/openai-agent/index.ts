@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { callChatCompletion } from '../_shared/azure-openai.ts';
+import { CHAT_MODEL } from '../_shared/model.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -625,7 +626,6 @@ async function decomposeGoalReal(params: {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ],
-    model: 'gpt-4.1-mini-2025-04-14',
     max_tokens: 1200
   });
 
@@ -711,7 +711,10 @@ serve(async (req) => {
       return await handleDecomposeGoal(body);
     }
 
-    const { messages, model = 'gpt-4.1-mini-2025-04-14', temperature = 0.7, tools = null, max_tokens = 4000 } = body;
+    // `task` decides reasoning effort (see _shared/model.ts). Callers should
+    // send it instead of naming a model; `model` stays only for the few places
+    // that genuinely need to pin one.
+    const { messages, model = CHAT_MODEL, task, temperature = 0.7, tools = null, max_tokens = 4000 } = body;
     
     console.log('🔧 Tools provided:', tools?.length || 0);
     console.log('📝 Messages count:', messages?.length);
@@ -771,6 +774,7 @@ serve(async (req) => {
       const response = await callChatCompletion({
         messages: conversationMessages,
         model: requestBody.model,
+        ...(task ? { task } : {}),
         max_tokens: requestBody.max_completion_tokens || requestBody.max_tokens || max_tokens,
         temperature: requestBody.temperature,
         tools: requestBody.tools,

@@ -116,7 +116,6 @@ Provide scores that reflect the nuanced reality of the conversation, not generic
           content: assessmentPrompt
         }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
       max_tokens: 2000,
     });
 

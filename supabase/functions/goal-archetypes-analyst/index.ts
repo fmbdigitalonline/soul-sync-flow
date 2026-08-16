@@ -39,7 +39,6 @@ Generate a comprehensive 3,000-4,000 word analysis covering goal orientation pat
         { role: 'system', content: 'You are an expert motivation analyst specializing in goal orientation and achievement patterns.' },
         { role: 'user', content: prompt }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
       max_tokens: 4000,
     });
 

@@ -550,7 +550,6 @@ Respond naturally and helpfully, integrating insights from your unified intellig
         { role: 'system', content: systemPrompt },
         { role: 'user', content: message }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
       max_tokens: 500,
     });
 

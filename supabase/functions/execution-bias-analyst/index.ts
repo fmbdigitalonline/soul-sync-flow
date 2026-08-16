@@ -77,7 +77,6 @@ Integrate insights from identity constructs and behavioral triggers analysis. Wr
         { role: 'system', content: 'You are an expert execution analyst specializing in decision-making patterns and action-taking biases.' },
         { role: 'user', content: prompt }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
       max_tokens: 4000,
     });
 

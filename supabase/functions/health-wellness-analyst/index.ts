@@ -45,7 +45,6 @@ Generate a comprehensive 3,000-4,000 word analysis covering:
         { role: 'system', content: 'You are an expert holistic health analyst specializing in personalized wellness patterns and mind-body optimization.' },
         { role: 'user', content: prompt }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
       max_tokens: 4000,
     });
 

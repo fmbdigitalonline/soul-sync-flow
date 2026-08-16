@@ -239,7 +239,6 @@ Provide strict analysis - only award growth for real demonstrated understanding.
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
       max_tokens: 500,
     });
 

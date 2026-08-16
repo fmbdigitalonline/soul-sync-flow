@@ -39,7 +39,6 @@ Generate a comprehensive 3,000-4,000 word analysis covering attachment patterns,
         { role: 'system', content: 'You are an expert attachment analyst specializing in relational patterns and authority dynamics.' },
         { role: 'user', content: prompt }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
       max_tokens: 4000,
     });
 

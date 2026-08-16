@@ -7,6 +7,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 // PHASE 1: Import edge-compatible services from _shared directory
 import { ConversationShadowDetector } from '../_shared/conversation-shadow-detector.ts';
 import { ConversationPhaseTracker } from '../_shared/conversation-phase-tracker.ts';
+import { CHAT_MODEL } from '../_shared/model.ts';
 
 // RCA 2026-08-10: name the class of an upstream model-provider failure so the
 // log trail (and the JSON error body, which the UI never renders) carries the
@@ -2293,7 +2294,7 @@ serve(async (req) => {
     });
 
     // MODEL SELECTION: Use GPT-4.1 mini for streaming capability and enhanced reasoning  
-    const selectedModel = 'gpt-4.1-mini-2025-04-14';
+    const selectedModel = CHAT_MODEL;
 
     // CONVERSATION MEMORY: Build messages array with conversation history
     let messagesToSend: any[];

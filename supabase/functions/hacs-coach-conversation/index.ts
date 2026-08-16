@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { callChatCompletion } from '../_shared/azure-openai.ts';
+import { CHAT_MODEL } from '../_shared/model.ts';
 
 // PILLAR I: Preserve Core Intelligence - Enhanced Coach Pipeline
 // Phase 1: Conversation State Detection for Productivity Coaching
@@ -483,7 +484,7 @@ Provide actionable, practical productivity advice. Stay focused on productivity 
     // PHASE 8: Enhanced Model Selection and Token Allocation
     const isComprehensiveRequest = /\b(complete|full|comprehensive|detailed)\s*(productivity|system|strategy|plan)\b/i.test(message);
     const maxTokens = isComprehensiveRequest ? 2000 : 1000;
-    const selectedModel = 'gpt-4.1-mini-2025-04-14'; // Enhanced reasoning for productivity coaching
+    const selectedModel = CHAT_MODEL; // Enhanced reasoning for productivity coaching
 
     console.log('🏃‍♂️ PRODUCTIVITY COACH: Generating response with enhanced model:', {
       model: selectedModel,

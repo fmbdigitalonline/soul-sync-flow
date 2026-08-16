@@ -77,7 +77,6 @@ Connect all insights to the hermetic analysis and identity constructs findings. 
         { role: 'system', content: 'You are an expert behavioral analyst specializing in trigger identification and response pattern analysis.' },
         { role: 'user', content: prompt }
       ],
-      model: 'gpt-4.1-mini-2025-04-14',
       max_tokens: 4000,
     });
 

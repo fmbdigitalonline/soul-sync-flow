@@ -375,7 +375,6 @@ serve(async (req) => {
             content: `Help me with: ${safeTitle}\n\nContext: ${JSON.stringify(taskContext ?? {})}`
           }
         ],
-        model: "gpt-4.1-mini-2025-04-14",
         max_tokens: 2000,
         tools: [
           {
