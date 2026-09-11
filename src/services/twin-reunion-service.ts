@@ -67,7 +67,7 @@ const COPY: Record<Lang, {
   en: {
     greet: (part, name) => (name ? `${part}, ${name}.` : `${part}.`),
     parts: ['Hello', 'Good morning', 'Good afternoon', 'Good evening'],
-    remember: (e) => `Last time, we were exploring: "${e}"`,
+    remember: (e) => `Last time was mostly about ${e}.`,
     reminder: (q) => `A reminder from your blueprint: ${q}`,
     continueTitled: (t) => `When you're ready, "${t}" is still waiting for us in the workspace.`,
     continueBare: `There's unfinished work waiting for us in the workspace whenever you're ready.`,
@@ -76,7 +76,7 @@ const COPY: Record<Lang, {
   nl: {
     greet: (part, name) => (name ? `${part}, ${name}.` : `${part}.`),
     parts: ['Hallo', 'Goedemorgen', 'Goedemiddag', 'Goedenavond'],
-    remember: (e) => `Vorige keer verkenden we: "${e}"`,
+    remember: (e) => `Vorige keer ging het vooral over ${e}.`,
     reminder: (q) => `Een herinnering uit je blauwdruk: ${q}`,
     continueTitled: (t) => `Wanneer je er klaar voor bent, wacht "${t}" nog op ons in de werkruimte.`,
     continueBare: `Er wacht nog werk op ons in de werkruimte wanneer je er klaar voor bent.`,
