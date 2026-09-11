@@ -38,7 +38,9 @@ export interface TwinReunion {
   generatedAt: string;
 }
 
-const CACHE_KEY = (userId: string) => `twin-reunion:v1:${userId}`;
+// v2: v1 cached verbatim quotes of the last user message ("Hi Liora"); the
+// remember line is now an essence, so old caches must not survive.
+const CACHE_KEY = (userId: string) => `twin-reunion:v2:${userId}`;
 
 type Lang = 'en' | 'nl';
 
