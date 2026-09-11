@@ -38,7 +38,9 @@ export interface TwinReunion {
   generatedAt: string;
 }
 
-const CACHE_KEY = (userId: string) => `twin-reunion:v1:${userId}`;
+// v2: v1 cached verbatim quotes of the last user message ("Hi Liora"); the
+// remember line is now an essence, so old caches must not survive.
+const CACHE_KEY = (userId: string) => `twin-reunion:v2:${userId}`;
 
 type Lang = 'en' | 'nl';
 
@@ -65,7 +67,7 @@ const COPY: Record<Lang, {
   en: {
     greet: (part, name) => (name ? `${part}, ${name}.` : `${part}.`),
     parts: ['Hello', 'Good morning', 'Good afternoon', 'Good evening'],
-    remember: (e) => `Last time, we were exploring: "${e}"`,
+    remember: (e) => `Last time was mostly about ${e}.`,
     reminder: (q) => `A reminder from your blueprint: ${q}`,
     continueTitled: (t) => `When you're ready, "${t}" is still waiting for us in the workspace.`,
     continueBare: `There's unfinished work waiting for us in the workspace whenever you're ready.`,
@@ -74,7 +76,7 @@ const COPY: Record<Lang, {
   nl: {
     greet: (part, name) => (name ? `${part}, ${name}.` : `${part}.`),
     parts: ['Hallo', 'Goedemorgen', 'Goedemiddag', 'Goedenavond'],
-    remember: (e) => `Vorige keer verkenden we: "${e}"`,
+    remember: (e) => `Vorige keer ging het vooral over ${e}.`,
     reminder: (q) => `Een herinnering uit je blauwdruk: ${q}`,
     continueTitled: (t) => `Wanneer je er klaar voor bent, wacht "${t}" nog op ons in de werkruimte.`,
     continueBare: `Er wacht nog werk op ons in de werkruimte wanneer je er klaar voor bent.`,
@@ -133,27 +135,87 @@ function isHiddenContent(content: string): boolean {
   return content.trim().startsWith('[CONTEXT:');
 }
 
-/** Last *visible* user message of the most recent conversation → continuity. */
+/**
+ * Pleasantries carry no subject. Quoting one back ("Hi Liora") is what the
+ * reunion used to do; such a message can never be the essence of a
+ * conversation, so it is filtered out before anything is summarised.
+ */
+const TRIVIAL_PATTERNS: RegExp[] = [
+  /^(hi|hey|hello|hoi|hai|hallo|yo|goedemorgen|goedemiddag|goedenavond|good (morning|afternoon|evening))\b[\s\S]{0,20}$/i,
+  /^(ok|oke|okay|oké|ja|nee|yes|no|yep|nope|thanks|thx|dank je|dankje|dank u|bedankt|top|prima|mooi|cool|ha)\b[\s\S]{0,10}$/i,
+];
+
+function isTrivial(content: string): boolean {
+  const clean = content.replace(/\s+/g, ' ').trim();
+  if (clean.length < 12) return true;
+  return TRIVIAL_PATTERNS.some((re) => re.test(clean));
+}
+
+export interface ReunionTurn {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+/** Substantive turns of a stored conversation, hidden plumbing removed. */
+function substantiveTurns(conversationData: unknown): ReunionTurn[] {
+  const msgs = Array.isArray(conversationData) ? (conversationData as any[]) : [];
+  return msgs
+    .filter(
+      (m) =>
+        (m?.role === 'user' || m?.role === 'assistant') &&
+        typeof m.content === 'string' &&
+        m.content.trim() &&
+        !isHiddenContent(m.content),
+    )
+    .map((m) => ({ role: m.role as 'user' | 'assistant', content: String(m.content).trim() }));
+}
+
+/** A conversation counts only when the person actually said something. */
+function hasEnoughSubstance(turns: ReunionTurn[]): boolean {
+  return turns.filter((t) => t.role === 'user' && !isTrivial(t.content)).length >= 2;
+}
+
+/**
+ * The essence of the last substantive conversation — never a verbatim quote.
+ *
+ * Runs during the background precompute only (compose()), so the app-open path
+ * stays a cache read. If the summariser fails, the line is simply dropped: a
+ * quoted greeting is worse than no line at all.
+ */
 async function rememberLine(userId: string, lang: Lang): Promise<string | undefined> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('hacs_conversations')
     .select('conversation_data, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
-    .limit(1);
-  const conv = data?.[0];
-  const msgs = Array.isArray(conv?.conversation_data) ? (conv!.conversation_data as any[]) : [];
-  const lastUser = [...msgs]
-    .reverse()
-    .find(
-      (m) =>
-        m?.role === 'user' &&
-        typeof m.content === 'string' &&
-        m.content.trim() &&
-        !isHiddenContent(m.content),
-    );
-  if (!lastUser) return undefined;
-  return COPY[lang].remember(excerpt(lastUser.content));
+    .limit(3);
+  if (error) {
+    console.error('🪞 reunion: failed to read conversations', error);
+    return undefined;
+  }
+
+  let turns: ReunionTurn[] | undefined;
+  for (const conv of data ?? []) {
+    const candidate = substantiveTurns(conv.conversation_data);
+    if (hasEnoughSubstance(candidate)) {
+      turns = candidate.slice(-12);
+      break;
+    }
+  }
+  if (!turns) {
+    console.log('🪞 reunion: no substantive prior conversation — remember line omitted');
+    return undefined;
+  }
+
+  const { data: result, error: fnError } = await supabase.functions.invoke('twin-reunion-essence', {
+    body: { turns, language: lang },
+  });
+  if (fnError || !result?.essence) {
+    console.error('🪞 reunion: essence unavailable — remember line omitted', fnError ?? result);
+    return undefined;
+  }
+
+  return COPY[lang].remember(excerpt(String(result.essence), 90));
 }
 
 /** One rotating blueprint quote, reframed as a personal reminder. */
