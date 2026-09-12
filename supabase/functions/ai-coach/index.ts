@@ -405,12 +405,37 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0]?.message?.content;
+    const choice = data.choices?.[0];
+    const aiResponse = choice?.message?.content;
+    const finishReason = choice?.finish_reason;
+    const usage = data.usage;
 
-    // Validate response has content
-    if (!aiResponse || aiResponse.trim().length === 0) {
-      console.error('❌ Empty AI response received');
-      throw new Error('AI service returned empty response');
+    // The provider tells us exactly why an answer is short or absent. Logging
+    // it is the difference between "empty response" and a diagnosis.
+    console.log('🧾 COMPLETION ACCOUNTING:', {
+      finishReason,
+      contentLength: aiResponse?.length ?? 0,
+      maxCompletionTokens: finalMaxTokens,
+      promptTokens: usage?.prompt_tokens,
+      completionTokens: usage?.completion_tokens,
+      reasoningTokens: usage?.completion_tokens_details?.reasoning_tokens,
+      task,
+      context,
+    });
+
+    // Budget exhaustion covers BOTH shapes: nothing written at all, and a
+    // half-written JSON object. Truncated JSON must never reach the healer —
+    // it cannot invent the missing milestones.
+    if (finishReason === 'length' || !aiResponse || aiResponse.trim().length === 0) {
+      const detail = `finish_reason=${finishReason ?? 'none'} content=${aiResponse?.length ?? 0} chars, budget=${finalMaxTokens}, completion_tokens=${usage?.completion_tokens ?? 'unknown'}, reasoning_tokens=${usage?.completion_tokens_details?.reasoning_tokens ?? 'unknown'}`;
+      console.error('❌ OUTPUT BUDGET EXHAUSTED:', detail);
+      const error = new Error(
+        language === 'nl'
+          ? `Het antwoord paste niet binnen de ruimte (${detail}).`
+          : `The answer did not fit within the output budget (${detail}).`
+      );
+      error.name = 'OUTPUT_BUDGET_EXHAUSTED';
+      throw error;
     }
 
     // Log response characteristics for debugging
