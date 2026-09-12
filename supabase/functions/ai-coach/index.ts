@@ -358,6 +358,8 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
       messages: requestPayload.messages,
       model: requestPayload.model,
       max_tokens: requestPayload.max_completion_tokens,
+      task,
+      ...(responseFormat ? { response_format: responseFormat } : {}),
     });
 
     if (!response.ok) {
