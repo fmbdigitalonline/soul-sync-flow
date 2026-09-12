@@ -140,7 +140,9 @@ export async function callChatCompletion(options: {
       ...rest,
     };
     if (sendTemperature) body.temperature = temperature;
-    if (reasoning && effort !== 'none') body.reasoning_effort = effort;
+    // 'none' must travel on the wire: gpt-5.6 defaults to medium reasoning, so
+    // omitting the field silently reasons while the log claims otherwise.
+    if (reasoning) body.reasoning_effort = effort;
     if (tools) body.tools = tools;
     if (tool_choice) body.tool_choice = tool_choice;
 
