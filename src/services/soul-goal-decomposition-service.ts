@@ -712,20 +712,20 @@ Return as JSON with **EXACTLY ${structure.milestoneCount} milestones** and **${s
       "prerequisites": ["task_GOALID_1_2_TIMESTAMP"]
     }
   ],
-  
-  CRITICAL INSTRUCTION FOR TASK IDs:
-  - Replace GOALID with a unique identifier derived from the goal title (lowercase, no spaces)
-  - Replace TIMESTAMP with the current timestamp or unique number
-  - Format: task_GOALID_MILESTONE_TASKNUM_TIMESTAMP
-  - Example: "task_fitness123_1_1_1699123456", "task_fitness123_1_2_1699123456"
-  - This ensures task IDs are unique across ALL goals and dreams
-  - NEVER use generic IDs like "task_1_1" or "task_2_1"
   "blueprint_insights": [
     "How this journey uses their Hermetic 2.0 identity constructs",
     "How timing respects their temporal biology",
     "How structure prevents their known avoidance patterns"
   ]
 }
+
+**CRITICAL INSTRUCTION FOR TASK IDs:** (this is guidance, not part of the JSON)
+- Replace GOALID with a unique identifier derived from the goal title (lowercase, no spaces)
+- Replace TIMESTAMP with the current timestamp or unique number
+- Format: task_GOALID_MILESTONE_TASKNUM_TIMESTAMP
+- Example: "task_fitness123_1_1_1699123456", "task_fitness123_1_2_1699123456"
+- This ensures task IDs are unique across ALL goals and dreams
+- NEVER use generic IDs like "task_1_1" or "task_2_1"
 
 **EXPANSION INSTRUCTION:** The example shows 3 milestones and 3 tasks. Create exactly ${structure.milestoneCount} milestones and ${structure.tasksPerMilestone} tasks per milestone using the same structure.
 
