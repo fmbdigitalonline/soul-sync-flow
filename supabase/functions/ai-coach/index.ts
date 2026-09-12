@@ -222,12 +222,98 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
       }
     };
 
-    // GPT-4.1-mini does NOT support temperature parameter - always undefined
-    // Ignore any client-passed temperature/maxTokens for GPT-4.1-mini compatibility
+    // Reasoning models reject temperature outright — always undefined.
     const finalTemperature = undefined;
-    const finalMaxTokens = maxTokens !== undefined 
-      ? maxTokens 
-      : (context === 'razor_aligned_goal_decomposition' ? 5000 : 2000);
+
+    // Machine contexts own their budget server-side. The client used to send
+    // maxTokens: 5000 for decomposition; the model's own reasoning consumed the
+    // whole of it and returned empty content, which surfaced as a generic 500.
+    // This endpoint has verify_jwt off, so a client-supplied ceiling is also a
+    // cost lever we should not hand out.
+    const DECOMPOSITION_BUDGET = 16000;
+    const JSON_REPAIR_BUDGET = 8000;
+    const finalMaxTokens = isDecomposition
+      ? DECOMPOSITION_BUDGET
+      : isJsonRepair
+        ? JSON_REPAIR_BUDGET
+        : (maxTokens !== undefined ? maxTokens : 2000);
+
+    // Fixed-shape JSON out: no deliberation wanted, and deliberation is what
+    // ate the budget. `structured` maps to reasoning_effort 'none', which the
+    // shared helper now sends explicitly.
+    const task = isMachineContext ? 'structured' : 'chat';
+
+    // Structured Outputs. Prompt-only "return JSON" is advisory; a strict
+    // schema is enforced by the provider.
+    const strArray = { type: 'array', items: { type: 'string' } };
+    const decompositionSchema = {
+      type: 'json_schema',
+      json_schema: {
+        name: 'goal_decomposition',
+        strict: true,
+        schema: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['milestones', 'tasks', 'blueprint_insights'],
+          properties: {
+            milestones: {
+              type: 'array',
+              items: {
+                type: 'object',
+                additionalProperties: false,
+                required: ['id', 'title', 'description', 'target_date', 'completed', 'completion_criteria', 'blueprint_alignment'],
+                properties: {
+                  id: { type: 'string' },
+                  title: { type: 'string' },
+                  description: { type: 'string' },
+                  target_date: { type: 'string' },
+                  completed: { type: 'boolean' },
+                  completion_criteria: strArray,
+                  blueprint_alignment: {
+                    type: 'object',
+                    additionalProperties: false,
+                    required: ['addresses_patterns', 'leverages_strengths', 'optimal_timing'],
+                    properties: {
+                      addresses_patterns: strArray,
+                      leverages_strengths: strArray,
+                      optimal_timing: { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+            tasks: {
+              type: 'array',
+              items: {
+                type: 'object',
+                additionalProperties: false,
+                required: ['id', 'title', 'description', 'milestone_id', 'completed', 'estimated_duration', 'energy_level_required', 'category', 'optimal_timing', 'blueprint_reasoning', 'prerequisites'],
+                properties: {
+                  id: { type: 'string' },
+                  title: { type: 'string' },
+                  description: { type: 'string' },
+                  milestone_id: { type: 'string' },
+                  completed: { type: 'boolean' },
+                  estimated_duration: { type: 'string' },
+                  energy_level_required: { type: 'string', enum: ['low', 'medium', 'high'] },
+                  category: { type: 'string' },
+                  optimal_timing: { type: 'string' },
+                  blueprint_reasoning: { type: 'string' },
+                  prerequisites: strArray,
+                },
+              },
+            },
+            blueprint_insights: strArray,
+          },
+        },
+      },
+    };
+    const responseFormat = isDecomposition
+      ? decompositionSchema
+      : isJsonRepair
+        ? { type: 'json_object' }
+        : undefined;
+
 
     console.log('🎯 FINAL MODEL CONFIGURATION (v' + DEPLOYMENT_VERSION + '):', {
       deploymentVersion: DEPLOYMENT_VERSION,
