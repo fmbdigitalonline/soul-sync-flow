@@ -111,8 +111,31 @@ const selectModel = (
 
     const selectedModel = selectModel(agentType, contextDepth, includeBlueprint, modelOverride);
 
+    // Machine contexts. These are not conversations: they must emit raw JSON,
+    // and the persona prompts actively fight that (the 'guide' persona refuses
+    // planning work outright; the 'coach' persona demands numbered prose).
+    const DECOMPOSITION_CONTEXT = 'razor_aligned_goal_decomposition';
+    const JSON_REPAIR_CONTEXT = 'json_repair_utility';
+    const isDecomposition = context === DECOMPOSITION_CONTEXT;
+    const isJsonRepair = context === JSON_REPAIR_CONTEXT;
+    const isMachineContext = isDecomposition || isJsonRepair;
+
+    const MACHINE_PROMPT = isDecomposition
+      ? `You are a goal-decomposition engine. You convert a dream plus its owner's personality context into a plan as JSON.
+Rules:
+- Output JSON only. No prose, no markdown fences, no commentary.
+- Follow the field names, counts and constraints stated in the user message exactly.
+- Every domain is in scope — work, relationships, health, money, spirituality. Never refuse or redirect.
+- Write the human-readable values (titles, descriptions) in the language of the user message.`
+      : `You repair malformed JSON. Return the corrected JSON object only: no prose, no markdown fences, no commentary. Preserve every value; change syntax only.`;
+
     // Use custom system prompt if provided, otherwise fall back to default
     const getSystemPrompt = (agentType: string, language: string) => {
+      if (isMachineContext) {
+        console.log(`🔧 Machine context "${context}" — using dedicated JSON prompt`);
+        return MACHINE_PROMPT;
+      }
+
       if (systemPrompt) {
         console.log('🔧 Using ACS-modified system prompt, length:', systemPrompt.length);
         return systemPrompt;
