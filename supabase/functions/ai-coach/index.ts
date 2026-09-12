@@ -111,8 +111,31 @@ const selectModel = (
 
     const selectedModel = selectModel(agentType, contextDepth, includeBlueprint, modelOverride);
 
+    // Machine contexts. These are not conversations: they must emit raw JSON,
+    // and the persona prompts actively fight that (the 'guide' persona refuses
+    // planning work outright; the 'coach' persona demands numbered prose).
+    const DECOMPOSITION_CONTEXT = 'razor_aligned_goal_decomposition';
+    const JSON_REPAIR_CONTEXT = 'json_repair_utility';
+    const isDecomposition = context === DECOMPOSITION_CONTEXT;
+    const isJsonRepair = context === JSON_REPAIR_CONTEXT;
+    const isMachineContext = isDecomposition || isJsonRepair;
+
+    const MACHINE_PROMPT = isDecomposition
+      ? `You are a goal-decomposition engine. You convert a dream plus its owner's personality context into a plan as JSON.
+Rules:
+- Output JSON only. No prose, no markdown fences, no commentary.
+- Follow the field names, counts and constraints stated in the user message exactly.
+- Every domain is in scope — work, relationships, health, money, spirituality. Never refuse or redirect.
+- Write the human-readable values (titles, descriptions) in the language of the user message.`
+      : `You repair malformed JSON. Return the corrected JSON object only: no prose, no markdown fences, no commentary. Preserve every value; change syntax only.`;
+
     // Use custom system prompt if provided, otherwise fall back to default
     const getSystemPrompt = (agentType: string, language: string) => {
+      if (isMachineContext) {
+        console.log(`🔧 Machine context "${context}" — using dedicated JSON prompt`);
+        return MACHINE_PROMPT;
+      }
+
       if (systemPrompt) {
         console.log('🔧 Using ACS-modified system prompt, length:', systemPrompt.length);
         return systemPrompt;
@@ -199,12 +222,98 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
       }
     };
 
-    // GPT-4.1-mini does NOT support temperature parameter - always undefined
-    // Ignore any client-passed temperature/maxTokens for GPT-4.1-mini compatibility
+    // Reasoning models reject temperature outright — always undefined.
     const finalTemperature = undefined;
-    const finalMaxTokens = maxTokens !== undefined 
-      ? maxTokens 
-      : (context === 'razor_aligned_goal_decomposition' ? 5000 : 2000);
+
+    // Machine contexts own their budget server-side. The client used to send
+    // maxTokens: 5000 for decomposition; the model's own reasoning consumed the
+    // whole of it and returned empty content, which surfaced as a generic 500.
+    // This endpoint has verify_jwt off, so a client-supplied ceiling is also a
+    // cost lever we should not hand out.
+    const DECOMPOSITION_BUDGET = 16000;
+    const JSON_REPAIR_BUDGET = 8000;
+    const finalMaxTokens = isDecomposition
+      ? DECOMPOSITION_BUDGET
+      : isJsonRepair
+        ? JSON_REPAIR_BUDGET
+        : (maxTokens !== undefined ? maxTokens : 2000);
+
+    // Fixed-shape JSON out: no deliberation wanted, and deliberation is what
+    // ate the budget. `structured` maps to reasoning_effort 'none', which the
+    // shared helper now sends explicitly.
+    const task = isMachineContext ? 'structured' : 'chat';
+
+    // Structured Outputs. Prompt-only "return JSON" is advisory; a strict
+    // schema is enforced by the provider.
+    const strArray = { type: 'array', items: { type: 'string' } };
+    const decompositionSchema = {
+      type: 'json_schema',
+      json_schema: {
+        name: 'goal_decomposition',
+        strict: true,
+        schema: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['milestones', 'tasks', 'blueprint_insights'],
+          properties: {
+            milestones: {
+              type: 'array',
+              items: {
+                type: 'object',
+                additionalProperties: false,
+                required: ['id', 'title', 'description', 'target_date', 'completed', 'completion_criteria', 'blueprint_alignment'],
+                properties: {
+                  id: { type: 'string' },
+                  title: { type: 'string' },
+                  description: { type: 'string' },
+                  target_date: { type: 'string' },
+                  completed: { type: 'boolean' },
+                  completion_criteria: strArray,
+                  blueprint_alignment: {
+                    type: 'object',
+                    additionalProperties: false,
+                    required: ['addresses_patterns', 'leverages_strengths', 'optimal_timing'],
+                    properties: {
+                      addresses_patterns: strArray,
+                      leverages_strengths: strArray,
+                      optimal_timing: { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+            tasks: {
+              type: 'array',
+              items: {
+                type: 'object',
+                additionalProperties: false,
+                required: ['id', 'title', 'description', 'milestone_id', 'completed', 'estimated_duration', 'energy_level_required', 'category', 'optimal_timing', 'blueprint_reasoning', 'prerequisites'],
+                properties: {
+                  id: { type: 'string' },
+                  title: { type: 'string' },
+                  description: { type: 'string' },
+                  milestone_id: { type: 'string' },
+                  completed: { type: 'boolean' },
+                  estimated_duration: { type: 'string' },
+                  energy_level_required: { type: 'string', enum: ['low', 'medium', 'high'] },
+                  category: { type: 'string' },
+                  optimal_timing: { type: 'string' },
+                  blueprint_reasoning: { type: 'string' },
+                  prerequisites: strArray,
+                },
+              },
+            },
+            blueprint_insights: strArray,
+          },
+        },
+      },
+    };
+    const responseFormat = isDecomposition
+      ? decompositionSchema
+      : isJsonRepair
+        ? { type: 'json_object' }
+        : undefined;
+
 
     console.log('🎯 FINAL MODEL CONFIGURATION (v' + DEPLOYMENT_VERSION + '):', {
       deploymentVersion: DEPLOYMENT_VERSION,
@@ -249,6 +358,8 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
       messages: requestPayload.messages,
       model: requestPayload.model,
       max_tokens: requestPayload.max_completion_tokens,
+      task,
+      ...(responseFormat ? { response_format: responseFormat } : {}),
     });
 
     if (!response.ok) {
@@ -294,12 +405,37 @@ INTEGRATION: Help ${userDisplayName} achieve goals while staying authentic to th
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0]?.message?.content;
+    const choice = data.choices?.[0];
+    const aiResponse = choice?.message?.content;
+    const finishReason = choice?.finish_reason;
+    const usage = data.usage;
 
-    // Validate response has content
-    if (!aiResponse || aiResponse.trim().length === 0) {
-      console.error('❌ Empty AI response received');
-      throw new Error('AI service returned empty response');
+    // The provider tells us exactly why an answer is short or absent. Logging
+    // it is the difference between "empty response" and a diagnosis.
+    console.log('🧾 COMPLETION ACCOUNTING:', {
+      finishReason,
+      contentLength: aiResponse?.length ?? 0,
+      maxCompletionTokens: finalMaxTokens,
+      promptTokens: usage?.prompt_tokens,
+      completionTokens: usage?.completion_tokens,
+      reasoningTokens: usage?.completion_tokens_details?.reasoning_tokens,
+      task,
+      context,
+    });
+
+    // Budget exhaustion covers BOTH shapes: nothing written at all, and a
+    // half-written JSON object. Truncated JSON must never reach the healer —
+    // it cannot invent the missing milestones.
+    if (finishReason === 'length' || !aiResponse || aiResponse.trim().length === 0) {
+      const detail = `finish_reason=${finishReason ?? 'none'} content=${aiResponse?.length ?? 0} chars, budget=${finalMaxTokens}, completion_tokens=${usage?.completion_tokens ?? 'unknown'}, reasoning_tokens=${usage?.completion_tokens_details?.reasoning_tokens ?? 'unknown'}`;
+      console.error('❌ OUTPUT BUDGET EXHAUSTED:', detail);
+      const error = new Error(
+        language === 'nl'
+          ? `Het antwoord paste niet binnen de ruimte (${detail}).`
+          : `The answer did not fit within the output budget (${detail}).`
+      );
+      error.name = 'OUTPUT_BUDGET_EXHAUSTED';
+      throw error;
     }
 
     // Log response characteristics for debugging
