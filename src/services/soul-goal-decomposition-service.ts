@@ -142,21 +142,34 @@ class SoulGoalDecompositionService {
         timestamp: new Date().toISOString()
       });
 
+      // No maxTokens: the output budget for this context is owned by the edge
+      // function. The client used to send 5000, which the model's own reasoning
+      // consumed before writing a single milestone.
       const { data, error } = await supabase.functions.invoke('ai-coach', {
         body: {
           message: comprehensivePrompt,
           context: 'razor_aligned_goal_decomposition',
           contextDepth: 'deep',
-          blueprintData,
-          maxTokens: 5000
+          blueprintData
         }
       });
 
       if (error) {
+        // supabase-js puts the edge function's JSON body on error.context, not
+        // in error.message — reading only the message loses every error code.
+        let serverBody: any = null;
+        try {
+          serverBody = await (error as any)?.context?.json?.();
+        } catch (bodyError) {
+          console.warn('⚠️ Could not read edge function error body', bodyError);
+        }
+
         console.error('❌ AI COACH ERROR - Detailed breakdown:', {
           errorMessage: error.message,
           errorName: error.name,
-          errorContext: error.context,
+          serverErrorCode: serverBody?.errorCode,
+          serverError: serverBody?.error,
+          serverDetails: serverBody?.details,
           timestamp: new Date().toISOString(),
           requestParams: {
             titleLength: title.length,
@@ -166,17 +179,21 @@ class SoulGoalDecompositionService {
           }
         });
 
-        // Parse error response for structured error codes
+        const code = serverBody?.errorCode;
+        const haystack = `${error.message ?? ''} ${serverBody?.error ?? ''} ${serverBody?.details ?? ''}`;
+
         let userFriendlyMessage = 'Failed to generate your personalized goal breakdown.';
-        
-        if (error.message?.includes('capacity') || error.message?.includes('quota') || error.message?.includes('429')) {
+
+        if (code === 'OUTPUT_BUDGET_EXHAUSTED') {
+          userFriendlyMessage = '📏 Your plan was too large to finish in one go. Try a shorter dream description or a smaller timeframe.';
+        } else if (code === 'QUOTA_EXCEEDED' || code === 'RATE_LIMIT' || haystack.includes('capacity') || haystack.includes('quota') || haystack.includes('429')) {
           userFriendlyMessage = '🔄 Our AI service is currently at capacity. Please try again in a few moments. Your data is safe!';
-        } else if (error.message?.includes('timeout') || error.message?.includes('504') || error.message?.includes('took too long')) {
+        } else if (code === 'TIMEOUT' || haystack.includes('timeout') || haystack.includes('504') || haystack.includes('took too long')) {
           userFriendlyMessage = '⏱️ The request took too long. Try simplifying your dream description.';
-        } else if (error.message?.includes('auth') || error.message?.includes('Authentication') || error.message?.includes('401')) {
+        } else if (code === 'AUTH_ERROR' || haystack.includes('Authentication') || haystack.includes('401')) {
           userFriendlyMessage = '🔐 Authentication issue detected. Please try logging out and back in.';
         }
-        
+
         throw new Error(userFriendlyMessage);
       }
 
