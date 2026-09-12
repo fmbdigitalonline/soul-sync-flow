@@ -177,7 +177,11 @@ export async function callChatCompletion(options: {
   // Chat Completions takes a flat `reasoning_effort`; the nested
   // `reasoning: { effort }` shape belongs to the Responses API, which this
   // helper does not speak. Moving to it is a separate change — see PARKED.md.
-  if (reasoning && effort !== 'none') body.reasoning_effort = effort;
+  // Send 'none' explicitly. The model reasons at its own default when the
+  // field is absent, which made `task: 'structured' | 'classify'` a log-only
+  // claim: the effort table said none, the provider still deliberated and
+  // billed that deliberation against max_completion_tokens.
+  if (reasoning) body.reasoning_effort = effort;
   if (tools) body.tools = tools;
   if (tool_choice) body.tool_choice = tool_choice;
 
