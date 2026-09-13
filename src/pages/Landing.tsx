@@ -212,26 +212,13 @@ const Reveal: React.FC<{ children: React.ReactNode; className?: string; delay?: 
   );
 };
 
-const heroTiming: Record<string, number> = {
-  You: 0.3,
-  learned: 1.25,
-  how: 2.25,
-  to: 3.0,
-  "become.": 3.75,
-  But: 4.95,
-  was: 5.75,
-  it: 6.5,
-  "you?": 7.85,
-  Je: 0.3,
-  leerde: 1.25,
-  hoe: 2.25,
-  je: 3.0,
-  moest: 3.75,
-  "worden.": 4.45,
-  Maar: 5.55,
-  was: 6.3,
-  jij: 7.0,
-  "dat?": 8.25,
+const heroLineTiming: Record<string, number[]> = {
+  "You learned": [0.3, 1.25],
+  "how to become.": [2.25, 3.0, 3.75],
+  "But was it you?": [4.95, 5.75, 6.5, 7.85],
+  "Je leerde": [0.3, 1.25],
+  "hoe je moest worden.": [2.25, 3.0, 3.75, 4.45],
+  "Maar was jij dat?": [5.55, 6.3, 7.0, 8.25],
 };
 
 const AnimatedHeroLine: React.FC<{
@@ -240,12 +227,12 @@ const AnimatedHeroLine: React.FC<{
 }> = ({ text, gradient = false }) => {
   const reduceMotion = useReducedMotion();
   const words = text.split(" ");
+  const timings = heroLineTiming[text] ?? words.map((_, index) => index * 0.8);
 
   return (
     <span className="block overflow-visible pb-[0.08em] [perspective:1400px]">
       {words.map((word, index) => {
         const isFinal = word.endsWith("?");
-        const delay = heroTiming[word] ?? index * 0.8;
         return (
           <motion.span
             key={`${word}-${index}`}
@@ -271,7 +258,7 @@ const AnimatedHeroLine: React.FC<{
             }}
             transition={{
               duration: isFinal ? 2.05 : 1.15,
-              delay,
+              delay: timings[index],
               ease: isFinal ? [0.12, 0.75, 0.16, 1] : [0.16, 0.82, 0.18, 1],
               times: [0, 0.78, 1],
             }}
