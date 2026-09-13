@@ -212,6 +212,54 @@ const Reveal: React.FC<{ children: React.ReactNode; className?: string; delay?: 
   );
 };
 
+const AnimatedHeroLine: React.FC<{
+  text: string;
+  start: number;
+  gradient?: boolean;
+}> = ({ text, start, gradient = false }) => {
+  const reduceMotion = useReducedMotion();
+  const words = text.split(" ");
+
+  return (
+    <span className="block overflow-hidden pb-[0.08em] [perspective:900px]">
+      {words.map((word, index) => (
+        <motion.span
+          key={`${word}-${index}`}
+          className={`mr-[0.18em] inline-block origin-bottom ${gradient ? "bg-gradient-to-r from-[#c8b4ff] via-[#9f7cff] to-[#43d5df] bg-clip-text text-transparent drop-shadow-[0_0_26px_rgba(139,92,246,.25)]" : ""}`}
+          initial={
+            reduceMotion
+              ? false
+              : {
+                  opacity: 0,
+                  y: "115%",
+                  rotateX: -72,
+                  rotateZ: index % 2 === 0 ? -3 : 3,
+                  scale: 0.82,
+                  filter: "blur(12px)",
+                }
+          }
+          animate={{
+            opacity: 1,
+            y: ["115%", "-8%", "0%"],
+            rotateX: 0,
+            rotateZ: 0,
+            scale: [0.82, 1.07, 1],
+            filter: "blur(0px)",
+          }}
+          transition={{
+            duration: 0.82,
+            delay: start + index * 0.095,
+            ease: [0.16, 0.8, 0.18, 1],
+            times: [0, 0.72, 1],
+          }}
+        >
+          {word}
+        </motion.span>
+      ))}
+    </span>
+  );
+};
+
 /**
  * Public signed-out landing only. The authenticated runtime remains untouched:
  * HomeGate still routes signed-in users directly to /companion.
@@ -261,24 +309,33 @@ const Landing: React.FC = () => {
 
             <div className="relative z-10 mx-auto flex h-full w-[calc(100%-36px)] max-w-[1220px] items-center pt-16 sm:w-[calc(100%-48px)]">
               <div className="max-w-4xl">
-                <Reveal>
-                  <div className="mb-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-violet-200/80">
-                    <span className="h-px w-8 bg-gradient-to-r from-violet-400 to-transparent" />
-                    {c.heroEyebrow}
-                  </div>
-                </Reveal>
+                <motion.div
+                  initial={reduceMotion ? false : { opacity: 0, x: -18 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.55, delay: 0.05 }}
+                  className="mb-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-violet-200/80"
+                >
+                  <motion.span
+                    className="h-px bg-gradient-to-r from-violet-400 to-transparent"
+                    initial={reduceMotion ? false : { width: 0 }}
+                    animate={{ width: 32 }}
+                    transition={{ duration: 0.7, delay: 0.08 }}
+                  />
+                  {c.heroEyebrow}
+                </motion.div>
+
                 <h1 className="max-w-[9ch] font-cormorant text-[clamp(4rem,8.2vw,8.3rem)] font-semibold leading-[0.84] tracking-[-0.065em]">
-                  <motion.span className="block" initial={reduceMotion ? false : { y: 70, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.95, ease: [0.16, 0.72, 0.16, 1] }}>
-                    {c.heroLine1}
-                  </motion.span>
-                  <motion.span className="block" initial={reduceMotion ? false : { y: 70, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.95, delay: 0.1, ease: [0.16, 0.72, 0.16, 1] }}>
-                    {c.heroLine2}
-                  </motion.span>
-                  <motion.span className="block bg-gradient-to-r from-[#b79cff] via-[#8b5cf6] to-[#33d0dd] bg-clip-text text-transparent" initial={reduceMotion ? false : { y: 70, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.95, delay: 0.2, ease: [0.16, 0.72, 0.16, 1] }}>
-                    {c.heroLine3}
-                  </motion.span>
+                  <AnimatedHeroLine text={c.heroLine1} start={0.12} />
+                  <AnimatedHeroLine text={c.heroLine2} start={0.28} />
+                  <AnimatedHeroLine text={c.heroLine3} start={0.54} gradient />
                 </h1>
-                <Reveal delay={0.3} className="max-w-2xl">
+
+                <motion.div
+                  className="max-w-2xl"
+                  initial={reduceMotion ? false : { opacity: 0, y: 22 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.75, delay: 1.18, ease: [0.22, 1, 0.36, 1] }}
+                >
                   <p className="mt-8 text-lg leading-relaxed text-white/70 sm:text-xl">{c.heroBody}</p>
                   <div className="mt-8 flex flex-wrap gap-3">
                     <Button asChild size="lg" className="rounded-full bg-white px-7 text-[#231a30] hover:bg-white/90">
@@ -288,7 +345,7 @@ const Landing: React.FC = () => {
                       <a href="#mirror">{language === "nl" ? "Wat is SoulSync?" : "What is SoulSync?"}</a>
                     </Button>
                   </div>
-                </Reveal>
+                </motion.div>
               </div>
             </div>
             <motion.div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-2 text-[9px] uppercase tracking-[0.16em] text-white/45" animate={reduceMotion ? undefined : { y: [0, 7, 0] }} transition={{ duration: 2, repeat: Infinity }}>
