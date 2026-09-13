@@ -1,6 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from "framer-motion";
 import { ArrowDown, ArrowRight, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/ui/language-selector";
@@ -165,6 +171,12 @@ const VideoBackdrop: React.FC<{
   const reduceMotion = useReducedMotion();
   const [shouldLoad, setShouldLoad] = useState(priority);
   const [isActive, setIsActive] = useState(priority);
+  const { scrollYProgress } = useScroll({
+    target: hostRef,
+    offset: ["start end", "end start"],
+  });
+  const rawY = useTransform(scrollYProgress, [0, 1], [24, -24]);
+  const y = useSpring(rawY, { stiffness: 80, damping: 24, mass: 0.35 });
 
   useEffect(() => {
     const host = hostRef.current;
@@ -175,7 +187,7 @@ const VideoBackdrop: React.FC<{
         setShouldLoad(entry.isIntersecting);
         setIsActive(entry.isIntersecting && entry.intersectionRatio > 0);
       },
-      { rootMargin: "35% 0px", threshold: [0, 0.01] }
+      { rootMargin: "30% 0px", threshold: [0, 0.01] }
     );
 
     observer.observe(host);
@@ -197,15 +209,13 @@ const VideoBackdrop: React.FC<{
       {shouldLoad && !reduceMotion && (
         <motion.video
           ref={videoRef}
-          className="h-full w-full object-cover will-change-transform"
+          className="h-[108%] w-full object-cover"
+          style={{ y }}
           src={src}
           muted
           loop
           playsInline
           preload={priority ? "auto" : "none"}
-          initial={{ scale: 1.02 }}
-          animate={isActive ? { scale: 1 } : undefined}
-          transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}
         />
       )}
     </div>
@@ -221,10 +231,57 @@ const Reveal: React.FC<{ children: React.ReactNode; className?: string; delay?: 
   return (
     <motion.div
       className={className}
-      initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+      initial={reduceMotion ? false : { opacity: 0, y: 34 }}
       whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.16 }}
+      transition={{ type: "spring", stiffness: 72, damping: 20, mass: 0.75, delay }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+const PhraseReveal: React.FC<{ text: string; className?: string }> = ({ text, className = "" }) => {
+  const reduceMotion = useReducedMotion();
+  const phrases = text.split(/(?<=[.!?])\s+/);
+  return (
+    <span className={className}>
+      {phrases.map((phrase, index) => (
+        <motion.span
+          key={`${phrase}-${index}`}
+          className="inline"
+          initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.8 }}
+          transition={{ type: "spring", stiffness: 72, damping: 18, delay: index * 0.14 }}
+        >
+          {phrase}{index < phrases.length - 1 ? " " : ""}
+        </motion.span>
+      ))}
+    </span>
+  );
+};
+
+const DriftCard: React.FC<{ children: React.ReactNode; index?: number; className?: string }> = ({
+  children,
+  index = 0,
+  className = "",
+}) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const reduceMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const rawY = useTransform(scrollYProgress, [0, 0.5, 1], [18 + index * 2, 0, -14 - index * 2]);
+  const y = useSpring(rawY, { stiffness: 80, damping: 24, mass: 0.5 });
+
+  return (
+    <motion.div
+      ref={ref}
+      style={reduceMotion ? undefined : { y }}
+      initial={reduceMotion ? false : { opacity: 0, scale: 0.97 }}
+      whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ type: "spring", stiffness: 74, damping: 19, delay: index * 0.07 }}
+      className={className}
     >
       {children}
     </motion.div>
@@ -255,31 +312,26 @@ const AnimatedHeroLine: React.FC<{
         return (
           <motion.span
             key={`${word}-${index}`}
-            className={`mr-[0.18em] inline-block origin-center ${gradient ? "bg-gradient-to-r from-[#c8b4ff] via-[#9f7cff] to-[#43d5df] bg-clip-text text-transparent" : ""} ${isFinal ? "drop-shadow-[0_0_35px_rgba(139,92,246,.38)]" : ""}`}
-            style={{ transformPerspective: 1400 }}
+            className={`mr-[0.18em] inline-block origin-center ${gradient ? "bg-gradient-to-r from-[#c8b4ff] via-[#9f7cff] to-[#43d5df] bg-clip-text text-transparent" : ""} ${isFinal ? "drop-shadow-[0_0_35px_rgba(139,92,246,.32)]" : ""}`}
             initial={
               reduceMotion
                 ? false
                 : {
                     opacity: 0,
-                    z: -900,
-                    y: 70,
-                    scale: 0.12,
-                    filter: "blur(24px)",
+                    y: 56,
+                    scale: 0.52,
                   }
             }
             animate={{
               opacity: 1,
-              z: 0,
               y: 0,
-              scale: isFinal ? [0.12, 1.12, 1] : [0.12, 1.035, 1],
-              filter: "blur(0px)",
+              scale: isFinal ? [0.52, 1.075, 1] : [0.52, 1.02, 1],
             }}
             transition={{
-              duration: isFinal ? 2.05 : 1.15,
+              duration: isFinal ? 1.75 : 1.05,
               delay: timings[index],
-              ease: isFinal ? [0.12, 0.75, 0.16, 1] : [0.16, 0.82, 0.18, 1],
-              times: [0, 0.78, 1],
+              ease: [0.16, 0.84, 0.2, 1],
+              times: [0, 0.82, 1],
             }}
           >
             {word}
@@ -290,19 +342,16 @@ const AnimatedHeroLine: React.FC<{
   );
 };
 
-/**
- * Public signed-out landing only. The authenticated runtime remains untouched:
- * HomeGate still routes signed-in users directly to /companion.
- *
- * This page merges the cinematic video-scroll prototype with the richer Motion V2
- * story: the videos carry emotion; the V2 mirror/Twin/alignment/movement sections
- * explain the product without coupling marketing UI to application state.
- */
 const Landing: React.FC = () => {
   const navigate = useNavigate();
   const { language, t } = useLanguage();
   const reduceMotion = useReducedMotion();
   const c = copy[(language as LanguageKey) ?? "en"] ?? copy.en;
+  const heroRef = useRef<HTMLElement | null>(null);
+  const { scrollYProgress: heroProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const heroCopyRaw = useTransform(heroProgress, [0, 0.8], [0, -54]);
+  const heroCopyY = useSpring(heroCopyRaw, { stiffness: 90, damping: 26, mass: 0.45 });
+  const heroOpacity = useTransform(heroProgress, [0, 0.7, 1], [1, 0.92, 0]);
 
   return (
     <div className="relative overflow-x-hidden bg-[#090812] text-white selection:bg-white selection:text-black">
@@ -330,26 +379,29 @@ const Landing: React.FC = () => {
       </header>
 
       <main>
-        <section id="top" className="relative h-[165vh]">
+        <section ref={heroRef} id="top" className="relative h-[165vh]">
           <div className="sticky top-0 h-[100svh] overflow-hidden">
             <VideoBackdrop src="/assets/01-search.mp4" priority />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_47%_40%,rgba(124,58,237,.18),transparent_28%)]" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#090812]/95 via-[#090812]/55 to-[#090812]/10" />
             <div className="absolute inset-0 bg-gradient-to-b from-[#090812]/20 via-transparent to-[#090812]/70" />
 
-            <div className="relative z-10 mx-auto flex h-full w-[calc(100%-36px)] max-w-[1220px] items-center pt-16 sm:w-[calc(100%-48px)]">
+            <motion.div
+              style={reduceMotion ? undefined : { y: heroCopyY, opacity: heroOpacity }}
+              className="relative z-10 mx-auto flex h-full w-[calc(100%-36px)] max-w-[1220px] items-center pt-16 sm:w-[calc(100%-48px)]"
+            >
               <div className="max-w-4xl">
                 <motion.div
                   initial={reduceMotion ? false : { opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.9, delay: 0.05 }}
+                  transition={{ duration: 1.2, delay: 0.05 }}
                   className="mb-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-violet-200/80"
                 >
                   <motion.span
                     className="h-px bg-gradient-to-r from-violet-400 to-transparent"
                     initial={reduceMotion ? false : { width: 0 }}
                     animate={{ width: 32 }}
-                    transition={{ duration: 1.1, delay: 0.08 }}
+                    transition={{ duration: 1.2, delay: 0.08 }}
                   />
                   {c.heroEyebrow}
                 </motion.div>
@@ -362,9 +414,9 @@ const Landing: React.FC = () => {
 
                 <motion.div
                   className="max-w-2xl"
-                  initial={reduceMotion ? false : { opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 1.0, delay: 10.05, ease: [0.22, 1, 0.36, 1] }}
+                  initial={reduceMotion ? false : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 1.6, delay: 9.65, ease: [0.2, 0.75, 0.22, 1] }}
                 >
                   <p className="mt-8 text-lg leading-relaxed text-white/70 sm:text-xl">{c.heroBody}</p>
                   <div className="mt-8 flex flex-wrap gap-3">
@@ -377,15 +429,16 @@ const Landing: React.FC = () => {
                   </div>
                 </motion.div>
               </div>
-            </div>
-            <motion.div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-2 text-[9px] uppercase tracking-[0.16em] text-white/45" animate={reduceMotion ? undefined : { y: [0, 7, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+            </motion.div>
+            <motion.div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-2 text-[9px] uppercase tracking-[0.16em] text-white/45" animate={reduceMotion ? undefined : { y: [0, 7, 0] }} transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}>
               <ArrowDown className="h-4 w-4" />
               {c.follow}
             </motion.div>
           </div>
         </section>
 
-        <section id="distance" className="relative min-h-[115svh] overflow-hidden bg-[#f1ede8] text-[#171421]">
+        <section id="distance" className="relative -mt-[1px] min-h-[115svh] overflow-hidden bg-[#f1ede8] text-[#171421]">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-24 bg-gradient-to-b from-[#090812] to-transparent" />
           <div className="absolute inset-0 lg:right-1/2">
             <VideoBackdrop src="/assets/04-misalignment.mp4" />
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#f1ede8]/20 to-[#f1ede8]" />
@@ -395,12 +448,12 @@ const Landing: React.FC = () => {
             <div className="min-h-[52vh] lg:min-h-0" />
             <Reveal className="pb-12 lg:pb-0">
               <div className="mb-5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#816bb2]">{c.distanceChapter}</div>
-              <h2 className="font-cormorant text-[clamp(3.2rem,6.3vw,5.9rem)] font-semibold leading-[0.94] tracking-[-0.055em]">{c.distanceTitle}</h2>
+              <h2 className="font-cormorant text-[clamp(3.2rem,6.3vw,5.9rem)] font-semibold leading-[0.94] tracking-[-0.055em]"><PhraseReveal text={c.distanceTitle} /></h2>
               <p className="mt-7 max-w-xl text-lg leading-relaxed text-[#6f6875]">{c.distanceBody1}</p>
               <p className="mt-4 max-w-xl text-lg leading-relaxed text-[#6f6875]">{c.distanceBody2}</p>
               <div className="mt-7 flex flex-wrap gap-2">
                 {c.questions.map((question: string, index: number) => (
-                  <motion.span key={question} className="rounded-full border border-black/10 bg-white/60 px-3 py-2 text-xs text-[#706979]" initial={reduceMotion ? false : { opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.1 }}>
+                  <motion.span key={question} className="rounded-full border border-black/10 bg-white/60 px-3 py-2 text-xs text-[#706979]" initial={reduceMotion ? false : { opacity: 0, x: index % 2 === 0 ? -12 : 12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ type: "spring", stiffness: 88, damping: 18, delay: index * 0.08 }}>
                     {question}
                   </motion.span>
                 ))}
@@ -410,31 +463,30 @@ const Landing: React.FC = () => {
         </section>
 
         <section id="mirror" className="relative min-h-[140svh] overflow-hidden bg-[#0b0911] px-5 py-32 text-white sm:px-6 lg:py-40">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-24 bg-gradient-to-b from-[#f1ede8] to-transparent" />
           <VideoBackdrop src="/assets/02-reflection.mp4" className="opacity-45" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0b0911]/90 via-[#0b0911]/55 to-[#0b0911]/95" />
           <div className="relative z-10 mx-auto max-w-[1180px]">
             <Reveal className="mx-auto max-w-4xl text-center">
               <div className="mb-5 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-300/70">{c.mirrorChapter}</div>
-              <h2 className="font-cormorant text-[clamp(3.2rem,6.3vw,5.9rem)] font-semibold leading-[0.94] tracking-[-0.055em]">{c.mirrorTitle}</h2>
+              <h2 className="font-cormorant text-[clamp(3.2rem,6.3vw,5.9rem)] font-semibold leading-[0.94] tracking-[-0.055em]"><PhraseReveal text={c.mirrorTitle} /></h2>
               <p className="mx-auto mt-6 max-w-3xl text-lg leading-relaxed text-white/55">{c.mirrorBody}</p>
             </Reveal>
 
             <div className="relative mx-auto mt-20 grid max-w-5xl gap-4 md:grid-cols-2">
               {c.echoes.map((echo: string[], index: number) => (
-                <Reveal key={echo[0]} delay={index * 0.08}>
+                <DriftCard key={echo[0]} index={index}>
                   <div className="rounded-[24px] border border-white/10 bg-white/[0.055] p-5 backdrop-blur-xl shadow-[0_18px_55px_rgba(0,0,0,.18)]">
                     <small className="text-[9px] font-bold uppercase tracking-[0.14em] text-violet-200/60">{echo[0]}</small>
                     <h3 className="mt-2 text-xl font-semibold">{echo[1]}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-white/50">{echo[2]}</p>
                   </div>
-                </Reveal>
+                </DriftCard>
               ))}
-              <div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[440px] w-[440px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-violet-400/10 md:block" />
-              <div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[590px] w-[590px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-300/10 md:block" />
+              <motion.div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[440px] w-[440px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-violet-400/10 md:block" animate={reduceMotion ? undefined : { scale: [1, 1.03, 1], opacity: [0.35, 0.6, 0.35] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} />
+              <motion.div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[590px] w-[590px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-300/10 md:block" animate={reduceMotion ? undefined : { scale: [1.02, 1, 1.02], opacity: [0.25, 0.45, 0.25] }} transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }} />
             </div>
-            <Reveal className="mx-auto mt-14 max-w-3xl text-center text-sm leading-relaxed text-white/45">
-              {c.mirrorLine}
-            </Reveal>
+            <Reveal className="mx-auto mt-14 max-w-3xl text-center text-sm leading-relaxed text-white/45">{c.mirrorLine}</Reveal>
           </div>
         </section>
 
@@ -446,19 +498,21 @@ const Landing: React.FC = () => {
           <div className="relative z-10 mx-auto grid min-h-[125svh] w-[calc(100%-36px)] max-w-[1180px] items-center py-28 lg:w-[calc(100%-48px)] lg:grid-cols-2 lg:gap-20">
             <Reveal className="max-w-xl">
               <div className="mb-5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#816bb2]">{c.twinChapter}</div>
-              <h2 className="font-cormorant text-[clamp(3.2rem,6vw,5.6rem)] font-semibold leading-[0.94] tracking-[-0.055em]">{c.twinTitle}</h2>
+              <h2 className="font-cormorant text-[clamp(3.2rem,6vw,5.6rem)] font-semibold leading-[0.94] tracking-[-0.055em]"><PhraseReveal text={c.twinTitle} /></h2>
               <p className="mt-6 text-lg leading-relaxed text-[#716a77]">{c.twinBody}</p>
               <div className="mt-8 grid gap-3">
                 {c.dialogue.map((item: string[], index: number) => (
-                  <motion.div key={`${item[0]}-${index}`} className={`max-w-[88%] rounded-[20px] px-4 py-3 text-sm leading-relaxed ${item[0] === "me" ? "ml-auto bg-[#e4dcef]" : "border border-black/10 bg-white"}`} initial={reduceMotion ? false : { opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.16 }}>
+                  <motion.div key={`${item[0]}-${index}`} className={`max-w-[88%] rounded-[20px] px-4 py-3 text-sm leading-relaxed ${item[0] === "me" ? "ml-auto bg-[#e4dcef]" : "border border-black/10 bg-white"}`} initial={reduceMotion ? false : { opacity: 0, x: item[0] === "me" ? 22 : -22 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ type: "spring", stiffness: 74, damping: 18, delay: index * 0.18 }}>
                     {item[1]}
                   </motion.div>
                 ))}
               </div>
-              <div className="mt-5 rounded-[18px] bg-gradient-to-br from-[#eee8ff] to-[#f0fbfc] p-4 text-sm leading-relaxed text-[#5e5670]">
-                <strong className="block">{c.twinUnderTitle}</strong>
-                {c.twinUnder}
-              </div>
+              <DriftCard index={1} className="mt-5">
+                <div className="rounded-[18px] bg-gradient-to-br from-[#eee8ff] to-[#f0fbfc] p-4 text-sm leading-relaxed text-[#5e5670]">
+                  <strong className="block">{c.twinUnderTitle}</strong>
+                  {c.twinUnder}
+                </div>
+              </DriftCard>
             </Reveal>
             <div className="min-h-[58vh] lg:min-h-0" />
           </div>
@@ -470,28 +524,26 @@ const Landing: React.FC = () => {
           <div className="relative z-10 mx-auto max-w-[1180px]">
             <Reveal className="mx-auto max-w-4xl text-center">
               <div className="mb-5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#816bb2]">{c.alignChapter}</div>
-              <h2 className="font-cormorant text-[clamp(3.2rem,6.3vw,5.9rem)] font-semibold leading-[0.94] tracking-[-0.055em]">{c.alignTitle}</h2>
+              <h2 className="font-cormorant text-[clamp(3.2rem,6.3vw,5.9rem)] font-semibold leading-[0.94] tracking-[-0.055em]"><PhraseReveal text={c.alignTitle} /></h2>
               <p className="mx-auto mt-6 max-w-3xl text-lg leading-relaxed text-[#756f7f]">{c.alignBody}</p>
             </Reveal>
 
             <div className="relative mx-auto mt-20 grid max-w-5xl gap-5 md:grid-cols-[1fr_auto_1fr] md:items-center">
-              <Reveal>
+              <DriftCard index={0}>
                 <div className="rounded-[30px] border border-violet-200/60 bg-white/75 p-7 shadow-[0_30px_90px_rgba(35,27,45,.08)] backdrop-blur-xl">
                   <small className="text-[9px] font-bold uppercase tracking-[0.13em] text-[#8a8290]">{c.adapted}</small>
                   <h3 className="mt-2 text-2xl font-semibold">{c.adaptedTitle}</h3>
                 </div>
-              </Reveal>
-              <motion.div className="mx-auto h-24 w-px bg-gradient-to-b from-violet-300 via-cyan-300 to-transparent md:h-px md:w-32" animate={reduceMotion ? undefined : { opacity: [0.35, 1, 0.35] }} transition={{ duration: 2.6, repeat: Infinity }} />
-              <Reveal delay={0.12}>
+              </DriftCard>
+              <motion.div className="mx-auto h-24 w-px bg-gradient-to-b from-violet-300 via-cyan-300 to-transparent md:h-px md:w-32" animate={reduceMotion ? undefined : { scaleY: [0.65, 1, 0.65], opacity: [0.45, 1, 0.45] }} transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }} />
+              <DriftCard index={2}>
                 <div className="rounded-[30px] border border-cyan-200/70 bg-white/75 p-7 shadow-[0_30px_90px_rgba(35,27,45,.08)] backdrop-blur-xl">
                   <small className="text-[9px] font-bold uppercase tracking-[0.13em] text-[#8a8290]">{c.aligned}</small>
                   <h3 className="mt-2 text-2xl font-semibold">{c.alignedTitle}</h3>
                 </div>
-              </Reveal>
+              </DriftCard>
             </div>
-            <Reveal className="mx-auto mt-12 max-w-3xl text-center text-base leading-relaxed text-[#716a77]">
-              {c.alignCaption}
-            </Reveal>
+            <Reveal className="mx-auto mt-12 max-w-3xl text-center text-base leading-relaxed text-[#716a77]">{c.alignCaption}</Reveal>
           </div>
         </section>
 
@@ -501,23 +553,21 @@ const Landing: React.FC = () => {
             <div className="grid gap-12 lg:grid-cols-[1.1fr_.9fr] lg:items-end lg:gap-20">
               <Reveal>
                 <div className="mb-5 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-300/70">{c.moveChapter}</div>
-                <h2 className="font-cormorant text-[clamp(3.2rem,6.3vw,5.9rem)] font-semibold leading-[0.94] tracking-[-0.055em]">{c.moveTitle}</h2>
+                <h2 className="font-cormorant text-[clamp(3.2rem,6.3vw,5.9rem)] font-semibold leading-[0.94] tracking-[-0.055em]"><PhraseReveal text={c.moveTitle} /></h2>
               </Reveal>
-              <Reveal delay={0.12}>
-                <p className="text-lg leading-relaxed text-white/50">{c.moveBody}</p>
-              </Reveal>
+              <Reveal delay={0.12}><p className="text-lg leading-relaxed text-white/50">{c.moveBody}</p></Reveal>
             </div>
 
             <div className="relative mt-20 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="pointer-events-none absolute left-1/2 top-[-46px] hidden h-[92px] w-[92px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_35%_30%,#fff_0_6%,#d8ccff_12%,#8b5cf6_42%,#372554_73%)] shadow-[0_0_55px_rgba(139,92,246,.27)] lg:block" />
+              <motion.div className="pointer-events-none absolute left-1/2 top-[-46px] hidden h-[92px] w-[92px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_35%_30%,#fff_0_6%,#d8ccff_12%,#8b5cf6_42%,#372554_73%)] shadow-[0_0_55px_rgba(139,92,246,.27)] lg:block" animate={reduceMotion ? undefined : { y: [0, -8, 0], scale: [1, 1.04, 1] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} />
               {c.paths.map((path: string[], index: number) => (
-                <Reveal key={path[1]} delay={index * 0.08}>
-                  <div className={`min-h-[180px] rounded-[24px] border p-5 backdrop-blur-xl transition-transform hover:-translate-y-1.5 ${index === 1 ? "border-emerald-300/20 bg-emerald-300/[0.06]" : index === 2 ? "border-violet-300/20 bg-violet-300/[0.06]" : "border-white/10 bg-white/[0.05]"}`}>
+                <DriftCard key={path[1]} index={index}>
+                  <div className={`min-h-[180px] rounded-[24px] border p-5 backdrop-blur-xl transition-transform ${index === 1 ? "border-emerald-300/20 bg-emerald-300/[0.06]" : index === 2 ? "border-violet-300/20 bg-violet-300/[0.06]" : "border-white/10 bg-white/[0.05]"}`}>
                     <small className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/50">{path[0]}</small>
                     <h3 className="mt-2 text-xl font-semibold">{path[1]}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-white/45">{path[2]}</p>
                   </div>
-                </Reveal>
+                </DriftCard>
               ))}
             </div>
           </div>
@@ -527,7 +577,7 @@ const Landing: React.FC = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_25%,rgba(139,92,246,.10),transparent_40%)]" />
           <Reveal className="relative z-10 mx-auto max-w-4xl">
             <motion.div className="mx-auto mb-8 h-28 w-28 rounded-full bg-[radial-gradient(circle_at_35%_30%,#fff_0_6%,#d8ccff_12%,#8b5cf6_42%,#372554_73%)] shadow-[0_0_65px_rgba(139,92,246,.24)]" animate={reduceMotion ? undefined : { y: [0, -10, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} />
-            <h2 className="font-cormorant text-[clamp(3.6rem,7.2vw,6.6rem)] font-semibold leading-[0.9] tracking-[-0.06em]">{c.finalTitle}</h2>
+            <h2 className="font-cormorant text-[clamp(3.6rem,7.2vw,6.6rem)] font-semibold leading-[0.9] tracking-[-0.06em]"><PhraseReveal text={c.finalTitle} /></h2>
             <p className="mx-auto mt-7 max-w-3xl text-lg leading-relaxed text-[#756f7f]">{c.finalBody}</p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button onClick={() => navigate("/auth")} size="lg" className="h-12 rounded-full bg-[#171421] px-8 text-white hover:bg-[#2a2433]">
