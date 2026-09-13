@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowRight, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/ui/language-selector";
@@ -163,32 +163,51 @@ const VideoBackdrop: React.FC<{
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hostRef = useRef<HTMLDivElement | null>(null);
   const reduceMotion = useReducedMotion();
-  const inView = useInView(hostRef, { margin: "35% 0px 35% 0px", amount: 0.08 });
+  const [shouldLoad, setShouldLoad] = useState(priority);
+  const [isActive, setIsActive] = useState(priority);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShouldLoad(entry.isIntersecting);
+        setIsActive(entry.isIntersecting && entry.intersectionRatio > 0);
+      },
+      { rootMargin: "35% 0px", threshold: [0, 0.01] }
+    );
+
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (reduceMotion || !inView) {
+    if (reduceMotion || !isActive) {
       video.pause();
       return;
     }
     void video.play().catch(() => undefined);
-  }, [inView, reduceMotion]);
+  }, [isActive, reduceMotion, shouldLoad]);
 
   return (
     <div ref={hostRef} className={`absolute inset-0 overflow-hidden ${className}`}>
-      <motion.video
-        ref={videoRef}
-        className="h-full w-full object-cover"
-        src={src}
-        muted
-        loop={!reduceMotion}
-        playsInline
-        preload={priority ? "auto" : "metadata"}
-        initial={reduceMotion ? false : { scale: 1.035 }}
-        animate={inView && !reduceMotion ? { scale: 1 } : undefined}
-        transition={{ duration: 2.2, ease: [0.22, 1, 0.36, 1] }}
-      />
+      {shouldLoad && !reduceMotion && (
+        <motion.video
+          ref={videoRef}
+          className="h-full w-full object-cover will-change-transform"
+          src={src}
+          muted
+          loop
+          playsInline
+          preload={priority ? "auto" : "none"}
+          initial={{ scale: 1.02 }}
+          animate={isActive ? { scale: 1 } : undefined}
+          transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}
+        />
+      )}
     </div>
   );
 };
@@ -511,7 +530,7 @@ const Landing: React.FC = () => {
             <h2 className="font-cormorant text-[clamp(3.6rem,7.2vw,6.6rem)] font-semibold leading-[0.9] tracking-[-0.06em]">{c.finalTitle}</h2>
             <p className="mx-auto mt-7 max-w-3xl text-lg leading-relaxed text-[#756f7f]">{c.finalBody}</p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button onClick={() => navigate("/get-started")} size="lg" className="h-12 rounded-full bg-[#171421] px-8 text-white hover:bg-[#2a2433]">
+              <Button onClick={() => navigate("/auth")} size="lg" className="h-12 rounded-full bg-[#171421] px-8 text-white hover:bg-[#2a2433]">
                 {t("index.getStarted")}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
