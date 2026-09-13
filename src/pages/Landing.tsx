@@ -212,50 +212,74 @@ const Reveal: React.FC<{ children: React.ReactNode; className?: string; delay?: 
   );
 };
 
+const heroTiming: Record<string, number> = {
+  You: 0.3,
+  learned: 1.25,
+  how: 2.25,
+  to: 3.0,
+  "become.": 3.75,
+  But: 4.95,
+  was: 5.75,
+  it: 6.5,
+  "you?": 7.85,
+  Je: 0.3,
+  leerde: 1.25,
+  hoe: 2.25,
+  je: 3.0,
+  moest: 3.75,
+  "worden.": 4.45,
+  Maar: 5.55,
+  was: 6.3,
+  jij: 7.0,
+  "dat?": 8.25,
+};
+
 const AnimatedHeroLine: React.FC<{
   text: string;
-  start: number;
   gradient?: boolean;
-}> = ({ text, start, gradient = false }) => {
+}> = ({ text, gradient = false }) => {
   const reduceMotion = useReducedMotion();
   const words = text.split(" ");
 
   return (
-    <span className="block overflow-hidden pb-[0.08em] [perspective:900px]">
-      {words.map((word, index) => (
-        <motion.span
-          key={`${word}-${index}`}
-          className={`mr-[0.18em] inline-block origin-bottom ${gradient ? "bg-gradient-to-r from-[#c8b4ff] via-[#9f7cff] to-[#43d5df] bg-clip-text text-transparent drop-shadow-[0_0_26px_rgba(139,92,246,.25)]" : ""}`}
-          initial={
-            reduceMotion
-              ? false
-              : {
-                  opacity: 0,
-                  y: "115%",
-                  rotateX: -72,
-                  rotateZ: index % 2 === 0 ? -3 : 3,
-                  scale: 0.82,
-                  filter: "blur(12px)",
-                }
-          }
-          animate={{
-            opacity: 1,
-            y: ["115%", "-8%", "0%"],
-            rotateX: 0,
-            rotateZ: 0,
-            scale: [0.82, 1.07, 1],
-            filter: "blur(0px)",
-          }}
-          transition={{
-            duration: 0.82,
-            delay: start + index * 0.095,
-            ease: [0.16, 0.8, 0.18, 1],
-            times: [0, 0.72, 1],
-          }}
-        >
-          {word}
-        </motion.span>
-      ))}
+    <span className="block overflow-visible pb-[0.08em] [perspective:1400px]">
+      {words.map((word, index) => {
+        const isFinal = word.endsWith("?");
+        const delay = heroTiming[word] ?? index * 0.8;
+        return (
+          <motion.span
+            key={`${word}-${index}`}
+            className={`mr-[0.18em] inline-block origin-center ${gradient ? "bg-gradient-to-r from-[#c8b4ff] via-[#9f7cff] to-[#43d5df] bg-clip-text text-transparent" : ""} ${isFinal ? "drop-shadow-[0_0_35px_rgba(139,92,246,.38)]" : ""}`}
+            style={{ transformPerspective: 1400 }}
+            initial={
+              reduceMotion
+                ? false
+                : {
+                    opacity: 0,
+                    z: -900,
+                    y: 70,
+                    scale: 0.12,
+                    filter: "blur(24px)",
+                  }
+            }
+            animate={{
+              opacity: 1,
+              z: 0,
+              y: 0,
+              scale: isFinal ? [0.12, 1.12, 1] : [0.12, 1.035, 1],
+              filter: "blur(0px)",
+            }}
+            transition={{
+              duration: isFinal ? 2.05 : 1.15,
+              delay,
+              ease: isFinal ? [0.12, 0.75, 0.16, 1] : [0.16, 0.82, 0.18, 1],
+              times: [0, 0.78, 1],
+            }}
+          >
+            {word}
+          </motion.span>
+        );
+      })}
     </span>
   );
 };
@@ -310,31 +334,31 @@ const Landing: React.FC = () => {
             <div className="relative z-10 mx-auto flex h-full w-[calc(100%-36px)] max-w-[1220px] items-center pt-16 sm:w-[calc(100%-48px)]">
               <div className="max-w-4xl">
                 <motion.div
-                  initial={reduceMotion ? false : { opacity: 0, x: -18 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.55, delay: 0.05 }}
+                  initial={reduceMotion ? false : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.9, delay: 0.05 }}
                   className="mb-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-violet-200/80"
                 >
                   <motion.span
                     className="h-px bg-gradient-to-r from-violet-400 to-transparent"
                     initial={reduceMotion ? false : { width: 0 }}
                     animate={{ width: 32 }}
-                    transition={{ duration: 0.7, delay: 0.08 }}
+                    transition={{ duration: 1.1, delay: 0.08 }}
                   />
                   {c.heroEyebrow}
                 </motion.div>
 
                 <h1 className="max-w-[9ch] font-cormorant text-[clamp(4rem,8.2vw,8.3rem)] font-semibold leading-[0.84] tracking-[-0.065em]">
-                  <AnimatedHeroLine text={c.heroLine1} start={0.12} />
-                  <AnimatedHeroLine text={c.heroLine2} start={0.28} />
-                  <AnimatedHeroLine text={c.heroLine3} start={0.54} gradient />
+                  <AnimatedHeroLine text={c.heroLine1} />
+                  <AnimatedHeroLine text={c.heroLine2} />
+                  <AnimatedHeroLine text={c.heroLine3} gradient />
                 </h1>
 
                 <motion.div
                   className="max-w-2xl"
-                  initial={reduceMotion ? false : { opacity: 0, y: 22 }}
+                  initial={reduceMotion ? false : { opacity: 0, y: 18 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.75, delay: 1.18, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: 1.0, delay: 10.05, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <p className="mt-8 text-lg leading-relaxed text-white/70 sm:text-xl">{c.heroBody}</p>
                   <div className="mt-8 flex flex-wrap gap-3">
