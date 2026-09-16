@@ -1,0 +1,1 @@
+DROP POLICY "Users insert own state tracking" ON public.conversation_state_tracking;
