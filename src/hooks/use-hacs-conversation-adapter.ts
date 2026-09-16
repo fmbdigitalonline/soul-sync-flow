@@ -394,7 +394,7 @@ export const useHACSConversationAdapter = (
               content: content,
               timestamp: new Date(),
               id: `user_${Date.now()}`
-            }, user.id);
+            }, user.id, agentMode);
             
             // Store Oracle response with progressive memory features
             if (oracleResponse?.response) {
@@ -403,8 +403,8 @@ export const useHACSConversationAdapter = (
                 content: oracleResponse.response,
                 timestamp: new Date(),
                 id: `oracle_${Date.now()}`,
-                agent_mode: 'companion'
-              }, user.id);
+                agent_mode: agentMode
+              }, user.id, agentMode);
             }
             
             console.log('✅ ADAPTER: Messages stored with semantic enhancement');

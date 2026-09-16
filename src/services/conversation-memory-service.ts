@@ -130,7 +130,7 @@ export class ConversationMemoryService {
   /**
    * Pillar I & II: Ground truth storage - only add validated content
    */
-  async storeMessage(threadId: string, message: any, userId?: string): Promise<boolean> {
+  async storeMessage(threadId: string, message: any, userId?: string, mode: string = 'companion'): Promise<boolean> {
     const validated = this.validateMessage(message);
     if (!validated) {
       BlueprintHealthChecker.logHealthCheck('ConversationMemory', 'fail', 'Message validation failed - not stored');
@@ -169,6 +169,9 @@ export class ConversationMemoryService {
             session_id: threadId,
             user_id: effectiveUserId,
             messages: updatedMessages as any,
+            // Bug 1 fix: mode must travel with every write — rows defaulting to
+            // 'guide' are invisible to the oracle's mode='companion' read.
+            mode,
             last_activity: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }, {
@@ -225,36 +228,26 @@ export class ConversationMemoryService {
     userMessage: string,
     maxTokens: number = 4000
   ): Promise<ValidatedMessage[]> {
+    // Bug 1 fix: this used to return [] unconditionally (the "progressive
+    // memory" store was disabled and the stub survived), which meant the
+    // client sent an EMPTY conversationHistory to the oracle every turn.
+    // Real behaviour: load the thread's validated messages, then select with
+    // semantic relevance (query-aware) and recency within the token budget.
     try {
-      // Progressive memory service temporarily disabled due to schema mismatch
-      // TODO: Fix progressive memory service schema alignment
-      const progressiveContext = { messages: [], summaries: [] };
+      const context = await this.getConversationContext(threadId);
+      const messages = context?.messages || [];
+      if (messages.length === 0) {
+        console.log('🔍 PROGRESSIVE CONTEXT: No messages stored for thread yet');
+        return [];
+      }
 
-      // Convert structured messages to ValidatedMessage format for compatibility
-      const messages: ValidatedMessage[] = progressiveContext.messages.map(msg => ({
-        id: msg.message_id,
-        role: msg.role,
-        content: msg.content,
-        timestamp: new Date(msg.created_at),
-        agent_mode: msg.agent_mode
-      }));
-
-      // Add summary context as system messages if available
-      progressiveContext.summaries.forEach(summary => {
-        messages.unshift({
-          id: `summary_${summary.id}`,
-          role: 'system',
-          content: `[Summary] ${summary.summary_content}`,
-          timestamp: new Date(summary.created_at),
-          agent_mode: 'summary'
-        });
-      });
-
-      console.log(`✅ PROGRESSIVE CONTEXT: Retrieved ${messages.length} messages using fallback strategy`);
-      return messages.slice(0, 20); // Reasonable limit
+      const selected = await this.getSemanticIntelligentContext(messages, userMessage, maxTokens);
+      console.log(`✅ PROGRESSIVE CONTEXT: Selected ${selected.length}/${messages.length} messages (budget ${maxTokens} tokens)`);
+      return selected;
     } catch (error) {
-      console.error('❌ PROGRESSIVE CONTEXT: Error, falling back to semantic context:', error);
-      return this.getSemanticIntelligentContext([], userMessage, maxTokens);
+      console.error('❌ PROGRESSIVE CONTEXT: Error, falling back to recency-based selection:', error);
+      const context = await this.getConversationContext(threadId);
+      return this.getIntelligentContext(context?.messages || [], maxTokens);
     }
   }
 
@@ -372,11 +365,12 @@ export class ConversationMemoryService {
   async storeMessageWithProgressiveMemory(
     threadId: string,
     message: any,
-    userId?: string
+    userId?: string,
+    mode: string = 'companion'
   ): Promise<boolean> {
     // Progressive memory currently disabled - use embedding storage
     console.warn('⚠️ PROGRESSIVE STORAGE: Currently disabled, using embedding storage');
-    return this.storeMessageWithEmbedding(threadId, message, userId);
+    return this.storeMessageWithEmbedding(threadId, message, userId, true, mode);
   }
 
   /**
@@ -387,11 +381,12 @@ export class ConversationMemoryService {
     threadId: string, 
     message: any, 
     userId?: string,
-    generateEmbedding: boolean = true
+    generateEmbedding: boolean = true,
+    mode: string = 'companion'
   ): Promise<boolean> {
     try {
       // Store message using existing validation logic
-      const stored = await this.storeMessage(threadId, message, userId);
+      const stored = await this.storeMessage(threadId, message, userId, mode);
       
       if (!stored || !generateEmbedding) return stored;
 
