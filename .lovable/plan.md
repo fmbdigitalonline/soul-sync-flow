@@ -1,29 +1,33 @@
-# Plan: SOULSYNC_RUNTIME_REGISTER bijwerken met nieuwe verificaties
+# Plan: Dubbele chatberichten oplossen + Runtime Register bijwerken
 
-## Doel
-Het register (het review-logboek naast de Runtime Constitution) bijwerken met drie verificaties die sinds de laatste entry (Aug 4) zijn uitgevoerd. Alleen documentatie — geen codewijzigingen.
+## Probleem 1: elke verzonden chatmelding verschijnt dubbel
+Schermafbeelding 21:18 UTC: één keer "Het gaat goed" getypt, twee identieke gebruikersbellen in beeld, één antwoord van de Twin. De database bevat correct **één** gebruikersbericht — dus de duplicatie ontstaat in de frontend-staat (lokaal bericht wordt twee keer toegevoegd), niet in de opslag.
 
-## Wijzigingen in `SOULSYNC_RUNTIME_REGISTER.md`
+### Diagnose (uit de code, te bevestigen met een live trace)
+De gebruikersmelding kan op meerdere plekken worden toegevoegd zonder bescherming tegen dubbel toevoegen:
+1. Companion-flow: `appendOptimisticUserMessage` voegt het bericht direct toe.
+2. Bij een fout na die stap (oracle-call faalt, context-loading faalt) valt de code terug op `hacsConversation.sendMessage(content)` — die voegt hetzelfde bericht **nog een keer** toe (skip-vlag staat daar op "niet overslaan"). Zelfde in de buitenste foutafvanger.
+3. Niets in de berichtenstaat filtert dubbele gebruikersberichten; alleen de opslag filtert ze er later weer uit (daarom is de database schoon maar het scherm niet).
 
-### 1. Nieuwe observatie-entry: thread-memory regressie gesloten (Sep 16–17 2026)
-Nieuwe sectie onder "Behavioural observations" die vastlegt:
-- **Bug 1 gesloten**: het actieve opslagpad (`storeMessageWithProgressiveMemory` → `storeMessage`) schreef zonder `mode`; nu reist `mode` mee in elke upsert naar `conversation_memory`, met `companion` als expliciete default.
-- **Leeskant gesloten**: `getProgressiveIntelligentContext` was een stub die onvoorwaardelijk `[]` teruggaf — de client stuurde elke beurt een lege gespreksgeschiedenis naar de oracle. Nu: laadt gevalideerde berichten via `getConversationContext(threadId)`, selecteert semantisch + recentheid binnen tokenbudget, chronologisch.
-- **Regressietest vastgelegd**: `src/services/__tests__/conversation-memory-service.test.ts`, met vooraf gedefinieerde ground-truth input/output (Test-First-directive): thread met twee berichten → context retourneert die berichten chronologisch, niet `[]`; upsert-payload bevat `mode`. **4/4 tests groen.**
+### Stap 1 — Bevestigen (eerst meten, dan fixen)
+- Korte trace-log toevoegen op elke plek waar een gebruikersbericht wordt toegevoegd (welke pad, bericht-id).
+- Eén testbericht sturen in de preview, console uitlezen, en het dubbele toevoeg-pad ermee bevestigen. Mochten edge-functielogs de oorzaak tonen (oracle-call die faalt en terugvalt), is dat het bewijs.
 
-### 2. Nieuwe observatie-entry: Dutch detector geverifieerd (Sep 17 2026)
-- De "detector is niet live"-waarschuwing van Aug 4 (stale bundle) is opgeheven: herdeploy uitgevoerd en de tweetalige detectie draait nu.
-- **22/22 regression tests groen** (`conversation-phase-tracker.test.ts`): Nederlandse zinnen matchen echte patronen, geen turn-count fallback (geen 0.30 confidence floor), Nederlandse en Engelse transcripten produceren identieke cluster-sequenties.
-- Dit deblokkeert indirect de open beslissing "consume `conversation_state_tracking` in the prompt" — de detector-defect-voorwaarde is nu vervuld.
+### Stap 2 — De fix (alle paden tegelijk, niet alleen het gevonden exemplaar)
+- **Eén toevoeg-pad**: gebruikersberichten gaan voortaan door één hulpfunctie die idempotent is — een identiek gebruikersbericht (zelfde inhoud, binnen korte tijd) wordt maar één keer aan de staat toegevoegd. Dit dekt de optimistische toevoeging én elke fallback.
+- **Fallback voegt niet opnieuw toe**: in de companion-foutpaden krijgt de terugval `sendMessage` de skip-vlag mee plus het al toegevoegde bericht, zodat het bericht niet twee keer landt (en er geen tweede AI-call wordt gedaan die de gebruiker niet zag aankomen).
+- **Render-veiligheid**: als laatste vangnet klapt de chatweergave twee direct opeenvolgende identieke gebruikersbellen samen (zodat ook een nog onbekend pad nooit dubbel zichtbaar is).
+- Vroegere geheugen-fixes (modus meegeven, progressieve context) blijven onaangetast — dit is uitsluitend frontend-staat/weergave.
 
-### 3. Open item toegevoegd: concreteness-regel
-- "Concreteness" gaat in "Open decisions" (of als open observatie): drie waarnemingen (Rule of Three bereikt — Jul 30 baseline ×2, Jul 30 post-Track-A ×1) dat antwoorden geen concrete stap bevatten. Kandidaat voor een nieuwe wet, maar nog geen amendement geformuleerd; per *interpretation before amendment* eerst bepalen of het een ontbrekende wet is of een toepassingsfout.
+### Stap 3 — Verifiëren
+- Regressietest: twee keer dezelfde optimistische toevoeging → staat bevat het bericht één keer; fallback-pad voegt geen tweede exemplaar toe.
+- Typecheck + tests draaien; live in de preview een bericht sturen en controleren dat er één bel verschijnt met één antwoord.
 
-## Technische details
-- Bestand: `SOULSYNC_RUNTIME_REGISTER.md` (alleen dit bestand).
-- Nieuwe entries volgen het bestaande format: gedateerde secties onder "Behavioural observations", amendementlog ongewijzigd (geen nieuwe wet — alleen verificaties en een open item).
-- De bestaande waarschuwing bij "Dutch detector" (stale bundle, Aug 4) wordt niet herschreven maar door de nieuwe gedateerde entry tegen-gesproken, conform het logkarakter van het register.
+## Probleem 2: SOULSYNC_RUNTIME_REGISTER bijwerken (staat al klaar, nog niet uitgevoerd)
+Alleen documentatie, geen code:
+- Entry: thread-memory regressie gesloten (mode reist mee, progressieve context live, 4/4 tests groen).
+- Entry: Dutch detector geverifieerd (herdeploy live, 22/22 tests groen).
+- Concreteness vastgelegd als open item (kandidaat-wet, nog geen amendement).
 
-## Niet in scope
-- Geen codewijzigingen, geen deploys, geen amendementen aan de Runtime Constitution.
-- De concreteness-regel wordt geregistreerd als open item, niet als wet geformuleerd.
+## Volgorde
+Eerst de trace + fix voor de dubbele bellen (blokkeert dagelijks gebruik), daarna de register-update.
