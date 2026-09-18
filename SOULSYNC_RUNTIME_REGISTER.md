@@ -372,6 +372,7 @@ for the window. New `📝 OPTIMISTIC APPEND` / `🔁 DUPLICATE GUARD` /
 
 | Decision | Blocked on | Owner |
 |---|---|---|
+| Ratify concreteness as a law (candidate, not yet ratified) | Collecting the third behavioural occurrence (Rule of Three) before amendment | Founder |
 | Consume `conversation_state_tracking` in the prompt (law 4 applies) | The Dutch detector defect landing first — the signal is invalid until then | Founder |
 | Retire the non-oracle fallback prompt (`index.ts:2133`) — a second, ungoverned prompt sharing no rule with the charters | Invocation-log evidence that the branch is dead (rule 4 + rule 10) | Founder |
 | Strip framework facet labels from `factsSection`, keeping values | Evidence that Voice Charter r6 alone did not hold after the spec ships | Founder |
