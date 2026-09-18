@@ -8,29 +8,7 @@ import { BackgroundIntelligenceService } from '../services/background-intelligen
 import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
 import { createErrorHandler } from '@/utils/error-recovery';
 import { conversationMemoryService } from '@/services/conversation-memory-service';
-
-// Exported for regression tests (see __tests__/optimistic-append-dedupe.test.ts).
-// Returns the already-present identical user message when the same turn would
-// be appended a second time mid-send: same trimmed content, no assistant reply
-// in between, and the existing message is younger than windowMs.
-export function findRecentDuplicateUserMessage(
-  prev: ConversationMessage[],
-  content: string,
-  nowMs: number,
-  windowMs: number = 5000
-): ConversationMessage | undefined {
-  const trimmed = content.trim();
-  for (let i = prev.length - 1; i >= 0; i--) {
-    const m = prev[i];
-    if (m.role !== 'user' || m.content.trim() !== trimmed) continue;
-    const hasReplyAfter = prev.slice(i + 1).some(later => later.role === 'hacs');
-    if (hasReplyAfter) continue;
-    const msgTime = new Date(m.timestamp).getTime();
-    if (Number.isFinite(msgTime) && nowMs - msgTime < windowMs) return m;
-    return undefined;
-  }
-  return undefined;
-}
+import { findRecentDuplicateUserMessage } from '@/utils/duplicate-message-guard';
 
 // Adapter interface that matches useEnhancedAICoach exactly
 export interface HACSConversationAdapter {
