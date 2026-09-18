@@ -8,6 +8,7 @@ import { BackgroundIntelligenceService } from '../services/background-intelligen
 import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
 import { createErrorHandler } from '@/utils/error-recovery';
 import { conversationMemoryService } from '@/services/conversation-memory-service';
+import { findRecentDuplicateUserMessage } from '@/utils/duplicate-message-guard';
 
 // Adapter interface that matches useEnhancedAICoach exactly
 export interface HACSConversationAdapter {
@@ -220,19 +221,49 @@ export const useHACSConversationAdapter = (
     hacsConversation.setMessages(prev => [...prev, message]);
   }, [hacsConversation.setMessages]);
 
+  // Idempotent optimistic user append.
+  // BUG FIX (duplicate chat bubbles): the same user turn used to reach the
+  // message state twice — once via this optimistic append and once when a
+  // fallback path (companion oracle error -> hacsConversation.sendMessage)
+  // appended its own user copy. While a send is in flight, an identical
+  // user message (same content, no assistant reply in between, within a
+  // 5s window) is treated as the same turn and not appended again.
   const appendOptimisticUserMessage = useCallback((messageContent: string) => {
     const clientMsgId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const trimmed = messageContent.trim();
     const optimisticMessage: ConversationMessage = {
       id: clientMsgId,
       role: 'user',
-      content: messageContent.trim(),
+      content: trimmed,
       timestamp: new Date().toISOString(),
       client_msg_id: clientMsgId
     };
 
-    addOptimisticMessage(optimisticMessage);
+    // When no send is in flight this is a genuine new user turn — always append.
+    const sendInFlight = hacsConversation.isLoading;
+    const duplicate = sendInFlight
+      ? findRecentDuplicateUserMessage(hacsConversation.messages, trimmed, Date.now())
+      : undefined;
+
+    if (duplicate) {
+      console.warn('🔁 DUPLICATE GUARD: identical user message already in state mid-send, skipping second append', {
+        content: trimmed,
+        existingId: duplicate.id,
+        attemptedId: clientMsgId,
+        timestamp: new Date().toISOString()
+      });
+      return duplicate;
+    }
+
+    hacsConversation.setMessages(prev => [...prev, optimisticMessage]);
+    console.log('📝 OPTIMISTIC APPEND: user message', {
+      id: clientMsgId,
+      content: trimmed,
+      sendInFlight,
+      timestamp: new Date().toISOString()
+    });
     return optimisticMessage;
-  }, [addOptimisticMessage]);
+  }, [hacsConversation.setMessages, hacsConversation.isLoading, hacsConversation.messages]);
 
   // PHASE 1: DUAL-PATHWAY ARCHITECTURE - Asynchronous Intelligence Model
   const sendMessage = useCallback(async (
@@ -425,8 +456,18 @@ export const useHACSConversationAdapter = (
           cleanup();
           handleOracleError(error, { fallback: true });
           
-          // Fallback: Use standard HACS conversation
-          await hacsConversation.sendMessage(content);
+          // Fallback: Use standard HACS conversation.
+          // BUG FIX (duplicate chat bubbles): this previously called
+          // sendMessage(content) without skipUserMessage, so after an
+          // optimistic append the user's message was added to state a second
+          // time. Skip it here and hand over the already-appended history.
+          await hacsConversation.sendMessage(
+            content,
+            true,
+            optimisticUserMessage
+              ? [...hacsConversation.messages, optimisticUserMessage]
+              : hacsConversation.messages
+          );
         } finally {
           // Ensure cleanup happens regardless of success/failure
           cleanup();

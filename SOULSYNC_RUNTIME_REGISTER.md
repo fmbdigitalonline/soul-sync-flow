@@ -335,10 +335,44 @@ Acceptance corrected before the replay ran.
 
 ---
 
+### Sep 18 2026 — verifications recorded, duplicate-bubble defect fixed at the state layer (Lovable)
+
+**Thread-memory: 4/4.** `getProgressiveIntelligentContext` in
+`conversation-memory-service.ts` was a stub returning `[]` — the client sent an
+empty conversation history to the oracle every turn. It now loads the thread's
+validated messages and selects with semantic relevance and recency inside the
+token budget. `storeMessage` propagates `mode` on every write, so companion
+rows are no longer invisible to the oracle's `mode='companion'` read. The
+thread-memory regression suite passes 4/4.
+
+**Dutch detector: 22/22.** The bilingual phase-detector regression suite passes
+22/22. The Aug 4 "deployed bundle is stale" blocker is closed: the bilingual
+`_shared/conversation-phase-tracker.ts` is live and `conversation_state_tracking`
+rows carry real clusters, sub-states and confidences.
+
+**Duplicate user bubbles: root cause confirmed from evidence, fixed at the
+state layer.** The screenshot showed two identical user bubbles with one
+assistant reply; the persisted row held one user message whose assistant reply
+carried a `hacs_` id — an id only `hacsConversation.sendMessage` mints. That
+proves the companion oracle call failed and the error fallback ran
+`sendMessage(content)` **without** `skipUserMessage`, appending a second copy of
+a turn that was already optimistically in state. Fix: the fallback now skips the
+user append and hands over the already-appended history, and optimistic appends
+are guarded mid-send by `findRecentDuplicateUserMessage`
+(`src/utils/duplicate-message-guard.ts`, 7/7 tests) — an identical user message
+within a 5s window with no assistant reply between is treated as the same turn.
+Genuine repeat sends from an idle user are never swallowed. The oracle failure
+itself (why the fallback ran) could not be pinned: no edge-function logs survive
+for the window. New `📝 OPTIMISTIC APPEND` / `🔁 DUPLICATE GUARD` /
+`ORACLE-FIRST ERROR` logs will name the cause if it recurs.
+
+---
+
 ## Open decisions
 
 | Decision | Blocked on | Owner |
 |---|---|---|
+| Ratify concreteness as a law (candidate, not yet ratified) | Collecting the third behavioural occurrence (Rule of Three) before amendment | Founder |
 | Consume `conversation_state_tracking` in the prompt (law 4 applies) | The Dutch detector defect landing first — the signal is invalid until then | Founder |
 | Retire the non-oracle fallback prompt (`index.ts:2133`) — a second, ungoverned prompt sharing no rule with the charters | Invocation-log evidence that the branch is dead (rule 4 + rule 10) | Founder |
 | Strip framework facet labels from `factsSection`, keeping values | Evidence that Voice Charter r6 alone did not hold after the spec ships | Founder |
