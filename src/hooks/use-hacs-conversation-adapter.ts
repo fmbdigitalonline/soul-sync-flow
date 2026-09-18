@@ -465,8 +465,18 @@ export const useHACSConversationAdapter = (
           cleanup();
           handleOracleError(error, { fallback: true });
           
-          // Fallback: Use standard HACS conversation
-          await hacsConversation.sendMessage(content);
+          // Fallback: Use standard HACS conversation.
+          // BUG FIX (duplicate chat bubbles): this previously called
+          // sendMessage(content) without skipUserMessage, so after an
+          // optimistic append the user's message was added to state a second
+          // time. Skip it here and hand over the already-appended history.
+          await hacsConversation.sendMessage(
+            content,
+            true,
+            optimisticUserMessage
+              ? [...hacsConversation.messages, optimisticUserMessage]
+              : hacsConversation.messages
+          );
         } finally {
           // Ensure cleanup happens regardless of success/failure
           cleanup();
