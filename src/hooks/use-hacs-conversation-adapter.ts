@@ -224,9 +224,9 @@ export const useHACSConversationAdapter = (
   // BUG FIX (duplicate chat bubbles): the same user turn used to reach the
   // message state twice — once via this optimistic append and once when a
   // fallback path (companion oracle error -> hacsConversation.sendMessage)
-  // appended its own user copy. Guard: if an identical user message was
-  // appended within the last 5 seconds with no assistant reply in between,
-  // this is the same turn — return the existing message instead of a copy.
+  // appended its own user copy. While a send is in flight, an identical
+  // user message (same content, no assistant reply in between, within a
+  // 5s window) is treated as the same turn and not appended again.
   const appendOptimisticUserMessage = useCallback((messageContent: string) => {
     const clientMsgId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const trimmed = messageContent.trim();
@@ -238,41 +238,31 @@ export const useHACSConversationAdapter = (
       client_msg_id: clientMsgId
     };
 
-    let accepted = false;
-    let existingMessage: ConversationMessage | undefined;
-    hacsConversation.setMessages(prev => {
-      const now = Date.now();
-      const isRecentDuplicate = [...prev].reverse().some(m => {
-        if (m.role !== 'user' || m.content.trim() !== trimmed) return false;
-        // Only treat it as the same turn if no assistant reply came after it
-        const idx = prev.indexOf(m);
-        const hasReplyAfter = prev.slice(idx + 1).some(later => later.role === 'hacs');
-        if (hasReplyAfter) return false;
-        const msgTime = new Date(m.timestamp).getTime();
-        return Number.isFinite(msgTime) && (now - msgTime) < 5000;
+    // When no send is in flight this is a genuine new user turn — always append.
+    const sendInFlight = hacsConversation.isLoading;
+    const duplicate = sendInFlight
+      ? findRecentDuplicateUserMessage(hacsConversation.messages, trimmed, Date.now())
+      : undefined;
+
+    if (duplicate) {
+      console.warn('🔁 DUPLICATE GUARD: identical user message already in state mid-send, skipping second append', {
+        content: trimmed,
+        existingId: duplicate.id,
+        attemptedId: clientMsgId,
+        timestamp: new Date().toISOString()
       });
-      if (isRecentDuplicate) {
-        existingMessage = prev.filter(m => m.role === 'user' && m.content.trim() === trimmed).pop();
-        console.warn('🔁 DUPLICATE GUARD: identical user message already present in state, skipping second append', {
-          content: trimmed,
-          existingId: existingMessage?.id,
-          attemptedId: clientMsgId,
-          timestamp: new Date().toISOString()
-        });
-        return prev;
-      }
-      accepted = true;
-      return [...prev, optimisticMessage];
-    });
+      return duplicate;
+    }
+
+    hacsConversation.setMessages(prev => [...prev, optimisticMessage]);
     console.log('📝 OPTIMISTIC APPEND: user message', {
       id: clientMsgId,
       content: trimmed,
-      accepted,
-      replacedBy: existingMessage?.id ?? null,
+      sendInFlight,
       timestamp: new Date().toISOString()
     });
-    return existingMessage ?? optimisticMessage;
-  }, [hacsConversation.setMessages]);
+    return optimisticMessage;
+  }, [hacsConversation.setMessages, hacsConversation.isLoading, hacsConversation.messages]);
 
   // PHASE 1: DUAL-PATHWAY ARCHITECTURE - Asynchronous Intelligence Model
   const sendMessage = useCallback(async (
