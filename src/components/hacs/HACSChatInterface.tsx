@@ -35,6 +35,11 @@ import { TwinNamingCard } from "./TwinNamingCard";
 import { useTwinName } from "@/hooks/use-twin-name";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useHermeticReportStatus } from "@/hooks/use-hermetic-report-status";
+import {
+  generatePrimarySentenceActionCopy,
+  generateSentenceActionCopy,
+  type SentenceActionCopy,
+} from "@/services/sentence-action-copy-service";
 
 /**
  * Feature flag: route OfferCard confirmations into the panel-hosted flow
@@ -114,6 +119,15 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   const [selectedSentences, setSelectedSentences] = useState<Record<string, string | null>>({});
   const [isProcessingAction, setIsProcessingAction] = useState(false);
   const [loadingAction, setLoadingAction] = useState<SentenceAction | null>(null);
+  const [sentenceCopy, setSentenceCopy] = useState<{
+    messageId: string;
+    sentence: string;
+    question?: string;
+    actions: SentenceActionCopy[];
+    isGenerating: boolean;
+    error: string | null;
+  } | null>(null);
+  const sentenceCopyRequestRef = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   // Proactive Intelligence Layer (v3.0): at most ONE quiet moment; the
   // guardian's five checks make no-action the default outcome.
@@ -264,11 +278,57 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   }, [messages.length, isLoading]);
 
   // Handle sentence selection toggle
+  const loadSentenceActions = async (messageId: string, sentence: string) => {
+    const requestId = ++sentenceCopyRequestRef.current;
+    const messageIndex = messages.findIndex((message) => message.id === messageId);
+    const context = messages
+      .slice(0, messageIndex < 0 ? messages.length : messageIndex)
+      .filter((message) => message.content.trim() && !message.content.startsWith('[CONTEXT:'))
+      .slice(-2)
+      .map((message) => message.content.trim().slice(0, 1600));
+    const input = { selectedSentence: sentence, context, language: language === 'nl' ? 'nl' as const : 'en' as const };
+
+    setSentenceCopy({ messageId, sentence, actions: [], isGenerating: true, error: null });
+    console.info('🧭 NBA COPY START', { contextParts: context.length, language: input.language });
+
+    const primaryPromise = generatePrimarySentenceActionCopy(input).then((primary) => {
+      if (sentenceCopyRequestRef.current !== requestId) return;
+      setSentenceCopy((current) => {
+        if (!current || current.messageId !== messageId || current.sentence !== sentence || current.actions.length === 4) return current;
+        return { ...current, question: primary.question, actions: [primary.action] };
+      });
+    });
+
+    const fullPromise = generateSentenceActionCopy(input).then((full) => {
+      if (sentenceCopyRequestRef.current !== requestId) return;
+      setSentenceCopy({ messageId, sentence, question: full.question, actions: full.actions, isGenerating: false, error: null });
+    });
+
+    const results = await Promise.allSettled([primaryPromise, fullPromise]);
+    if (sentenceCopyRequestRef.current !== requestId) return;
+    const fullFailed = results[1].status === 'rejected';
+    if (fullFailed) {
+      console.error('❌ NBA COPY INCOMPLETE', { primaryReady: results[0].status === 'fulfilled' });
+      setSentenceCopy((current) => current && current.messageId === messageId
+        ? {
+            ...current,
+            isGenerating: false,
+            error: language === 'nl'
+              ? 'De overige opties konden niet worden afgestemd.'
+              : 'The remaining options could not be tailored.',
+          }
+        : current);
+    }
+  };
+
   const handleSentenceSelect = (messageId: string, sentence: string | null) => {
-    setSelectedSentences(prev => ({
-      ...prev,
-      [messageId]: sentence
-    }));
+    sentenceCopyRequestRef.current += 1;
+    setSelectedSentences(sentence ? { [messageId]: sentence } : {});
+    if (!sentence) {
+      setSentenceCopy(null);
+      return;
+    }
+    void loadSentenceActions(messageId, sentence);
   };
 
   /**
@@ -651,16 +711,29 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                     {/* Four-intent card when a sentence is selected (v2.6):
                         the card IS the transition — choosing an operational
                         intent opens the panel directly, no draft card. */}
-                    {selectedSentences[message.id] && (
+                    {selectedSentences[message.id] && (() => {
+                      const selectedSentence = selectedSentences[message.id];
+                      if (!selectedSentence) return null;
+                      const copy = sentenceCopy?.messageId === message.id && sentenceCopy.sentence === selectedSentence
+                        ? sentenceCopy
+                        : null;
+                      return (
                       <div className="mt-3 pt-2 border-t border-border/30">
                         <SentenceActionButtons
-                          selectedSentence={selectedSentences[message.id]!}
+                          selectedSentence={selectedSentence}
+                          language={language === 'nl' ? 'nl' : 'en'}
+                          question={copy?.question}
+                          actions={copy?.actions ?? []}
+                          isGenerating={copy?.isGenerating ?? true}
+                          generationError={copy?.error}
+                          onRetry={() => void loadSentenceActions(message.id, selectedSentence)}
                           onAction={handleSentenceAction}
                           isLoading={isProcessingAction}
                           loadingAction={loadingAction}
                         />
                       </div>
-                    )}
+                      );
+                    })()}
                     
                     {message.isQuestion && (
                       <div className="mt-2 ss-micro" style={{ color: 'var(--ss-faint)' }}>
