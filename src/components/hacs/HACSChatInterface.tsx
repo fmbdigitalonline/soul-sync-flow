@@ -721,6 +721,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                       <div className="mt-3 pt-2 border-t border-border/30">
                         <SentenceActionButtons
                           selectedSentence={selectedSentence}
+                          language={language === 'nl' ? 'nl' : 'en'}
                           question={copy?.question}
                           actions={copy?.actions ?? []}
                           isGenerating={copy?.isGenerating ?? true}

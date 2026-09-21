@@ -26,6 +26,7 @@ export type SentenceAction = "understand" | "change_pattern" | "achieve" | "reme
 
 interface SentenceActionButtonsProps {
   selectedSentence: string;
+  language: 'nl' | 'en';
   onAction: (action: SentenceAction, sentence: string) => void;
   question?: string;
   actions: SentenceActionCopy[];
@@ -45,6 +46,7 @@ const intentIcons: Record<SentenceAction, React.ComponentType<{ className?: stri
 
 export const SentenceActionButtons: React.FC<SentenceActionButtonsProps> = ({
   selectedSentence,
+  language,
   onAction,
   question,
   actions,
@@ -54,6 +56,7 @@ export const SentenceActionButtons: React.FC<SentenceActionButtonsProps> = ({
   isLoading = false,
   loadingAction = null,
 }) => {
+  const nl = language === 'nl';
   const [expanded, setExpanded] = useState(false);
   const hasCompleteSet = actions.length === 4;
   const visibleActions = expanded ? actions : actions.slice(0, 3);
@@ -65,7 +68,9 @@ export const SentenceActionButtons: React.FC<SentenceActionButtonsProps> = ({
       {question ? (
         <p className="text-[11px] font-medium text-muted-foreground px-1">{question}</p>
       ) : isGenerating ? (
-        <Shimmer className="px-1 text-[11px] font-medium">Passende vervolgstap formuleren…</Shimmer>
+        <Shimmer className="px-1 text-[11px] font-medium">
+          {nl ? 'Passende vervolgstap formuleren…' : 'Tailoring the next step…'}
+        </Shimmer>
       ) : null}
 
       <div className="space-y-1">
@@ -98,7 +103,7 @@ export const SentenceActionButtons: React.FC<SentenceActionButtonsProps> = ({
 
         {isGenerating && actions.length < 3 && Array.from({ length: 3 - actions.length }).map((_, index) => (
           <div key={`pending-${index}`} className="h-9 ss-rs border border-border/40 px-2.5 flex items-center">
-            <Shimmer className="text-xs">Volgende optie afstemmen…</Shimmer>
+            <Shimmer className="text-xs">{nl ? 'Volgende optie afstemmen…' : 'Tailoring another option…'}</Shimmer>
           </div>
         ))}
       </div>
@@ -111,7 +116,7 @@ export const SentenceActionButtons: React.FC<SentenceActionButtonsProps> = ({
           onClick={() => setExpanded((value) => !value)}
           className="h-8 w-full justify-between rounded-md px-2 text-xs text-muted-foreground"
         >
-          <span>{expanded ? "Minder opties" : "Meer opties"}</span>
+          <span>{expanded ? (nl ? 'Minder opties' : 'Fewer options') : (nl ? 'Meer opties' : 'More options')}</span>
           {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
         </Button>
       )}
@@ -121,7 +126,7 @@ export const SentenceActionButtons: React.FC<SentenceActionButtonsProps> = ({
           <p role="alert" className="text-xs text-destructive">{generationError}</p>
           <Button type="button" variant="outline" size="sm" onClick={onRetry} className="h-8 shrink-0 rounded-md px-2 text-xs">
             <RefreshCw className="h-3.5 w-3.5" />
-            Opnieuw proberen
+            {nl ? 'Opnieuw proberen' : 'Try again'}
           </Button>
         </div>
       )}
