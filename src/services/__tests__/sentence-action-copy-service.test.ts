@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateSentenceActionCopy } from '../sentence-action-copy-service';
+import { validatePrimarySentenceActionCopy, validateSentenceActionCopy } from '../sentence-action-copy-service';
 
 describe('sentence action copy contract', () => {
   const valid = {
@@ -29,5 +29,12 @@ describe('sentence action copy contract', () => {
   it('rejects unknown routes', () => {
     const actions = valid.actions.map((item, index) => index === 0 ? { ...item, action: 'new_route' } : item);
     expect(() => validateSentenceActionCopy({ ...valid, actions })).toThrow('unknown');
+  });
+
+  it('accepts one fast primary route', () => {
+    expect(validatePrimarySentenceActionCopy({
+      question: 'Wat helpt je om te beginnen?',
+      action: { action: 'achieve', label: 'Help me mijn eerste leerstap kiezen', rank: 1 },
+    }).action.action).toBe('achieve');
   });
 });

@@ -12,6 +12,11 @@ export type SentenceActionCopyResult = {
   actions: SentenceActionCopy[];
 };
 
+export type PrimarySentenceActionCopyResult = {
+  question: string;
+  action: SentenceActionCopy;
+};
+
 const ACTIONS: SentenceAction[] = ['understand', 'change_pattern', 'achieve', 'remember'];
 
 export function validateSentenceActionCopy(value: unknown): SentenceActionCopyResult {
@@ -57,7 +62,7 @@ export async function generateSentenceActionCopy(input: {
   context: string[];
   language: 'nl' | 'en';
 }): Promise<SentenceActionCopyResult> {
-  const { data, error } = await supabase.functions.invoke('sentence-action-copy', { body: input });
+  const { data, error } = await supabase.functions.invoke('sentence-action-copy', { body: { ...input, mode: 'full' } });
   if (error) {
     console.error('❌ NBA COPY REQUEST FAILED', { name: error.name, message: error.message });
     throw new Error(error.message);
@@ -65,4 +70,34 @@ export async function generateSentenceActionCopy(input: {
   const result = validateSentenceActionCopy(data);
   console.info('✅ NBA COPY READY', { actions: result.actions.map((item) => item.action) });
   return result;
+}
+
+export function validatePrimarySentenceActionCopy(value: unknown): PrimarySentenceActionCopyResult {
+  if (!value || typeof value !== 'object') throw new Error('No primary action wording was returned.');
+  const candidate = value as { question?: unknown; action?: unknown };
+  const action = candidate.action as { action?: unknown; label?: unknown; rank?: unknown } | undefined;
+  if (typeof candidate.question !== 'string' || !candidate.question.trim() || candidate.question.length > 120) {
+    throw new Error('The follow-up question was invalid.');
+  }
+  if (!action || !ACTIONS.includes(action.action as SentenceAction)) throw new Error('An unknown follow-up route was returned.');
+  if (typeof action.label !== 'string' || action.label.trim().length < 4 || action.label.length > 110 || action.rank !== 1) {
+    throw new Error('The primary follow-up action was invalid.');
+  }
+  return {
+    question: candidate.question.trim(),
+    action: { action: action.action as SentenceAction, label: action.label.trim(), rank: 1 },
+  };
+}
+
+export async function generatePrimarySentenceActionCopy(input: {
+  selectedSentence: string;
+  context: string[];
+  language: 'nl' | 'en';
+}): Promise<PrimarySentenceActionCopyResult> {
+  const { data, error } = await supabase.functions.invoke('sentence-action-copy', { body: { ...input, mode: 'primary' } });
+  if (error) {
+    console.error('❌ PRIMARY NBA COPY REQUEST FAILED', { name: error.name, message: error.message });
+    throw new Error(error.message);
+  }
+  return validatePrimarySentenceActionCopy(data);
 }
