@@ -6,6 +6,27 @@ export type ActionCopyPayload = {
   actions: Array<{ action: AllowedAction; label: string; rank: number }>;
 };
 
+export type PrimaryActionCopyPayload = {
+  question: string;
+  action: { action: AllowedAction; label: string; rank: 1 };
+};
+
+export function assertPrimaryActionCopyPayload(value: unknown): PrimaryActionCopyPayload {
+  if (!value || typeof value !== 'object') throw new Error('Model returned no JSON object');
+  const payload = value as PrimaryActionCopyPayload;
+  if (typeof payload.question !== 'string' || !payload.question.trim() || payload.question.length > 120) {
+    throw new Error('Invalid question');
+  }
+  if (!payload.action || !ALLOWED_ACTIONS.includes(payload.action.action)) throw new Error('Unknown action route');
+  if (typeof payload.action.label !== 'string' || payload.action.label.trim().length < 4 || payload.action.label.length > 110) {
+    throw new Error('Invalid label');
+  }
+  return {
+    question: payload.question.trim(),
+    action: { action: payload.action.action, label: payload.action.label.trim(), rank: 1 },
+  };
+}
+
 export function assertActionCopyPayload(value: unknown): ActionCopyPayload {
   if (!value || typeof value !== 'object') throw new Error('Model returned no JSON object');
   const payload = value as ActionCopyPayload;

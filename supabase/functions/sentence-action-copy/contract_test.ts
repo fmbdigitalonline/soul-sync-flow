@@ -1,5 +1,13 @@
 import { assertEquals, assertThrows } from 'https://deno.land/std@0.224.0/assert/mod.ts';
-import { assertActionCopyPayload } from './contract.ts';
+import { assertActionCopyPayload, assertPrimaryActionCopyPayload } from './contract.ts';
+
+Deno.test('accepts one fast primary recommendation', () => {
+  const result = assertPrimaryActionCopyPayload({
+    question: 'Wat helpt je nu verder?',
+    action: { action: 'achieve', label: 'Kies nu je eerste leerstap', rank: 1 },
+  });
+  assertEquals(result.action.action, 'achieve');
+});
 
 Deno.test('accepts the four fixed routes in ranked order', () => {
   const result = assertActionCopyPayload({
